@@ -1,7 +1,7 @@
 # Zephyr Virtuális Séta – munkaállapot (2026. október 22., 04:26)
 
 ## Hol van a kész munka
-- **Élő túra (artifact):** https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD (347. verzió) – privát, megosztás az oldal Megosztás menüjében
+- **Élő túra (artifact):** https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD (348. verzió) – privát, megosztás az oldal Megosztás menüjében
 - **Szerkesztő mód:** https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD#szerkesztes (kilépés: a `#szerkesztes` törlése a címből + újratöltés)
 - **WordPress-csomag:** `zephyr-virtualis-seta.zip` (a beszélgetésben letölthető, utolsó változat okt. 22. 04:25). Tartalma: `virtualis-seta/index.html`, `img/` (panorámák + bélyegképek), `BEILLESZTES.txt`. Kicsomagolva a saját gépen is futtatható.
 - **Forráskód:** a projektben `claude/zephyr-virtualis-seta-index.html` (ugyanaz, mint a csomagban)
@@ -90,3 +90,4 @@
 - 346 – API: events (nyilvános), events_all / events_save (admin), vihar (met.hu tavi viharjelzés, 10 perces gyorstár: data/vihar.json). Tulajdonosi felület új „Programok” füle: felvétel, szerkesztés, másolat, törlés, kiemelt, rejtett.
 - Kérdés nyitva: a régi oldalon 5. apartmanként JOLLE szerepel, a sétában/foglalásban Schooner az 5. és Kadett a 6. – tisztázandó.
 - 347 – A kocka új megjelenése a tulajdonos mintaképe alapján: üveghasáb (PC 216×128, táblagép 204×120, telefon 150×88 px), vastag csillogó üvegkeret, sötétkék lekerekített panelek; 1 „HÁZ ÉS KERT” piros + nagy fehér „UTCA” + halvány vitorlás, 2 színes térkép piros jelölővel + MAP, 3 fehér visszanyíl + BACK, 4 piros panel fehér házzal + HOME; alatta íves kék forgatásjelző nyíl, kis pöttyök, üveg oldalnyilak. Kötél, rézszegecsek kivéve. A térkép PC-n 198 px-től indul.
+- 348 – A kocka üvegtömb hatású: áttetsző lapok (átlátszik a háttér), csillogó perem színes fénytöréssel, a hátsó élek halványan látszanak az üvegen át, forgatáskor csúszó fényfolt, 7 mp-enként csillanás a felénk néző lapon.
