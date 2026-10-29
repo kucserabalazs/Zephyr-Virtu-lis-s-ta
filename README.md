@@ -2,6 +2,12 @@
 
 Zephyr Apartmanház, 8621 Zamárdi, Gáspár András utca 58. · balatoni-udules.hu
 
+## Kezdőfelület
+A munka mindig az új **kezdőoldalról** indul: `weboldal/uj/index.html`.
+A tároló gyökerében lévő `index.html` ide irányít, így GitHub Pages-en a repó címe egyből a kezdőoldalt nyitja meg;
+onnan érhető el a virtuális séta (`weboldal/virtualis-seta/`), a foglalás és a tulajdonosi felület.
+(GitHub Pages-en a foglalás és a programok bemutató módban futnak – élesben csak a PHP-s tárhelyen működnek.)
+
 ## Mappák
 - `weboldal/` – **ez kerül fel a tárhelyre** (FileZilla), a fő mappába:
   - `virtualis-seta/` – 360°-os virtuális séta forgatható kockával, foglalási ablakkal (`index.html`, `img/`)
