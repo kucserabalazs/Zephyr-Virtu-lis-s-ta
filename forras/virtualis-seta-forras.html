@@ -1998,13 +1998,13 @@ Object.keys(SCENES).filter((k) => SCENES[k].g === "schooner" && k !== "schooner-
 /* Kivett képek: Kerti konyha, Parkoló és kert (a nyilak a Grillezőre / Hátsó lépcsőre mutatnak) */
 delete SCENES["kerti-konyha"]; delete SCENES.parkolo;
 const POI_MAP = {
-  "biciklik|0": [6.08, -6.23, "Kerti hűtőszekrény"], "biciklik|1": [2.68, -6.23, "Kompresszor"],
+  "biciklik|0": [7.46, -7.76, "Kerti hűtőszekrény"], "biciklik|1": [1.57, -7.56, "Kompresszor"],
   "utca|0": [6.25, 28.27, "Parkoló"], "utca|1": [-1.55, 28.27, "Parkoló"],
   "parkolo|0": [9.05, 3.6, "Belső parkoló (4 autó)"], "parkolo|1": [0.4, 0.5],
-  "kert|0": [8.4, -4.7], "kert|1": [2.96, -4.07], "kert|2": [1.41, -4.81],
+  "kert|0": [8.4, -4.7], "kert|1": [1.68, -4.48], "kert|2": [0.74, -5.94],
   "kerti-konyha|0": [4.38, -6.23], "kerti-konyha|1": [0.9, -11.11, "SUP-ok"], "kerti-konyha|2": [10.87, -10.66],
   "korvett-nappali|0": null, "kapu|0": [4.6, 26.3], "korvett-terasz|0": null,
-  "fedett-bejaro|0": [6.22, 18.9, "Mentőmellények"], "folyoso-fregatt|0": [7.95, 18.9, "Közös hűtő"], "emeleti-terasz|0": null, "emeleti-terasz|1": [7.62, 18.72, "Etetőszék"], "emeleti-terasz|2": null, "folyoso-kaloz|0": null
+  "fedett-bejaro|0": [6.22, 18.9, "Mentőmellények"], "folyoso-fregatt|0": [7.95, 18.9, "Közös hűtő"], "emeleti-terasz|0": null, "emeleti-terasz|1": [9.75, 18.89, "Etetőszék"], "emeleti-terasz|2": null, "folyoso-kaloz|0": null
 };
 
 /* Alaprajzok méterben, az "összes lakás rajza" PDF alapján (vázlatos). */
@@ -2171,7 +2171,7 @@ const PLANS = {
     /* Kültéri tereptárgyak: [típus, x, y, szélesség, mélység, felirat, forgatás, extra] – a burkolatok ("area") legyenek elöl */
     furn: [
       ["area", 3.2, 25.35, 8.8, 2.25, "", 0, "lawn"],
-      ["area", 0.02, -11.6, 12, 11.35, "", 0, "lawn"],
+      ["area", 0.83, 2.76, 12, 11.35, "", 0, "lawn"],
       ["area", 0.04, -11.36, 4.66, 3.79, "", 0, "gravel"],
       ["area", 0, -0.15, 3, 27.75, "", 0, "bricks"],
       ["area", 3.2, -0.15, 8.8, 7.5, "", 0, "grid"],
@@ -2185,11 +2185,11 @@ const PLANS = {
       ["tap", 4.45, 26.15, 0.3, 0.3],
       ["gate", 0, 27.5, 3, 0.16, "Tolókapu"],
       ["tree", 9.1, -11.42, 2.9, 2.9],
-      ["shed", 0.12, -10.03, 2.93, 2.27, "Fém tárolóház"],
+      ["shed", 0.16, -10.77, 2.93, 2.27, "Fém tárolóház"],
       ["sup", 0.15, -11.35, 1.5, 0.48, "", 0, 4],
       ["bikes", 9.9, -11.04, 1.95, 0.75, "", 0, 7],
       ["gazebo", 3.25, -8.93, 3.99, 2.66],
-      ["counter2", 0.07, -6.72, 6.46, 0.98],
+      ["counter2", 0.57, -7.37, 7.43, 0.98],
       ["sink", 4.13, -6.44, 0.5, 0.42],
       ["oshower", 0.1, -8.21, 0.45, 0.45],
       ["tap", 0.79, -4.01, 0.3, 0.3],
