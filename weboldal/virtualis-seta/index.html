@@ -65,17 +65,15 @@ button { font: inherit; }
 .cube-stage.drag .cube, .cube.instant { transition: none; }
 .cube-stage.press .cube { transform: var(--rot) scale(.93); transition: transform .12s; }
 /* egy oldal: vastag kristályüveg keret + fedett sötétkék (Home: piros) panel */
-.cf { position: absolute; left: 0; top: 0; width: var(--S); height: var(--H); box-sizing: border-box; border-radius: calc(var(--S) * .16); backface-visibility: hidden; -webkit-backface-visibility: hidden;
+.cf { position: absolute; left: 0; top: 0; width: var(--S); height: var(--H); box-sizing: border-box; border-radius: calc(var(--S) * .2); backface-visibility: hidden; -webkit-backface-visibility: hidden;
   background:
     linear-gradient(118deg, rgba(255,255,255,0) 26%, rgba(255,255,255,.55) 31%, rgba(255,255,255,0) 37%),
     linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(205,232,255,.45) 9%, rgba(110,165,225,.42) 30%, rgba(60,120,200,.5) 50%, rgba(120,180,235,.45) 72%, rgba(215,238,255,.6) 90%, rgba(255,255,255,.95) 100%);
   box-shadow:
-    inset 0 0 0 1.5px #fff,
-    inset 0 0 0 3px rgba(70,130,200,.5),
-    inset 0 0 0 4.5px rgba(255,255,255,.6),
-    inset 3px 4px 7px rgba(255,255,255,.95),
-    inset -3px -4px 7px rgba(25,80,150,.45),
-    inset 0 0 calc(var(--gp) * 1.1) rgba(255,255,255,.5);
+    inset 0 0 calc(var(--gp) * .55) calc(var(--gp) * .2) rgba(255,255,255,.75),
+    inset 0 0 calc(var(--gp) * 1.4) rgba(160,210,255,.45),
+    inset 2px 3px 8px rgba(255,255,255,.8),
+    inset -2px -3px 8px rgba(25,80,150,.3);
   filter: brightness(var(--lit, 1)); }
 .cf::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; mix-blend-mode: screen;
   background:
@@ -97,10 +95,16 @@ button { font: inherit; }
 .cf2 { transform: rotateY(90deg) translateZ(calc(var(--S) / 2)); }
 .cf3 { transform: rotateY(180deg) translateZ(calc(var(--S) / 2)); }
 .cf4 { transform: rotateY(-90deg) translateZ(calc(var(--S) / 2)); }
-/* teteje: tiszta üveglap */
-.cf-top { pointer-events: none; position: absolute; left: 0; width: var(--S); height: var(--S); top: calc((var(--H) - var(--S)) / 2); box-sizing: border-box; border-radius: calc(var(--S) * .16); transform: rotateX(90deg) translateZ(calc(var(--H) / 2)); backface-visibility: hidden;
+/* lekerekített üvegélek a lapok találkozásánál – mint egy üveg dobókockán */
+.ce { position: absolute; top: calc(var(--S) * .06); height: calc(var(--H) - var(--S) * .12); width: calc(var(--S) * .2); left: calc(50% - var(--S) * .1); pointer-events: none; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(200,230,255,.35) 18%, rgba(255,255,255,.95) 44%, rgba(120,175,235,.55) 62%, rgba(230,245,255,.6) 82%, rgba(255,255,255,0) 100%);
+  filter: blur(1.4px) brightness(var(--lit, 1)); }
+.ce1 { transform: rotateY(45deg) translateZ(calc(var(--S) * .675)); } .ce2 { transform: rotateY(135deg) translateZ(calc(var(--S) * .675)); }
+.ce3 { transform: rotateY(225deg) translateZ(calc(var(--S) * .675)); } .ce4 { transform: rotateY(315deg) translateZ(calc(var(--S) * .675)); }
+/* teteje: tiszta üveglap, lágy, lekerekített peremmel */
+.cf-top { pointer-events: none; position: absolute; left: 0; width: var(--S); height: var(--S); top: calc((var(--H) - var(--S)) / 2); box-sizing: border-box; border-radius: calc(var(--S) * .2); transform: rotateX(90deg) translateZ(calc(var(--H) / 2)); backface-visibility: hidden;
   background: radial-gradient(70% 70% at 40% 40%, rgba(255,255,255,.35), rgba(180,220,255,.18) 60%, rgba(255,255,255,.55));
-  box-shadow: inset 0 0 0 1.5px #fff, inset 0 0 0 4px rgba(120,180,240,.45), inset 0 0 calc(var(--gp) * 1.4) rgba(255,255,255,.8); }
+  box-shadow: inset 0 0 calc(var(--gp) * .7) calc(var(--gp) * .25) rgba(255,255,255,.8), inset 0 0 calc(var(--gp) * 1.6) rgba(170,215,255,.5); filter: blur(.4px); }
 /* 1. oldal: helyszín */
 .cf1 .cf-in.plate { all: unset; position: absolute; inset: var(--gp); border-radius: calc(var(--S) * .09); overflow: hidden; box-sizing: border-box; display: grid; align-content: center; justify-items: start; gap: 0; padding: 4px calc(var(--S) * .09) 6px; text-align: left; opacity: var(--cv, 1);
   background: linear-gradient(180deg, #16325a 0%, #0f2747 38%, #0a1b35 100%);
@@ -1015,6 +1019,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     <div class="cube-stage" id="cubeStage" tabindex="0" role="group" aria-roledescription="forgatható kocka" aria-label="Forgatható kocka – húzással forgatható, koppintásra a felénk néző oldal működik">
       <div class="cube" id="cube">
         <div class="cf-top" aria-hidden="true"></div>
+        <i class="ce ce1" aria-hidden="true"></i><i class="ce ce2" aria-hidden="true"></i><i class="ce ce3" aria-hidden="true"></i><i class="ce ce4" aria-hidden="true"></i>
         <section class="cf cf1" data-f="1" aria-live="polite"><div class="cf-in plate">
           <span class="house"><img class="logo" src="img/zephyr-logo-s.png" alt="Zephyr Apartman · Zamárdi" draggable="false"></span>
           <span class="unit" id="unitName"></span>
@@ -7512,6 +7517,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         el.classList.toggle("cf-front", +el.dataset.f === front);
         el.setAttribute("aria-hidden", +el.dataset.f === front ? "false" : "true");
       });
+      cube.querySelectorAll(".ce").forEach((el, i) => { const a = (45 + 90 * i + yaw) * rad; el.style.setProperty("--lit", (.75 + .35 * Math.max(0, Math.cos(a))).toFixed(3)); });
       stage.setAttribute("aria-label", "Forgatható kocka – most: " + CUBE_NAMES[front] + ". Húzd a forgatáshoz, koppints a használathoz.");
     }
     const snapTo = (ry) => { cubeSt.ry = ry; paint(); };
@@ -7587,7 +7593,6 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     }
     cubeFit();
     window.addEventListener("resize", () => setTimeout(cubeFit, 120));
-    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(() => { if (P || document.hidden) return; stage.classList.remove("glint"); void stage.offsetWidth; stage.classList.add("glint"); }, 7000);
   }
 
   async function start() {
