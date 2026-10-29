@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zephyr Apartman – indító</title>
+<style>
+  :root { color-scheme: light dark; --sea: #0b2f5e; --gold: #f2b233; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; box-sizing: border-box;
+    font: 500 16px/1.4 "Segoe UI", system-ui, -apple-system, sans-serif; color: #fff;
+    background: radial-gradient(900px 500px at 70% -10%, #1d5390, transparent 60%), linear-gradient(180deg, #0b2f5e, #061a36); }
+  main { width: min(560px, 100%); }
+  h1 { margin: 0 0 4px; font-size: 34px; letter-spacing: .06em; text-transform: uppercase; }
+  h1 b { color: #ffd978; }
+  p.sub { margin: 0 0 22px; color: #c9d8e6; }
+  section { margin-bottom: 18px; padding: 14px; border-radius: 20px; background: rgba(255,255,255,.07); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(255,255,255,.1); }
+  h2 { margin: 0 0 10px 4px; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: #9fd0ff; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+  a { display: block; padding: 12px 14px; border-radius: 14px; text-decoration: none; color: #fff; background: rgba(255,255,255,.1); font-weight: 700; }
+  a small { display: block; font-weight: 500; color: #c3d6e8; font-size: 12.5px; margin-top: 2px; }
+  a:hover, a:focus-visible { background: rgba(255,255,255,.2); outline: none; }
+  a.main { background: linear-gradient(180deg, #ffd978, var(--gold)); color: #14202a; }
+  a.main small { color: #4a3a10; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Zephyr <b>Apartman</b></h1>
+  <p class="sub">Indító – minden fontos oldal egy helyen</p>
+
+  <section>
+    <h2>Élő weboldal (balatoni-udules.hu)</h2>
+    <div class="grid">
+      <a class="main" href="https://balatoni-udules.hu/uj/">Új kezdőoldal<small>balatoni-udules.hu/uj/</small></a>
+      <a class="main" href="https://balatoni-udules.hu/virtualis-seta/">Virtuális séta<small>a stégjátékokkal</small></a>
+      <a href="https://balatoni-udules.hu/virtualis-seta/#foglalas-admin">Tulajdonosi belépés<small>foglalások, naptár, programok</small></a>
+      <a href="https://balatoni-udules.hu/">Régi WordPress-oldal<small>balatoni-udules.hu</small></a>
+    </div>
+  </section>
+
+  <section>
+    <h2>GitHub (fejlesztői változat)</h2>
+    <div class="grid">
+      <a href="https://kucserabalazs.github.io/Zephyr-Virtu-lis-s-ta/">Kezdőoldal a GitHubon<small>foglalás bemutató módban</small></a>
+      <a href="https://kucserabalazs.github.io/Zephyr-Virtu-lis-s-ta/weboldal/virtualis-seta/">Séta a GitHubon</a>
+      <a href="https://github.com/kucserabalazs/Zephyr-Virtu-lis-s-ta">A repó (forrás, mentések)</a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Szerkesztés (Claude)</h2>
+    <div class="grid">
+      <a href="https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD#szerkesztes">Séta szerkesztő módban<small>„Változások másolása” → be a beszélgetésbe</small></a>
+      <a href="https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD">Séta (Claude)</a>
+      <a href="https://claude.ai/artifact/MarcoyQiN2vBjunbMeAjpw">Kezdőoldal (Claude)</a>
+    </div>
+  </section>
+</main>
+</body>
+</html>
