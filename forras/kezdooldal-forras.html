@@ -81,6 +81,9 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 @keyframes kenburns { from { transform: scale(1.04) translate(0, 0); } to { transform: scale(1.16) translate(-2.5%, -1.5%); } }
 .hero::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(7,29,56,.55) 0%, rgba(7,29,56,.05) 30%, rgba(7,29,56,.15) 55%, rgba(7,29,56,.88) 100%); }
 .hero-boats { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+/* vitorlásverseny a nyitókép alján (a sétából) */
+.home-regatta { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 104px; z-index: 2; pointer-events: none; }
+@media (max-width: 700px) { .home-regatta { height: 54px; } }
 .hero-in { position: relative; z-index: 3; padding-block: 140px 70px; display: grid; gap: 6px; }
 .hero-logo { width: min(420px, 78vw); height: auto; filter: drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 14px rgba(255,255,255,.45)); opacity: 0; transform: translateY(20px) scale(.96); animation: rise 1s .2s cubic-bezier(.2,.8,.2,1) forwards; }
 .hero h1 { font: 900 clamp(46px, 9.4vw, 128px)/.86 var(--display); letter-spacing: .02em; text-transform: uppercase; text-shadow: 0 6px 30px rgba(0,0,0,.45); }
@@ -414,6 +417,7 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
     <video id="heroVideo" muted loop playsinline preload="none" poster="img/hero.jpg" aria-hidden="true"></video>
   </div>
   <canvas class="hero-boats" id="heroBoats" aria-hidden="true"></canvas>
+  <canvas class="home-regatta" id="regatta" aria-hidden="true"></canvas>
   <div class="wrap hero-in">
     <h1><span class="w">Zephyr</span> <span class="w">Apartman</span></h1>
     <div class="place">Zamárdi</div>
@@ -938,3 +942,4 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
 })();
 </script>
 <!--ZEPHYR-BOOKING-JS-->
+<!--ZEPHYR-REGATTA-JS-->

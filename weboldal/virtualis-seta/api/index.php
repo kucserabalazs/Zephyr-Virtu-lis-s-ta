@@ -188,13 +188,14 @@ function day_free($s, $d, $busy) {
     if ($d > add_days(today(), (int) $s['horizon_days'])) { return false; }
     return true;
 }
-function quote($s, $apt, $ci, $co, $adults) {
+function quote($s, $apt, $ci, $co, $adults, $disc_pct = 0) {
     $sum = 0;
     for ($d = $ci; $d < $co; $d = add_days($d, 1)) { $sum += price_for($s, $apt, $d); }
     $n = nights($ci, $co);
+    $disc = $disc_pct > 0 ? (int) (round($sum * $disc_pct / 100 / 100) * 100) : 0;   /* stégjáték-kedvezmény: csak a szállásdíjból, az adót nem érinti */
     $tax = (int) $adults * $n * (int) $s['tax'];
-    $total = $sum + $tax;
-    return array('total' => $total, 'tax' => $tax, 'deposit' => (int) (round($total * (int) $s['deposit_pct'] / 100 / 100) * 100));
+    $total = $sum - $disc + $tax;
+    return array('total' => $total, 'tax' => $tax, 'discount' => $disc, 'deposit' => (int) (round($total * (int) $s['deposit_pct'] / 100 / 100) * 100));
 }
 function find_idx($db, $id) { foreach ($db['bookings'] as $i => $b) { if ($b['id'] === $id) { return $i; } } return -1; }
 function new_ref($prefix) { return $prefix . '-' . date('ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 4)); }
@@ -379,6 +380,8 @@ function summary($s, $b) {
         . 'Távozás: ' . hu_date($b['checkout']) . ' ' . $s['checkout'] . "-ig\n"
         . 'Éjszakák: ' . nights($b['checkin'], $b['checkout']) . "\n"
         . 'Vendégek: ' . (int) $b['adults'] . ' felnőtt' . ((int) $b['children'] ? ', ' . (int) $b['children'] . ' gyermek' : '') . "\n"
+        . (!empty($b['group']) ? 'Csoportos foglalás: ' . $b['group'] . ' (' . (int) $b['group_size'] . " apartman)\n" : '')
+        . (!empty($b['discount']) ? 'Stégjáték-kedvezmény (' . (int) $b['discount_pct'] . '% a szállásdíjból): -' . money($b['discount']) . "\n" : '')
         . 'Végösszeg (idegenforgalmi adóval): ' . money($b['total']) . "\nElőleg: " . money($b['deposit']) . "\n";
 }
 function footer($s) { return "\nÜdvözlettel:\nZephyr Apartmanház\n{$s['address']}\nTel.: {$s['phone']}\nE-mail: {$s['email']}\n" . ($s['ntak'] ? "NTAK regisztrációs szám: {$s['ntak']}\n" : ''); }
@@ -416,6 +419,26 @@ function mail_admin_new($s, $b) {
         . "\nFoglaló: {$b['name']}\nTelefon: {$b['phone']}\nE-mail: {$b['email']}\n" . ($b['note'] ? "Megjegyzés: {$b['note']}\n" : '')
         . "\nJóváhagyás vagy elutasítás (tulajdonosi belépés):\n{$link}\n\n"
         . 'Ha ' . (int) $s['pending_days'] . " napon belül nem hagyod jóvá, a kérés lejár, és a napok újra szabadok lesznek.\n");
+}
+function group_summary($s, $bs) {
+    $t = 'Csoportos foglalás: ' . $bs[0]['group'] . ' – ' . count($bs) . " apartman ugyanarra az időszakra\n\n"; $tot = 0; $dep = 0;
+    foreach ($bs as $b) { $t .= summary($s, $b) . "\n"; $tot += (int) $b['total']; $dep += (int) $b['deposit']; }
+    return $t . 'Összesen (idegenforgalmi adóval): ' . money($tot) . "\nElőleg összesen: " . money($dep) . "\n";
+}
+function mail_received_group($s, $bs) {
+    $b = $bs[0];
+    send_mail($s, $b['email'], 'Foglalási kérés megérkezett – ' . $b['group'] . ' – Zephyr Apartmanház',
+        "Kedves {$b['name']}!\n\nKöszönjük foglalási kérését, megkaptuk. A kiválasztott apartmanokat ideiglenesen lefoglaltuk.\n"
+        . "Hamarosan ellenőrizzük, és jóváhagyás után apartmanonként e-mailben küldjük az előleg átutalásához szükséges adatokat. A foglalás az előleg beérkezésével válik véglegessé.\n\n"
+        . group_summary($s, $bs) . footer($s));
+}
+function mail_admin_new_group($s, $bs) {
+    $b = $bs[0];
+    $link = (isset($_SERVER['HTTP_HOST']) ? 'https://' . $_SERVER['HTTP_HOST'] : '') . preg_replace('#/api/.*$#', '/', $_SERVER['REQUEST_URI']) . '#foglalas-admin';
+    send_mail($s, $s['notify_email'], 'ÚJ CSOPORTOS FOGLALÁSI KÉRÉS – ' . $b['group'] . ' (' . count($bs) . ' apartman)',
+        "Új csoportos foglalási kérés érkezett.\n\n" . group_summary($s, $bs)
+        . "\nFoglaló: {$b['name']}\nTelefon: {$b['phone']}\nE-mail: {$b['email']}\n" . ($b['note'] ? "Megjegyzés: {$b['note']}\n" : '')
+        . "\nAz apartmanonkénti kéréseket a tulajdonosi felületen külön-külön hagyhatod jóvá:\n{$link}\n");
 }
 function mail_approved($s, $b) {
     $deadline = hu_date(date('Y-m-d', time() + max(1, (int) $s['pay_days']) * 86400));
@@ -517,16 +540,30 @@ case 'book':
     $db = db_load(); $s = $db['settings'];
     if (!rate_hit($db, 'book', 6, 3600)) { db_save($db); fail('Túl sok foglalási kérés érkezett erről a címről. Kérjük, hívjon minket: ' . $s['phone'], 429); }
     $aps = apartments($s, true);
-    $apt = isset($P['apt']) ? preg_replace('/[^a-z]/', '', (string) $P['apt']) : '';
-    if (!isset($aps[$apt])) { fail('Ismeretlen apartman.'); }
+    /* egy vagy több apartman ugyanarra az időszakra: apts = [{apt, adults, children}, …] */
+    $items = array();
+    if (!empty($P['apts']) && is_array($P['apts'])) {
+        foreach (array_slice($P['apts'], 0, 6) as $it) {
+            if (!is_array($it)) { continue; }
+            $items[] = array('apt' => preg_replace('/[^a-z]/', '', (string) (isset($it['apt']) ? $it['apt'] : '')), 'adults' => max(0, (int) (isset($it['adults']) ? $it['adults'] : 0)), 'children' => max(0, (int) (isset($it['children']) ? $it['children'] : 0)));
+        }
+    } else {
+        $items[] = array('apt' => isset($P['apt']) ? preg_replace('/[^a-z]/', '', (string) $P['apt']) : '', 'adults' => max(1, (int) (isset($P['adults']) ? $P['adults'] : 1)), 'children' => max(0, (int) (isset($P['children']) ? $P['children'] : 0)));
+    }
+    if (!$items) { fail('Válasszon apartmant.'); }
+    $seen = array();
+    foreach ($items as $it) {
+        if (!isset($aps[$it['apt']])) { fail('Ismeretlen apartman.'); }
+        if (isset($seen[$it['apt']])) { fail('Egy apartman csak egyszer szerepelhet a foglalásban.'); }
+        $seen[$it['apt']] = 1;
+        if ($it['adults'] < 1) { fail('Minden apartmanba legalább egy felnőtt kell (' . $aps[$it['apt']]['name'] . ').'); }
+        if ($it['adults'] + $it['children'] > (int) $aps[$it['apt']]['cap']) { fail('A(z) ' . $aps[$it['apt']]['name'] . ' apartmanban legfeljebb ' . (int) $aps[$it['apt']]['cap'] . ' fő szállhat meg.'); }
+    }
     $ci = isset($P['checkin']) ? (string) $P['checkin'] : ''; $co = isset($P['checkout']) ? (string) $P['checkout'] : '';
     if (!valid_date($ci) || !valid_date($co) || $co <= $ci) { fail('Hibás dátum.'); }
     $n = nights($ci, $co);
     if ($n < (int) $s['min_nights']) { fail('Legalább ' . (int) $s['min_nights'] . ' éjszakára lehet foglalni.'); }
     if ($n > (int) $s['max_nights']) { fail('Online legfeljebb ' . (int) $s['max_nights'] . ' éjszakára lehet foglalni.'); }
-    $adults = max(1, (int) (isset($P['adults']) ? $P['adults'] : 1));
-    $children = max(0, (int) (isset($P['children']) ? $P['children'] : 0));
-    if ($adults + $children > (int) $aps[$apt]['cap']) { fail('Az apartmanban legfeljebb ' . (int) $aps[$apt]['cap'] . ' fő szállhat meg.'); }
     $name = clean(isset($P['name']) ? $P['name'] : '', 120);
     $phone = clean(isset($P['phone']) ? $P['phone'] : '', 40);
     $email = clean(isset($P['email']) ? $P['email'] : '', 160);
@@ -541,22 +578,36 @@ case 'book':
     if (!valid_date($bdate) || $bdate > add_days(today(), -18 * 365)) { fail('A foglalónak nagykorúnak kell lennie.'); }
     if (!preg_match('/^[A-Z0-9-]{5,20}$/', $iddoc)) { fail('Kérjük, adja meg a személyi igazolvány vagy útlevél számát.'); }
     if (empty($P['accept'])) { fail('A foglaláshoz el kell fogadni a házirendet és az adatkezelési tájékoztatót.'); }
-    $busy = busy_map($db, $apt, $ci, $co);
-    for ($d = $ci; $d < $co; $d = add_days($d, 1)) {
-        if (!day_free($s, $d, $busy)) { fail('Sajnos a kiválasztott időszakban már van foglalt nap. Kérjük, válasszon másik időpontot.', 409); }
+    foreach ($items as $it) {
+        $busy = busy_map($db, $it['apt'], $ci, $co);
+        for ($d = $ci; $d < $co; $d = add_days($d, 1)) {
+            if (!day_free($s, $d, $busy)) { fail('Sajnos a(z) ' . $aps[$it['apt']]['name'] . ' apartman a kiválasztott időszakban már foglalt. Kérjük, válasszon másik időpontot.', 409); }
+        }
     }
-    $q = quote($s, $apt, $ci, $co, $adults);
-    $b = array('id' => bin2hex(random_bytes(8)), 'ref' => new_ref('ZB'), 'apt' => $apt, 'checkin' => $ci, 'checkout' => $co,
-        'adults' => $adults, 'children' => $children, 'name' => $name, 'phone' => $phone, 'email' => $email,
-        'birth_place' => $bplace, 'birth_date' => $bdate, 'id_doc' => $iddoc, 'note' => $note,
-        'total' => $q['total'], 'tax' => $q['tax'], 'deposit' => $q['deposit'], 'created' => time(), 'source' => 'web',
-        'label' => '', 'admin_note' => '', 'status' => 'pending', 'log' => array(), 'ip' => client_ip());
-    set_status($b, 'pending', 'Online foglalási kérés', 'vendég');
-    $db['bookings'][] = $b;
+    /* stégjáték-kedvezmény: a sétában 5 perc játék után kapott kód (formai ellenőrzés; egy kód egyszer használható) */
+    $game = isset($P['game']) ? preg_replace('/[^A-Z0-9-]/', '', strtoupper((string) $P['game'])) : '';
+    $disc_pct = 0;
+    if ($game !== '' && preg_match('/^STEG-[A-Z0-9]{6,12}-[A-Z0-9]{3,6}$/', $game)) {
+        $used = isset($db['settings']['game_used']) ? (array) $db['settings']['game_used'] : array();
+        if (!in_array($game, $used, true)) { $disc_pct = 5; $used[] = $game; $db['settings']['game_used'] = array_slice($used, -500); }
+    }
+    $group = count($items) > 1 ? new_ref('ZG') : '';
+    $made = array(); $sum_total = 0; $sum_dep = 0;
+    foreach ($items as $it) {
+        $q = quote($s, $it['apt'], $ci, $co, $it['adults'], $disc_pct);
+        $b = array('id' => bin2hex(random_bytes(8)), 'ref' => new_ref('ZB'), 'apt' => $it['apt'], 'checkin' => $ci, 'checkout' => $co,
+            'adults' => $it['adults'], 'children' => $it['children'], 'name' => $name, 'phone' => $phone, 'email' => $email,
+            'birth_place' => $bplace, 'birth_date' => $bdate, 'id_doc' => $iddoc, 'note' => $note,
+            'total' => $q['total'], 'tax' => $q['tax'], 'deposit' => $q['deposit'], 'discount' => $q['discount'], 'discount_pct' => $disc_pct, 'game' => $disc_pct ? $game : '',
+            'group' => $group, 'group_size' => count($items), 'created' => time(), 'source' => 'web',
+            'label' => '', 'admin_note' => '', 'status' => 'pending', 'log' => array(), 'ip' => client_ip());
+        set_status($b, 'pending', $group ? 'Online foglalási kérés (csoportos: ' . $group . ')' : 'Online foglalási kérés', 'vendég');
+        $db['bookings'][] = $b; $made[] = $b; $sum_total += $q['total']; $sum_dep += $q['deposit'];
+    }
     db_save($db);
-    mail_received($s, $b);
-    mail_admin_new($s, $b);
-    out(array('ok' => true, 'ref' => $b['ref'], 'total' => $q['total'], 'deposit' => $q['deposit']));
+    if (count($made) === 1) { mail_received($s, $made[0]); mail_admin_new($s, $made[0]); }
+    else { mail_received_group($s, $made); mail_admin_new_group($s, $made); }
+    out(array('ok' => true, 'ref' => $group ? $group : $made[0]['ref'], 'refs' => array_map(function ($b) { return $b['ref']; }, $made), 'total' => $sum_total, 'deposit' => $sum_dep, 'discount_pct' => $disc_pct));
 
 /* ------------------------------ admin */
 case 'login':
