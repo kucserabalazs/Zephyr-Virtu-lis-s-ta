@@ -1,0 +1,1953 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zephyr Apartman Zamárdi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Zephyr Apartmanház, Zamárdi – hat hajóról elnevezett apartman a Balaton-parton, ingyenes kerékpárral, SUP-pal, grillezővel és privát napozóstéggel. Virtuális séta, online foglalás, programajánló.">
+<link rel="icon" href="img/zephyr-logo-s.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Manrope:wght@400;500;600;700;800&family=Alex+Brush&display=swap">
+<style>
+/* Layout: hajónapló-szerű, egymás alatti „fedélzetek” – sötét tengerkék és vitorlavászon sávok váltják egymást, köztük hajókötél-elválasztók.
+   Egyetlen, tudatosan világos nyári megjelenés (a vízparti napfény), sötét kék szalagokkal. */
+:root {
+  --sea: #0b2f5e;        /* mély balatoni kék – szalagok, fejléc */
+  --sea-2: #071d38;      /* éjszakai kék – lábléc, árnyék */
+  --lake: #2a86ad;       /* nappali víz – kiemelés, linkek */
+  --sail: #f7f2e5;       /* vitorlavászon – alap háttér */
+  --sail-2: #efe6d0;     /* árnyaltabb vászon */
+  --rope: #c9a25a;       /* kötél / sárgaréz */
+  --rope-d: #8a6630;
+  --red: #e2483d;        /* a Zephyr-logó pirosa – jelzések */
+  --ink: #14202a;        /* szöveg */
+  --ink-2: #4d5a63;      /* másodlagos szöveg */
+  --line: #ddd2b8;
+  --display: "Big Shoulders Display", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --body: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --script: "Alex Brush", "Brush Script MT", cursive;
+  --gut: max(16px, env(safe-area-inset-left, 0px));
+  --gutR: max(16px, env(safe-area-inset-right, 0px));
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden]:not([hidden=until-found i]) { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body { margin: 0; background: var(--sail); color: var(--ink); font: 500 16px/1.6 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--sea); }
+img { max-width: 100%; display: block; }
+a { color: var(--lake); }
+button { font: inherit; }
+h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
+.wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding-left: var(--gut); padding-right: var(--gutR); }
+:focus-visible { outline: 3px solid var(--rope); outline-offset: 3px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ---------- gombok ---------- */
+.btn { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 13px 22px; border-radius: 999px; font: 800 15px/1.1 var(--body); letter-spacing: .01em; transition: transform .18s, box-shadow .18s, background .18s; text-align: center; }
+.btn svg { width: 19px; height: 19px; flex: none; }
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0) scale(.98); }
+.btn:focus-visible { outline: 3px solid var(--rope); outline-offset: 3px; }
+.btn-gold { background: linear-gradient(180deg, #ffd978, #f2b233); color: var(--ink); box-shadow: 0 8px 22px rgba(242,178,51,.35), inset 0 1px 0 rgba(255,255,255,.6); }
+.btn-red { background: var(--red); color: #fff; box-shadow: 0 8px 22px rgba(226,72,61,.35); }
+.btn-sea { background: var(--sea); color: #fff; box-shadow: 0 8px 22px rgba(11,47,94,.3); }
+.btn-ghost { background: rgba(255,255,255,.14); color: #fff; border: 1.5px solid rgba(255,255,255,.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.btn-line { background: transparent; color: var(--sea); border: 1.6px solid var(--sea); }
+.btn-sm { padding: 9px 15px; font-size: 13.5px; }
+
+/* ---------- fejléc ---------- */
+.nav { position: fixed; z-index: 50; top: env(safe-area-inset-top, 0px); left: 0; right: 0; transition: background .3s, box-shadow .3s; }
+.nav .wrap { display: flex; align-items: center; gap: 18px; padding-block: 12px; }
+.nav.solid { background: rgba(7,29,56,.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 8px 30px rgba(0,0,0,.25); }
+.nav-logo img { height: 40px; width: auto; filter: drop-shadow(0 0 1px rgba(255,255,255,.95)) drop-shadow(0 0 6px rgba(255,255,255,.45)); }
+.nav-links { display: flex; gap: 4px; margin-left: auto; list-style: none; padding: 0; margin-block: 0; }
+.nav-links a { display: block; padding: 9px 12px; border-radius: 999px; color: #fff; text-decoration: none; font: 700 14px/1 var(--body); letter-spacing: .02em; }
+.nav-links a:hover { background: rgba(255,255,255,.14); }
+.nav .btn { padding: 10px 17px; font-size: 14px; }
+.nav-burger { all: unset; display: none; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; place-items: center; color: #fff; background: rgba(255,255,255,.12); }
+.nav-burger svg { width: 22px; height: 22px; }
+@media (max-width: 980px) {
+  .nav-links { position: fixed; inset: calc(64px + env(safe-area-inset-top, 0px)) 0 auto 0; flex-direction: column; gap: 2px; background: rgba(7,29,56,.98); padding: 10px var(--gutR) 18px var(--gut); transform: translateY(-12px); opacity: 0; pointer-events: none; transition: .25s; box-shadow: 0 20px 40px rgba(0,0,0,.35); }
+  .nav-links a { padding: 13px 12px; font-size: 16px; }
+  .nav.open .nav-links { transform: none; opacity: 1; pointer-events: auto; }
+  .nav.open { background: rgba(7,29,56,.98); }
+  .nav-burger { display: grid; margin-left: auto; }
+  .nav .btn { margin-left: 4px; }
+}
+@media (max-width: 420px) { .nav .btn b { display: none; } .nav .btn { padding: 11px; } .nav-logo img { height: 34px; } }
+
+/* ---------- nyitókép: drónvideó ---------- */
+.hero { position: relative; min-height: min(92vh, 860px); min-height: min(92svh, 860px); display: grid; align-items: end; overflow: hidden; background: var(--sea-2); color: #fff; isolation: isolate; }
+.hero-media, .hero-media video, .hero-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero-media img { animation: kenburns 26s ease-in-out infinite alternate; transform-origin: 60% 60%; }
+.hero-media video { opacity: 0; transition: opacity 1.2s; } .hero-media video.on { opacity: 1; }
+@keyframes kenburns { from { transform: scale(1.04) translate(0, 0); } to { transform: scale(1.16) translate(-2.5%, -1.5%); } }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(7,29,56,.55) 0%, rgba(7,29,56,.05) 30%, rgba(7,29,56,.15) 55%, rgba(7,29,56,.88) 100%); }
+.hero-boats { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+.hero-in { position: relative; z-index: 3; padding-block: 140px 70px; display: grid; gap: 6px; }
+.hero-logo { width: min(420px, 78vw); height: auto; filter: drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 14px rgba(255,255,255,.45)); opacity: 0; transform: translateY(20px) scale(.96); animation: rise 1s .2s cubic-bezier(.2,.8,.2,1) forwards; }
+.hero h1 { font: 900 clamp(46px, 9.4vw, 128px)/.86 var(--display); letter-spacing: .02em; text-transform: uppercase; text-shadow: 0 6px 30px rgba(0,0,0,.45); }
+.hero h1 .w { display: inline-block; opacity: 0; transform: translateY(.5em) rotate(4deg); animation: word .9s cubic-bezier(.2,.9,.25,1.15) forwards; }
+.hero h1 .w:nth-child(1) { animation-delay: .7s; } .hero h1 .w:nth-child(2) { animation-delay: .95s; color: #ffd978; }
+.hero .place { display: flex; align-items: center; gap: 14px; font: 800 clamp(22px, 3.6vw, 40px)/1 var(--display); letter-spacing: .34em; text-transform: uppercase; opacity: 0; animation: rise .9s 1.5s forwards; }
+.hero .place::after { content: ""; height: 7px; flex: 0 1 220px; border-radius: 4px; background: repeating-linear-gradient(45deg, #f4dfa3 0 3px, #c9a25a 3px 6px, #8a6630 6px 8px); transform-origin: left; transform: scaleX(0); animation: rope 1.2s 1.8s ease forwards; }
+.hero .hello { font: 400 clamp(46px, 7.5vw, 96px)/1 var(--script); color: #fff; margin-top: 4px; text-shadow: 0 4px 24px rgba(0,0,0,.5); opacity: 0; transform: translateX(-24px); animation: hello 1.1s 2.4s cubic-bezier(.2,.8,.2,1) forwards; }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; opacity: 0; animation: rise .9s 3s forwards; }
+.hero-cue { position: absolute; z-index: 3; left: 50%; bottom: 18px; transform: translateX(-50%); color: #fff; opacity: .85; display: grid; justify-items: center; gap: 2px; font: 700 11px/1 var(--body); letter-spacing: .2em; text-transform: uppercase; text-decoration: none; animation: bob 2.4s ease-in-out infinite; }
+.hero-cue svg { width: 26px; height: 26px; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+@keyframes word { to { opacity: 1; transform: none; } }
+@keyframes rope { to { transform: scaleX(1); } }
+@keyframes hello { to { opacity: 1; transform: none; } }
+@keyframes bob { 50% { transform: translate(-50%, 6px); } }
+.hero-note { position: absolute; z-index: 3; right: var(--gutR); bottom: 18px; font: 600 11.5px/1.3 var(--body); color: rgba(255,255,255,.7); text-align: right; max-width: 50vw; }
+
+/* ---------- kötél-elválasztó és szekciófejek ---------- */
+.rope { height: 18px; background:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='18' viewBox='0 0 28 18'%3E%3Cpath d='M-4 13 C3 3 11 3 14 9 C17 15 25 15 32 5' fill='none' stroke='%238a6630' stroke-width='6'/%3E%3Cpath d='M-4 13 C3 3 11 3 14 9 C17 15 25 15 32 5' fill='none' stroke='%23e2c47f' stroke-width='3.2'/%3E%3Cpath d='M2 6.5 C6 4.5 9 5 11 7' fill='none' stroke='%23fff3cf' stroke-width='1.2' opacity='.8'/%3E%3C/svg%3E") repeat-x center / 28px 18px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.18)); }
+.sec { padding-block: 84px; position: relative; overflow-x: clip; }
+.sec-dark { background: radial-gradient(1200px 600px at 80% -10%, #164377 0%, transparent 60%), var(--sea); color: #fff; }
+.sec-dark .lead { color: #c9d8e6; }
+.sec-cream { background: var(--sail-2); }
+.sec-head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-bottom: 40px; max-width: 760px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; font: 800 12.5px/1 var(--body); letter-spacing: .22em; text-transform: uppercase; color: var(--red); }
+.sec-dark .eyebrow { color: #ffd978; }
+.eyebrow svg { width: 20px; height: 20px; }
+.sec-head h2 { overflow-wrap: break-word; hyphens: auto; font: 900 clamp(32px, 7.4vw, 66px)/.95 var(--display); letter-spacing: .01em; text-transform: uppercase; color: var(--sea); }
+.sec-dark .sec-head h2 { color: #fff; }
+.sec-head h2 em { font: 400 .78em/1 var(--script); text-transform: none; color: var(--red); letter-spacing: 0; margin-left: .1em; }
+.sec-dark .sec-head h2 em { color: #ffd978; }
+.lead { font-size: 17.5px; color: var(--ink-2); max-width: 64ch; margin: 0; }
+.compass-wm { position: absolute; width: 460px; height: 460px; right: -120px; top: 40px; opacity: .06; pointer-events: none; }
+
+/* ---------- apartmanok ---------- */
+.tour-banner { position: relative; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 0; border-radius: 22px; overflow: hidden; background: var(--sea-2); color: #fff; margin-bottom: 44px; box-shadow: 0 24px 60px rgba(7,29,56,.35); text-decoration: none; }
+.tour-banner .tb-img { position: relative; min-height: 300px; overflow: hidden; }
+.tour-banner .tb-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 6s ease; }
+.tour-banner:hover .tb-img img { transform: scale(1.08) translateX(-2%); }
+.tb-360 { position: absolute; left: 18px; top: 18px; display: flex; align-items: center; gap: 8px; padding: 8px 13px; border-radius: 999px; background: rgba(7,29,56,.75); font: 800 14px/1 var(--display); letter-spacing: .12em; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.tb-360 svg { width: 22px; height: 22px; animation: spin360 6s linear infinite; }
+@keyframes spin360 { to { transform: rotate(360deg); } }
+.tb-txt { padding: 34px 34px 32px; display: grid; gap: 14px; align-content: center; background: radial-gradient(500px 300px at 100% 0%, #1d5390, transparent 70%); }
+.tb-txt h3 { font: 900 clamp(32px, 4vw, 46px)/.95 var(--display); text-transform: uppercase; }
+.tb-txt p { margin: 0; color: #c9d8e6; }
+.tb-feat { display: flex; flex-wrap: wrap; gap: 8px; } .tb-feat span { font: 700 12.5px/1 var(--body); padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); }
+.apts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; }
+.apt { position: relative; background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 2px 0 var(--line), 0 14px 34px rgba(20,32,42,.08); display: grid; grid-template-rows: auto 1fr; transition: transform .25s, box-shadow .25s; }
+.apt:hover { transform: translateY(-6px); box-shadow: 0 2px 0 var(--line), 0 26px 50px rgba(20,32,42,.16); }
+.apt-img { all: unset; cursor: pointer; position: relative; display: block; aspect-ratio: 3 / 2; overflow: hidden; background: var(--sea); }
+.apt-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s cubic-bezier(.2,.8,.2,1); }
+.apt:hover .apt-img img { transform: scale(1.07); }
+.apt-img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, rgba(7,29,56,.65)); }
+.apt-cnt { position: absolute; z-index: 1; right: 12px; bottom: 12px; display: flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 999px; background: rgba(255,255,255,.92); color: var(--sea); font: 800 12.5px/1 var(--body); }
+.apt-cnt svg { width: 16px; height: 16px; }
+.apt-flag { position: absolute; z-index: 1; left: 14px; top: 0; width: 46px; padding: 10px 0 14px; text-align: center; color: #fff; font: 900 24px/1 var(--display); background: var(--ac); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%); box-shadow: 0 4px 10px rgba(0,0,0,.3); }
+.apt-body { padding: 18px 20px 20px; display: grid; gap: 10px; align-content: start; }
+.apt-body h3 { font: 900 34px/.95 var(--display); text-transform: uppercase; letter-spacing: .03em; color: var(--sea); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.apt-body h3 small { font: 700 13px/1 var(--body); letter-spacing: .04em; text-transform: none; color: var(--ac); }
+.apt-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; color: var(--ink-2); font-weight: 600; }
+.apt-meta span { display: inline-flex; align-items: center; gap: 6px; } .apt-meta svg { width: 16px; height: 16px; color: var(--rope-d); }
+.apt-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.apt-acts .btn { flex: 1 1 auto; }
+.apt.off .apt-img img { filter: grayscale(.4) brightness(.8); }
+.apt-badge { position: absolute; z-index: 2; right: 12px; top: 12px; padding: 7px 11px; border-radius: 8px; background: var(--red); color: #fff; font: 800 12px/1 var(--body); letter-spacing: .08em; text-transform: uppercase; transform: rotate(3deg); box-shadow: 0 4px 10px rgba(0,0,0,.25); }
+.apt-ph { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #1f5a96, #0b2f5e 70%); }
+.apt-ph svg { width: 46%; opacity: .85; }
+.amen { margin-top: 34px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.amen b { font: 800 13px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--sea); margin-right: 6px; }
+.amen span { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font: 700 13px/1 var(--body); color: var(--ink-2); }
+.amen svg { width: 17px; height: 17px; color: var(--lake); }
+
+/* ---------- szolgáltatások ---------- */
+.svc { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 46px; align-items: center; padding-block: 34px; }
+.svc + .svc { border-top: 1px dashed rgba(255,255,255,.18); }
+.svc:nth-child(even) .svc-media { order: 2; }
+.svc-media { position: relative; display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; aspect-ratio: 16 / 10; }
+.svc-media button { all: unset; cursor: pointer; position: relative; border-radius: 14px; overflow: hidden; background: #0d2a4d; box-shadow: 0 12px 30px rgba(0,0,0,.3); }
+.svc-media button:first-child { grid-row: span 2; }
+.svc-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s; }
+.svc-media button:hover img { transform: scale(1.08); }
+.svc-media button:focus-visible { outline: 3px solid var(--rope); outline-offset: 3px; }
+.svc-more { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(7,29,56,.55); font: 800 15px/1 var(--body); color: #fff; }
+.svc-play { position: absolute; left: 12px; bottom: 12px; display: flex; align-items: center; gap: 7px; padding: 8px 12px 8px 9px; border-radius: 999px; background: var(--red); color: #fff; font: 800 12.5px/1 var(--body); }
+.svc-play svg { width: 18px; height: 18px; }
+.svc-ico { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: linear-gradient(180deg, #ffd978, #f2b233); color: var(--sea); box-shadow: 0 10px 24px rgba(242,178,51,.3); transform: rotate(-4deg); }
+.svc-ico svg { width: 36px; height: 36px; }
+.svc-txt { display: grid; gap: 14px; justify-items: start; }
+.svc-txt h3 { font: 900 clamp(34px, 4.2vw, 50px)/.95 var(--display); text-transform: uppercase; }
+.svc-txt h3 small { display: block; font: 400 .62em/1.1 var(--script); text-transform: none; color: #ffd978; margin-top: 4px; }
+.svc-txt p { margin: 0; color: #d3e0ec; max-width: 52ch; }
+.svc-txt ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.svc-txt li { display: flex; gap: 10px; align-items: flex-start; color: #e8eff6; font-size: 15px; }
+.svc-txt li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 3px; background: #ffd978; -webkit-mask: var(--knot) center / contain no-repeat; mask: var(--knot) center / contain no-repeat; }
+.free { display: inline-block; padding: 6px 11px; border-radius: 6px; background: var(--red); color: #fff; font: 800 12px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; }
+
+/* ---------- rendezvények ---------- */
+.ev-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; align-items: center; }
+.chip { all: unset; cursor: pointer; padding: 9px 14px; border-radius: 999px; background: #fff; border: 1.5px solid var(--line); font: 700 13.5px/1 var(--body); color: var(--ink-2); }
+.chip[aria-pressed="true"] { background: var(--sea); border-color: var(--sea); color: #fff; }
+.chip:focus-visible { outline: 3px solid var(--rope); outline-offset: 2px; }
+.ev-month { font: 900 26px/1 var(--display); text-transform: uppercase; letter-spacing: .08em; color: var(--sea); margin: 26px 0 12px; display: flex; align-items: center; gap: 14px; }
+.ev-month::after { content: ""; flex: 1; height: 2px; background: repeating-linear-gradient(90deg, var(--rope) 0 10px, transparent 10px 16px); }
+.evs { display: grid; gap: 14px; }
+.ev { display: grid; grid-template-columns: 104px minmax(0, 1fr) auto; gap: 0; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 0 var(--line), 0 10px 26px rgba(20,32,42,.07); }
+.ev-date { position: relative; background: var(--sea); color: #fff; display: grid; place-content: center; text-align: center; padding: 14px 6px; }
+.ev-date::after { content: ""; position: absolute; right: -7px; top: 0; bottom: 0; width: 14px; background: radial-gradient(circle at 7px 8px, var(--sail-2) 0 5px, transparent 5.5px) 0 0 / 14px 16px repeat-y; }
+.ev-date b { font: 900 44px/.9 var(--display); }
+.ev-date span { font: 800 12.5px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; color: #ffd978; }
+.ev-date small { font: 700 11px/1.2 var(--body); color: #c9d8e6; margin-top: 4px; }
+.ev-body { padding: 16px 20px 16px 26px; display: grid; gap: 6px; align-content: center; min-width: 0; }
+.ev-body h3 { font: 800 21px/1.2 var(--body); color: var(--ink); }
+.ev-info { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13.5px; color: var(--ink-2); font-weight: 600; }
+.ev-info span { display: inline-flex; gap: 6px; align-items: center; } .ev-info svg { width: 15px; height: 15px; color: var(--red); }
+.ev-body p { margin: 2px 0 0; font-size: 14.5px; color: var(--ink-2); }
+.ev-acts { display: flex; flex-direction: column; gap: 8px; justify-content: center; padding: 16px 18px; }
+.ev-cat { justify-self: start; font: 800 11px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; padding: 5px 8px; border-radius: 6px; background: var(--sail-2); color: var(--rope-d); }
+.ev.top { grid-template-columns: 104px minmax(0, 1fr) auto; box-shadow: 0 0 0 2px #f2b233, 0 14px 34px rgba(242,178,51,.25); }
+.ev-img { grid-column: 1 / -1; height: 180px; object-fit: cover; width: 100%; }
+.ev-empty { padding: 30px; border-radius: 16px; background: #fff; border: 2px dashed var(--line); text-align: center; color: var(--ink-2); display: grid; gap: 10px; justify-items: center; }
+.ev-empty svg { width: 54px; height: 54px; color: var(--rope); }
+.demo-tag { display: inline-block; margin-left: 8px; padding: 3px 7px; border-radius: 5px; background: #fff3cd; color: #8a6300; font: 800 10.5px/1 var(--body); letter-spacing: .1em; text-transform: uppercase; vertical-align: middle; }
+.owner-link { all: unset; cursor: pointer; font: 700 13px/1 var(--body); color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; margin-left: auto; }
+
+/* ---------- látnivalók ---------- */
+.sights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.sight { position: relative; display: grid; grid-template-rows: auto 1fr; background: #fff; border-radius: 4px 4px 18px 18px; overflow: hidden; box-shadow: 0 2px 0 var(--line), 0 14px 30px rgba(20,32,42,.08); text-decoration: none; color: inherit; transition: transform .25s; }
+.sight:hover { transform: translateY(-5px) rotate(-.4deg); }
+.sight-img { position: relative; aspect-ratio: 407 / 270; background: linear-gradient(135deg, #2a86ad, #0b2f5e); overflow: hidden; }
+.sight-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s; }
+.sight:hover .sight-img img { transform: scale(1.06); }
+.sight-img .ph { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.85); }
+.sight-img .ph svg { width: 70px; height: 70px; }
+.sight-tag { position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; border-radius: 6px; background: rgba(7,29,56,.82); color: #ffd978; font: 800 11px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; }
+.sight-body { padding: 16px 18px 18px; display: grid; gap: 8px; align-content: start; }
+.sight-body h3 { font: 900 26px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; color: var(--sea); }
+.sight-body p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+.sight-more { font: 800 13.5px/1 var(--body); color: var(--red); display: inline-flex; align-items: center; gap: 6px; margin-top: 2px; }
+.sight-more svg { width: 15px; height: 15px; transition: transform .2s; } .sight:hover .sight-more svg { transform: translateX(4px); }
+.sight-info { font-size: 13.5px; color: var(--ink-2); display: grid; gap: 2px; }
+
+/* ---------- biztonság ---------- */
+.sos { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 14px; margin-bottom: 26px; }
+.sos a, .sos div { text-decoration: none; border-radius: 18px; padding: 18px 20px; display: grid; gap: 4px; color: #fff; position: relative; overflow: hidden; }
+.sos .s112 { background: linear-gradient(135deg, #ef5a4f, #c6281e); box-shadow: 0 16px 34px rgba(226,72,61,.35); }
+.sos .s112 b { font: 900 74px/.85 var(--display); letter-spacing: .02em; }
+.sos .svm b { font-size: 28px; }
+.sos .svm { background: linear-gradient(135deg, #2a86ad, #0b5f8a); } .sos .s1817 { background: linear-gradient(135deg, #1b4c86, #0b2f5e); }
+.sos b { font: 900 34px/1 var(--display); letter-spacing: .03em; font-variant-numeric: tabular-nums; }
+.sos span { font: 800 12.5px/1.2 var(--body); letter-spacing: .14em; text-transform: uppercase; opacity: .92; }
+.sos small { font: 600 13px/1.35 var(--body); opacity: .9; }
+.sos svg.bg { position: absolute; right: -14px; bottom: -14px; width: 110px; height: 110px; opacity: .16; }
+.wx { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; margin-bottom: 30px; }
+.storm { border-radius: 18px; background: var(--sea-2); color: #fff; padding: 20px; display: grid; gap: 12px; align-content: start; position: relative; overflow: hidden; }
+.storm h3 { font: 900 24px/1 var(--display); text-transform: uppercase; letter-spacing: .04em; }
+.storm-row { display: flex; gap: 16px; align-items: center; }
+.lamp { flex: none; width: 74px; height: 74px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff7c4, #ffcf33 45%, #c98a00 75%); box-shadow: 0 0 0 6px #23394f, 0 0 0 9px #556b80; position: relative; }
+.lamp.off { background: radial-gradient(circle at 40% 35%, #8f8a6c, #4b4a3c 60%, #2a2a22); }
+.lamp.l1 { animation: flash 1.333s steps(1) infinite; } .lamp.l2 { animation: flash .667s steps(1) infinite; }
+@keyframes flash { 0% { filter: brightness(1.15); box-shadow: 0 0 0 6px #23394f, 0 0 0 9px #556b80, 0 0 40px 14px rgba(255,207,51,.75); } 50% { filter: brightness(.35) saturate(.4); box-shadow: 0 0 0 6px #23394f, 0 0 0 9px #556b80; } }
+.storm-lv { font: 900 30px/1 var(--display); text-transform: uppercase; letter-spacing: .03em; }
+.storm-lv.l0 { color: #8fe0a8; } .storm-lv.l1 { color: #ffd978; } .storm-lv.l2 { color: #ff8a7f; }
+.storm p { margin: 0; font-size: 14px; color: #c9d8e6; }
+.storm small { color: #8fa6bb; font-size: 12px; }
+.storm a { color: #ffd978; }
+.fc { border-radius: 18px; background: #fff; box-shadow: 0 2px 0 var(--line), 0 10px 26px rgba(20,32,42,.07); padding: 18px 20px; display: grid; gap: 12px; min-width: 0; }
+.fc h3 { font: 900 24px/1 var(--display); text-transform: uppercase; color: var(--sea); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.fc h3 small { font: 600 12.5px/1 var(--body); color: var(--ink-2); text-transform: none; }
+.fc-now { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: center; }
+.fc-now .t { font: 900 58px/.9 var(--display); color: var(--sea); font-variant-numeric: tabular-nums; }
+.fc-now dl { display: grid; grid-template-columns: auto auto; gap: 3px 12px; margin: 0; font-size: 14px; } .fc-now dt { color: var(--ink-2); font-weight: 600; } .fc-now dd { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+.fc-days { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.fc-days div { background: var(--sail); border-radius: 12px; padding: 10px; text-align: center; display: grid; gap: 3px; font-size: 13px; }
+.fc-days b { font: 800 13px/1 var(--body); color: var(--sea); } .fc-days .ic { font-size: 26px; line-height: 1.1; } .fc-days .g { font-weight: 800; color: var(--ink-2); } .fc-days .g.w1 { color: #b07800; } .fc-days .g.w2 { color: var(--red); }
+.rules { border-radius: 22px; background: #fff; box-shadow: 0 2px 0 var(--line), 0 14px 34px rgba(20,32,42,.08); padding: 24px; display: grid; gap: 16px; margin-bottom: 26px; }
+.rules-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.rules-head h3 { font: 900 30px/1 var(--display); text-transform: uppercase; color: var(--sea); }
+.seg { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--sail-2); gap: 4px; }
+.seg button { all: unset; cursor: pointer; padding: 9px 14px; border-radius: 999px; font: 800 13px/1 var(--body); color: var(--ink-2); display: inline-flex; align-items: center; gap: 7px; }
+.seg button i { width: 10px; height: 10px; border-radius: 50%; background: #9aa5ad; }
+.seg button[data-lv="1"] i { background: #f2b233; } .seg button[data-lv="2"] i { background: var(--red); } .seg button[data-lv="0"] i { background: #3fb37f; }
+.seg button[aria-pressed="true"] { background: var(--sea); color: #fff; }
+.seg button:focus-visible { outline: 3px solid var(--rope); outline-offset: 2px; }
+.lake-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 16px; }
+.lake { min-width: 640px; display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 0; border-radius: 16px; overflow: hidden; background: linear-gradient(90deg, #e9d9a8 0 150px, transparent 150px), linear-gradient(90deg, #bfe3ef, #6fb7d4 40%, #2a86ad 75%, #1b5e8a); }
+.lake-axis { grid-column: 2; display: grid; grid-template-columns: 7% 26% 67%; font: 800 11.5px/1 var(--body); color: #fff; letter-spacing: .06em; padding: 8px 0 6px; position: relative; }
+.lake-axis span { border-right: 2px dashed rgba(255,255,255,.85); padding-right: 6px; text-align: right; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.lane { display: contents; }
+.lane > .who { grid-column: 1; display: flex; gap: 10px; align-items: center; padding: 10px 12px; font: 800 13.5px/1.15 var(--body); color: var(--ink); border-top: 1px solid rgba(255,255,255,.5); }
+.lane > .who svg { width: 34px; height: 34px; flex: none; }
+.lane > .bar { grid-column: 2; position: relative; border-top: 1px solid rgba(255,255,255,.35); min-height: 58px; }
+.lane .zone { position: absolute; left: 0; top: 14px; bottom: 14px; border-radius: 0 999px 999px 0; background: linear-gradient(90deg, rgba(255,255,255,.95), rgba(255,255,255,.8)); box-shadow: 0 2px 6px rgba(0,0,0,.12); transition: width .55s cubic-bezier(.2,.8,.2,1); }
+.lane .zl { position: absolute; top: 50%; transform: translateY(-50%); font: 800 13px/1.15 var(--body); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.45); white-space: nowrap; transition: left .55s cubic-bezier(.2,.8,.2,1); }
+.lane .zl.in { color: var(--sea); text-shadow: none; }
+.lane .zone.no { width: auto; left: 8px; right: auto; padding: 0 14px; display: flex; align-items: center; border-radius: 999px; background: rgba(226,72,61,.94); color: #fff; font: 800 13px/1 var(--body); }
+.rules-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; margin: 0; padding: 0; list-style: none; font-size: 14.5px; color: var(--ink-2); }
+.rules-notes li { display: flex; gap: 10px; } .rules-notes li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 3px; background: var(--red); -webkit-mask: var(--knot) center / contain no-repeat; mask: var(--knot) center / contain no-repeat; }
+.zam-note { display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px; border-radius: 14px; background: #fff3cd; color: #5e4500; font-size: 14.5px; }
+.zam-note svg { width: 34px; height: 34px; flex: none; color: #b07800; }
+.vest { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; padding: 20px 22px; border-radius: 18px; background: var(--sea); color: #fff; margin-bottom: 26px; }
+.vest svg { width: 76px; height: 76px; } .vest p { margin: 0; color: #d3e0ec; } .vest b { color: #ffd978; }
+.help { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.hc { background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 2px 0 var(--line), 0 10px 26px rgba(20,32,42,.06); display: grid; gap: 6px; align-content: start; font-size: 14px; color: var(--ink-2); }
+.hc h4 { display: flex; align-items: center; gap: 10px; font: 900 19px/1.1 var(--display); text-transform: uppercase; letter-spacing: .04em; color: var(--sea); }
+.hc h4 svg { width: 26px; height: 26px; flex: none; color: var(--red); }
+.hc b { color: var(--ink); } .hc p { margin: 0; }
+.hc a.tel { display: inline-flex; align-items: center; gap: 7px; font: 800 16px/1.2 var(--body); color: var(--sea); text-decoration: none; font-variant-numeric: tabular-nums; padding: 4px 0; }
+.hc a.tel svg { width: 16px; height: 16px; color: var(--red); }
+.hc details summary { cursor: pointer; font-weight: 700; color: var(--lake); }
+.hc table { font-size: 13px; border-collapse: collapse; margin-top: 4px; } .hc td { padding: 2px 10px 2px 0; vertical-align: top; }
+
+/* ---------- lábléc ---------- */
+.foot { background: var(--sea-2); color: #c9d8e6; padding-block: 56px 28px; font-size: 14.5px; }
+.foot-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 30px; }
+.foot h4 { font: 900 18px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: #ffd978; margin-bottom: 12px; }
+.foot a { color: #fff; text-decoration: none; } .foot a:hover { text-decoration: underline; }
+.foot p { margin: 0 0 6px; }
+.foot-logo { width: 220px; height: auto; filter: drop-shadow(0 0 1px rgba(255,255,255,.9)) drop-shadow(0 0 6px rgba(255,255,255,.35)); margin-bottom: 14px; }
+.szep { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; } .szep span { padding: 5px 9px; border-radius: 6px; background: #fff; color: var(--sea); font: 800 12px/1 var(--body); }
+.soc { display: flex; gap: 10px; margin-top: 10px; } .soc a { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.1); }
+.soc svg { width: 19px; height: 19px; fill: #fff; }
+.foot-bot { margin-top: 36px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.12); display: flex; flex-wrap: wrap; gap: 10px 20px; justify-content: space-between; font-size: 13px; color: #8fa6bb; }
+.foot-bot button { all: unset; cursor: pointer; color: #c9d8e6; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- galéria (lightbox) ---------- */
+.lb { position: fixed; inset: 0; z-index: 2147482000; background: #05101e; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; color: #fff; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+.lb-hd { display: flex; align-items: center; gap: 12px; padding: 12px var(--gutR) 10px var(--gut); flex-wrap: wrap; }
+.lb-hd h3 { font: 900 28px/1 var(--display); text-transform: uppercase; letter-spacing: .04em; }
+.lb-hd .cap { color: #c9d8e6; font-weight: 700; font-size: 14px; }
+.lb-hd .sp { flex: 1; }
+.lb-x { all: unset; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.12); font: 700 26px/1 sans-serif; }
+.lb-x:hover { background: var(--red); }
+.lb-stage { position: relative; display: grid; place-items: center; min-height: 0; padding: 0 64px; touch-action: pan-y; }
+.lb-stage img, .lb-stage video { max-width: 100%; max-height: calc(100vh - 190px); max-height: calc(100dvh - 190px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); object-fit: contain; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.5); animation: lbIn .35s ease; }
+@keyframes lbIn { from { opacity: 0; transform: scale(.98); } }
+.lb-nav { all: unset; cursor: pointer; position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.14); }
+.lb-nav:hover { background: rgba(255,255,255,.25); } .lb-nav svg { width: 26px; height: 26px; }
+.lb-nav.p { left: 8px; } .lb-nav.n { right: 8px; }
+.lb-th { display: flex; gap: 8px; overflow-x: auto; padding: 12px var(--gutR) 14px var(--gut); scrollbar-width: thin; }
+.lb-th button { all: unset; cursor: pointer; flex: none; width: 92px; height: 62px; border-radius: 8px; overflow: hidden; opacity: .55; border: 2px solid transparent; }
+.lb-th button[aria-current="true"] { opacity: 1; border-color: #ffd978; }
+.lb-th img { width: 100%; height: 100%; object-fit: cover; }
+.lb .btn { padding: 10px 16px; font-size: 14px; }
+@media (max-width: 700px) { .lb-stage { padding: 0 6px; } .lb-nav { width: 42px; height: 42px; background: rgba(7,29,56,.6); } .lb-hd h3 { font-size: 22px; } .lb-hd .btn b { display: none; } }
+
+/* ---------- reszponzív ---------- */
+@media (max-width: 1020px) {
+  .apts, .sights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .foot-grid { grid-template-columns: 1fr 1fr; }
+  .wx { grid-template-columns: 1fr; }
+  .help { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .sec { padding-block: 60px; }
+  .tour-banner { grid-template-columns: minmax(0, 1fr); } .tour-banner .tb-img { min-height: 220px; }
+  .svc { grid-template-columns: minmax(0, 1fr); gap: 22px; } .svc:nth-child(even) .svc-media { order: 0; }
+  .ev { grid-template-columns: 84px minmax(0, 1fr); } .ev.top { grid-template-columns: 84px minmax(0, 1fr); }
+  .ev-acts { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; padding: 0 16px 16px; } .ev-acts .btn { flex: 1; }
+  .ev-date b { font-size: 36px; } .ev-body { padding: 14px 14px 12px 20px; }
+  .sos { grid-template-columns: 1fr 1fr; } .sos .s112 { grid-column: 1 / -1; }
+  .rules-notes { grid-template-columns: 1fr; }
+  .tb-txt { padding: 24px 20px; }
+}
+@media (max-width: 560px) {
+  .apts, .sights, .help, .foot-grid { grid-template-columns: 1fr; }
+  .fc-days { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero-in { padding-block: 110px 76px; }
+  .hero-note { display: none; }
+  .compass-wm { display: none; }
+  .vest { grid-template-columns: 1fr; } .vest svg { width: 56px; height: 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01s !important; animation-delay: 0s !important; transition-duration: .01s !important; }
+  html { scroll-behavior: auto; }
+}
+:root { --knot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a5 5 0 0 1 5 5c0 2-1.2 3.4-2.6 4.5L12 13l-2.4-1.5C8.2 10.4 7 9 7 7a5 5 0 0 1 5-5zm0 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5 13l7 4 7-4 2 2-9 7-9-7z'/%3E%3C/svg%3E"); }
+</style>
+<style>
+/* foglalási ablak + tulajdonosi felület (a virtuális sétából) */
+/* Zephyr – tulajdonosi felület (a foglalási ablak stílusára építve) */
+.zfb-owner { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin: 16px 0 0; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); font: 700 12.5px/1 Manrope, sans-serif; color: #66727b; }
+.zfb-owner:hover, .zfb-owner:focus-visible { color: var(--navy); border-color: var(--navy); }
+.zfb-apt-off { cursor: not-allowed; opacity: .78; background: repeating-linear-gradient(135deg, #fff 0 10px, #faf3ea 10px 20px); }
+.zfb-apt-off:hover { transform: none; box-shadow: 0 4px 0 rgba(20,32,42,.06); border-color: var(--line); }
+.zfb-apt-off .zfb-full { display: inline-block; align-self: flex-start; background: #e2483d; color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+.zfb-apt-off i { color: #8a949c !important; }
+.zfb-apt-admin { background: linear-gradient(160deg, #f3f6fb, #fff); border-style: dashed; }
+.zfb-apt-admin .zfb-no { font-size: 15px; }
+.zad .zad-card { width: min(1100px, calc(100vw - 24px)); height: calc(100vh - 24px); height: calc(100dvh - 24px); max-height: none; }
+.zad .zfb-hd { flex-wrap: wrap; gap: 10px 14px; }
+.zad-tabs { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+.zad-tabs button { all: unset; cursor: pointer; padding: 8px 13px; border-radius: 999px; font: 800 13px/1 Manrope, sans-serif; color: #fff; background: rgba(255,255,255,.12); display: inline-flex; gap: 6px; align-items: center; }
+.zad-tabs button.on { background: var(--gold); color: var(--ink); }
+.zad-tabs button em { font-style: normal; background: #e2483d; color: #fff; border-radius: 999px; padding: 2px 7px; font-size: 11.5px; }
+.zad-tabs button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.zad-body { position: relative; flex: 1; min-height: 0; background: #f6f3ea; }
+.zad-ok { background: #e7f6ec; color: #1e6b3a; border-radius: 10px; padding: 10px 12px; font-weight: 700; font-size: 14px; margin: 0 0 12px; }
+.zad .zfb-err { margin: 0 0 12px; }
+.zad-warn { background: #fff3cd; border: 1px solid #f2b233; border-radius: 10px; padding: 9px 12px; font-size: 13.5px; font-weight: 600; margin: 0 0 10px; color: var(--ink); }
+.zad-link { all: unset; cursor: pointer; color: var(--navy); font-weight: 800; text-decoration: underline; }
+.zad-login { max-width: 360px; margin: 40px auto; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+.zad-login .zfb-btn { width: 100%; margin-top: 12px; }
+.zad-f { display: grid; gap: 5px; font-size: 12.5px; font-weight: 700; color: #4a5660; min-width: 0; }
+.zad-f input, .zad-f select, .zad-f textarea { font: 600 15px/1.3 Manrope, sans-serif; padding: 10px 11px; border: 1.5px solid #d8d0bb; border-radius: 10px; background: #fff; color: var(--ink); width: 100%; min-width: 0; }
+.zad-f input:focus, .zad-f select:focus, .zad-f textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(11,47,94,.15); }
+.zad-suf { display: flex; align-items: center; gap: 6px; } .zad-suf i { font-style: normal; color: #66727b; font-weight: 700; white-space: nowrap; }
+.zad-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.zad-chk { display: flex; gap: 8px; align-items: center; font: 700 13.5px/1.3 Manrope, sans-serif; color: var(--ink); cursor: pointer; }
+.zad-chk input { width: 18px; height: 18px; accent-color: var(--navy); }
+.zad-chk.big { margin-top: 12px; padding: 10px 12px; background: #fff; border: 1.5px dashed #c9a03c; border-radius: 10px; }
+.zad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 14px; }
+.zad-grid .wide { grid-column: 1 / -1; }
+.zad-sec { margin: 0 0 22px; }
+.zad-sec h3 { font: 800 16px/1.2 Manrope, sans-serif; color: var(--navy); margin: 0 0 12px; display: flex; gap: 8px; align-items: center; }
+.zad-sec h3 em { font-style: normal; font-size: 12px; background: var(--navy); color: #fff; border-radius: 999px; padding: 2px 8px; }
+.zad-empty { color: #8a949b; font-size: 13.5px; margin: 0; }
+.zad-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.zad-c { background: #fff; border: 1px solid var(--line); border-left: 6px solid var(--ac); border-radius: 14px; padding: 12px 14px; display: grid; gap: 6px; box-shadow: 0 2px 8px rgba(20,32,42,.05); }
+.zad-c-hd { display: flex; align-items: center; gap: 8px; }
+.zad-c-hd b { font: 800 16px/1 Manrope, sans-serif; color: var(--ink); }
+.zad .zfb-no { background: var(--ac, var(--navy)); }
+.zad-st { margin-left: auto; font: 800 11.5px/1 Manrope, sans-serif; padding: 5px 9px; border-radius: 999px; color: #fff; white-space: nowrap; }
+.st-pending.zad-st, .zad-legend .st-pending, .zad-cal td.st-pending { background: #dba617; }
+.st-approved.zad-st, .zad-legend .st-approved, .zad-cal td.st-approved { background: #2271b1; }
+.st-paid.zad-st, .zad-legend .st-paid, .zad-cal td.st-paid { background: #1e9e4a; }
+.st-block.zad-st, .zad-legend .st-block, .zad-cal td.st-block { background: #55606a; }
+.st-rejected.zad-st, .st-cancelled.zad-st { background: #8c8f94; } .st-expired.zad-st { background: #b32d2e; }
+.zad-c.st-pending { box-shadow: 0 0 0 2px #f2c94c, 0 2px 8px rgba(20,32,42,.05); }
+.zad-c-dates b { font-size: 15px; color: var(--ink); } .zad-c-dates span { font-size: 13px; color: #66727b; font-weight: 700; margin-left: 6px; }
+.zad-c-who { font-weight: 800; color: var(--ink); } .zad-c-who small { display: block; font-weight: 600; color: #8a949b; font-size: 12px; margin-top: 2px; }
+.zad-kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 13px; margin-top: 4px; }
+.zad-kv span { color: #66727b; font-weight: 600; } .zad-kv b { color: var(--ink); font-weight: 700; overflow-wrap: anywhere; } .zad-kv b small { color: #8a949b; font-weight: 600; }
+.zad-kv a { color: var(--navy); }
+.zad-note { margin: 2px 0 0; font-size: 13px; background: #f6f3ea; border-radius: 8px; padding: 7px 9px; } .zad-note.own { background: #eef4fb; }
+.zad-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.zad-b { all: unset; cursor: pointer; padding: 9px 13px; border-radius: 999px; font: 800 13px/1 Manrope, sans-serif; color: var(--navy); background: #fff; border: 1.5px solid #cfd6de; }
+.zad-b:hover { border-color: var(--navy); } .zad-b:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+.zad-b.pri { background: var(--navy); color: #fff; border-color: var(--navy); }
+.zad-ical { border: 1.5px solid #e6dfcc; border-left: 5px solid var(--ac, #0b2f5e); border-radius: 12px; padding: 10px 12px; margin: 10px 0; background: #fff; }
+.zad-ical h4 { margin: 0 0 8px; display: flex; align-items: center; gap: 8px; font-size: 15px; } .zad-ical h4 .zfb-no { width: 26px; height: 26px; font-size: 13px; margin: 0; box-shadow: none; }
+.zad-ical-g { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .zad-ical-g > div { display: grid; gap: 6px; align-content: start; }
+.zad-exp { display: flex; gap: 6px; } .zad-exp input { flex: 1; min-width: 0; font: 12px monospace; padding: 7px 8px; border: 1.5px solid #e6dfcc; border-radius: 8px; background: #f8f5ec; }
+.zad-ok { color: #2e7d32; } .zad-bad { color: #c62828; }
+@media (max-width: 700px) { .zad-ical-g { grid-template-columns: 1fr; } }
+.zad-b.del { color: #b32d2e; border-color: #e7b7b7; }
+.zad-calnav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; } .zad-calnav b { font: 800 17px/1 Manrope, sans-serif; color: var(--navy); min-width: 150px; text-align: center; }
+.zad-calwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+.zad-cal { border-collapse: collapse; font: 700 11px/1 Manrope, sans-serif; }
+.zad-cal th, .zad-cal td { border: 1px solid #ece6d6; min-width: 26px; height: 32px; padding: 0; text-align: center; color: #4a5660; }
+.zad-cal thead th small { display: block; font-weight: 600; color: #8a949b; margin-top: 2px; font-size: 9.5px; }
+.zad-cal th.we { background: #f3f7fc; } .zad-cal .td { box-shadow: inset 0 0 0 2px #e2483d; }
+.zad-cal th.ap { position: sticky; left: 0; z-index: 1; background: #fff; text-align: left; padding: 0 10px 0 6px; min-width: 112px; font-size: 13px; color: var(--ink); white-space: nowrap; }
+.zad-cal th.ap .zfb-no { width: 20px; height: 20px; font-size: 11px; margin-right: 6px; vertical-align: middle; display: inline-grid; }
+.zad-cal td.off { background: repeating-linear-gradient(45deg, #f6f3ea 0 4px, #ece6d6 4px 8px); }
+.zad-cal td.bk button { all: unset; cursor: pointer; display: block; width: 100%; height: 32px; }
+.zad-cal td.ci { border-left: 3px solid #14202a; } .zad-cal td.sel { outline: 3px solid var(--gold); outline-offset: -3px; }
+.zad-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 12.5px; color: #4a5660; font-weight: 600; margin: 10px 0 14px; }
+.zad-legend span { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: -8px; vertical-align: -2px; }
+.zad-legend .off { background: repeating-linear-gradient(45deg, #f6f3ea 0 3px, #d8d0bb 3px 6px); }
+.zad-form { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin: 0 0 16px; }
+.zad-form .zfb-btn { margin-top: 14px; }
+.zad-apts { display: grid; gap: 10px; }
+.zad-aptrow { display: grid; grid-template-columns: auto 1.3fr .7fr 1fr auto; gap: 10px; align-items: end; padding: 10px; border: 1px solid var(--line); border-left: 5px solid var(--ac); border-radius: 12px; }
+.zad-aptrow .zfb-no { align-self: center; }
+.zad-rules { display: grid; gap: 8px; margin-bottom: 10px; }
+.zad-rule { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 8px; align-items: end; padding: 10px; background: #faf8f2; border-radius: 12px; }
+.zad-save { position: sticky; bottom: -24px; background: linear-gradient(transparent, #fff 30%); padding: 14px 0 4px; margin: 0 -18px -18px; padding-left: 18px; }
+.zad-busy { position: absolute; inset: 0; background: rgba(246,243,234,.6); display: grid; place-items: center; z-index: 3; }
+.zad-busy i { width: 36px; height: 36px; border: 4px solid #d8d0bb; border-top-color: var(--navy); border-radius: 50%; animation: zadspin .8s linear infinite; }
+@keyframes zadspin { to { transform: rotate(360deg); } }
+.zad-dlg { position: fixed; inset: 0; z-index: 5; background: rgba(8,18,30,.45); display: grid; place-items: center; padding: 16px; }
+.zad-dlg-in { background: #fff; border-radius: 16px; padding: 18px; width: min(440px, 100%); display: grid; gap: 10px; box-shadow: 0 20px 50px rgba(0,0,0,.35); }
+.zad-dlg-in h3 { margin: 0; font: 800 18px/1.2 Manrope, sans-serif; color: var(--navy); } .zad-dlg-in p { margin: 0; font-size: 14px; }
+.zad-ev.off { opacity: .55; }
+.zad-dlg-in.warn { border-top: 6px solid #b32d2e; } .zad-dlg-in.warn h3 { color: #b32d2e; }
+.zad-bigwarn { background: #fdecea; border: 1.5px solid #e7b7b7; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.45; color: #5b1a1a; }
+.zad-lock { margin: 2px 0 0; font-size: 12.5px; font-weight: 700; color: #4a5660; background: #f1f3f5; border-radius: 8px; padding: 6px 9px; }
+.zad-conf { margin: 2px 0 0; font-size: 13px; font-weight: 800; color: #b32d2e; background: #fdecea; border-radius: 8px; padding: 7px 9px; }
+.zad-st.src-szallas, .zad-legend .src-szallas, .zad-cal td.src-szallas { background: #00897b; }
+.zad-st.src-airbnb, .zad-legend .src-airbnb, .zad-cal td.src-airbnb { background: #ff5a5f; }
+.zad-st.src-egyeb, .zad-cal td.src-egyeb { background: #7b8794; }
+.zad-c.src-szallas { border-left-color: #00897b; } .zad-c.src-airbnb { border-left-color: #ff5a5f; }
+.zad-cal td.conf { box-shadow: inset 0 0 0 3px #b32d2e; }
+.zad-h4 { font: 800 13px/1.2 Manrope, sans-serif; color: #4a5660; text-transform: uppercase; letter-spacing: .06em; margin: 12px 0 8px; }
+.zad-sewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+.zad-se { border-collapse: collapse; font: 700 13px/1.2 Manrope, sans-serif; min-width: 100%; }
+.zad-se th, .zad-se td { border: 1px solid #ece6d6; padding: 6px; vertical-align: middle; }
+.zad-se thead th { background: #faf8f2; min-width: 118px; }
+.zad-se thead th input { width: 100%; border: 1px solid #e6dfcc; border-radius: 6px; padding: 5px 6px; font: 800 12.5px Manrope, sans-serif; color: var(--navy); background: #fff; box-sizing: border-box; }
+.zad-sed { display: flex; align-items: center; gap: 3px; margin-top: 5px; color: #8a949b; } .zad-sed input { width: 52px !important; text-align: center; font-weight: 700 !important; color: var(--ink) !important; }
+.zad-se tbody th { position: sticky; left: 0; background: #fff; z-index: 1; text-align: left; white-space: nowrap; border-left: 5px solid var(--ac); }
+.zad-se tbody th .zfb-no { width: 22px; height: 22px; font-size: 11px; margin-right: 6px; vertical-align: middle; display: inline-grid; box-shadow: none; }
+.zad-se td input { width: 100%; min-width: 92px; box-sizing: border-box; border: 1.5px solid #e6dfcc; border-radius: 8px; padding: 7px 6px; font: 700 14px Manrope, sans-serif; text-align: right; background: #fff; color: var(--ink); }
+.zfb-ntak { display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: space-between; padding: 8px 22px; border-top: 1px solid var(--line); background: #f6f3ea; font-size: 11.5px; color: #66727b; }
+.zfb-ntak b { color: var(--ink); letter-spacing: .02em; }
+.zad .zfb-ntak { display: none; }
+.zfb-pay { margin: 8px 0 0; font-size: 12.5px; color: #4a5660; line-height: 1.7; }
+.zfb-szep i { font-style: normal; font-weight: 800; font-size: 11px; background: #fff; border: 1px solid #d8d0bb; border-radius: 6px; padding: 2px 6px; margin-left: 4px; color: var(--navy); }
+.zad-swipe { display: none; font-weight: 800; color: var(--navy); }
+@media (max-width: 720px) { .zad-swipe { display: inline; } .zfb-ntak { padding: 7px 12px; font-size: 11px; } }
+@media (max-width: 720px) {
+  .zad .zad-card { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0 !important; }
+  .zad .zfb-hd { padding: 10px 12px; }
+  .zad-tabs { order: 3; width: 100%; margin: 0; overflow-x: auto; flex-wrap: nowrap; }
+  .zad-tabs button { flex: none; }
+  .zad .zfb-x { margin-left: auto; }
+  .zad .zfb-body { padding: 14px 12px 18px; }
+  .zad-cards { grid-template-columns: 1fr; }
+  .zad-aptrow { grid-template-columns: auto 1fr 1fr; } .zad-aptrow .zad-chk { grid-column: 2 / -1; }
+  .zad-rule { grid-template-columns: 1fr 1fr; } .zad-rule .zad-b { justify-self: start; }
+  .zad-save { margin: 0 -12px -18px; padding-left: 12px; }
+  .zad-form { padding: 14px; }
+}
+
+/* Zephyr – foglalási felület */
+.zfb { --navy: #0b2f5e; --gold: #f2b233; --ink: #14202a; --paper: #fffdf6; --line: #e6dfcc; position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center; font-family: Manrope, "Segoe UI", system-ui, sans-serif; color: var(--ink); }
+.zfb[hidden] { display: none; }
+html.zfb-lock, html.zfb-lock body { overflow: hidden; }
+.zfb * { box-sizing: border-box; }
+.zfb-bg { position: absolute; inset: 0; background: rgba(8,18,30,.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); opacity: 0; transition: opacity .3s; }
+.zfb.on .zfb-bg { opacity: 1; }
+.zfb-card { position: relative; width: min(1040px, calc(100vw - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; background: var(--paper); border-radius: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.45); overflow: hidden; transform: translateY(24px) scale(.97); opacity: 0; transition: transform .35s cubic-bezier(.2,.9,.3,1.1), opacity .25s; }
+.zfb.on .zfb-card { transform: none; opacity: 1; }
+.zfb-hd { display: flex; align-items: center; gap: 18px; padding: 14px 18px 14px 22px; background: linear-gradient(135deg, #0b2f5e, #1b4c86); color: #fff; }
+.zfb-logo { display: flex; flex-direction: column; line-height: 1; }
+.zfb-logo b { font: 900 22px/1 Georgia, serif; letter-spacing: .18em; background: linear-gradient(180deg, #f7e19a, #c9a03c 60%, #f2d27a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.zfb-logo span { font-size: 10.5px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; opacity: .8; margin-top: 4px; }
+.zfb-steps { display: flex; gap: 6px; list-style: none; margin: 0 0 0 auto; padding: 0; }
+.zfb-steps li { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; opacity: .55; }
+.zfb-steps li + li::before { content: ""; width: 16px; height: 2px; background: rgba(255,255,255,.4); margin-right: 2px; }
+.zfb-steps li i { font-style: normal; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255,255,255,.6); font-size: 12px; }
+.zfb-steps li.on { opacity: 1; } .zfb-steps li.on i { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.zfb-steps li.done { opacity: .9; } .zfb-steps li.done i { background: #3fb37f; border-color: #3fb37f; }
+.zfb-x { all: unset; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font: 700 26px/1 sans-serif; background: rgba(255,255,255,.12); margin-left: 6px; }
+.zfb-x:hover { background: #e2483d; }
+.zfb-body { padding: 22px 24px 24px; overflow: auto; -webkit-overflow-scrolling: touch; }
+.zfb-h { font: 800 22px/1.2 Manrope, sans-serif; margin: 0 0 14px; color: var(--navy); }
+.zfb-demo { background: #fff3cd; border: 1px solid #f2b233; border-radius: 10px; padding: 8px 12px; font-size: 13px; margin: 0 0 14px; }
+.zfb-fine { font-size: 12.5px; color: #66727b; margin: 14px 0 0; line-height: 1.45; }
+.zfb-fine a { color: var(--navy); }
+.zfb-err { background: #fdecea; color: #b71c1c; border-radius: 10px; padding: 10px 12px; font-weight: 700; font-size: 14px; }
+.zfb-loading { display: flex; gap: 12px; align-items: center; justify-content: center; padding: 60px 0; font-weight: 700; color: var(--navy); }
+.zfb-loading i { width: 26px; height: 26px; border-radius: 50%; border: 3px solid #cfd8e3; border-top-color: var(--navy); animation: zfbSpin .8s linear infinite; }
+@keyframes zfbSpin { to { transform: rotate(360deg); } }
+/* apartmanválasztó */
+.zfb-apts { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+.zfb-apt { all: unset; cursor: pointer; position: relative; display: flex; flex-direction: column; gap: 4px; padding: 18px 16px 16px; border-radius: 18px; background: #fff; border: 2px solid var(--line); box-shadow: 0 4px 0 rgba(20,32,42,.06); transition: transform .15s, border-color .15s, box-shadow .15s; }
+.zfb-apt:hover, .zfb-apt:focus-visible { transform: translateY(-3px); border-color: var(--ac); box-shadow: 0 12px 26px rgba(20,32,42,.14); }
+.zfb-apt b { font: 800 22px/1.1 Manrope, sans-serif; } .zfb-apt small { color: #66727b; font-weight: 600; }
+.zfb-apt em { font-style: normal; font-weight: 800; color: var(--navy); margin-top: 6px; } .zfb-apt i { font-style: normal; font-weight: 800; color: var(--ac); margin-top: 6px; font-size: 13px; }
+.zfb-no { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--ac); color: #fff; font: 900 18px/1 Manrope, sans-serif; box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ac); margin-bottom: 6px; }
+.zfb-apt-chip { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--ac); border-radius: 999px; padding: 6px 14px 6px 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.zfb-apt-chip .zfb-no { width: 30px; height: 30px; font-size: 15px; margin: 0; box-shadow: none; }
+.zfb-apt-chip b { font-size: 17px; } .zfb-apt-chip small { color: #66727b; font-weight: 600; }
+.zfb-apt-chip button { all: unset; cursor: pointer; margin-left: auto; font-size: 12.5px; font-weight: 800; color: var(--navy); text-decoration: underline; }
+/* naptár */
+.zfb-cal-wrap { display: grid; grid-template-columns: 1fr 320px; gap: 22px; align-items: start; }
+.zfb-mnav { display: flex; align-items: center; gap: 10px; justify-content: space-between; margin-bottom: 10px; }
+.zfb-mnav span { font-size: 13px; color: #66727b; font-weight: 600; text-align: center; }
+.zfb-mnav button { all: unset; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--navy); color: #fff; font: 800 22px/1 sans-serif; }
+.zfb-mnav button:disabled { opacity: .3; cursor: default; }
+.zfb-months { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.zfb-month h4 { margin: 0 0 8px; text-align: center; font: 800 16px/1 Manrope, sans-serif; color: var(--navy); text-transform: capitalize; }
+.zfb-wd, .zfb-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.zfb-wd span { text-align: center; font-size: 11px; font-weight: 800; color: #8a949c; padding: 4px 0; }
+.zfb-d { all: unset; box-sizing: border-box; aspect-ratio: 1 / 1.05; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; background: #fff; border: 1.5px solid #e3ecdf; position: relative; transition: background .12s, transform .12s; }
+.zfb-d b { font-size: 14px; font-weight: 800; } .zfb-d small { font-size: 10px; font-weight: 700; color: #2e7d32; }
+.zfb-d:hover:not(:disabled) { transform: scale(1.06); border-color: var(--gold); z-index: 1; }
+.zfb-d.empty { background: none; border: 0; cursor: default; }
+.zfb-d.off { background: #f3f1ec; color: #b7bcc0; border-color: transparent; cursor: default; }
+.zfb-d.busy { background: repeating-linear-gradient(135deg, #f6e1df 0 5px, #fbeeed 5px 10px); color: #c0605a; border-color: #f2d4d1; cursor: not-allowed; }
+.zfb-d.busy b { text-decoration: line-through; }
+.zfb-d.today b { color: #e2483d; }
+.zfb-d.in { background: #fff1c9; border-color: #f7dc8d; border-radius: 4px; }
+.zfb-d.ci, .zfb-d.co { background: var(--navy); color: #fff; border-color: var(--navy); }
+.zfb-d.ci small, .zfb-d.co small { color: #f2d27a; }
+.zfb-d.ci { border-radius: 14px 4px 4px 14px; } .zfb-d.co { border-radius: 4px 14px 14px 4px; }
+.zfb-d.co.busy b { text-decoration: none; }
+.zfb-d.can { border-color: var(--gold); } .zfb-d.cant:not(.busy) { opacity: .55; }
+.zfb-d:disabled { cursor: default; }
+.zfb-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: #66727b; font-weight: 600; }
+.zfb-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 5px; }
+.zfb-legend .lf { background: #fff; border: 1.5px solid #e3ecdf; } .zfb-legend .lb { background: repeating-linear-gradient(135deg, #f6e1df 0 3px, #fbeeed 3px 6px); } .zfb-legend .ls { background: var(--navy); }
+/* oldalsáv: dátumok, vendégek, kimutatás */
+.zfb-side { position: sticky; top: 0; background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.zfb-dates { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; }
+.zfb-dates div { padding: 9px 12px; display: flex; flex-direction: column; } .zfb-dates div + div { border-left: 1.5px solid var(--line); }
+.zfb-dates small { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #8a949c; }
+.zfb-dates b { font-size: 13.5px; } .zfb-dates em { font-style: normal; font-size: 12px; color: #66727b; }
+.zfb-step { display: flex; align-items: center; justify-content: space-between; }
+.zfb-step b { display: block; font-size: 15px; } .zfb-step small { color: #8a949c; font-size: 12px; font-weight: 600; }
+.zfb-st-c { display: flex; align-items: center; gap: 10px; }
+.zfb-st-c button { all: unset; cursor: pointer; width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--navy); color: var(--navy); display: grid; place-items: center; font: 800 20px/1 sans-serif; }
+.zfb-st-c button:disabled { opacity: .25; cursor: default; }
+.zfb-st-c output { min-width: 20px; text-align: center; font-weight: 800; font-size: 17px; }
+.zfb-tip { background: #f3f7fb; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; font-weight: 600; color: var(--navy); margin: 0; }
+.zfb-sum { border-top: 2px dashed var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.zfb-row b { white-space: nowrap; }
+.zfb-done-sum .zfb-apt-chip { border-radius: 16px; }
+.zfb-row { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.zfb-row span small { display: block; color: #8a949c; font-size: 11.5px; }
+.zfb-row.muted { color: #66727b; font-size: 13px; }
+.zfb-row.total { border-top: 2px solid var(--ink); padding-top: 8px; margin-top: 4px; font-size: 18px; } .zfb-row.total b { font-size: 20px; }
+.zfb-row.dep { background: #fff3cd; border-radius: 8px; padding: 7px 9px; font-size: 13.5px; }
+.zfb-nights summary { cursor: pointer; font-size: 12.5px; color: var(--navy); font-weight: 700; }
+.zfb-nights div { display: flex; justify-content: space-between; font-size: 12.5px; color: #66727b; padding: 2px 0; }
+.zfb-btn { all: unset; box-sizing: border-box; cursor: pointer; text-align: center; padding: 14px 22px; border-radius: 999px; background: linear-gradient(180deg, #f7c548, #f2b233); color: var(--ink); font: 800 15px/1 Manrope, sans-serif; box-shadow: 0 4px 0 #c98f17; transition: transform .1s, box-shadow .1s; }
+.zfb-btn:hover:not(:disabled) { transform: translateY(-1px); } .zfb-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #c98f17; }
+.zfb-btn:disabled { opacity: .45; cursor: default; }
+.zfb-btn.ghost { background: #fff; border: 2px solid var(--navy); color: var(--navy); box-shadow: none; }
+.zfb-link { all: unset; cursor: pointer; text-align: center; font-size: 12.5px; color: #66727b; text-decoration: underline; }
+/* űrlap */
+.zfb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.zfb-f { display: flex; flex-direction: column; gap: 4px; } .zfb-f.wide { grid-column: 1 / -1; }
+.zfb-f span { font-size: 12.5px; font-weight: 800; color: #3c4a55; }
+.zfb-f input, .zfb-f textarea { font: 600 15px/1.3 Manrope, sans-serif; padding: 11px 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); width: 100%; }
+.zfb-f input:focus, .zfb-f textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(11,47,94,.12); }
+.zfb-f small { font-size: 11.5px; color: #66727b; line-height: 1.35; }
+.zfb-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.zfb-acc { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0 8px; font-size: 13.5px; line-height: 1.45; cursor: pointer; }
+.zfb-acc input { width: 20px; height: 20px; margin-top: 1px; flex: none; accent-color: var(--navy); }
+.zfb-acc a { color: var(--navy); font-weight: 700; }
+.zfb-actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; }
+/* kész */
+.zfb-done { text-align: center; max-width: 620px; margin: 0 auto; }
+.zfb-anchor { font-size: 46px; width: 84px; height: 84px; border-radius: 50%; margin: 6px auto 10px; display: grid; place-items: center; background: #e7f5ec; color: #2e7d32; animation: zfbPop .5s cubic-bezier(.2,.9,.3,1.4); }
+@keyframes zfbPop { from { transform: scale(.4); opacity: 0; } }
+.zfb-done h2 { font: 800 24px/1.25 Manrope, sans-serif; color: var(--navy); margin: 0 0 10px; }
+.zfb-done-sum { text-align: left; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 14px; margin: 16px 0; }
+.zfb-done .zfb-btn { margin-top: 10px; }
+/* rövidkód gomb */
+.zf-open-btn { cursor: pointer; padding: 12px 22px; border: 0; border-radius: 999px; background: linear-gradient(180deg, #f7c548, #f2b233); color: #14202a; font: 800 15px/1 Manrope, sans-serif; box-shadow: 0 4px 0 #c98f17; }
+@media (max-width: 760px) {
+  .zfb-card { width: 100vw; max-height: none; height: 100%; height: 100dvh; border-radius: 0; }
+  .zfb-hd { padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px 16px; gap: 10px; }
+  .zfb-steps li span { display: none; } .zfb-steps li + li::before { width: 8px; }
+  .zfb-logo span { display: none; } .zfb-logo b { font-size: 20px; }
+  .zfb-body { padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .zfb-cal-wrap { grid-template-columns: 1fr; }
+  .zfb-side { position: static; }
+  .zfb-grid { grid-template-columns: 1fr; }
+  .zfb-apts { grid-template-columns: 1fr 1fr; gap: 10px; } .zfb-apt { padding: 14px 12px; }
+  .zfb-actions .zfb-btn { flex: 1; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-anchor" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.2V21M7 11h10M4.5 14.5c.8 3.8 3.8 6.5 7.5 6.5s6.7-2.7 7.5-6.5M4.5 14.5l2 1.5M19.5 14.5l-2 1.5"/></g></symbol>
+    <symbol id="i-wheel" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4M4.6 4.6l2.8 2.8M16.6 16.6l2.8 2.8M19.4 4.6l-2.8 2.8M7.4 16.6l-2.8 2.8"/></g></symbol>
+    <symbol id="i-boat" viewBox="0 0 64 64"><path d="M31 6v40" stroke="currentColor" stroke-width="2.4"/><path d="M33 8c9 9 14 22 14 34H33z" fill="currentColor"/><path d="M29 14C22 22 17 32 16 42h13z" fill="currentColor" opacity=".8"/><path d="M31 6l8 3-8 3z" fill="#e2483d"/><path d="M8 47h48l-7 9H15z" fill="currentColor"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="2.6" fill="currentColor"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></g></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.8 3.2-6 6.5-6s5.9 2.2 6.5 6"/><circle cx="17" cy="9" r="2.6"/><path d="M16.5 14c2.7.2 4.4 2.1 5 5"/></g></symbol>
+    <symbol id="i-photo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></g></symbol>
+    <symbol id="i-360" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="12" rx="10" ry="4.5"/><path d="M12 3.5v17M8.5 4.4a12 12 0 0 0 0 15.2M15.5 4.4a12 12 0 0 1 0 15.2"/></g></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9 15l2 2 4-4"/></g></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 0 0 4v0a2 2 0 0 1 0 4v2h18v-2a2 2 0 0 1 0-4 2 2 0 0 1 0-4V6H3zM14 6v12" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="0" stroke-linejoin="round"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 3h3l2 5-2.5 1.5a11 11 0 0 0 7 7L16 14l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-cross" viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/></symbol>
+    <symbol id="i-tooth" viewBox="0 0 24 24"><path d="M7 3c-2.5 0-4 2-4 4.5 0 3 1.5 4.5 2 7.5.4 2.6 1 6 2.6 6 1.8 0 1.6-5 4.4-5s2.6 5 4.4 5c1.6 0 2.2-3.4 2.6-6 .5-3 2-4.5 2-7.5C21 5 19.5 3 17 3c-2 0-3 1-5 1S9 3 7 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pill" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="8" width="19" height="8" rx="4" transform="rotate(-35 12 12)"/><path d="M9.5 8.5l5 7"/></g></symbol>
+    <symbol id="i-paw" viewBox="0 0 24 24"><g fill="currentColor"><ellipse cx="6" cy="10" rx="2" ry="2.6"/><ellipse cx="10" cy="6" rx="2" ry="2.6"/><ellipse cx="14.5" cy="6" rx="2" ry="2.6"/><ellipse cx="18.5" cy="10" rx="2" ry="2.6"/><path d="M12 11c-3 0-6.5 4.5-6.5 7 0 1.8 1.4 2.5 3 2.5 1.4 0 2.2-.8 3.5-.8s2.1.8 3.5.8c1.6 0 3-.7 3-2.5 0-2.5-3.5-7-6.5-7z"/></g></symbol>
+    <symbol id="i-hosp" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 21V7l8-4 8 4v14z"/><path d="M12 8v6M9 11h6M10 21v-3h4v3"/></g></symbol>
+    <symbol id="i-swim" viewBox="0 0 48 48"><circle cx="31" cy="13" r="4.5" fill="#e2483d"/><path d="M8 26l9-6 6 4 7-5" fill="none" stroke="#0b2f5e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 34q4.5-4 9 0t9 0 9 0 9 0 9 0" fill="none" stroke="#2a86ad" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="i-matrac" viewBox="0 0 48 48"><rect x="5" y="20" width="38" height="10" rx="5" fill="#f2b233" stroke="#8a6630" stroke-width="2"/><path d="M14 20v10M24 20v10M34 20v10" stroke="#8a6630" stroke-width="1.5"/><path d="M3 36q4.5-4 9 0t9 0 9 0 9 0 9 0" fill="none" stroke="#2a86ad" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="i-sup" viewBox="0 0 48 48"><path d="M4 31h40c0 3-5 4-20 4S4 34 4 31z" fill="#2a86ad"/><circle cx="23" cy="9" r="3.6" fill="#e2483d"/><path d="M23 13v10l-4 8M23 23l4 8M23 15l7 3" fill="none" stroke="#0b2f5e" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M31 6l4 28" stroke="#8a6630" stroke-width="2.4" stroke-linecap="round"/><path d="M33.5 30l3 6-3.5.5z" fill="#8a6630"/><path d="M2 41q4.5-4 9 0t9 0 9 0 9 0 9 0" fill="none" stroke="#2a86ad" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="i-boat2" viewBox="0 0 48 48"><path d="M5 26h38l-5 9H10z" fill="#c9a25a" stroke="#8a6630" stroke-width="2" stroke-linejoin="round"/><path d="M14 26l-6-8M34 26l6-8" stroke="#8a6630" stroke-width="2.4" stroke-linecap="round"/><circle cx="24" cy="18" r="3.4" fill="#e2483d"/><path d="M24 21.5V26" stroke="#0b2f5e" stroke-width="3"/><path d="M2 41q4.5-4 9 0t9 0 9 0 9 0 9 0" fill="none" stroke="#2a86ad" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="i-sail" viewBox="0 0 48 48"><path d="M24 4v28" stroke="#0b2f5e" stroke-width="2"/><path d="M25.5 6c7 7 10.5 15 10.5 24H25.5z" fill="#f7f2e5" stroke="#0b2f5e" stroke-width="1.8"/><path d="M22.5 10c-5 6-8.5 12.5-9.5 20h9.5z" fill="#e2483d"/><path d="M8 33h32l-5 6H13z" fill="#0b2f5e"/><path d="M2 43q4.5-4 9 0t9 0 9 0 9 0 9 0" fill="none" stroke="#2a86ad" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="i-vest" viewBox="0 0 64 64"><path d="M22 6c0 6 4 10 10 10s10-4 10-10l9 5 3 12-6 3v30c0 2-1 3-3 3H19c-2 0-3-1-3-3V26l-6-3 3-12z" fill="#f26b1d" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><path d="M32 16v45" stroke="#fff" stroke-width="2" stroke-dasharray="3 3"/><path d="M16 34h32M16 46h32" stroke="#ffd978" stroke-width="4"/><circle cx="28" cy="34" r="2" fill="#14202a"/><circle cx="36" cy="34" r="2" fill="#14202a"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="nav-logo" href="#top" aria-label="Zephyr Apartman – kezdőlap"><img src="img/zephyr-logo-s.png" alt="Zephyr Apartman Zamárdi" width="600" height="206"></a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#apartmanok">Apartmanok</a></li>
+      <li><a href="#szolgaltatasok">Szolgáltatások</a></li>
+      <li><a href="#rendezvenyek">Rendezvények</a></li>
+      <li><a href="#latnivalok">Programajánló</a></li>
+      <li><a href="#biztonsag">Biztonság</a></li>
+      <li><a href="#kapcsolat">Kapcsolat</a></li>
+    </ul>
+    <button type="button" class="nav-burger" id="burger" aria-label="Menü" aria-expanded="false" aria-controls="navLinks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <button type="button" class="btn btn-gold" data-book=""><svg><use href="#i-cal"/></svg><b>Foglalás</b></button>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero" aria-label="Zephyr Apartman, Zamárdi – Isten hozta!">
+  <div class="hero-media">
+    <img src="img/hero.jpg" alt="Kilátás a Zephyr Apartmanház privát napozóstégéről a Balatonra" fetchpriority="high">
+    <video id="heroVideo" muted loop playsinline preload="none" poster="img/hero.jpg" aria-hidden="true"></video>
+  </div>
+  <canvas class="hero-boats" id="heroBoats" aria-hidden="true"></canvas>
+  <div class="wrap hero-in">
+    <h1><span class="w">Zephyr</span> <span class="w">Apartman</span></h1>
+    <div class="place">Zamárdi</div>
+    <div class="hello">Isten hozta!</div>
+    <div class="hero-cta">
+      <a class="btn btn-gold" href="#apartmanok"><svg><use href="#i-anchor"/></svg>Apartmanjaink</a>
+      <a class="btn btn-ghost" data-tour="" href="../virtualis-seta/?honnan=kezdolap"><svg><use href="#i-360"/></svg>Virtuális séta</a>
+      <button type="button" class="btn btn-red" data-book=""><svg><use href="#i-cal"/></svg>Szabad napok, foglalás</button>
+    </div>
+  </div>
+  <a class="hero-cue" href="#apartmanok" aria-label="Görgess lejjebb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.2V20M7.5 10.5h9M5 14c.8 3.5 3.6 6 7 6s6.2-2.5 7-6"/></svg>Görgess</a>
+  <p class="hero-note" id="heroNote">8621 Zamárdi, Gáspár András utca 58.</p>
+</section>
+
+<div class="rope" aria-hidden="true"></div>
+
+<!-- ============ APARTMANOK ============ -->
+<section class="sec" id="apartmanok">
+  <svg class="compass-wm" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-wheel"/></svg>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><svg><use href="#i-anchor"/></svg>Hat hajó, egy kikötő</span>
+      <h2>Apartman kínálatunk <em>&amp; virtuális séta</em></h2>
+      <p class="lead">Minden apartmanunk egy vitorlástípus nevét viseli. Nézd meg a képeket, vagy lépj be a 360°-os virtuális sétába, és járd be a szobákat úgy, mintha már itt lennél.</p>
+    </div>
+    <a class="tour-banner" data-tour="" href="../virtualis-seta/?honnan=kezdolap">
+      <div class="tb-img"><img src="img/galeria/kert.jpg" alt="A Zephyr Apartmanház kertje a grillezővel" loading="lazy"><span class="tb-360"><svg><use href="#i-360"/></svg>360° SÉTA</span></div>
+      <div class="tb-txt">
+        <h3>Sétálj be hozzánk még indulás előtt</h3>
+        <p>Kapu, kert, grillező, lépcsőház, minden apartman minden szobája, és a séta a Gáspár András utcán át a napozóstégig – telefonon, gépen és VR-szemüvegben is.</p>
+        <div class="tb-feat"><span>58 helyszín</span><span>alaprajz</span><span>berendezési füzet</span><span>online foglalás</span></div>
+        <span class="btn btn-gold" style="justify-self:start"><svg><use href="#i-360"/></svg>Belépek a sétába</span>
+      </div>
+    </a>
+    <div class="apts" id="apts"></div>
+    <div class="amen" aria-label="Minden apartmanban">
+      <b>Minden apartmanban</b>
+      <span><svg><use href="#i-wheel"/></svg>felszerelt konyha</span><span><svg><use href="#i-wheel"/></svg>mikró, kávéfőző, vízforraló</span><span><svg><use href="#i-wheel"/></svg>TV, 102 csatorna</span><span><svg><use href="#i-wheel"/></svg>Wi-Fi</span><span><svg><use href="#i-wheel"/></svg>tájékoztató füzet</span><span><svg><use href="#i-wheel"/></svg>babafelszerelés kérésre</span>
+    </div>
+  </div>
+</section>
+
+<div class="rope" aria-hidden="true"></div>
+
+<!-- ============ SZOLGÁLTATÁSOK ============ -->
+<section class="sec sec-dark" id="szolgaltatasok">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><svg><use href="#i-wheel"/></svg>A fedélzeten</span>
+      <h2>Szolgáltatásaink <em>– élvezze a nyaralás minden percét</em></h2>
+      <p class="lead">Ami a vendégeinknek jár, külön díj nélkül: kerékpár, SUP, grillező és saját napozóstég a Balatonon.</p>
+    </div>
+    <div id="svcs"></div>
+  </div>
+</section>
+
+<div class="rope" aria-hidden="true"></div>
+
+<!-- ============ RENDEZVÉNYEK ============ -->
+<section class="sec sec-cream" id="rendezvenyek">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><svg><use href="#i-cal"/></svg>Programajánló</span>
+      <h2>Rendezvények <em>Zamárdiban és környékén</em></h2>
+      <p class="lead">Az év fontos eseményei dátum szerint. Ahol lehet, egy kattintással jegyet foglalhatsz, vagy elolvashatod a rendezvény saját oldalát.</p>
+    </div>
+    <div class="ev-bar" id="evBar"></div>
+    <div id="evList" aria-live="polite"></div>
+  </div>
+</section>
+
+<div class="rope" aria-hidden="true"></div>
+
+<!-- ============ LÁTNIVALÓK ============ -->
+<section class="sec" id="latnivalok">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><svg><use href="#i-pin"/></svg>Programajánló</span>
+      <h2>Helyi szépségek <em>&amp; értékek</em></h2>
+      <p class="lead">Rendezvények, kalandok, finom ételek, csodás helyek – válogasson kedvére! Amit Zamárdiban érdemes meglátogatni.</p>
+    </div>
+    <div class="sights" id="sights"></div>
+  </div>
+</section>
+
+<div class="rope" aria-hidden="true"></div>
+
+<!-- ============ BIZTONSÁG ============ -->
+<section class="sec sec-cream" id="biztonsag">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow"><svg><use href="#i-cross"/></svg>Biztonság és segélykérés</span>
+      <h2>Biztonság <em>a vízen és a parton</em></h2>
+      <p class="lead">Mentse el a telefonjába ezeket a számokat. Indulás előtt nézze meg a viharjelzést és az előrejelzést.</p>
+    </div>
+    <div class="sos">
+      <a class="s112" href="tel:112"><span>Általános segélyhívó</span><b>112</b><small>Mentők, tűzoltók, rendőrség – ingyenes, éjjel-nappal</small><svg class="bg"><use href="#i-cross"/></svg></a>
+      <a class="svm" href="tel:+36303838383"><span>Vízimentők – riasztás</span><b>+36 30 383 8383</b><small>Balatoni vízimentők, a nap 24 órájában</small><svg class="bg"><use href="#i-vest"/></svg></a>
+      <a class="s1817" href="tel:1817"><span>Vízi segélyhívó</span><b>1817</b><small>Balatoni vízi segélykérő vonal, 0–24</small><svg class="bg"><use href="#i-anchor"/></svg></a>
+    </div>
+    <div class="wx">
+      <div class="storm" id="storm">
+        <h3>Viharjelzés most</h3>
+        <div class="storm-row"><div class="lamp off" id="lamp" aria-hidden="true"></div><div><div class="storm-lv" id="stormLv">Betöltés…</div><small id="stormSrc">Keleti medence (Zamárdi)</small></div></div>
+        <p id="stormTxt">A parti viharjelző lámpák sárga fénnyel villognak: percenként 45-öt első fokon, 90-et másodfokon.</p>
+        <small>Hivatalos forrás: <a href="https://www.met.hu/idojaras/veszelyjelzes/tavi_viharjelzes/" target="_blank" rel="noopener">HungaroMet – tavi viharjelzés</a> · a szolgálat április 1. és október 31. között működik.</small>
+      </div>
+      <div class="fc" id="fc">
+        <h3>Időjárás Zamárdiban <small id="fcUpd"></small></h3>
+        <div id="fcBody"><p style="margin:0;color:var(--ink-2)">Előrejelzés betöltése…</p></div>
+      </div>
+    </div>
+    <div class="rules">
+      <div class="rules-head">
+        <h3>Ki meddig mehet be a Balatonba?</h3>
+        <div class="seg" role="group" aria-label="Viharjelzés fokozata">
+          <button type="button" data-lv="0" aria-pressed="true"><i></i>Nincs jelzés</button>
+          <button type="button" data-lv="1" aria-pressed="false"><i></i>I. fok</button>
+          <button type="button" data-lv="2" aria-pressed="false"><i></i>II. fok</button>
+        </div>
+      </div>
+      <div class="lake-wrap"><div class="lake" id="lake"></div></div>
+      <div class="zam-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/></svg><div><b>Zamárdinál vigyázat!</b> A parttól kb. 300–400 méterre a mederben egy 4–6 méter mély árok húzódik: a sekély víz itt hirtelen mélyül. Úszni nem tudók és gyerekek ne menjenek ki eddig.</div></div>
+      <ul class="rules-notes">
+        <li>Lehetőleg kijelölt strandon fürödjön, a bójákig, illetve a „120 cm” táblákig.</li>
+        <li>Éjszaka és rossz látási viszonyok között tilos fürdeni, SUP-ozni és csónakázni.</li>
+        <li>6 év alatti gyerek, és 12 év alatti, úszni nem tudó gyerek csak felnőtt közvetlen felügyeletével mehet a vízbe.</li>
+        <li>Gumimatrac, úszógumi, vízibicikli: a fürdőzés szabályai érvényesek rá, gyermeken legyen mentőmellény.</li>
+        <li>SUP, kajak, kenu, evezős csónak: 14 év felett, úszni tudóként; legyen mentőmellény vagy leash (biztosítókötél).</li>
+        <li>Nagyhajó útvonalát 1000 m-en belül ne keresztezze, mögötte 60 m-nél, oldalt 30 m-nél ne menjen közelebb.</li>
+        <li>Vitorlás: 6-os Beaufort alatti szélben a parttól 1500 m-ig, 6–8 között 200 m-ig (strandon kívül), 8 felett tilos.</li>
+        <li>Ha villogni kezd a viharjelző, induljon azonnal a part felé – a vihar 30–90 percen belül érkezhet.</li>
+      </ul>
+      <small style="color:var(--ink-2)">Összefoglaló a hajózási szabályzat és a vízbiztonsági tájékoztatók alapján (Katasztrófavédelem, Vízirendészet). Kétség esetén mindig a helyszíni jelzések és a vízimentők utasításai irányadók.</small>
+    </div>
+    <div class="vest"><svg aria-hidden="true"><use href="#i-vest"/></svg><div><b>Mentőmellény minden vendégnek</b><p>A Zephyr Apartmanház minden kedves vendége számára vízi mentőmellényt biztosítunk. A méretekről és a helyes használatról kérésre a helyszínen tájékoztatást adunk.</p></div></div>
+    <div class="help" id="help"></div>
+  </div>
+</section>
+</main>
+
+<div class="rope" aria-hidden="true"></div>
+
+<!-- ============ LÁBLÉC ============ -->
+<footer class="foot" id="kapcsolat">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <img class="foot-logo" src="img/zephyr-logo.png" alt="Zephyr Apartman" width="1625" height="558" loading="lazy">
+        <p>Szívesen látjuk Zamárdiban akár néhány napra, akár egy hosszabb nyaralásra a Zephyr Apartmanházban!</p>
+        <div class="soc">
+          <a href="https://www.facebook.com/zephyrapartman/" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M14 8V6.5c0-.8.4-1.5 1.6-1.5H17V2h-2.6C11.6 2 11 4 11 6v2H9v3h2v11h3V11h2.6l.4-3z"/></svg></a>
+          <a href="https://www.instagram.com/zephyrapartmanhaz/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 7.3A4.7 4.7 0 1 0 12 16.7 4.7 4.7 0 0 0 12 7.3zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm4.9-7.9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0zM12 3.6c2.7 0 3 0 4.1.1 2.7.1 4 1.4 4.1 4.1.1 1.1.1 1.4.1 4.1s0 3-.1 4.1c-.1 2.7-1.4 4-4.1 4.1-1.1.1-1.4.1-4.1.1s-3 0-4.1-.1c-2.7-.1-4-1.4-4.1-4.1C3.7 15 3.6 14.7 3.6 12s0-3 .1-4.1c.1-2.7 1.4-4 4.1-4.1C8.9 3.7 9.3 3.6 12 3.6zM12 2C9.3 2 8.9 2 7.8 2.1 4.2 2.2 2.2 4.2 2.1 7.8 2 8.9 2 9.3 2 12s0 3.1.1 4.2c.1 3.6 2.1 5.6 5.7 5.7 1.1.1 1.5.1 4.2.1s3.1 0 4.2-.1c3.6-.1 5.6-2.1 5.7-5.7.1-1.1.1-1.5.1-4.2s0-3.1-.1-4.2c-.1-3.6-2.1-5.6-5.7-5.7C15.1 2 14.7 2 12 2z"/></svg></a>
+        </div>
+      </div>
+      <div>
+        <h4>Elérhetőség</h4>
+        <p>8621 Zamárdi,<br>Gáspár András utca 58.</p>
+        <p>Telefon: <a href="tel:+36205363120">+36 20 536 3120</a></p>
+        <p>E-mail: <a href="mailto:kucserabalazs79@gmail.com">kucserabalazs79@gmail.com</a></p>
+        <p><a href="https://szallas.hu/zephyr-apartmanhaz-zamardi" target="_blank" rel="noopener">Szállás.hu oldalunk ↗</a></p>
+      </div>
+      <div>
+        <h4>Foglalás</h4>
+        <p><button type="button" class="btn btn-gold btn-sm" data-book=""><svg><use href="#i-cal"/></svg>Szabad napok, foglalás</button></p>
+        <p>Szezon: május 15. – október 15.</p>
+        <p>Érkezés 14:00-tól, távozás 10:00-ig</p>
+        <p>Idegenforgalmi adó: 600 Ft / fő / éj (18 év felett)</p>
+      </div>
+      <div>
+        <h4>Szálláshely adatai</h4>
+        <p>Szálláshely-szolgáltató: Kucsera Balázs</p>
+        <p>NTAK reg. szám: MA22033593 / MA22033128</p>
+        <p>Adószám: 63529076-1-22</p>
+        <p>K&amp;H: 10402427-50526955-87681005</p>
+        <p style="margin-top:10px">SZÉP-kártya elfogadóhely:</p>
+        <div class="szep"><span>OTP</span><span>MBH</span><span>K&amp;H</span></div>
+      </div>
+    </div>
+    <div class="foot-bot"><span>Kucsera Balázs © <span id="year">2026</span>. Minden jog fenntartva.</span><span><button type="button" id="ownerFoot">Tulajdonosi belépés</button></span></div>
+  </div>
+</footer>
+
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Képgaléria">
+  <div class="lb-hd"><h3 id="lbTitle"></h3><span class="cap" id="lbCap"></span><span class="sp"></span><a class="btn btn-gold" id="lbTour" href="#"><svg><use href="#i-360"/></svg><b>Virtuális séta ide</b></a><button type="button" class="lb-x" id="lbX" aria-label="Galéria bezárása">×</button></div>
+  <div class="lb-stage" id="lbStage"><button type="button" class="lb-nav p" id="lbP" aria-label="Előző kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div id="lbMedia" style="display:contents"></div><button type="button" class="lb-nav n" id="lbN" aria-label="Következő kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div>
+  <div class="lb-th" id="lbTh"></div>
+</div>
+
+<script>
+/* ======================================================================
+   Zephyr Apartman – kezdőoldal
+   A tartalmak (apartmanok, szolgáltatások képei/videói, látnivalók) itt, a fájl elején szerkeszthetők.
+   A rendezvényeket a tulajdonosi felület „Programok” fülén lehet kezelni (jelszóval).
+   ====================================================================== */
+if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/i.test(location.hostname)) window.ZEPHYR_API = "/virtualis-seta/api/index.php";
+(function () {
+  "use strict";
+  const TOUR = "../virtualis-seta/";          /* a virtuális séta címe */
+  const OLD = "/wp-content/uploads/";          /* a régi weboldal képei (ugyanazon a tárhelyen) */
+  const OLDSITE = "https://balatoni-udules.hu/";
+  const HERO_VIDEO = "video/dron.mp4";         /* ide kerül a drónvideó (ha nincs még feltöltve, állókép megy) */
+
+  const G = (id, n) => ({ src: "img/galeria/" + id + ".jpg", th: "img/galeria/" + id + "-k.jpg", cap: n, scene: id });
+  const APTS = [
+    { id: "korvett", no: 1, name: "Korvett", type: "családi apartman", cap: 4, where: "első, földszint", color: "#e2483d", cover: "korvett-nappali", entry: "korvett-eloszoba",
+      pics: [["korvett-nappali", "Nappali"], ["korvett-konyha", "Konyha"], ["korvett-halo", "Hálószoba"], ["korvett-halo2", "Hálószoba · ablak"], ["korvett-terasz", "Terasz"], ["korvett-eloszoba", "Előszoba"], ["korvett-furdo", "Fürdőszoba"]] },
+    { id: "dingi", no: 2, name: "Dingi", type: "stúdió apartman", cap: 2, where: "középső, földszint", color: "#3fb37f", cover: "dingi-ulosarok", entry: "dingi-eloter",
+      pics: [["dingi-ulosarok", "Szoba · ülősarok"], ["dingi-konyha", "Szoba · konyha"], ["dingi-ablak", "Szoba · ablak"], ["dingi-eloter", "Előtér"], ["dingi-furdo", "Fürdőszoba"]] },
+    { id: "fregatt", no: 3, name: "Fregatt", type: "családi apartman", cap: 4, where: "első, emelet", color: "#3d8fe2", cover: "fregatt-nappali", entry: "fregatt-bejarat",
+      pics: [["fregatt-nappali", "Nappali"], ["fregatt-konyha", "Konyha"], ["fregatt-halo", "Hálószoba"], ["fregatt-halo2", "Hálószoba · ágy"], ["fregatt-erkely", "Erkély"], ["fregatt-erkely2", "Erkély · kilátás"], ["fregatt-erkely-halo", "Erkély · hálószoba"], ["fregatt-bejarat", "Bejárat"], ["fregatt-eloszoba", "Előszoba"], ["fregatt-halo-ajto", "Hálószoba ajtaja"], ["fregatt-furdo", "Fürdőszoba"]] },
+    { id: "kaloz", no: 4, name: "Kalóz", type: "stúdió apartman", cap: 2, where: "középső, emelet", color: "#9b6be2", cover: "kaloz-eloter", entry: "kaloz-bejarat",
+      pics: [["kaloz-eloter", "Előtér"], ["kaloz-szoba", "Szoba · ágy"], ["kaloz-konyha", "Szoba · konyha"], ["kaloz-asztal", "Szoba · szekrény"], ["kaloz-bejarat", "Bejárat"], ["kaloz-furdo", "Fürdőszoba"]] },
+    { id: "schooner", no: 5, name: "Schooner", type: "családi apartman", cap: 4, where: "hátsó, földszint", color: "#2bb3c0", cover: "schooner-nappali", entry: "schooner-eloter",
+      pics: [["schooner-nappali", "Konyha"], ["schooner-nappali2", "Szoba · étkező"], ["schooner-konyha", "Szoba · ágy"], ["schooner-halo", "Hálószoba"], ["schooner-halo2", "Hálószoba · ajtó"], ["schooner-haloajto", "Hálószoba ajtaja"], ["schooner-terasz2", "Terasz"], ["schooner-eloter", "Előtér · konyha"], ["schooner-furdo", "Fürdőszoba"]] },
+    { id: "kadett", no: 6, name: "Kadett", type: "családi apartman", cap: 4, where: "hátsó, emelet", color: "#f08a24", off: true, pics: [] }
+  ];
+  APTS.forEach((a) => (a.pics = a.pics.map(([id, n]) => G(id, n))));
+
+  const S = (f, n, scene) => ({ src: "img/szolg/" + f + ".jpg", th: "img/szolg/" + f + "-k.jpg", cap: n, scene });
+  /* Szolgáltatások – ide bármikor tehetsz új képet (img/szolg/…) vagy videót ({ video: "video/sup.mp4", cap: "…" }) */
+  const SERVICES = [
+    { id: "kerekpar", title: "Kerékpár", sub: "ingyenes, ameddig csak kell", ico: "bike", free: 1, scene: "biciklik",
+      text: "Vendégeink díjmentesen használhatják kerékpárjainkat. Tekerjen le a strandra, a Balaton-parti bringaúton a szomszéd településekre, vagy fel a Kőhegyi kilátóhoz.",
+      list: ["Felnőtt kerékpárok a kertben, a ház mellett", "Kompresszor a gumik felfújásához", "A kerékpárúthoz pár perc az út"],
+      media: [S("kerekpar1", "Kerékpárok a kertben", "sup"), S("kerekpar2", "Kerékpárok", "sup"), S("kerekpar3", "Kerti tároló és hűtő", "biciklik")] },
+    { id: "sup", title: "SUP", sub: "állj fel a víz tetejére", ico: "sup", free: 1, scene: "sup",
+      text: "SUP-deszkáinkat lapáttal együtt használhatják vendégeink. A napozóstégről könnyű vízre szállni – a part menti nádas és a nyugodt reggelek a legszebbek.",
+      list: ["SUP-deszkák lapáttal", "Mentőmellény minden vendégnek", "Indulás előtt nézze meg a viharjelzést lent"],
+      media: [S("sup1", "SUP-deszkák", "sup"), S("sup2", "A stég a vízről", "steg-viz"), S("strand1", "A strand füves partja", "strand-part")] },
+    { id: "grill", title: "Grill & bográcsozás", sub: "esti tűz a kertben", ico: "grill", scene: "kert",
+      text: "Fedett kerti grillező várja a társaságot. Kérésre bográcsot, grilltárcsát és minden grillfelszerelést adunk, faszénnel és begyújtóval együtt.",
+      list: ["Fedett grillező és kerti asztalok", "Bogrács és grilltárcsa kérésre", "Faszén és begyújtó (használat után pótolandó)", "Kerti hűtő az italoknak"],
+      media: [S("grill1", "Grillező a kertben", "kert"), S("grill2", "Kerti konyha", "biciklik"), S("kerekpar3", "Kert", "biciklik")] },
+    { id: "steg", title: "Privát napozóstég", sub: "a saját kis Balatonunk", ico: "steg", free: 1, scene: "steg",
+      text: "A háztól pár perc séta a Gáspár András utcán: kis strand és saját napozóstég a nádas között. Reggeli kávé a víz fölött, napozás, naplemente.",
+      list: ["Saját stég a Balatonon", "Kis strand füves parttal", "Lépcső a vízbe a nádas között"],
+      media: [S("steg1", "Napozóstég", "steg"), S("steg2", "Napozóstég a vízről", "steg-viz"), S("steg3", "Fürdés a nádas között", "strand-viz")] }
+  ];
+  const SVC_ICO = {
+    bike: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="32" r="8"/><circle cx="37" cy="32" r="8"/><path d="M11 32l8-14h12l6 14M19 18l7 14h5M28 12h5l-2 6"/></svg>',
+    sup: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 34h40c0 3-6 4-20 4S4 37 4 34z" fill="currentColor"/><circle cx="22" cy="8" r="3.5" fill="currentColor"/><path d="M22 12v11l-4 9M22 23l4 9M22 15l8 3M32 5l3 28"/></svg>',
+    grill: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20h32a16 16 0 0 1-32 0z" fill="currentColor"/><path d="M14 36l-4 8M34 36l4 8M24 36v8M16 4c-2 3 2 5 0 9M24 3c-2 3 2 5 0 9M32 4c-2 3 2 5 0 9"/></svg>',
+    steg: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h40M10 22v18M24 22v18M38 22v18M6 16h36"/><path d="M2 40q5.5-4 11 0t11 0 11 0 11 0" /><circle cx="36" cy="8" r="4" fill="currentColor"/></svg>'
+  };
+
+  const SIGHTS = [
+    { t: "Emlékhelyek, emlékművek", tag: "Történelem", img: OLD + "2022/05/Honfoglalasi-emlekmu-407x270-1.jpg", url: OLDSITE + "emlekhelyek-emlekmuvek/",
+      p: "Kopjafa és emléktábla az 1848-as hősök tiszteletére a Szabadság téren. A kopjafát és a mellette álló emléktáblát 1998-ban, a szabadságharc 150. évfordulóján állították." },
+    { t: "Tájház", tag: "Néprajz", img: OLD + "2022/05/KIM-2013.-augusztus-20.-407x270-1.jpg", url: OLDSITE + "tajhaz/",
+      p: "A Fő utca 83. szám alatti régi parasztház. Már az 1960-as évek elején felvetődött, hogy a községi tanács megvásárolja és megőrzi az utókornak." },
+    { t: "Kőhegyi kilátó", tag: "Kirándulás", img: OLD + "2022/05/zamardi-kilato-407x270-1.jpg", url: OLDSITE + "kohegyi-kilato/",
+      p: "Érdemes felsétálni a Kőhegy tetejére! A várostól délnyugatra emelkedik ez a szép környezetű, kiváló szőlőtermő magaslat, csodálatos panorámával." },
+    { t: "Templom és kápolnák", tag: "Templomok", img: OLD + "2022/05/Orgona-407x270-1.jpg", url: OLDSITE + "templom-es-kapolnak/",
+      p: "A ma is álló római katolikus plébániatemplom felépítése Vajda Sámuel apát nevéhez fűződik; az építkezés 1771-ben kezdődött." },
+    { t: "Balaton Szíve tér", tag: "Közösség", img: OLD + "2022/05/Balaton-szive-1.jpg", url: OLDSITE + "balaton-szive-ter/",
+      p: "A tér neve a Balatoni Játszadalomra utal: a rendezvényen évente sok száz ember kézfogásával szív formálódik a vízben." },
+    { t: "Világháborúk Múzeuma", tag: "Múzeum", img: OLD + "2022/05/013-407x270-1.jpg", url: "https://www.tarrkamilitaria.hu", ext: 1,
+      p: "Hadtörténeti gyűjtemény Zamárdi-felsőn, a Siófoki úton.",
+      info: ["Nyári nyitva tartás: 10.00–18.00 (hétvégén is)", "Más időpontban telefonos egyeztetéssel", "Tarr Péter: 06 30 425 8115 · info@tarrkamilitaria.hu"] },
+    { t: "Zamárdi Kalandpark", tag: "Kaland", img: OLD + "2022/05/Te%CC%81rke%CC%81p_u%CC%81j_1000_x_713-1000x650.jpg", url: OLDSITE + "hotel-zante-in-pictures/",
+      p: "Mindenki belevaló! A kalandpark az autópályától és a Zamárdi-felső vasútállomástól mintegy száz méterre található." },
+    { t: "Avarkori temető", tag: "Régészet", img: OLD + "2022/05/Avarkori-temeto1-407x270-1.jpg", url: OLDSITE + "avarkori-temeto/",
+      p: "Az egykori Pannónia keleti felében a VI. század végén, a VII. század elején kialakult avar kori temető emlékei." },
+    { t: "Szamárkő", tag: "Természet", img: OLD + "2022/05/Ferenczi-Szamarko-fekvo-407x270-1.jpg", url: OLDSITE + "szamarko/",
+      p: "Az érdekes sziklatömböt Zamárdi nyugati végén, a Kiserdő dombhajlatai között találjuk meg." }
+  ];
+
+  const HELP = [
+    { ico: "i-cross", t: "Orvosi ügyelet", b: "Balatonföldvár, Szabadság tér 1.", p: "Munkanapokon 16:00–08:00, munkaszüneti napokon 08:00–08:00 (24 órában).", tel: [["+36 84 340-113", "+3684340113"], ["+36 84 540-246", "+3684540246"]] },
+    { ico: "i-hosp", t: "Kórház, rendelőintézet", b: "Siófok, Semmelweis u. 1.", tel: [["+36 84 501-700", "+3684501700"]] },
+    { ico: "i-tooth", t: "Fogászat", b: "Ifj. Dr. Ledermayer Ferenc fogszakorvos · Zamárdi, Honvéd u. 2.", tel: [["+36 84 348-936", "+3684348936"]],
+      tbl: [["hétfő", "14.00–18.00"], ["kedd", "8.00–13.00"], ["szerda", "iskolafogászat (06.01–08.31. között 8.00–13.00)"], ["csütörtök", "9.00–12.00"], ["péntek", "8.00–13.00"]] },
+    { ico: "i-pill", t: "Gyógyszertár", b: "Magyarné Főző Hedvig gyógyszerész · Zamárdi, Kossuth u. 9.", tel: [["+36 84 348-733", "+3684348733"]],
+      tbl: [["09.01–05.31.", "hétköznap 08:00–12:30 és 13:00–16:30, hétvégén zárva"], ["06.01–08.31.", "hétköznap 08:00–12:30 és 13:00–18:00, szombat 08:00–12:00, vasárnap zárva"]],
+      link: ["Ügyeletes gyógyszertárak (ÁNTSZ)", "https://www.antsz.hu/felso_menu/lakossagi_tajekoztatas/gyogyszerellatas_felugyelete/gyogyszertar_ugyeletek"], note: "Az ügyeletes gyógyszertár a helyszínen is jelölve van." },
+    { ico: "i-paw", t: "Állatorvos", b: "Dr. Dragon Judit · Szántód, Csemetekert u. 1.", tel: [["+36 84 348-998", "+3684348998"], ["+36 30 927-1500", "+36309271500"]],
+      b2: "Dr. Benedek Pál · Siófok, Honvéd u. 26.", tel2: [["+36 84 322-400", "+3684322400"]] },
+    { ico: "i-anchor", t: "Vízirendészet", b: "Balatoni Vízirendészet, Siófok (éjjel-nappal)", tel: [["+36 84 310-712", "+3684310712"]], p: "Vízi baleset, eltűnt vízi jármű vagy fürdőző esetén először a 112-t vagy az 1817-et hívja." }
+  ];
+
+  /* ---------------------------------------------------------------- segédek */
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const PREVIEW = /(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/i.test(location.hostname) || !/^https?:$/.test(location.protocol);
+  const TOUR_PREVIEW = "https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD";
+  const tourUrl = (scene) => PREVIEW ? TOUR_PREVIEW + (scene ? "#" + scene : "") : TOUR + "?honnan=kezdolap" + (scene ? "#" + scene : "");
+  const HU_M = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
+  const HU_MS = ["jan.", "febr.", "márc.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szept.", "okt.", "nov.", "dec."];
+  const HU_WD = ["vasárnap", "hétfő", "kedd", "szerda", "csütörtök", "péntek", "szombat"];
+  const pd = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const ymd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  $("year").textContent = new Date().getFullYear();
+  document.querySelectorAll("[data-tour]").forEach((a) => (a.href = tourUrl("")));
+  if (PREVIEW) document.querySelectorAll("[data-tour]").forEach((a) => (a.target = "_blank"));
+
+  /* ---------------------------------------------------------------- fejléc */
+  const nav = $("nav");
+  const onScroll = () => nav.classList.toggle("solid", window.scrollY > 40 || nav.classList.contains("open"));
+  window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
+  $("burger").addEventListener("click", () => { const o = !nav.classList.contains("open"); nav.classList.toggle("open", o); $("burger").setAttribute("aria-expanded", String(o)); onScroll(); });
+  $("navLinks").addEventListener("click", (e) => { if (e.target.closest("a")) { nav.classList.remove("open"); $("burger").setAttribute("aria-expanded", "false"); onScroll(); } });
+
+  /* ---------------------------------------------------------------- nyitókép: drónvideó + vitorlások */
+  (function hero() {
+    const v = $("heroVideo");
+    if (!PREVIEW && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      v.src = HERO_VIDEO;
+      v.addEventListener("canplay", () => { v.classList.add("on"); v.play().catch(() => {}); }, { once: true });
+      v.addEventListener("error", () => v.remove(), { once: true });
+      v.load();
+    } else v.remove();
+    const cv = $("heroBoats"), g = cv.getContext("2d"); let W = 0, H = 0, dpr = 1;
+    const boats = [{ x: .12, y: .64, s: 34, v: .0045, c: "#e2483d" }, { x: .55, y: .6, s: 24, v: .0032, c: "#f7f2e5" }, { x: .82, y: .67, s: 42, v: .0058, c: "#3d8fe2" }];
+    const size = () => { dpr = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; };
+    size(); window.addEventListener("resize", size);
+    function boat(b, t) {
+      const x = ((b.x + t * b.v / 60) % 1.2 - .1) * W, y = b.y * H + Math.sin(t / 900 + b.x * 9) * 3, s = b.s * (W < 600 ? .7 : 1), tilt = Math.sin(t / 1300 + b.x * 5) * .06;
+      g.save(); g.translate(x, y); g.rotate(tilt); g.globalAlpha = .9;
+      g.fillStyle = "#0b2f5e"; g.beginPath(); g.moveTo(-s * .55, 0); g.lineTo(s * .55, 0); g.lineTo(s * .4, s * .18); g.lineTo(-s * .4, s * .18); g.fill();
+      g.strokeStyle = "#0b2f5e"; g.lineWidth = Math.max(1.2, s / 22); g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -s * 1.15); g.stroke();
+      g.fillStyle = b.c; g.beginPath(); g.moveTo(s * .04, -s * 1.1); g.quadraticCurveTo(s * .55, -s * .55, s * .5, -s * .08); g.lineTo(s * .04, -s * .08); g.fill();
+      g.fillStyle = "#f7f2e5"; g.beginPath(); g.moveTo(-s * .04, -s * .95); g.quadraticCurveTo(-s * .4, -s * .45, -s * .42, -s * .1); g.lineTo(-s * .04, -s * .1); g.fill();
+      g.globalAlpha = .35; g.fillStyle = "#fff"; g.fillRect(-s * .7, s * .2, s * 1.4, 1.5);
+      g.restore();
+    }
+    let vis = true; new IntersectionObserver((e) => (vis = e[0].isIntersecting)).observe(cv);
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    (function loop(t) { if (vis) { g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H); boats.forEach((b) => boat(b, still ? 0 : t)); } if (!still) requestAnimationFrame(loop); })(0);
+  })();
+
+  /* ---------------------------------------------------------------- apartmanok */
+  $("apts").innerHTML = APTS.map((a) => `
+    <article class="apt${a.off ? " off" : ""}" style="--ac:${a.color}">
+      <button type="button" class="apt-img" ${a.pics.length ? `data-gal="${a.id}"` : "disabled"} aria-label="${esc(a.name)} – képek megnézése">
+        ${a.pics.length ? `<img src="${a.pics[0].th.replace("-k.jpg", ".jpg")}" alt="${esc(a.name)} apartman – ${esc(a.pics[0].cap)}" loading="lazy">` : `<span class="apt-ph"><svg><use href="#i-boat"/></svg></span>`}
+        ${a.pics.length ? `<span class="apt-cnt"><svg><use href="#i-photo"/></svg>${a.pics.length} kép</span>` : ""}
+      </button>
+      <span class="apt-flag" aria-hidden="true">${a.no}</span>
+      ${a.off ? `<span class="apt-badge">Jelenleg nem kiadó</span>` : ""}
+      <div class="apt-body">
+        <h3>${esc(a.name)} <small>${a.no}. apartman · ${esc(a.type)}</small></h3>
+        <div class="apt-meta"><span><svg><use href="#i-users"/></svg>legfeljebb ${a.cap} fő</span><span><svg><use href="#i-pin"/></svg>${esc(a.where)}</span></div>
+        <div class="apt-acts">${a.off ? `<span class="btn btn-line btn-sm" style="opacity:.6;cursor:default">Saját használatú – hamarosan</span>` : `
+          <button type="button" class="btn btn-line btn-sm" data-gal="${a.id}"><svg><use href="#i-photo"/></svg>Képek</button>
+          <a class="btn btn-sea btn-sm" href="${tourUrl(a.entry)}"${PREVIEW ? ' target="_blank"' : ""}><svg><use href="#i-360"/></svg>Virtuális séta</a>
+          <button type="button" class="btn btn-gold btn-sm" data-book="${a.id}"><svg><use href="#i-cal"/></svg>Foglalás</button>`}</div>
+      </div>
+    </article>`).join("");
+
+  /* ---------------------------------------------------------------- szolgáltatások */
+  $("svcs").innerHTML = SERVICES.map((s) => {
+    const m = s.media, extra = m.length > 3 ? m.length - 3 : 0;
+    return `<article class="svc" id="szolg-${s.id}">
+      <div class="svc-media">${m.slice(0, 3).map((x, i) => `<button type="button" data-svc="${s.id}" data-i="${i}" aria-label="${esc(s.title)} – ${esc(x.cap)}">
+        ${x.video ? `<img src="${esc(x.poster || x.th)}" alt="" loading="lazy"><span class="svc-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Videó</span>` : `<img src="${esc(x.th.replace("-k.jpg", ".jpg"))}" alt="${esc(x.cap)}" loading="lazy">`}
+        ${i === 2 && extra ? `<span class="svc-more">+${extra} kép</span>` : ""}</button>`).join("")}</div>
+      <div class="svc-txt">
+        <span class="svc-ico" aria-hidden="true">${SVC_ICO[s.ico]}</span>
+        ${s.free ? `<span class="free">Ingyenes</span>` : ""}
+        <h3>${esc(s.title)}<small>${esc(s.sub)}</small></h3>
+        <p>${esc(s.text)}</p>
+        <ul>${s.list.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
+          <button type="button" class="btn btn-gold btn-sm" data-svc="${s.id}" data-i="0"><svg><use href="#i-photo"/></svg>Képek${m.some((x) => x.video) ? " és videó" : ""}</button>
+          <a class="btn btn-ghost btn-sm" href="${tourUrl(s.scene)}"${PREVIEW ? ' target="_blank"' : ""}><svg><use href="#i-360"/></svg>Megnézem a sétában</a>
+        </div>
+      </div></article>`;
+  }).join("");
+
+  /* ---------------------------------------------------------------- galéria */
+  const LB = { list: [], i: 0, title: "", tourBase: "" };
+  function openLb(title, list, i) {
+    LB.list = list; LB.i = i || 0; LB.title = title;
+    $("lbTitle").textContent = title;
+    $("lbTh").innerHTML = list.map((x, k) => `<button type="button" data-k="${k}" aria-label="${esc(x.cap)}"><img src="${esc(x.th || x.poster || x.src)}" alt="" loading="lazy"></button>`).join("");
+    $("lb").hidden = false; document.documentElement.style.overflow = "hidden"; showLb(); $("lbX").focus();
+  }
+  function showLb() {
+    const x = LB.list[LB.i]; if (!x) return;
+    $("lbMedia").innerHTML = x.video ? `<video src="${esc(x.video)}" controls autoplay playsinline poster="${esc(x.poster || "")}"></video>` : `<img src="${esc(x.src)}" alt="${esc(LB.title + " – " + x.cap)}">`;
+    $("lbCap").textContent = `${x.cap} · ${LB.i + 1} / ${LB.list.length}`;
+    const t = $("lbTour"); if (x.scene) { t.hidden = false; t.href = tourUrl(x.scene); if (PREVIEW) t.target = "_blank"; t.querySelector("b").textContent = "Virtuális séta ide: " + x.cap; } else t.hidden = true;
+    $("lbTh").querySelectorAll("button").forEach((b) => b.setAttribute("aria-current", String(+b.dataset.k === LB.i)));
+    const c = $("lbTh").querySelector('[aria-current="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    const nx = LB.list[(LB.i + 1) % LB.list.length]; if (nx && !nx.video) { const im = new Image(); im.src = nx.src; }
+  }
+  const stepLb = (d) => { LB.i = (LB.i + d + LB.list.length) % LB.list.length; showLb(); };
+  function closeLb() { $("lb").hidden = true; $("lbMedia").innerHTML = ""; document.documentElement.style.overflow = ""; }
+  $("lbX").addEventListener("click", closeLb); $("lbP").addEventListener("click", () => stepLb(-1)); $("lbN").addEventListener("click", () => stepLb(1));
+  $("lbTh").addEventListener("click", (e) => { const b = e.target.closest("[data-k]"); if (b) { LB.i = +b.dataset.k; showLb(); } });
+  $("lb").addEventListener("click", (e) => { if (e.target === $("lbStage")) closeLb(); });
+  document.addEventListener("keydown", (e) => { if ($("lb").hidden) return; if (e.key === "Escape") closeLb(); if (e.key === "ArrowRight") stepLb(1); if (e.key === "ArrowLeft") stepLb(-1); });
+  (function swipe() { let x0 = null, y0 = 0; const st = $("lbStage");
+    st.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+    st.addEventListener("touchend", (e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) stepLb(dx < 0 ? 1 : -1); }); })();
+
+  /* ---------------------------------------------------------------- látnivalók */
+  $("sights").innerHTML = SIGHTS.map((s) => `
+    <a class="sight" href="${esc(s.url)}" target="_blank" rel="noopener">
+      <div class="sight-img"><span class="ph"><svg><use href="#i-pin"/></svg></span><img src="${esc(s.img)}" alt="${esc(s.t)}" loading="lazy" onerror="this.remove()"><span class="sight-tag">${esc(s.tag)}</span></div>
+      <div class="sight-body"><h3>${esc(s.t)}</h3><p>${esc(s.p)}</p>
+        ${s.info ? `<div class="sight-info">${s.info.map((i) => `<span>${esc(i)}</span>`).join("")}</div>` : ""}
+        <span class="sight-more">${s.ext ? "A múzeum oldala" : "Bővebben"}<svg><use href="#i-arrow"/></svg></span></div>
+    </a>`).join("");
+
+  /* ---------------------------------------------------------------- segítség */
+  const telL = (arr) => (arr || []).map(([n, t]) => `<a class="tel" href="tel:${t}"><svg><use href="#i-phone"/></svg>${esc(n)}</a>`).join("");
+  $("help").innerHTML = HELP.map((h) => `<div class="hc"><h4><svg><use href="#${h.ico}"/></svg>${esc(h.t)}</h4>
+    <p><b>${esc(h.b)}</b></p>${h.p ? `<p>${esc(h.p)}</p>` : ""}${telL(h.tel)}
+    ${h.b2 ? `<p style="margin-top:6px"><b>${esc(h.b2)}</b></p>${telL(h.tel2)}` : ""}
+    ${h.tbl ? `<details><summary>Nyitvatartás / rendelés</summary><table>${h.tbl.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join("")}</table></details>` : ""}
+    ${h.note ? `<p>${esc(h.note)}</p>` : ""}${h.link ? `<p><a href="${esc(h.link[1])}" target="_blank" rel="noopener">${esc(h.link[0])} ↗</a></p>` : ""}</div>`).join("");
+
+  /* ---------------------------------------------------------------- ki meddig mehet be? */
+  const LANES = [
+    { ico: "i-swim", who: "Fürdőző", z: ["500 m-ig · strandon a bójákig", "500 m-ig, strandon a bójákig", null] },
+    { ico: "i-matrac", who: "Gumimatrac, úszógumi, vízibicikli", z: ["mint a fürdőző: 500 m-ig", "a parthoz közel, a bójákig", null] },
+    { ico: "i-sup", who: "SUP, kajak, kenu, evezős csónak", z: ["500 m-ig", "100 m-es parti sávban", null] },
+    { ico: "i-boat2", who: "Csónak (képesítés nélkül)", z: ["1500 m-ig", "500 m-ig", null] },
+    { ico: "i-sail", who: "Vitorlás", z: ["1500 m-ig (6 Bf alatti szélben)", "200 m-ig (6–8 Bf szélben)", null] }
+  ];
+  const DIST = { "100 m-es parti sávban": 100, "200 m-ig (6–8 Bf szélben)": 200 };
+  const pos = (m) => m <= 100 ? (m / 100) * 7 : m <= 500 ? 7 + ((m - 100) / 400) * 26 : 33 + ((m - 500) / 1000) * 64;
+  function lake(lv) {
+    $("lake").innerHTML = `<div style="grid-column:1;padding:8px 12px;font:800 11.5px/1 Manrope,sans-serif;color:#5e4500;letter-spacing:.06em">PART</div><div class="lake-axis"><span>100 m</span><span>500 m</span><span>1500 m</span></div>` +
+      LANES.map((l) => { const z = l.z[lv]; const m = z == null ? 0 : DIST[z] || (/1500/.test(z) ? 1500 : /500/.test(z) ? 500 : /200/.test(z) ? 200 : 100);
+        const w = pos(m), inside = w > 55;
+        return `<div class="lane"><div class="who"><svg><use href="#${l.ico}"/></svg>${esc(l.who)}</div><div class="bar">${z == null ? `<span class="zone no">⛔ Tilos vízre menni</span>` : `<span class="zone" style="width:${w}%"></span><span class="zl${inside ? " in" : ""}" style="left:${inside ? "14px" : `calc(${w}% + 10px)`}">${esc(z)}</span>`}</div></div>`; }).join("");
+    document.querySelectorAll(".seg button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.lv === lv)));
+  }
+  document.querySelector(".seg").addEventListener("click", (e) => { const b = e.target.closest("[data-lv]"); if (b) lake(+b.dataset.lv); });
+  lake(0);
+
+  /* ---------------------------------------------------------------- viharjelzés + időjárás */
+  const LV_TXT = [
+    ["Nincs viharjelzés", "l0", "Most nincs érvényben viharjelzés. Ettől függetlenül figyelje az eget és a parti lámpákat."],
+    ["I. fokú viharjelzés", "l1", "Percenként 45 sárga villanás: 40–60 km/h-s széllökések várhatók. Fürödni csak a part 500 m-es sávjában szabad, SUP-pal, kajakkal csak 100 m-en belül."],
+    ["II. fokú viharjelzés", "l2", "Percenként 90 sárga villanás: 60 km/h feletti viharos szél várható. Fürdeni és vízi eszközzel vízre menni tilos – jöjjön ki a vízből!"]
+  ];
+  function setStorm(lv, src) {
+    const t = LV_TXT[lv]; $("stormLv").textContent = t[0]; $("stormLv").className = "storm-lv " + t[1]; $("stormTxt").textContent = t[2];
+    $("lamp").className = "lamp " + (lv ? "l" + lv : "off"); if (src) $("stormSrc").textContent = src; lake(lv);
+  }
+  async function storm() {
+    const mon = new Date().getMonth();
+    try {
+      if (PREVIEW) throw new Error("preview");
+      const r = await fetch((window.ZEPHYR_API || "") + "?r=vihar", { cache: "no-store" }); const j = await r.json();
+      if (!j.ok || j.basins.keleti == null) throw new Error("no data");
+      setStorm(j.basins.keleti, "Keleti medence (Zamárdi) · " + j.time.slice(11) + " · HungaroMet");
+    } catch (e) {
+      $("stormLv").textContent = mon >= 3 && mon <= 9 ? "Nézze meg élőben" : "Szezonon kívül";
+      $("stormLv").className = "storm-lv"; $("stormTxt").textContent = mon >= 3 && mon <= 9 ? "Az élő jelzés a weboldalon jelenik meg. Addig is a HungaroMet oldalán ellenőrizheti a három medence aktuális jelzését." : "A viharjelző szolgálat április 1. és október 31. között működik.";
+    }
+  }
+  const WMO = (c) => c === 0 ? ["☀️", "derült"] : c <= 2 ? ["🌤️", "kissé felhős"] : c === 3 ? ["☁️", "borult"] : c <= 48 ? ["🌫️", "köd"] : c <= 57 ? ["🌦️", "szitálás"] : c <= 67 ? ["🌧️", "eső"] : c <= 77 ? ["🌨️", "havazás"] : c <= 82 ? ["🌦️", "zápor"] : ["⛈️", "zivatar"];
+  const DIRS = ["É", "ÉK", "K", "DK", "D", "DNy", "Ny", "ÉNy"];
+  async function weather() {
+    try {
+      const u = "https://api.open-meteo.com/v1/forecast?latitude=46.886&longitude=17.951&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_gusts_10m_max,precipitation_probability_max&timezone=Europe%2FBudapest&forecast_days=4";
+      const j = await (await fetch(u)).json(); const c = j.current, d = j.daily;
+      const gw = (g) => g >= 60 ? "w2" : g >= 40 ? "w1" : "";
+      $("fcBody").innerHTML = `<div class="fc-now"><span class="t">${Math.round(c.temperature_2m)}°</span><div><b style="font-size:18px">${WMO(c.weather_code)[0]} ${WMO(c.weather_code)[1]}</b><dl><dt>Hőérzet</dt><dd>${Math.round(c.apparent_temperature)}°</dd><dt>Szél</dt><dd>${Math.round(c.wind_speed_10m)} km/h, ${DIRS[Math.round(c.wind_direction_10m / 45) % 8]}</dd><dt>Széllökés</dt><dd>${Math.round(c.wind_gusts_10m)} km/h</dd></dl></div></div>
+        <div class="fc-days">${d.time.map((t, i) => { const dt = pd(t); return `<div><b>${i === 0 ? "Ma" : HU_WD[dt.getDay()]}</b><span class="ic">${WMO(d.weather_code[i])[0]}</span><span>${Math.round(d.temperature_2m_min[i])}° / <b>${Math.round(d.temperature_2m_max[i])}°</b></span><span class="g ${gw(d.wind_gusts_10m_max[i])}">lökés ${Math.round(d.wind_gusts_10m_max[i])} km/h</span><span>eső ${d.precipitation_probability_max[i] ?? 0}%</span></div>`; }).join("")}</div>
+        <small style="color:var(--ink-2)">40 km/h feletti lökéseknél első, 60 km/h felett másodfokú viharjelzés várható. Forrás: Open-Meteo.</small>`;
+      $("fcUpd").textContent = "frissítve " + new Date().toTimeString().slice(0, 5);
+    } catch (e) { $("fcBody").innerHTML = `<p style="margin:0;color:var(--ink-2)">Az előrejelzés most nem érhető el. <a href="https://www.met.hu/idojaras/tavaink/balaton/" target="_blank" rel="noopener">Balatoni előrejelzés a HungaroMet oldalán ↗</a></p>`; }
+  }
+  storm(); weather(); setInterval(storm, 10 * 60 * 1000);
+
+  /* ---------------------------------------------------------------- rendezvények */
+  const EVC = { fesztival: "Fesztivál", koncert: "Koncert", sport: "Sport", gasztro: "Gasztro", kultura: "Kultúra", csalad: "Családi", egyeb: "Egyéb" };
+  let EVS = [], evCat = "", evDemo = false;
+  function demoEvents() {
+    const t = new Date(), add = (n) => { const d = new Date(t); d.setDate(d.getDate() + n); return ymd(d); };
+    return [
+      { id: "d1", from: add(12), to: add(14), time: "egész nap", title: "Példa: nyári fesztivál a szabadstrandon", place: "Zamárdi Szabadstrand", cat: "fesztival", desc: "Így jelenik meg egy rendezvény. A tulajdonosi felület „Programok” fülén lehet felvenni a valódi programokat.", url: "#", ticket: "#", top: 1 },
+      { id: "d2", from: add(20), time: "19:00", title: "Példa: koncert a Balaton Szíve téren", place: "Balaton Szíve tér", cat: "koncert", desc: "Rövid leírás, időpont, helyszín, és a rendezvény saját oldalának linkje.", url: "#" },
+      { id: "d3", from: add(41), time: "9:00", title: "Példa: futóverseny a parton", place: "Zamárdi", cat: "sport", ticket: "#" }
+    ];
+  }
+  async function loadEvents() {
+    try { if (PREVIEW) throw new Error("preview"); const r = await fetch((window.ZEPHYR_API || "") + "?r=events", { cache: "no-store" }); if (!r.ok) throw new Error(""); EVS = (await r.json()).events || []; }
+    catch (e) { EVS = demoEvents(); evDemo = true; }
+    renderEvents();
+  }
+  function renderEvents() {
+    const cats = [...new Set(EVS.map((e) => e.cat))];
+    $("evBar").innerHTML = (EVS.length ? [["", "Mind"]].concat(cats.map((c) => [c, EVC[c] || "Egyéb"])).map(([k, n]) => `<button type="button" class="chip" data-cat="${k}" aria-pressed="${evCat === k}">${esc(n)}</button>`).join("") : "") + `<button type="button" class="owner-link" data-owner="prog">Programok szerkesztése (tulajdonos)</button>`;
+    const list = EVS.filter((e) => !evCat || e.cat === evCat);
+    if (!list.length) { $("evList").innerHTML = `<div class="ev-empty"><svg><use href="#i-cal"/></svg><b>Hamarosan feltöltjük az idei programokat.</b><span>Addig is nézze meg a helyi látnivalókat lejjebb.</span></div>`; return; }
+    let h = "", lastM = "";
+    list.forEach((e) => {
+      const d = pd(e.from), m = d.getFullYear() + "-" + d.getMonth();
+      if (m !== lastM) { h += `${lastM ? "</div>" : ""}<h3 class="ev-month">${d.getFullYear()}. ${HU_M[d.getMonth()]}</h3><div class="evs">`; lastM = m; }
+      const to = e.to ? pd(e.to) : null;
+      const range = to ? `${HU_MS[d.getMonth()]} ${d.getDate()}. – ${to.getMonth() !== d.getMonth() ? HU_MS[to.getMonth()] + " " : ""}${to.getDate()}.` : HU_WD[d.getDay()];
+      h += `<article class="ev${e.top ? " top" : ""}">
+        ${e.img ? `<img class="ev-img" src="${esc(e.img)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
+        <div class="ev-date"><span>${HU_MS[d.getMonth()]}</span><b${to && to.getMonth() === d.getMonth() ? ' style="font-size:30px"' : ""}>${d.getDate()}${to && to.getMonth() === d.getMonth() ? "–" + to.getDate() : ""}</b><small>${esc(range)}</small></div>
+        <div class="ev-body"><span class="ev-cat">${esc(EVC[e.cat] || "Egyéb")}${evDemo ? `<span class="demo-tag">példa</span>` : ""}</span><h3>${esc(e.title)}</h3>
+          <div class="ev-info">${e.time ? `<span><svg><use href="#i-clock"/></svg>${esc(e.time)}</span>` : ""}${e.place ? `<span><svg><use href="#i-pin"/></svg>${esc(e.place)}</span>` : ""}</div>
+          ${e.desc ? `<p>${esc(e.desc)}</p>` : ""}</div>
+        <div class="ev-acts">${e.ticket ? `<a class="btn btn-red btn-sm" href="${esc(e.ticket)}" target="_blank" rel="noopener"><svg><use href="#i-ticket"/></svg>Jegyfoglalás</a>` : ""}${e.url ? `<a class="btn btn-line btn-sm" href="${esc(e.url)}" target="_blank" rel="noopener"><svg><use href="#i-ext"/></svg>Bővebben</a>` : ""}</div>
+      </article>`;
+    });
+    $("evList").innerHTML = h + "</div>";
+  }
+  $("evBar").addEventListener("click", (e) => { const b = e.target.closest("[data-cat]"); if (b) { evCat = b.dataset.cat; renderEvents(); } });
+  loadEvents();
+
+  /* ---------------------------------------------------------------- kattintások: galéria, foglalás, tulajdonos */
+  document.addEventListener("click", (e) => {
+    const g = e.target.closest("[data-gal]"); if (g) { const a = APTS.find((x) => x.id === g.dataset.gal); if (a && a.pics.length) openLb(a.name + " apartman", a.pics, 0); return; }
+    const s = e.target.closest("[data-svc]"); if (s) { const x = SERVICES.find((y) => y.id === s.dataset.svc); if (x) openLb(x.title, x.media, +s.dataset.i || 0); return; }
+    const b = e.target.closest("[data-book]"); if (b) { e.preventDefault(); if (window.ZephyrBooking) ZephyrBooking.open({ apt: b.dataset.book || "" }); return; }
+    const o = e.target.closest(".owner-link[data-owner]"); if (o) { if (window.ZephyrAdmin) ZephyrAdmin.open({ tab: o.dataset.owner || "" }); }
+  });
+  $("ownerFoot").addEventListener("click", () => { if (window.ZephyrAdmin) ZephyrAdmin.open({}); });
+  window.addEventListener("zephyr-events-changed", loadEvents);
+})();
+</script>
+<script>
+/* Zephyr Apartmanház – online foglalási felület (vendég oldal)
+   Használat: ZephyrBooking.open({ apt: "korvett" })
+   API: window.ZEPHYR_API (pl. "https://balatoni-udules.hu/wp-json/zephyr/v1"); ha nem érhető el, bemutató módban fut. */
+(function () {
+  "use strict";
+  if (window.ZephyrBooking) return;
+  const HU_M = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
+  const HU_WD = ["H", "K", "Sze", "Cs", "P", "Szo", "V"];
+  const money = (n) => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " Ft";
+  const ymd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const pd = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addD = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return ymd(d); };
+  const diff = (a, b) => Math.round((pd(b) - pd(a)) / 864e5);
+  const huDate = (s, wd) => { const d = pd(s); return d.getFullYear() + ". " + HU_M[d.getMonth()] + " " + d.getDate() + "." + (wd ? " (" + ["vasárnap", "hétfő", "kedd", "szerda", "csütörtök", "péntek", "szombat"][d.getDay()] + ")" : ""); };
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  /* A foglalási program a séta mappájában: api/index.php (a weboldalra feltöltve). A claude.ai előnézetben bemutató mód. */
+  function apiBase() {
+    if (window.ZEPHYR_API) return String(window.ZEPHYR_API);
+    if (!/^https?:$/.test(location.protocol)) return null;
+    if (/(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/i.test(location.hostname)) return null;
+    try {  /* „…/virtualis-seta” (perjel nélkül) címen is a mappa api/ alkönyvtárát használja */
+      let path = location.pathname; if (!/\/$/.test(path) && !/\.[a-z0-9]+$/i.test(path)) path += "/";
+      return new URL("api/index.php", location.origin + path).href;
+    } catch (e) { return null; }
+  }
+  function apiUrl(path) {
+    const base = apiBase(); if (!base) return null;
+    const p = String(path).replace(/^\//, ""), i = p.indexOf("?");
+    const route = i < 0 ? p : p.slice(0, i), qs = i < 0 ? "" : p.slice(i + 1);
+    return base + (base.indexOf("?") < 0 ? "?" : "&") + "r=" + encodeURIComponent(route) + (qs ? "&" + qs : "");
+  }
+  async function api(path, opt) {
+    const url = apiUrl(path); if (!url) throw Object.assign(new Error("nincs API"), { offline: true });
+    opt = opt || {};
+    let r;
+    try { r = await fetch(url, { method: opt.method || "GET", headers: { "Content-Type": "application/json" }, body: opt.body ? JSON.stringify(opt.body) : undefined, cache: "no-store" }); }
+    catch (e) { throw Object.assign(new Error("A foglalási rendszer most nem érhető el."), { offline: true }); }
+    let j = null; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) throw new Error((j && j.message) || "Hiba történt (" + r.status + ").");
+    return j;
+  }
+  /* ---------- bemutató adatok (ha nincs szerver) ---------- */
+  function demoConfig() {
+    const t = new Date(); const today = ymd(t);
+    return { demo: true, today, tax: 600, deposit_pct: 30, min_nights: 2, max_nights: 30, lead_days: 0, horizon_days: 400, checkin: "14:00", checkout: "10:00", phone: "+36 20 536 3120", email: "info@balatoni-udules.hu", address: "8621 Zamárdi, Gáspár András utca 58.", rules_url: "", privacy_url: "", ntak: "MA22033593 / MA22033128", szep: ["OTP", "MBH", "K&H"], intl: true,
+      apartments: [{ id: "korvett", name: "Korvett", no: 1, cap: 4, price: 30000, color: "#e2483d" }, { id: "dingi", name: "Dingi", no: 2, cap: 2, price: 22000, color: "#3fb37f" }, { id: "fregatt", name: "Fregatt", no: 3, cap: 4, price: 30000, color: "#3d8fe2" }, { id: "kaloz", name: "Kalóz", no: 4, cap: 2, price: 22000, color: "#9b6be2" }, { id: "schooner", name: "Schooner", no: 5, cap: 4, price: 32000, color: "#2bb3c0" }] };
+  }
+  function demoDays(cfg, apt) {
+    const a = cfg.apartments.find((x) => x.id === apt), out = []; let seed = apt.length * 7919;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    let busyLeft = 0;
+    for (let i = 0; i < 400; i++) {
+      const d = addD(cfg.today, i), dt = pd(d), m = dt.getMonth(), wk = dt.getDay() === 5 || dt.getDay() === 6;
+      const season = m === 6 || m === 7 ? 1.35 : m === 5 || m === 8 ? 1.1 : 1;
+      if (busyLeft <= 0 && rnd() < .07) busyLeft = 2 + Math.floor(rnd() * 5);
+      out.push({ d, p: Math.round(a.price * season * (wk ? 1.1 : 1) / 500) * 500, free: busyLeft-- <= 0 });
+    }
+    return out;
+  }
+
+  /* ---------- állapot ---------- */
+  let el = null, cfg = null, st = null;
+  function reset(apt) { st = { step: apt ? 2 : 1, apt: apt || null, days: null, map: {}, ci: null, co: null, adults: 2, children: 0, month: 0, form: {}, result: null, loading: false, err: "" }; }
+
+  async function open(opts) {
+    opts = opts || {};
+    if (!el) build();
+    reset(null);
+    el.hidden = false; requestAnimationFrame(() => el.classList.add("on"));
+    document.documentElement.classList.add("zfb-lock");
+    if (!cfg) {
+      paint(`<div class="zfb-loading"><i></i><span>Betöltés…</span></div>`);
+      try { cfg = await api("/config"); } catch (e) { cfg = demoConfig(); }
+    }
+    el.querySelector(".zfb-ntak").innerHTML = `<span>Zephyr Apartmanház · ${esc(cfg.address || "")}</span>` + (cfg.ntak ? `<span>NTAK regisztrációs szám: <b>${esc(cfg.ntak)}</b></span>` : "");
+    const pre = opts.apt && cfg.apartments.find((a) => a.id === opts.apt);
+    if (pre) await chooseApt(pre.id); else render();
+  }
+  function close() {
+    if (!el) return; el.classList.remove("on"); document.documentElement.classList.remove("zfb-lock");
+    setTimeout(() => { el.hidden = true; }, 300);
+  }
+  function build() {
+    el = document.createElement("div"); el.className = "zfb"; el.hidden = true; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Szállásfoglalás – Zephyr Apartmanház");
+    el.innerHTML = `<div class="zfb-bg"></div><div class="zfb-card"><header class="zfb-hd"><div class="zfb-logo"><b>ZEPHYR</b><span>Apartmanház · Zamárdi</span></div><ol class="zfb-steps"></ol><button type="button" class="zfb-x" aria-label="Bezárás">×</button></header><div class="zfb-body"></div><footer class="zfb-ntak"></footer></div>`;
+    document.body.appendChild(el);
+    el.querySelector(".zfb-bg").addEventListener("click", close);
+    el.querySelector(".zfb-x").addEventListener("click", close);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && el && !el.hidden) close(); });
+    el.addEventListener("click", onClick); el.addEventListener("submit", (e) => { e.preventDefault(); submit(); }); el.addEventListener("input", onInput); el.addEventListener("change", onInput);
+  }
+  function paint(html) { el.querySelector(".zfb-body").innerHTML = html; }
+  function steps() {
+    const names = ["Apartman", "Időpont és vendégek", "Adatok", "Kész"];
+    el.querySelector(".zfb-steps").innerHTML = names.map((n, i) => `<li class="${st.step === i + 1 ? "on" : st.step > i + 1 ? "done" : ""}"><i>${st.step > i + 1 ? "✓" : i + 1}</i><span>${n}</span></li>`).join("");
+  }
+  const apt = () => cfg.apartments.find((a) => a.id === st.apt);
+  async function chooseApt(id) {
+    st.apt = id; st.step = 2; st.ci = st.co = null; st.days = null; st.err = "";
+    const a = apt(); st.adults = Math.min(st.adults, a.cap); st.children = Math.min(st.children, a.cap - st.adults);
+    render();
+    try { const r = cfg.demo ? { days: demoDays(cfg, id) } : await api("/availability?apt=" + id + "&from=" + cfg.today + "&to=" + addD(cfg.today, Math.min(420, (cfg.horizon_days || 400) + 1)));
+      st.days = r.days; st.map = {}; r.days.forEach((d) => (st.map[d.d] = d)); }
+    catch (e) { st.err = e.message; }
+    render();
+  }
+
+  /* ---------- számítás ---------- */
+  function rangeOk(ci, co) { for (let d = ci; d < co; d = addD(d, 1)) { const x = st.map[d]; if (!x || !x.free) return false; } return true; }
+  function quote() {
+    if (!st.ci || !st.co) return null;
+    const n = diff(st.ci, st.co); let acc = 0; const per = [];
+    for (let d = st.ci; d < st.co; d = addD(d, 1)) { const p = (st.map[d] || {}).p || apt().price; acc += p; per.push([d, p]); }
+    const tax = st.adults * n * cfg.tax, total = acc + tax, dep = Math.round(total * cfg.deposit_pct / 100 / 100) * 100;
+    return { n, per, acc, tax, total, dep, rest: total - dep };
+  }
+  function selError() {
+    if (!st.ci) return "Válaszd ki az érkezés napját a naptárban.";
+    if (!st.co) return "Most válaszd ki a távozás napját.";
+    const n = diff(st.ci, st.co);
+    if (n < cfg.min_nights) return `Legalább ${cfg.min_nights} éjszakára lehet foglalni.`;
+    if (n > cfg.max_nights) return `Online legfeljebb ${cfg.max_nights} éjszakára foglalhatsz – hosszabb tartózkodáshoz hívj minket: ${cfg.phone}`;
+    if (!rangeOk(st.ci, st.co)) return "A kiválasztott időszakban van foglalt nap.";
+    return "";
+  }
+
+  /* ---------- megjelenítés ---------- */
+  function render() {
+    steps();
+    if (st.step === 1) return paint(viewApts());
+    if (st.step === 2) return paint(viewCal());
+    if (st.step === 3) return paint(viewForm());
+    if (st.step === 4) return paint(viewDone());
+  }
+  function demoNote() { return cfg.demo ? `<p class="zfb-demo">Bemutató mód – a foglalási rendszer a weboldalra feltöltve, élő naptárral működik. Itt az árak és a foglaltság csak minták.</p>` : ""; }
+  function viewApts() {
+    return demoNote() + `<h2 class="zfb-h">Melyik apartmant foglalnád?</h2><div class="zfb-apts">` + cfg.apartments.map((a) => `
+      <button type="button" class="zfb-apt" data-apt="${a.id}" style="--ac:${a.color}">
+        <span class="zfb-no">${a.no}</span><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő</small><em>${money(a.price)}-tól / éj</em><i>Kiválasztom ›</i>
+      </button>`).join("") + (cfg.apartments.some((a) => a.id === "kadett") ? "" : `
+      <div class="zfb-apt zfb-apt-off" style="--ac:#f08a24" aria-disabled="true" title="A Kadett apartman nem foglalható">
+        <span class="zfb-no">6</span><b>Kadett</b><small>legfeljebb 4 fő</small><em class="zfb-full">Foglalt</em><i>Nem foglalható</i>
+      </div>`) + `
+      <button type="button" class="zfb-apt zfb-apt-admin" data-owner="1" style="--ac:#0b2f5e" title="Tulajdonosi felület – jelszóval">
+        <span class="zfb-no">🔒</span><b>Admin</b><small>tulajdonosi belépés</small><em>Foglalások kezelése</em><i>Belépés jelszóval ›</i>
+      </button></div><p class="zfb-fine">Érkezés ${esc(cfg.checkin)} órától, távozás ${esc(cfg.checkout)} óráig · Az árakhoz 18 év felett ${money(cfg.tax)} / fő / éj idegenforgalmi adó adódik.</p>
+      <p class="zfb-pay"><b>Fizetés:</b> előleg átutalással${cfg.intl ? " (külföldről is – IBAN / SWIFT)" : ""}${cfg.szep && cfg.szep.length ? `, a többi érkezéskor · <span class="zfb-szep">SZÉP-kártya: ${cfg.szep.map((x) => `<i>${esc(x)}</i>`).join("")}</span>` : ", a többi érkezéskor"}</p>`;
+  }
+  function monthGrid(y, m) {
+    const first = new Date(y, m, 1), start = (first.getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+    let html = `<div class="zfb-month"><h4>${y}. ${HU_M[m]}</h4><div class="zfb-wd">${HU_WD.map((w) => `<span>${w}</span>`).join("")}</div><div class="zfb-days">`;
+    for (let i = 0; i < start; i++) html += `<span class="zfb-d empty"></span>`;
+    for (let d = 1; d <= days; d++) {
+      const ds = ymd(new Date(y, m, d)), x = st.map[ds], prev = st.map[addD(ds, -1)];
+      const free = x && x.free, past = ds < cfg.today, coOk = st.ci && !st.co && ds > st.ci && rangeOk(st.ci, ds);
+      let cls = "zfb-d", dis = false;
+      if (past || !x) { cls += " off"; dis = !(coOk); }
+      else if (!free) { cls += " busy"; dis = !coOk; if (prev && prev.free && !(st.ci && !st.co)) cls += " half"; }
+      if (st.ci === ds) cls += " ci"; if (st.co === ds) cls += " co";
+      if (st.ci && st.co && ds > st.ci && ds < st.co) cls += " in";
+      if (st.ci && !st.co && ds > st.ci) cls += coOk ? " can" : " cant";
+      if (ds === cfg.today) cls += " today";
+      if (st.ci && !st.co && ds > st.ci && !coOk) dis = !free;
+      const price = x && free ? `<small>${Math.round(x.p / 1000)}e</small>` : "";
+      html += `<button type="button" class="${cls}" data-day="${ds}"${dis ? " disabled" : ""} aria-label="${huDate(ds)}${free ? ", szabad, " + money(x.p) : ", foglalt"}"><b>${d}</b>${price}</button>`;
+    }
+    return html + `</div></div>`;
+  }
+  function stepper(k, v, min, max, label, sub) {
+    return `<div class="zfb-step"><div><b>${label}</b><small>${sub}</small></div><div class="zfb-st-c"><button type="button" data-st="${k}" data-v="-1" ${v <= min ? "disabled" : ""} aria-label="kevesebb">−</button><output>${v}</output><button type="button" data-st="${k}" data-v="1" ${v >= max ? "disabled" : ""} aria-label="több">+</button></div></div>`;
+  }
+  function breakdown(q, compact) {
+    if (!q) return "";
+    const nights = q.per.map(([d, p]) => `<div><span>${huDate(d)}</span><span>${money(p)}</span></div>`).join("");
+    return `<div class="zfb-sum">
+      <div class="zfb-row"><span>Szállásdíj · ${q.n} éjszaka</span><b>${money(q.acc)}</b></div>
+      <details class="zfb-nights"${compact ? "" : ""}><summary>Napi bontás</summary>${nights}</details>
+      <div class="zfb-row"><span>Idegenforgalmi adó<small>${st.adults} fő (18+) × ${q.n} éj × ${money(cfg.tax)}</small></span><b>${money(q.tax)}</b></div>
+      ${st.children ? `<div class="zfb-row muted"><span>${st.children} gyermek (18 év alatt) – adómentes</span><b>0 Ft</b></div>` : ""}
+      <div class="zfb-row total"><span>Végösszeg</span><b>${money(q.total)}</b></div>
+      <div class="zfb-row dep"><span>Előleg (${cfg.deposit_pct}%) – átutalással, visszaigazolás után</span><b>${money(q.dep)}</b></div>
+      <div class="zfb-row muted"><span>Fennmaradó összeg érkezéskor</span><b>${money(q.rest)}</b></div>
+    </div>`;
+  }
+  function viewCal() {
+    const a = apt();
+    if (st.err) return `<p class="zfb-err">${esc(st.err)}</p><button type="button" class="zfb-btn ghost" data-go="1">‹ Vissza</button>`;
+    if (!st.days) return `<div class="zfb-loading"><i></i><span>Szabad napok betöltése…</span></div>`;
+    const base = pd(cfg.today), months = [];
+    const per = window.innerWidth < 760 ? 1 : 2;
+    for (let i = 0; i < per; i++) { const d = new Date(base.getFullYear(), base.getMonth() + st.month + i, 1); months.push(monthGrid(d.getFullYear(), d.getMonth())); }
+    const maxMonth = 12, err = selError(), q = !err ? quote() : null;
+    return demoNote() + `<div class="zfb-cal-wrap">
+      <div class="zfb-cal">
+        <div class="zfb-apt-chip" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő</small><button type="button" data-go="1">másik apartman</button></div>
+        <div class="zfb-mnav"><button type="button" data-m="-1" ${st.month <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><span>Válaszd ki az érkezés, majd a távozás napját</span><button type="button" data-m="1" ${st.month >= maxMonth ? "disabled" : ""} aria-label="Következő hónap">›</button></div>
+        <div class="zfb-months">${months.join("")}</div>
+        <div class="zfb-legend"><span><i class="lf"></i>szabad (ár / éj, ezer Ft)</span><span><i class="lb"></i>foglalt</span><span><i class="ls"></i>kiválasztva</span></div>
+      </div>
+      <aside class="zfb-side">
+        <div class="zfb-dates"><div><small>Érkezés</small><b>${st.ci ? huDate(st.ci) : "–"}</b><em>${esc(cfg.checkin)}-tól</em></div><div><small>Távozás</small><b>${st.co ? huDate(st.co) : "–"}</b><em>${esc(cfg.checkout)}-ig</em></div></div>
+        ${stepper("adults", st.adults, 1, a.cap - st.children, "Felnőtt", "18 év felett")}
+        ${stepper("children", st.children, 0, a.cap - st.adults, "Gyermek", "18 év alatt")}
+        ${err ? `<p class="zfb-tip">${esc(err)}</p>` : breakdown(q)}
+        <button type="button" class="zfb-btn" data-next="3" ${err ? "disabled" : ""}>Tovább az adatokhoz ›</button>
+        ${st.ci ? `<button type="button" class="zfb-link" data-clear="1">dátumok törlése</button>` : ""}
+      </aside></div>`;
+  }
+  function inp(k, label, type, attrs, help) {
+    const v = st.form[k] == null ? "" : st.form[k];
+    return `<label class="zfb-f${attrs && attrs.indexOf("wide") >= 0 ? " wide" : ""}"><span>${label}</span><input name="${k}" type="${type || "text"}" value="${esc(v)}" ${attrs || ""}>${help ? `<small>${help}</small>` : ""}</label>`;
+  }
+  function viewForm() {
+    const a = apt(), q = quote();
+    const rules = cfg.rules_url ? `<a href="${esc(cfg.rules_url)}" target="_blank" rel="noopener">házirendet</a>` : "házirendet";
+    const priv = cfg.privacy_url ? `<a href="${esc(cfg.privacy_url)}" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>` : "adatkezelési tájékoztatót";
+    return demoNote() + `<div class="zfb-cal-wrap"><form class="zfb-form" novalidate>
+      <h2 class="zfb-h">A foglaló adatai</h2>
+      <div class="zfb-grid">
+        ${inp("name", "Teljes név *", "text", 'autocomplete="name" required class="wide"')}
+        ${inp("phone", "Telefonszám *", "tel", 'autocomplete="tel" required placeholder="+36 …"')}
+        ${inp("email", "E-mail cím *", "email", 'autocomplete="email" required')}
+        ${inp("birth_place", "Születési hely *", "text", "required")}
+        ${inp("birth_date", "Születési idő *", "date", 'required max="' + addD(cfg.today, -18 * 365) + '"')}
+        ${inp("id_doc", "Személyi igazolvány vagy útlevél száma *", "text", 'required autocapitalize="characters" class="wide"', "A szálláshely-szolgáltatókra vonatkozó jogszabály (VIZA-nyilvántartás) miatt kérjük. Titkosítva tároljuk, csak a szállásadó láthatja.")}
+        <label class="zfb-f wide"><span>Üzenet a szállásadónak (nem kötelező)</span><textarea name="note" rows="2" placeholder="pl. várható érkezési idő, babaágy, etetőszék igény">${esc(st.form.note || "")}</textarea></label>
+        <input name="website" type="text" class="zfb-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+      </div>
+      <label class="zfb-acc"><input type="checkbox" name="accept" ${st.form.accept ? "checked" : ""}> <span>Elolvastam és elfogadom a ${rules} és az ${priv}. Tudomásul veszem, hogy érkezéskor minden vendégnek (gyermekeknek is) fényképes igazolvány szükséges.</span></label>
+      ${st.err ? `<p class="zfb-err">${esc(st.err)}</p>` : ""}
+      <div class="zfb-actions"><button type="button" class="zfb-btn ghost" data-go="2">‹ Vissza</button><button type="submit" class="zfb-btn" ${st.loading ? "disabled" : ""}>${st.loading ? "Küldés…" : "Foglalási kérés elküldése"}</button></div>
+      <p class="zfb-fine">A foglalás elküldésével a napokat ideiglenesen lefoglaljuk. Jóváhagyás után e-mailben küldjük az előleg (${cfg.deposit_pct}%) átutalásához szükséges adatokat; a foglalás az előleg beérkezésével válik véglegessé.</p>
+    </form>
+    <aside class="zfb-side"><div class="zfb-apt-chip" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span><b>${esc(a.name)}</b><small>${st.adults} felnőtt${st.children ? ", " + st.children + " gyermek" : ""}</small></div>
+      <div class="zfb-dates"><div><small>Érkezés</small><b>${huDate(st.ci, true)}</b><em>${esc(cfg.checkin)}-tól</em></div><div><small>Távozás</small><b>${huDate(st.co, true)}</b><em>${esc(cfg.checkout)}-ig</em></div></div>
+      ${breakdown(q)}</aside></div>`;
+  }
+  function viewDone() {
+    const r = st.result, q = quote(), a = apt();
+    return `<div class="zfb-done">
+      <div class="zfb-anchor">⚓</div>
+      <h2>${cfg.demo ? "Így nézne ki a sikeres foglalás" : "Köszönjük! Foglalási kérését megkaptuk."}</h2>
+      ${cfg.demo ? `<p class="zfb-demo">Bemutató mód – a kérés nem lett elküldve.</p>` : `<p>Foglalási azonosító: <b>${esc(r.ref)}</b></p>`}
+      <p>A kiválasztott napokat ideiglenesen lefoglaltuk. Hamarosan ellenőrizzük, és e-mailben (<b>${esc(st.form.email)}</b>) visszaigazoljuk az előleg átutalásához szükséges adatokkal.</p>
+      <div class="zfb-done-sum"><div class="zfb-apt-chip" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span><b>${esc(a.name)}</b><small>${huDate(st.ci)} – ${huDate(st.co)}</small></div>${breakdown(q)}</div>
+      <p class="zfb-fine">Kérdése van? Hívjon minket: <a href="tel:${esc(cfg.phone.replace(/\s/g, ""))}">${esc(cfg.phone)}</a> · <a href="mailto:${esc(cfg.email)}">${esc(cfg.email)}</a></p>
+      <button type="button" class="zfb-btn" data-close="1">Bezárás</button></div>`;
+  }
+
+  /* ---------- események ---------- */
+  function onInput(e) {
+    const t = e.target; if (!t.name) return;
+    st.form[t.name] = t.type === "checkbox" ? t.checked : t.value;
+  }
+  async function onClick(e) {
+    const b = e.target.closest("button, [data-apt]"); if (!b || b.disabled) return;
+    if (b.dataset.apt) return chooseApt(b.dataset.apt);
+    if (b.dataset.go) { st.step = +b.dataset.go; st.err = ""; return render(); }
+    if (b.dataset.close) return close();
+    if (b.dataset.owner) { close(); if (window.ZephyrAdmin) setTimeout(() => window.ZephyrAdmin.open(), 320); return; }
+    if (b.dataset.m) { st.month = Math.max(0, Math.min(12, st.month + +b.dataset.m)); return render(); }
+    if (b.dataset.clear) { st.ci = st.co = null; return render(); }
+    if (b.dataset.st) { const k = b.dataset.st; st[k] = Math.max(k === "adults" ? 1 : 0, st[k] + +b.dataset.v); return render(); }
+    if (b.dataset.day) {
+      const d = b.dataset.day;
+      if (!st.ci || st.co || d <= st.ci) { if (st.map[d] && st.map[d].free) { st.ci = d; st.co = null; } }
+      else if (rangeOk(st.ci, d)) st.co = d;
+      else if (st.map[d] && st.map[d].free) { st.ci = d; st.co = null; }
+      return render();
+    }
+    if (b.dataset.next) { st.step = +b.dataset.next; st.err = ""; render(); el.querySelector(".zfb-body").scrollTop = 0; return; }
+    if (b.type === "submit") { e.preventDefault(); return submit(); }
+  }
+  async function submit() {
+    const f = el.querySelector(".zfb-form"); new FormData(f).forEach((v, k) => (st.form[k] = v)); st.form.accept = f.accept.checked;
+    const F = st.form, bad = (m, n) => { st.err = m; render(); const i = el.querySelector(`[name="${n}"]`); if (i) i.focus(); };
+    if (!F.name || F.name.trim().split(/\s+/).length < 2) return bad("Kérjük, add meg a teljes neved (vezeték- és keresztnév).", "name");
+    if (!F.phone || F.phone.replace(/\D/g, "").length < 8) return bad("Kérjük, adj meg érvényes telefonszámot.", "phone");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(F.email || "")) return bad("Kérjük, adj meg érvényes e-mail címet.", "email");
+    if (!F.birth_place || F.birth_place.trim().length < 2) return bad("Kérjük, add meg a születési helyed.", "birth_place");
+    if (!F.birth_date || F.birth_date > addD(cfg.today, -18 * 365)) return bad("Kérjük, add meg a születési időd (a foglalónak nagykorúnak kell lennie).", "birth_date");
+    if (!/^[A-Za-z0-9-]{5,20}$/.test((F.id_doc || "").replace(/\s/g, ""))) return bad("Kérjük, add meg a személyi igazolványod vagy útleveled számát.", "id_doc");
+    if (!F.accept) return bad("A foglaláshoz el kell fogadnod a házirendet és az adatkezelési tájékoztatót.", "accept");
+    st.loading = true; st.err = ""; render();
+    try {
+      if (cfg.demo) { await new Promise((r) => setTimeout(r, 700)); st.result = { ref: "ZEPHYR-DEMO" }; }
+      else st.result = await api("/book", { method: "POST", body: { apt: st.apt, checkin: st.ci, checkout: st.co, adults: st.adults, children: st.children, name: F.name.trim(), phone: F.phone.trim(), email: F.email.trim(), birth_place: F.birth_place.trim(), birth_date: F.birth_date, id_doc: F.id_doc.replace(/\s/g, ""), note: F.note || "", accept: true, website: F.website || "" } });
+      st.step = 4;
+    } catch (e) { st.err = e.message; }
+    st.loading = false; render();
+  }
+
+  window.ZephyrBooking = { open, close, apiUrl, reset: () => { cfg = null; } };
+})();
+/* Zephyr Apartmanház – tulajdonosi felület (jelszóval védett admin a foglalási ablakban)
+   Megnyitás: a foglalási ablak „Tulajdonosi belépés” gombja, vagy a link végére írt #foglalas-admin */
+(function () {
+  "use strict";
+  if (window.ZephyrAdmin) return;
+  const HU_M = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
+  const HU_MC = HU_M.map((m) => m[0].toUpperCase() + m.slice(1));
+  const WD = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
+  const ST = { pending: "Jóváhagyásra vár", approved: "Előlegre vár", paid: "Végleges", rejected: "Elutasítva", cancelled: "Törölve", expired: "Lejárt", block: "Zárolva" };
+  const money = (n) => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " Ft";
+  const ymd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const pd = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addD = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return ymd(d); };
+  const nightsOf = (a, b) => Math.round((pd(b) - pd(a)) / 864e5);
+  const hu = (s) => { if (!s) return "–"; const d = pd(s); return d.getFullYear() + ". " + HU_M[d.getMonth()] + " " + d.getDate() + "."; };
+  const huShort = (s) => { const d = pd(s); return HU_M[d.getMonth()].slice(0, 3) + ". " + d.getDate() + "."; };
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const when = (t) => { const d = new Date(t * 1000); return d.getFullYear() + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + String(d.getDate()).padStart(2, "0") + ". " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+  const TK = "zephyr-admin-token";
+  const getTok = () => { try { return localStorage.getItem(TK) || ""; } catch (e) { return ""; } };
+  const setTok = (t) => { try { t ? localStorage.setItem(TK, t) : localStorage.removeItem(TK); } catch (e) {} };
+
+  let el = null, A = null, refreshT = 0;
+  function reset() { A = { ev: null, evEdit: null, evPast: false, tab: "list", data: null, err: "", msg: "", busy: false, month: null, calSel: null, showClosed: false, settings: null, dlg: null, initial: false }; }
+
+  async function call(route, body) {
+    const B = window.ZephyrBooking;
+    const url = B && B.apiUrl ? B.apiUrl("/" + route) : null;
+    if (!url) throw new Error("A tulajdonosi felület csak a weboldalra feltöltve működik (itt bemutató módban fut a séta).");
+    let r;
+    try {
+      r = await fetch(url, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json", "X-Zephyr-Token": getTok() }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    } catch (e) { throw new Error("Nincs kapcsolat a szerverrel. Ellenőrizd az internetet."); }
+    let j = null; try { j = await r.json(); } catch (e) {}
+    if (r.status === 401 && route !== "login") { setTok(""); A.data = null; throw new Error((j && j.message) || "Kérjük, lépj be újra."); }
+    if (!r.ok) throw new Error((j && j.message) || "Hiba történt (" + r.status + ").");
+    return j;
+  }
+
+  /* ---------- megnyitás / bezárás ---------- */
+  async function open(opt) {
+    if (!el) build();
+    reset();
+    if (opt && opt.tab) A.tab = opt.tab;
+    el.hidden = false; requestAnimationFrame(() => el.classList.add("on"));
+    document.documentElement.classList.add("zfb-lock");
+    if (getTok()) { await load(); if (A.tab === "prog") loadEv(); } else render();
+    clearInterval(refreshT);
+    refreshT = setInterval(() => { if (!el.hidden && A.data && !A.busy && !A.dlg && A.tab !== "settings" && A.tab !== "new" && A.tab !== "prog") load(true); }, 60000);
+  }
+  function close() {
+    if (!el) return;
+    clearInterval(refreshT);
+    el.classList.remove("on"); document.documentElement.classList.remove("zfb-lock");
+    setTimeout(() => { el.hidden = true; }, 300);
+    if (location.hash === "#foglalas-admin") { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} }
+  }
+  function build() {
+    el = document.createElement("div"); el.className = "zfb zad"; el.hidden = true;
+    el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Tulajdonosi felület – Zephyr foglalások");
+    el.innerHTML = `<div class="zfb-bg"></div><div class="zfb-card zad-card"><header class="zfb-hd"><div class="zfb-logo"><b>ZEPHYR</b><span>Tulajdonosi felület</span></div><nav class="zad-tabs"></nav><button type="button" class="zfb-x" aria-label="Bezárás">×</button></header><div class="zfb-body zad-body"></div></div>`;
+    document.body.appendChild(el);
+    el.querySelector(".zfb-bg").addEventListener("click", () => { if (!A.dlg) close(); });
+    el.querySelector(".zfb-x").addEventListener("click", close);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && el && !el.hidden) { if (A.dlg) { A.dlg = null; render(); } else close(); } });
+    el.addEventListener("click", onClick);
+    el.addEventListener("submit", onSubmit);
+  }
+
+  async function load(quiet) {
+    if (!quiet) { A.busy = true; render(); }
+    try {
+      const d = await call("bookings");
+      A.data = d; A.initial = d.initial; A.err = "";
+      if (!A.settings || A.tab !== "settings") A.settings = JSON.parse(JSON.stringify(d.settings));
+      if (!A.month) A.month = d.today.slice(0, 7);
+    } catch (e) { A.err = e.message; }
+    A.busy = false; render();
+  }
+
+  /* ---------- megjelenítés ---------- */
+  function tabs() {
+    const n = A.data ? A.data.bookings.filter((b) => b.status === "pending").length : 0;
+    const t = [["list", "Foglalások" + (n ? ` <em>${n}</em>` : "")], ["cal", "Naptár"], ["new", "Zárolás"], ["prog", "Programok"], ["settings", "Beállítások"]];
+    el.querySelector(".zad-tabs").innerHTML = A.data ? t.map(([k, l]) => `<button type="button" data-tab="${k}" class="${A.tab === k ? "on" : ""}">${l}</button>`).join("") + `<button type="button" data-reload="1" title="Frissítés" aria-label="Frissítés">⟳</button>` : "";
+  }
+  function render() {
+    tabs();
+    const body = el.querySelector(".zad-body");
+    let h = "";
+    if (A.msg) h += `<div class="zad-ok">${esc(A.msg)}</div>`;
+    if (A.err) h += `<div class="zfb-err">${esc(A.err)}</div>`;
+    if (!A.data) h += loginView();
+    else {
+      if (A.initial) h += `<div class="zad-warn">Még az első, ideiglenes jelszóval vagy belépve. Kérjük, változtasd meg a <button type="button" class="zad-link" data-tab="settings">Beállítások</button> fül alján.</div>`;
+      (A.data.warnings || []).forEach((w) => { h += `<div class="zad-warn">${esc(w)}</div>`; });
+      if (A.tab === "cal") h += calView();
+      else if (A.tab === "new") h += newView();
+      else if (A.tab === "settings") h += settingsView();
+      else if (A.tab === "prog") h += progView();
+      else h += listView();
+    }
+    if (A.busy) h += `<div class="zad-busy"><i></i></div>`;
+    if (A.dlg) h += dlgView();
+    const y = body.scrollTop;
+    body.innerHTML = h;
+    body.scrollTop = y;
+  }
+
+  function loginView() {
+    return `<form class="zad-login" data-form="login"><h2 class="zfb-h">Tulajdonosi belépés</h2>
+      <p class="zfb-fine" style="margin:0 0 14px">Itt kezelheted a foglalási kéréseket, a zárolásokat és az árakat.</p>
+      <label class="zad-f"><span>Jelszó</span><input type="password" name="password" autocomplete="current-password" required autofocus></label>
+      <button class="zfb-btn" type="submit">Belépés</button></form>`;
+  }
+
+  const aptOf = (id) => (A.data.settings.apartments.find((a) => a.id === id) || { name: id, color: "#888", no: "?" });
+  const SRCN = { szallas: "Szállás.hu", airbnb: "Airbnb", egyeb: "Egyéb naptár" };
+  const isExt = (b) => !!(b.ext_uid && SRCN[b.source]);
+  function card(b, compact) {
+    const a = aptOf(b.apt), n = nightsOf(b.checkin, b.checkout);
+    const who = b.status === "block" ? (b.label || "Zárolva") + (b.name ? " – " + b.name : "") : b.name;
+    let act = "";
+    const btn = (doo, l, cls) => `<button type="button" class="zad-b ${cls || ""}" data-act="${doo}" data-id="${b.id}">${l}</button>`;
+    if (isExt(b)) {
+      return `<article class="zad-c st-block src-${b.source}" style="--ac:${a.color}">
+      <div class="zad-c-hd"><span class="zfb-no">${a.no}</span><b>${esc(a.name)}</b><span class="zad-st src-${b.source}">${SRCN[b.source]}</span></div>
+      <div class="zad-c-dates"><b>${hu(b.checkin)} – ${hu(b.checkout)}</b> <span>${n} éj</span></div>
+      <div class="zad-c-who">${esc(b.label || SRCN[b.source])} <small>${esc(b.ref)} · automatikus naptárszinkron</small></div>
+      <p class="zad-lock">🔒 A(z) ${SRCN[b.source]} oldaláról érkezett – itt nem módosítható, csak a(z) ${SRCN[b.source]} felületén.</p>
+      ${b.admin_note ? `<p class="zad-note own"><b>Saját megjegyzés:</b> ${esc(b.admin_note)}</p>` : ""}
+      <div class="zad-acts">${btn("note", "Megjegyzés")}${btn("delext", "Törlés…", "del")}</div></article>`;
+    }
+    if (b.status === "pending" || b.status === "expired") act += btn("approve", "✓ Jóváhagyom", "pri") + btn("reject", "Elutasítom");
+    if (b.status === "approved") act += btn("paid", "✓ Megjött az előleg", "pri") + btn("resend", "Előleg-bekérő újra");
+    if (b.status === "pending" || b.status === "expired") act += btn("paid", "Előleg már megjött");
+    if (["pending", "approved", "paid"].includes(b.status)) act += btn("cancel", "Törlés");
+    if (["block", "rejected", "cancelled", "expired"].includes(b.status)) act += btn("delete", b.status === "block" ? "Zárolás feloldása" : "Végleges törlés", "del");
+    act += btn("note", "Megjegyzés");
+    const info = b.status === "block" && !b.phone ? "" : `
+      <div class="zad-kv">
+        ${b.adults ? `<span>Vendégek</span><b>${b.adults} felnőtt${b.children ? ", " + b.children + " gyermek" : ""}</b>` : ""}
+        ${b.phone ? `<span>Telefon</span><b><a href="tel:${esc(b.phone.replace(/\s/g, ""))}">${esc(b.phone)}</a></b>` : ""}
+        ${b.email ? `<span>E-mail</span><b><a href="mailto:${esc(b.email)}">${esc(b.email)}</a></b>` : ""}
+        ${b.birth_date ? `<span>Született</span><b>${esc(b.birth_place)}, ${hu(b.birth_date)}</b>` : ""}
+        ${b.id_doc ? `<span>Okmányszám</span><b>${esc(b.id_doc)}</b>` : ""}
+        ${b.total ? `<span>Végösszeg</span><b>${money(b.total)} <small>(IFA ${money(b.tax)})</small></b>` : ""}
+        ${b.deposit ? `<span>Előleg</span><b>${money(b.deposit)}</b><span>Érkezéskor</span><b>${money(b.total - b.deposit)}</b>` : ""}
+      </div>`;
+    return `<article class="zad-c st-${b.status}" style="--ac:${a.color}">
+      <div class="zad-c-hd"><span class="zfb-no">${a.no}</span><b>${esc(a.name)}</b><span class="zad-st st-${b.status}">${ST[b.status] || b.status}</span></div>
+      <div class="zad-c-dates"><b>${hu(b.checkin)} – ${hu(b.checkout)}</b> <span>${n} éj</span></div>
+      <div class="zad-c-who">${esc(who)} <small>${esc(b.ref)}${b.created ? " · " + when(b.created) : ""}${b.source === "manual" ? " · kézi" : ""}</small></div>
+      ${b.conflict ? `<p class="zad-conf">⚠ Ütközik: ${esc(b.conflict)} – a platformról jött foglalás az elsődleges, ezt rendezd.</p>` : ""}
+      ${compact ? "" : info}
+      ${b.note ? `<p class="zad-note"><b>Vendég:</b> ${esc(b.note)}</p>` : ""}
+      ${b.admin_note ? `<p class="zad-note own"><b>Saját megjegyzés:</b> ${esc(b.admin_note)}</p>` : ""}
+      <div class="zad-acts">${act}</div></article>`;
+  }
+
+  function listView() {
+    const all = A.data.bookings, t = A.data.today;
+    const sec = (title, arr, hint) => `<section class="zad-sec"><h3>${title} <em>${arr.length}</em></h3>${hint ? `<p class="zfb-fine" style="margin:-6px 0 10px">${hint}</p>` : ""}${arr.length ? `<div class="zad-cards">${arr.map((b) => card(b)).join("")}</div>` : `<p class="zad-empty">Nincs ilyen.</p>`}</section>`;
+    const pend = all.filter((b) => b.status === "pending");
+    const appr = all.filter((b) => b.status === "approved");
+    const paid = all.filter((b) => b.status === "paid" && b.checkout >= t);
+    const blk = all.filter((b) => b.status === "block" && b.checkout >= t && !isExt(b));
+    const ext = (src) => all.filter((b) => isExt(b) && b.source === src && b.checkout >= t);
+    const closed = all.filter((b) => ["rejected", "cancelled", "expired"].includes(b.status) || (["paid", "block"].includes(b.status) && b.checkout < t && !isExt(b))).sort((a, b) => (b.created || 0) - (a.created || 0));
+    let h = sec("Jóváhagyásra vár", pend, pend.length ? `Ha ${A.data.settings.pending_days} napon belül nem döntesz, a kérés lejár és a napok felszabadulnak.` : "");
+    h += sec("Jóváhagyva – előlegre vár", appr);
+    h += sec("Végleges foglalások", paid);
+    h += sec("Szállás.hu foglalások", ext("szallas"), "Ehhez a naptárhoz igazodik minden: a Szállás.hu-ról jött napok itt és az Airbnb-n is lezárva. Itt nem módosíthatók.");
+    h += sec("Airbnb foglalások", ext("airbnb"));
+    if (ext("egyeb").length) h += sec("Egyéb naptárból", ext("egyeb"));
+    h += sec("Kézi zárolások", blk);
+    h += `<section class="zad-sec"><button type="button" class="zad-link" data-closed="1">${A.showClosed ? "▾" : "▸"} Lezárt, elutasított, lejárt (${closed.length})</button>${A.showClosed ? `<div class="zad-cards">${closed.map((b) => card(b, true)).join("") || `<p class="zad-empty">Nincs ilyen.</p>`}</div>` : ""}</section>`;
+    return h;
+  }
+
+  function calView() {
+    const S = A.data.settings, t = A.data.today, m = A.month;
+    const first = m + "-01", dim = new Date(+m.slice(0, 4), +m.slice(5), 0).getDate();
+    const inSeason = (d) => { const f = S.season_from, to = S.season_to; if (!f || !to) return true; const md = d.slice(5); return f <= to ? md >= f && md <= to : md >= f || md <= to; };
+    const blocking = ["pending", "approved", "paid", "block"];
+    let h = `<div class="zad-calnav"><button type="button" class="zad-b" data-month="-1">‹ Előző</button><b>${m.slice(0, 4)}. ${HU_MC[+m.slice(5) - 1]}</b><button type="button" class="zad-b" data-month="1">Következő ›</button><button type="button" class="zad-link" data-month="0">Ma</button></div>`;
+    h += `<div class="zad-calwrap"><table class="zad-cal"><thead><tr><th class="ap"></th>`;
+    for (let i = 0; i < dim; i++) { const d = addD(first, i), w = pd(d).getDay(); h += `<th class="${w === 5 || w === 6 ? "we" : ""}${d === t ? " td" : ""}">${i + 1}<small>${WD[w]}</small></th>`; }
+    h += `</tr></thead><tbody>`;
+    S.apartments.forEach((a) => {
+      h += `<tr><th class="ap" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span>${esc(a.name)}</th>`;
+      const bs = A.data.bookings.filter((b) => b.apt === a.id && blocking.includes(b.status) && b.checkin < addD(first, dim) && b.checkout > first);
+      for (let i = 0; i < dim; i++) {
+        const d = addD(first, i), b = bs.find((x) => x.checkin <= d && x.checkout > d);
+        if (b) h += `<td class="bk st-${b.status}${isExt(b) ? " src-" + b.source : ""}${b.conflict ? " conf" : ""}${d === b.checkin ? " ci" : ""}${A.calSel === b.id ? " sel" : ""}"><button type="button" data-cal="${b.id}" title="${esc((b.status === "block" ? b.label : b.name) + " · " + ST[b.status])}"></button></td>`;
+        else h += `<td class="${!inSeason(d) || d < t ? "off" : ""}${d === t ? " td" : ""}"></td>`;
+      }
+      h += `</tr>`;
+    });
+    h += `</tbody></table></div><p class="zad-legend"><span class="st-pending"></span>Jóváhagyásra vár <span class="st-approved"></span>Előlegre vár <span class="st-paid"></span>Végleges <span class="st-block src-szallas"></span>Szállás.hu <span class="st-block src-airbnb"></span>Airbnb <span class="st-block"></span>Zárolva <span class="off"></span>Szezonon kívül / elmúlt</p>`;
+    const sel = A.calSel && A.data.bookings.find((b) => b.id === A.calSel);
+    h += sel ? `<div class="zad-cards">${card(sel)}</div>` : `<p class="zfb-fine">Koppints egy színes napra a foglalás részleteiért.</p>`;
+    return h;
+  }
+
+  function newView() {
+    const S = A.data.settings;
+    return `<form class="zad-form" data-form="manual"><h2 class="zfb-h">Kézi foglalás vagy zárolás</h2>
+      <p class="zfb-fine" style="margin:-6px 0 14px">Ide írd be a máshonnan jött foglalásokat (Airbnb, Szallas.hu, telefon), vagy amikor nem adod ki az apartmant. A sétában ezek a napok foglaltként látszanak.</p>
+      <div class="zad-grid">
+        <label class="zad-f"><span>Apartman</span><select name="apt">${S.apartments.map((a) => `<option value="${a.id}">${a.no}. ${esc(a.name)}</option>`).join("")}</select></label>
+        <label class="zad-f"><span>Típus</span><select name="kind"><option value="block">Zárolás / külső foglalás</option><option value="paid">Saját vendég (végleges)</option></select></label>
+        <label class="zad-f"><span>Érkezés (első éjszaka)</span><input type="date" name="checkin" required></label>
+        <label class="zad-f"><span>Távozás napja</span><input type="date" name="checkout" required></label>
+        <label class="zad-f wide"><span>Megnevezés</span><input type="text" name="label" placeholder="pl. Airbnb, Szallas.hu, saját használat"></label>
+        <label class="zad-f"><span>Vendég neve</span><input type="text" name="name"></label>
+        <label class="zad-f"><span>Telefon</span><input type="tel" name="phone"></label>
+        <label class="zad-f"><span>E-mail</span><input type="email" name="email"></label>
+        <label class="zad-f"><span>Felnőtt / gyermek</span><span class="zad-pair"><input type="number" name="adults" value="2" min="1" max="12"><input type="number" name="children" value="0" min="0" max="12"></span></label>
+        <label class="zad-f wide"><span>Saját megjegyzés</span><textarea name="admin_note" rows="2"></textarea></label>
+      </div>
+      <p class="zfb-fine">A távozás napja már szabad marad. Vendégnek ilyenkor nem megy e-mail.</p>
+      <button class="zfb-btn" type="submit">Rögzítés</button></form>`;
+  }
+
+  function settingsView() {
+    const S = A.settings, v = (k) => esc(S[k] == null ? "" : S[k]);
+    const num = (k, l, suf, min, max) => `<label class="zad-f"><span>${l}</span><span class="zad-suf"><input type="number" data-s="${k}" value="${v(k)}" min="${min}" max="${max}">${suf ? `<i>${suf}</i>` : ""}</span></label>`;
+    const txt = (k, l, ph, type) => `<label class="zad-f"><span>${l}</span><input type="${type || "text"}" data-s="${k}" value="${v(k)}" placeholder="${esc(ph || "")}"></label>`;
+    let h = `<form class="zad-form" data-form="settings">`;
+    const SE = S.seasons || [];
+    h += `<section class="zad-sec"><h3>Alapárak szezononként (Ft / éj)</h3><p class="zfb-fine" style="margin:-6px 0 10px">Az időszakok határát (hó-nap) és nevét is átírhatod. Az utolsó nap az utolsó éjszaka napja. Az „Időszakos árak” lent felülírják ezeket.<span class="zad-swipe"> A táblázat oldalra húzható →</span></p>
+      <div class="zad-sewrap"><table class="zad-se"><thead><tr><th></th>${SE.map((x, j) => `<th><input type="text" data-se="${j}" data-k="name" value="${esc(x.name)}" aria-label="Időszak neve"><span class="zad-sed"><input type="text" data-se="${j}" data-k="from" value="${esc(x.from)}" maxlength="5" placeholder="05-15" aria-label="Kezdete">–<input type="text" data-se="${j}" data-k="to" value="${esc(x.to)}" maxlength="5" placeholder="06-18" aria-label="Vége"></span></th>`).join("")}</tr></thead>
+      <tbody>${S.apartments.map((a) => `<tr><th style="--ac:${a.color}"><span class="zfb-no">${a.no}</span>${esc(a.name)}</th>${SE.map((x, j) => `<td><input type="number" data-sp="${j}" data-apt="${a.id}" value="${esc((x.prices || {})[a.id] || "")}" min="0" step="500" aria-label="${esc(a.name)} – ${esc(x.name)}"></td>`).join("")}</tr>`).join("")}</tbody></table></div>
+      <label class="zad-chk big"><input type="checkbox" data-s="prices_checked" ${S.prices_checked ? "checked" : ""}> Az árakat ellenőriztem, rendben vannak</label></section>`;
+    h += `<section class="zad-sec"><h3>Apartmanok</h3><div class="zad-apts">` + S.apartments.map((a, i) => `
+      <div class="zad-aptrow" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span>
+        <label class="zad-f"><span>Név</span><input type="text" data-ap="${i}" data-k="name" value="${esc(a.name)}"></label>
+        <label class="zad-f"><span>Max. fő</span><input type="number" data-ap="${i}" data-k="cap" value="${a.cap}" min="1" max="12"></label>
+        <label class="zad-f"><span>Szezonon kívül / éj</span><span class="zad-suf"><input type="number" data-ap="${i}" data-k="price" value="${a.price}" min="0" step="500"><i>Ft</i></span></label>
+        <label class="zad-chk"><input type="checkbox" data-ap="${i}" data-k="active" ${a.active ? "checked" : ""}> Online foglalható</label>
+      </div>`).join("") + `</div></section>`;
+    h += `<section class="zad-sec"><h3>Időszakos árak</h3><p class="zfb-fine" style="margin:-6px 0 10px">Egy időszakra az alapár helyett ez az ár érvényes (pl. főszezon). Ha több sor is illik egy napra, a lejjebb lévő számít.</p>
+      <div class="zad-rules">` + (S.price_rules || []).map((r, i) => `
+        <div class="zad-rule"><label class="zad-f"><span>Ettől</span><input type="date" data-ru="${i}" data-k="from" value="${esc(r.from)}"></label>
+        <label class="zad-f"><span>Eddig (utolsó éj)</span><input type="date" data-ru="${i}" data-k="to" value="${esc(r.to)}"></label>
+        <label class="zad-f"><span>Apartman</span><select data-ru="${i}" data-k="apt"><option value="all">Mindegyik</option>${S.apartments.map((a) => `<option value="${a.id}" ${r.apt === a.id ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</select></label>
+        <label class="zad-f"><span>Ár / éj</span><span class="zad-suf"><input type="number" data-ru="${i}" data-k="price" value="${esc(r.price)}" min="0" step="500"><i>Ft</i></span></label>
+        <button type="button" class="zad-b del" data-delrule="${i}" aria-label="Sor törlése">✕</button></div>`).join("") + `</div>
+      <button type="button" class="zad-b" data-addrule="1">+ Új időszak</button>
+      <div class="zad-grid" style="margin-top:12px">${num("weekend_pct", "Hétvégi felár (péntek, szombat éj)", "%", 0, 100)}</div></section>`;
+    h += `<section class="zad-sec"><h3>Foglalási szabályok</h3><div class="zad-grid">
+      ${txt("season_from", "Szezon kezdete (hó-nap)", "05-15")}${txt("season_to", "Szezon vége (hó-nap)", "10-15")}
+      ${num("min_nights", "Legalább", "éj", 1, 60)}${num("max_nights", "Legfeljebb", "éj", 1, 120)}
+      ${num("lead_days", "Legkorábban érkezés előtt", "nappal", 0, 60)}${num("horizon_days", "Előre foglalható", "napra", 30, 420)}
+      ${txt("checkin", "Érkezés ettől", "14:00")}${txt("checkout", "Távozás eddig", "10:00")}
+      ${num("tax", "Idegenforgalmi adó / fő / éj", "Ft", 0, 100000)}${num("deposit_pct", "Előleg", "%", 0, 100)}
+      ${num("pending_days", "Függő kérés lejár", "nap után", 1, 14)}${num("pay_days", "Utalási határidő", "nap", 1, 30)}
+      </div></section>`;
+    h += `<section class="zad-sec"><h3>Bankszámla adatok</h3><p class="zfb-fine" style="margin:-6px 0 10px">A jóváhagyó e-mail ezeket küldi el a vendégnek az előleg utalásához.</p>
+      <h4 class="zad-h4">Belföldi utalás</h4><div class="zad-grid">
+      ${txt("bank_holder", "Kedvezményezett neve")}${txt("bank_name", "Bank neve")}${txt("bank_account", "Számlaszám", "12345678-12345678-12345678")}</div>
+      <h4 class="zad-h4">Külföldi utalás</h4><div class="zad-grid">
+      ${txt("bank_iban", "IBAN", "HU00 1234 5678 1234 5678 1234 5678")}${txt("bank_swift", "SWIFT / BIC", "pl. OTPVHUHB")}${txt("bank_address", "Bank címe (nem kötelező)", "pl. 1051 Budapest, Nádor u. 16.")}</div></section>`;
+    h += `<section class="zad-sec"><h3>SZÉP-kártya elfogadás</h3><p class="zfb-fine" style="margin:-6px 0 10px">Ami ki van töltve, az megjelenik a foglalási ablakban és a vendég jóváhagyó e-mailjében (online SZÉP-kártyás utaláshoz kell). Üresen hagyva nem jelenik meg.</p><div class="zad-grid">
+      ${txt("szep_otp", "OTP Széchenyi Pihenőkártya – szerződésszám", "SZK/2020/…")}${txt("szep_mbh", "MBH (MKB) Széchenyi Pihenőkártya – szerződésszám", "S14598")}${txt("szep_kh", "K&H Széchenyi Pihenőkártya – elfogadóhely-azonosító", "84059114")}</div></section>`;
+    h += `<section class="zad-sec"><h3>Elérhetőség és értesítés</h3><div class="zad-grid">
+      ${txt("phone", "Telefon (vendégeknek)")}${txt("email", "E-mail (vendégeknek)", "", "email")}${txt("notify_email", "Új foglalásról értesítés ide", "", "email")}
+      ${txt("address", "Cím")}${txt("ntak", "NTAK regisztrációs szám", "MA22033593 / MA22033128")}${txt("rules_url", "Házirend linkje", "https://", "url")}${txt("privacy_url", "Adatkezelési tájékoztató linkje", "https://", "url")}</div>
+      <button type="button" class="zad-b" data-testmail="1">Próba e-mail küldése</button></section>`;
+    const L = (A.data && A.data.ical_links) || {}, IC = S.ical || {}, LOG = S.sync_log || {};
+    const SRC = [["airbnb", "Airbnb"], ["szallas", "Szállás.hu"], ["egyeb", "Egyéb (pl. Booking)"]];
+    const cp = (u) => `<span class="zad-exp"><input type="text" readonly value="${esc(u || "")}" data-selall="1"><button type="button" class="zad-b" data-copy="${esc(u || "")}">Másolás</button></span>`;
+    h += `<section class="zad-sec"><h3>Naptárszinkron – Airbnb, Szállás.hu, Google Naptár</h3>
+      <p class="zfb-fine" style="margin:-6px 0 10px"><b>Behúzás:</b> az Airbnb / Szállás.hu naptárexport (iCal, .ics) linkjét másold be apartmanonként – az ottani foglalások itt automatikusan zárolják a napokat (óránként frissül). <b>Kiküldés:</b> az „Airbnb-be” / „Szállás.hu-ba” linket add hozzá az adott platform naptárimportjánál, így az itteni foglalások ott is lezárják a napokat.</p>`
+      + S.apartments.map((a) => `<div class="zad-ical" style="--ac:${a.color}"><h4><span class="zfb-no">${a.no}</span> ${esc(a.name)}</h4><div class="zad-ical-g">
+        <div>${SRC.map(([k, n]) => { const l = LOG[a.id + "|" + k]; return `<label class="zad-f"><span>${n} naptár linkje (behúzás)</span><input type="url" data-ical="${a.id}" data-src="${k}" value="${esc((IC[a.id] || {})[k] || "")}" placeholder="https://…ics">${l ? `<small class="${l.ok ? "zad-ok" : "zad-bad"}">${l.ok ? "✓" : "⚠"} ${esc(l.t)} – ${esc(l.msg)}</small>` : ""}</label>`; }).join("")}</div>
+        <div class="zad-f"><span>Kiküldés – Airbnb-be</span>${cp((L[a.id] || {}).airbnb)}<span>Kiküldés – Szállás.hu-ba</span>${cp((L[a.id] || {}).szallas)}<span>Általános (pl. Booking.com)</span>${cp((L[a.id] || {}).altalanos)}</div></div></div>`).join("")
+      + `<div class="zad-ical"><h4>Google Naptár – minden apartman, részletesen (név, telefon, összeg)</h4>${cp(L.google)}
+        <p class="zfb-fine">Google Naptár → Egyéb naptárak → + → „URL-ről” → illeszd be. A Google kb. 12–24 óránként frissít. A link személyes adatokat tartalmaz: csak a saját fiókodba add hozzá.</p></div>
+      <p style="margin-top:10px"><button type="button" class="zad-b pri" data-sync="1">Szinkronizálás most</button> <label class="zad-chk" style="display:inline-flex;margin-left:12px"><input type="checkbox" data-s="regen_ical_key"> Új titkos naptárkulcs (a régi kiküldési linkek megszűnnek)</label></p></section>`;
+    h += `<div class="zad-save"><button class="zfb-btn" type="submit">Beállítások mentése</button></div></form>`;
+    h += `<form class="zad-form zad-sec" data-form="password"><h3>Jelszó megváltoztatása</h3><div class="zad-grid">
+      <label class="zad-f"><span>Jelenlegi jelszó</span><input type="password" name="old" autocomplete="current-password" required></label>
+      <label class="zad-f"><span>Új jelszó (min. 8 karakter)</span><input type="password" name="new" autocomplete="new-password" minlength="8" required></label>
+      </div><button class="zad-b pri" type="submit">Jelszó mentése</button></form>
+      <p style="margin-top:18px"><button type="button" class="zad-b" data-logout="1">Kilépés ezen az eszközön</button></p>`;
+    return h;
+  }
+
+  /* ---------- Programajánló / rendezvények (a kezdőoldalon jelennek meg) ---------- */
+  const EVC = { fesztival: "Fesztivál", koncert: "Koncert", sport: "Sport", gasztro: "Gasztro", kultura: "Kultúra", csalad: "Családi", egyeb: "Egyéb" };
+  async function loadEv() { try { const r = await call("events_all"); A.ev = r.events || []; A.evToday = r.today; } catch (x) { A.err = x.message; } render(); }
+  function progView() {
+    if (!A.ev) return `<div class="zfb-loading"><i></i><span>Programok betöltése…</span></div>`;
+    const t = A.evToday || A.data.today, E = A.evEdit;
+    let h = `<section class="zad-sec"><h3>Programajánló – rendezvények</h3><p class="zfb-fine" style="margin:-6px 0 12px">Ezek a kezdőoldal „Programajánló / Rendezvények” részében jelennek meg, dátum szerint. A lejárt programok maguktól eltűnnek a kezdőoldalról.</p>
+      ${E ? "" : `<button type="button" class="zfb-btn" data-evnew="1">+ Új program</button>`}</section>`;
+    if (E) {
+      const v = (k) => esc(E[k] == null ? "" : E[k]);
+      h += `<form class="zad-form" data-form="ev"><h3 class="zad-h4" style="margin-top:0">${E.id ? "Program szerkesztése" : "Új program"}</h3><div class="zad-grid">
+        <label class="zad-f wide"><span>A program neve *</span><input name="title" required value="${v("title")}" placeholder="pl. Zamárdi Napok"></label>
+        <label class="zad-f"><span>Első nap *</span><input type="date" name="from" required value="${v("from")}"></label>
+        <label class="zad-f"><span>Utolsó nap (ha több napos)</span><input type="date" name="to" value="${v("to")}"></label>
+        <label class="zad-f"><span>Időpont</span><input name="time" value="${v("time")}" placeholder="pl. 18:00-tól"></label>
+        <label class="zad-f"><span>Helyszín</span><input name="place" value="${v("place")}" placeholder="pl. Zamárdi Szabadstrand"></label>
+        <label class="zad-f"><span>Kategória</span><select name="cat">${Object.entries(EVC).map(([k, n]) => `<option value="${k}" ${E.cat === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+        <label class="zad-f wide"><span>Rövid leírás</span><textarea name="desc" rows="3">${v("desc")}</textarea></label>
+        <label class="zad-f"><span>Bővebben – a rendezvény saját oldala</span><input type="url" name="url" value="${v("url")}" placeholder="https://…"></label>
+        <label class="zad-f"><span>Jegyfoglalás / jegyvásárlás linkje</span><input type="url" name="ticket" value="${v("ticket")}" placeholder="https://…"></label>
+        <label class="zad-f wide"><span>Kép linkje (nem kötelező)</span><input name="img" value="${v("img")}" placeholder="https://… vagy /uj/img/programok/kep.jpg"></label>
+      </div><div class="zad-checks" style="display:flex;gap:18px;flex-wrap:wrap;margin-top:12px">
+        <label class="zad-chk"><input type="checkbox" name="top" ${E.top ? "checked" : ""}> Kiemelt program (nagyobb kártya)</label>
+        <label class="zad-chk"><input type="checkbox" name="hidden" ${E.hidden ? "checked" : ""}> Rejtve (nem látszik a kezdőoldalon)</label></div>
+        <div class="zad-acts" style="margin-top:14px"><button type="submit" class="zad-b pri">Mentés</button><button type="button" class="zad-b" data-evcancel="1">Mégse</button></div></form>`;
+    }
+    const up = A.ev.filter((e) => (e.to || e.from) >= t), past = A.ev.filter((e) => (e.to || e.from) < t);
+    const row = (e) => `<article class="zad-c zad-ev${e.hidden ? " off" : ""}" style="--ac:${e.top ? "#f2b233" : "#0b2f5e"}">
+      <div class="zad-c-hd"><b>${esc(e.title)}</b><span class="zad-st st-approved">${EVC[e.cat] || "Egyéb"}</span></div>
+      <div class="zad-c-dates"><b>${hu(e.from)}${e.to ? " – " + hu(e.to) : ""}</b>${e.time ? ` <span>${esc(e.time)}</span>` : ""}</div>
+      ${e.place ? `<div class="zad-c-who">${esc(e.place)}</div>` : ""}${e.desc ? `<p class="zad-note">${esc(e.desc)}</p>` : ""}
+      <div class="zad-c-who"><small>${e.url ? "🔗 Bővebben link · " : ""}${e.ticket ? "🎫 Jegy link · " : ""}${e.top ? "★ Kiemelt · " : ""}${e.hidden ? "Rejtve" : "Látható"}</small></div>
+      <div class="zad-acts"><button type="button" class="zad-b" data-evedit="${e.id}">Szerkesztés</button><button type="button" class="zad-b" data-evdup="${e.id}">Másolat</button><button type="button" class="zad-b del" data-evdel="${e.id}">Törlés</button></div></article>`;
+    h += `<section class="zad-sec"><h3>Közelgő programok <em>${up.length}</em></h3>${up.length ? `<div class="zad-cards">${up.map(row).join("")}</div>` : `<p class="zad-empty">Még nincs felvéve program. Az „+ Új program” gombbal adhatsz hozzá.</p>`}</section>`;
+    if (past.length) h += `<section class="zad-sec"><button type="button" class="zad-link" data-evpast="1">${A.evPast ? "▾" : "▸"} Elmúlt programok (${past.length})</button>${A.evPast ? `<div class="zad-cards">${past.map(row).join("")}</div>` : ""}</section>`;
+    return h;
+  }
+  async function saveEv(list, msg) {
+    A.busy = true; render();
+    try { const r = await call("events_save", { events: list }); A.ev = r.events; A.evEdit = null; A.busy = false; flash(msg || r.message); try { window.dispatchEvent(new Event("zephyr-events-changed")); } catch (z) {} }
+    catch (x) { A.busy = false; A.err = x.message; render(); }
+  }
+
+  function dlgView() {
+    const d = A.dlg;
+    const b = A.data.bookings.find((x) => x.id === d.id) || {};
+    if (d.act === "delext") {
+      const src = SRCN[b.source] || "külső";
+      return `<div class="zad-dlg"><form class="zad-dlg-in warn" data-form="dlg"><h3>⚠ ${src} foglalás törlése</h3>
+      <p><b>${esc(b.label || src)}</b> · ${hu(b.checkin)} – ${hu(b.checkout)}</p>
+      <div class="zad-bigwarn"><b>Figyelem!</b> Ez a foglalás a(z) ${src} oldalán létezik. Ha itt törlöd, a napok a sétában és a többi platformon (${b.source === "szallas" ? "Airbnb" : "Szállás.hu"}) is szabaddá válnak – <b>dupla foglalás</b> lehet belőle. A vendég foglalását ez <b>nem</b> mondja le a(z) ${src}-n.<br>Csak akkor töröld, ha a(z) ${src}-n már biztosan nincs meg (pl. lemondták, de a szinkron még nem frissült).</div>
+      <label class="zad-chk"><input type="checkbox" name="confirm" required> Megértettem, mégis törlöm</label>
+      <label class="zad-chk"><input type="checkbox" name="ignore"> A szinkron se hozza vissza (ha a platformon még szerepel)</label>
+      <div class="zad-acts"><button type="submit" class="zad-b del">Törlés</button><button type="button" class="zad-b" data-dlgclose="1">Mégse</button></div></form></div>`;
+    }
+    const t = { reject: "Kérés elutasítása", cancel: "Foglalás törlése", note: "Saját megjegyzés", delete: "Végleges törlés", approve: "Jóváhagyás", paid: "Előleg megérkezett" }[d.act] || "";
+    const txt = {
+      approve: `A vendég e-mailt kap az előleg (${money(b.deposit)}) utalásához szükséges adatokkal.`,
+      paid: "A foglalás véglegessé válik, a vendég visszaigazoló e-mailt kap.",
+      delete: "A foglalás minden adata véglegesen törlődik. Ez nem vonható vissza.",
+      cancel: "A napok felszabadulnak, és újra foglalhatók lesznek.",
+      reject: "A napok felszabadulnak.",
+    }[d.act] || "";
+    const needsReason = ["reject", "cancel"].includes(d.act);
+    return `<div class="zad-dlg"><form class="zad-dlg-in" data-form="dlg"><h3>${t}</h3>
+      <p><b>${esc(b.name || b.label || "")}</b> · ${hu(b.checkin)} – ${hu(b.checkout)}</p>${txt ? `<p class="zfb-fine">${txt}</p>` : ""}
+      ${needsReason ? `<label class="zad-f"><span>Üzenet a vendégnek (nem kötelező)</span><textarea name="reason" rows="3"></textarea></label>${b.email ? `<label class="zad-chk"><input type="checkbox" name="notify" ${d.act === "reject" ? "checked" : ""}> E-mail a vendégnek</label>` : ""}` : ""}
+      ${d.act === "note" ? `<label class="zad-f"><span>Csak te látod</span><textarea name="reason" rows="4">${esc(b.admin_note || "")}</textarea></label>` : ""}
+      <div class="zad-acts"><button type="submit" class="zad-b ${d.act === "delete" ? "del" : "pri"}">${d.act === "note" ? "Mentés" : "Rendben"}</button><button type="button" class="zad-b" data-dlgclose="1">Mégse</button></div></form></div>`;
+  }
+
+  /* ---------- események ---------- */
+  function flash(m) { A.msg = m; A.err = ""; render(); clearTimeout(flash.t); flash.t = setTimeout(() => { A.msg = ""; if (el && !el.hidden) render(); }, 5000); }
+  function grabSettings() {
+    const S = A.settings;
+    el.querySelectorAll("[data-s]").forEach((i) => { S[i.dataset.s] = i.type === "checkbox" ? (i.checked ? 1 : 0) : i.value; });
+    el.querySelectorAll("[data-ap]").forEach((i) => { const a = S.apartments[+i.dataset.ap]; a[i.dataset.k] = i.type === "checkbox" ? (i.checked ? 1 : 0) : i.value; });
+    el.querySelectorAll("[data-ru]").forEach((i) => { const r = S.price_rules[+i.dataset.ru]; if (r) r[i.dataset.k] = i.value; });
+    el.querySelectorAll("[data-se]").forEach((i) => { const x = (S.seasons || [])[+i.dataset.se]; if (x) x[i.dataset.k] = i.value.trim(); });
+    el.querySelectorAll("[data-sp]").forEach((i) => { const x = (S.seasons || [])[+i.dataset.sp]; if (x) (x.prices = x.prices || {})[i.dataset.apt] = +i.value || 0; });
+    if (el.querySelector("[data-ical]")) { S.ical = {}; el.querySelectorAll("[data-ical]").forEach((i) => { if (i.value.trim()) (S.ical[i.dataset.ical] = S.ical[i.dataset.ical] || {})[i.dataset.src] = i.value.trim(); }); }
+  }
+  async function onClick(e) {
+    const b = e.target.closest("button"); if (!b || b.disabled) return;
+    if (b.dataset.tab) { if (A.tab === "settings") grabSettings(); A.tab = b.dataset.tab; A.err = ""; A.msg = ""; render(); el.querySelector(".zad-body").scrollTop = 0; if (A.tab === "prog" && !A.ev) loadEv(); return; }
+    if (b.dataset.reload) { if (A.tab === "prog") { A.ev = null; render(); return loadEv(); } return load(); }
+    if (b.dataset.evnew) { A.evEdit = { cat: "egyeb" }; render(); el.querySelector(".zad-body").scrollTop = 0; return; }
+    if (b.dataset.evcancel) { A.evEdit = null; return render(); }
+    if (b.dataset.evpast) { A.evPast = !A.evPast; return render(); }
+    if (b.dataset.evedit) { A.evEdit = Object.assign({}, A.ev.find((e) => e.id === b.dataset.evedit)); render(); el.querySelector(".zad-body").scrollTop = 0; return; }
+    if (b.dataset.evdup) { const e = Object.assign({}, A.ev.find((x) => x.id === b.dataset.evdup)); delete e.id; e.title += " (másolat)"; A.evEdit = e; render(); el.querySelector(".zad-body").scrollTop = 0; return; }
+    if (b.dataset.evdel) { const e = A.ev.find((x) => x.id === b.dataset.evdel); if (e && window.confirm("Biztosan törlöd ezt a programot?\n\n" + e.title)) return saveEv(A.ev.filter((x) => x.id !== e.id), "Program törölve."); return; }
+    if (b.dataset.closed) { A.showClosed = !A.showClosed; return render(); }
+    if (b.dataset.month) { const n = +b.dataset.month; if (!n) A.month = A.data.today.slice(0, 7); else { const d = pd(A.month + "-01"); d.setMonth(d.getMonth() + n); A.month = ymd(d).slice(0, 7); } A.calSel = null; return render(); }
+    if (b.dataset.cal) { A.calSel = A.calSel === b.dataset.cal ? null : b.dataset.cal; return render(); }
+    if (b.dataset.act) { A.dlg = { act: b.dataset.act, id: b.dataset.id }; if (b.dataset.act === "resend") return doAction("resend", b.dataset.id, {}); return render(); }
+    if (b.dataset.dlgclose) { A.dlg = null; return render(); }
+    if (b.dataset.addrule) { grabSettings(); (A.settings.price_rules = A.settings.price_rules || []).push({ from: "", to: "", apt: "all", price: "" }); return render(); }
+    if (b.dataset.delrule) { grabSettings(); A.settings.price_rules.splice(+b.dataset.delrule, 1); return render(); }
+    if (b.dataset.logout) { try { await call("logout", {}); } catch (x) {} setTok(""); A.data = null; return render(); }
+    if (b.dataset.copy != null) { try { navigator.clipboard.writeText(b.dataset.copy); b.textContent = "Másolva ✓"; setTimeout(() => (b.textContent = "Másolás"), 1600); } catch (x) {} return; }
+    if (b.dataset.sync) { grabSettings(); A.busy = true; render(); try { await call("save_settings", { settings: A.settings }); const r = await call("sync", {}); A.settings = null; await load(true); flash(r.message); } catch (x) { A.busy = false; A.err = x.message; render(); } return; }
+    if (b.dataset.testmail) { A.busy = true; render(); try { const r = await call("test_mail", {}); A.busy = false; r.ok ? flash(r.message) : (A.err = r.message, render()); } catch (x) { A.busy = false; A.err = x.message; render(); } return; }
+  }
+  async function doAction(act, id, extra) {
+    A.busy = true; render();
+    try { const r = await call("action", Object.assign({ do: act, id }, extra)); A.dlg = null; await load(true); flash(r.message); }
+    catch (x) { A.busy = false; A.dlg = null; A.err = x.message; render(); }
+  }
+  async function onSubmit(e) {
+    e.preventDefault();
+    const f = e.target, kind = f.dataset.form, fd = Object.fromEntries(new FormData(f).entries());
+    if (kind === "login") {
+      A.busy = true; A.err = ""; render();
+      try { const r = await call("login", { password: fd.password }); setTok(r.token); await load(); if (A.tab === "prog") loadEv(); }
+      catch (x) { A.busy = false; A.err = x.message; render(); }
+      return;
+    }
+    if (kind === "ev") {
+      const E = Object.assign({}, A.evEdit, fd, { top: !!fd.top, hidden: !!fd.hidden });
+      if (!E.title || !E.from) { A.err = "A program neve és az első nap kötelező."; return render(); }
+      if (E.to && E.to < E.from) { A.err = "Az utolsó nap nem lehet az első nap előtt."; return render(); }
+      const list = A.ev.slice(); const i = E.id ? list.findIndex((x) => x.id === E.id) : -1;
+      if (i >= 0) list[i] = E; else list.push(E);
+      return saveEv(list, i >= 0 ? "Program módosítva." : "Program felvéve.");
+    }
+    if (kind === "dlg") {
+      const d = A.dlg;
+      if (d.act === "delext") { if (!fd.confirm) { A.err = "A törléshez jelöld be: „Megértettem, mégis törlöm”."; return render(); } return doAction("delete", d.id, { confirm: 1, ignore: fd.ignore ? 1 : 0 }); }
+      return doAction(d.act, d.id, { reason: fd.reason || "", notify: !!fd.notify });
+    }
+    if (kind === "manual") {
+      if (!fd.checkin || !fd.checkout || fd.checkout <= fd.checkin) { A.err = "A távozás napja legyen az érkezés után."; return render(); }
+      A.busy = true; render();
+      try { const r = await call("manual", fd); f.reset(); await load(true); A.tab = "list"; flash(r.message); }
+      catch (x) { A.busy = false; A.err = x.message; render(); }
+      return;
+    }
+    if (kind === "settings") {
+      grabSettings(); A.busy = true; render();
+      try { const r = await call("save_settings", { settings: A.settings }); A.settings = JSON.parse(JSON.stringify(r.settings)); await load(true); if (window.ZephyrBooking && ZephyrBooking.reset) ZephyrBooking.reset(); flash(r.message); }
+      catch (x) { A.busy = false; A.err = x.message; render(); }
+      return;
+    }
+    if (kind === "password") {
+      A.busy = true; render();
+      try { const r = await call("password", { old: fd.old, new: fd.new }); A.initial = false; await load(true); flash(r.message); }
+      catch (x) { A.busy = false; A.err = x.message; render(); }
+    }
+  }
+
+  window.ZephyrAdmin = { open, close };
+  if (location.hash === "#foglalas-admin") setTimeout(open, 600);
+  window.addEventListener("hashchange", () => { if (location.hash === "#foglalas-admin") open(); });
+})();
+
+</script>

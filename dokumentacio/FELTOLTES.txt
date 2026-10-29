@@ -1,0 +1,22 @@
+ZEPHYR – ÚJ KEZDŐOLDAL + FORGATHATÓ KOCKA + PROGRAMOK – FELTÖLTÉS
+================================================================
+
+A ZIP-ben két mappa van. Mindkettőt a tárhely FŐ mappájába töltsd fel (FileZillával),
+oda, ahol a „wp-content” és a „virtualis-seta” mappa is van:
+
+  virtualis-seta/index.html     – a séta a forgatható kockával (felülírja a régit)
+  virtualis-seta/api/index.php  – foglalás + programok + viharjelzés (felülírja a régit)
+  uj/                           – AZ ÚJ KEZDŐOLDAL (új mappa, képekkel)
+
+Az új kezdőoldal címe:  https://balatoni-udules.hu/uj/
+A régi WordPress-oldal közben változatlanul megy tovább. Ha az új oldal elkészült és tetszik,
+megbeszéljük, hogyan kerüljön a fő címre (balatoni-udules.hu), úgy, hogy a Google-helyezés megmaradjon.
+
+DRÓNVIDEÓ: a uj/video mappába, dron.mp4 néven.
+
+PROGRAMOK SZERKESZTÉSE
+– A kezdőoldalon a Rendezvények résznél: „Programok szerkesztése (tulajdonos)”,
+  vagy a lábléc alján „Tulajdonosi belépés” → „Programok” fül.
+– Ugyanaz a jelszó, mint a foglalásoknál.
+
+A LÁTNIVALÓK KÉPEI a régi weboldal képeit használják (wp-content/uploads) – ezeket ne töröld.

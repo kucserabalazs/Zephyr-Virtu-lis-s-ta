@@ -1,0 +1,4 @@
+# a szerveren keletkező adatok (foglalások, jelszó, vendégadatok) SOHA ne kerüljenek ide
+**/api/data/
+*.log
+.DS_Store
