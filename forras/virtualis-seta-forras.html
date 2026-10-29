@@ -48,107 +48,76 @@ button { font: inherit; }
 .plate .unit { font: 800 13px/1.3 var(--body); color: var(--signal); letter-spacing: .06em; text-transform: uppercase; }
 .plate .unit:empty { display: none; }
 .plate .place { font: 800 26px/1.05 var(--display); letter-spacing: .02em; text-transform: uppercase; text-wrap: balance; }
-/* ---- Forgatható üveghasáb (bal felül): 1 helyszín · 2 Map · 3 Back · 4 Home · 5–6 (tető/alj) később ----
-   Négy oldal körbe forog (vízszintes húzás), a tető és az alj függőleges húzással jön elő. */
-.cubebox { --W: 224px; --H: 136px; --gp: 15px; position: relative; flex: none; width: calc(var(--W) + 44px); padding: 0 22px; box-sizing: border-box; display: grid; justify-items: center; }
-.cube-stage { width: var(--W); height: var(--H); perspective: calc(var(--W) * 4.2); perspective-origin: 50% 45%; position: relative; touch-action: none; cursor: grab; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+/* ---- Forgatható üvegkocka (bal felül) – a tulajdonos 6–7. mintaképe szerint ----
+   Nyugalomban is térben áll: kissé elfordítva és felülről nézve, jobbra a felénk néző (aktív) lap,
+   balra keskenyen a szomszédja. Lapok: 1 helyszín · 2 MAP · 3 BACK · 4 HOME. Teteje/alja tiszta üveg. */
+.cubebox { --S: 120px; --H: 126px; --gp: 11px; position: relative; flex: none; width: calc(var(--S) * 1.5); display: grid; justify-items: center; padding-top: 10px; box-sizing: border-box; }
+.cube-stage { width: var(--S); height: var(--H); perspective: calc(var(--S) * 4.6); perspective-origin: 50% 0%; position: relative; touch-action: none; cursor: grab; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
 .cube-stage img { -webkit-user-drag: none; pointer-events: none; }
 .cube-stage.drag { cursor: grabbing; }
-.cube-stage:focus-visible::after { content: ""; position: absolute; inset: -6px; border-radius: 24px; outline: 2px solid #9fd8ff; }
-.cube { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.2,1.25,.35,1); will-change: transform; }
+.cube-stage:focus-visible::after { content: ""; position: absolute; inset: -14px -30px; border-radius: 24px; outline: 2px solid #bfe6ff; }
+.cube { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .75s cubic-bezier(.2,1.2,.35,1); will-change: transform; }
 .cube-stage.drag .cube, .cube.instant { transition: none; }
-.cube-shadow { position: absolute; left: 10%; right: 10%; bottom: -16px; height: 18px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,10,30,.5), transparent); filter: blur(3px); }
-/* egy oldal: vastag, kristálytiszta üvegkeret, benne fedett sötétkék (vagy piros) panel – a tulajdonos mintaképe szerint */
-.cf { position: absolute; left: 0; top: 0; width: var(--W); height: var(--H); box-sizing: border-box; border-radius: calc(var(--H) * .17); padding: var(--gp); backface-visibility: hidden; -webkit-backface-visibility: hidden;
+.cube-stage.press .cube { transform: var(--rot) scale(.93); transition: transform .12s; }
+/* egy oldal: vastag kristályüveg keret + fedett sötétkék (Home: piros) panel */
+.cf { position: absolute; left: 0; top: 0; width: var(--S); height: var(--H); box-sizing: border-box; border-radius: calc(var(--S) * .16); backface-visibility: hidden; -webkit-backface-visibility: hidden;
   background:
-    radial-gradient(120% 60% at 50% -14%, rgba(255,255,255,.7) 0%, rgba(255,255,255,0) 32%),
-    radial-gradient(40% 40% at 0% 100%, rgba(255,255,255,.6) 0%, rgba(255,255,255,0) 60%),
-    radial-gradient(40% 40% at 100% 100%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 60%),
-    linear-gradient(115deg, rgba(255,255,255,.0) 30%, rgba(255,255,255,.55) 34%, rgba(255,255,255,0) 40%),
-    linear-gradient(180deg, #f4fbff 0%, #b9dcf7 10%, #6fa8de 26%, #2f6db5 44%, #4f8fd0 58%, #a7d2f4 76%, #e9f6ff 90%, #ffffff 100%);
+    linear-gradient(118deg, rgba(255,255,255,0) 26%, rgba(255,255,255,.55) 31%, rgba(255,255,255,0) 37%),
+    linear-gradient(180deg, rgba(255,255,255,.92) 0%, rgba(205,232,255,.45) 9%, rgba(110,165,225,.42) 30%, rgba(60,120,200,.5) 50%, rgba(120,180,235,.45) 72%, rgba(215,238,255,.6) 90%, rgba(255,255,255,.95) 100%);
   box-shadow:
-    inset 0 0 0 1.5px rgba(255,255,255,1),
-    inset 0 0 0 3px rgba(60,120,190,.55),
-    inset 0 0 0 4.5px rgba(255,255,255,.7),
-    inset 0 0 calc(var(--gp) * .9) rgba(255,255,255,.55),
-    inset 3px 3px 6px rgba(255,255,255,.9),
-    inset -3px -3px 6px rgba(20,70,140,.35),
-    0 1px 0 rgba(255,255,255,.6),
-    0 14px 26px rgba(0,30,70,.38);
+    inset 0 0 0 1.5px #fff,
+    inset 0 0 0 3px rgba(70,130,200,.5),
+    inset 0 0 0 4.5px rgba(255,255,255,.6),
+    inset 3px 4px 7px rgba(255,255,255,.95),
+    inset -3px -4px 7px rgba(25,80,150,.45),
+    inset 0 0 calc(var(--gp) * 1.1) rgba(255,255,255,.5);
   filter: brightness(var(--lit, 1)); }
-.cf::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3;
+.cf::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; mix-blend-mode: screen;
   background:
-    linear-gradient(112deg, transparent 0 calc(var(--sh, 30%) - 10%), rgba(255,255,255,.28) var(--sh, 30%), transparent calc(var(--sh, 30%) + 10%)),
-    radial-gradient(22px 12px at 16% 5%, rgba(255,255,255,1), transparent 70%),
-    radial-gradient(9px 24px at 3% 42%, rgba(255,255,255,.95), transparent 70%),
-    radial-gradient(18px 9px at 84% 96%, rgba(255,255,255,.95), transparent 70%),
-    radial-gradient(8px 16px at 97% 30%, rgba(255,255,255,.8), transparent 70%);
-  mix-blend-mode: screen; }
-.cf::after { content: ""; position: absolute; left: 12%; right: 30%; top: 2px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, rgba(255,255,255,0), #fff, rgba(255,255,255,0)); pointer-events: none; z-index: 3; }
-.cf-in, .cf1 .cf-in.plate { position: absolute; inset: var(--gp); border-radius: calc(var(--H) * .09); overflow: hidden; box-sizing: border-box;
-  background: linear-gradient(180deg, #17345c 0%, #10284a 40%, #0a1d38 100%);
-  box-shadow: 0 0 0 1.5px rgba(8,22,44,.95), 0 0 0 3px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.22), inset 0 8px 18px rgba(255,255,255,.07), inset 0 -10px 20px rgba(0,0,0,.4); }
-.cf-in { display: grid; grid-template-columns: 100%; place-items: center; align-content: center; gap: 0; text-align: center; padding: 4px 8px; opacity: var(--cv, 1); }
-.cf-in::before, .cf1 .cf-in.plate::before { content: ""; position: absolute; inset: 0; background: linear-gradient(170deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.03) 32%, transparent 45%); pointer-events: none; }
-.cf-red .cf-in { background: linear-gradient(180deg, #ff4a3c 0%, #e0221a 42%, #b3120c 100%); box-shadow: 0 0 0 1.5px rgba(80,6,4,.9), 0 0 0 3px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.45), inset 0 10px 20px rgba(255,255,255,.18), inset 0 -10px 20px rgba(80,0,0,.35); }
-.cf-red .cf-in::before { background: linear-gradient(170deg, rgba(255,255,255,.3) 0%, rgba(255,255,255,.06) 34%, transparent 48%); }
-.cube-stage.glint .cf-front::before { animation: glint 1.2s ease-in-out; }
-@keyframes glint { from { background-position: -200px 0, 0 0, 0 0, 0 0; } to { background-position: 300px 0, 0 0, 0 0, 0 0; } }
-.cf1 { transform: rotateY(0deg) translateZ(calc(var(--W) / 2)); }
-.cf2 { transform: rotateY(90deg) translateZ(calc(var(--W) / 2)); }
-.cf3 { transform: rotateY(180deg) translateZ(calc(var(--W) / 2)); }
-.cf4 { transform: rotateY(-90deg) translateZ(calc(var(--W) / 2)); }
-.cf5, .cf6 { height: var(--W); top: calc((var(--H) - var(--W)) / 2); }
-.cf5 { transform: rotateX(90deg) translateZ(calc(var(--H) / 2)); }
-.cf6 { transform: rotateX(-90deg) translateZ(calc(var(--H) / 2)); }
-.cf-ico { width: auto; height: calc(var(--H) * .43); filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); transition: transform .3s; position: relative; }
-.cf-lbl { position: relative; font: 800 calc(var(--H) * .22)/1.05 var(--display); letter-spacing: .02em; text-transform: uppercase; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,.45); margin-top: 1px; }
-.cf-in small { display: none; }
-.cf-row { display: flex; align-items: center; justify-content: center; gap: 12px; position: relative; }
-.cube-stage:hover .cf-front .cf-ico { transform: scale(1.07) translateY(-2px); }
-.cube-stage.press .cube { transform: var(--rot) scale(.94); transition: transform .12s; }
-.cf-rot .cf-lbl { font-size: calc(var(--H) * .17); }
-.cf5 .cf-in, .cf6 .cf-in { align-content: center; }
-/* 1. oldal: a helyszín */
-.cf1 .cf-in.plate { all: unset; position: absolute; inset: var(--gp); border-radius: calc(var(--H) * .09); overflow: hidden; box-sizing: border-box; display: grid; align-content: center; justify-items: start; gap: 0; padding: 4px calc(var(--H) * .14) 6px; text-align: left; opacity: var(--cv, 1);
-  background: linear-gradient(180deg, #17345c 0%, #10284a 40%, #0a1d38 100%);
-  box-shadow: 0 0 0 1.5px rgba(8,22,44,.95), 0 0 0 3px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.22), inset 0 8px 18px rgba(255,255,255,.07), inset 0 -10px 20px rgba(0,0,0,.4); }
-.cf1 .plate::after { content: ""; position: absolute; right: -2%; bottom: -10%; width: 58%; height: 118%; background: #2b4f80; opacity: .55; -webkit-mask: var(--boat) center / contain no-repeat; mask: var(--boat) center / contain no-repeat; transform: rotate(-4deg); pointer-events: none; }
+    linear-gradient(112deg, transparent 0 calc(var(--sh, 30%) - 9%), rgba(255,255,255,.22) var(--sh, 30%), transparent calc(var(--sh, 30%) + 9%)),
+    radial-gradient(calc(var(--S) * .2) calc(var(--S) * .08) at 22% 4%, #fff, transparent 70%),
+    radial-gradient(calc(var(--S) * .07) calc(var(--S) * .24) at 3% 34%, rgba(255,255,255,.95), transparent 70%),
+    radial-gradient(calc(var(--S) * .16) calc(var(--S) * .07) at 80% 97%, rgba(255,255,255,.9), transparent 70%),
+    radial-gradient(calc(var(--S) * .06) calc(var(--S) * .16) at 97% 22%, rgba(255,255,255,.85), transparent 70%); }
+.cf-in { position: absolute; inset: var(--gp); border-radius: calc(var(--S) * .09); overflow: hidden; box-sizing: border-box; display: grid; grid-template-columns: 100%; place-items: center; align-content: center; gap: 0; text-align: center; padding: 4px 6px 6px; opacity: var(--cv, 1);
+  background: linear-gradient(180deg, #16325a 0%, #0f2747 38%, #0a1b35 100%);
+  box-shadow: 0 0 0 1.5px rgba(6,18,38,.95), 0 0 0 2.6px rgba(255,255,255,.28), inset 0 1px 0 rgba(255,255,255,.22), inset 0 8px 16px rgba(255,255,255,.06), inset 0 -10px 18px rgba(0,0,0,.42); }
+.cf-in::before { content: ""; position: absolute; inset: 0; background: linear-gradient(172deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.03) 30%, transparent 44%); pointer-events: none; }
+.cf-red .cf-in { background: linear-gradient(180deg, #ff4b3d 0%, #e3231a 40%, #b5120c 100%); box-shadow: 0 0 0 1.5px rgba(80,6,4,.9), 0 0 0 2.6px rgba(255,255,255,.3), inset 0 1px 0 rgba(255,255,255,.45), inset 0 10px 20px rgba(255,255,255,.18), inset 0 -10px 20px rgba(80,0,0,.35); }
+.cf-red .cf-in::before { background: linear-gradient(172deg, rgba(255,255,255,.3) 0%, rgba(255,255,255,.07) 34%, transparent 48%); }
+.cf-ico { height: calc(var(--S) * .44); width: auto; position: relative; filter: drop-shadow(0 4px 5px rgba(0,0,0,.45)); transition: transform .3s; }
+.cf-lbl { position: relative; font: 800 calc(var(--S) * .21)/1.05 var(--display); letter-spacing: .01em; text-transform: uppercase; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.45); margin-top: 2px; }
+.cube-stage:hover .cf-front .cf-ico { transform: scale(1.06) translateY(-2px); }
+.cf1 { transform: rotateY(0deg) translateZ(calc(var(--S) / 2)); }
+.cf2 { transform: rotateY(90deg) translateZ(calc(var(--S) / 2)); }
+.cf3 { transform: rotateY(180deg) translateZ(calc(var(--S) / 2)); }
+.cf4 { transform: rotateY(-90deg) translateZ(calc(var(--S) / 2)); }
+/* teteje: tiszta üveglap */
+.cf-top { pointer-events: none; position: absolute; left: 0; width: var(--S); height: var(--S); top: calc((var(--H) - var(--S)) / 2); box-sizing: border-box; border-radius: calc(var(--S) * .16); transform: rotateX(90deg) translateZ(calc(var(--H) / 2)); backface-visibility: hidden;
+  background: radial-gradient(70% 70% at 40% 40%, rgba(255,255,255,.35), rgba(180,220,255,.18) 60%, rgba(255,255,255,.55));
+  box-shadow: inset 0 0 0 1.5px #fff, inset 0 0 0 4px rgba(120,180,240,.45), inset 0 0 calc(var(--gp) * 1.4) rgba(255,255,255,.8); }
+/* 1. oldal: helyszín */
+.cf1 .cf-in.plate { all: unset; position: absolute; inset: var(--gp); border-radius: calc(var(--S) * .09); overflow: hidden; box-sizing: border-box; display: grid; align-content: center; justify-items: start; gap: 0; padding: 4px calc(var(--S) * .09) 6px; text-align: left; opacity: var(--cv, 1);
+  background: linear-gradient(180deg, #16325a 0%, #0f2747 38%, #0a1b35 100%);
+  box-shadow: 0 0 0 1.5px rgba(6,18,38,.95), 0 0 0 2.6px rgba(255,255,255,.28), inset 0 1px 0 rgba(255,255,255,.22), inset 0 8px 16px rgba(255,255,255,.06), inset 0 -10px 18px rgba(0,0,0,.42); }
+.cf1 .cf-in.plate::before { content: ""; position: absolute; inset: 0; background: linear-gradient(172deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.03) 30%, transparent 44%); pointer-events: none; }
+.cf1 .plate::after { content: ""; position: absolute; right: -6%; bottom: -8%; width: 70%; height: 100%; background: #2a4c7c; opacity: .6; -webkit-mask: var(--boat) center / contain no-repeat; mask: var(--boat) center / contain no-repeat; pointer-events: none; }
 .cf1 .plate .house { display: none; }
-.cf1 .plate .unit { position: relative; z-index: 1; white-space: nowrap; font-size: var(--uf, calc(var(--H) * .2)) !important; font: 800 calc(var(--H) * .2)/1.05 var(--display); letter-spacing: .01em; text-transform: uppercase; color: #ff2d22; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
-.cf1 .plate .place { position: relative; z-index: 1; font: 800 var(--pf, calc(var(--H) * .4))/.95 var(--display); letter-spacing: .02em; text-transform: uppercase; color: #fff; text-wrap: balance; overflow-wrap: anywhere; max-width: 100%; text-shadow: 0 2px 8px rgba(0,0,0,.45); }
-/* oldalsó üveggombok */
-.cube-arr { all: unset; cursor: pointer; position: absolute; top: calc(var(--H) / 2 - 17px); width: 20px; height: 34px; display: grid; place-items: center; border-radius: 10px; color: #fff;
-  background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(180,215,245,.18)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), 0 3px 10px rgba(0,20,50,.35); opacity: .75; transition: opacity .2s, transform .15s; }
-.cube-arr svg { width: 13px; height: 13px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); } .cube-arr.l { left: 0; } .cube-arr.r { right: 0; }
-.cubebox:hover .cube-arr { opacity: 1; } .cube-arr:active { transform: scale(.9); } .cube-arr:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 2px; opacity: 1; }
-/* íves forgatásjelző nyíl a hasáb alatt */
-.cube-swoosh { width: calc(var(--W) * .78); height: 26px; margin-top: 4px; pointer-events: none; overflow: visible; }
-.cube-swoosh path { fill: none; stroke: url(#swooshG); stroke-width: 4.5; stroke-linecap: round; filter: drop-shadow(0 0 4px rgba(120,200,255,.9)); }
-.cube-swoosh .hd { fill: #c9ecff; stroke: none; }
-.cube-swoosh g { animation: swoosh 2.2s ease-in-out infinite; transform-origin: 50% 50%; }
-@keyframes swoosh { 0%, 100% { transform: translateX(-5px); opacity: .75; } 50% { transform: translateX(5px); opacity: 1; } }
-.cubebox.seen .cube-swoosh { opacity: .55; } .cubebox.seen .cube-swoosh g { animation: none; }
-.cube-arr, .cube-dots, .cube-hint { display: none !important; }
-.cube-dots { display: flex; gap: 5px; margin-top: 2px; padding: 3px 6px; border-radius: 999px; }
-.cube-dots button { all: unset; cursor: pointer; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.45); box-shadow: 0 0 0 1px rgba(0,20,50,.25); transition: transform .2s, background .2s; position: relative; }
-.cube-dots button::after { content: ""; position: absolute; inset: -6px -3px; }
-.cube-dots button[aria-selected="true"] { background: #fff; transform: scale(1.35); box-shadow: 0 0 6px rgba(160,220,255,.9); }
-.cube-dots button:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 2px; }
-.cube-hint { position: absolute; top: calc(var(--H) / 2 - 14px); left: calc(100% + 4px); white-space: nowrap; display: flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px;
-  font: 800 12.5px/1 var(--body); color: #0b2f5e; background: linear-gradient(180deg, #ffffff, #cfe9ff); box-shadow: 0 6px 16px rgba(0,20,50,.35); pointer-events: none; animation: cubeHint 1.8s ease-in-out infinite; transition: opacity .4s; }
-.cube-hint svg { width: 15px; height: 15px; animation: cubeHintIco 1.8s linear infinite; }
-.cube-hint::before { content: ""; position: absolute; left: -6px; top: 50%; margin-top: -6px; border: 6px solid transparent; border-left: 0; border-right-color: #e6f4ff; }
-.cube-hint.gone { opacity: 0; }
-@keyframes cubeHint { 50% { transform: translateX(4px); } }
-@keyframes cubeHintIco { to { transform: rotate(360deg); } }
-:root[data-device="tablet"] .cubebox { --W: 208px; --H: 128px; --gp: 14px; width: calc(var(--W) + 56px); padding: 0 28px; }
-:root[data-device="tablet"] .cube-arr { width: 26px; height: 42px; top: calc(var(--H) / 2 - 21px); }
-:root[data-device="phone"] .cubebox { --W: 158px; --H: 96px; --gp: 10px; width: calc(var(--W) + 40px); padding: 0 20px; }
-
-:root[data-device="phone"] .cube-arr { width: 18px; }
-:root[data-device="phone"] .cube-dots button { width: 7px; height: 7px; }
-@media (prefers-reduced-motion: reduce) { .cube { transition-duration: .01s; } .cube-hint, .cube-hint svg, .cube-swoosh g { animation: none; } }
+.cf1 .plate .unit { position: relative; z-index: 1; white-space: nowrap; font: 800 var(--uf, calc(var(--S) * .15))/1.05 var(--display); letter-spacing: .01em; text-transform: uppercase; color: #ff2d22; text-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.cf1 .plate .unit:empty { display: none; }
+.cf1 .plate .place { position: relative; z-index: 1; font: 800 var(--pf, calc(var(--S) * .3))/.95 var(--display); letter-spacing: .01em; text-transform: uppercase; color: #fff; text-wrap: balance; overflow-wrap: anywhere; max-width: 100%; text-shadow: 0 2px 6px rgba(0,0,0,.45); }
+/* íves forgatásjelző nyíl a kocka alatt */
+.cube-swoosh { width: calc(var(--S) * 1.32); height: calc(var(--S) * .24); margin-top: calc(var(--S) * .1); pointer-events: none; overflow: visible; }
+.cube-swoosh .arc { fill: none; stroke: url(#swooshG); stroke-width: 5; stroke-linecap: round; }
+.cube-swoosh .glow { fill: none; stroke: rgba(140,210,255,.55); stroke-width: 11; stroke-linecap: round; filter: blur(3px); }
+.cube-swoosh .hd { fill: #e9f7ff; filter: drop-shadow(0 0 4px rgba(140,210,255,.9)); }
+.cube-swoosh g { animation: swoosh 2.4s ease-in-out infinite; }
+@keyframes swoosh { 0%, 100% { transform: translateX(-4px); opacity: .8; } 50% { transform: translateX(5px); opacity: 1; } }
+.cube-stage.glint .cf-front::before { animation: glint 1.2s ease-in-out; }
+@keyframes glint { from { background-position: -220px 0, 0 0, 0 0, 0 0, 0 0; } to { background-position: 320px 0, 0 0, 0 0, 0 0, 0 0; } }
+:root[data-device="tablet"] .cubebox { --S: 114px; --H: 120px; --gp: 10px; }
+:root[data-device="phone"] .cubebox { --S: 84px; --H: 88px; --gp: 8px; padding-top: 8px; }
+@media (prefers-reduced-motion: reduce) { .cube { transition-duration: .01s; } .cube-swoosh g { animation: none; } }
 .tools { margin-left: auto; display: flex; gap: 8px; flex: none; }
 .tool {
   all: unset; cursor: pointer; width: 42px; height: 42px; border-radius: 50%;
@@ -207,7 +176,7 @@ button { font: inherit; }
 .map {
   position: fixed; z-index: 6;
   left: max(16px, env(safe-area-inset-left, 0px));
-  top: calc(198px + env(safe-area-inset-top, 0px));
+  top: calc(196px + env(safe-area-inset-top, 0px));
   width: 300px; max-height: calc(100% - 368px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   min-height: 160px;
   background: rgba(12, 26, 38, 0.28); border: 1px solid var(--line); border-radius: 10px;
@@ -1038,39 +1007,31 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 
 <div class="top">
   <div class="cubebox" id="cubeBox">
-    <div class="cube-stage" id="cubeStage" tabindex="0" role="group" aria-roledescription="forgatható kocka" aria-label="Forgatható kocka – húzással vagy a nyilakkal forgatható, koppintásra a felénk néző oldal működik">
-      <div class="cube-shadow" aria-hidden="true"></div>
+    <div class="cube-stage" id="cubeStage" tabindex="0" role="group" aria-roledescription="forgatható kocka" aria-label="Forgatható kocka – húzással forgatható, koppintásra a felénk néző oldal működik">
       <div class="cube" id="cube">
+        <div class="cf-top" aria-hidden="true"></div>
         <section class="cf cf1" data-f="1" aria-live="polite"><div class="cf-in plate">
           <span class="house"><img class="logo" src="img/zephyr-logo-s.png" alt="Zephyr Apartman · Zamárdi" draggable="false"></span>
           <span class="unit" id="unitName"></span>
           <span class="place" id="placeName">Betöltés…</span>
         </div></section>
-        <section class="cf cf2" data-f="2"><div class="cf-in"><div class="cf-row"><svg class="cf-ico" viewBox="0 0 72 64" aria-hidden="true">
+        <section class="cf cf2" data-f="2"><div class="cf-in"><svg class="cf-ico" viewBox="0 0 72 64" aria-hidden="true">
           <defs><linearGradient id="mpG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#dfe8ee"/></linearGradient><linearGradient id="pinG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b5e"/><stop offset="1" stop-color="#c41a12"/></linearGradient></defs>
-          <path d="M5 18l20-7 22 7 20-7v42l-20 7-22-7-20 7z" fill="url(#mpG)"/>
-          <path d="M8 20l17-6v38l-17 6z" fill="#34b45a"/><path d="M25 14l22 7v38l-22-7z" fill="#2f8fe0"/><path d="M47 21l17-6v38l-17 6z" fill="#4cc4f0"/>
-          <path d="M8 40l17-8 22 10 17-9" fill="none" stroke="#ffd21f" stroke-width="5" stroke-linejoin="round"/><path d="M18 17l7 41M40 19l-6 38" fill="none" stroke="#ffd21f" stroke-width="3.5"/>
-          <path d="M5 18l20-7 22 7 20-7v42l-20 7-22-7-20 7z" fill="none" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>
-          <path d="M46 40c-8-9-12-15-12-21a12 12 0 0 1 24 0c0 6-4 12-12 21z" fill="url(#pinG)" stroke="#fff" stroke-width="1.5"/><circle cx="46" cy="19" r="4.6" fill="#fff"/></svg></div><b class="cf-lbl">Map</b></div></section>
+          <path d="M4 22l20-7 22 7 22-7v40l-22 7-22-7-20 7z" fill="url(#mpG)"/>
+          <path d="M7.5 24.5l16.5-6v36l-16.5 6z" fill="#3cb85c"/><path d="M24 18.5l22 7v36l-22-7z" fill="#2f8fe0"/><path d="M46 25.5l18.5-6v36l-18.5 6z" fill="#3cb85c"/>
+          <path d="M7.5 44l16.5-8 22 9 18.5-8" fill="none" stroke="#ffd21f" stroke-width="5" stroke-linejoin="round"/><path d="M16 21l8 39M38 23l-6 36" fill="none" stroke="#ffd21f" stroke-width="3.5"/>
+          <path d="M4 22l20-7 22 7 22-7v40l-22 7-22-7-20 7z" fill="none" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/>
+          <path d="M42 41c-9-10-13-16.5-13-23a13 13 0 0 1 26 0c0 6.5-4 13-13 23z" fill="url(#pinG)" stroke="#fff" stroke-width="1.6"/><circle cx="42" cy="18" r="5" fill="#fff"/></svg><b class="cf-lbl">Map</b></div></section>
         <section class="cf cf3" data-f="3"><div class="cf-in"><svg class="cf-ico" viewBox="0 0 64 64" aria-hidden="true">
-          <defs><linearGradient id="bkG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfdbe6"/></linearGradient></defs>
-          <path d="M27 9L6 28l21 19V35h6c11 0 18 5 22 17 3-18-6-30-22-30h-6z" fill="url(#bkG)" stroke="rgba(0,0,0,.15)" stroke-width="1" stroke-linejoin="round"/></svg><b class="cf-lbl">Back</b></div></section>
+          <defs><linearGradient id="bkG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cbd8e4"/></linearGradient></defs>
+          <path d="M28 7L5 28l23 21V36h5c12 0 19 6 23 19 4-21-6-34-23-34h-5z" fill="url(#bkG)" stroke-linejoin="round"/></svg><b class="cf-lbl">Back</b></div></section>
         <section class="cf cf4 cf-red" data-f="4"><div class="cf-in"><svg class="cf-ico" viewBox="0 0 64 64" aria-hidden="true">
-          <defs><linearGradient id="hmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffe3df"/></linearGradient></defs>
-          <path d="M32 6L4 30h8v26h15V40h10v16h15V30h8L48 16V8h-7v2z" fill="url(#hmG)" stroke-linejoin="round"/></svg><b class="cf-lbl">Home</b></div></section>
-        <section class="cf cf5" data-f="5"><div class="cf-in cf-rot"><svg class="cf-ico" viewBox="0 0 64 64" aria-hidden="true"><g stroke="#e7f2fb" stroke-linecap="round">
-          <circle cx="32" cy="32" r="17" fill="none" stroke-width="5"/><path d="M32 4v56M4 32h56M12.2 12.2l39.6 39.6M51.8 12.2L12.2 51.8" stroke-width="3.4"/></g><circle cx="32" cy="32" r="6" fill="#ff3b30" stroke="#fff" stroke-width="2"/></svg><b class="cf-lbl">Hamarosan</b></div></section>
-        <section class="cf cf6" data-f="6"><div class="cf-in cf-rot"><svg class="cf-ico" viewBox="0 0 64 64" aria-hidden="true">
-          <circle cx="32" cy="32" r="26" fill="#fff" stroke="#cfe3f3" stroke-width="3"/><path d="M32 9l5 23-5 23-5-23z" fill="#102a4c"/><path d="M32 9l5 23h-10z" fill="#ff3b30"/><circle cx="32" cy="32" r="3" fill="#fff" stroke="#102a4c"/></svg><b class="cf-lbl">Hamarosan</b></div></section>
+          <defs><linearGradient id="hmG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffe0dc"/></linearGradient></defs>
+          <path d="M32 5L3 31h9v27h15V42h10v16h15V31h9L49 19V9h-8v3z" fill="url(#hmG)" stroke-linejoin="round"/></svg><b class="cf-lbl">Home</b></div></section>
       </div>
     </div>
-    <button type="button" class="cube-arr l" data-cube="-1" aria-label="Forgatás balra"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <button type="button" class="cube-arr r" data-cube="1" aria-label="Forgatás jobbra"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <svg class="cube-swoosh" viewBox="0 0 160 26" aria-hidden="true"><defs><linearGradient id="swooshG" x1="0" x2="1"><stop offset="0" stop-color="#7fd0ff" stop-opacity="0"/><stop offset=".35" stop-color="#9fdcff"/><stop offset="1" stop-color="#e6f6ff"/></linearGradient></defs>
-      <g><path d="M10 6 Q80 26 142 10"/><path class="hd" d="M138 2l16 6-13 11z"/></g></svg>
-    <div class="cube-dots" id="cubeDots" role="tablist" aria-label="A kocka oldalai"></div>
-    <div class="cube-hint" id="cubeHint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Forgasd meg!</div>
+    <svg class="cube-swoosh" viewBox="0 0 160 30" aria-hidden="true"><defs><linearGradient id="swooshG" x1="0" x2="1"><stop offset="0" stop-color="#8fd6ff" stop-opacity="0"/><stop offset=".3" stop-color="#9fdcff" stop-opacity=".9"/><stop offset="1" stop-color="#eaf8ff"/></linearGradient></defs>
+      <g><path class="glow" d="M12 5 Q78 30 140 12"/><path class="arc" d="M12 5 Q78 30 140 12"/><path class="hd" d="M134 3l20 6-15 13z"/></g></svg>
   </div>
   <div class="tools" id="tools">
     <button class="tool tool-book" id="btnBook" type="button" title="Szállásfoglalás – szabad napok, árak" aria-label="Szállásfoglalás">
@@ -7490,15 +7451,17 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     renderEdit();
   }
 
-  /* ---------- Forgatható kocka ----------
-     Húzás = forgatás, rövid koppintás/kattintás = a felénk néző oldal funkciója.
-     A kettő nem keveredik: csak akkor forgat, ha az ujj/egér legalább pár képpontot elmozdult. */
+  /* ---------- Forgatható üvegkocka ----------
+     Húzás = forgatás, rövid koppintás/kattintás = a felénk néző (jobb, nagyobb) oldal funkciója.
+     A bal oldali, keskeny lapra koppintva a kocka arra az oldalra fordul. A kettő nem keveredik:
+     csak akkor forgat, ha az ujj/egér legalább pár képpontot elmozdult. */
   const SITE_HOME = "/uj/";   /* az új kezdőoldal címe a tárhelyen – ha a gyökérbe kerül, ide "/" kell */
-  const CUBE_NAMES = { 1: "Helyszín", 2: "Házvázlat (Map)", 3: "Vissza (Back)", 4: "Kezdőlap (Home)", 5: "Hamarosan", 6: "Hamarosan" };
-  const cubeSt = { ry: 0, rx: 0 };
+  const CUBE_NAMES = { 1: "Helyszín", 2: "Házvázlat (Map)", 3: "Vissza (Back)", 4: "Kezdőlap (Home)" };
+  const CUBE_OFF = 26, CUBE_TILT = -14;   /* nyugalmi térbeli helyzet: elfordítás és felülnézet (fok) */
+  const cubeSt = { ry: 0 };
   let cubeFit = () => {};
   const fromHome = /(^|[?&])honnan=kezdolap/.test(location.search) || (() => { try { const r = new URL(document.referrer); return r.host === location.host && !/\/virtualis-seta\//.test(r.pathname); } catch (e) { return false; } })();
-  function cubeFront() { if (cubeSt.rx <= -45) return 5; if (cubeSt.rx >= 45) return 6; return [1, 2, 3, 4][((Math.round(-cubeSt.ry / 90) % 4) + 4) % 4]; }
+  function cubeFront() { return [1, 2, 3, 4][((Math.round(-cubeSt.ry / 90) % 4) + 4) % 4]; }
   function goHome() {
     if (!/balatoni-udules\.hu$|^localhost$|^127\./.test(location.hostname)) { toast("A kezdőlap a weboldalon érhető el (balatoni-udules.hu).", 3500); return; }
     try { const r = document.referrer && new URL(document.referrer); if (r && r.host === location.host && r.pathname === SITE_HOME && history.length > 1) { history.back(); return; } } catch (e) {}
@@ -7523,62 +7486,51 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (f === 2) { $("btnMap").click(); return; }
     if (f === 3) { goBack(); return; }
     if (f === 4) { goHome(); return; }
-    toast("Ez az oldal hamarosan új funkciót kap.", 2600);
   }
   function wireCube() {
-    const stage = $("cubeStage"), cube = $("cube"), box = $("cubeBox"), dots = $("cubeDots"), hint = $("cubeHint");
+    const stage = $("cubeStage"), cube = $("cube");
     if (!stage) return;
-    const faces = [...cube.querySelectorAll(".cf")];
+    const faces = [...cube.querySelectorAll(".cf[data-f]")];
     let seen = false; try { seen = localStorage.getItem("zephyr-kocka") === "1"; } catch (e) {}
-    const done = () => { if (seen) return; seen = true; hint.classList.add("gone"); box.classList.remove("fresh"); box.classList.add("seen"); try { localStorage.setItem("zephyr-kocka", "1"); } catch (e) {} };
-    if (seen) { hint.classList.add("gone"); box.classList.add("seen"); } else box.classList.add("fresh");
-    dots.innerHTML = [1, 2, 3, 4, 5, 6].map((f) => `<button type="button" role="tab" data-face="${f}" aria-label="${CUBE_NAMES[f]}" title="${CUBE_NAMES[f]}"></button>`).join("");
-    const rad = Math.PI / 180;
-    const N = { 1: [0, 0, 1], 2: [1, 0, 0], 3: [0, 0, -1], 4: [-1, 0, 0], 5: [0, -1, 0], 6: [0, 1, 0] };
+    const done = () => { if (seen) return; seen = true; try { localStorage.setItem("zephyr-kocka", "1"); } catch (e) {} };
+    const rad = Math.PI / 180, N = { 1: [0, 1], 2: [1, 0], 3: [0, -1], 4: [-1, 0] };   /* [x, z] normálisok */
     function paint() {
-      const rot = `translateZ(calc(var(--W) / -2)) rotateX(${cubeSt.rx}deg) rotateY(${cubeSt.ry}deg)`;
+      const yaw = cubeSt.ry + CUBE_OFF;
+      const rot = `translateZ(calc(var(--S) / -2)) rotateX(${CUBE_TILT}deg) rotateY(${yaw}deg)`;
       cube.style.transform = rot; stage.style.setProperty("--rot", rot);
-      const cy = Math.cos(cubeSt.ry * rad), sy = Math.sin(cubeSt.ry * rad), cx = Math.cos(cubeSt.rx * rad), sx = Math.sin(cubeSt.rx * rad);
-      const front = cubeFront();
+      const cy = Math.cos(yaw * rad), sy = Math.sin(yaw * rad), ct = Math.cos(CUBE_TILT * rad), front = cubeFront();
       faces.forEach((el) => {
-        const [x, y, z] = N[el.dataset.f];
-        const x1 = x * cy + z * sy, z1 = -x * sy + z * cy;          /* rotateY */
-        const z2 = y * sx + z1 * cx;                                /* rotateX (CSS: lefelé nő az y) */
-        el.style.setProperty("--lit", (.78 + .26 * Math.max(0, z2)).toFixed(3));
-        el.style.setProperty("--cv", Math.max(0, Math.min(1, z2 * 4)).toFixed(3));          /* tartalom csak a felénk néző oldalon */
-        el.style.setProperty("--sh", (30 + x1 * 34).toFixed(1) + "%");                    /* a fényfolt forgatáskor végigcsúszik */
+        const [x, z] = N[el.dataset.f], x1 = x * cy + z * sy, z2 = (-x * sy + z * cy) * ct;
+        el.style.setProperty("--lit", (.66 + .4 * Math.max(0, z2)).toFixed(3));
+        el.style.setProperty("--cv", Math.max(0, Math.min(1, z2 * 5)).toFixed(3));
+        el.style.setProperty("--sh", (30 + x1 * 34).toFixed(1) + "%");
         el.classList.toggle("cf-front", +el.dataset.f === front);
         el.setAttribute("aria-hidden", +el.dataset.f === front ? "false" : "true");
       });
-      /* a teteje / alja felirata mindig álló helyzetben látszódjon */
-      cube.querySelectorAll(".cf-rot").forEach((r) => (r.style.transform = `rotate(${(r.closest(".cf5") ? 1 : -1) * cubeSt.ry}deg)`));
-      dots.querySelectorAll("button").forEach((b) => b.setAttribute("aria-selected", String(+b.dataset.face === front)));
-      stage.setAttribute("aria-label", "Forgatható kocka – most: " + CUBE_NAMES[front] + ". Húzd vagy használd a nyilakat a forgatáshoz, koppints a használathoz.");
+      stage.setAttribute("aria-label", "Forgatható kocka – most: " + CUBE_NAMES[front] + ". Húzd a forgatáshoz, koppints a használathoz.");
     }
-    function snapTo(ry, rx) { cubeSt.ry = ry; cubeSt.rx = rx; paint(); }
-    function turn(d) { done(); const ry = cubeSt.rx ? Math.round(cubeSt.ry / 90) * 90 : Math.round(cubeSt.ry / 90) * 90 - d * 90; snapTo(ry, 0); }
+    const snapTo = (ry) => { cubeSt.ry = ry; paint(); };
+    const turn = (d) => { done(); snapTo(Math.round(cubeSt.ry / 90) * 90 - d * 90); };
     function show(f) {
       done();
-      if (f === 5) return snapTo(Math.round(cubeSt.ry / 90) * 90, -90);
-      if (f === 6) return snapTo(Math.round(cubeSt.ry / 90) * 90, 90);
       const k = { 1: 0, 2: 1, 3: 2, 4: 3 }[f], base = Math.round(cubeSt.ry / 90) * 90, curK = ((Math.round(-base / 90) % 4) + 4) % 4;
       let d = k - curK; if (d > 2) d -= 4; if (d < -2) d += 4;
-      snapTo(base - d * 90, 0);
+      snapTo(base - d * 90);
     }
-    cubeFit = () => {   /* hosszú helyszínnév: a betűméret igazodjon a kocka oldalához */
-      const pl = $("placeName"); if (!pl) return;
-      const Wd = stage.clientWidth || 216, Hd = stage.clientHeight || 128; let f = Hd * .36; pl.style.setProperty("--pf", f + "px");
-      const inner = pl.parentElement;
-      const over = () => pl.offsetTop + pl.offsetHeight > Hd - 20 || pl.scrollWidth > Wd - 44;
-      for (let i = 0; i < 10 && over(); i++) { f *= .92; pl.style.setProperty("--pf", f + "px"); }
-      const un = $("unitName"); if (un) { let u = Hd * .2; un.style.setProperty("--uf", u + "px"); for (let i = 0; i < 10 && un.scrollWidth > Wd - 44; i++) { u *= .92; un.style.setProperty("--uf", u + "px"); } }
-      void inner;
+    cubeFit = () => {   /* hosszú helyszínnév: a betűméret igazodjon a laphoz */
+      const pl = $("placeName"), un = $("unitName"); if (!pl) return;
+      const S = stage.clientWidth || 120, H = stage.clientHeight || 126, room = S - 2 * (S * .09) - 24;
+      let f = S * .3; pl.style.setProperty("--pf", f + "px");
+      const over = () => pl.offsetTop + pl.offsetHeight > H - 26 || pl.scrollWidth > room;
+      for (let i = 0; i < 12 && over(); i++) { f *= .91; pl.style.setProperty("--pf", f + "px"); }
+      if (un) { let u = S * .15; un.style.setProperty("--uf", u + "px"); for (let i = 0; i < 10 && un.scrollWidth > room; i++) { u *= .92; un.style.setProperty("--uf", u + "px"); } }
     };
     /* --- egér és ujj: koppintás vagy húzás --- */
     let P = null;
     stage.addEventListener("pointerdown", (e) => {
       if (e.button > 0) return;
-      P = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), ry: cubeSt.ry, rx: cubeSt.rx, mode: null, lx: e.clientX, ly: e.clientY, lt: performance.now(), vx: 0, vy: 0, touch: e.pointerType !== "mouse" };
+      const fe = e.target.closest && e.target.closest(".cf[data-f]");
+      P = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), ry: cubeSt.ry, mode: null, lx: e.clientX, lt: performance.now(), vx: 0, touch: e.pointerType !== "mouse", face: fe ? +fe.dataset.f : 0 };
       try { stage.setPointerCapture(e.pointerId); } catch (x) {}
       e.stopPropagation();
     });
@@ -7587,12 +7539,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const dx = e.clientX - P.x, dy = e.clientY - P.y, now = performance.now();
       if (!P.mode) {
         if (Math.hypot(dx, dy) < (P.touch ? 11 : 6)) return;   /* ennyi elmozdulásig még koppintásnak számít */
-        P.mode = Math.abs(dx) >= Math.abs(dy) ? "h" : "v"; stage.classList.add("drag"); done();
+        P.mode = "h"; stage.classList.add("drag"); done();
       }
-      const k = 90 / (stage.clientWidth * .85);
-      if (P.mode === "h") { cubeSt.ry = P.ry + dx * k; cubeSt.rx = P.rx * Math.max(0, 1 - Math.abs(dx) / stage.clientWidth); }
-      else { cubeSt.rx = Math.max(-100, Math.min(100, P.rx - dy * k)); }
-      const dt = Math.max(1, now - P.lt); P.vx = (e.clientX - P.lx) / dt; P.vy = (e.clientY - P.ly) / dt; P.lx = e.clientX; P.ly = e.clientY; P.lt = now;
+      cubeSt.ry = P.ry + dx * (90 / (stage.clientWidth * 1.05));
+      const dt = Math.max(1, now - P.lt); P.vx = (e.clientX - P.lx) / dt; P.lx = e.clientX; P.lt = now;
       paint(); e.preventDefault();
     });
     const end = (e) => {
@@ -7600,17 +7550,16 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const p = P; P = null; stage.classList.remove("drag");
       try { stage.releasePointerCapture(e.pointerId); } catch (x) {}
       if (!p.mode) {
-        if (e.type === "pointerup" && performance.now() - p.t < 900) cubeAct(cubeFront());
+        if (e.type !== "pointerup" || performance.now() - p.t > 900) return;
+        /* a bal oldali keskeny lap a geometria alapján (a 3D találatvizsgálat nem mindig megbízható) */
+        const r = stage.getBoundingClientRect(), rel = (e.clientX - (r.left + r.width / 2)) / r.width;
+        const edge = -.5 * Math.cos(CUBE_OFF * rad) + .5 * Math.sin(CUBE_OFF * rad);
+        if (rel < edge - .02) show([0, 4, 1, 2, 3][cubeFront()]); else cubeAct(cubeFront());
         return;
       }
-      if (p.mode === "h") {
-        let ry = cubeSt.ry + Math.max(-1.2, Math.min(1.2, p.vx)) * 70;        /* lendület */
-        ry = Math.round(ry / 90) * 90; ry = Math.max(p.ry - 180, Math.min(p.ry + 180, ry));
-        snapTo(ry, 0);
-      } else {
-        const rx = cubeSt.rx - Math.max(-1.2, Math.min(1.2, p.vy)) * 60;
-        snapTo(cubeSt.ry, rx < -45 ? -90 : rx > 45 ? 90 : 0);
-      }
+      let ry = cubeSt.ry + Math.max(-1.2, Math.min(1.2, p.vx)) * 70;     /* lendület */
+      ry = Math.round(ry / 90) * 90; ry = Math.max(p.ry - 180, Math.min(p.ry + 180, ry));
+      snapTo(ry);
     };
     stage.addEventListener("pointerup", end); stage.addEventListener("pointercancel", end);
     stage.addEventListener("click", (e) => e.stopPropagation());
@@ -7620,18 +7569,15 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     stage.addEventListener("wheel", (e) => { e.preventDefault(); e.stopPropagation(); const n = performance.now(); if (n - wheelT < 380) return; wheelT = n; turn((e.deltaY || e.deltaX) > 0 ? 1 : -1); }, { passive: false });
     stage.addEventListener("keydown", (e) => {
       if (e.key === "ArrowRight") { turn(1); e.preventDefault(); } else if (e.key === "ArrowLeft") { turn(-1); e.preventDefault(); }
-      else if (e.key === "ArrowUp") { show(cubeFront() === 6 ? 1 : 5); e.preventDefault(); } else if (e.key === "ArrowDown") { show(cubeFront() === 5 ? 1 : 6); e.preventDefault(); }
       else if (e.key === "Enter" || e.key === " ") { cubeAct(cubeFront()); e.preventDefault(); }
       e.stopPropagation();
     });
-    box.querySelectorAll("[data-cube]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); turn(+b.dataset.cube); }));
-    dots.addEventListener("click", (e) => { const b = e.target.closest("[data-face]"); if (b) { e.stopPropagation(); show(+b.dataset.face); } });
-    ["pointerdown", "pointermove", "pointerup"].forEach((t) => box.addEventListener(t, (e) => e.stopPropagation()));
-    /* kezdő oldal: a kezdőlapról érkezve a „Vissza” oldal néz felénk */
+    ["pointerdown", "pointermove", "pointerup"].forEach((t) => $("cubeBox").addEventListener(t, (e) => e.stopPropagation()));
+    /* kezdő oldal: a kezdőlapról érkezve a „Back” oldal néz felénk */
     cube.classList.add("instant"); if (fromHome) show(3); else paint(); requestAnimationFrame(() => requestAnimationFrame(() => cube.classList.remove("instant")));
-    /* figyelemfelkeltés: amíg nem forgatta meg, időnként „belekukkant” a következő oldalba */
+    /* amíg nem forgatta meg, időnként kicsit megbillen, jelezve, hogy forgatható */
     if (!seen) {
-      const peek = () => { if (seen || P || document.hidden) return; const ry = cubeSt.ry, rx = cubeSt.rx; cubeSt.ry = ry - 38; cubeSt.rx = rx - 12; paint(); setTimeout(() => { if (!P) { cubeSt.ry = ry; cubeSt.rx = rx; paint(); } }, 750); };
+      const peek = () => { if (seen || P || document.hidden) return; const ry = cubeSt.ry; cubeSt.ry = ry - 30; paint(); setTimeout(() => { if (!P) { cubeSt.ry = ry; paint(); } }, 750); };
       setTimeout(peek, 2600); const iv = setInterval(() => { if (seen) clearInterval(iv); else peek(); }, 9000);
     }
     cubeFit();

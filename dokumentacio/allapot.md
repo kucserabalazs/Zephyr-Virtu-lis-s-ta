@@ -1,7 +1,7 @@
 # Zephyr Virtuális Séta – munkaállapot (2026. október 22., 04:26)
 
 ## Hol van a kész munka
-- **Élő túra (artifact):** https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD (349. verzió) – privát, megosztás az oldal Megosztás menüjében
+- **Élő túra (artifact):** https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD (350. verzió) – privát, megosztás az oldal Megosztás menüjében
 - **Szerkesztő mód:** https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD#szerkesztes (kilépés: a `#szerkesztes` törlése a címből + újratöltés)
 - **WordPress-csomag:** `zephyr-virtualis-seta.zip` (a beszélgetésben letölthető, utolsó változat okt. 22. 04:25). Tartalma: `virtualis-seta/index.html`, `img/` (panorámák + bélyegképek), `BEILLESZTES.txt`. Kicsomagolva a saját gépen is futtatható.
 - **Forráskód:** a projektben `claude/zephyr-virtualis-seta-index.html` (ugyanaz, mint a csomagban)
@@ -92,3 +92,4 @@
 - 347 – A kocka új megjelenése a tulajdonos mintaképe alapján: üveghasáb (PC 216×128, táblagép 204×120, telefon 150×88 px), vastag csillogó üvegkeret, sötétkék lekerekített panelek; 1 „HÁZ ÉS KERT” piros + nagy fehér „UTCA” + halvány vitorlás, 2 színes térkép piros jelölővel + MAP, 3 fehér visszanyíl + BACK, 4 piros panel fehér házzal + HOME; alatta íves kék forgatásjelző nyíl, kis pöttyök, üveg oldalnyilak. Kötél, rézszegecsek kivéve. A térkép PC-n 198 px-től indul.
 - 348 – A kocka üvegtömb hatású: áttetsző lapok (átlátszik a háttér), csillogó perem színes fénytöréssel, a hátsó élek halványan látszanak az üvegen át, forgatáskor csúszó fényfolt, 7 mp-enként csillanás a felénk néző lapon.
 - 349 – A kocka pontosan a tulajdonos mintaképe szerint: vastag, kristálytiszta üvegkeret erős csillanásokkal, fedett sötétkék panelek (Home: piros), balra igazított „HÁZ ÉS KERT” (piros) + „UTCA” (fehér) + vitorlás-sziluett, nagy ikonok (térkép, visszanyíl, ház) MAP/BACK/HOME felirattal, alatta íves kék nyíl. A pöttyök, oldalnyilak és a „Forgasd meg!” címke el vannak rejtve (CSS: display:none); billentyű és egérgörgő továbbra is forgat.
+- 350 – A kocka újraépítve a tulajdonos 6–7. mintaképe szerint: valódi kocka (PC 120×126, táblagép 114×120, telefon 84×88 px), nyugalomban is térben áll (26° elfordítás, 14° felülnézet) – jobbra az aktív lap, balra keskenyen az előző, felül tiszta üveglap; vastag kristályüveg peremek csillanásokkal, sötétkék panelek (Home piros), alul világító kék íves nyíl. Négy lap: 1 helyszín, 2 MAP, 3 BACK, 4 HOME (az 5–6. funkció később, új lapként vagy a tetőn). Koppintás a jobb (aktív) lapra = funkció, a bal keskeny lapra = odafordul; húzás, egérgörgő, nyilak forgatnak.
