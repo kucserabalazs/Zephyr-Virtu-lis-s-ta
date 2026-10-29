@@ -1,18 +1,34 @@
-ZEPHYR – ÚJ KEZDŐOLDAL + FORGATHATÓ KOCKA + PROGRAMOK – FELTÖLTÉS
-================================================================
+ZEPHYR – ÚJ KEZDŐOLDAL + VIRTUÁLIS SÉTA + FOGLALÁS – FELTÖLTÉS
+==============================================================
 
-A ZIP-ben két mappa van. Mindkettőt a tárhely FŐ mappájába töltsd fel (FileZillával),
-oda, ahol a „wp-content” és a „virtualis-seta” mappa is van:
+A ZIP-ben két mappa van: „uj” és „virtualis-seta”. Csomagold ki a gépeden, majd
+mindkét mappát töltsd fel FileZillával a tárhely FŐ mappájába (ELIN.hu-n ez a /web),
+oda, ahol a „wp-content” mappa és a korábban feltöltött „virtualis-seta” is van.
+Ha a FileZilla rákérdez, hogy felülírja-e a meglévő fájlokat: „Felülírás” (mindig).
 
-  virtualis-seta/index.html     – a séta a forgatható kockával (felülírja a régit)
-  virtualis-seta/api/index.php  – foglalás + programok + viharjelzés (felülírja a régit)
   uj/                           – AZ ÚJ KEZDŐOLDAL (új mappa, képekkel)
+  virtualis-seta/index.html     – a séta a forgatható kockával (felülírja a régit)
+  virtualis-seta/img/           – a 360°-os képek, logó, zene
+  virtualis-seta/api/index.php  – foglalás + programok + viharjelzés (PHP)
 
-Az új kezdőoldal címe:  https://balatoni-udules.hu/uj/
-A régi WordPress-oldal közben változatlanul megy tovább. Ha az új oldal elkészült és tetszik,
-megbeszéljük, hogyan kerüljön a fő címre (balatoni-udules.hu), úgy, hogy a Google-helyezés megmaradjon.
+FONTOS: a szerveren a virtualis-seta/api/data mappában vannak a foglalások, a jelszó
+és a vendégadatok. Ez a mappa szándékosan NINCS a csomagban – a szerveren NE töröld.
+Első használatkor a program magától létrehozza.
 
-DRÓNVIDEÓ: a uj/video mappába, dron.mp4 néven.
+KIPRÓBÁLÁS feltöltés után
+  Új kezdőoldal:   https://balatoni-udules.hu/uj/
+  Virtuális séta:  https://balatoni-udules.hu/virtualis-seta/
+  Tulajdonosi felület: a kezdőoldal lábléce → „Tulajdonosi belépés”
+    (vagy https://balatoni-udules.hu/virtualis-seta/#foglalas-admin)
+  Első belépés az ideiglenes jelszóval → a Beállítások fül alján AZONNAL cseréld le
+  a saját jelszavadra. Ugyanitt add meg a banki adatokat, az árakat és a naptár-
+  linkeket (Szállás.hu, Airbnb), majd a „Próba e-mail küldése” gombbal próbáld ki az értesítést.
+
+A régi WordPress-oldal (balatoni-udules.hu) közben változatlanul megy tovább. Ha az új
+oldal tetszik, megbeszéljük, hogyan kerüljön a fő címre úgy, hogy a Google-helyezés
+megmaradjon.
+
+DRÓNVIDEÓ: később a uj/video mappába, dron.mp4 néven.
 
 PROGRAMOK SZERKESZTÉSE
 – A kezdőoldalon a Rendezvények résznél: „Programok szerkesztése (tulajdonos)”,
