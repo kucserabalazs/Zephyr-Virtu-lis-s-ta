@@ -7789,8 +7789,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       [[5, 1], [6, -1]].forEach(([f, sgn]) => {
         const c = document.createElement("canvas"); c.width = QC; c.height = QC; DRAW[f](c.getContext("2d"), QC, QC);
         const tex = new T.CanvasTexture(c); if ("colorSpace" in tex) tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = maxAniso;
-        const m = new T.Mesh(new T.PlaneGeometry(QW, QW), new T.MeshBasicMaterial({ map: tex, alphaTest: .02, transparent: true, opacity: 0, depthWrite: false, toneMapped: false })); m.renderOrder = 2;
-        m.rotation.x = -sgn * Math.PI / 2; m.position.y = sgn * (BH / 2 - INSET);
+        const m = new T.Mesh(new T.PlaneGeometry(QW, QW), new T.MeshBasicMaterial({ map: tex, alphaTest: .5, toneMapped: false }));
+        m.rotation.order = "YXZ"; m.rotation.x = -sgn * Math.PI / 2; m.position.y = sgn * (BH / 2 - INSET);
         group.add(m); panels.push({ f, c, tex, m, sq: 1 });
       });
       [1, 2, 3, 4].forEach((f, i) => {
@@ -7819,7 +7819,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         cv.style.width = W + "px"; cv.style.height = H + "px";
         R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); R.setSize(W, H, false);
         cam.aspect = W / H; cam.updateProjectionMatrix();
-        cam.position.set(0, .92, 5.5); cam.lookAt(0, -.02, 0);
+        cam.position.set(0, 1.45, 5.4); cam.lookAt(0, -.04, 0);
         need = true;
       }
       let yaw = 0, target = 0, vel = 0, need = true, raf = 0, pressT = 0, pit = 0, ptarget = 0, pvel = 0;
@@ -7833,7 +7833,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         if (Math.abs(dp) > .02 || Math.abs(pvel) > .02) { pvel = pvel * .78 + dp * .085; pit += pvel; need = true; } else if (pit !== ptarget) { pit = ptarget; pvel = 0; need = true; }
         let sc = 1; if (pressT) { const k = (performance.now() - pressT) / 220; if (k >= 1) pressT = 0; else { sc = 1 - .06 * Math.sin(k * Math.PI); need = true; } }
         if (need) { group.rotation.y = yaw * rad; group.rotation.x = pit * rad; group.scale.setScalar(sc);
-          const vis = Math.max(0, Math.min(1, (Math.abs(pit) - 10) / 32)); panels.forEach((q) => { if (q.sq) { q.m.material.opacity = vis; q.m.visible = vis > .01; } });
+          /* a tető (Settings) felirata mindig a felénk néző oldal felől olvasható */
+          const topY = -Math.round(target / 90) * 90 * rad; panels.forEach((q) => { if (q.f === 5) q.m.rotation.y = topY; });
           R.render(scene, cam); need = false; }
         if (Math.abs(target - yaw) > .02 || Math.abs(vel) > .02 || Math.abs(ptarget - pit) > .02 || Math.abs(pvel) > .02 || pressT) raf = requestAnimationFrame(frame);
       }
