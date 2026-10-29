@@ -55,7 +55,7 @@ button { font: inherit; }
 .plate .place { font: 800 26px/1.05 var(--display); letter-spacing: .02em; text-transform: uppercase; text-wrap: balance; }
 /* ---- Forgatható üveghasáb (bal felül): 1 helyszín · 2 Map · 3 Back · 4 Home · 5–6 (tető/alj) később ----
    Négy oldal körbe forog (vízszintes húzás), a tető és az alj függőleges húzással jön elő. */
-.cubebox { --W: 216px; --H: 128px; position: relative; flex: none; width: calc(var(--W) + 44px); padding: 0 22px; box-sizing: border-box; display: grid; justify-items: center; }
+.cubebox { --W: 224px; --H: 136px; --gp: 15px; position: relative; flex: none; width: calc(var(--W) + 44px); padding: 0 22px; box-sizing: border-box; display: grid; justify-items: center; }
 .cube-stage { width: var(--W); height: var(--H); perspective: calc(var(--W) * 4.2); perspective-origin: 50% 45%; position: relative; touch-action: none; cursor: grab; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
 .cube-stage img { -webkit-user-drag: none; pointer-events: none; }
 .cube-stage.drag { cursor: grabbing; }
@@ -63,32 +63,42 @@ button { font: inherit; }
 .cube { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.2,1.25,.35,1); will-change: transform; }
 .cube-stage.drag .cube, .cube.instant { transition: none; }
 .cube-shadow { position: absolute; left: 10%; right: 10%; bottom: -16px; height: 18px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,10,30,.5), transparent); filter: blur(3px); }
-/* egy oldal: áttetsző üvegtömb – vastag, csillogó perem, áttetsző sötétkék „üvegbe öntött” panel.
-   A hátsó lapok pereme halványan átlátszik az üvegen; a tartalmat a JS rejti el, ha a lap hátrafelé néz. */
-.cf { position: absolute; left: 0; top: 0; width: var(--W); height: var(--H); box-sizing: border-box; border-radius: 20px; padding: 8px; backface-visibility: visible; -webkit-backface-visibility: visible;
-  opacity: var(--fa, 1); transition: opacity .25s;
+/* egy oldal: vastag, kristálytiszta üvegkeret, benne fedett sötétkék (vagy piros) panel – a tulajdonos mintaképe szerint */
+.cf { position: absolute; left: 0; top: 0; width: var(--W); height: var(--H); box-sizing: border-box; border-radius: calc(var(--H) * .17); padding: var(--gp); backface-visibility: hidden; -webkit-backface-visibility: hidden;
   background:
-    linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(210,236,255,.16) 14%, rgba(160,205,240,.06) 40%, rgba(255,255,255,.03) 58%, rgba(185,225,255,.14) 82%, rgba(255,255,255,.5) 100%);
+    radial-gradient(120% 60% at 50% -14%, rgba(255,255,255,.7) 0%, rgba(255,255,255,0) 32%),
+    radial-gradient(40% 40% at 0% 100%, rgba(255,255,255,.6) 0%, rgba(255,255,255,0) 60%),
+    radial-gradient(40% 40% at 100% 100%, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 60%),
+    linear-gradient(115deg, rgba(255,255,255,.0) 30%, rgba(255,255,255,.55) 34%, rgba(255,255,255,0) 40%),
+    linear-gradient(180deg, #f4fbff 0%, #b9dcf7 10%, #6fa8de 26%, #2f6db5 44%, #4f8fd0 58%, #a7d2f4 76%, #e9f6ff 90%, #ffffff 100%);
   box-shadow:
-    inset 0 0 0 1.5px rgba(255,255,255,.9),
-    inset 1.5px 1.5px 0 2px rgba(150,230,255,.35),
-    inset -1.5px -1.5px 0 2px rgba(255,170,220,.18),
-    inset 0 0 18px rgba(200,235,255,.35),
-    0 10px 30px rgba(0,25,60,.28); }
+    inset 0 0 0 1.5px rgba(255,255,255,1),
+    inset 0 0 0 3px rgba(60,120,190,.55),
+    inset 0 0 0 4.5px rgba(255,255,255,.7),
+    inset 0 0 calc(var(--gp) * .9) rgba(255,255,255,.55),
+    inset 3px 3px 6px rgba(255,255,255,.9),
+    inset -3px -3px 6px rgba(20,70,140,.35),
+    0 1px 0 rgba(255,255,255,.6),
+    0 14px 26px rgba(0,30,70,.38);
+  filter: brightness(var(--lit, 1)); }
 .cf::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3;
-  background: linear-gradient(112deg, transparent 0 calc(var(--sh, 30%) - 14%), rgba(255,255,255,.08) calc(var(--sh, 30%) - 8%), rgba(255,255,255,.55) var(--sh, 30%), rgba(255,255,255,.08) calc(var(--sh, 30%) + 7%), transparent calc(var(--sh, 30%) + 12%));
-  mix-blend-mode: screen; opacity: var(--cv, 1); }
-.cf::after { content: ""; position: absolute; left: 16px; right: 38%; top: 2.5px; height: 3.5px; border-radius: 4px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,1), rgba(255,255,255,0)); pointer-events: none; z-index: 3; opacity: var(--cv, 1); }
-.cf-in { position: absolute; inset: 8px; border-radius: 13px; overflow: hidden; display: grid; grid-template-columns: 100%; place-items: center; align-content: center; gap: 2px; text-align: center; padding: 6px 10px; box-sizing: border-box;
-  opacity: var(--cv, 1); transition: opacity .2s;
-  background: linear-gradient(160deg, rgba(40,86,140,.72) 0%, rgba(14,40,78,.74) 45%, rgba(6,22,46,.8) 100%);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.28), inset 0 1px 0 1px rgba(255,255,255,.18), inset 0 10px 22px rgba(140,200,255,.16), inset 0 -12px 22px rgba(0,0,0,.35); }
-.cf-in::before { content: ""; position: absolute; inset: 0; background: linear-gradient(165deg, rgba(255,255,255,.26) 0%, rgba(255,255,255,.06) 28%, transparent 42%), radial-gradient(90% 60% at 80% 115%, rgba(120,210,255,.28), transparent 70%); pointer-events: none; }
-.cf-in, .cf1 .cf-in.plate { filter: brightness(var(--lit, 1)); }
-.cf-red .cf-in { background: linear-gradient(160deg, rgba(255,92,78,.8) 0%, rgba(220,36,26,.8) 45%, rgba(150,14,8,.84) 100%); }
-.cf-red .cf-in::before { background: linear-gradient(165deg, rgba(255,255,255,.32) 0%, rgba(255,255,255,.08) 28%, transparent 42%), radial-gradient(90% 60% at 80% 115%, rgba(255,190,170,.35), transparent 70%); }
-.cube-stage.glint .cf-front::before { animation: glint 1.1s ease-in-out; }
-@keyframes glint { from { background-position: -160px 0; } to { background-position: 260px 0; } }
+  background:
+    linear-gradient(112deg, transparent 0 calc(var(--sh, 30%) - 10%), rgba(255,255,255,.28) var(--sh, 30%), transparent calc(var(--sh, 30%) + 10%)),
+    radial-gradient(22px 12px at 16% 5%, rgba(255,255,255,1), transparent 70%),
+    radial-gradient(9px 24px at 3% 42%, rgba(255,255,255,.95), transparent 70%),
+    radial-gradient(18px 9px at 84% 96%, rgba(255,255,255,.95), transparent 70%),
+    radial-gradient(8px 16px at 97% 30%, rgba(255,255,255,.8), transparent 70%);
+  mix-blend-mode: screen; }
+.cf::after { content: ""; position: absolute; left: 12%; right: 30%; top: 2px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, rgba(255,255,255,0), #fff, rgba(255,255,255,0)); pointer-events: none; z-index: 3; }
+.cf-in, .cf1 .cf-in.plate { position: absolute; inset: var(--gp); border-radius: calc(var(--H) * .09); overflow: hidden; box-sizing: border-box;
+  background: linear-gradient(180deg, #17345c 0%, #10284a 40%, #0a1d38 100%);
+  box-shadow: 0 0 0 1.5px rgba(8,22,44,.95), 0 0 0 3px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.22), inset 0 8px 18px rgba(255,255,255,.07), inset 0 -10px 20px rgba(0,0,0,.4); }
+.cf-in { display: grid; grid-template-columns: 100%; place-items: center; align-content: center; gap: 0; text-align: center; padding: 4px 8px; opacity: var(--cv, 1); }
+.cf-in::before, .cf1 .cf-in.plate::before { content: ""; position: absolute; inset: 0; background: linear-gradient(170deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.03) 32%, transparent 45%); pointer-events: none; }
+.cf-red .cf-in { background: linear-gradient(180deg, #ff4a3c 0%, #e0221a 42%, #b3120c 100%); box-shadow: 0 0 0 1.5px rgba(80,6,4,.9), 0 0 0 3px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.45), inset 0 10px 20px rgba(255,255,255,.18), inset 0 -10px 20px rgba(80,0,0,.35); }
+.cf-red .cf-in::before { background: linear-gradient(170deg, rgba(255,255,255,.3) 0%, rgba(255,255,255,.06) 34%, transparent 48%); }
+.cube-stage.glint .cf-front::before { animation: glint 1.2s ease-in-out; }
+@keyframes glint { from { background-position: -200px 0, 0 0, 0 0, 0 0; } to { background-position: 300px 0, 0 0, 0 0, 0 0; } }
 .cf1 { transform: rotateY(0deg) translateZ(calc(var(--W) / 2)); }
 .cf2 { transform: rotateY(90deg) translateZ(calc(var(--W) / 2)); }
 .cf3 { transform: rotateY(180deg) translateZ(calc(var(--W) / 2)); }
@@ -96,8 +106,8 @@ button { font: inherit; }
 .cf5, .cf6 { height: var(--W); top: calc((var(--H) - var(--W)) / 2); }
 .cf5 { transform: rotateX(90deg) translateZ(calc(var(--H) / 2)); }
 .cf6 { transform: rotateX(-90deg) translateZ(calc(var(--H) / 2)); }
-.cf-ico { width: auto; height: calc(var(--H) * .46); filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); transition: transform .3s; position: relative; }
-.cf-lbl { position: relative; font: 800 calc(var(--H) * .24)/1 var(--display); letter-spacing: .03em; text-transform: uppercase; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.cf-ico { width: auto; height: calc(var(--H) * .43); filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); transition: transform .3s; position: relative; }
+.cf-lbl { position: relative; font: 800 calc(var(--H) * .22)/1.05 var(--display); letter-spacing: .02em; text-transform: uppercase; color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,.45); margin-top: 1px; }
 .cf-in small { display: none; }
 .cf-row { display: flex; align-items: center; justify-content: center; gap: 12px; position: relative; }
 .cube-stage:hover .cf-front .cf-ico { transform: scale(1.07) translateY(-2px); }
@@ -105,14 +115,13 @@ button { font: inherit; }
 .cf-rot .cf-lbl { font-size: calc(var(--H) * .17); }
 .cf5 .cf-in, .cf6 .cf-in { align-content: center; }
 /* 1. oldal: a helyszín */
-.cf1 .cf-in.plate { all: unset; position: absolute; inset: 8px; border-radius: 13px; overflow: hidden; display: grid; align-content: center; justify-items: start; gap: 2px; padding: 8px 16px 10px; box-sizing: border-box; text-align: left; opacity: var(--cv, 1);
-  background: linear-gradient(160deg, rgba(40,86,140,.72) 0%, rgba(14,40,78,.74) 45%, rgba(6,22,46,.8) 100%);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.28), inset 0 1px 0 1px rgba(255,255,255,.18), inset 0 10px 22px rgba(140,200,255,.16), inset 0 -12px 22px rgba(0,0,0,.35); }
-.cf1 .cf-in.plate::before { content: ""; position: absolute; inset: 0; background: linear-gradient(165deg, rgba(255,255,255,.24) 0%, rgba(255,255,255,.05) 28%, transparent 42%), radial-gradient(90% 60% at 80% 115%, rgba(120,210,255,.26), transparent 70%); pointer-events: none; }
-.cf1 .plate::after { content: ""; position: absolute; right: -4px; bottom: -6px; width: 62%; height: 112%; background: #fff; opacity: .09; -webkit-mask: var(--boat) center / contain no-repeat; mask: var(--boat) center / contain no-repeat; transform: rotate(-4deg); pointer-events: none; }
+.cf1 .cf-in.plate { all: unset; position: absolute; inset: var(--gp); border-radius: calc(var(--H) * .09); overflow: hidden; box-sizing: border-box; display: grid; align-content: center; justify-items: start; gap: 0; padding: 4px calc(var(--H) * .14) 6px; text-align: left; opacity: var(--cv, 1);
+  background: linear-gradient(180deg, #17345c 0%, #10284a 40%, #0a1d38 100%);
+  box-shadow: 0 0 0 1.5px rgba(8,22,44,.95), 0 0 0 3px rgba(255,255,255,.35), inset 0 1px 0 rgba(255,255,255,.22), inset 0 8px 18px rgba(255,255,255,.07), inset 0 -10px 20px rgba(0,0,0,.4); }
+.cf1 .plate::after { content: ""; position: absolute; right: -2%; bottom: -10%; width: 58%; height: 118%; background: #2b4f80; opacity: .55; -webkit-mask: var(--boat) center / contain no-repeat; mask: var(--boat) center / contain no-repeat; transform: rotate(-4deg); pointer-events: none; }
 .cf1 .plate .house { display: none; }
-.cf1 .plate .unit { position: relative; z-index: 1; font: 800 calc(var(--H) * .175)/1 var(--display); letter-spacing: .02em; text-transform: uppercase; color: #ff3b30; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
-.cf1 .plate .place { position: relative; z-index: 1; font: 800 var(--pf, calc(var(--H) * .36))/.95 var(--display); letter-spacing: .02em; text-transform: uppercase; color: #fff; text-wrap: balance; overflow-wrap: anywhere; max-width: 100%; text-shadow: 0 2px 8px rgba(0,0,0,.45); }
+.cf1 .plate .unit { position: relative; z-index: 1; white-space: nowrap; font-size: var(--uf, calc(var(--H) * .2)) !important; font: 800 calc(var(--H) * .2)/1.05 var(--display); letter-spacing: .01em; text-transform: uppercase; color: #ff2d22; text-shadow: 0 1px 4px rgba(0,0,0,.4); }
+.cf1 .plate .place { position: relative; z-index: 1; font: 800 var(--pf, calc(var(--H) * .4))/.95 var(--display); letter-spacing: .02em; text-transform: uppercase; color: #fff; text-wrap: balance; overflow-wrap: anywhere; max-width: 100%; text-shadow: 0 2px 8px rgba(0,0,0,.45); }
 /* oldalsó üveggombok */
 .cube-arr { all: unset; cursor: pointer; position: absolute; top: calc(var(--H) / 2 - 17px); width: 20px; height: 34px; display: grid; place-items: center; border-radius: 10px; color: #fff;
   background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(180,215,245,.18)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), 0 3px 10px rgba(0,20,50,.35); opacity: .75; transition: opacity .2s, transform .15s; }
@@ -125,6 +134,7 @@ button { font: inherit; }
 .cube-swoosh g { animation: swoosh 2.2s ease-in-out infinite; transform-origin: 50% 50%; }
 @keyframes swoosh { 0%, 100% { transform: translateX(-5px); opacity: .75; } 50% { transform: translateX(5px); opacity: 1; } }
 .cubebox.seen .cube-swoosh { opacity: .55; } .cubebox.seen .cube-swoosh g { animation: none; }
+.cube-arr, .cube-dots, .cube-hint { display: none !important; }
 .cube-dots { display: flex; gap: 5px; margin-top: 2px; padding: 3px 6px; border-radius: 999px; }
 .cube-dots button { all: unset; cursor: pointer; width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.45); box-shadow: 0 0 0 1px rgba(0,20,50,.25); transition: transform .2s, background .2s; position: relative; }
 .cube-dots button::after { content: ""; position: absolute; inset: -6px -3px; }
@@ -137,10 +147,10 @@ button { font: inherit; }
 .cube-hint.gone { opacity: 0; }
 @keyframes cubeHint { 50% { transform: translateX(4px); } }
 @keyframes cubeHintIco { to { transform: rotate(360deg); } }
-:root[data-device="tablet"] .cubebox { --W: 204px; --H: 120px; width: calc(var(--W) + 56px); padding: 0 28px; }
+:root[data-device="tablet"] .cubebox { --W: 208px; --H: 128px; --gp: 14px; width: calc(var(--W) + 56px); padding: 0 28px; }
 :root[data-device="tablet"] .cube-arr { width: 26px; height: 42px; top: calc(var(--H) / 2 - 21px); }
-:root[data-device="phone"] .cubebox { --W: 150px; --H: 88px; width: calc(var(--W) + 40px); padding: 0 20px; }
-:root[data-device="phone"] .cf { border-radius: 15px; padding: 6px; } :root[data-device="phone"] .cf-in, :root[data-device="phone"] .cf1 .cf-in.plate { inset: 6px; border-radius: 10px; padding: 5px 10px 7px; }
+:root[data-device="phone"] .cubebox { --W: 158px; --H: 96px; --gp: 10px; width: calc(var(--W) + 40px); padding: 0 20px; }
+
 :root[data-device="phone"] .cube-arr { width: 18px; }
 :root[data-device="phone"] .cube-dots button { width: 7px; height: 7px; }
 @media (prefers-reduced-motion: reduce) { .cube { transition-duration: .01s; } .cube-hint, .cube-hint svg, .cube-swoosh g { animation: none; } }
@@ -7541,7 +7551,6 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         const z2 = y * sx + z1 * cx;                                /* rotateX (CSS: lefelé nő az y) */
         el.style.setProperty("--lit", (.78 + .26 * Math.max(0, z2)).toFixed(3));
         el.style.setProperty("--cv", Math.max(0, Math.min(1, z2 * 4)).toFixed(3));          /* tartalom csak a felénk néző oldalon */
-        el.style.setProperty("--fa", z2 > .02 ? "1" : "0.45");                            /* a hátsó perem halványan átlátszik */
         el.style.setProperty("--sh", (30 + x1 * 34).toFixed(1) + "%");                    /* a fényfolt forgatáskor végigcsúszik */
         el.classList.toggle("cf-front", +el.dataset.f === front);
         el.setAttribute("aria-hidden", +el.dataset.f === front ? "false" : "true");
@@ -7567,6 +7576,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const inner = pl.parentElement;
       const over = () => pl.offsetTop + pl.offsetHeight > Hd - 20 || pl.scrollWidth > Wd - 44;
       for (let i = 0; i < 10 && over(); i++) { f *= .92; pl.style.setProperty("--pf", f + "px"); }
+      const un = $("unitName"); if (un) { let u = Hd * .2; un.style.setProperty("--uf", u + "px"); for (let i = 0; i < 10 && un.scrollWidth > Wd - 44; i++) { u *= .92; un.style.setProperty("--uf", u + "px"); } }
       void inner;
     };
     /* --- egér és ujj: koppintás vagy húzás --- */
