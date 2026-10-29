@@ -1,7 +1,7 @@
 # Zephyr Virtuális Séta – munkaállapot (2026. október 22., 04:26)
 
 ## Hol van a kész munka
-- **Élő túra (artifact):** https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD (352. verzió) – privát, megosztás az oldal Megosztás menüjében
+- **Élő túra (artifact):** https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD (353. verzió) – privát, megosztás az oldal Megosztás menüjében
 - **Szerkesztő mód:** https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD#szerkesztes (kilépés: a `#szerkesztes` törlése a címből + újratöltés)
 - **WordPress-csomag:** `zephyr-virtualis-seta.zip` (a beszélgetésben letölthető, utolsó változat okt. 22. 04:25). Tartalma: `virtualis-seta/index.html`, `img/` (panorámák + bélyegképek), `BEILLESZTES.txt`. Kicsomagolva a saját gépen is futtatható.
 - **Forráskód:** a projektben `claude/zephyr-virtualis-seta-index.html` (ugyanaz, mint a csomagban)
@@ -96,3 +96,4 @@
 - 351 – Kocka: nyugalomban nincs csillogás (a 7 mp-es csillanás kivéve; fényfolt csak forgatás közben mozog). Üveg dobókocka-élek: a lapok éles peremvonala helyett lágy belső fény, nagyobb lekerekítés, a 4 függőleges élen lekerekített üvegél-darab (.ce), a tetőlap pereme is lágy.
 - 352 – A kocka valódi 3D-ben (WebGL, az A-Frame THREE motorja): egyetlen lekerekített élű üveg téglatest (1,6 × 1,0 × 1,6), illesztés nélkül; átlátszó üveg + hátoldali réteg + Fresnel-peremfény, tükröződés az aktuális panorámából (minden helyszínváltáskor frissül); benne a 4 vászonra rajzolt panel (helyszín – vitorlás nélkül, MAP, BACK, HOME). Nyugalomban áll (csak forgatáskor/rugós beálláskor rajzol). Ha nincs WebGL, a CSS-es kocka a tartalék. Telefonon a térkép induláskor már nem nyílik ki magától (régi hiba javítva).
 - 352 – KEZDŐFELÜLET: a tulajdonos kérésére mindig a kezdőoldalról indulunk. A GitHub-repó gyökerében index.html → weboldal/uj/ (GitHub Pages-hez .nojekyll). A kocka Home oldala relatív címre visz (../uj/), így tárhelyen és Pages-en is jó.
+- 353 – A téglatest teteje: SETTINGS (fogaskerék; telefonon beállítás-menü, gépen gombsor-kiemelés + nézetválasztó), alja: INVENTORY (vágólap + fazék; az aktuális apartman mappája, máshol apartmanválasztó). Függőleges húzással / ↑ ↓ billentyűvel érhetők el. Teljes mentés a GitHubra, részletes folytatási útmutató: FOLYTATAS.md.

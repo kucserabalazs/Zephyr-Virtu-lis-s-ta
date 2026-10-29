@@ -1,5 +1,7 @@
 # Zephyr Apartman – weboldal, virtuális séta, foglalási rendszer
 
+**Új munkamenet elején olvasd el: [FOLYTATAS.md](FOLYTATAS.md)** – a projekt teljes állása és a folytatás menete.
+
 Zephyr Apartmanház, 8621 Zamárdi, Gáspár András utca 58. · balatoni-udules.hu
 
 ## Kezdőfelület

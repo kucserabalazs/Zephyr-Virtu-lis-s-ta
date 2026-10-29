@@ -1,0 +1,130 @@
+/* Zephyr – foglalási felület */
+.zfb { --navy: #0b2f5e; --gold: #f2b233; --ink: #14202a; --paper: #fffdf6; --line: #e6dfcc; position: fixed; inset: 0; z-index: 2147483000; display: grid; place-items: center; font-family: Manrope, "Segoe UI", system-ui, sans-serif; color: var(--ink); }
+.zfb[hidden] { display: none; }
+html.zfb-lock, html.zfb-lock body { overflow: hidden; }
+.zfb * { box-sizing: border-box; }
+.zfb-bg { position: absolute; inset: 0; background: rgba(8,18,30,.6); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); opacity: 0; transition: opacity .3s; }
+.zfb.on .zfb-bg { opacity: 1; }
+.zfb-card { position: relative; width: min(1040px, calc(100vw - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; background: var(--paper); border-radius: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.45); overflow: hidden; transform: translateY(24px) scale(.97); opacity: 0; transition: transform .35s cubic-bezier(.2,.9,.3,1.1), opacity .25s; }
+.zfb.on .zfb-card { transform: none; opacity: 1; }
+.zfb-hd { display: flex; align-items: center; gap: 18px; padding: 14px 18px 14px 22px; background: linear-gradient(135deg, #0b2f5e, #1b4c86); color: #fff; }
+.zfb-logo { display: flex; flex-direction: column; line-height: 1; }
+.zfb-logo b { font: 900 22px/1 Georgia, serif; letter-spacing: .18em; background: linear-gradient(180deg, #f7e19a, #c9a03c 60%, #f2d27a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.zfb-logo span { font-size: 10.5px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; opacity: .8; margin-top: 4px; }
+.zfb-steps { display: flex; gap: 6px; list-style: none; margin: 0 0 0 auto; padding: 0; }
+.zfb-steps li { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; opacity: .55; }
+.zfb-steps li + li::before { content: ""; width: 16px; height: 2px; background: rgba(255,255,255,.4); margin-right: 2px; }
+.zfb-steps li i { font-style: normal; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255,255,255,.6); font-size: 12px; }
+.zfb-steps li.on { opacity: 1; } .zfb-steps li.on i { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.zfb-steps li.done { opacity: .9; } .zfb-steps li.done i { background: #3fb37f; border-color: #3fb37f; }
+.zfb-x { all: unset; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font: 700 26px/1 sans-serif; background: rgba(255,255,255,.12); margin-left: 6px; }
+.zfb-x:hover { background: #e2483d; }
+.zfb-body { padding: 22px 24px 24px; overflow: auto; -webkit-overflow-scrolling: touch; }
+.zfb-h { font: 800 22px/1.2 Manrope, sans-serif; margin: 0 0 14px; color: var(--navy); }
+.zfb-demo { background: #fff3cd; border: 1px solid #f2b233; border-radius: 10px; padding: 8px 12px; font-size: 13px; margin: 0 0 14px; }
+.zfb-fine { font-size: 12.5px; color: #66727b; margin: 14px 0 0; line-height: 1.45; }
+.zfb-fine a { color: var(--navy); }
+.zfb-err { background: #fdecea; color: #b71c1c; border-radius: 10px; padding: 10px 12px; font-weight: 700; font-size: 14px; }
+.zfb-loading { display: flex; gap: 12px; align-items: center; justify-content: center; padding: 60px 0; font-weight: 700; color: var(--navy); }
+.zfb-loading i { width: 26px; height: 26px; border-radius: 50%; border: 3px solid #cfd8e3; border-top-color: var(--navy); animation: zfbSpin .8s linear infinite; }
+@keyframes zfbSpin { to { transform: rotate(360deg); } }
+/* apartmanválasztó */
+.zfb-apts { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+.zfb-apt { all: unset; cursor: pointer; position: relative; display: flex; flex-direction: column; gap: 4px; padding: 18px 16px 16px; border-radius: 18px; background: #fff; border: 2px solid var(--line); box-shadow: 0 4px 0 rgba(20,32,42,.06); transition: transform .15s, border-color .15s, box-shadow .15s; }
+.zfb-apt:hover, .zfb-apt:focus-visible { transform: translateY(-3px); border-color: var(--ac); box-shadow: 0 12px 26px rgba(20,32,42,.14); }
+.zfb-apt b { font: 800 22px/1.1 Manrope, sans-serif; } .zfb-apt small { color: #66727b; font-weight: 600; }
+.zfb-apt em { font-style: normal; font-weight: 800; color: var(--navy); margin-top: 6px; } .zfb-apt i { font-style: normal; font-weight: 800; color: var(--ac); margin-top: 6px; font-size: 13px; }
+.zfb-no { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--ac); color: #fff; font: 900 18px/1 Manrope, sans-serif; box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ac); margin-bottom: 6px; }
+.zfb-apt-chip { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--ac); border-radius: 999px; padding: 6px 14px 6px 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.zfb-apt-chip .zfb-no { width: 30px; height: 30px; font-size: 15px; margin: 0; box-shadow: none; }
+.zfb-apt-chip b { font-size: 17px; } .zfb-apt-chip small { color: #66727b; font-weight: 600; }
+.zfb-apt-chip button { all: unset; cursor: pointer; margin-left: auto; font-size: 12.5px; font-weight: 800; color: var(--navy); text-decoration: underline; }
+/* naptár */
+.zfb-cal-wrap { display: grid; grid-template-columns: 1fr 320px; gap: 22px; align-items: start; }
+.zfb-mnav { display: flex; align-items: center; gap: 10px; justify-content: space-between; margin-bottom: 10px; }
+.zfb-mnav span { font-size: 13px; color: #66727b; font-weight: 600; text-align: center; }
+.zfb-mnav button { all: unset; cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--navy); color: #fff; font: 800 22px/1 sans-serif; }
+.zfb-mnav button:disabled { opacity: .3; cursor: default; }
+.zfb-months { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.zfb-month h4 { margin: 0 0 8px; text-align: center; font: 800 16px/1 Manrope, sans-serif; color: var(--navy); text-transform: capitalize; }
+.zfb-wd, .zfb-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.zfb-wd span { text-align: center; font-size: 11px; font-weight: 800; color: #8a949c; padding: 4px 0; }
+.zfb-d { all: unset; box-sizing: border-box; aspect-ratio: 1 / 1.05; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; cursor: pointer; background: #fff; border: 1.5px solid #e3ecdf; position: relative; transition: background .12s, transform .12s; }
+.zfb-d b { font-size: 14px; font-weight: 800; } .zfb-d small { font-size: 10px; font-weight: 700; color: #2e7d32; }
+.zfb-d:hover:not(:disabled) { transform: scale(1.06); border-color: var(--gold); z-index: 1; }
+.zfb-d.empty { background: none; border: 0; cursor: default; }
+.zfb-d.off { background: #f3f1ec; color: #b7bcc0; border-color: transparent; cursor: default; }
+.zfb-d.busy { background: repeating-linear-gradient(135deg, #f6e1df 0 5px, #fbeeed 5px 10px); color: #c0605a; border-color: #f2d4d1; cursor: not-allowed; }
+.zfb-d.busy b { text-decoration: line-through; }
+.zfb-d.today b { color: #e2483d; }
+.zfb-d.in { background: #fff1c9; border-color: #f7dc8d; border-radius: 4px; }
+.zfb-d.ci, .zfb-d.co { background: var(--navy); color: #fff; border-color: var(--navy); }
+.zfb-d.ci small, .zfb-d.co small { color: #f2d27a; }
+.zfb-d.ci { border-radius: 14px 4px 4px 14px; } .zfb-d.co { border-radius: 4px 14px 14px 4px; }
+.zfb-d.co.busy b { text-decoration: none; }
+.zfb-d.can { border-color: var(--gold); } .zfb-d.cant:not(.busy) { opacity: .55; }
+.zfb-d:disabled { cursor: default; }
+.zfb-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: #66727b; font-weight: 600; }
+.zfb-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 5px; }
+.zfb-legend .lf { background: #fff; border: 1.5px solid #e3ecdf; } .zfb-legend .lb { background: repeating-linear-gradient(135deg, #f6e1df 0 3px, #fbeeed 3px 6px); } .zfb-legend .ls { background: var(--navy); }
+/* oldalsáv: dátumok, vendégek, kimutatás */
+.zfb-side { position: sticky; top: 0; background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.zfb-dates { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; }
+.zfb-dates div { padding: 9px 12px; display: flex; flex-direction: column; } .zfb-dates div + div { border-left: 1.5px solid var(--line); }
+.zfb-dates small { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #8a949c; }
+.zfb-dates b { font-size: 13.5px; } .zfb-dates em { font-style: normal; font-size: 12px; color: #66727b; }
+.zfb-step { display: flex; align-items: center; justify-content: space-between; }
+.zfb-step b { display: block; font-size: 15px; } .zfb-step small { color: #8a949c; font-size: 12px; font-weight: 600; }
+.zfb-st-c { display: flex; align-items: center; gap: 10px; }
+.zfb-st-c button { all: unset; cursor: pointer; width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--navy); color: var(--navy); display: grid; place-items: center; font: 800 20px/1 sans-serif; }
+.zfb-st-c button:disabled { opacity: .25; cursor: default; }
+.zfb-st-c output { min-width: 20px; text-align: center; font-weight: 800; font-size: 17px; }
+.zfb-tip { background: #f3f7fb; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; font-weight: 600; color: var(--navy); margin: 0; }
+.zfb-sum { border-top: 2px dashed var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.zfb-row b { white-space: nowrap; }
+.zfb-done-sum .zfb-apt-chip { border-radius: 16px; }
+.zfb-row { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.zfb-row span small { display: block; color: #8a949c; font-size: 11.5px; }
+.zfb-row.muted { color: #66727b; font-size: 13px; }
+.zfb-row.total { border-top: 2px solid var(--ink); padding-top: 8px; margin-top: 4px; font-size: 18px; } .zfb-row.total b { font-size: 20px; }
+.zfb-row.dep { background: #fff3cd; border-radius: 8px; padding: 7px 9px; font-size: 13.5px; }
+.zfb-nights summary { cursor: pointer; font-size: 12.5px; color: var(--navy); font-weight: 700; }
+.zfb-nights div { display: flex; justify-content: space-between; font-size: 12.5px; color: #66727b; padding: 2px 0; }
+.zfb-btn { all: unset; box-sizing: border-box; cursor: pointer; text-align: center; padding: 14px 22px; border-radius: 999px; background: linear-gradient(180deg, #f7c548, #f2b233); color: var(--ink); font: 800 15px/1 Manrope, sans-serif; box-shadow: 0 4px 0 #c98f17; transition: transform .1s, box-shadow .1s; }
+.zfb-btn:hover:not(:disabled) { transform: translateY(-1px); } .zfb-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #c98f17; }
+.zfb-btn:disabled { opacity: .45; cursor: default; }
+.zfb-btn.ghost { background: #fff; border: 2px solid var(--navy); color: var(--navy); box-shadow: none; }
+.zfb-link { all: unset; cursor: pointer; text-align: center; font-size: 12.5px; color: #66727b; text-decoration: underline; }
+/* űrlap */
+.zfb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; }
+.zfb-f { display: flex; flex-direction: column; gap: 4px; } .zfb-f.wide { grid-column: 1 / -1; }
+.zfb-f span { font-size: 12.5px; font-weight: 800; color: #3c4a55; }
+.zfb-f input, .zfb-f textarea { font: 600 15px/1.3 Manrope, sans-serif; padding: 11px 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); width: 100%; }
+.zfb-f input:focus, .zfb-f textarea:focus { outline: none; border-color: var(--navy); box-shadow: 0 0 0 3px rgba(11,47,94,.12); }
+.zfb-f small { font-size: 11.5px; color: #66727b; line-height: 1.35; }
+.zfb-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.zfb-acc { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0 8px; font-size: 13.5px; line-height: 1.45; cursor: pointer; }
+.zfb-acc input { width: 20px; height: 20px; margin-top: 1px; flex: none; accent-color: var(--navy); }
+.zfb-acc a { color: var(--navy); font-weight: 700; }
+.zfb-actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; }
+/* kész */
+.zfb-done { text-align: center; max-width: 620px; margin: 0 auto; }
+.zfb-anchor { font-size: 46px; width: 84px; height: 84px; border-radius: 50%; margin: 6px auto 10px; display: grid; place-items: center; background: #e7f5ec; color: #2e7d32; animation: zfbPop .5s cubic-bezier(.2,.9,.3,1.4); }
+@keyframes zfbPop { from { transform: scale(.4); opacity: 0; } }
+.zfb-done h2 { font: 800 24px/1.25 Manrope, sans-serif; color: var(--navy); margin: 0 0 10px; }
+.zfb-done-sum { text-align: left; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 14px; margin: 16px 0; }
+.zfb-done .zfb-btn { margin-top: 10px; }
+/* rövidkód gomb */
+.zf-open-btn { cursor: pointer; padding: 12px 22px; border: 0; border-radius: 999px; background: linear-gradient(180deg, #f7c548, #f2b233); color: #14202a; font: 800 15px/1 Manrope, sans-serif; box-shadow: 0 4px 0 #c98f17; }
+@media (max-width: 760px) {
+  .zfb-card { width: 100vw; max-height: none; height: 100%; height: 100dvh; border-radius: 0; }
+  .zfb-hd { padding: calc(10px + env(safe-area-inset-top, 0px)) 12px 10px 16px; gap: 10px; }
+  .zfb-steps li span { display: none; } .zfb-steps li + li::before { width: 8px; }
+  .zfb-logo span { display: none; } .zfb-logo b { font-size: 20px; }
+  .zfb-body { padding: 16px 14px calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .zfb-cal-wrap { grid-template-columns: 1fr; }
+  .zfb-side { position: static; }
+  .zfb-grid { grid-template-columns: 1fr; }
+  .zfb-apts { grid-template-columns: 1fr 1fr; gap: 10px; } .zfb-apt { padding: 14px 12px; }
+  .zfb-actions .zfb-btn { flex: 1; }
+}

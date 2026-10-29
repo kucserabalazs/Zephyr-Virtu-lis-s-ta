@@ -92,6 +92,20 @@ button { font: inherit; }
 .cf2 { transform: rotateY(90deg) translateZ(calc(var(--S) / 2)); }
 .cf3 { transform: rotateY(180deg) translateZ(calc(var(--S) / 2)); }
 .cf4 { transform: rotateY(-90deg) translateZ(calc(var(--S) / 2)); }
+.cf5, .cf6 { height: var(--S); top: calc((var(--H) - var(--S)) / 2); }
+.cf5 { transform: rotateX(90deg) translateZ(calc(var(--H) / 2)); }
+.cf6 { transform: rotateX(-90deg) translateZ(calc(var(--H) / 2)); }
+.tools.tools-flash .tool { animation: toolsFlash 1.6s ease; }
+@keyframes toolsFlash { 0%, 100% { box-shadow: none; } 25%, 65% { box-shadow: 0 0 0 3px #9fdcff, 0 0 18px rgba(140,210,255,.9); } }
+.inv-pick { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(6,16,30,.55); padding: 16px; }
+.inv-card { position: relative; width: min(380px, 100%); border-radius: 22px; padding: 20px 20px 18px; color: #fff; background: linear-gradient(180deg, #17345c, #0a1b35); box-shadow: inset 0 0 0 2px rgba(255,255,255,.5), 0 20px 50px rgba(0,0,0,.45); }
+.inv-card h3 { margin: 0 0 4px; font: 800 26px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; }
+.inv-card p { margin: 0 0 14px; color: #c9d8e6; font-size: 14px; }
+.inv-list { display: grid; gap: 8px; }
+.inv-list button { all: unset; cursor: pointer; display: flex; gap: 12px; align-items: center; padding: 11px 14px; border-radius: 12px; background: rgba(255,255,255,.1); font: 800 17px/1 var(--display); text-transform: uppercase; letter-spacing: .04em; }
+.inv-list button:hover, .inv-list button:focus-visible { background: rgba(255,255,255,.22); }
+.inv-list b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #e2483d; font-size: 15px; }
+.inv-x { all: unset; cursor: pointer; position: absolute; right: 12px; top: 10px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.14); font: 700 22px/1 sans-serif; }
 /* lekerekített üvegélek a lapok találkozásánál – mint egy üveg dobókockán */
 .ce { position: absolute; top: calc(var(--S) * .06); height: calc(var(--H) - var(--S) * .12); width: calc(var(--S) * .2); left: calc(50% - var(--S) * .1); pointer-events: none; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 999px;
   background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(200,230,255,.35) 18%, rgba(255,255,255,.95) 44%, rgba(120,175,235,.55) 62%, rgba(230,245,255,.6) 82%, rgba(255,255,255,0) 100%);
@@ -1015,7 +1029,8 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   <div class="cubebox" id="cubeBox">
     <div class="cube-stage" id="cubeStage" tabindex="0" role="group" aria-roledescription="forgatható kocka" aria-label="Forgatható kocka – húzással forgatható, koppintásra a felénk néző oldal működik">
       <div class="cube" id="cube">
-        <div class="cf-top" aria-hidden="true"></div>
+        <section class="cf cf5" data-f="5"><div class="cf-in"><svg class="cf-ico" viewBox="0 0 64 64" aria-hidden="true"><path d="M27 4h10l1.6 7.2a22 22 0 0 1 5.2 3l7-2.3 5 8.7-5.5 4.9a22 22 0 0 1 0 6l5.5 4.9-5 8.7-7-2.3a22 22 0 0 1-5.2 3L37 60H27l-1.6-7.2a22 22 0 0 1-5.2-3l-7 2.3-5-8.7 5.5-4.9a22 22 0 0 1 0-6l-5.5-4.9 5-8.7 7 2.3a22 22 0 0 1 5.2-3z" fill="#fff"/><circle cx="32" cy="32" r="10" fill="#2f7fd0"/><circle cx="32" cy="32" r="4" fill="#0b2f5e"/></svg><b class="cf-lbl">Settings</b></div></section>
+        <section class="cf cf6" data-f="6"><div class="cf-in"><svg class="cf-ico" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="8" width="30" height="46" rx="4" fill="#c58d3a"/><rect x="13" y="14" width="24" height="37" rx="2" fill="#fff"/><rect x="19" y="5" width="12" height="7" rx="2" fill="#c9d3dd"/><path d="M16 22l2 2 4-4M16 31l2 2 4-4M16 40l2 2 4-4" fill="none" stroke="#2fae5a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 22h9M25 31h9M25 40h9" stroke="#9fb1c4" stroke-width="2.4"/><path d="M40 40h20l-2 13c-.3 2-2 3-4 3H46c-2 0-3.7-1-4-3z" fill="#e2322a"/><rect x="38" y="37" width="24" height="4" rx="2" fill="#fff"/></svg><b class="cf-lbl">Inventory</b></div></section>
         <i class="ce ce1" aria-hidden="true"></i><i class="ce ce2" aria-hidden="true"></i><i class="ce ce3" aria-hidden="true"></i><i class="ce ce4" aria-hidden="true"></i>
         <section class="cf cf1" data-f="1" aria-live="polite"><div class="cf-in plate">
           <span class="house"><img class="logo" src="img/zephyr-logo-s.png" alt="Zephyr Apartman · Zamárdi" draggable="false"></span>
@@ -7463,12 +7478,12 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
      A bal oldali, keskeny lapra koppintva a kocka arra az oldalra fordul. A kettő nem keveredik:
      csak akkor forgat, ha az ujj/egér legalább pár képpontot elmozdult. */
   const SITE_HOME = "../uj/";   /* az új kezdőoldal a séta mappája mellett (tárhelyen és GitHub Pages-en is így működik) */
-  const CUBE_NAMES = { 1: "Helyszín", 2: "Házvázlat (Map)", 3: "Vissza (Back)", 4: "Kezdőlap (Home)" };
+  const CUBE_NAMES = { 1: "Helyszín", 2: "Házvázlat (Map)", 3: "Vissza (Back)", 4: "Kezdőlap (Home)", 5: "Beállítások (Settings)", 6: "Eszközkészlet (Inventory)" };
   const CUBE_OFF = 26, CUBE_TILT = -14;   /* nyugalmi térbeli helyzet: elfordítás és felülnézet (fok) */
-  const cubeSt = { ry: 0 };
+  const cubeSt = { ry: 0, rx: 0 };   /* rx: -90 = teteje (Settings), +90 = alja (Inventory) */
   let cubeFit = () => {};
   const fromHome = /(^|[?&])honnan=kezdolap/.test(location.search) || (() => { try { const r = new URL(document.referrer); return r.host === location.host && !/\/virtualis-seta\//.test(r.pathname); } catch (e) { return false; } })();
-  function cubeFront() { return [1, 2, 3, 4][((Math.round(-cubeSt.ry / 90) % 4) + 4) % 4]; }
+  function cubeFront() { if (cubeSt.rx <= -45) return 5; if (cubeSt.rx >= 45) return 6; return [1, 2, 3, 4][((Math.round(-cubeSt.ry / 90) % 4) + 4) % 4]; }
   function goHome() {
     if (!/balatoni-udules\.hu$|github\.io$|^localhost$|^127\./.test(location.hostname)) { toast("A kezdőlap a weboldalon érhető el (balatoni-udules.hu).", 3500); return; }
     try { const r = document.referrer && new URL(document.referrer); if (r && r.host === location.host && r.href.split("#")[0] === new URL(SITE_HOME, location.href).href && history.length > 1) { history.back(); return; } } catch (e) {}
@@ -7493,6 +7508,25 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (f === 2) { $("btnMap").click(); return; }
     if (f === 3) { goBack(); return; }
     if (f === 4) { goHome(); return; }
+    if (f === 5) { openSettings(); return; }
+    if (f === 6) { openInventory(); return; }
+  }
+  /* Settings: telefonon a beállítás-menü, gépen/táblagépen a gombsor kiemelése + nézetválasztó */
+  function openSettings() {
+    const t = $("tools");
+    if (device === "phone") { if (!t.classList.contains("open")) $("btnTools").click(); return; }
+    t.classList.remove("tools-flash"); void t.offsetWidth; t.classList.add("tools-flash"); setTimeout(() => t.classList.remove("tools-flash"), 1800);
+    setTimeout(() => { const m = $("devMenu"); if (m && m.hidden) $("btnDevice").click(); }, 60);
+  }
+  /* Inventory: az aktuális apartman eszközjegyzéke; ha nem apartmanban vagyunk, választó */
+  function openInventory() {
+    const g = SCENES[current] && SCENES[current].g, apts = GROUPS.filter((x) => x.no && !x.lock);
+    if (apts.some((a) => a.id === g)) { openBinder(g); return; }
+    let el = $("invPick"); if (el) { el.remove(); return; }
+    el = document.createElement("div"); el.id = "invPick"; el.className = "inv-pick"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Melyik apartman eszközkészletét nézed?");
+    el.innerHTML = `<div class="inv-card"><h3>Inventory · eszközkészlet</h3><p>Melyik apartmanét nézed meg?</p><div class="inv-list">${apts.map((a) => `<button type="button" data-inv="${a.id}"><b>${a.no}</b>${a.name}</button>`).join("")}</div><button type="button" class="inv-x" aria-label="Bezárás">×</button></div>`;
+    document.body.appendChild(el);
+    el.addEventListener("click", (e) => { const b = e.target.closest("[data-inv]"); if (b) { el.remove(); openBinder(b.dataset.inv); return; } if (e.target === el || e.target.closest(".inv-x")) el.remove(); });
   }
   function wireCube() {
     const stage = $("cubeStage"), cube = $("cube");
@@ -7500,15 +7534,16 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const faces = [...cube.querySelectorAll(".cf[data-f]")];
     let seen = false; try { seen = localStorage.getItem("zephyr-kocka") === "1"; } catch (e) {}
     const done = () => { if (seen) return; seen = true; try { localStorage.setItem("zephyr-kocka", "1"); } catch (e) {} };
-    const rad = Math.PI / 180, N = { 1: [0, 1], 2: [1, 0], 3: [0, -1], 4: [-1, 0] };   /* [x, z] normálisok */
+    const rad = Math.PI / 180, N = { 1: [0, 0, 1], 2: [1, 0, 0], 3: [0, 0, -1], 4: [-1, 0, 0], 5: [0, -1, 0], 6: [0, 1, 0] };   /* normálisok (CSS: y lefelé) */
+    const restYaw = () => cubeSt.ry + (cubeSt.rx ? 0 : CUBE_OFF);
     function paint() {
-      const yaw = cubeSt.ry + CUBE_OFF;
-      const rot = `translateZ(calc(var(--S) / -2)) rotateX(${CUBE_TILT}deg) rotateY(${yaw}deg)`;
+      const yaw = restYaw(), pitch = CUBE_TILT + cubeSt.rx;
+      const rot = `translateZ(calc(var(--S) / -2)) rotateX(${pitch}deg) rotateY(${yaw}deg)`;
       cube.style.transform = rot; stage.style.setProperty("--rot", rot);
-      if (cube3d) cube3d.setYaw(cubeSt.ry, !!P && !!P.mode);
-      const cy = Math.cos(yaw * rad), sy = Math.sin(yaw * rad), ct = Math.cos(CUBE_TILT * rad), front = cubeFront();
+      if (cube3d) cube3d.setYaw(cubeSt.ry, !!P && !!P.mode, cubeSt.rx);
+      const cy = Math.cos(yaw * rad), sy = Math.sin(yaw * rad), cp = Math.cos(pitch * rad), sp = Math.sin(pitch * rad), front = cubeFront();
       faces.forEach((el) => {
-        const [x, z] = N[el.dataset.f], x1 = x * cy + z * sy, z2 = (-x * sy + z * cy) * ct;
+        const [x, y, z] = N[el.dataset.f], x1 = x * cy + z * sy, z1 = -x * sy + z * cy, z2 = y * sp + z1 * cp;
         el.style.setProperty("--lit", (.66 + .4 * Math.max(0, z2)).toFixed(3));
         el.style.setProperty("--cv", Math.max(0, Math.min(1, z2 * 5)).toFixed(3));
         el.style.setProperty("--sh", (30 + x1 * 34).toFixed(1) + "%");
@@ -7518,13 +7553,14 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       cube.querySelectorAll(".ce").forEach((el, i) => { const a = (45 + 90 * i + yaw) * rad; el.style.setProperty("--lit", (.75 + .35 * Math.max(0, Math.cos(a))).toFixed(3)); });
       stage.setAttribute("aria-label", "Forgatható kocka – most: " + CUBE_NAMES[front] + ". Húzd a forgatáshoz, koppints a használathoz.");
     }
-    const snapTo = (ry) => { cubeSt.ry = ry; paint(); };
-    const turn = (d) => { done(); snapTo(Math.round(cubeSt.ry / 90) * 90 - d * 90); };
+    const snapTo = (ry, rx) => { cubeSt.ry = ry; cubeSt.rx = rx || 0; paint(); };
+    const turn = (d) => { done(); snapTo(Math.round(cubeSt.ry / 90) * 90 - (cubeSt.rx ? 0 : d * 90), 0); };
     function show(f) {
       done();
+      if (f === 5 || f === 6) return snapTo(Math.round(cubeSt.ry / 360) * 360, f === 5 ? -90 : 90);
       const k = { 1: 0, 2: 1, 3: 2, 4: 3 }[f], base = Math.round(cubeSt.ry / 90) * 90, curK = ((Math.round(-base / 90) % 4) + 4) % 4;
       let d = k - curK; if (d > 2) d -= 4; if (d < -2) d += 4;
-      snapTo(base - d * 90);
+      snapTo(base - d * 90, 0);
     }
     cubeFit = () => {   /* hosszú helyszínnév: a betűméret igazodjon a laphoz */
       const pl = $("placeName"), un = $("unitName"); if (!pl) return;
@@ -7539,7 +7575,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     stage.addEventListener("pointerdown", (e) => {
       if (e.button > 0) return;
       const fe = e.target.closest && e.target.closest(".cf[data-f]");
-      P = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), ry: cubeSt.ry, mode: null, lx: e.clientX, lt: performance.now(), vx: 0, touch: e.pointerType !== "mouse", face: fe ? +fe.dataset.f : 0 };
+      P = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now(), ry: cubeSt.ry, rx: cubeSt.rx, mode: null, lx: e.clientX, ly: e.clientY, lt: performance.now(), vx: 0, vy: 0, touch: e.pointerType !== "mouse", face: fe ? +fe.dataset.f : 0 };
       try { stage.setPointerCapture(e.pointerId); } catch (x) {}
       e.stopPropagation();
     });
@@ -7548,10 +7584,12 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const dx = e.clientX - P.x, dy = e.clientY - P.y, now = performance.now();
       if (!P.mode) {
         if (Math.hypot(dx, dy) < (P.touch ? 11 : 6)) return;   /* ennyi elmozdulásig még koppintásnak számít */
-        P.mode = "h"; stage.classList.add("drag"); done();
+        P.mode = Math.abs(dx) >= Math.abs(dy) ? "h" : "v"; stage.classList.add("drag"); done();
+        if (P.mode === "v" && !P.rx) { P.ry = Math.round(cubeSt.ry / 360) * 360; }
       }
-      cubeSt.ry = P.ry + dx * (90 / (stage.clientWidth * 1.05));
-      const dt = Math.max(1, now - P.lt); P.vx = (e.clientX - P.lx) / dt; P.lx = e.clientX; P.lt = now;
+      if (P.mode === "h") { cubeSt.ry = P.ry + dx * (90 / (stage.clientWidth * 1.05)); cubeSt.rx = P.rx * Math.max(0, 1 - Math.abs(dx) / stage.clientWidth); }
+      else { cubeSt.ry = P.ry; cubeSt.rx = Math.max(-100, Math.min(100, P.rx - dy * (90 / (stage.clientHeight * 1.3)))); }
+      const dt = Math.max(1, now - P.lt); P.vx = (e.clientX - P.lx) / dt; P.vy = (e.clientY - P.ly) / dt; P.lx = e.clientX; P.ly = e.clientY; P.lt = now;
       paint(); e.preventDefault();
     });
     const end = (e) => {
@@ -7563,12 +7601,18 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         /* a bal oldali keskeny lap a geometria alapján (a 3D találatvizsgálat nem mindig megbízható) */
         const r = stage.getBoundingClientRect(), rel = (e.clientX - (r.left + r.width / 2)) / r.width;
         const edge = -.5 * Math.cos(CUBE_OFF * rad) + .5 * Math.sin(CUBE_OFF * rad);
-        if (rel < edge - .02) show([0, 4, 1, 2, 3][cubeFront()]); else cubeAct(cubeFront());
+        if (!cubeSt.rx && rel < edge - .02) show([0, 4, 1, 2, 3][cubeFront()]); else cubeAct(cubeFront());
+        return;
+      }
+      if (p.mode === "v") {
+        const rx = cubeSt.rx - Math.max(-1.2, Math.min(1.2, p.vy)) * 60;
+        const t = rx < -40 ? -90 : rx > 40 ? 90 : 0;
+        snapTo(t ? Math.round(cubeSt.ry / 360) * 360 : Math.round(cubeSt.ry / 90) * 90, t);
         return;
       }
       let ry = cubeSt.ry + Math.max(-1.2, Math.min(1.2, p.vx)) * 70;     /* lendület */
       ry = Math.round(ry / 90) * 90; ry = Math.max(p.ry - 180, Math.min(p.ry + 180, ry));
-      snapTo(ry);
+      snapTo(ry, 0);
     };
     stage.addEventListener("pointerup", end); stage.addEventListener("pointercancel", end);
     stage.addEventListener("click", (e) => e.stopPropagation());
@@ -7578,6 +7622,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     stage.addEventListener("wheel", (e) => { e.preventDefault(); e.stopPropagation(); const n = performance.now(); if (n - wheelT < 380) return; wheelT = n; turn((e.deltaY || e.deltaX) > 0 ? 1 : -1); }, { passive: false });
     stage.addEventListener("keydown", (e) => {
       if (e.key === "ArrowRight") { turn(1); e.preventDefault(); } else if (e.key === "ArrowLeft") { turn(-1); e.preventDefault(); }
+      else if (e.key === "ArrowDown") { if (cubeSt.rx > 0) snapTo(Math.round(cubeSt.ry / 90) * 90, 0); else if (cubeSt.rx < 0) snapTo(cubeSt.ry, 0); else show(5); e.preventDefault(); }
+      else if (e.key === "ArrowUp") { if (cubeSt.rx < 0) snapTo(Math.round(cubeSt.ry / 90) * 90, 0); else if (cubeSt.rx > 0) snapTo(cubeSt.ry, 0); else show(6); e.preventDefault(); }
       else if (e.key === "Enter" || e.key === " ") { cubeAct(cubeFront()); e.preventDefault(); }
       e.stopPropagation();
     });
@@ -7655,6 +7701,36 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         rr(g, 5, 5, CW - 10, CH - 10, 57); g.lineWidth = 5; g.strokeStyle = red ? "rgba(90,8,4,.9)" : "rgba(4,14,30,.95)"; g.stroke();
         rr(g, 11, 11, CW - 22, CH - 22, 52); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.22)"; g.stroke();
       }
+      function baseSq(g, w, h) {
+        g.clearRect(0, 0, w, h);
+        const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#1a3a66"); gr.addColorStop(.4, "#10294b"); gr.addColorStop(1, "#091a33");
+        rr(g, 4, 4, w - 8, h - 8, 64); g.fillStyle = gr; g.fill();
+        g.save(); rr(g, 4, 4, w - 8, h - 8, 64); g.clip(); const hl = g.createLinearGradient(0, 0, 0, h * .5); hl.addColorStop(0, "rgba(255,255,255,.14)"); hl.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = hl; g.fillRect(0, 0, w, h * .5); g.restore();
+        rr(g, 5, 5, w - 10, h - 10, 63); g.lineWidth = 5; g.strokeStyle = "rgba(4,14,30,.95)"; g.stroke();
+        rr(g, 11, 11, w - 22, h - 22, 58); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.22)"; g.stroke();
+      }
+      function labelSq(g, txt, w, y, size) { g.font = `800 ${size}px ${FONT}`; while (size > 40 && g.measureText(txt).width > w - 90) { size -= 4; g.font = `800 ${size}px ${FONT}`; } g.textAlign = "center"; g.fillStyle = "#fff"; g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 10; g.shadowOffsetY = 4; g.fillText(txt, w / 2, y); g.shadowColor = "transparent"; }
+      function gear(g, x, y, R0) {   /* fogaskerék: fehér, kék középpel */
+        g.save(); g.translate(x, y); g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 16; g.shadowOffsetY = 6;
+        const teeth = 9, ro = R0, ri = R0 * .78; g.beginPath();
+        for (let i = 0; i < teeth * 2; i++) { const a0 = i * Math.PI / teeth, r = i % 2 ? ri : ro, w = Math.PI / teeth * .42; g.lineTo(Math.cos(a0 - w) * r, Math.sin(a0 - w) * r); g.lineTo(Math.cos(a0 + w) * r, Math.sin(a0 + w) * r); }
+        g.closePath(); const gg = g.createLinearGradient(0, -ro, 0, ro); gg.addColorStop(0, "#ffffff"); gg.addColorStop(1, "#c6d4e2"); g.fillStyle = gg; g.fill(); g.shadowColor = "transparent";
+        g.beginPath(); g.arc(0, 0, R0 * .42, 0, 7); const cg = g.createRadialGradient(-R0 * .1, -R0 * .15, 2, 0, 0, R0 * .42); cg.addColorStop(0, "#5fb2ff"); cg.addColorStop(1, "#1f5fae"); g.fillStyle = cg; g.fill();
+        g.beginPath(); g.arc(0, 0, R0 * .16, 0, 7); g.fillStyle = "#0b2f5e"; g.fill(); g.restore();
+      }
+      function clip(g, x, y, R0) {   /* eszközlista: vágólap pipákkal, mellette fazék */
+        g.save(); g.translate(x - R0 * .25, y); g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 16; g.shadowOffsetY = 6;
+        const w = R0 * 1.25, h = R0 * 1.65; rr(g, -w / 2, -h / 2, w, h, R0 * .12); const bg = g.createLinearGradient(0, -h / 2, 0, h / 2); bg.addColorStop(0, "#d9a44a"); bg.addColorStop(1, "#a8742a"); g.fillStyle = bg; g.fill();
+        g.shadowColor = "transparent"; rr(g, -w / 2 + R0 * .1, -h / 2 + R0 * .2, w - R0 * .2, h - R0 * .3, R0 * .06); g.fillStyle = "#fbfdff"; g.fill();
+        rr(g, -R0 * .28, -h / 2 - R0 * .1, R0 * .56, R0 * .24, R0 * .08); g.fillStyle = "#c9d3dd"; g.fill();
+        for (let i = 0; i < 4; i++) { const yy = -h / 2 + R0 * (.48 + i * .32); g.strokeStyle = "#2fae5a"; g.lineWidth = R0 * .07; g.lineCap = "round"; g.beginPath(); g.moveTo(-w / 2 + R0 * .24, yy); g.lineTo(-w / 2 + R0 * .32, yy + R0 * .08); g.lineTo(-w / 2 + R0 * .46, yy - R0 * .08); g.stroke(); g.fillStyle = "#9fb1c4"; g.fillRect(-w / 2 + R0 * .56, yy - R0 * .03, w - R0 * .8, R0 * .07); }
+        g.restore();
+        g.save(); g.translate(x + R0 * .78, y + R0 * .38); g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 12; g.shadowOffsetY = 5;   /* fazék */
+        const pw = R0 * .9; g.beginPath(); g.moveTo(-pw / 2, -R0 * .2); g.lineTo(pw / 2, -R0 * .2); g.lineTo(pw * .42, R0 * .42); g.quadraticCurveTo(0, R0 * .52, -pw * .42, R0 * .42); g.closePath();
+        const pg = g.createLinearGradient(0, -R0 * .2, 0, R0 * .5); pg.addColorStop(0, "#ff5a4c"); pg.addColorStop(1, "#c0180f"); g.fillStyle = pg; g.fill(); g.shadowColor = "transparent";
+        rr(g, -pw * .58, -R0 * .3, pw * 1.16, R0 * .14, R0 * .06); g.fillStyle = "#ffffff"; g.fill(); rr(g, -R0 * .12, -R0 * .44, R0 * .24, R0 * .14, R0 * .05); g.fill();
+        g.restore();
+      }
       function label(g, txt, y, size) { g.font = `800 ${size}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillStyle = "#fff"; g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 10; g.shadowOffsetY = 4; g.fillText(txt, CW / 2, y); g.shadowColor = "transparent"; }
       function icon(g, path, x, y, s, fill) { g.save(); g.translate(x, y); g.scale(s, s); g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 14 / s; g.shadowOffsetY = 6 / s; g.fillStyle = fill; g.fill(new Path2D(path)); g.restore(); }
       const DRAW = {
@@ -7687,9 +7763,20 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
           g.restore(); label(g, "MAP", CH - 52, 150);
         },
         3(g) { base(g, false); const gr = g.createLinearGradient(0, 40, 0, 300); gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#cbd8e4"); icon(g, "M28 7L5 28l23 21V36h5c12 0 19 6 23 19 4-21-6-34-23-34h-5z", CW / 2 - 136, 34, 4.6, gr); label(g, "BACK", CH - 52, 150); },
+        5(g, w, h) { baseSq(g, w, h, false); gear(g, w / 2, h * .42, h * .27); labelSq(g, "SETTINGS", w, h * .86, h * .17); },
+        6(g, w, h) { baseSq(g, w, h, false); clip(g, w / 2, h * .43, h * .3); labelSq(g, "INVENTORY", w, h * .86, h * .16); },
         4(g) { base(g, true); const gr = g.createLinearGradient(0, 40, 0, 300); gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#ffe0dc"); icon(g, "M32 5L3 31h9v27h15V42h10v16h15V31h9L49 19V9h-8v3z", CW / 2 - 142, 32, 4.45, gr); label(g, "HOME", CH - 52, 150); }
       };
       const maxAniso = R.capabilities.getMaxAnisotropy ? R.capabilities.getMaxAnisotropy() : 1;
+      /* teteje (Settings) és alja (Inventory) – négyzetes panelek */
+      const QW = BW - .2, QC = 720;
+      [[5, 1], [6, -1]].forEach(([f, sgn]) => {
+        const c = document.createElement("canvas"); c.width = QC; c.height = QC; DRAW[f](c.getContext("2d"), QC, QC);
+        const tex = new T.CanvasTexture(c); if ("colorSpace" in tex) tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = maxAniso;
+        const m = new T.Mesh(new T.PlaneGeometry(QW, QW), new T.MeshBasicMaterial({ map: tex, alphaTest: .5, toneMapped: false }));
+        m.rotation.x = -sgn * Math.PI / 2; m.position.y = sgn * (BH / 2 - INSET);
+        group.add(m); panels.push({ f, c, tex, m, sq: 1 });
+      });
       [1, 2, 3, 4].forEach((f, i) => {
         const c = document.createElement("canvas"); c.width = CW; c.height = CH; DRAW[f](c.getContext("2d"));
         const tex = new T.CanvasTexture(c); if ("colorSpace" in tex) tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = maxAniso;
@@ -7719,19 +7806,22 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         cam.position.set(0, .92, 5.5); cam.lookAt(0, -.02, 0);
         need = true;
       }
-      let yaw = 0, target = 0, vel = 0, need = true, raf = 0, pressT = 0;
+      let yaw = 0, target = 0, vel = 0, need = true, raf = 0, pressT = 0, pit = 0, ptarget = 0, pvel = 0;
+      group.rotation.order = "XYZ";
       const rad = Math.PI / 180;
       function frame() {
         raf = 0;
         const d = target - yaw;
         if (Math.abs(d) > .02 || Math.abs(vel) > .02) { vel = vel * .78 + d * .085; yaw += vel; need = true; } else if (yaw !== target) { yaw = target; vel = 0; need = true; }
+        const dp = ptarget - pit;
+        if (Math.abs(dp) > .02 || Math.abs(pvel) > .02) { pvel = pvel * .78 + dp * .085; pit += pvel; need = true; } else if (pit !== ptarget) { pit = ptarget; pvel = 0; need = true; }
         let sc = 1; if (pressT) { const k = (performance.now() - pressT) / 220; if (k >= 1) pressT = 0; else { sc = 1 - .06 * Math.sin(k * Math.PI); need = true; } }
-        if (need) { group.rotation.y = yaw * rad; group.scale.setScalar(sc); R.render(scene, cam); need = false; }
-        if (Math.abs(target - yaw) > .02 || Math.abs(vel) > .02 || pressT) raf = requestAnimationFrame(frame);
+        if (need) { group.rotation.y = yaw * rad; group.rotation.x = pit * rad; group.scale.setScalar(sc); R.render(scene, cam); need = false; }
+        if (Math.abs(target - yaw) > .02 || Math.abs(vel) > .02 || Math.abs(ptarget - pit) > .02 || Math.abs(pvel) > .02 || pressT) raf = requestAnimationFrame(frame);
       }
       const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
       cube3d = {
-        setYaw(ry, instant) { target = ry + CUBE_OFF; if (instant) { yaw = target; vel = 0; need = true; } kick(); },
+        setYaw(ry, instant, rx) { rx = rx || 0; target = ry + (rx ? 0 : CUBE_OFF); ptarget = -rx; if (instant) { yaw = target; vel = 0; pit = ptarget; pvel = 0; need = true; } kick(); },
         press() { pressT = performance.now(); kick(); },
         plate() { const p = panels[0]; DRAW[1](p.c.getContext("2d")); p.tex.needsUpdate = true; need = true; kick(); },
         env(tex) {
@@ -7743,8 +7833,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       size(); window.addEventListener("resize", () => setTimeout(size, 120));
       new ResizeObserver(() => size()).observe(stage);
       stage.classList.add("is3d");
-      cube3d.setYaw(cubeSt.ry, true);
-      if (document.fonts && document.fonts.load) document.fonts.load('800 100px "Big Shoulders Display"').then(() => { panels.forEach((p) => { DRAW[p.f](p.c.getContext("2d")); p.tex.needsUpdate = true; }); need = true; kick(); }).catch(() => {});
+      cube3d.setYaw(cubeSt.ry, true, cubeSt.rx);
+      if (document.fonts && document.fonts.load) document.fonts.load('800 100px "Big Shoulders Display"').then(() => { panels.forEach((p) => { DRAW[p.f](p.c.getContext("2d"), p.c.width, p.c.height); p.tex.needsUpdate = true; }); need = true; kick(); }).catch(() => {});
       if (typeof skyTex !== "undefined" && skyTex) cube3d.env(skyTex);
     } catch (e) { cube3d = null; stage.classList.remove("is3d"); const c = stage.querySelector(".cube3d"); if (c) c.remove(); }
   }

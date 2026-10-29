@@ -1,0 +1,32 @@
+ZEPHYR FOGLALÁS – WordPress bővítmény
+=====================================
+
+TELEPÍTÉS
+1. WordPress admin → Bővítmények → Új hozzáadása → Bővítmény feltöltése → válaszd a zephyr-foglalas.zip fájlt → Telepítés → Bekapcsolás.
+2. A bal oldali menüben megjelenik a „Zephyr foglalás” menüpont (csak adminisztrátor látja).
+3. Beállítások fül: értesítési e-mail, banki adatok (kedvezményezett, számlaszám, IBAN), házirend és adatkezelési tájékoztató linkje.
+4. Árak fül: alapár apartmanonként; időszakos árak (főszezon, hétvége).
+5. Naptárszinkron fül:
+   – Airbnb: Naptár → Elérhetőség → Naptárak összekapcsolása → „Naptár exportálása” linket másold be ide (Airbnb iCal link),
+     és az itteni „Airbnb-be” linket add hozzá az Airbnb-ben „Másik webhely naptárának importálása” alatt.
+   – Szállás.hu: a partneri felületen a naptárszinkron (iCal) menüben ugyanígy: export link ide, az itteni „Szállás.hu-ba” link oda.
+   – Google Naptár: Egyéb naptárak → + → „URL-ről” → az itteni Google-link (részletes, névvel).
+   A rendszer óránként automatikusan szinkronizál (WP-Cron); azonnal: „Mentés és szinkronizálás most”.
+6. A virtuális túra (balatoni-udules.hu/virtualis-seta/) „Foglalás” gombja automatikusan ezt a rendszert használja.
+   Bármely oldalra: [zephyr_foglalas]   vagy   [zephyr_foglalas apartman="korvett" gomb="Korvett foglalása"]
+
+MŰKÖDÉS
+– A vendég kiválasztja az apartmant, a napokat (szabad napok + napi ár), a létszámot; teljes kimutatást lát:
+  szállásdíj + idegenforgalmi adó (18 év felett 600 Ft/fő/éj) = végösszeg, előleg (30%), fennmaradó összeg.
+– Megadja: név, telefon, e-mail, születési hely és idő, személyi igazolvány / útlevél szám.
+– A napok azonnal ideiglenesen foglaltak lesznek („Jóváhagyásra vár”), a vendég és te e-mailt kapsz.
+– Te jóváhagyod (adminban) → a vendég visszaigazoló e-mailt kap az előleg utalási adataival és határidővel.
+– Jóvá nem hagyott kérés 72 óra után automatikusan törlődik (Beállításokban módosítható).
+– Naptár fül: napok kijelölése → lezárás / megnyitás / ár átírása / kézi foglalás; foglalásra kattintva szerkesztés,
+  átírás, törlés, saját megjegyzés (csak te látod).
+
+ADATVÉDELEM
+– A személyi okmány száma és a születési adatok titkosítva (AES-256) tárolódnak, csak az adminfelületen láthatók.
+– Beállítások: „Okmányadatok törlése távozás után (nap)” – automatikus törlés.
+– Az oldal HTTPS-en fusson. Az adatkezelési tájékoztatóban szerepeljen a foglalási adatok kezelése.
+– E-mail küldéshez javasolt egy SMTP-bővítmény (pl. WP Mail SMTP), hogy a levelek ne kerüljenek spambe.
