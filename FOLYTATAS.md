@@ -9,12 +9,12 @@ A Zephyr Apartmanház (8621 Zamárdi, Gáspár András utca 58., tulajdonos: Kuc
 - **új kezdőoldal** (drónvideós nyitókép, apartmanok, szolgáltatások, rendezvények, látnivalók, biztonság);
 - **programajánló-kezelő** a tulajdonosi felület „Programok” fülén.
 
-A régi WordPress-oldal (balatoni-udules.hu) közben változatlanul fut; a látnivalók képei onnan jönnek (`/wp-content/uploads/…`).
+**2026. okt. 29-től a fejlesztés kizárólag a GitHubon folyik; a balatoni-udules.hu-t (régi WordPress-oldal, ELIN.hu tárhely) már nem használjuk.** Az oldalt a GitHub Pages-en nézzük. Függőségek, amelyeket ki kell váltani: a látnivalók képei még a régi oldalról jönnek (`/wp-content/uploads/…` – Pages-en nem töltődnek be), a „Bővebben” linkek a régi oldal aloldalaira mutatnak, és a foglalási/programkezelő PHP (`api/index.php`) Pages-en nem fut (ott bemutató mód).
 
 ## 2. Munkamódszer (a tulajdonos kérései)
 - Mindig **magyarul**.
 - A letöltendő fájlokat mindig **közvetlenül a beszélgetésbe** kell küldeni.
-- **Minden módosítás a GitHubra kerül** (ez a repó); az éles tárhelyre csak a munka végén, külön kérésre.
+- **Minden módosítás a GitHubra kerül** (ez a repó), és onnan nézzük (GitHub Pages). A balatoni-udules.hu-t már nem használjuk.
 - A munka **mindig a kezdőoldalról indul** – az a kezdőfelület (`weboldal/uj/`).
 - A kocka kinézetének etalonja a tulajdonos mintaképe (üveg téglatest, sötétkék panelek, UTCA / MAP / BACK / HOME).
 
@@ -68,7 +68,7 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép), animált „Zephyr
 - Repó: https://github.com/kucserabalazs/Zephyr-Virtu-lis-s-ta (privát; átnevezés **Zephyr-Apartman**-ra a tulajdonosnál: Settings → Repository name).
 - GitHub Pages (ha a tulajdonos bekapcsolja: Settings → Pages → main / root): `https://kucserabalazs.github.io/Zephyr-Virtu-lis-s-ta/` → kezdőoldal. Privát repóhoz Pro előfizetés kell, vagy nyilvánossá tétel. Pages-en a foglalás és a programok bemutató módban futnak.
 - Bemutató oldalak (claude.ai): kezdőoldal – https://claude.ai/artifact/MarcoyQiN2vBjunbMeAjpw · séta – https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD
-- Éles tárhely: balatoni-udules.hu – feltöltés FileZillával a fő mappába (`virtualis-seta/`, `uj/`).
+- ~~Éles tárhely: balatoni-udules.hu~~ – 2026. okt. 29-től nem használjuk.
 
 ## 10. Nyitott kérdések / következő lépések
 1. A drónvideó, további szolgáltatás-fotók/videók, rendezvénylista, Kadett-fotók – a tulajdonostól.
@@ -76,5 +76,5 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép), animált „Zephyr
 3. Airbnb-link; kell-e a Twitter.
 4. GitHub Pages bekapcsolása és a repó átnevezése (tulajdonos).
 5. A régi WordPress-oldal anyagának (XML-export + `wp-content/uploads`) teljes átemelése – később.
-6. A kész oldal élesítése a tárhelyen, majd a kezdőoldal fő címre (/) költöztetése úgy, hogy a Google-helyezés megmaradjon (átirányítások).
+6. A régi oldaltól való függések kiváltása (látnivaló-képek a repóba, „Bővebben” linkek), és döntés arról, hol fusson a valódi foglalás/programkezelés, mert a GitHub Pages PHP-t nem futtat.
 7. A korábban beküldött GitHub-tokent a tulajdonosnak vissza kell vonnia (nincs és nem is kell használni).
