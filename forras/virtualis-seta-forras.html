@@ -57,6 +57,10 @@ button { font: inherit; }
 .cube-stage { width: var(--S); height: var(--H); perspective: calc(var(--S) * 4.6); perspective-origin: 50% 0%; position: relative; touch-action: none; cursor: grab; outline: none; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
 .cube-stage img { -webkit-user-drag: none; pointer-events: none; }
 .cube-stage.drag { cursor: grabbing; }
+/* lebegés: többrétegű, lágy árnyék és halvány kék derengés a kocka alatt */
+.cube-stage::before { content: ""; position: absolute; left: 4%; right: 4%; top: 100%; height: calc(var(--H) * .5); margin-top: calc(var(--H) * .2); pointer-events: none; z-index: -1;
+  background: radial-gradient(50% 38% at 50% 50%, rgba(3,14,32,.34), rgba(3,14,32,.14) 55%, transparent 100%), radial-gradient(60% 50% at 50% 46%, rgba(120,190,255,.22), transparent 75%);
+  filter: blur(calc(var(--H) * .07)); }
 .cube-stage:focus-visible::after { content: ""; position: absolute; inset: -14px -30px; border-radius: 24px; outline: 2px solid #bfe6ff; }
 .cube { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .75s cubic-bezier(.2,1.2,.35,1); will-change: transform; }
 .cube-stage.drag .cube, .cube.instant { transition: none; }
@@ -7628,8 +7632,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       e.stopPropagation();
     });
     ["pointerdown", "pointermove", "pointerup"].forEach((t) => $("cubeBox").addEventListener(t, (e) => e.stopPropagation()));
-    /* kezdő oldal: a kezdőlapról érkezve a „Back” oldal néz felénk */
-    cube.classList.add("instant"); if (fromHome) show(3); else paint(); requestAnimationFrame(() => requestAnimationFrame(() => cube.classList.remove("instant")));
+    /* kezdő állapot (a tulajdonos 6. referenciaképe): a „Back” oldal néz felénk, balra keskenyen a „Map” */
+    cube.classList.add("instant"); cubeSt.ry = -180; cubeSt.rx = 0; paint(); requestAnimationFrame(() => requestAnimationFrame(() => cube.classList.remove("instant")));
     /* amíg nem forgatta meg, időnként kicsit megbillen, jelezve, hogy forgatható */
     if (!seen) {
       const peek = () => { if (seen || P || document.hidden) return; const ry = cubeSt.ry; cubeSt.ry = ry - 30; paint(); setTimeout(() => { if (!P) { cubeSt.ry = ry; paint(); } }, 750); };
@@ -7655,7 +7659,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if ("outputColorSpace" in R) R.outputColorSpace = T.SRGBColorSpace;
       R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.08;
       const scene = new T.Scene(), cam = new T.PerspectiveCamera(24, 1, .1, 60);
-      const BW = 1.6, BH = 1.0, BD = 1.6, RAD = .16, INSET = .075;
+      const BW = 1.6, BH = 1.0, BD = 1.6, RAD = .19, INSET = .088;
       /* lekerekített élű téglatest – sima normálokkal, hogy ne látszódjon illesztés */
       function roundedBox(w, h, d, r, seg) {
         const g = new T.BoxGeometry(w, h, d, seg, seg, seg), p = g.attributes.position, n = g.attributes.normal;
@@ -7669,37 +7673,44 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         p.needsUpdate = true; n.needsUpdate = true; return g;
       }
       /* átlátszó üveg: a mögötte lévő oldal valóban átlátszik, a peremeken erős tükröződés (Fresnel) */
-      const glassMat = new T.MeshPhysicalMaterial({ color: 0xf4faff, metalness: 0, roughness: .03, transmission: 0, transparent: true, opacity: .24, depthWrite: false,
-        clearcoat: 1, clearcoatRoughness: .02, specularIntensity: 1, specularColor: new T.Color(0xffffff), envMapIntensity: 2.1, ior: 1.5, side: T.FrontSide });
-      const glassBack = new T.MeshPhysicalMaterial({ color: 0xa8d4ff, metalness: 0, roughness: .06, transparent: true, opacity: .26, depthWrite: false, envMapIntensity: 1.2, side: T.BackSide });
+      const glassMat = new T.MeshPhysicalMaterial({ color: 0xe8f4ff, metalness: 0, roughness: .02, transmission: 0, transparent: true, opacity: .07, depthWrite: false,
+        clearcoat: 1, clearcoatRoughness: .01, specularIntensity: .7, specularColor: new T.Color(0xffffff), envMapIntensity: 1.5, ior: 1.52, side: T.FrontSide });
+      const glassBack = new T.MeshPhysicalMaterial({ color: 0x6aaeff, metalness: 0, roughness: .05, transparent: true, opacity: .15, depthWrite: false, envMapIntensity: 1.5, side: T.BackSide });
       const group = new T.Group(); scene.add(group);
       const boxGeo = roundedBox(BW, BH, BD, RAD, 12);
       const glassIn = new T.Mesh(boxGeo, glassBack); glassIn.renderOrder = 1; group.add(glassIn);
       const glass = new T.Mesh(boxGeo, glassMat); glass.renderOrder = 3; group.add(glass);
       /* üvegperem-fény (Fresnel): a lekerekített éleken és a széleken erős, a lapok közepén alig */
       const rimMat = new T.ShaderMaterial({ transparent: true, depthWrite: false, blending: T.AdditiveBlending,
-        uniforms: { col: { value: new T.Color(0xeaf6ff) }, pw: { value: 2.6 }, k: { value: .95 } },
+        uniforms: { col: { value: new T.Color(0xd2eaff) }, pw: { value: 2.0 }, k: { value: 1.05 } },
         vertexShader: "varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }",
-        fragmentShader: "uniform vec3 col; uniform float pw; uniform float k; varying vec3 vN; varying vec3 vV; void main(){ float f = pow(1.0 - clamp(dot(normalize(vN), normalize(vV)), 0.0, 1.0), pw); gl_FragColor = vec4(col * f * k, f * k); }" });
+        fragmentShader: "uniform vec3 col; uniform float pw; uniform float k; varying vec3 vN; varying vec3 vV; void main(){ vec3 n = normalize(vN); float nv = clamp(dot(n, normalize(vV)), 0.0, 1.0); float f = pow(1.0 - nv, pw) * k; float s = pow(max(dot(n, normalize(vec3(-0.55, 0.78, 0.42))), 0.0), 36.0) * (1.0 - nv) * 2.4; float s2 = pow(max(dot(n, normalize(vec3(0.7, -0.35, 0.5))), 0.0), 28.0) * (1.0 - nv) * 0.9; vec3 c = col * f + vec3(1.0) * s + vec3(0.62, 0.84, 1.0) * s2; float a = clamp(f + s + s2 * 0.8, 0.0, 1.0); gl_FragColor = vec4(c, a); }" });
       const rimM = new T.Mesh(boxGeo, rimMat); rimM.renderOrder = 4; group.add(rimM);
       /* belső panelek – vászonra rajzolva */
-      const PW = BW - .2, PH = BH - .2, CW = 800, CH = Math.round(CW * PH / PW);
+      const PW = BW - .27, PH = BH - .27, CW = 800, CH = Math.round(CW * PH / PW);
       const panels = [];
       const rr = (g, x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
       const FONT = '"Big Shoulders Display", "Arial Narrow", Impact, sans-serif';
       function base(g, red) {
         g.clearRect(0, 0, CW, CH);
         const gr = g.createLinearGradient(0, 0, 0, CH);
-        if (red) { gr.addColorStop(0, "#ff4c3e"); gr.addColorStop(.42, "#e3231a"); gr.addColorStop(1, "#ad100a"); }
-        else { gr.addColorStop(0, "#1a3a66"); gr.addColorStop(.4, "#10294b"); gr.addColorStop(1, "#091a33"); }
+        if (red) { gr.addColorStop(0, "#ff5a4a"); gr.addColorStop(.38, "#e5261b"); gr.addColorStop(1, "#a30d08"); }
+        else { gr.addColorStop(0, "#17396b"); gr.addColorStop(.36, "#0c2447"); gr.addColorStop(1, "#040d22"); }
         rr(g, 4, 4, CW - 8, CH - 8, 58); g.fillStyle = gr; g.fill();
         g.save(); rr(g, 4, 4, CW - 8, CH - 8, 58); g.clip();
-        const hl = g.createLinearGradient(0, 0, 0, CH * .55); hl.addColorStop(0, red ? "rgba(255,255,255,.28)" : "rgba(255,255,255,.14)"); hl.addColorStop(1, "rgba(255,255,255,0)");
-        g.fillStyle = hl; g.fillRect(0, 0, CW, CH * .55);
-        const sh = g.createLinearGradient(0, CH * .6, 0, CH); sh.addColorStop(0, "rgba(0,0,0,0)"); sh.addColorStop(1, red ? "rgba(70,0,0,.35)" : "rgba(0,0,0,.4)");
-        g.fillStyle = sh; g.fillRect(0, CH * .6, CW, CH * .4); g.restore();
-        rr(g, 5, 5, CW - 10, CH - 10, 57); g.lineWidth = 5; g.strokeStyle = red ? "rgba(90,8,4,.9)" : "rgba(4,14,30,.95)"; g.stroke();
-        rr(g, 11, 11, CW - 22, CH - 22, 52); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.22)"; g.stroke();
+        /* mély belső árnyék a perem mentén, középen lágy derengés */
+        const vg = g.createRadialGradient(CW * .42, CH * .3, CH * .1, CW * .5, CH * .55, CW * .62); vg.addColorStop(0, red ? "rgba(255,170,150,.16)" : "rgba(110,170,255,.16)"); vg.addColorStop(1, "rgba(0,0,0,0)");
+        g.fillStyle = vg; g.fillRect(0, 0, CW, CH);
+        /* íves fényes felső tükröződés */
+        const hl = g.createLinearGradient(0, 0, 0, CH * .5); hl.addColorStop(0, red ? "rgba(255,255,255,.32)" : "rgba(255,255,255,.16)"); hl.addColorStop(1, "rgba(255,255,255,0)");
+        g.beginPath(); g.moveTo(0, 0); g.lineTo(CW, 0); g.lineTo(CW, CH * .3); g.quadraticCurveTo(CW * .5, CH * .5, 0, CH * .36); g.closePath(); g.fillStyle = hl; g.fill();
+        const sh = g.createLinearGradient(0, CH * .58, 0, CH); sh.addColorStop(0, "rgba(0,0,0,0)"); sh.addColorStop(1, red ? "rgba(70,0,0,.4)" : "rgba(0,4,16,.5)");
+        g.fillStyle = sh; g.fillRect(0, CH * .58, CW, CH * .42);
+        g.shadowColor = red ? "rgba(255,200,190,.55)" : "rgba(140,200,255,.5)"; g.shadowBlur = 22;
+        rr(g, 14, 14, CW - 28, CH - 28, 50); g.lineWidth = 3; g.strokeStyle = red ? "rgba(255,220,214,.4)" : "rgba(170,215,255,.32)"; g.stroke();
+        g.shadowColor = "transparent"; g.restore();
+        rr(g, 5, 5, CW - 10, CH - 10, 57); g.lineWidth = 5; g.strokeStyle = red ? "rgba(90,8,4,.9)" : "rgba(2,10,24,.95)"; g.stroke();
+        rr(g, 10, 10, CW - 20, CH - 20, 53); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.3)"; g.stroke();
       }
       function baseSq(g, w, h) {
         g.clearRect(0, 0, w, h);
@@ -7769,11 +7780,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       };
       const maxAniso = R.capabilities.getMaxAnisotropy ? R.capabilities.getMaxAnisotropy() : 1;
       /* teteje (Settings) és alja (Inventory) – négyzetes panelek */
-      const QW = BW - .2, QC = 720;
+      const QW = BW - .27, QC = 720;
       [[5, 1], [6, -1]].forEach(([f, sgn]) => {
         const c = document.createElement("canvas"); c.width = QC; c.height = QC; DRAW[f](c.getContext("2d"), QC, QC);
         const tex = new T.CanvasTexture(c); if ("colorSpace" in tex) tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = maxAniso;
-        const m = new T.Mesh(new T.PlaneGeometry(QW, QW), new T.MeshBasicMaterial({ map: tex, alphaTest: .5, toneMapped: false }));
+        const m = new T.Mesh(new T.PlaneGeometry(QW, QW), new T.MeshBasicMaterial({ map: tex, alphaTest: .02, transparent: true, opacity: 0, depthWrite: false, toneMapped: false })); m.renderOrder = 2;
         m.rotation.x = -sgn * Math.PI / 2; m.position.y = sgn * (BH / 2 - INSET);
         group.add(m); panels.push({ f, c, tex, m, sq: 1 });
       });
@@ -7816,7 +7827,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         const dp = ptarget - pit;
         if (Math.abs(dp) > .02 || Math.abs(pvel) > .02) { pvel = pvel * .78 + dp * .085; pit += pvel; need = true; } else if (pit !== ptarget) { pit = ptarget; pvel = 0; need = true; }
         let sc = 1; if (pressT) { const k = (performance.now() - pressT) / 220; if (k >= 1) pressT = 0; else { sc = 1 - .06 * Math.sin(k * Math.PI); need = true; } }
-        if (need) { group.rotation.y = yaw * rad; group.rotation.x = pit * rad; group.scale.setScalar(sc); R.render(scene, cam); need = false; }
+        if (need) { group.rotation.y = yaw * rad; group.rotation.x = pit * rad; group.scale.setScalar(sc);
+          const vis = Math.max(0, Math.min(1, (Math.abs(pit) - 10) / 32)); panels.forEach((q) => { if (q.sq) { q.m.material.opacity = vis; q.m.visible = vis > .01; } });
+          R.render(scene, cam); need = false; }
         if (Math.abs(target - yaw) > .02 || Math.abs(vel) > .02 || Math.abs(ptarget - pit) > .02 || Math.abs(pvel) > .02 || pressT) raf = requestAnimationFrame(frame);
       }
       const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
