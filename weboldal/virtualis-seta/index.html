@@ -144,6 +144,12 @@ button { font: inherit; }
 @keyframes swoosh { 0%, 100% { transform: translateX(-4px); opacity: .8; } 50% { transform: translateX(5px); opacity: 1; } }
 .cube-stage.glint .cf-front::before { animation: glint 1.2s ease-in-out; }
 @keyframes glint { from { background-position: -220px 0, 0 0, 0 0, 0 0, 0 0; } to { background-position: 320px 0, 0 0, 0 0, 0 0, 0 0; } }
+/* tartalék kocka (ha nincs WebGL): nem térbeli lapok egymáson – mindig csak a felénk néző lap látszik, lapozó animációval.
+   (Egyes böngészők, pl. Safari, a CSS-3D lapokat egymásra csúsztatták.) */
+.cube-stage:not(.is3d) .cube { transform: none !important; transform-style: flat; }
+.cube-stage:not(.is3d) .cf, .cube-stage:not(.is3d) .ce, .cube-stage:not(.is3d) .cf-top { display: none; }
+.cube-stage:not(.is3d) .cf.cf-front { display: block; top: 0; height: var(--H); transform: perspective(600px) rotateY(-10deg) !important; --cv: 1 !important; --lit: 1 !important; animation: cubeFlip .35s ease; box-shadow: 0 14px 28px rgba(0,0,0,.35); }
+@keyframes cubeFlip { from { opacity: .2; transform: perspective(600px) rotateY(-70deg); } }
 :root[data-device="tablet"] .cubebox { --S: 176px; --H: 110px; --gp: 11px; }
 :root[data-device="phone"] .cubebox { --S: 90px; --H: 56px; --gp: 6px; width: calc(var(--S) * 1.32); padding-top: calc(var(--H) * .3); margin: -8px 0 0 -8px; }
 :root[data-device="phone"] .cube-swoosh { width: calc(var(--S) * .95); margin-top: calc(var(--H) * .26); opacity: .75; }
@@ -915,10 +921,8 @@ body.walk-on .gm-dock { display: none; }
 .gm-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; } .gm-tabs::-webkit-scrollbar { display: none; }
 .gm-tabs button { all: unset; cursor: pointer; flex: none; padding: 8px 12px; border-radius: 999px; font: 800 12.5px/1 var(--body); background: rgba(255,255,255,.1); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); white-space: nowrap; }
 .gm-tabs button.on { background: var(--gc); box-shadow: 0 4px 12px rgba(0,0,0,.25); }
-.gm-prog { flex: none; display: flex; align-items: center; gap: 8px; }
 .gm-ring { width: 34px; height: 34px; display: grid; place-items: center; }
 .gm-ring i { --k: 0; width: 34px; height: 34px; border-radius: 50%; background: conic-gradient(#f2b233 calc(var(--k) * 360deg), rgba(255,255,255,.18) 0); -webkit-mask: radial-gradient(circle, transparent 0 11px, #000 12px); mask: radial-gradient(circle, transparent 0 11px, #000 12px); }
-.gm-time { display: grid; line-height: 1.15; } .gm-time b { font: 800 13px/1.1 var(--body); font-variant-numeric: tabular-nums; } .gm-time small { font: 600 10.5px/1.2 var(--body); color: #c3d6e8; }
 .gm-x { all: unset; cursor: pointer; flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font: 700 24px/1 sans-serif; background: rgba(255,255,255,.14); }
 .gm-x:hover { background: #e2483d; }
 .gm-help.show { animation: gmHelp 7s ease forwards; } @keyframes gmHelp { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
@@ -930,8 +934,8 @@ body.walk-on .gm-dock { display: none; }
 .gm-rw-card h3 { margin: 0 0 6px; font: 900 30px/1 var(--display); text-transform: uppercase; } .gm-rw-card p { margin: 0 0 8px; font: 600 14.5px/1.45 var(--body); color: #dbe8f4; } .gm-rw-card small { color: #a9c3da; font: 700 11.5px/1 var(--body); }
 .gm-rw-acts { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
 .gm-rw-acts button { all: unset; cursor: pointer; padding: 12px 18px; border-radius: 999px; font: 800 14px/1 var(--body); }
-.gm-rw-book { background: linear-gradient(180deg, #ffd978, #f2b233); color: #14202a; } .gm-rw-x { background: rgba(255,255,255,.14); color: #fff; }
-@media (max-width: 600px) { .gm-hd { flex-wrap: wrap; } .gm-tabs { order: 3; flex: 1 0 100%; } .gm-prog { flex: 1; } }
+.gm-rw-acts .gm-rw-book { background: linear-gradient(180deg, #ffd978, #f2b233); color: #14202a; box-shadow: 0 8px 18px rgba(242,178,51,.35); } .gm-rw-acts .gm-rw-x { background: rgba(255,255,255,.14); color: #fff; }
+@media (max-width: 600px) { .gm-hd { flex-wrap: wrap; } .gm-tabs { order: 3; flex: 1 0 100%; } }
 
 /* ---- Foglalás gomb ---- */
 .tool-book { width: auto !important; padding: 0 16px 0 12px; gap: 8px; display: inline-flex !important; align-items: center; background: linear-gradient(180deg, #f7c548, #f2b233) !important; color: #14202a !important; border-color: #f2b233 !important; font: 800 14px/1 var(--body, Manrope), sans-serif; box-shadow: 0 3px 0 #c98f17, 0 6px 16px rgba(0,0,0,.3); }
@@ -1107,6 +1111,9 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 .zfb-loading i { width: 26px; height: 26px; border-radius: 50%; border: 3px solid #cfd8e3; border-top-color: var(--navy); animation: zfbSpin .8s linear infinite; }
 @keyframes zfbSpin { to { transform: rotate(360deg); } }
 /* apartmanválasztó */
+.zfb-back { all: unset; cursor: pointer; flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px 8px 10px; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font: 800 13px/1 Manrope, sans-serif; box-shadow: inset 0 0 0 1px rgba(255,255,255,.28); white-space: nowrap; }
+.zfb-back:hover, .zfb-back:focus-visible { background: rgba(255,255,255,.26); }
+@media (max-width: 760px) { .zfb-back span { display: none; } .zfb-back { padding: 8px 12px; font-size: 18px; } }
 .zfb-apts { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
 .zfb-apt { all: unset; cursor: pointer; position: relative; display: flex; flex-direction: column; gap: 4px; padding: 18px 16px 16px; border-radius: 18px; background: #fff; border: 2px solid var(--line); box-shadow: 0 4px 0 rgba(20,32,42,.06); transition: transform .15s, border-color .15s, box-shadow .15s; }
 .zfb-apt:hover, .zfb-apt:focus-visible { transform: translateY(-3px); border-color: var(--ac); box-shadow: 0 12px 26px rgba(20,32,42,.14); }
@@ -1398,7 +1405,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
 
   /* ---------- stégjáték-kedvezmény (5% a szállásdíjból, 24 óráig, egyszer) ----------
-     A stégen 5 perc játék után a séta a ZephyrGame.earn()-nel írja be; a kezdőoldalon is érvényes. */
+     A stégjátékok rejtett ajándéka (10 perc játék után, kilépéskor) a ZephyrGame.earn()-nel kerül ide; a kezdőoldalon is érvényes. */
   if (!window.ZephyrGame) window.ZephyrGame = (function () {
     const K = "zephyr-jatek", DAY = 864e5, PCT = 5;
     const read = () => { try { return JSON.parse(localStorage.getItem(K) || "null"); } catch (e) { return null; } };
@@ -1415,10 +1422,20 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   let el = null, cfg = null, st = null;
   function reset(apt) { st = { step: apt ? 2 : 1, apt: apt || null, apts: apt ? [apt] : [], maps: {}, days: null, map: {}, ci: null, co: null, adults: 2, children: 0, month: 0, form: {}, result: null, loading: false, err: "" }; }
 
+  /* visszalépés: bármelyik lépésből vissza oda, ahonnan a foglalást megnyitották (séta, játék, beállítások, kezdőoldal) */
+  let backTo = null, histPushed = false, ignorePop = false;
+  const isOpen = () => !!(el && !el.hidden && el.classList.contains("on"));
+  window.addEventListener("popstate", () => {
+    if (ignorePop) { ignorePop = false; window.__zbPop = Date.now(); return; }
+    if (isOpen()) { histPushed = false; window.__zbPop = Date.now(); close(); }
+  });
   async function open(opts) {
     opts = opts || {};
     if (!el) build();
     reset(null);
+    backTo = typeof opts.back === "function" ? opts.back : null;
+    const lbl = el.querySelector(".zfb-back span"); if (lbl) lbl.textContent = opts.backLabel || (/virtualis-seta/.test(location.pathname) ? "Vissza a sétához" : "Vissza az oldalra");
+    if (!histPushed) { try { history.pushState({ zfb: 1 }, "", location.href); histPushed = true; } catch (e) {} }
     el.hidden = false; requestAnimationFrame(() => el.classList.add("on"));
     document.documentElement.classList.add("zfb-lock");
     if (!cfg) {
@@ -1429,16 +1446,20 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const pre = opts.apt && cfg.apartments.find((a) => a.id === opts.apt);
     if (pre) await chooseApt(pre.id); else render();
   }
-  function close() {
-    if (!el) return; el.classList.remove("on"); document.documentElement.classList.remove("zfb-lock");
+  function close(mode) {
+    if (!el || el.hidden) return; el.classList.remove("on"); document.documentElement.classList.remove("zfb-lock");
     setTimeout(() => { el.hidden = true; }, 300);
+    if (histPushed) { histPushed = false; try { if (history.state && history.state.zfb) { ignorePop = true; history.back(); } } catch (e) {} }
+    const b = backTo; backTo = null;
+    if (b && mode !== "noret") setTimeout(() => { try { b(); } catch (e) {} }, 320);
   }
   function build() {
     el = document.createElement("div"); el.className = "zfb"; el.hidden = true; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Szállásfoglalás – Zephyr Apartmanház");
-    el.innerHTML = `<div class="zfb-bg"></div><div class="zfb-card"><header class="zfb-hd"><div class="zfb-logo"><b>ZEPHYR</b><span>Apartmanház · Zamárdi</span></div><ol class="zfb-steps"></ol><button type="button" class="zfb-x" aria-label="Bezárás">×</button></header><div class="zfb-body"></div><footer class="zfb-ntak"></footer></div>`;
+    el.innerHTML = `<div class="zfb-bg"></div><div class="zfb-card"><header class="zfb-hd"><button type="button" class="zfb-back" aria-label="Vissza oda, ahonnan a foglalást megnyitottad">‹ <span>Vissza</span></button><div class="zfb-logo"><b>ZEPHYR</b><span>Apartmanház · Zamárdi</span></div><ol class="zfb-steps"></ol><button type="button" class="zfb-x" aria-label="Bezárás">×</button></header><div class="zfb-body"></div><footer class="zfb-ntak"></footer></div>`;
     document.body.appendChild(el);
-    el.querySelector(".zfb-bg").addEventListener("click", close);
-    el.querySelector(".zfb-x").addEventListener("click", close);
+    el.querySelector(".zfb-bg").addEventListener("click", () => close());
+    el.querySelector(".zfb-x").addEventListener("click", () => close());
+    el.querySelector(".zfb-back").addEventListener("click", () => close());
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && el && !el.hidden) close(); });
     el.addEventListener("click", onClick); el.addEventListener("submit", (e) => { e.preventDefault(); submit(); }); el.addEventListener("input", onInput); el.addEventListener("change", onInput);
   }
@@ -1650,7 +1671,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     if (b.dataset.load) return loadDays();
     if (b.dataset.go) { st.step = +b.dataset.go; st.err = ""; return render(); }
     if (b.dataset.close) return close();
-    if (b.dataset.owner) { close(); if (window.ZephyrAdmin) setTimeout(() => window.ZephyrAdmin.open(), 320); return; }
+    if (b.dataset.owner) { close("noret"); if (window.ZephyrAdmin) setTimeout(() => window.ZephyrAdmin.open(), 320); return; }
     if (b.dataset.m) { st.month = Math.max(0, Math.min(12, st.month + +b.dataset.m)); return render(); }
     if (b.dataset.clear) { st.ci = st.co = null; return render(); }
     if (b.dataset.st) { const k = b.dataset.st, cap = capTotal(); st[k] = Math.max(k === "adults" ? 1 : 0, Math.min(cap - (k === "adults" ? st.children : st.adults), st[k] + +b.dataset.v)); return render(); }
@@ -7941,7 +7962,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const sb = e.target.closest(".set-sw"); if (sb) { const src = $(sb.dataset.proxy); if (src) src.click(); setTimeout(sync, 60); setTimeout(sync, 450); return; }
       const dv = e.target.closest(".set-dev"); if (dv) { deviceChoice = dv.dataset.dev; if (!devForced) { try { localStorage.setItem("zephyr-device", deviceChoice); } catch (x) {} } applyDevice(); applyMapForDevice(); setTimeout(sync, 60); return; }
       if (e.target.closest(".set-mute")) { $("volMute").click(); sync(); return; }
-      if (e.target.closest(".set-book")) { el.remove(); $("btnBook").click(); }
+      if (e.target.closest(".set-book")) { el.remove(); window.ZephyrBooking && ZephyrBooking.open({ back: openSettings }); }
     });
     el.querySelector(".set-vol input").addEventListener("input", (e) => { setVol(e.target.value / 100); sync(); });
     el.addEventListener("keydown", (e) => { if (e.key === "Escape") { el.remove(); } e.stopPropagation(); });
@@ -8066,6 +8087,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       let lastPop = 0;
       window.addEventListener("popstate", () => {
         const now = Date.now();
+        if (now - (window.__zbPop || 0) < 400) return;   /* a foglalási ablak kezelte */
+        const ov = gmEl && !gmEl.hidden ? () => gmClose() : bkEl ? () => closeBinder() : $("setPanel") ? () => $("setPanel").remove() : $("invPick") ? () => $("invPick").remove() : null;
+        if (ov) { ov(); try { history.pushState({ zephyrGuard: 1 }, "", location.href); } catch (e) {} return; }
         if (now - lastPop < 2500) { history.back(); return; }
         lastPop = now; try { history.pushState({ zephyrGuard: 1 }, "", location.href); } catch (e) {}
         toast("A kilépéshez húzd / nyomd meg még egyszer a vissza gombot – a kezdőlapra a kocka HOME lapja visz.", 2500);
@@ -8293,9 +8317,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
 
   /* ================= Stégjátékok: a napozóstégen választható játékok a víz fölött + félkarú rabló =================
-     5 perc játék után 5% kedvezmény a szállásdíjból (az idegenforgalmi adót nem érinti), 24 óráig, egy foglalásra.
+     Rejtett ajándék: aki összesen legalább 10 percet játszik, kilépéskor köszönetet és 5% kedvezményt kap a szállásdíjból
+     (az IFA-t nem érinti), 24 óráig, egy foglalásra. Nincs kijelzett számláló, nincs előzetes figyelmeztetés.
      A játékok tét nélküliek (nem szerencsejáték): a nyerőautomata csak pontokat számol. */
-  const GM_GOAL = 5 * 60 * 1000, GM_KEY = "zephyr-jatekido";
+  const GM_GOAL = 10 * 60 * 1000, GM_KEY = "zephyr-jatekido";
   const GM_LIST = [
     { id: "slot", n: "Zephyr nyerőautomata", d: "Húzd meg a kart – horgony, vitorlás, mentőöv, és a nagy Z!", c: "#e2483d" },
     { id: "duck", n: "Pizza a kacsáknak", d: "Dobj pici pizzát a vízimadaraknak – megeszik, örülnek, és pontot érnek!", c: "#2a86ad" },
@@ -8303,8 +8328,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     { id: "race", n: "Vitorlás-regatta", d: "Versenyezz 3 hajóval a Balatonon, a stég előtt!", c: "#6a1b9a" }
   ];
   let gmEl = null, gmCv = null, gmG = null, gmRaf = 0, gmGame = null, gmLast = 0, gmInput = 0, gmDock = null;
+  const gmGiven = () => { try { const v = JSON.parse(localStorage.getItem(GM_KEY) || "null"); return !!(v && v.d === new Date().toDateString() && v.given); } catch (e) { return false; } };
   const gmTime = () => { try { const v = JSON.parse(localStorage.getItem(GM_KEY) || "null"); return v && v.d === new Date().toDateString() ? v.ms : 0; } catch (e) { return 0; } };
-  const gmSave = (ms) => { try { localStorage.setItem(GM_KEY, JSON.stringify({ d: new Date().toDateString(), ms })); } catch (e) {} };
+  const gmSave = (ms, given) => { try { localStorage.setItem(GM_KEY, JSON.stringify({ d: new Date().toDateString(), ms, given: given || gmGiven() })); } catch (e) {} };
   let gmMs = gmTime();
   const gmClamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const gmRnd = (a, b) => a + Math.random() * (b - a);
@@ -8510,16 +8536,18 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (sub) { g.font = "700 14px Manrope, Arial, sans-serif"; g.fillStyle = "rgba(255,255,255,.95)"; g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 4; g.fillText(sub, W / 2, y2); g.shadowBlur = 0; }
   }
 
-  /* ---------------- 2. Pizza a kacsáknak (a kacsázás helyett) ---------------- */
+  /* ---------------- 2. Pizza a kacsáknak – szintekkel, úszó és repülő vízimadarakkal ---------------- */
   const BIRDS = {
-    swan:  { n: "Bütykös hattyú", pts: 5, L: 1.5, sp: .35, w: 1.1 },
-    drake: { n: "Tőkés réce (gácsér)", pts: 10, L: .62, sp: .7, w: 3 },
-    hen:   { n: "Tőkés réce (tojó)", pts: 10, L: .58, sp: .7, w: 2.2 },
-    coot:  { n: "Szárcsa", pts: 15, L: .42, sp: .85, w: 2.4 },
-    gull:  { n: "Dankasirály", pts: 20, L: .44, sp: .9, w: 1.4 },
-    grebe: { n: "Búbos vöcsök", pts: 25, L: .5, sp: 1, w: 1 }
+    swan:  { n: "Bütykös hattyú", pts: 5, L: 1.45, sp: .32, w: 1 },
+    drake: { n: "Tőkés réce", pts: 10, L: .6, sp: .6, w: 2.6 },
+    hen:   { n: "Tőkés réce tojó", pts: 10, L: .56, sp: .6, w: 2 },
+    coot:  { n: "Szárcsa", pts: 15, L: .4, sp: .75, w: 2.2 },
+    gull:  { n: "Dankasirály", pts: 20, L: .42, sp: .8, w: 1.4 },
+    grebe: { n: "Búbos vöcsök", pts: 25, L: .5, sp: .9, w: 1 },
+    fgull: { n: "Sirály a levegőben", pts: 40, L: .42, sp: 4.2, w: 0, fly: 1 },
+    tern:  { n: "Küszvágó csér a levegőben", pts: 60, L: .36, sp: 5.2, w: 0, fly: 1 }
   };
-  const BSC = 1.9;   /* a madarak játékbeli nagyítása (jobban láthatók, könnyebb eltalálni) */
+  const BSC = 2.1, BIRD_ZMIN = 10;   /* nagyítás a jobb láthatóságért; ennél közelebb nem jönnek a madarak */
   function pizzaDraw(g, x, y, r, squash, rot) {
     g.save(); g.translate(x, y); g.scale(1, squash); g.rotate(rot);
     g.fillStyle = "rgba(0,0,0,.18)"; g.beginPath(); g.arc(r * .08, r * .12, r, 0, 7); g.fill();
@@ -8530,152 +8558,275 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     g.fillStyle = "#3f8f3a"; for (let k = 0; k < 3; k++) { const a = k * 2.1 + 1; g.beginPath(); g.ellipse(Math.cos(a) * r * .3, Math.sin(a) * r * .3, r * .1, r * .05, a, 0, 7); g.fill(); }
     g.restore();
   }
-  /* oldalnézeti vízimadár; a talpvonal a vízfelszín (y), egység: s px / méter */
-  function birdDraw(g, sp, x, y, s, dir, t, eat, happy) {
-    const B = BIRDS[sp], L = B.L * s * BSC, ph = t * 2.2 + x * .01;
-    if (L < 3) return;
-    g.save(); g.translate(x, y + Math.sin(ph) * L * .02); g.scale(dir, 1);
-    /* tükörkép és árnyék a vízen */
-    g.fillStyle = "rgba(10,40,70,.22)"; g.beginPath(); g.ellipse(0, L * .02, L * .55, L * .08, 0, 0, 7); g.fill();
-    /* nyomhullámok */
-    g.strokeStyle = "rgba(255,255,255,.45)"; g.lineWidth = Math.max(1, L * .025);
-    for (let k = 1; k <= 3; k++) { const q = ((t * .8 + k / 3) % 1); g.globalAlpha = 1 - q; g.beginPath(); g.moveTo(-L * (.45 + q * 1.1), L * (.03 + q * .1)); g.quadraticCurveTo(-L * (.2 + q * .5), L * .02, -L * .1, L * .01); g.stroke(); g.beginPath(); g.moveTo(-L * (.45 + q * 1.1), -L * (.0 + q * .04)); g.quadraticCurveTo(-L * (.2 + q * .5), -L * .01, -L * .1, -L * .01); g.stroke(); }
-    g.globalAlpha = 1;
-    const flap = happy ? Math.sin(t * 22) * .5 : 0, dip = eat ? Math.max(0, Math.sin(Math.min(1, eat) * Math.PI)) : 0;
-    const P = { swan: ["#ffffff", "#e9eef2", "#ffffff", "#f07a1c"], drake: ["#bdb7ad", "#6b3b25", "#1f6b3a", "#e8c03a"], hen: ["#8f6b48", "#7a5536", "#6e4f33", "#e0892a"],
-      coot: ["#1f2124", "#1f2124", "#141517", "#f4f4f2"], gull: ["#ffffff", "#b9c4cc", "#3b2a22", "#c9302c"], grebe: ["#8a7a6a", "#f2ece4", "#2a2420", "#d98a8a"] }[sp];
-    const bodyH = sp === "swan" ? .2 : sp === "gull" ? .15 : .15, bodyY = sp === "swan" || sp === "gull" ? -.14 : -.1;
-    /* test (a víz fölötti rész) */
-    g.save(); g.beginPath(); g.rect(-L, -L * 2, L * 2, L * 2.02); g.clip();
-    const bg = g.createLinearGradient(0, L * (bodyY - bodyH), 0, 0); bg.addColorStop(0, P[0]); bg.addColorStop(1, P[1]);
-    g.fillStyle = bg; g.beginPath(); g.ellipse(-L * .02, L * bodyY, L * .44, L * bodyH, 0, 0, 7); g.fill();
-    if (sp === "drake") { g.fillStyle = P[1]; g.beginPath(); g.ellipse(L * .26, L * (bodyY - .02), L * .16, L * .12, 0, 0, 7); g.fill(); }
-    /* farok */
-    g.fillStyle = sp === "drake" ? "#202020" : sp === "gull" ? "#222" : P[1]; g.beginPath(); g.moveTo(-L * .38, L * (bodyY - .05)); g.lineTo(-L * .56, L * (bodyY - .14 - (sp === "swan" ? .04 : 0))); g.lineTo(-L * .4, L * (bodyY + .04)); g.fill();
-    /* szárny */
-    g.save(); g.translate(-L * .02, L * (bodyY - bodyH * .4)); g.rotate(-flap);
-    const wg = g.createLinearGradient(0, -L * .1, 0, L * .1); wg.addColorStop(0, sp === "gull" ? "#c9d2d9" : sp === "coot" ? "#2c2f33" : sp === "swan" ? "#ffffff" : "#a99f92"); wg.addColorStop(1, sp === "gull" ? "#9aa6af" : sp === "coot" ? "#141517" : sp === "swan" ? "#dfe6eb" : P[0]);
-    g.fillStyle = wg; g.beginPath(); g.ellipse(-L * .06, 0, L * (sp === "swan" ? .34 : .28), L * (sp === "swan" ? .12 : .08), -.12, 0, 7); g.fill();
-    if (sp === "drake" || sp === "hen") { g.fillStyle = "#2b4fd1"; g.fillRect(-L * .2, -L * .01, L * .12, L * .035); }
-    if (sp === "gull") { g.fillStyle = "#111"; g.beginPath(); g.moveTo(-L * .3, -L * .02); g.lineTo(-L * .42, L * .02); g.lineTo(-L * .28, L * .04); g.fill(); }
-    g.restore();
-    g.restore();
-    /* nyak és fej */
-    let hx, hy, hr = L * .085;
+  /* ---- madárrajzolás: oldalnézet, egység = testhossz (u), talpvonal = vízfelszín ---- */
+  const lgr = (g, x0, y0, x1, y1, stops) => { const gr = g.createLinearGradient(x0, y0, x1, y1); stops.forEach(([o, c]) => gr.addColorStop(o, c)); return gr; };
+  function pathOf(g, u, pts) { g.beginPath(); g.moveTo(pts[0][0] * u, pts[0][1] * u); for (let i = 1; i < pts.length; i++) { const p = pts[i]; if (p.length === 4) g.quadraticCurveTo(p[0] * u, p[1] * u, p[2] * u, p[3] * u); else if (p.length === 6) g.bezierCurveTo(p[0] * u, p[1] * u, p[2] * u, p[3] * u, p[4] * u, p[5] * u); else g.lineTo(p[0] * u, p[1] * u); } g.closePath(); }
+  function swimBird(g, sp, u, t, eat, happy, seed) {
+    const dip = eat ? Math.max(0, Math.sin(Math.min(1, eat) * Math.PI)) : 0, open = eat ? Math.abs(Math.sin(t * 16)) : 0, lw = Math.max(.6, u * .012);
+    g.lineJoin = "round"; g.lineCap = "round";
+    const eye = (x, y, r, red) => { g.fillStyle = red ? "#b71c1c" : "#120c08"; g.beginPath(); g.arc(x * u, y * u, Math.max(.8, r * u), 0, 7); g.fill(); if (happy) { g.strokeStyle = "#120c08"; g.lineWidth = Math.max(.8, r * u * .6); g.beginPath(); g.arc(x * u, (y + r * .3) * u, r * u * 1.2, Math.PI * 1.15, Math.PI * 1.85); g.stroke(); return; } g.fillStyle = "rgba(255,255,255,.9)"; g.beginPath(); g.arc((x + r * .35) * u, (y - r * .35) * u, Math.max(.4, r * .35 * u), 0, 7); g.fill(); };
     if (sp === "swan") {
-      hx = L * (.3 + dip * .12); hy = L * (-.62 + dip * .55);
-      g.strokeStyle = "#ffffff"; g.lineWidth = L * .09; g.lineCap = "round"; g.beginPath(); g.moveTo(L * .3, L * (bodyY - .05)); g.bezierCurveTo(L * .5, L * -.3, L * .12, L * -.45, hx - L * .02, hy + L * .03); g.stroke();
-      g.strokeStyle = "rgba(0,0,0,.06)"; g.lineWidth = L * .03; g.stroke(); hr = L * .06;
-    } else {
-      const nl = sp === "grebe" ? .32 : sp === "coot" ? .16 : .22;
-      hx = L * (.32 + dip * .14); hy = L * (bodyY - nl + dip * (nl + .02));
-      g.strokeStyle = sp === "grebe" ? "#f2ece4" : sp === "drake" ? P[2] : P[sp === "gull" ? 0 : 1]; g.lineWidth = L * (sp === "grebe" ? .08 : .12); g.lineCap = "round";
-      g.beginPath(); g.moveTo(L * .26, L * (bodyY - .02)); g.quadraticCurveTo(L * .34, L * (bodyY - nl * .5), hx - L * .02, hy + L * .02); g.stroke();
-      if (sp === "drake") { g.strokeStyle = "#fff"; g.lineWidth = L * .025; g.beginPath(); g.arc(L * .3, L * (bodyY - .1), L * .055, -.6, 1.4); g.stroke(); }
+      /* test: vízen ülő, felemelt („vitorlázó”) szárnyakkal */
+      pathOf(g, u, [[-.5, -.02], [-.62, -.2, -.5, -.24], [-.2, -.3, .12, -.22], [.32, -.16, .34, -.04], [.3, .01], [-.3, .02]]);
+      g.fillStyle = lgr(g, 0, -.3 * u, 0, 0, [[0, "#ffffff"], [.7, "#eef2f4"], [1, "#c9d3da"]]); g.fill(); g.strokeStyle = "rgba(90,110,125,.35)"; g.lineWidth = lw; g.stroke();
+      const wing = happy ? Math.sin(t * 9) * .05 : 0;
+      pathOf(g, u, [[-.42, -.2], [-.5, -.42 - wing, -.18, -.47 - wing], [.05, -.48 - wing, .12, -.3], [.05, -.22], [-.2, -.22]]);
+      g.fillStyle = lgr(g, 0, -.48 * u, 0, -.2 * u, [[0, "#ffffff"], [1, "#e3e9ed"]]); g.fill(); g.strokeStyle = "rgba(90,110,125,.4)"; g.lineWidth = lw; g.stroke();
+      g.strokeStyle = "rgba(120,140,155,.35)"; g.lineWidth = lw * .9; for (let k = 0; k < 6; k++) { const x = -.4 + k * .08; g.beginPath(); g.moveTo(x * u, -.25 * u); g.quadraticCurveTo((x + .03) * u, -.36 * u, (x + .07) * u, -.44 * u); g.stroke(); }
+      /* nyak: elvékonyodó, S-ívű kitöltött forma */
+      const hx = .26 + dip * .16, hy = -.78 + dip * .7;
+      pathOf(g, u, [[.16, -.18], [.3, -.45, .14, -.62], [.08, -.74, hx - .02, hy - .03], [hx + .04, hy + .03], [.2, -.66, .24, -.48], [.36, -.28, .3, -.12]]);
+      g.fillStyle = lgr(g, .1 * u, 0, .32 * u, 0, [[0, "#e6ecef"], [.5, "#ffffff"], [1, "#f2f5f7"]]); g.fill(); g.strokeStyle = "rgba(90,110,125,.3)"; g.lineWidth = lw; g.stroke();
+      g.save(); g.translate(hx * u, hy * u); g.rotate(.25 + dip * .9);
+      pathOf(g, u, [[-.07, -.02], [-.05, -.07, .02, -.065], [.06, -.06, .07, -.02], [.06, .03, -.02, .035], [-.08, .02, -.07, -.02]]); g.fillStyle = "#fbfcfd"; g.fill();
+      pathOf(g, u, [[.05, -.045], [.11, -.04], [.17, -.015, .19, .0], [.12, .025, .05, .02]]); g.fillStyle = lgr(g, .05 * u, 0, .19 * u, 0, [[0, "#d9531c"], [1, "#f08a3c"]]); g.fill();
+      g.fillStyle = "#1a1412"; g.beginPath(); g.ellipse(.055 * u, -.045 * u, .028 * u, .022 * u, 0, 0, 7); g.fill(); g.beginPath(); g.moveTo(.05 * u, -.03 * u); g.lineTo(.08 * u, -.01 * u); g.lineTo(.04 * u, .015 * u); g.fill();
+      g.fillStyle = "#1a1412"; g.beginPath(); g.moveTo(.17 * u, -.004 * u); g.lineTo(.19 * u, .0); g.lineTo(.17 * u, .01 * u); g.fill();
+      if (open > .3) { g.strokeStyle = "#7a2a10"; g.lineWidth = lw; g.beginPath(); g.moveTo(.08 * u, .012 * u); g.lineTo(.17 * u, (.012 + open * .03) * u); g.stroke(); }
+      eye(.0, -.035, .012); g.restore();
+      return;
     }
-    /* fej */
-    const hg = g.createRadialGradient(hx - hr * .3, hy - hr * .4, hr * .1, hx, hy, hr * 1.2);
-    hg.addColorStop(0, sp === "drake" ? "#2f9a5a" : P[2]); hg.addColorStop(1, sp === "drake" ? "#124a2a" : P[2]);
-    g.fillStyle = hg; g.beginPath(); g.ellipse(hx, hy, hr * 1.15, hr, 0, 0, 7); g.fill();
-    if (sp === "grebe") { g.fillStyle = "#b5552a"; g.beginPath(); g.ellipse(hx - hr * .4, hy + hr * .7, hr * .9, hr * .6, .3, 0, 7); g.fill(); g.fillStyle = "#1c1612"; g.beginPath(); g.moveTo(hx - hr * .4, hy - hr * .6); g.lineTo(hx - hr * 1.5, hy - hr * 1.5); g.lineTo(hx + hr * .1, hy - hr * .9); g.fill(); }
-    if (sp === "gull") { g.fillStyle = "#fff"; g.beginPath(); g.arc(hx + hr * .15, hy - hr * .1, hr * .22, 0, 7); g.fill(); }
-    /* csőr: evéskor nyílik */
-    const open = eat ? Math.abs(Math.sin(t * 18)) * .5 : 0, bl = sp === "swan" ? 1.6 : sp === "grebe" ? 1.5 : sp === "coot" ? .9 : 1.25;
-    g.fillStyle = P[3];
-    g.beginPath(); g.moveTo(hx + hr * .7, hy - hr * .2); g.lineTo(hx + hr * (.7 + bl), hy + hr * (.15 - open * .3)); g.lineTo(hx + hr * .7, hy + hr * .15); g.fill();
-    g.beginPath(); g.moveTo(hx + hr * .7, hy + hr * .2); g.lineTo(hx + hr * (.7 + bl * .9), hy + hr * (.3 + open)); g.lineTo(hx + hr * .7, hy + hr * .45); g.fill();
-    if (sp === "swan") { g.fillStyle = "#111"; g.beginPath(); g.ellipse(hx + hr * .75, hy - hr * .35, hr * .3, hr * .28, 0, 0, 7); g.fill(); }
-    if (sp === "coot") { g.fillStyle = "#f4f4f2"; g.beginPath(); g.ellipse(hx + hr * .55, hy - hr * .45, hr * .25, hr * .35, 0, 0, 7); g.fill(); }
-    /* szem: boldogan hunyorog */
-    if (happy) { g.strokeStyle = sp === "coot" ? "#ddd" : "#111"; g.lineWidth = Math.max(1, hr * .14); g.beginPath(); g.arc(hx + hr * .25, hy - hr * .1, hr * .22, Math.PI * 1.1, Math.PI * 1.9); g.stroke(); }
-    else { g.fillStyle = sp === "coot" ? "#c62828" : "#111"; g.beginPath(); g.arc(hx + hr * .25, hy - hr * .18, Math.max(1, hr * .16), 0, 7); g.fill(); g.fillStyle = "#fff"; g.beginPath(); g.arc(hx + hr * .29, hy - hr * .23, Math.max(.6, hr * .05), 0, 7); g.fill(); }
+    if (sp === "drake" || sp === "hen") {
+      const dr = sp === "drake";
+      pathOf(g, u, [[-.5, -.14], [-.42, -.24, -.18, -.25], [.08, -.26, .2, -.22], [.34, -.16, .32, -.04], [.28, .01], [-.34, .01], [-.44, -.04, -.5, -.14]]);
+      g.fillStyle = dr ? lgr(g, 0, -.26 * u, 0, 0, [[0, "#b8b1a4"], [.5, "#cfc9bd"], [1, "#a8a195"]]) : lgr(g, 0, -.26 * u, 0, 0, [[0, "#8a6a47"], [1, "#a8845a"]]); g.fill();
+      if (dr) { g.strokeStyle = "rgba(60,55,50,.18)"; g.lineWidth = lw * .7; for (let k = 0; k < 9; k++) { g.beginPath(); g.moveTo((-.3 + k * .06) * u, -.18 * u); g.lineTo((-.28 + k * .06) * u, -.03 * u); g.stroke(); }
+        pathOf(g, u, [[.12, -.24], [.3, -.22, .33, -.1], [.32, -.03, .26, .0], [.18, -.06, .12, -.24]]); g.fillStyle = lgr(g, 0, -.24 * u, 0, 0, [[0, "#7a3d22"], [1, "#5a2a17"]]); g.fill();
+        pathOf(g, u, [[-.5, -.14], [-.44, -.2, -.34, -.18], [-.36, -.08], [-.48, -.08]]); g.fillStyle = "#1c1c1c"; g.fill();
+        g.strokeStyle = "#1c1c1c"; g.lineWidth = lw * 1.4; g.beginPath(); g.arc(-.44 * u, -.22 * u, .025 * u, Math.PI * .2, Math.PI * 1.7); g.stroke();
+        g.fillStyle = "#f4f4f2"; g.beginPath(); g.moveTo(-.52 * u, -.13 * u); g.lineTo(-.6 * u, -.12 * u); g.lineTo(-.52 * u, -.09 * u); g.fill(); }
+      else { g.fillStyle = "rgba(60,38,20,.55)"; let sd = seed * 9301 + 49297; for (let k = 0; k < 26; k++) { sd = (sd * 9301 + 49297) % 233280; const r1 = sd / 233280; sd = (sd * 9301 + 49297) % 233280; const r2 = sd / 233280; const x = -.42 + r1 * .7, y = -.22 + r2 * .2; g.beginPath(); g.moveTo(x * u, y * u); g.lineTo((x + .03) * u, (y + .012) * u); g.lineTo(x * u, (y + .024) * u); g.fill(); } }
+      /* szárny a tükörrel */
+      const fl = happy ? Math.sin(t * 20) * .12 : 0;
+      g.save(); g.translate(.05 * u, -.2 * u); g.rotate(-fl);
+      pathOf(g, u, [[.1, 0], [.0, -.05, -.32, -.03], [-.5, .0, -.46, .05], [-.2, .06, .1, 0]]); g.fillStyle = dr ? lgr(g, 0, -.05 * u, 0, .06 * u, [[0, "#8d8478"], [1, "#6e665c"]]) : lgr(g, 0, -.05 * u, 0, .06 * u, [[0, "#7a5a3a"], [1, "#5e4228"]]); g.fill();
+      g.fillStyle = "#ffffff"; g.fillRect(-.3 * u, .012 * u, .16 * u, .012 * u); g.fillStyle = "#2a4fd1"; g.fillRect(-.3 * u, .022 * u, .16 * u, .02 * u); g.fillStyle = "#ffffff"; g.fillRect(-.3 * u, .04 * u, .16 * u, .008 * u);
+      g.restore();
+      /* nyak, fej */
+      const hx = .3 + dip * .12, hy = -.4 + dip * .38;
+      pathOf(g, u, [[.16, -.2], [.2, -.32, hx - .06, hy + .02], [hx + .02, hy + .06], [.3, -.26, .3, -.18]]); g.fillStyle = dr ? "#1d6b3c" : "#8a6a47"; g.fill();
+      if (dr) { g.strokeStyle = "#ffffff"; g.lineWidth = Math.max(1, .022 * u); g.beginPath(); g.moveTo(.2 * u, -.27 * u); g.quadraticCurveTo(.26 * u, -.25 * u, .31 * u, -.27 * u); g.stroke(); }
+      g.save(); g.translate(hx * u, hy * u); g.rotate(dip * .8);
+      pathOf(g, u, [[-.08, .02], [-.09, -.06, -.01, -.075], [.08, -.08, .1, -.01], [.08, .05, -.02, .05], [-.08, .04, -.08, .02]]);
+      g.fillStyle = dr ? lgr(g, -.08 * u, -.08 * u, .08 * u, .05 * u, [[0, "#3fb36a"], [.45, "#14592f"], [.8, "#3a2a5a"], [1, "#0e3d22"]]) : lgr(g, 0, -.08 * u, 0, .05 * u, [[0, "#6e4f33"], [1, "#9a7a55"]]); g.fill();
+      if (!dr) { g.strokeStyle = "#3a2614"; g.lineWidth = Math.max(.8, .014 * u); g.beginPath(); g.moveTo(-.06 * u, -.02 * u); g.lineTo(.09 * u, -.03 * u); g.stroke(); }
+      pathOf(g, u, [[.08, -.04], [.19, -.035, .22, -.0], [.2, .02], [.13, .015, .08, .015]]); g.fillStyle = dr ? "#e9c33a" : "#e28a2c"; g.fill();
+      if (!dr) { g.fillStyle = "rgba(60,40,20,.7)"; g.beginPath(); g.ellipse(.15 * u, -.02 * u, .03 * u, .01 * u, 0, 0, 7); g.fill(); }
+      g.fillStyle = "#222"; g.beginPath(); g.arc(.205 * u, -.012 * u, Math.max(.5, .009 * u), 0, 7); g.fill();
+      if (open > .3) { g.fillStyle = "#c46a1c"; g.beginPath(); g.moveTo(.09 * u, .015 * u); g.lineTo(.19 * u, (.02 + open * .035) * u); g.lineTo(.09 * u, .03 * u); g.fill(); }
+      eye(.02, -.03, .015); g.restore();
+      return;
+    }
+    if (sp === "coot") {
+      pathOf(g, u, [[-.5, -.12], [-.46, -.3, -.12, -.32], [.18, -.33, .3, -.14], [.32, -.02, .24, .01], [-.36, .01], [-.48, -.04, -.5, -.12]]);
+      g.fillStyle = lgr(g, 0, -.33 * u, 0, 0, [[0, "#3a3e44"], [.5, "#24272b"], [1, "#16181b"]]); g.fill();
+      g.strokeStyle = "rgba(255,255,255,.12)"; g.lineWidth = lw; g.beginPath(); g.moveTo(-.3 * u, -.26 * u); g.quadraticCurveTo(0, -.32 * u, .18 * u, -.28 * u); g.stroke();
+      const hx = .3 + dip * .1, hy = -.42 + dip * .36;
+      pathOf(g, u, [[.14, -.26], [.2, -.38, hx - .05, hy], [hx + .05, hy + .06], [.3, -.26, .28, -.18]]); g.fillStyle = "#1b1d20"; g.fill();
+      g.save(); g.translate(hx * u, hy * u); g.rotate(dip * .8);
+      g.fillStyle = "#1b1d20"; g.beginPath(); g.ellipse(0, 0, .095 * u, .085 * u, 0, 0, 7); g.fill();
+      pathOf(g, u, [[.04, -.075], [.08, -.09, .1, -.06], [.11, -.02], [.2, .01], [.11, .03], [.05, .0]]); g.fillStyle = "#f6f4ee"; g.fill(); g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = lw * .7; g.stroke();
+      if (open > .3) { g.strokeStyle = "#555"; g.lineWidth = lw; g.beginPath(); g.moveTo(.11 * u, .01 * u); g.lineTo(.19 * u, (.015 + open * .03) * u); g.stroke(); }
+      eye(.02, -.02, .018, true); g.restore();
+      return;
+    }
+    if (sp === "grebe") {
+      pathOf(g, u, [[-.5, -.06], [-.4, -.16, -.1, -.17], [.2, -.17, .3, -.08], [.31, .0], [-.4, .01]]);
+      g.fillStyle = lgr(g, 0, -.17 * u, 0, 0, [[0, "#6d6258"], [.6, "#8a7d70"], [1, "#a39684"]]); g.fill();
+      g.fillStyle = "#a8562a"; g.beginPath(); g.ellipse(0, -.06 * u, .26 * u, .035 * u, 0, 0, 7); g.fill();
+      const hx = .34 + dip * .14, hy = -.52 + dip * .5;
+      pathOf(g, u, [[.18, -.15], [.32, -.3, hx - .04, hy + .04], [hx + .03, hy + .06], [.36, -.28, .32, -.1]]); g.fillStyle = lgr(g, .2 * u, 0, .36 * u, 0, [[0, "#5a4a3c"], [.5, "#f3eee6"], [1, "#ffffff"]]); g.fill();
+      g.save(); g.translate(hx * u, hy * u); g.rotate(dip * .8);
+      pathOf(g, u, [[-.1, .02], [-.16, .1, -.06, .12], [.04, .1, .05, .03]]); g.fillStyle = lgr(g, 0, 0, 0, .12 * u, [[0, "#d8742c"], [1, "#7a2f12"]]); g.fill();
+      g.fillStyle = "#f6f1ea"; g.beginPath(); g.ellipse(0, 0, .07 * u, .055 * u, 0, 0, 7); g.fill();
+      pathOf(g, u, [[-.06, -.03], [-.12, -.13], [-.03, -.06], [.02, -.13], [.05, -.04]]); g.fillStyle = "#1a1410"; g.fill();
+      g.fillStyle = "#1a1410"; g.beginPath(); g.ellipse(0, -.035 * u, .065 * u, .025 * u, 0, Math.PI, 0); g.fill();
+      pathOf(g, u, [[.05, -.01], [.2, .01], [.05, .02]]); g.fillStyle = "#d48a86"; g.fill();
+      eye(.02, -.01, .013, true); g.restore();
+      return;
+    }
+    if (sp === "gull") {
+      pathOf(g, u, [[-.36, -.1], [-.26, -.22, .0, -.24], [.22, -.24, .3, -.12], [.28, -.02], [-.3, .0]]);
+      g.fillStyle = lgr(g, 0, -.24 * u, 0, 0, [[0, "#ffffff"], [1, "#e4eaee"]]); g.fill();
+      pathOf(g, u, [[.16, -.2], [-.1, -.27, -.44, -.2], [-.66, -.16], [-.6, -.11], [-.2, -.12, .14, -.13]]); g.fillStyle = lgr(g, 0, -.27 * u, 0, -.11 * u, [[0, "#c3ccd3"], [1, "#a3aeb7"]]); g.fill();
+      g.fillStyle = "#151515"; pathOf(g, u, [[-.46, -.19], [-.66, -.16], [-.6, -.11], [-.46, -.13]]); g.fill(); g.fillStyle = "#fff"; g.beginPath(); g.arc(-.6 * u, -.145 * u, .01 * u, 0, 7); g.fill();
+      const hx = .28 + dip * .12, hy = -.34 + dip * .3;
+      g.fillStyle = "#ffffff"; pathOf(g, u, [[.14, -.2], [.2, -.3, hx - .05, hy], [hx + .04, hy + .07], [.3, -.2, .28, -.12]]); g.fill();
+      g.save(); g.translate(hx * u, hy * u); g.rotate(dip * .8);
+      g.fillStyle = lgr(g, 0, -.08 * u, 0, .06 * u, [[0, "#4a3226"], [1, "#2e1f17"]]); g.beginPath(); g.ellipse(.01 * u, 0, .085 * u, .07 * u, 0, 0, 7); g.fill();
+      pathOf(g, u, [[.07, -.02], [.17, -.01], [.19, .005], [.07, .02]]); g.fillStyle = "#b8242a"; g.fill();
+      g.strokeStyle = "#fff"; g.lineWidth = Math.max(.6, .01 * u); g.beginPath(); g.arc(.025 * u, -.025 * u, .02 * u, 0, 7); g.stroke();
+      eye(.025, -.025, .012); g.restore();
+    }
+  }
+  function flyBird(g, sp, u, t, dir) {   /* repülő sirály / csér: test és csapkodó szárnyak, kissé felülről */
+    const tern = sp === "tern", fl = Math.sin(t * (tern ? 15 : 11));
+    g.lineJoin = "round";
+    const wing = (side) => { const y = -fl * .32 * side, tip = tern ? .62 : .55;
+      g.beginPath(); g.moveTo(.02 * u, -.02 * u); g.quadraticCurveTo(-.05 * u, (y * .6 - .05) * u, -.18 * u, (y - .06) * u); g.lineTo(-.3 * u, (y * 1.1 - .03 * side) * u); g.quadraticCurveTo(-.12 * u, .02 * u, -.12 * u, .02 * u); g.closePath();
+      g.fillStyle = tern ? "#e9eef2" : "#bcc6ce"; g.fill(); g.fillStyle = "#151515"; g.beginPath(); g.moveTo(-.23 * u, (y - .05) * u); g.lineTo(-.3 * u, (y * 1.1 - .03 * side) * u); g.lineTo(-.2 * u, (y - .02) * u); g.fill(); };
+    g.save(); g.scale(dir, 1);
+    g.save(); g.scale(1, .55); wing(-1); g.restore();
+    pathOf(g, u, [[-.3, 0], [-.1, -.06, .12, -.04], [.2, 0], [.1, .04, -.3, .02]]); g.fillStyle = "#ffffff"; g.fill(); g.strokeStyle = "rgba(0,0,0,.15)"; g.lineWidth = .8; g.stroke();
+    if (tern) { g.fillStyle = "#111"; g.beginPath(); g.ellipse(.15 * u, -.03 * u, .07 * u, .035 * u, 0, Math.PI, 0); g.fill(); g.fillStyle = "#d6312a"; g.beginPath(); g.moveTo(.2 * u, -.01 * u); g.lineTo(.32 * u, .0); g.lineTo(.2 * u, .01 * u); g.fill();
+      g.fillStyle = "#fff"; g.beginPath(); g.moveTo(-.3 * u, 0); g.lineTo(-.45 * u, -.06 * u); g.lineTo(-.36 * u, .01 * u); g.lineTo(-.46 * u, .06 * u); g.closePath(); g.fill(); }
+    else { g.fillStyle = "#3a2a20"; g.beginPath(); g.arc(.15 * u, -.02 * u, .045 * u, 0, 7); g.fill(); g.fillStyle = "#b8242a"; g.beginPath(); g.moveTo(.19 * u, -.01 * u); g.lineTo(.27 * u, 0); g.lineTo(.19 * u, .01 * u); g.fill(); }
+    wing(1);
+    g.restore();
+  }
+  function birdOnWater(g, sp, x, y, s, dir, t, eat, happy, seed) {
+    const B = BIRDS[sp], u = B.L * s * BSC; if (u < 4) return;
+    const bob = Math.sin(t * 2 + seed) * u * .012;
+    g.save(); g.translate(x, y + bob);
+    /* nyomhullám és gyűrűk */
+    g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = Math.max(.8, u * .012);
+    for (let k = 1; k <= 3; k++) { const q = (t * .7 + k / 3) % 1; g.globalAlpha = (1 - q) * .8; g.beginPath(); g.moveTo(-dir * u * (.42 + q * .9), u * (.02 + q * .08)); g.quadraticCurveTo(-dir * u * (.2 + q * .4), u * .015, dir * u * .2, u * .005); g.stroke(); }
+    g.globalAlpha = 1;
+    /* tükörkép a vízen (hullámzó, halvány) */
+    g.save(); g.scale(dir, -.55); g.globalAlpha = .2; swimBird(g, sp, u, t, eat, happy, seed); g.restore();
+    g.fillStyle = "rgba(20,50,80,.18)"; g.beginPath(); g.ellipse(0, u * .02, u * .5, u * .045, 0, 0, 7); g.fill();
+    g.save(); g.scale(dir, 1); swimBird(g, sp, u, t, eat, happy, seed); g.restore();
     g.restore();
   }
   function gameDuck() {
     let C = null;
-    const S = { birds: [], pz: [], fl: [], fx: [], score: 0, fed: 0, cool: 0, msg: "Koppints a vízre: oda repül a pici pizza! Találd el a madarakat – megeszik, örülnek, és pontot kapsz." };
-    const pickSp = () => { const ks = Object.keys(BIRDS), tot = ks.reduce((n, k) => n + BIRDS[k].w, 0); let r = Math.random() * tot; for (const k of ks) { r -= BIRDS[k].w; if (r <= 0) return k; } return "drake"; };
+    const LV = (n) => ({ time: 60, pizzas: 16 + Math.min(6, n), target: 90 + (n - 1) * 70, speed: 1 + (n - 1) * .22, fly: n >= 2, swim: 5 + Math.min(3, n) });
+    const S = { lv: 1, birds: [], flyers: [], pz: [], fl: [], fx: [], score: 0, fed: 0, combo: 0, best: 0, cool: 0, st: "intro", left: 60, pizzas: 16, msg: "" };
+    const pickSp = () => { const ks = Object.keys(BIRDS).filter((k) => !BIRDS[k].fly), tot = ks.reduce((n, k) => n + BIRDS[k].w, 0); let r = Math.random() * tot; for (const k of ks) { r -= BIRDS[k].w; if (r <= 0) return k; } return "drake"; };
+    const cfg = () => LV(S.lv);
+    function startLevel() { const c = cfg(); S.birds.forEach((b) => { b.v = BIRDS[b.sp].sp * gmRnd(.75, 1.25) * c.speed; b.st = "swim"; b.seek = null; }); Object.assign(S, { flyers: [], pz: [], fl: [], fx: [], score: 0, fed: 0, combo: 0, st: "play", left: c.time, pizzas: c.pizzas, msg: `${S.lv}. szint – gyűjts ${c.target} pontot ${c.time} mp alatt!` }); setTimeout(() => { if (S.msg.startsWith(S.lv + ".")) S.msg = ""; }, 2600); }
     function spawn(first) {
-      const sp = pickSp(), B = BIRDS[sp], Z = gmRnd(6, sp === "swan" ? 22 : 19), dir = Math.random() < .5 ? -1 : 1, hv = viewHalf(C, Z);
-      return { sp, Z, dir, X: first ? gmRnd(-hv * .9, hv * .9) : -dir * (hv + B.L * BSC + 1.5), v: B.sp * gmRnd(.7, 1.2), st: "swim", et: 0, dive: 0, nextDive: gmRnd(4, 10), seek: null };
+      const sp = pickSp(), B = BIRDS[sp], Z = gmRnd(sp === "swan" ? 12 : BIRD_ZMIN, sp === "swan" ? 19 : 17), dir = Math.random() < .5 ? -1 : 1, hv = viewHalf(C, Z);
+      return { sp, Z, dir, X: first ? gmRnd(-hv * .85, hv * .85) : -dir * (hv + B.L * BSC + 1.5), v: B.sp * gmRnd(.75, 1.25) * cfg().speed, st: "swim", et: 0, dive: 0, nextDive: gmRnd(4, 9), seek: null, seed: Math.random() * 100, turn: gmRnd(6, 14) };
+    }
+    function spawnFly() {
+      const sp = Math.random() < .6 ? "fgull" : "tern", B = BIRDS[sp], Z = gmRnd(13, 24), dir = Math.random() < .5 ? -1 : 1, hv = viewHalf(C, Z);
+      return { sp, Z, Y: gmRnd(2.2, 4.2), dir, X: -dir * (hv + 2), v: B.sp * gmRnd(.85, 1.15) * (1 + (S.lv - 2) * .1), ph: Math.random() * 6, caught: 0 };
     }
     function quack(sp) {
-      if (sp === "swan") fxTone(300, 240, .28, .04, "triangle");
-      else if (sp === "gull") { fxTone(1300, 900, .14, .03, "sine"); setTimeout(() => fxTone(1200, 850, .12, .025, "sine"), 160); }
-      else if (sp === "coot") fxTone(1500, 1400, .05, .03, "square");
-      else if (sp === "grebe") fxBurst(900, .18, .03, "bandpass", 3);
-      else { fxTone(420, 300, .09, .04, "triangle"); setTimeout(() => fxTone(400, 290, .09, .035, "triangle"), 130); }
+      if (sp === "swan") fxTone(300, 240, .28, .035, "triangle");
+      else if (sp === "gull" || sp === "fgull") { fxTone(1300, 900, .14, .025, "sine"); setTimeout(() => fxTone(1200, 850, .12, .02, "sine"), 160); }
+      else if (sp === "tern") { fxTone(2200, 1800, .1, .02, "sine"); setTimeout(() => fxTone(2300, 1900, .08, .018, "sine"), 120); }
+      else if (sp === "coot") fxTone(1500, 1400, .05, .025, "square");
+      else if (sp === "grebe") fxBurst(900, .18, .025, "bandpass", 3);
+      else { fxTone(420, 300, .09, .035, "triangle"); setTimeout(() => fxTone(400, 290, .09, .03, "triangle"), 130); }
+    }
+    function score(X, Y, Z, base, name, kind) {
+      S.combo++; const mult = Math.min(4, 1 + Math.floor((S.combo - 1) / 3)), pts = base * mult;
+      S.score += pts; S.fed++;
+      S.fx.push({ X, Y, Z, t: 0, txt: "+" + pts + (mult > 1 ? ` ×${mult}` : ""), sub: name + (kind ? " – " + kind : " – nyamm!") });
+      for (let k = 0; k < 6; k++) S.fx.push({ X: X + gmRnd(-.3, .3), Y, Z, t: -k * .1, heart: 1, dx: gmRnd(-.3, .3) });
     }
     function feed(b, half) {
-      const B = BIRDS[b.sp], pts = half ? Math.ceil(B.pts / 2) : B.pts;
-      b.st = "eat"; b.et = 0; S.score += pts; S.fed++;
-      S.fx.push({ X: b.X, Z: b.Z, t: 0, txt: "+" + pts, sub: half ? B.n + " – kihalászta" : B.n + " – nyamm!" });
-      for (let k = 0; k < 6; k++) S.fx.push({ X: b.X + gmRnd(-.3, .3), Z: b.Z, t: -k * .12, heart: 1, dx: gmRnd(-.3, .3) });
-      setTimeout(() => quack(b.sp), 150); setTimeout(() => fxTone(1175, 1568, .25, .03, "sine"), 500);
-      S.msg = "";
+      const B = BIRDS[b.sp]; b.st = "eat"; b.et = 0; if (half) S.combo = 0;
+      score(b.X, .6, b.Z, half ? Math.ceil(B.pts / 2) : B.pts, B.n, half ? "kihalászta" : "");
+      setTimeout(() => quack(b.sp), 150); setTimeout(() => fxTone(1175, 1568, .22, .025, "sine"), 500);
     }
+    const endCheck = () => { if (S.st !== "play") return; const c = cfg(); if (S.score >= c.target) { S.st = "win"; S.best = Math.max(S.best, S.lv); gmSnd.win(); } else if (S.left <= 0 || (S.pizzas <= 0 && !S.pz.length && !S.fl.length && !S.birds.some((b) => b.seek))) { S.st = "lose"; fxTone(400, 260, .4, .03, "triangle"); } };
+    let L = {};
     return {
       title: "Pizza a kacsáknak",
-      down(x, y, W, H) {
-        if (!C || S.cool > 0) return;
-        const p = unproj(C, x, y); if (p.Z < 3) return;
-        S.pz.push({ tx: p.X, tz: p.Z, t: 0, T: .38 + p.Z * .022, h: .8 + p.Z * .06, rot: gmRnd(0, 6) });
-        S.cool = .28; gmSnd.pop();
+      down(x, y) {
+        if (!C) return;
+        if (S.st !== "play") { if (L.b1 && x > L.b1.x && x < L.b1.x + L.b1.w && y > L.b1.y && y < L.b1.y + L.b1.h) { if (S.st === "win") S.lv++; startLevel(); } else if (L.b2 && x > L.b2.x && x < L.b2.x + L.b2.w && y > L.b2.y && y < L.b2.y + L.b2.h) startLevel(); else if (S.st === "intro") startLevel(); return; }
+        if (S.cool > 0 || S.pizzas <= 0) return;
+        const p = unproj(C, x, y); if (p.Z < 4) return;
+        S.pz.push({ tx: p.X, tz: p.Z, t: 0, T: .42 + p.Z * .026, h: 1 + p.Z * .1, rot: gmRnd(0, 6), X: 0, Y: 1.3, Z: 1.6 });
+        S.pizzas--; S.cool = .32; gmSnd.pop();
       },
       step(dt) {
         if (!C) return;
-        S.cool -= dt;
-        while (S.birds.length < (C.W < 600 ? 5 : 7)) S.birds.push(spawn(S.birds.length < 5 && !S.started));
-        S.started = true;
+        const c = cfg();
+        if (S.st === "play") { S.left -= dt; S.cool -= dt; }
+        while (S.birds.length < (C.W < 600 ? Math.min(5, c.swim) : c.swim)) S.birds.push(spawn(!S.inited));
+        S.inited = true;
+        if (S.st === "play" && c.fly && S.flyers.length < 2 && Math.random() < dt * .25) S.flyers.push(spawnFly());
         S.birds.forEach((b, i) => {
           const B = BIRDS[b.sp];
-          if (b.st === "eat") { b.et += dt; if (b.et > 1.6) { b.st = "happy"; b.et = 0; } return; }
-          if (b.st === "happy") { b.et += dt; if (b.et > 1.4) { b.st = "swim"; b.v *= 1.25; } }
-          if (b.sp === "grebe" && b.st === "swim") { b.nextDive -= dt; if (b.nextDive <= 0 && !b.dive) { b.dive = 2.2; gmSnd.splash(.05); } if (b.dive) { b.dive -= dt; b.X += b.dir * dt * 1.2; if (b.dive <= 0) { b.dive = 0; b.nextDive = gmRnd(5, 11); } return; } }
+          if (b.st === "eat") { b.et += dt; if (b.et > 1.5) { b.st = "happy"; b.et = 0; } return; }
+          if (b.st === "happy") { b.et += dt; if (b.et > 1.3) { b.st = "swim"; b.v *= 1.15; } }
+          if (b.sp === "grebe" && b.st === "swim") { b.nextDive -= dt; if (b.nextDive <= 0 && !b.dive) { b.dive = 2 + Math.random() * 1.5; } if (b.dive) { b.dive -= dt; b.X += b.dir * dt * 1.4; if (b.dive <= 0) { b.dive = 0; b.nextDive = gmRnd(3.5, 8) / c.speed; } return; } }
           if (b.seek && b.seek.gone) b.seek = null;
-          if (b.seek) { const dx = b.seek.X - b.X, dz = b.seek.Z - b.Z, d = Math.hypot(dx, dz); b.dir = dx >= 0 ? 1 : -1; const sp2 = B.sp * 1.8; b.X += dx / (d || 1) * sp2 * dt; b.Z += dz / (d || 1) * sp2 * dt;
+          if (b.seek) { const dx = b.seek.X - b.X, dz = b.seek.Z - b.Z, d = Math.hypot(dx, dz); b.dir = dx >= 0 ? 1 : -1; const s2 = B.sp * 1.6; b.X += dx / (d || 1) * s2 * dt; b.Z = Math.max(BIRD_ZMIN, b.Z + dz / (d || 1) * s2 * dt);
             if (d < Math.max(.4, B.L * BSC * .45)) { b.seek.gone = true; b.seek = null; feed(b, true); } return; }
-          b.X += b.dir * b.v * dt; b.Z += Math.sin(performance.now() / 2300 + i) * dt * .05;
+          b.turn -= dt; if (b.turn <= 0 && Math.abs(b.X) < viewHalf(C, b.Z) * .6) { b.dir = -b.dir; b.turn = gmRnd(7, 15); }
+          b.X += b.dir * b.v * dt; b.Z = Math.max(BIRD_ZMIN, b.Z + Math.sin(performance.now() / 2300 + i) * dt * .06);
           if (Math.abs(b.X) > viewHalf(C, b.Z) + B.L * BSC + 2.5) S.birds[i] = spawn(false);
         });
+        S.flyers.forEach((f) => { f.ph += dt; f.X += f.dir * f.v * dt; f.Y += Math.sin(f.ph * 1.3) * dt * .4; if (f.caught) { f.caught += dt; f.Y += dt * 2.2; } });
+        S.flyers = S.flyers.filter((f) => Math.abs(f.X) < viewHalf(C, f.Z) + 4 && f.caught < 3);
         S.pz.forEach((p) => {
-          p.t += dt;
+          p.t += dt; const k = Math.min(1, p.t / p.T); p.X = p.tx * k; p.Z = 1.6 + (p.tz - 1.6) * k; p.Y = 1.3 * (1 - k) + Math.sin(k * Math.PI) * p.h;
+          /* röptében elkapó madarak */
+          S.flyers.forEach((f) => { if (!p.done && !f.caught && Math.hypot(f.X - p.X, f.Y - p.Y, (f.Z - p.Z) * .7) < .9) { p.done = true; f.caught = .01; f.dir = -f.dir; const B = BIRDS[f.sp]; score(f.X, f.Y, f.Z, B.pts, B.n, "elkapta röptében!"); setTimeout(() => quack(f.sp), 80); } });
           if (p.t >= p.T && !p.done) {
             p.done = true;
             let best = null, bd = 1e9;
-            S.birds.forEach((b) => { if (b.st !== "swim" && b.st !== "happy" || b.dive) return; const B = BIRDS[b.sp], dx = b.X - p.tx, dz = (b.Z - p.tz) * .6, d = Math.hypot(dx, dz); if (d < Math.max(.8, B.L * BSC * .6) + p.tz * .015 && d < bd) { bd = d; best = b; } });
+            S.birds.forEach((b) => { if ((b.st !== "swim" && b.st !== "happy") || b.dive) return; const B = BIRDS[b.sp], dx = b.X - p.tx, dz = (b.Z - p.tz) * .55, d = Math.hypot(dx, dz); if (d < Math.max(.55, B.L * BSC * .5) + p.tz * .01 && d < bd) { bd = d; best = b; } });
             if (best) feed(best, false);
-            else { gmSnd.splash(.07); const f = { X: p.tx, Z: p.tz, t: 0 }; S.fl.push(f); S.fx.push({ X: p.tx, Z: p.tz, t: 0, ring: 1 });
-              const near = S.birds.filter((b) => b.st === "swim" && !b.dive && !b.seek && Math.hypot(b.X - f.X, b.Z - f.Z) < 5).sort((a, c) => Math.hypot(a.X - f.X, a.Z - f.Z) - Math.hypot(c.X - f.X, c.Z - f.Z))[0];
-              if (near) near.seek = f;
-              if (!S.fed) S.msg = "Mellé ment – de a közeli madár odaúszik érte!"; }
+            else { S.combo = 0; gmSnd.splash(.06); S.fx.push({ X: p.tx, Y: 0, Z: p.tz, t: 0, ring: 1 });
+              if (p.tz >= BIRD_ZMIN - 1) { const f = { X: p.tx, Z: Math.max(BIRD_ZMIN, p.tz), t: 0 }; S.fl.push(f);
+                const near = S.birds.filter((b) => b.st === "swim" && !b.dive && !b.seek && Math.hypot(b.X - f.X, b.Z - f.Z) < 3.5)[0]; if (near && S.lv <= 3) near.seek = f; } }
           }
         });
         S.pz = S.pz.filter((p) => !p.done);
-        S.fl.forEach((f) => { f.t += dt; if (f.t > 7) f.gone = true; }); S.fl = S.fl.filter((f) => !f.gone);
+        S.fl.forEach((f) => { f.t += dt; if (f.t > 5) f.gone = true; }); S.fl = S.fl.filter((f) => !f.gone);
         S.fx.forEach((f) => (f.t += dt)); S.fx = S.fx.filter((f) => f.t < 1.8);
+        endCheck();
       },
       draw(g, W, H, t) {
         panoBg(g, W, H, t); C = camOf(W, H);
         const items = [];
-        S.birds.forEach((b) => items.push({ z: b.Z, d() { if (b.dive) { const p = proj(C, b.X, 0, b.Z); if (p) { g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 1.2; g.beginPath(); g.ellipse(p.x, p.y, .5 * p.s, .1 * p.s, 0, 0, 7); g.stroke(); } return; }
-          const p = proj(C, b.X, 0, b.Z); if (!p) return; birdDraw(g, b.sp, p.x, p.y, p.s, b.dir, t, b.st === "eat" ? b.et / 1.6 : 0, b.st === "happy"); } }));
-        S.fl.forEach((f) => items.push({ z: f.Z + .01, d() { const p = proj(C, f.X, 0, f.Z); if (!p) return; g.globalAlpha = Math.min(1, (7 - f.t) / 1.5); pizzaDraw(g, p.x, p.y + Math.sin(t * 3 + f.X) * .03 * p.s, .3 * p.s, .3, f.t * .3); g.globalAlpha = 1; } }));
+        S.birds.forEach((b) => items.push({ z: b.Z, d() { const p = proj(C, b.X, 0, b.Z); if (!p) return;
+          if (b.dive) { g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 1.2; g.beginPath(); g.ellipse(p.x, p.y, .45 * p.s, .09 * p.s, 0, 0, 7); g.stroke(); return; }
+          birdOnWater(g, b.sp, p.x, p.y, p.s, b.dir, t, b.st === "eat" ? b.et / 1.5 : 0, b.st === "happy", b.seed); } }));
+        S.fl.forEach((f) => items.push({ z: f.Z + .01, d() { const p = proj(C, f.X, 0, f.Z); if (!p) return; g.globalAlpha = Math.min(1, (5 - f.t) / 1.2); pizzaDraw(g, p.x, p.y + Math.sin(t * 3 + f.X) * .03 * p.s, .28 * p.s, .3, f.t * .3); g.globalAlpha = 1; } }));
+        S.flyers.forEach((f) => items.push({ z: f.Z - .5, d() { const p = proj(C, f.X, f.Y, f.Z), sh = proj(C, f.X, 0, f.Z); if (!p) return;
+          if (sh) { g.fillStyle = "rgba(10,40,70,.12)"; g.beginPath(); g.ellipse(sh.x, sh.y, .35 * sh.s, .05 * sh.s, 0, 0, 7); g.fill(); }
+          g.save(); g.translate(p.x, p.y); flyBird(g, f.sp, BIRDS[f.sp].L * p.s * BSC * 1.25, t + f.ph, f.dir); if (f.caught) pizzaDraw(g, f.dir * .14 * BIRDS[f.sp].L * p.s * BSC, 2, Math.max(3, .1 * p.s), .5, 0); g.restore(); } }));
         items.sort((a, b) => b.z - a.z).forEach((it) => it.d());
-        S.pz.forEach((p) => { const k = Math.min(1, p.t / p.T), X = p.tx * k, Z = 1.6 + (p.tz - 1.6) * k, Y = 1.3 * (1 - k) + Math.sin(k * Math.PI) * p.h, q = proj(C, X, Y, Z), sh = proj(C, X, 0, Z); if (!q) return;
+        S.pz.forEach((p) => { const q = proj(C, p.X, p.Y, p.Z), sh = proj(C, p.X, 0, p.Z); if (!q) return;
           if (sh) { g.fillStyle = "rgba(0,20,40,.18)"; g.beginPath(); g.ellipse(sh.x, sh.y, .2 * sh.s, .05 * sh.s, 0, 0, 7); g.fill(); }
-          pizzaDraw(g, q.x, q.y, Math.min(40, .3 * q.s), .55 + .35 * Math.cos(p.t * 9), p.rot + p.t * 8); });
-        S.fx.forEach((f) => { const p = proj(C, f.X, f.heart ? .6 + f.t * 1.2 : 1 + f.t * .9, f.Z); if (!p || f.t < 0) return; const a = Math.max(0, 1 - f.t / 1.8);
+          pizzaDraw(g, q.x, q.y, Math.min(40, .28 * q.s), .55 + .35 * Math.cos(p.t * 9), p.rot + p.t * 8); });
+        S.fx.forEach((f) => { if (f.t < 0) return; const a = Math.max(0, 1 - f.t / 1.8);
           if (f.ring) { const w = proj(C, f.X, 0, f.Z); if (w) { g.strokeStyle = `rgba(255,255,255,${a})`; g.lineWidth = 1.5; g.beginPath(); g.ellipse(w.x, w.y, (.2 + f.t) * w.s, (.05 + f.t * .25) * w.s, 0, 0, 7); g.stroke(); } return; }
+          const p = proj(C, f.X, (f.Y || 0) + (f.heart ? .4 + f.t * 1.2 : .7 + f.t * .9), f.Z); if (!p) return;
           if (f.heart) { const r = Math.max(5, .12 * p.s); g.save(); g.globalAlpha = a; g.translate(p.x + f.dx * p.s, p.y); g.fillStyle = "#ff4f7a"; g.beginPath(); g.moveTo(0, r * .35); g.bezierCurveTo(-r, -r * .3, -r * .5, -r, 0, -r * .45); g.bezierCurveTo(r * .5, -r, r, -r * .3, 0, r * .35); g.fill(); g.restore(); return; }
-          g.save(); g.globalAlpha = a; g.textAlign = "center"; g.font = `900 ${Math.max(16, Math.min(34, .45 * p.s))}px Manrope, Arial, sans-serif`; g.lineWidth = 4; g.strokeStyle = "rgba(7,29,56,.8)"; g.strokeText(f.txt, p.x, p.y); g.fillStyle = "#ffd978"; g.fillText(f.txt, p.x, p.y);
+          g.save(); g.globalAlpha = a; g.textAlign = "center"; g.font = `900 ${Math.max(16, Math.min(32, .45 * p.s))}px Manrope, Arial, sans-serif`; g.lineWidth = 4; g.strokeStyle = "rgba(7,29,56,.8)"; g.strokeText(f.txt, p.x, p.y); g.fillStyle = "#ffd978"; g.fillText(f.txt, p.x, p.y);
           g.font = "800 12px Manrope, Arial, sans-serif"; g.strokeText(f.sub, p.x, p.y + 18); g.fillStyle = "#fff"; g.fillText(f.sub, p.x, p.y + 18); g.restore(); });
-        /* a kezünkben a következő pizza */
-        if (S.cool <= 0) pizzaDraw(g, W / 2, H - 46, Math.min(30, W * .06), .55, t * .5);
-        gmLegend(g, W, H, Object.keys(BIRDS).filter((k) => k !== "hen").map((k) => [BIRDS[k].n.replace(" (gácsér)", ""), BIRDS[k].pts + " p", (gg, x, y, r) => birdDraw(gg, k, x, y + r * .3, r * 2.2 / BIRDS[k].L / BSC * (k === "swan" ? .6 : 1), 1, t, 0, 0)]));
-        gmText(g, W, S.msg, `Pont: ${S.score} · megetetett madár: ${S.fed}`);
+        const c = cfg();
+        /* HUD: szint, idő-sáv, pont/cél, pizzák, kombó */
+        const hy = W < 600 ? 120 : 76, bw = Math.min(W - 24, 460), bx = W / 2 - bw / 2;
+        g.fillStyle = "rgba(7,29,56,.66)"; g.beginPath(); g.roundRect ? g.roundRect(bx, hy, bw, 48, 16) : g.rect(bx, hy, bw, 48); g.fill();
+        g.textBaseline = "middle"; g.font = "900 15px Manrope, Arial, sans-serif"; g.textAlign = "left"; g.fillStyle = "#ffd978"; g.fillText(`${S.lv}. szint`, bx + 14, hy + 17);
+        g.fillStyle = "#fff"; g.textAlign = "right"; g.fillText(`${S.score} / ${c.target} pont`, bx + bw - 14, hy + 17);
+        const tk = Math.max(0, S.left / c.time); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(bx + 14, hy + 32, bw - 28, 7); g.fillStyle = tk < .25 ? "#ff6b5a" : "#7fd8ff"; g.fillRect(bx + 14, hy + 32, (bw - 28) * tk, 7);
+        g.textAlign = "center"; g.font = "800 13px Manrope, Arial, sans-serif"; g.fillStyle = "#fff"; g.fillText(`⏱ ${Math.ceil(Math.max(0, S.left))} mp`, W / 2, hy + 17);
+        if (S.combo >= 3 && S.st === "play") { g.font = "900 18px Manrope, Arial, sans-serif"; g.fillStyle = "#ff9f43"; g.fillText(`Sorozat ×${Math.min(4, 1 + Math.floor((S.combo - 1) / 3))}`, W / 2, hy + 70); }
+        if (S.msg) gmText(g, W, S.msg, "");
+        /* pizzák a kosárban */
+        const n = S.pizzas, pr = W < 600 ? 9 : 11; for (let k = 0; k < Math.min(n, 22); k++) pizzaDraw(g, W - 24 - (k % 11) * pr * 2.1, H - (W < 600 ? 168 : 30) - Math.floor(k / 11) * pr * 2.2, pr, .6, k);
+        if (S.cool <= 0 && n > 0 && S.st === "play") pizzaDraw(g, W / 2, H - 46, Math.min(30, W * .06), .55, t * .5);
+        gmLegend(g, W, H, ["swan", "drake", "coot", "gull", "grebe"].map((k) => [BIRDS[k].n, BIRDS[k].pts + " p", (gg, x, y, r) => birdOnWater(gg, k, x, y + r * .4, r * 2.1 / BIRDS[k].L / BSC * (k === "swan" ? .62 : 1), 1, 0, 0, 0, 1)]).concat(c.fly ? [["Röptében: sirály / csér", "40/60", null]] : []));
+        /* szint eleje / vége panel */
+        L = {};
+        if (S.st !== "play") {
+          const pw = Math.min(W - 30, 400), ph = 210, px = W / 2 - pw / 2, py = H * .3;
+          g.fillStyle = "rgba(7,29,56,.86)"; g.beginPath(); g.roundRect ? g.roundRect(px, py, pw, ph, 20) : g.rect(px, py, pw, ph); g.fill();
+          g.textAlign = "center"; g.fillStyle = "#ffd978"; g.font = "900 24px Manrope, Arial, sans-serif";
+          const title = S.st === "intro" ? "Pizza a kacsáknak" : S.st === "win" ? `${S.lv}. szint teljesítve!` : "Most nem sikerült";
+          g.fillText(title, W / 2, py + 34);
+          g.fillStyle = "#e6eef6"; g.font = "600 14px Manrope, Arial, sans-serif";
+          const lines = S.st === "intro" ? [`Koppints a vízre – oda repül a pizza.`, `${c.time} mp alatt gyűjts ${c.target} pontot ${c.pizzas} pizzával!`, `Sorozatban eltalálva szorzó jár; a 2. szinttől`, `repülő madarakat is elkaphatsz röptében.`] : S.st === "win" ? [`${S.score} pont · ${S.fed} jóllakott madár`, `A következő szinten gyorsabbak a madarak,`, `és több pontot kell gyűjteni.`] : [`${S.score} / ${c.target} pont`, `Célozz a madár elé, mert úsznak!`];
+          lines.forEach((l, i) => g.fillText(l, W / 2, py + 66 + i * 21));
+          const bwid = (pw - 50) / 2, by = py + ph - 58;
+          const btn = (x, label, gold) => { g.fillStyle = gold ? "#f2b233" : "rgba(255,255,255,.16)"; g.beginPath(); g.roundRect ? g.roundRect(x, by, bwid, 42, 21) : g.rect(x, by, bwid, 42); g.fill(); g.fillStyle = gold ? "#14202a" : "#fff"; g.font = "800 15px Manrope, Arial, sans-serif"; g.fillText(label, x + bwid / 2, by + 22); return { x, y: by, w: bwid, h: 42 }; };
+          if (S.st === "intro") L.b1 = btn(W / 2 - bwid / 2, "Kezdés", true);
+          else if (S.st === "win") { L.b1 = btn(px + 20, "Tovább ›", true); L.b2 = btn(px + 30 + bwid, "Újra", false); }
+          else L.b2 = btn(W / 2 - bwid / 2, "Újra", true);
+        }
       },
-      help: "Koppints a vízre (vagy kattints): oda dobod a pici pizzát. Ha a madár mellé esik, a közeli madár odaúszik érte – fél pontért."
+      help: "Koppints a vízre: oda dobod a pizzát. Célozz a madár elé – úsznak! Szintenként gyorsabbak, és a 2. szinttől repülő sirályokat, cséreket is elkaphatsz."
     };
   }
 
@@ -8724,97 +8875,135 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     };
   }
 
-  /* ---------------- 4. Vitorlás-regatta a Balatonon, a stégről nézve ---------------- */
+  /* ---------------- 4. Vitorlás-regatta a Balatonon, a stégről nézve – változó pályák és szél ---------------- */
   function gameRace() {
     const ad = (a) => { a = (a + Math.PI) % (2 * Math.PI); if (a < 0) a += 2 * Math.PI; return a - Math.PI; };
-    const VMAX = 7, NOGO = .66, K = .62;   /* K: a hajók mérete (kisebb, sportos vitorlások) */
+    const NOGO = .66, K = .62;   /* K: a hajók mérete */
     const CREW = [
-      { n: "Te (Zephyr)", sail: "#e2483d", sail2: "#b8231a", hull: "#0b2f5e", num: "Z", me: true },
-      { n: "Kék Fecske", sail: "#ffffff", sail2: "#cfd8e2", hull: "#ffffff", num: "HUN 7", band: "#1f5fa8" },
-      { n: "Sárga Szél", sail: "#fff3c4", sail2: "#e8d48a", hull: "#ffffff", num: "HUN 21", band: "#f2b233" },
-      { n: "Tihanyi Csillag", sail: "#ffffff", sail2: "#d5dde5", hull: "#e9eef2", num: "HUN 3", band: "#2e7d32" }
+      { n: "Te (Zephyr)", sail: "#e2483d", sail2: "#a81d14", hull: "#0b2f5e", deck: "#d9b07a", num: "Z", me: true, spin: ["#e2483d", "#ffffff", "#0b2f5e"] },
+      { n: "Kék Fecske", sail: "#ffffff", sail2: "#c9d4df", hull: "#ffffff", deck: "#e6d2b0", num: "HUN 7", band: "#1f5fa8", spin: ["#1f5fa8", "#ffffff", "#7fc4ff"] },
+      { n: "Sárga Szél", sail: "#fff6d6", sail2: "#e3cf8c", hull: "#f4f6f8", deck: "#cfa676", num: "HUN 21", band: "#f2b233", spin: ["#f2b233", "#ffffff", "#e2483d"] },
+      { n: "Tihanyi Csillag", sail: "#ffffff", sail2: "#d2dbe3", hull: "#1f3d2a", deck: "#d9b07a", num: "HUN 3", band: "#2e7d32", spin: ["#2e7d32", "#ffffff", "#f2b233"] }
     ];
+    const TPL = [
+      { n: "Felszél–hátszél", m: [[0, 1]] },
+      { n: "Háromszög", m: [[-1, .95], [1, .7]] },
+      { n: "Szlalom", m: [[-.6, .55], [.6, .75], [-.4, 1]] },
+      { n: "Tihanyi kör", m: [[1, 1], [-1, 1], [0, .5]] },
+      { n: "Nagy ív", m: [[1, .6], [.3, 1], [-1, .8]] }
+    ];
+    const rng = (seed) => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t2 = Math.imul(seed ^ seed >>> 15, 1 | seed); t2 = t2 + Math.imul(t2 ^ t2 >>> 7, 61 | t2) ^ t2; return ((t2 ^ t2 >>> 14) >>> 0) / 4294967296; };
     let C = null, CO = null;
-    const S = { boats: [], st: "idle", cd: 0, t: 0, wind: .3, steer: 0, keys: { l: 0, r: 0 }, foam: [], spray: [], streaks: [], res: [], msg: "Koppints a rajthoz! Kormányozz a ◀ ▶ gombokkal (vagy nyilakkal), kerüld meg a két bóját, és érj vissza a stég előtti célvonalhoz.", best: null };
-    function course() {
-      const z1 = 74, a = Math.min(30, viewHalf(C, z1) * .62), lz = 27, lh = Math.min(12, viewHalf(C, lz) * .8);
-      return { m: [[-a, z1], [a, z1 - 5]], lz, lh };
+    const S = { lvl: 1, boats: [], st: "idle", cd: 0, t: 0, wind: .3, wbase: .3, wstr: 1, steer: 0, keys: { l: 0, r: 0 }, foam: [], spray: [], streaks: [], res: [], msg: "", best: {} };
+    /* pálya és szél a pálya sorszámából – újraindításkor ugyanaz marad, csak „Tovább”-nál változik */
+    function course(lvl) {
+      const R = rng(lvl * 7919 + 13), tp = TPL[(lvl - 1) % TPL.length], zFar = 76, zNear = 40;
+      const a = Math.min(30, viewHalf(C, zFar) * .62), lz = 27, lh = Math.min(12, viewHalf(C, lz) * .8);
+      const m = tp.m.map(([x, z]) => [x * a * (.85 + R() * .3), zNear + (zFar - zNear) * z + (R() - .5) * 6]);
+      const side = R() < .3 ? (R() < .5 ? -1 : 1) * (.9 + R() * .5) : (R() - .5) * .9;   /* néha oldalszél */
+      const str = .8 + R() * .5;
+      return { name: tp.n, m, lz, lh, wind: side, wstr: str, lvl };
     }
-    function reset() {
-      CO = course(); S.t = 0; S.res = []; S.foam = []; S.spray = []; S.st = "count"; S.cd = 3.6; S.wind = gmRnd(.15, .45) * (Math.random() < .5 ? -1 : 1);
-      const n = C.W < 600 ? 3 : 4;
-      S.boats = CREW.slice(0, n).map((c, i) => { const fr = n === 1 ? 0 : i / (n - 1) - .5; return { c, X: fr * CO.lh * 1.7, Z: CO.lz - 4 - (i % 2) * 2.5, hd: S.wind - Math.sign(S.wind || 1) * .9, v: 0, heel: 0, boom: 0, next: 0, done: false, ft: 0, tack: 0, sk: c.me ? 1 : gmRnd(.84, .95), ftm: 0 }; });
-      S.msg = ""; S.blast = 0;
+    function windName() { const s = S.wstr; return s < .95 ? "gyenge szél" : s < 1.15 ? "közepes szél" : "erős szél"; }
+    function reset(keep) {
+      if (!keep || !CO || CO.lvl !== S.lvl) CO = course(S.lvl);
+      S.t = 0; S.res = []; S.foam = []; S.spray = []; S.st = "count"; S.cd = 3.6; S.wbase = CO.wind; S.wind = CO.wind; S.wstr = CO.wstr; S.shiftT = 0;
+      const n = C.W < 600 ? 3 : 4, R = rng(S.lvl * 31 + 7);
+      S.boats = CREW.slice(0, n).map((c, i) => { const fr = n === 1 ? 0 : i / (n - 1) - .5; return { c, X: fr * CO.lh * 1.7, Z: CO.lz - 4 - (i % 2) * 2.5, hd: S.wind - Math.sign(S.wind || 1) * .9, v: 0, heel: 0, boom: 0, next: 0, done: false, ft: 0, tack: 0, sk: c.me ? 1 : .84 + R() * .11, ftm: 0, spin: 0 }; });
+      S.msg = "";
     }
-    const horn = (l) => { fxTone(233, 228, l || .7, .045, "sawtooth"); fxTone(466, 460, l || .7, .02, "triangle"); };
+    const horn = (l) => { fxTone(233, 228, l || .7, .04, "sawtooth"); fxTone(466, 460, l || .7, .018, "triangle"); };
     function sail(b, dt) {
-      const th = Math.abs(ad(b.hd - S.wind)), side = Math.sign(ad(b.hd - S.wind)) || 1;
-      const tv = th < NOGO ? .35 : VMAX * Math.min(1, Math.sin(th * .95) + .22) * (th > 2.6 ? .82 : 1) * b.sk;
+      const th = Math.abs(ad(b.hd - S.wind)), side = Math.sign(ad(b.hd - S.wind)) || 1, vmax = 6.6 * S.wstr;
+      const tv = th < NOGO ? .35 : vmax * Math.min(1, Math.sin(th * .95) + .22) * (th > 2.6 ? .86 : 1) * b.sk;
       b.v += (tv - b.v) * dt * (tv < b.v ? 1.1 : .55);
-      b.heel += (side * .34 * Math.sin(th) * (b.v / VMAX) - b.heel) * dt * 2;
+      b.heel += (side * .36 * Math.sin(th) * Math.min(1.2, b.v / 6.6) - b.heel) * dt * 2;
       b.boom += (side * gmClamp(th * .55, .12, 1.25) - b.boom) * dt * 3;
+      b.spin += ((th > 2.3 ? 1 : 0) - b.spin) * dt * 1.5;
       b.X += Math.sin(b.hd) * b.v * dt; b.Z += Math.cos(b.hd) * b.v * dt;
-      b.Z = gmClamp(b.Z, 9, 95); const hv = viewHalf(C, b.Z) * 1.08; b.X = gmClamp(b.X, -hv, hv);
-      b.ftm += dt; if (b.ftm > .07 && b.v > .6) { b.ftm = 0; S.foam.push({ X: b.X - Math.sin(b.hd) * 3.9 * K, Z: b.Z - Math.cos(b.hd) * 3.9 * K, a: .8, w: .3 }); if (b.v > 4.6 && Math.random() < .5) for (let k = 0; k < 3; k++) S.spray.push({ X: b.X + Math.sin(b.hd) * 4 * K, Y: .2, Z: b.Z + Math.cos(b.hd) * 4 * K, vx: gmRnd(-1, 1), vy: gmRnd(1, 2.2), vz: gmRnd(-.5, .5), a: 1 }); }
+      b.Z = gmClamp(b.Z, 9, 98); const hv = viewHalf(C, b.Z) * 1.08; b.X = gmClamp(b.X, -hv, hv);
+      b.ftm += dt; if (b.ftm > .07 && b.v > .6) { b.ftm = 0; S.foam.push({ X: b.X - Math.sin(b.hd) * 3.9 * K, Z: b.Z - Math.cos(b.hd) * 3.9 * K, a: .8, w: .3 }); if (b.v > 5 && Math.random() < .5) for (let k = 0; k < 3; k++) S.spray.push({ X: b.X + Math.sin(b.hd) * 4 * K, Y: .2, Z: b.Z + Math.cos(b.hd) * 4 * K, vx: gmRnd(-1, 1), vy: gmRnd(1, 2.2), vz: gmRnd(-.5, .5), a: 1 }); }
       if (!b.done) {
-        if (b.next < 2) { const m = CO.m[b.next]; if (Math.hypot(b.X - m[0], b.Z - m[1]) < 7) { b.next++; if (b.c.me) { gmSnd.coin(); S.msg = b.next === 1 ? "1. bója megvan – irány a 2.!" : "2. bója megvan – vissza a célvonalhoz a stég elé!"; } } }
-        else if (b.Z < CO.lz && Math.abs(b.X) < CO.lh + 2) { b.done = true; b.ft = S.t; S.res.push(b); if (b.c.me) { const pos = S.res.length; S.msg = pos === 1 ? "GYŐZTÉL! Első lettél!" : `Célba értél – ${pos}. hely.`; gmSnd.win(); S.best = S.best == null ? S.t : Math.min(S.best, S.t); } else fxTone(880, 880, .2, .02, "sine"); }
+        const NM = CO.m.length;
+        if (b.next < NM) { const m = CO.m[b.next]; if (Math.hypot(b.X - m[0], b.Z - m[1]) < 7) { b.next++; if (b.c.me) { gmSnd.coin(); S.msg = b.next < NM ? `${b.next}. bója megvan – irány a ${b.next + 1}.!` : "Minden bója megvan – vissza a célvonalhoz a stég elé!"; } } }
+        else if (b.Z < CO.lz && Math.abs(b.X) < CO.lh + 2) { b.done = true; b.ft = S.t; S.res.push(b); if (b.c.me) { const pos = S.res.length; S.msg = pos === 1 ? "GYŐZTÉL! Első lettél!" : `Célba értél – ${pos}. hely.`; gmSnd.win(); S.best[S.lvl] = Math.min(S.best[S.lvl] || 1e9, S.t); } else fxTone(880, 880, .2, .02, "sine"); }
       }
     }
     function ai(b, dt) {
       if (b.done) { const tg = S.wind + Math.PI * .6; b.hd += gmClamp(ad(tg - b.hd), -dt * .5, dt * .5); return; }
-      const tx = b.next < 2 ? CO.m[b.next][0] + (b.next === 0 ? -3 : 3) : 0, tz = b.next < 2 ? CO.m[b.next][1] + 2 : CO.lz - 6;
+      const NM = CO.m.length, tx = b.next < NM ? CO.m[b.next][0] : 0, tz = b.next < NM ? CO.m[b.next][1] + 1.5 : CO.lz - 6;
       const br = Math.atan2(tx - b.X, tz - b.Z), d = ad(br - S.wind); let want;
       if (Math.abs(d) < .82) { if (!b.tack) b.tack = Math.sign(d) || 1; if (d * b.tack < -.32) b.tack = -b.tack; want = S.wind + b.tack * .84; } else { b.tack = 0; want = br; }
       b.hd += gmClamp(ad(want - b.hd), -dt * .9, dt * .9) + Math.sin(S.t * 1.3 + b.X) * dt * .02;
     }
-    /* vitorlás rajzolása valódi 3D pontokból: hajótest, fedélzet, árboc, nagyvitorla, orrvitorla, legénység */
-    function boat3d(g, b, t) {
-      const ch = Math.cos(b.heel), shh = Math.sin(b.heel), cs = Math.cos(b.hd), sn = Math.sin(b.hd), bob = Math.sin(t * 1.6 + b.X * .3) * .08;
-      const W3 = (lx, ly, lz) => { lx *= K; ly *= K; lz *= K; const x2 = lx * ch + ly * shh, y2 = -lx * shh + ly * ch; return proj(C, b.X + x2 * cs + lz * sn, y2 + bob, b.Z - x2 * sn + lz * cs); };
-      const HULL = [[0, 4.1], [.72, 3.3], [1.18, 1.9], [1.32, 0], [1.26, -2], [1.08, -3.55], [.78, -3.95]];
-      const out = HULL.concat(HULL.slice().reverse().map(([x, z]) => [-x, z]));
-      const wl = out.map(([x, z]) => W3(x * .9, 0, z * .97)), dk = out.map(([x, z]) => W3(x, .78, z));
-      if (wl.some((p) => !p) || dk.some((p) => !p)) return;
+    /* vitorlás 3D pontokból: ívelt hajótest, vízvonal-csík, kötélzet, panelezett vitorlák, hátszélben spinakker, tükörkép */
+    function boat3d(g, b, t, mirror) {
+      const ch = Math.cos(b.heel), shh = Math.sin(b.heel), cs = Math.cos(b.hd), sn = Math.sin(b.hd), bob = Math.sin(t * 1.6 + b.X * .3) * .08, my = mirror ? -1 : 1;
+      const W3 = (lx, ly, lz) => { lx *= K; ly *= K; lz *= K; const x2 = lx * ch + ly * shh, y2 = -lx * shh + ly * ch; return proj(C, b.X + x2 * cs + lz * sn, (y2 + bob) * my, b.Z - x2 * sn + lz * cs); };
+      const side = Math.sign(b.boom) || 1, bS = Math.sin(b.boom), bC = Math.cos(b.boom);
       const c0 = W3(0, 0, 0); if (!c0) return;
-      /* árnyék a vízen */
-      g.fillStyle = "rgba(6,30,60,.22)"; g.beginPath(); wl.forEach((p, i) => (i ? g.lineTo(p.x, p.y + 2) : g.moveTo(p.x, p.y + 2))); g.closePath(); g.fill();
-      /* oldalfalak: hátulról előre */
-      const faces = [];
-      for (let i = 0; i < out.length; i++) { const j = (i + 1) % out.length; faces.push({ q: [wl[i], wl[j], dk[j], dk[i]], z: (wl[i].s + wl[j].s) }); }
-      faces.sort((a, b2) => a.z - b2.z).forEach((f, k) => { const [a, b2, c, d] = f.q, cr = (b2.x - a.x) * (d.y - a.y) - (b2.y - a.y) * (d.x - a.x);
-        g.fillStyle = b.c.hull; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b2.x, b2.y); g.lineTo(c.x, c.y); g.lineTo(d.x, d.y); g.closePath(); g.fill();
-        g.fillStyle = `rgba(0,10,30,${cr > 0 ? .22 : .05})`; g.fill(); });
-      /* díszcsík a palánkon */
-      g.strokeStyle = b.c.me ? "#f2b233" : b.c.band || "#1f5fa8"; g.lineWidth = Math.max(1, c0.s * .1); g.beginPath(); out.forEach(([x, z], i) => { const p = W3(x * .97, .55, z); i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y); }); g.closePath(); g.stroke();
-      /* fedélzet tíkfa színnel, kokpit */
-      const dg = g.createLinearGradient(dk[0].x, dk[0].y, dk[7].x, dk[7].y); dg.addColorStop(0, "#d9b07a"); dg.addColorStop(1, "#a97a45");
-      g.fillStyle = dg; g.beginPath(); dk.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.fill(); g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = Math.max(1, c0.s * .05); g.stroke();
-      const ck = [[.72, -3.3], [.72, -1.1], [-.72, -1.1], [-.72, -3.3]].map(([x, z]) => W3(x, .7, z)); g.fillStyle = "#6e4a26"; g.beginPath(); ck.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.fill();
-      /* legénység a szél felőli oldalon kiülve */
-      const side = Math.sign(b.boom) || 1, cw = W3(-side * 1.05, 1.15, -2.2), ch2 = W3(-side * 1.15, 1.75, -2.2);
-      if (cw && ch2) { g.strokeStyle = b.c.me ? "#f2b233" : "#e2483d"; g.lineWidth = Math.max(2, c0.s * .32 * K); g.lineCap = "round"; g.beginPath(); g.moveTo(cw.x, cw.y); g.lineTo(ch2.x, ch2.y); g.stroke(); g.fillStyle = "#f1c6a0"; g.beginPath(); g.arc(ch2.x, ch2.y - c0.s * .18 * K, Math.max(1.5, c0.s * .17 * K), 0, 7); g.fill(); }
-      /* árboc, bum */
-      const mb = W3(0, .78, .9), mt = W3(0, 11.2, .9), bb = W3(0, 1.7, .9), be = W3(Math.sin(b.boom) * 4.6, 1.7, .9 - Math.cos(b.boom) * 4.6);
-      /* orrvitorla */
-      const jh = W3(0, 9.4, .9), jt = W3(0, 1.05, 3.95), jc = W3(Math.sin(b.boom) * 1.35, 1.35, 1.25 - Math.cos(b.boom) * .3), jb = W3(Math.sin(b.boom) * 1.2, 5, 2.6);
-      const sailFill = (pts, ctrl, a, b2) => { const sg = g.createLinearGradient(pts[0].x, pts[0].y, pts[2].x, pts[2].y); sg.addColorStop(0, a); sg.addColorStop(1, b2); g.fillStyle = sg;
-        g.beginPath(); g.moveTo(pts[0].x, pts[0].y); g.lineTo(pts[1].x, pts[1].y); g.quadraticCurveTo(ctrl.x, ctrl.y, pts[2].x, pts[2].y); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.18)"; g.lineWidth = 1; g.stroke(); };
-      if (jh && jt && jc && jb) sailFill([jt, jh, jc], jb, b.c.me ? "#ffffff" : b.c.sail, b.c.me ? "#dfe6ee" : b.c.sail2);
-      if (mb && mt) { g.strokeStyle = "#c9d2da"; g.lineWidth = Math.max(1.5, c0.s * .13); g.beginPath(); g.moveTo(mb.x, mb.y); g.lineTo(mt.x, mt.y); g.stroke(); }
-      const mh = W3(0, 10.9, .9), bel = W3(Math.sin(b.boom) * 2.8 + Math.sign(b.boom) * .7, 6.2, .9 - Math.cos(b.boom) * 2.4);
-      if (mh && bb && be && bel) {
-        sailFill([bb, mh, be], bel, b.c.sail, b.c.sail2);
-        /* lécek és felirat */
-        g.strokeStyle = "rgba(0,0,0,.12)"; g.lineWidth = 1; for (let k = 1; k <= 3; k++) { const f = k / 4, a = W3(0, 1.7 + 9.2 * f, .9), e = W3(Math.sin(b.boom) * 4.6 * (1 - f) + Math.sign(b.boom) * .25, 1.7 + 9.2 * f * .98, .9 - Math.cos(b.boom) * 4.6 * (1 - f)); if (a && e) { g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(e.x, e.y); g.stroke(); } }
-        const cc = W3(Math.sin(b.boom) * 1.7 + Math.sign(b.boom) * .25, 6, .9 - Math.cos(b.boom) * 1.6);
-        if (cc && c0.s > 5) { g.save(); g.font = `900 ${gmClamp(c0.s * K * (b.c.me ? 1.6 : .8), 7, b.c.me ? 34 : 18)}px ${b.c.me ? "Georgia, serif" : "Manrope, Arial, sans-serif"}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = b.c.me ? "#ffffff" : "#14202a"; g.fillText(b.c.num, cc.x, cc.y); g.restore(); }
+      const sheer = (z) => .78 + .28 * Math.pow(Math.max(0, z) / 4.2, 2) + .08 * Math.pow(Math.max(0, -z) / 4, 2);
+      const sailFill = (pts, ctrl, a, b2, seams) => {
+        if (pts.some((p) => !p) || !ctrl) return;
+        const sg = g.createLinearGradient(pts[0].x, pts[0].y, ctrl.x, ctrl.y); sg.addColorStop(0, b2); sg.addColorStop(.45, a); sg.addColorStop(1, b2); g.fillStyle = sg;
+        g.beginPath(); g.moveTo(pts[0].x, pts[0].y); g.lineTo(pts[1].x, pts[1].y); g.quadraticCurveTo(ctrl.x, ctrl.y, pts[2].x, pts[2].y); g.closePath(); g.fill();
+        if (!mirror) { g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = 1; g.stroke(); if (seams) { g.save(); g.clip(); g.strokeStyle = "rgba(0,0,0,.08)"; for (let k = 1; k < 7; k++) { const f = k / 7; g.beginPath(); g.moveTo(pts[0].x + (pts[1].x - pts[0].x) * f, pts[0].y + (pts[1].y - pts[0].y) * f); g.lineTo(pts[2].x + (pts[1].x - pts[2].x) * f * .9, pts[2].y + (pts[1].y - pts[2].y) * f * .9); g.stroke(); } g.restore(); } }
+      };
+      if (mirror) { g.save(); g.globalAlpha = .13; }
+      if (!mirror) {
+        const HULL = [[0, 4.2], [.55, 3.6], [1.0, 2.6], [1.28, 1.2], [1.34, 0], [1.3, -1.6], [1.18, -3.0], [1.0, -3.9], [.6, -4.0]];
+        const out = HULL.concat(HULL.slice().reverse().map(([x, z]) => [-x, z]));
+        const wl = out.map(([x, z]) => W3(x * .86, 0, z * .96)), dk = out.map(([x, z]) => W3(x, sheer(z), z)), bt = out.map(([x, z]) => W3(x * .92, .18, z * .98));
+        if (wl.some((p) => !p) || dk.some((p) => !p) || bt.some((p) => !p)) return;
+        g.fillStyle = "rgba(6,30,60,.24)"; g.beginPath(); wl.forEach((p, i) => (i ? g.lineTo(p.x, p.y + 2) : g.moveTo(p.x, p.y + 2))); g.closePath(); g.fill();
+        const faces = [];
+        for (let i = 0; i < out.length; i++) { const j = (i + 1) % out.length; faces.push({ q: [wl[i], wl[j], dk[j], dk[i]], b: [wl[i], wl[j], bt[j], bt[i]], z: wl[i].s + wl[j].s, nx: out[i][0] }); }
+        faces.sort((a, c) => a.z - c.z).forEach((f) => { const [a, b2, c, d] = f.q, cr = (b2.x - a.x) * (d.y - a.y) - (b2.y - a.y) * (d.x - a.x);
+          const hg = g.createLinearGradient(0, d.y, 0, a.y); hg.addColorStop(0, b.c.hull); hg.addColorStop(1, b.c.hull === "#ffffff" || b.c.hull === "#f4f6f8" ? "#cfd8e0" : "#061a33");
+          g.fillStyle = hg; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b2.x, b2.y); g.lineTo(c.x, c.y); g.lineTo(d.x, d.y); g.closePath(); g.fill();
+          g.fillStyle = `rgba(0,10,30,${cr > 0 ? .2 : .04})`; g.fill();
+          const [e, h, k2, l2] = f.b; g.fillStyle = b.c.me ? "#e2483d" : "#b0122a"; g.beginPath(); g.moveTo(e.x, e.y); g.lineTo(h.x, h.y); g.lineTo(k2.x, k2.y); g.lineTo(l2.x, l2.y); g.closePath(); g.fill(); });
+        g.strokeStyle = b.c.me ? "#f2b233" : b.c.band || "#1f5fa8"; g.lineWidth = Math.max(1, c0.s * .08); g.beginPath(); out.forEach(([x, z], i) => { const p = W3(x * .985, sheer(z) - .16, z); i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y); }); g.closePath(); g.stroke();
+        const dg = g.createLinearGradient(dk[0].x, dk[0].y, dk[9].x, dk[9].y); dg.addColorStop(0, b.c.deck); dg.addColorStop(1, "#9a6d3a");
+        g.fillStyle = dg; g.beginPath(); dk.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.fill();
+        g.strokeStyle = "rgba(90,60,30,.35)"; g.lineWidth = Math.max(.6, c0.s * .015); for (let k = -3; k <= 3; k++) { const a = W3(k * .32, sheer(3.4), 3.4), e = W3(k * .32, sheer(-3.8), -3.8); if (a && e) { g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(e.x, e.y); g.stroke(); } }
+        g.strokeStyle = "#e8edf2"; g.lineWidth = Math.max(1, c0.s * .05); g.beginPath(); dk.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.stroke();
+        const ck = [[.74, -3.4], [.8, -1.0], [-.8, -1.0], [-.74, -3.4]].map(([x, z]) => W3(x, .62, z)); g.fillStyle = "#5e3e1f"; g.beginPath(); ck.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.fill();
+        const cab = [[.6, -.9], [.55, .7], [-.55, .7], [-.6, -.9]].map(([x, z]) => W3(x, 1.15, z)); g.fillStyle = "#f2f5f8"; g.beginPath(); cab.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.fill();
+        [[-.45, .1], [.45, .1]].forEach(([x, z]) => { const w = W3(x, 1.05, z); if (w) { g.fillStyle = "#1b3550"; g.beginPath(); g.ellipse(w.x, w.y, Math.max(1, c0.s * .07), Math.max(.8, c0.s * .035), 0, 0, 7); g.fill(); } });
+        /* legénység: két fő mentőmellényben, kiülve */
+        [[-2.3, 0], [-1.5, .2]].forEach(([z, o]) => { const hip = W3(-side * (1.08 + o * .2), sheer(z) + .2, z), sh = W3(-side * (1.4 + o), sheer(z) + .85, z); if (!hip || !sh) return;
+          g.strokeStyle = b.c.me ? "#f2b233" : "#e2483d"; g.lineWidth = Math.max(2, c0.s * .3 * K); g.lineCap = "round"; g.beginPath(); g.moveTo(hip.x, hip.y); g.lineTo(sh.x, sh.y); g.stroke();
+          g.fillStyle = "#f1c6a0"; g.beginPath(); g.arc(sh.x, sh.y - c0.s * .14 * K, Math.max(1.4, c0.s * .14 * K), 0, 7); g.fill(); g.fillStyle = b.c.me ? "#0b2f5e" : "#fff"; g.beginPath(); g.arc(sh.x, sh.y - c0.s * .19 * K, Math.max(1, c0.s * .1 * K), Math.PI, 0); g.fill(); });
       }
-      if (bb && be) { g.strokeStyle = "#8a949c"; g.lineWidth = Math.max(1.5, c0.s * .1); g.beginPath(); g.moveTo(bb.x, bb.y); g.lineTo(be.x, be.y); g.stroke(); }
-      if (mt) { g.fillStyle = b.c.me ? "#f2b233" : b.c.band || "#e2483d"; g.beginPath(); g.moveTo(mt.x, mt.y); g.lineTo(mt.x - Math.sin(S.wind) * c0.s * .9 * (1), mt.y + c0.s * .25); g.lineTo(mt.x, mt.y + c0.s * .5); g.fill(); }
-      if (b.c.me && mt) { g.fillStyle = "#ffd978"; g.font = "900 12px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.fillText("▼ TE", mt.x, mt.y - 10); }
+      const mb = W3(0, .9, .9), mt = W3(0, 11.4, .9), bb = W3(0, 1.75, .9), be = W3(bS * 4.6, 1.75, .9 - bC * 4.6);
+      /* spinakker hátszélben */
+      if (b.spin > .05) {
+        const sh = W3(0, 10.6, 1), stc = W3(-side * 1.6, 1.4, 4.4), sclw = W3(side * 2.8, 2.2, 3.4), bulge = W3(0, 5.5, 4.4 + 3.2 * b.spin);
+        if (sh && stc && sclw && bulge) { g.save(); g.globalAlpha *= Math.min(1, b.spin * 1.5);
+          const sp = new Path2D(); sp.moveTo(sh.x, sh.y); sp.quadraticCurveTo(bulge.x - (sclw.x - stc.x) * .45, bulge.y, stc.x, stc.y); sp.quadraticCurveTo(bulge.x, bulge.y + (stc.y - sh.y) * .35, sclw.x, sclw.y); sp.quadraticCurveTo(bulge.x + (sclw.x - stc.x) * .45, bulge.y, sh.x, sh.y);
+          g.fillStyle = b.c.spin[0]; g.fill(sp); g.save(); g.clip(sp); const cols = b.c.spin; for (let k = 0; k < 6; k++) { g.fillStyle = cols[k % 3]; const y = sh.y + (Math.max(stc.y, sclw.y) - sh.y) * k / 6; g.fillRect(Math.min(stc.x, sclw.x) - 50, y, Math.abs(sclw.x - stc.x) + 100, (Math.max(stc.y, sclw.y) - sh.y) / 12); } g.restore();
+          g.strokeStyle = "rgba(0,0,0,.2)"; g.stroke(sp); g.restore(); }
+      }
+      const jh = W3(0, 9.6, .9), jt = W3(0, 1.1, 4.1), jc = W3(bS * 1.35, 1.4, 1.25 - bC * .3), jb = W3(bS * 1.25, 5, 2.6);
+      sailFill([jt, jh, jc], jb, b.c.me ? "#ffffff" : b.c.sail, b.c.me ? "#d6dee7" : b.c.sail2, true);
+      if (!mirror && jt && mt) { g.strokeStyle = "rgba(60,70,80,.55)"; g.lineWidth = .8; g.beginPath(); g.moveTo(jt.x, jt.y); g.lineTo(mt.x, mt.y); const bs = W3(0, sheer(-4), -4); if (bs) { g.moveTo(bs.x, bs.y); g.lineTo(mt.x, mt.y); } [-1, 1].forEach((sd) => { const cp = W3(sd * 1.25, sheer(.5), .5), sp2 = W3(sd * .55, 7, .9); if (cp && sp2) { g.moveTo(cp.x, cp.y); g.lineTo(sp2.x, sp2.y); g.lineTo(mt.x, mt.y); } }); g.stroke(); }
+      if (mb && mt) { g.strokeStyle = mirror ? "#c9d2da" : lgr(g, mb.x - 3, 0, mb.x + 3, 0, [[0, "#8a949c"], [.5, "#f2f5f8"], [1, "#8a949c"]]); g.lineWidth = Math.max(1.5, c0.s * .12); g.beginPath(); g.moveTo(mb.x, mb.y); g.lineTo(mt.x, mt.y); g.stroke(); }
+      const mh = W3(0, 11.1, .9), bel = W3(bS * 2.9 + side * .8, 6.4, .9 - bC * 2.4);
+      sailFill([bb, mh, be], bel, b.c.sail, b.c.sail2, true);
+      if (!mirror && bb && be && mh) {
+        /* lécek + felirat a vitorla síkjában */
+        g.strokeStyle = "rgba(0,0,0,.14)"; g.lineWidth = 1; for (let k = 1; k <= 3; k++) { const f = k / 4, a = W3(0, 1.75 + 9.3 * f, .9), e = W3(bS * 4.6 * (1 - f) + side * .3, 1.75 + 9.2 * f, .9 - bC * 4.6 * (1 - f)); if (a && e) { g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(a.x + (e.x - a.x) * .35, a.y + (e.y - a.y) * .35); g.stroke(); g.beginPath(); g.moveTo(e.x, e.y); g.lineTo(e.x + (a.x - e.x) * .25, e.y + (a.y - e.y) * .25); g.stroke(); } }
+        const o = W3(bS * 1.5 + side * .25, 6.6, .9 - bC * 1.5), ox = W3(bS * 2.5 + side * .25, 6.6, .9 - bC * 2.5), oy = W3(bS * 1.5 + side * .25, 7.6, .9 - bC * 1.5);
+        if (o && ox && oy && c0.s > 4) { g.save(); const ux = ox.x - o.x, uy = ox.y - o.y, vx = oy.x - o.x, vy = oy.y - o.y; g.transform(ux / 10, uy / 10, -vx / 10, -vy / 10, o.x, o.y); if (ux * -vy - uy * -vx < 0) g.scale(-1, 1);
+          g.font = `900 ${b.c.me ? 26 : 13}px ${b.c.me ? "Georgia, serif" : "Manrope, Arial, sans-serif"}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = b.c.me ? "#ffffff" : "#14202a"; g.fillText(b.c.num, 0, 0); g.restore(); }
+        g.strokeStyle = "#7a848c"; g.lineWidth = Math.max(1.5, c0.s * .09); g.beginPath(); g.moveTo(bb.x, bb.y); g.lineTo(be.x, be.y); g.stroke();
+      }
+      if (!mirror && mt) { const fl = Math.sin(t * 9 + b.X) * c0.s * .05; g.fillStyle = b.c.me ? "#f2b233" : b.c.band || "#e2483d"; g.beginPath(); g.moveTo(mt.x, mt.y); g.lineTo(mt.x - Math.sin(S.wind) * c0.s * .9, mt.y + c0.s * .22 + fl); g.lineTo(mt.x, mt.y + c0.s * .45); g.fill(); }
+      if (!mirror && b.c.me && mt) { g.fillStyle = "#ffd978"; g.font = "900 12px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.fillText("▼ TE", mt.x, mt.y - 10); }
+      if (mirror) g.restore();
     }
-    function committee(g, t) {   /* rajt-/célvonal: bal oldalon bója zászlóval, jobb oldalon a rendezőhajó */
+    function committee(g, t) {
       const L = proj(C, -CO.lh, 0, CO.lz), R = proj(C, CO.lh, 0, CO.lz); if (!L || !R) return;
       g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 2; g.setLineDash([8, 7]); g.beginPath(); g.moveTo(L.x, L.y); g.lineTo(R.x, R.y); g.stroke(); g.setLineDash([]);
       markBuoy(g, C, -CO.lh, CO.lz, t, ["#ff8a2a", "#a84a00", "#ffffff"], "", false);
@@ -8826,92 +9015,109 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.strokeStyle = "#555"; g.lineWidth = Math.max(1, w * .03); g.beginPath(); g.moveTo(p.x, p.y - w * .62); g.lineTo(tp.x, tp.y - w * .2); g.stroke();
       const fl = Math.sin(t * 6) * w * .04; g.fillStyle = S.st === "count" ? "#e2483d" : "#1f5fa8"; g.beginPath(); g.moveTo(tp.x, tp.y - w * .2); g.lineTo(tp.x + w * .45, tp.y - w * .12 + fl); g.lineTo(tp.x, tp.y + w * .02); g.fill();
     }
+    let L = {};
+    const inB = (b, x, y) => b && x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h;
     function hud(g, W, H, t) {
-      /* szélirány */
-      const x = 46, y = W < 600 ? 236 : 118; g.fillStyle = "rgba(7,29,56,.65)"; g.beginPath(); g.arc(x, y, 30, 0, 7); g.fill(); g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = 1.5; g.stroke();
-      g.save(); g.translate(x, y); g.rotate(-(S.wind + Math.PI) + Math.PI); g.fillStyle = "#9fdcff"; g.beginPath(); g.moveTo(0, 20); g.lineTo(-9, -6); g.lineTo(0, -1); g.lineTo(9, -6); g.closePath(); g.fill(); g.restore();
-      g.fillStyle = "#fff"; g.font = "800 10.5px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.fillText("SZÉL", x, y + 44);
-      /* minitérkép */
-      const mw = W < 600 ? 92 : 132, mh = mw * 1.1, mx = W - mw - 12, my = y - 30, sx = mw / (CO.m[1][0] * 2 + 26), sz = (mh - 16) / (CO.m[0][1] + 6);
+      const x = 46, y = W < 600 ? 236 : 118;
+      g.fillStyle = "rgba(7,29,56,.65)"; g.beginPath(); g.arc(x, y, 30, 0, 7); g.fill(); g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = 1.5; g.stroke();
+      g.save(); g.translate(x, y); g.rotate(-S.wind); const al = 12 + 8 * S.wstr; g.fillStyle = "#9fdcff"; g.beginPath(); g.moveTo(0, al); g.lineTo(-9, -6); g.lineTo(0, -1); g.lineTo(9, -6); g.closePath(); g.fill(); g.restore();
+      g.fillStyle = "#fff"; g.font = "800 10.5px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.fillText(windName().toUpperCase(), x, y + 44);
+      const mw = W < 600 ? 92 : 132, mh = mw * 1.1, mx = W - mw - 12, my = y - 30, maxX = Math.max(...CO.m.map((q) => Math.abs(q[0])), CO.lh) + 10, maxZ = Math.max(...CO.m.map((q) => q[1])) + 8, sx = mw / (maxX * 2), sz = (mh - 16) / maxZ;
       g.fillStyle = "rgba(7,29,56,.62)"; g.beginPath(); g.roundRect ? g.roundRect(mx, my, mw, mh, 12) : g.rect(mx, my, mw, mh); g.fill();
       const M = (X, Z) => [mx + mw / 2 + X * sx, my + mh - 6 - Z * sz];
       g.fillStyle = "#b98a57"; g.fillRect(mx + mw / 2 - 8, my + mh - 6, 16, 4);
       const [l1, l2] = [M(-CO.lh, CO.lz), M(CO.lh, CO.lz)]; g.strokeStyle = "rgba(255,255,255,.5)"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(l1[0], l1[1]); g.lineTo(l2[0], l2[1]); g.stroke(); g.setLineDash([]);
       CO.m.forEach(([X, Z], i) => { const [a, b] = M(X, Z); g.fillStyle = "#ff8a2a"; g.beginPath(); g.arc(a, b, 5, 0, 7); g.fill(); g.fillStyle = "#14202a"; g.font = "900 8px Manrope, Arial"; g.fillText(i + 1, a, b + 3); });
       S.boats.forEach((b) => { const [a, c] = M(b.X, b.Z); g.save(); g.translate(a, c); g.rotate(b.hd); g.fillStyle = b.c.me ? "#e2483d" : "#fff"; g.beginPath(); g.moveTo(0, -5); g.lineTo(3, 4); g.lineTo(-3, 4); g.closePath(); g.fill(); g.restore(); });
-      /* kormánygombok */
-      if (S.st === "race" || S.st === "count") [[-1, "◀"], [1, "▶"]].forEach(([d, s2]) => { const bx = d < 0 ? 58 : W - 58, by = H - 70, on = S.steer === d;
-        g.fillStyle = on ? "rgba(242,178,51,.85)" : "rgba(7,29,56,.55)"; g.beginPath(); g.arc(bx, by, 36, 0, 7); g.fill(); g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = 2; g.stroke();
-        g.fillStyle = "#fff"; g.font = "900 28px Manrope, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(s2, bx + d * 2, by + 1); });
+      g.fillStyle = "#fff"; g.font = "800 10px Manrope, Arial"; g.fillText(`${S.lvl}. pálya`, mx + mw / 2, my + 12);
+      if (S.st === "race" || S.st === "count") {
+        [[-1, "◀"], [1, "▶"]].forEach(([d, s2]) => { const bx = d < 0 ? 58 : W - 58, by = H - 70, on = S.steer === d;
+          g.fillStyle = on ? "rgba(242,178,51,.85)" : "rgba(7,29,56,.55)"; g.beginPath(); g.arc(bx, by, 36, 0, 7); g.fill(); g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = 2; g.stroke();
+          g.fillStyle = "#fff"; g.font = "900 28px Manrope, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(s2, bx + d * 2, by + 1); });
+        /* újraindítás ugyanazon a pályán */
+        L.rs = { x: 14, y: y + 56, w: 64, h: 30 }; g.fillStyle = "rgba(7,29,56,.65)"; g.beginPath(); g.roundRect ? g.roundRect(L.rs.x, L.rs.y, L.rs.w, L.rs.h, 15) : g.rect(L.rs.x, L.rs.y, L.rs.w, L.rs.h); g.fill();
+        g.fillStyle = "#fff"; g.font = "800 12px Manrope, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("↻ Újra", L.rs.x + 32, L.rs.y + 15);
+      }
     }
-    function rank() { const sc = (b) => b.done ? 1e6 - b.ft : b.next * 1e4 - (b.next < 2 ? Math.hypot(b.X - CO.m[b.next][0], b.Z - CO.m[b.next][1]) : b.Z); return S.boats.slice().sort((a, b) => sc(b) - sc(a)); }
+    function rank() { const NM = CO.m.length; const sc = (b) => b.done ? 1e6 - b.ft : b.next * 1e4 - (b.next < NM ? Math.hypot(b.X - CO.m[b.next][0], b.Z - CO.m[b.next][1]) : b.Z); return S.boats.slice().sort((a, b) => sc(b) - sc(a)); }
     const steerFrom = () => { S.steer = S.keys.l && !S.keys.r ? -1 : S.keys.r && !S.keys.l ? 1 : S.ptr || 0; };
+    function panel(g, W, H, title, lines, b1, b2) {
+      const pw = Math.min(W - 30, 380), ph = 96 + lines.length * 22 + 54, px = W / 2 - pw / 2, py = Math.max(150, H * .26);
+      g.fillStyle = "rgba(7,29,56,.86)"; g.beginPath(); g.roundRect ? g.roundRect(px, py, pw, ph, 20) : g.rect(px, py, pw, ph); g.fill();
+      g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#ffd978"; g.font = "900 22px Manrope, Arial, sans-serif"; g.fillText(title, W / 2, py + 30);
+      g.font = "700 14px Manrope, Arial, sans-serif"; lines.forEach((l, i) => { g.fillStyle = l.includes("Te (") ? "#ffd978" : "#fff"; g.fillText(l, W / 2, py + 62 + i * 22); });
+      const bw = b2 ? (pw - 50) / 2 : pw * .55, by = py + ph - 56;
+      const btn = (x, label, gold) => { g.fillStyle = gold ? "#f2b233" : "rgba(255,255,255,.16)"; g.beginPath(); g.roundRect ? g.roundRect(x, by, bw, 42, 21) : g.rect(x, by, bw, 42); g.fill(); g.fillStyle = gold ? "#14202a" : "#fff"; g.font = "800 15px Manrope, Arial, sans-serif"; g.fillText(label, x + bw / 2, by + 21); return { x, y: by, w: bw, h: 42 }; };
+      if (b2) { L.b1 = btn(px + 20, b1, true); L.b2 = btn(px + 30 + bw, b2, false); } else { L.b1 = btn(W / 2 - bw / 2, b1, true); L.b2 = null; }
+    }
     return {
       title: "Vitorlás-regatta",
-      down(x, y, W, H) { if (S.st === "idle" || S.st === "done") { reset(); horn(.3); return; } S.ptr = x < W / 2 ? -1 : 1; steerFrom(); },
+      down(x, y, W, H) {
+        if (S.st === "idle") { if (inB(L.b1, x, y) || !L.b1) { reset(false); horn(.3); } return; }
+        if (S.st === "done") { if (inB(L.b1, x, y)) { S.lvl++; reset(false); horn(.3); } else if (inB(L.b2, x, y)) { reset(true); horn(.3); } return; }
+        if (inB(L.rs, x, y)) { reset(true); horn(.3); return; }
+        S.ptr = x < W / 2 ? -1 : 1; steerFrom();
+      },
       up() { S.ptr = 0; steerFrom(); },
-      key(k, down) { if (k === "ArrowLeft") S.keys.l = down ? 1 : 0; if (k === "ArrowRight") S.keys.r = down ? 1 : 0; steerFrom(); if (down && (k === " " || k === "Enter") && (S.st === "idle" || S.st === "done")) { reset(); horn(.3); } },
+      key(k, down) { if (k === "ArrowLeft") S.keys.l = down ? 1 : 0; if (k === "ArrowRight") S.keys.r = down ? 1 : 0; steerFrom();
+        if (down && (k === " " || k === "Enter")) { if (S.st === "idle") reset(false); else if (S.st === "done") { S.lvl++; reset(false); } } if (down && (k === "r" || k === "R")) reset(true); },
       step(dt) {
         if (!C) return;
-        if (!CO) CO = course();
-        S.streaks.forEach((w) => { w.X += -Math.sin(S.wind) * dt * 2.5; w.Z += -Math.cos(S.wind) * dt * 2.5; w.a -= dt * .25; }); S.streaks = S.streaks.filter((w) => w.a > 0 && w.Z > 5);
-        if (Math.random() < .5) S.streaks.push({ X: gmRnd(-40, 40), Z: gmRnd(10, 70), a: .5 });
+        if (!CO) CO = course(S.lvl);
+        /* változó szél: lassú forgás és lökések a pálya alapszele körül */
+        if (S.st === "race") { S.shiftT = (S.shiftT || 0) + dt; S.wind = S.wbase + Math.sin(S.shiftT * .11 + S.lvl) * .22 + Math.sin(S.shiftT * .37) * .06; S.wstr = CO.wstr * (1 + Math.sin(S.shiftT * .5 + 1) * .12); }
+        S.streaks.forEach((w) => { w.X += -Math.sin(S.wind) * dt * 2.5 * S.wstr; w.Z += -Math.cos(S.wind) * dt * 2.5 * S.wstr; w.a -= dt * .25; }); S.streaks = S.streaks.filter((w) => w.a > 0 && w.Z > 5);
+        if (Math.random() < .5 * S.wstr) S.streaks.push({ X: gmRnd(-40, 40), Z: gmRnd(10, 80), a: .5 });
         S.foam.forEach((f) => { f.a -= dt * .32; f.w += dt * .6; }); S.foam = S.foam.filter((f) => f.a > 0);
         S.spray.forEach((p) => { p.X += p.vx * dt; p.Y += p.vy * dt; p.Z += p.vz * dt; p.vy -= 9 * dt; p.a -= dt * 1.4; }); S.spray = S.spray.filter((p) => p.a > 0 && p.Y > -.2);
-        if (S.st === "count") { const was = Math.ceil(S.cd); S.cd -= dt; if (Math.ceil(S.cd) !== was && S.cd > 0) fxTone(880, 880, .12, .03, "sine"); if (S.cd <= 0) { S.st = "race"; horn(.9); S.msg = "RAJT! Irány az 1. bója (bal oldalt)."; } S.boats.forEach((b) => { b.v *= .97; }); return; }
-        if (S.st !== "race" && S.st !== "done") return;
-        S.t += S.st === "race" ? dt : 0;
+        if (S.st === "count") { const was = Math.ceil(S.cd); S.cd -= dt; if (Math.ceil(S.cd) !== was && S.cd > 0) fxTone(880, 880, .12, .025, "sine"); if (S.cd <= 0) { S.st = "race"; horn(.9); S.msg = `RAJT! ${CO.name} – irány az 1. bója.`; } S.boats.forEach((b) => { b.v *= .97; }); return; }
+        if (S.st !== "race") return;
+        S.t += dt;
         S.boats.forEach((b) => { if (b.c.me) { if (!b.done) b.hd += S.steer * dt * 1.05; } else ai(b, dt); sail(b, dt); });
         const me = S.boats.find((b) => b.c.me);
         if (me && !me.done && Math.abs(ad(me.hd - S.wind)) < NOGO && me.v < 1.2) S.msg = "Szemből fúj a szél – így nem halad a hajó! Fordulj ki oldalra.";
         else if (S.msg.startsWith("Szemből")) S.msg = "";
-        if (S.st === "race" && (me.done && S.res.length >= Math.min(S.boats.length, 2) || S.res.length === S.boats.length || S.t > 240)) { S.st = "done"; }
+        if ((me.done && S.res.length >= Math.min(S.boats.length, 2)) || S.res.length === S.boats.length || S.t > 300) S.st = "done";
       },
       draw(g, W, H, t) {
-        panoBg(g, W, H, t); C = camOf(W, H); if (!CO) CO = course();
+        panoBg(g, W, H, t); C = camOf(W, H); if (!CO) CO = course(S.lvl);
         S.streaks.forEach((w) => { const a = proj(C, w.X, 0, w.Z), b = proj(C, w.X - Math.sin(S.wind) * 3, 0, w.Z - Math.cos(S.wind) * 3); if (!a || !b) return; g.strokeStyle = `rgba(20,50,80,${w.a * .22})`; g.lineWidth = Math.max(1, a.s * .08); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); });
         S.foam.forEach((f) => { const p = proj(C, f.X, 0, f.Z); if (!p) return; g.fillStyle = `rgba(255,255,255,${f.a * .55})`; g.beginPath(); g.ellipse(p.x, p.y, f.w * p.s, f.w * .22 * p.s, 0, 0, 7); g.fill(); });
-        const items = [{ z: CO.lz, d: () => committee(g, t) }].concat(CO.m.map(([X, Z], i) => ({ z: Z, d: () => markBuoy(g, C, X, Z, t, ["#ff8a2a", "#a84a00", "#ffffff"], String(i + 1), true) })), S.boats.map((b) => ({ z: b.Z, d: () => boat3d(g, b, t) })));
+        S.boats.forEach((b) => boat3d(g, b, t, true));
+        const items = [{ z: CO.lz, d: () => committee(g, t) }].concat(CO.m.map(([X, Z], i) => ({ z: Z, d: () => markBuoy(g, C, X, Z, t, ["#ff8a2a", "#a84a00", "#ffffff"], String(i + 1), true) })), S.boats.map((b) => ({ z: b.Z, d: () => boat3d(g, b, t, false) })));
         items.sort((a, b) => b.z - a.z).forEach((it) => it.d());
         S.spray.forEach((p) => { const q = proj(C, p.X, p.Y, p.Z); if (!q) return; g.fillStyle = `rgba(255,255,255,${p.a})`; g.beginPath(); g.arc(q.x, q.y, Math.max(1, .06 * q.s), 0, 7); g.fill(); });
-        hud(g, W, H, t);
+        L = {}; hud(g, W, H, t);
         const me = S.boats.find((b) => b.c.me);
-        if (S.st === "idle") gmText(g, W, S.msg, S.best != null ? `Legjobb idő: ${S.best.toFixed(1)} mp` : "4 hajó · 2 bója · célvonal a stég előtt");
-        else if (S.st === "count") { gmText(g, W, "Rajt előtt …", ""); g.save(); g.font = `900 ${Math.min(120, W * .2)}px Manrope, Arial, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.lineWidth = 8; g.strokeStyle = "rgba(7,29,56,.75)"; const s2 = String(Math.max(1, Math.ceil(S.cd))); g.strokeText(s2, W / 2, H * .38); g.fillStyle = "#ffd978"; g.fillText(s2, W / 2, H * .38); g.restore(); }
-        else if (S.st === "race") { const r = rank(), pos = r.indexOf(me) + 1; gmText(g, W, S.msg, `Idő: ${S.t.toFixed(1)} mp · helyezés: ${pos}/${S.boats.length} · ${me.done ? "célban" : me.next < 2 ? "következő: " + (me.next + 1) + ". bója" : "irány a cél"}`); }
+        if (S.st === "idle") panel(g, W, H, `${S.lvl}. pálya: ${CO.name}`, [`${CO.m.length} bója · ${windName()}`, "Kerüld meg a bójákat sorban, és érj vissza", "a stég előtti célvonalhoz. Szemből nem halad a hajó!"], "Rajt");
+        else if (S.st === "count") { gmText(g, W, `${S.lvl}. pálya: ${CO.name} · ${windName()}`, ""); g.save(); g.font = `900 ${Math.min(120, W * .2)}px Manrope, Arial, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.lineWidth = 8; g.strokeStyle = "rgba(7,29,56,.75)"; const s2 = String(Math.max(1, Math.ceil(S.cd))); g.strokeText(s2, W / 2, H * .38); g.fillStyle = "#ffd978"; g.fillText(s2, W / 2, H * .38); g.restore(); }
+        else if (S.st === "race") { const r = rank(), pos = r.indexOf(me) + 1, NM = CO.m.length; gmText(g, W, S.msg, `Idő: ${S.t.toFixed(1)} mp · helyezés: ${pos}/${S.boats.length} · ${me.done ? "célban" : me.next < NM ? "következő: " + (me.next + 1) + ". bója" : "irány a cél"}`); }
         else if (S.st === "done") {
-          const list = S.res.map((b, i) => `${i + 1}. ${b.c.n} – ${b.ft.toFixed(1)} mp`).concat(rank().filter((b) => !b.done).map((b) => `– ${b.c.n} (még versenyben)`));
-          const bw = Math.min(W - 30, 360), bh = 70 + list.length * 24, bx = W / 2 - bw / 2, by = H * .3;
-          g.fillStyle = "rgba(7,29,56,.82)"; g.beginPath(); g.roundRect ? g.roundRect(bx, by, bw, bh, 18) : g.rect(bx, by, bw, bh); g.fill();
-          g.textAlign = "center"; g.fillStyle = "#ffd978"; g.font = "900 22px Manrope, Arial, sans-serif"; g.fillText("Eredmény", W / 2, by + 30);
-          g.font = "700 14.5px Manrope, Arial, sans-serif"; list.forEach((l, i) => { g.fillStyle = l.includes("Te (") ? "#ffd978" : "#fff"; g.fillText(l, W / 2, by + 60 + i * 24); });
-          gmText(g, W, S.msg, "Koppints az új futamhoz");
+          const list = S.res.map((b, i) => `${i + 1}. ${b.c.n} – ${b.ft.toFixed(1)} mp`).concat(rank().filter((b) => !b.done).map((b) => `– ${b.c.n}`));
+          panel(g, W, H, me.done ? (S.res[0] === me ? "Győzelem!" : "Célba értél!") : "A futam véget ért", list, "Tovább: új pálya ›", "Újra ezen a pályán");
         }
       },
-      help: "◀ ▶ gombok vagy nyilak: kormányzás. Szemből (a szél felől) nem halad a hajó – cikcakkban (cirkálva) menj a bójákhoz, hátszélben gyors!"
+      help: "◀ ▶ gombok vagy nyilak: kormányzás · ↻ Újra: ugyanez a pálya és szél. Szemből nem halad a hajó – cirkálj cikcakkban; hátszélben kinyílik a spinakker!"
     };
   }
 
   const GM_MAKE = { slot: gameSlot, duck: gameDuck, ring: gameRing, race: gameRace };
   function gmFmt(ms) { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
-  function gmHud() {
-    if (!gmEl) return;
-    const done = !!(window.ZephyrGame && window.ZephyrGame.discount()), k = Math.min(1, gmMs / GM_GOAL);
-    gmEl.querySelector(".gm-ring i").style.setProperty("--k", (done ? 1 : k).toFixed(3));
-    gmEl.querySelector(".gm-time").innerHTML = done ? "<b>5% kedvezmény aktív</b><small>24 óráig, a szállásdíjból</small>" : `<b>${gmFmt(gmMs)} / 5:00</b><small>játékidő → 5% kedvezmény</small>`;
-  }
-  function gmReward() {
-    const c = window.ZephyrGame.earn();
+  function gmHud() {}
+  /* kilépéskor: ha elérte a rejtett játékidőt, megköszönjük, és ekkor kapja meg az ajándékot */
+  function gmThanks() {
+    const c = window.ZephyrGame.earn(); gmSave(gmMs, true);
     const r = document.createElement("div"); r.className = "gm-reward";
-    r.innerHTML = `<div class="gm-rw-card"><div class="gm-rw-badge">5%</div><h3>Gratulálunk!</h3><p>5 percet játszottál a stégen – <b>5% kedvezményt</b> kapsz a szállásdíjból, ha 24 órán belül foglalsz. Az idegenforgalmi adót a kedvezmény nem érinti.</p><small>Kód: ${c.code}</small><div class="gm-rw-acts"><button type="button" class="gm-rw-book">Foglalok most</button><button type="button" class="gm-rw-x">Játszom tovább</button></div></div>`;
+    r.innerHTML = `<div class="gm-rw-card"><div class="gm-rw-badge">5%</div><h3>Köszönjük, hogy játszottál!</h3><p>Jó volt veled a stégen. Köszönetképpen <b>5% kedvezményt</b> kapsz a szállásdíjból, ha 24 órán belül foglalsz – az idegenforgalmi adót a kedvezmény nem érinti, a foglalásnál automatikusan levonjuk.</p><div class="gm-rw-acts"><button type="button" class="gm-rw-book">Foglalok most</button><button type="button" class="gm-rw-x">Köszönöm, bezárom</button></div></div>`;
     gmEl.appendChild(r); gmSnd.win();
-    r.querySelector(".gm-rw-x").addEventListener("click", () => r.remove());
-    r.querySelector(".gm-rw-book").addEventListener("click", () => { gmClose(); setTimeout(() => window.ZephyrBooking && ZephyrBooking.open({}), 250); });
+    const fin = () => { r.remove(); gmCloseNow(); };
+    r.querySelector(".gm-rw-x").addEventListener("click", fin);
+    r.querySelector(".gm-rw-book").addEventListener("click", () => { const last = gmGame && gmGame.id; fin(); setTimeout(() => window.ZephyrBooking && ZephyrBooking.open({ back: () => gmOpen(last) }), 250); });
   }
   function gmOpen(id) {
     if (!gmEl) {
       gmEl = document.createElement("div"); gmEl.className = "gm-wrap"; gmEl.setAttribute("role", "dialog"); gmEl.setAttribute("aria-label", "Stégjátékok"); gmEl.tabIndex = -1;
-      gmEl.innerHTML = `<canvas class="gm-cv"></canvas><header class="gm-hd"><div class="gm-tabs"></div><div class="gm-prog"><span class="gm-ring"><i></i></span><span class="gm-time"></span></div><button type="button" class="gm-x" aria-label="Bezárás">×</button></header><p class="gm-help"></p>`;
+      gmEl.innerHTML = `<canvas class="gm-cv"></canvas><header class="gm-hd"><div class="gm-tabs"></div><button type="button" class="gm-x" aria-label="Bezárás">×</button></header><p class="gm-help"></p>`;
       document.body.appendChild(gmEl);
       gmEl.querySelector(".gm-tabs").innerHTML = GM_LIST.map((q) => `<button type="button" data-gm="${q.id}" style="--gc:${q.c}">${q.n}</button>`).join("");
       gmCv = gmEl.querySelector(".gm-cv"); gmG = gmCv.getContext("2d");
@@ -8940,20 +9146,24 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const dt = Math.min(.05, (now - gmLast) / 1000); gmLast = now;
     /* játékidő: csak ha az oldal látszik, és az utolsó 20 mp-ben volt mozdulat */
     if (!document.hidden && now - gmInput < 20000 && !(window.ZephyrGame && window.ZephyrGame.discount())) {
-      gmMs += dt * 1000; if (Math.floor(gmMs / 1000) !== Math.floor((gmMs - dt * 1000) / 1000)) { gmSave(gmMs); gmHud(); }
-      if (gmMs >= GM_GOAL) { gmSave(gmMs); gmReward(); gmHud(); }
+      gmMs += dt * 1000; if (Math.floor(gmMs / 5000) !== Math.floor((gmMs - dt * 1000) / 5000)) gmSave(gmMs);
     }
     gmG.setTransform(dpr, 0, 0, dpr, 0, 0); gmG.clearRect(0, 0, W, H);
     try { gmGame.step(dt, now); gmGame.draw(gmG, W, H, now / 1000); } catch (e) { console.warn(e); }
     gmRaf = requestAnimationFrame(gmFrame);
   }
-  function gmClose() { if (!gmEl) return; gmSave(gmMs); gmEl.classList.remove("on"); cancelAnimationFrame(gmRaf); setTimeout(() => { if (gmEl) gmEl.hidden = true; }, 280); }
+  function gmClose() {
+    if (!gmEl || gmEl.hidden) return; gmSave(gmMs);
+    if (gmMs >= GM_GOAL && !gmGiven() && !(window.ZephyrGame && window.ZephyrGame.discount()) && !gmEl.querySelector(".gm-reward")) { gmThanks(); return; }
+    gmCloseNow();
+  }
+  function gmCloseNow() { if (!gmEl) return; gmSave(gmMs); gmEl.classList.remove("on"); cancelAnimationFrame(gmRaf); setTimeout(() => { if (gmEl) gmEl.hidden = true; }, 280); }
   /* a stégen megjelenő játékválasztó (dokk) – benne a nyerőautomata kiemelve */
   function stegDock(on) {
     if (!gmDock) {
       gmDock = document.createElement("div"); gmDock.className = "gm-dock"; gmDock.hidden = true;
       gmDock.innerHTML = `<button type="button" class="gm-slotcard" data-gm="slot" aria-label="Zephyr nyerőautomata"><canvas width="220" height="260"></canvas><span><b>Nyerőautomata</b><small>és stégjátékok</small></span></button>
-        <div class="gm-list"><h4>Stégjátékok <em>5 perc = 5%</em></h4>${GM_LIST.slice(1).map((q) => `<button type="button" data-gm="${q.id}" style="--gc:${q.c}"><b>${q.n}</b><small>${q.d}</small></button>`).join("")}</div>`;
+        <div class="gm-list"><h4>Stégjátékok</h4>${GM_LIST.slice(1).map((q) => `<button type="button" data-gm="${q.id}" style="--gc:${q.c}"><b>${q.n}</b><small>${q.d}</small></button>`).join("")}</div>`;
       document.body.appendChild(gmDock);
       gmDock.addEventListener("click", (e) => { const b = e.target.closest("[data-gm]"); if (b) gmOpen(b.dataset.gm); });
       const c = gmDock.querySelector("canvas"), g = c.getContext("2d"); let t0 = performance.now();
@@ -8990,14 +9200,14 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     try { await loadScript(0); } catch (e) { ok = false; }
     let gl = null;
     try { const c = document.createElement("canvas"); gl = c.getContext("webgl2") || c.getContext("webgl"); } catch (e) {}
-    if (!ok || !gl || !window.AFRAME) { switchToFlat(firstId); return; }
+    if (!ok || !gl || !window.AFRAME) { switchToFlat(firstId); if (gl) { try { initCube3D(); } catch (e) {} } return; }
     try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]); } catch (e) {}
     try {
       await Promise.race([buildScene(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 12000))]);
       await go(firstId, true);
       wireEdit3D();
       try { initCube3D(); } catch (e) {}
-    } catch (e) { switchToFlat(firstId); return; }
+    } catch (e) { switchToFlat(firstId); try { initCube3D(); } catch (e2) {} return; }
     $("loader").classList.add("done");
     tick();
   }

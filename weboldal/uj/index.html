@@ -537,6 +537,9 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 .zfb-loading i { width: 26px; height: 26px; border-radius: 50%; border: 3px solid #cfd8e3; border-top-color: var(--navy); animation: zfbSpin .8s linear infinite; }
 @keyframes zfbSpin { to { transform: rotate(360deg); } }
 /* apartmanválasztó */
+.zfb-back { all: unset; cursor: pointer; flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px 8px 10px; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font: 800 13px/1 Manrope, sans-serif; box-shadow: inset 0 0 0 1px rgba(255,255,255,.28); white-space: nowrap; }
+.zfb-back:hover, .zfb-back:focus-visible { background: rgba(255,255,255,.26); }
+@media (max-width: 760px) { .zfb-back span { display: none; } .zfb-back { padding: 8px 12px; font-size: 18px; } }
 .zfb-apts { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
 .zfb-apt { all: unset; cursor: pointer; position: relative; display: flex; flex-direction: column; gap: 4px; padding: 18px 16px 16px; border-radius: 18px; background: #fff; border: 2px solid var(--line); box-shadow: 0 4px 0 rgba(20,32,42,.06); transition: transform .15s, border-color .15s, box-shadow .15s; }
 .zfb-apt:hover, .zfb-apt:focus-visible { transform: translateY(-3px); border-color: var(--ac); box-shadow: 0 12px 26px rgba(20,32,42,.14); }
@@ -1291,7 +1294,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
 
   /* ---------- stégjáték-kedvezmény (5% a szállásdíjból, 24 óráig, egyszer) ----------
-     A stégen 5 perc játék után a séta a ZephyrGame.earn()-nel írja be; a kezdőoldalon is érvényes. */
+     A stégjátékok rejtett ajándéka (10 perc játék után, kilépéskor) a ZephyrGame.earn()-nel kerül ide; a kezdőoldalon is érvényes. */
   if (!window.ZephyrGame) window.ZephyrGame = (function () {
     const K = "zephyr-jatek", DAY = 864e5, PCT = 5;
     const read = () => { try { return JSON.parse(localStorage.getItem(K) || "null"); } catch (e) { return null; } };
@@ -1308,10 +1311,20 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   let el = null, cfg = null, st = null;
   function reset(apt) { st = { step: apt ? 2 : 1, apt: apt || null, apts: apt ? [apt] : [], maps: {}, days: null, map: {}, ci: null, co: null, adults: 2, children: 0, month: 0, form: {}, result: null, loading: false, err: "" }; }
 
+  /* visszalépés: bármelyik lépésből vissza oda, ahonnan a foglalást megnyitották (séta, játék, beállítások, kezdőoldal) */
+  let backTo = null, histPushed = false, ignorePop = false;
+  const isOpen = () => !!(el && !el.hidden && el.classList.contains("on"));
+  window.addEventListener("popstate", () => {
+    if (ignorePop) { ignorePop = false; window.__zbPop = Date.now(); return; }
+    if (isOpen()) { histPushed = false; window.__zbPop = Date.now(); close(); }
+  });
   async function open(opts) {
     opts = opts || {};
     if (!el) build();
     reset(null);
+    backTo = typeof opts.back === "function" ? opts.back : null;
+    const lbl = el.querySelector(".zfb-back span"); if (lbl) lbl.textContent = opts.backLabel || (/virtualis-seta/.test(location.pathname) ? "Vissza a sétához" : "Vissza az oldalra");
+    if (!histPushed) { try { history.pushState({ zfb: 1 }, "", location.href); histPushed = true; } catch (e) {} }
     el.hidden = false; requestAnimationFrame(() => el.classList.add("on"));
     document.documentElement.classList.add("zfb-lock");
     if (!cfg) {
@@ -1322,16 +1335,20 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const pre = opts.apt && cfg.apartments.find((a) => a.id === opts.apt);
     if (pre) await chooseApt(pre.id); else render();
   }
-  function close() {
-    if (!el) return; el.classList.remove("on"); document.documentElement.classList.remove("zfb-lock");
+  function close(mode) {
+    if (!el || el.hidden) return; el.classList.remove("on"); document.documentElement.classList.remove("zfb-lock");
     setTimeout(() => { el.hidden = true; }, 300);
+    if (histPushed) { histPushed = false; try { if (history.state && history.state.zfb) { ignorePop = true; history.back(); } } catch (e) {} }
+    const b = backTo; backTo = null;
+    if (b && mode !== "noret") setTimeout(() => { try { b(); } catch (e) {} }, 320);
   }
   function build() {
     el = document.createElement("div"); el.className = "zfb"; el.hidden = true; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Szállásfoglalás – Zephyr Apartmanház");
-    el.innerHTML = `<div class="zfb-bg"></div><div class="zfb-card"><header class="zfb-hd"><div class="zfb-logo"><b>ZEPHYR</b><span>Apartmanház · Zamárdi</span></div><ol class="zfb-steps"></ol><button type="button" class="zfb-x" aria-label="Bezárás">×</button></header><div class="zfb-body"></div><footer class="zfb-ntak"></footer></div>`;
+    el.innerHTML = `<div class="zfb-bg"></div><div class="zfb-card"><header class="zfb-hd"><button type="button" class="zfb-back" aria-label="Vissza oda, ahonnan a foglalást megnyitottad">‹ <span>Vissza</span></button><div class="zfb-logo"><b>ZEPHYR</b><span>Apartmanház · Zamárdi</span></div><ol class="zfb-steps"></ol><button type="button" class="zfb-x" aria-label="Bezárás">×</button></header><div class="zfb-body"></div><footer class="zfb-ntak"></footer></div>`;
     document.body.appendChild(el);
-    el.querySelector(".zfb-bg").addEventListener("click", close);
-    el.querySelector(".zfb-x").addEventListener("click", close);
+    el.querySelector(".zfb-bg").addEventListener("click", () => close());
+    el.querySelector(".zfb-x").addEventListener("click", () => close());
+    el.querySelector(".zfb-back").addEventListener("click", () => close());
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && el && !el.hidden) close(); });
     el.addEventListener("click", onClick); el.addEventListener("submit", (e) => { e.preventDefault(); submit(); }); el.addEventListener("input", onInput); el.addEventListener("change", onInput);
   }
@@ -1543,7 +1560,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     if (b.dataset.load) return loadDays();
     if (b.dataset.go) { st.step = +b.dataset.go; st.err = ""; return render(); }
     if (b.dataset.close) return close();
-    if (b.dataset.owner) { close(); if (window.ZephyrAdmin) setTimeout(() => window.ZephyrAdmin.open(), 320); return; }
+    if (b.dataset.owner) { close("noret"); if (window.ZephyrAdmin) setTimeout(() => window.ZephyrAdmin.open(), 320); return; }
     if (b.dataset.m) { st.month = Math.max(0, Math.min(12, st.month + +b.dataset.m)); return render(); }
     if (b.dataset.clear) { st.ci = st.co = null; return render(); }
     if (b.dataset.st) { const k = b.dataset.st, cap = capTotal(); st[k] = Math.max(k === "adults" ? 1 : 0, Math.min(cap - (k === "adults" ? st.children : st.adults), st[k] + +b.dataset.v)); return render(); }
