@@ -1,6 +1,6 @@
 const { open } = require('./env');
 (async () => {
-  for (const [phone, lay] of [[false, 'vit'], [true, 'hab'], [true, 'tek'], [false, 'hab']]) {
+  for (const [phone, lay] of [[false, 'vit'], [false, 'vit'], [true, 'hab'], [true, 'tek']]) {
     const { b, p } = await open('about:blank', phone);
     await p.addInitScript(() => { window.__zephyrTest = {}; });
     await p.goto('http://127.0.0.1:8096/virtualis-seta/#steg'); await p.waitForTimeout(6000);
