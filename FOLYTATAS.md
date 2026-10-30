@@ -84,7 +84,7 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 ## 9. Elérhetőségek
 - Repó: https://github.com/kucserabalazs/Zephyr-Virtu-lis-s-ta (privát; átnevezés **Zephyr-Apartman**-ra a tulajdonosnál: Settings → Repository name).
 - GitHub Pages (ha a tulajdonos bekapcsolja: Settings → Pages → main / root): `https://kucserabalazs.github.io/Zephyr-Virtu-lis-s-ta/` → kezdőoldal. Privát repóhoz Pro előfizetés kell, vagy nyilvánossá tétel. Pages-en a foglalás és a programok bemutató módban futnak.
-- Bemutató oldalak (claude.ai): kezdőoldal – https://claude.ai/artifact/MarcoyQiN2vBjunbMeAjpw · séta – https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD
+- Bemutató oldalak (claude.ai): kezdőoldal – https://claude.ai/artifact/MarcoyQiN2vBjunbMeAjpw · **séta (okt. 30-tól) – https://claude.ai/artifact/5JDHAnuPHejorWhWDd2ecr** (a régi SMR1LuVh1U2VLuCgzJY9oD az okt. 29-i állapotot mutatja)
 - ~~Éles tárhely: balatoni-udules.hu~~ – 2026. okt. 29-től nem használjuk.
 
 ## 10. Nyitott kérdések / következő lépések
