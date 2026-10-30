@@ -1,2 +1,0 @@
-Ide töltsd fel a drónvideót  dron.mp4  néven (MP4, H.264, lehetőleg 1920×1080, 10–40 mp, hang nélkül, 15 MB alatt).
-Amíg nincs itt videó, a kezdőoldal tetején a stégről készült állókép lassan úszó mozgással jelenik meg.
