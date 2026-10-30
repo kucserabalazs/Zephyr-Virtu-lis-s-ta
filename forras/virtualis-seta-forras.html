@@ -8394,7 +8394,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const sd = sg.getImageData(0, 0, sw, sh).data;
     const k = Math.min(1.5, 1600 / W), ow = Math.round(W * k), oh = Math.round(H * k);
     const out = document.createElement("canvas"); out.width = ow; out.height = oh; const og = out.getContext("2d"), od = og.createImageData(ow, oh), o = od.data;
-    const C = camOf(W, H, cam), u0 = SCENES.steg && SCENES.steg.s != null ? SCENES.steg.s : .5, TAU = Math.PI * 2;
+    const C = camOf(W, H, cam), u0 = (SCENES.steg && SCENES.steg.s != null ? SCENES.steg.s : .5) + (cam && cam.yaw || 0), TAU = Math.PI * 2;
     for (let py = 0; py < oh; py++) {
       const y = py / k - H / 2, dyv = -y * C.ca - C.f * C.sa, dzb = -y * C.sa + C.f * C.ca;
       for (let px = 0; px < ow; px++) {
@@ -8409,7 +8409,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
   function panoBg(g, W, H, t, o) {
     panoLoad();
-    const key = W + "x" + H + "p" + (o && o.pitch || 0);
+    const key = W + "x" + H + "p" + (o && o.pitch || 0) + "y" + (o && o.yaw || 0);
     if (PANO.img && PANO.key !== key) { try { PANO.cache = panoRender(W, H, o); } catch (e) { PANO.cache = null; } PANO.key = key; }
     if (!PANO.cache) return lakeBg(g, W, H, t, true);
     g.drawImage(PANO.cache, 0, 0, W, H);
@@ -8889,7 +8889,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const ad = (a) => { a = (a + Math.PI) % (2 * Math.PI); if (a < 0) a += 2 * Math.PI; return a - Math.PI; };
     const NOGO = .66, K = .62;   /* K: a hajók mérete */
     /* magasabb nézőpont (mintha a stég melletti mólóról / kilátóról néznénk), hogy a hátsó bója kerülését ne takarják az elöl haladó hajók */
-    const RACE_CAM = { h: 10, pitch: 14 };
+    const RACE_CAM = { h: 10, pitch: 14, yaw: .21 };   /* yaw: a stég hosszabbik oldaláról, 72°-kal elfordulva – szinte csak víz látszik, a stégből egy kis sarok */
     const CREW = [
       { n: "Te (Zephyr)", sail: "#e2483d", sail2: "#a81d14", hull: "#0b2f5e", deck: "#d9b07a", num: "Z", me: true, spin: ["#e2483d", "#ffffff", "#0b2f5e"] },
       { n: "Kék Fecske", sail: "#ffffff", sail2: "#c9d4df", hull: "#ffffff", deck: "#e6d2b0", num: "HUN 7", band: "#1f5fa8", spin: ["#1f5fa8", "#ffffff", "#7fc4ff"] },
@@ -9389,6 +9389,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         if ((me.done && S.res.length >= Math.min(S.boats.length, 2)) || S.res.length === S.boats.length || S.t > 300) S.st = "done";
       },
       draw(g, W, H, t) {
+        RACE_CAM.yaw = H > W * 1.1 ? .24 : .21;   /* álló telefonon kicsit tovább fordulunk, hogy a kép alján se látsszon a stég */
         panoBg(g, W, H, t, RACE_CAM); C = camOf(W, H, RACE_CAM); if (!CO) CO = course(S.lvl);
         S.streaks.forEach((w) => { const a = proj(C, w.X, 0, w.Z), b = proj(C, w.X - Math.sin(S.wind) * 3, 0, w.Z - Math.cos(S.wind) * 3); if (!a || !b) return; g.strokeStyle = `rgba(20,50,80,${w.a * .22})`; g.lineWidth = Math.max(1, a.s * .08); g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke(); });
         S.foam.forEach((f) => { const p = proj(C, f.X, 0, f.Z); if (!p) return; g.fillStyle = `rgba(255,255,255,${f.a * .55})`; g.beginPath(); g.ellipse(p.x, p.y, f.w * p.s, f.w * .22 * p.s, 0, 0, 7); g.fill(); });
