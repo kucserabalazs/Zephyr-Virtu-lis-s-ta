@@ -1,6 +1,6 @@
 # Zephyr Apartman – a projekt állása és folytatási útmutató
 
-Utolsó mentés: 2026. október 30. · Ezt a fájlt olvasd el először egy új munkamenet elején.
+Utolsó mentés: 2026. október 30. hajnal (utolsó commit után ezt a fájlt olvasd el először) · Ezt a fájlt olvasd el először egy új munkamenet elején.
 
 ## 1. Mi ez a projekt?
 A Zephyr Apartmanház (8621 Zamárdi, Gáspár András utca 58., tulajdonos: Kucsera Balázs) weboldalának megújítása:
@@ -95,3 +95,9 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 5. A régi WordPress-oldal anyagának (XML-export + `wp-content/uploads`) teljes átemelése – később.
 6. A régi oldaltól való függések kiváltása (látnivaló-képek a repóba, „Bővebben” linkek), és döntés arról, hol fusson a valódi foglalás/programkezelés, mert a GitHub Pages PHP-t nem futtat.
 7. A korábban beküldött GitHub-tokent a tulajdonosnak vissza kell vonnia (nincs és nem is kell használni).
+
+## 11. Állás 2026. okt. 30. hajnal – innen folytatjuk
+- Kész ma: kocka SETTINGS/helyszín összecsúszás javítva; összecsukódó játékválasztó; regatta 10 m magasról, 14°-os dőléssel, a stég hosszabbik oldaláról nézve (a tulajdonos szerint a magasság tökéletes); új 5. stégjáték: Vitorlás mahjong (Vitorlás 86 / Teknős 144 lap).
+- Bemutató (claude.ai): séta – https://claude.ai/artifact/5JDHAnuPHejorWhWDd2ecr (szerkesztés: `#szerkesztes`).
+- Letölthető csomagok: `zephyr-frissites-csak-kod.zip` (csak `virtualis-seta/index.html` → `/web/virtualis-seta`), `zephyr-feltoltes.zip` (teljes, képekkel → `/web`).
+- Visszajelzésre vár: a mahjong telefonon (Teknős álló képernyőn kicsi lapokkal), a regatta új iránya valódi telefonon, és hogy a feltöltés után az élő oldalon is rendben vannak-e a képek.
