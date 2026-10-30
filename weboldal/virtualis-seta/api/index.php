@@ -7,6 +7,7 @@
  * Végpontok (?r=…):
  *   vendég:  config · availability (apt, from, to) · book (POST)
  *   admin:   login · logout · me · bookings · action · manual · settings · save_settings · password
+ *   admin app (admin/): waste · waste_save · remind_test   ·   naptár: teendok_ical (key) – hulladék + vendégérkezés emlékeztetővel
  */
 
 date_default_timezone_set('Europe/Budapest');
@@ -52,6 +53,8 @@ function defaults() {
         'pending_days' => 3, 'pay_days' => 5, 'rules_url' => '', 'privacy_url' => '',
         'price_rules' => array(), 'prices_checked' => 0,
         'ical' => array(), 'ical_key' => '', 'sync_log' => array(), 'last_sync' => 0,
+        /* emlékeztetők (admin app): hulladék előző nap, vendégérkezés egy nappal vagy egy héttel előre */
+        'remind_hour' => 18, 'remind_waste' => 1, 'guest_mode' => 'day', 'week_day' => 0, 'remind_email' => '',
     );
 }
 
@@ -496,6 +499,152 @@ function public_booking($s, $b) {
     return $b;
 }
 
+/* ---------------------------------------------------------------- hulladékszállítás + emlékeztetők (admin app) */
+function waste_kinds() { return array('weekly' => 'hetente', 'biweekly' => 'kéthetente', 'monthly' => 'havonta', 'dates' => 'csak megadott napokon'); }
+function waste_clean($in) {
+    $o = array(); $colors = array('#5b6b7a', '#2a86ad', '#f2b233', '#3c9a5f', '#8a6630', '#e2483d', '#7a5cc2');
+    foreach (array_slice(is_array($in) ? $in : array(), 0, 12) as $i => $t) {
+        if (!is_array($t)) { continue; }
+        $name = clean(isset($t['name']) ? $t['name'] : '', 60); if ($name === '') { continue; }
+        $kind = isset($t['kind']) && isset(waste_kinds()[$t['kind']]) ? $t['kind'] : 'weekly';
+        $dates = array(); foreach ((array) (isset($t['dates']) ? $t['dates'] : array()) as $d) { if (valid_date($d)) { $dates[] = $d; } }
+        $skip = array(); foreach ((array) (isset($t['skip']) ? $t['skip'] : array()) as $d) { if (valid_date($d)) { $skip[] = $d; } }
+        $start = isset($t['start']) && valid_date($t['start']) ? $t['start'] : today();
+        $col = isset($t['color']) && preg_match('/^#[0-9a-f]{6}$/i', $t['color']) ? $t['color'] : $colors[$i % count($colors)];
+        $o[] = array('id' => isset($t['id']) && preg_match('/^[a-f0-9]{6,16}$/', (string) $t['id']) ? (string) $t['id'] : bin2hex(random_bytes(5)),
+            'name' => $name, 'kind' => $kind, 'weekday' => max(0, min(6, (int) (isset($t['weekday']) ? $t['weekday'] : 1))),
+            'nth' => max(-1, min(4, (int) (isset($t['nth']) ? $t['nth'] : 1))), 'start' => $start,
+            'season_from' => isset($t['season_from']) && preg_match('/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', $t['season_from']) ? $t['season_from'] : '',
+            'season_to' => isset($t['season_to']) && preg_match('/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', $t['season_to']) ? $t['season_to'] : '',
+            'dates' => array_values(array_unique($dates)), 'skip' => array_values(array_unique($skip)),
+            'note' => clean(isset($t['note']) ? $t['note'] : '', 160), 'color' => $col, 'active' => !isset($t['active']) || $t['active'] ? 1 : 0);
+    }
+    return $o;
+}
+/* a megadott időszak szállítási napjai: [['date' => …, 'id' => …, 'name' => …, 'note' => …, 'color' => …], …] */
+function waste_dates($types, $from, $to) {
+    $o = array();
+    foreach ((array) $types as $t) {
+        if (empty($t['active'])) { continue; }
+        $hit = array();
+        if ($t['kind'] === 'dates') { foreach ($t['dates'] as $d) { if ($d >= $from && $d <= $to) { $hit[] = $d; } } }
+        else {
+            for ($d = $from; $d <= $to; $d = add_days($d, 1)) {
+                if (weekday($d) !== (int) $t['weekday']) { continue; }
+                if ($t['season_from'] && $t['season_to'] && !md_in(substr($d, 5), $t['season_from'], $t['season_to'])) { continue; }
+                if ($t['kind'] === 'weekly') { $hit[] = $d; }
+                elseif ($t['kind'] === 'biweekly') { $diff = nights($t['start'], $d); if ($diff % 14 === 0 || (-$diff) % 14 === 0) { $hit[] = $d; } }
+                elseif ($t['kind'] === 'monthly') {
+                    $dom = (int) substr($d, 8, 2); $n = (int) ceil($dom / 7);
+                    $last = (int) date('t', strtotime($d . ' 12:00')) - $dom < 7;
+                    if (((int) $t['nth'] === -1 && $last) || (int) $t['nth'] === $n) { $hit[] = $d; }
+                }
+            }
+            foreach ($t['dates'] as $d) { if ($d >= $from && $d <= $to) { $hit[] = $d; } }   /* pótnapok */
+        }
+        foreach (array_unique($hit) as $d) {
+            if (in_array($d, $t['skip'], true)) { continue; }
+            $o[] = array('date' => $d, 'id' => $t['id'], 'name' => $t['name'], 'note' => $t['note'], 'color' => $t['color']);
+        }
+    }
+    usort($o, function ($a, $b) { return strcmp($a['date'] . $a['name'], $b['date'] . $b['name']); });
+    return $o;
+}
+function hu_day($ymd) { $n = array('vasárnap', 'hétfő', 'kedd', 'szerda', 'csütörtök', 'péntek', 'szombat'); return $n[weekday($ymd)]; }
+function apt_name($s, $id) { $a = apartments($s); return isset($a[$id]) ? $a[$id]['name'] : $id; }
+function guest_line($s, $b) {
+    $st = eff_status($s, $b);
+    $who = $st === 'block' ? ($b['label'] ? $b['label'] : 'Zárolva') . ($b['name'] ? ' – ' . $b['name'] : '') : ($b['name'] ? $b['name'] : 'vendég');
+    $src = !empty($b['source']) && isset(ical_sources()[$b['source']]) ? ' [' . ical_sources()[$b['source']] . ']' : '';
+    $pp = (int) $b['adults'] + (int) $b['children'];
+    return '  • ' . apt_name($s, $b['apt']) . ': ' . $who . $src . ($pp && $st !== 'block' ? ', ' . $pp . ' fő' : '') . ($b['phone'] ? ', tel.: ' . $b['phone'] : '')
+        . ' (' . nights($b['checkin'], $b['checkout']) . ' éj)' . ($st === 'pending' ? ' – JÓVÁHAGYÁSRA VÁR' : ($st === 'approved' ? ' – előlegre vár' : ''));
+}
+function moves_on($db, $day) {   /* aznapi érkezők és távozók */
+    $s = $db['settings']; $in = array(); $out = array();
+    foreach ($db['bookings'] as $b) {
+        if (!in_array(eff_status($s, $b), ZB_BLOCKING, true)) { continue; }
+        if ($b['checkin'] === $day) { $in[] = $b; }
+        if ($b['checkout'] === $day) { $out[] = $b; }
+    }
+    return array($in, $out);
+}
+function remind_text($db, $day, $weekly) {   /* $day = a nap, amelyről szól (holnap); $weekly: 7 napos áttekintés */
+    $s = $db['settings']; $parts = array();
+    if (!empty($s['remind_waste'])) {
+        $w = waste_dates(isset($db['waste']) ? $db['waste'] : array(), $day, $day);
+        if ($w) {
+            $t = "HULLADÉKSZÁLLÍTÁS HOLNAP (" . hu_day($day) . ', ' . hu_date($day) . "):\n";
+            foreach ($w as $x) { $t .= '  • ' . $x['name'] . ($x['note'] ? ' – ' . $x['note'] : '') . "\n"; }
+            $parts[] = $t . "  → Ma este tedd ki a kukát!\n";
+        }
+    }
+    $days = $weekly ? 7 : ($s['guest_mode'] === 'off' ? 0 : 1);
+    $g = '';
+    for ($i = 0; $i < $days; $i++) {
+        $d = add_days($day, $i); list($in, $out) = moves_on($db, $d);
+        if (!$in && !$out) { continue; }
+        $g .= ucfirst(hu_day($d)) . ', ' . hu_date($d) . ":\n";
+        if ($out) { $g .= " Távozik ({$s['checkout']}-ig):\n"; foreach ($out as $b) { $g .= guest_line($s, $b) . "\n"; } }
+        if ($in) { $g .= " Érkezik ({$s['checkin']}-tól):\n"; foreach ($in as $b) { $g .= guest_line($s, $b) . "\n"; } }
+        $sw = array_intersect(array_map(function ($b) { return $b['apt']; }, $in), array_map(function ($b) { return $b['apt']; }, $out));
+        if ($sw) { $g .= '  ⚠ Aznapi vendégváltás (' . implode(', ', array_map(function ($a) use ($s) { return apt_name($s, $a); }, array_values(array_unique($sw)))) . ") – takarítás {$s['checkout']} és {$s['checkin']} között.\n"; }
+    }
+    if ($g !== '') { $parts[] = ($weekly ? "VENDÉGFOGADÁS – A KÖVETKEZŐ 7 NAP:\n" : "VENDÉGFOGADÁS HOLNAP:\n") . $g; }
+    elseif ($weekly) { $parts[] = "VENDÉGFOGADÁS – A KÖVETKEZŐ 7 NAP:\n  Nincs érkező vagy távozó vendég.\n"; }
+    return $parts;
+}
+/* naponta egyszer, a beállított óra után: e-mail a holnapi teendőkről (a tárhely ütemezője vagy bármely oldalbetöltés indítja) */
+function remind_due($db) {
+    $s = $db['settings'];
+    return (int) date('G') >= (int) $s['remind_hour'] && (!isset($db['remind_sent']) || $db['remind_sent'] !== today());
+}
+function remind_run(&$db, $force = false) {
+    $s = $db['settings']; $tomorrow = add_days(today(), 1);
+    $weekly = $s['guest_mode'] === 'week' && weekday(today()) === (int) $s['week_day'];
+    $parts = remind_text($db, $tomorrow, $weekly);
+    if ($s['guest_mode'] === 'week' && !$weekly) {   /* heti módban a köztes napokon csak a hulladék megy */
+        $parts = array_values(array_filter($parts, function ($p) { return strpos($p, 'HULLADÉK') === 0; }));
+    }
+    $db['remind_sent'] = today();
+    if (!$parts && !$force) { return array(false, 'Holnapra nincs teendő.'); }
+    if (!$parts) { $parts = array("Holnapra (" . hu_date($tomorrow) . ") nincs hulladékszállítás és vendégmozgás.\n"); }
+    $to = $s['remind_email'] ? $s['remind_email'] : $s['notify_email'];
+    $subj = 'Zephyr – ' . ($weekly ? 'heti áttekintés' : 'holnapi teendők') . ' (' . hu_day($tomorrow) . ', ' . hu_date($tomorrow) . ')';
+    $ok = send_mail($s, $to, $subj, "Szia!\n\n" . implode("\n", $parts) . "\nRészletek az admin appban.\n");
+    return array($ok, $ok ? 'Emlékeztető elküldve ide: ' . $to : 'A szerver nem tudta elküldeni az e-mailt.');
+}
+function teendok_ical($db) {
+    $s = $db['settings']; $host = isset($_SERVER['HTTP_HOST']) ? preg_replace('/[^a-z0-9.-]/i', '', $_SERVER['HTTP_HOST']) : 'zephyr';
+    $o = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Zephyr Apartmanhaz//Teendok//HU\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\nX-WR-CALNAME:Zephyr – teendők\r\nX-WR-TIMEZONE:Europe/Budapest\r\nREFRESH-INTERVAL;VALUE=DURATION:PT6H\r\n";
+    $stamp = gmdate('Ymd\THis\Z'); $from = add_days(today(), -7); $to = add_days(today(), 400);
+    $h = max(0, min(23, (int) $s['remind_hour'])); $trig = '-PT' . (24 - $h) . 'H';   /* előző nap a beállított órakor */
+    foreach (waste_dates(isset($db['waste']) ? $db['waste'] : array(), $from, $to) as $x) {
+        $o .= "BEGIN:VEVENT\r\nUID:zw-" . $x['id'] . '-' . $x['date'] . '@' . $host . "\r\nDTSTAMP:$stamp\r\n";
+        $o .= 'DTSTART;VALUE=DATE:' . str_replace('-', '', $x['date']) . "\r\nDTEND;VALUE=DATE:" . str_replace('-', '', add_days($x['date'], 1)) . "\r\n";
+        $o .= ical_fold('SUMMARY:' . ical_esc('🗑 ' . $x['name'] . ' – szállítás')); if ($x['note']) { $o .= ical_fold('DESCRIPTION:' . ical_esc($x['note'])); }
+        $o .= "TRANSP:TRANSPARENT\r\nBEGIN:VALARM\r\nACTION:DISPLAY\r\n" . ical_fold('DESCRIPTION:' . ical_esc('Holnap ' . $x['name'] . ' – ma este tedd ki a kukát!')) . "TRIGGER:$trig\r\nEND:VALARM\r\nEND:VEVENT\r\n";
+    }
+    if ($s['guest_mode'] !== 'off') {
+        $gt = $s['guest_mode'] === 'week' ? '-P7D' : $trig;
+        foreach ($db['bookings'] as $b) {
+            if (!in_array(eff_status($s, $b), ZB_BLOCKING, true) || $b['checkin'] < $from || $b['checkin'] > $to || eff_status($s, $b) === 'block') { continue; }
+            $o .= "BEGIN:VEVENT\r\nUID:zg-" . $b['id'] . '@' . $host . "\r\nDTSTAMP:$stamp\r\n";
+            $o .= 'DTSTART;VALUE=DATE:' . str_replace('-', '', $b['checkin']) . "\r\nDTEND;VALUE=DATE:" . str_replace('-', '', add_days($b['checkin'], 1)) . "\r\n";
+            $o .= ical_fold('SUMMARY:' . ical_esc('🛎 Érkezik: ' . apt_name($s, $b['apt']) . ' – ' . ($b['name'] ? $b['name'] : 'vendég')));
+            $o .= ical_fold('DESCRIPTION:' . ical_esc(trim(guest_line($s, $b), " •") . "\nTávozás: " . hu_date($b['checkout'])));
+            $o .= "TRANSP:TRANSPARENT\r\nBEGIN:VALARM\r\nACTION:DISPLAY\r\n" . ical_fold('DESCRIPTION:' . ical_esc('Vendégérkezés: ' . apt_name($s, $b['apt']))) . "TRIGGER:$gt\r\nEND:VALARM\r\nEND:VEVENT\r\n";
+        }
+    }
+    return $o . "END:VCALENDAR\r\n";
+}
+function waste_payload($db) {
+    $s = $db['settings']; $t = today();
+    return array('today' => $t, 'types' => isset($db['waste']) ? $db['waste'] : array(), 'upcoming' => waste_dates(isset($db['waste']) ? $db['waste'] : array(), $t, add_days($t, 120)),
+        'kinds' => waste_kinds(), 'feed' => api_self_url() . '?r=teendok_ical&key=' . $s['ical_key'], 'cron' => api_self_url() . '?r=cron&key=' . $s['ical_key'],
+        'last_sent' => isset($db['remind_sent']) ? $db['remind_sent'] : '');
+}
+
 /* ================================================================ útvonalak */
 $r = isset($_GET['r']) ? preg_replace('/[^a-z_]/', '', $_GET['r']) : '';
 $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
@@ -629,7 +778,7 @@ case 'me':
 
 case 'bookings':
     $db = db_load(); require_admin($db);
-    $ch = maybe_sync($db); if (mark_conflicts($db)) { $ch = true; } if ($ch) { db_save($db); }
+    $ch = maybe_sync($db); if (mark_conflicts($db)) { $ch = true; } if (remind_due($db)) { remind_run($db); $ch = true; } if ($ch) { db_save($db); }
     $s = $db['settings'];
     $list = array();
     foreach ($db['bookings'] as $b) { $list[] = public_booking($s, $b); }
@@ -772,6 +921,11 @@ case 'save_settings':
         if (isset($in[$k])) { $v = clean($in[$k], 300); $s[$k] = ($v === '' || preg_match('#^(https?://|\.\./|/)#i', $v)) ? $v : ''; }
     }
     if (isset($in['prices_checked'])) { $s['prices_checked'] = $in['prices_checked'] ? 1 : 0; }
+    if (isset($in['remind_hour'])) { $s['remind_hour'] = max(0, min(23, (int) $in['remind_hour'])); }
+    if (isset($in['week_day'])) { $s['week_day'] = max(0, min(6, (int) $in['week_day'])); }
+    if (isset($in['remind_waste'])) { $s['remind_waste'] = $in['remind_waste'] ? 1 : 0; }
+    if (isset($in['guest_mode'])) { $s['guest_mode'] = in_array($in['guest_mode'], array('day', 'week', 'off'), true) ? $in['guest_mode'] : 'day'; }
+    if (isset($in['remind_email'])) { $v = clean($in['remind_email'], 160); if ($v !== '' && !filter_var($v, FILTER_VALIDATE_EMAIL)) { fail('Hibás e-mail cím: ' . $v); } $s['remind_email'] = $v; }
     if (isset($in['ical']) && is_array($in['ical'])) {
         $ic = array();
         foreach (apartments($s) as $apt => $a) {
@@ -816,7 +970,7 @@ case 'sync':
 case 'cron':  /* tárhely ütemezőből: …/api/index.php?r=cron&key=… */
     $db = db_load();
     if (!hash_equals((string) $db['settings']['ical_key'], isset($_GET['key']) ? (string) $_GET['key'] : '')) { fail('Hozzáférés megtagadva.', 403); }
-    $log = sync_all($db); db_save($db); out(array('ok' => true, 'log' => $log));
+    $log = sync_all($db); $rm = remind_due($db) ? remind_run($db) : null; db_save($db); out(array('ok' => true, 'log' => $log, 'remind' => $rm));
 
 case 'ical':  /* naptár-kiküldés: Airbnb, Szállás.hu, Google Naptár */
     $db = db_load();
@@ -832,6 +986,7 @@ case 'ical':  /* naptár-kiküldés: Airbnb, Szállás.hu, Google Naptár */
 /* ------------------------------ programajánló / rendezvények (kezdőoldal) */
 case 'events':
     $db = db_load(); $t = today(); $list = array();
+    if (remind_due($db)) { remind_run($db); db_save($db); }   /* a kezdőoldal látogatása is elindítja a napi emlékeztetőt */
     foreach ((array) (isset($db['events']) ? $db['events'] : array()) as $e) { if ((isset($e['to']) && $e['to'] ? $e['to'] : $e['from']) >= $t && empty($e['hidden'])) { $list[] = $e; } }
     usort($list, function ($a, $b) { return strcmp($a['from'] . $a['time'], $b['from'] . $b['time']); });
     header('Cache-Control: public, max-age=300');
@@ -892,6 +1047,31 @@ case 'vihar':
     }
     header('Cache-Control: public, max-age=300');
     out(array('ok' => !empty($c['ok']), 'basins' => $c['basins'], 'time' => date('Y-m-d H:i', (int) $c['t']), 'source' => 'HungaroMet – met.hu'));
+
+/* ------------------------------ admin app: hulladékszállítás, emlékeztetők */
+case 'waste':
+    $db = db_load(); require_admin($db); out(waste_payload($db));
+
+case 'waste_save':
+    if ($method !== 'POST') { fail('POST kell.', 405); }
+    $db = db_load(); require_admin($db);
+    $db['waste'] = waste_clean(isset($P['types']) ? $P['types'] : array()); db_save($db);
+    out(array_merge(array('ok' => true, 'message' => 'Hulladéknaptár elmentve.'), waste_payload($db)));
+
+case 'remind_test':
+    if ($method !== 'POST') { fail('POST kell.', 405); }
+    $db = db_load(); require_admin($db);
+    $prev = isset($db['remind_sent']) ? $db['remind_sent'] : '';
+    list($ok, $msg) = remind_run($db, true);
+    $db['remind_sent'] = $prev;   /* a próba nem számít bele a napi küldésbe */
+    db_save($db); out(array('ok' => $ok, 'message' => $msg));
+
+case 'teendok_ical':
+    $db = db_load();
+    if (!hash_equals((string) $db['settings']['ical_key'], isset($_GET['key']) ? (string) $_GET['key'] : '')) { fail('Hozzáférés megtagadva.', 403); }
+    header('Content-Type: text/calendar; charset=utf-8');
+    header('Content-Disposition: inline; filename="zephyr-teendok.ics"');
+    echo teendok_ical($db); exit;
 
 default:
     fail('Ismeretlen kérés.', 404);

@@ -1,0 +1,1170 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zephyr Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0b2f5e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zephyr Admin">
+<link rel="icon" href="../Zephyr%20Apartman%20Kell%C3%A9kek/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../Zephyr%20Apartman%20Kell%C3%A9kek/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../Zephyr%20Apartman%20Kell%C3%A9kek/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  --sea: #0b2f5e; --sea-2: #071d38; --sea-3: #12407a; --sky: #2a86ad;
+  --gold: #c9a25a; --gold-2: #ffd978; --gold-d: #8a6630;
+  --red: #e2483d; --green: #2f9e63; --orange: #e8890c; --blue: #2f6fd6;
+  --bg: #f4f1ea; --card: #ffffff; --ink: #14202a; --mut: #5d6b78; --line: #e4ded1; --soft: #faf8f2;
+  --display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --body: "Manrope", "Segoe UI", system-ui, sans-serif;
+  --r: 16px; --sh: 0 1px 2px rgba(20,32,42,.06), 0 6px 18px rgba(20,32,42,.07);
+  --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 500 15px/1.45 var(--body); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+body { min-height: 100vh; min-height: 100dvh; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--sea-3); }
+svg.i { width: 20px; height: 20px; flex: none; }
+[hidden] { display: none !important; }
+
+/* ---------- belépés ---------- */
+.login { min-height: 100dvh; display: grid; place-items: center; padding: 24px 18px; background: radial-gradient(80% 60% at 50% 30%, #fff 0%, #faf6ec 50%, #ece3cf 100%); }
+.login-card { width: min(400px, 100%); background: #fff; border-radius: 22px; box-shadow: 0 20px 60px rgba(11,47,94,.16); padding: 30px 24px 24px; text-align: center; }
+.login-card img { width: min(260px, 70%); height: auto; }
+.login-card h1 { font: 800 15px/1 var(--display); letter-spacing: .4em; text-transform: uppercase; color: var(--gold-d); margin: 14px 0 22px; padding-left: .4em; }
+.login-card form { display: grid; gap: 12px; text-align: left; }
+.login-note { font-size: 12.5px; color: var(--mut); margin-top: 14px; }
+
+/* ---------- keret ---------- */
+.app { display: grid; grid-template-columns: 1fr; min-height: 100dvh; align-content: start; }
+.top { position: sticky; top: 0; z-index: 30; background: var(--sea); color: #fff; padding: calc(10px + var(--safe-t)) 14px 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 18px rgba(7,29,56,.25); }
+.top img { height: 30px; width: auto; filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 6px rgba(255,255,255,.5)); }
+.top .tt { display: grid; line-height: 1.1; }
+.top .tt b { font: 800 18px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; }
+.top .tt span { font-size: 11.5px; opacity: .75; }
+.top .sp { flex: 1; }
+.icon-btn { all: unset; box-sizing: border-box; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; position: relative; }
+.top .icon-btn { background: rgba(255,255,255,.1); }
+.top .icon-btn:active { background: rgba(255,255,255,.22); }
+.dot { position: absolute; top: 6px; right: 6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--red); color: #fff; font: 800 10.5px/17px var(--body); text-align: center; box-shadow: 0 0 0 2px var(--sea); }
+.demo-pill { font: 800 10px/1 var(--body); letter-spacing: .1em; text-transform: uppercase; background: var(--gold-2); color: var(--sea); padding: 5px 8px; border-radius: 99px; }
+main { padding: 14px 14px calc(96px + var(--safe-b)); max-width: 1100px; width: 100%; margin: 0 auto; min-width: 0; }
+.app > * { min-width: 0; }
+.sysw summary { list-style: none; cursor: pointer; } .sysw summary::-webkit-details-marker { display: none; }
+
+/* alsó navigáció (telefon) / oldalsáv (asztal) */
+.nav { position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,.97); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, 1fr); padding: 6px 4px calc(6px + var(--safe-b)); }
+.nav button { all: unset; cursor: pointer; display: grid; justify-items: center; gap: 3px; padding: 6px 2px; border-radius: 12px; color: var(--mut); font: 700 11px/1 var(--body); position: relative; }
+.nav button svg { width: 23px; height: 23px; }
+.nav button.on { color: var(--sea); }
+.nav button.on::before { content: ""; position: absolute; top: -6px; width: 28px; height: 3px; border-radius: 3px; background: var(--gold); }
+.nav .dot { top: 0; right: calc(50% - 22px); box-shadow: 0 0 0 2px #fff; }
+.nav .nav-more-only { display: none; }
+.fab { position: fixed; z-index: 41; right: 16px; bottom: calc(80px + var(--safe-b)); width: 56px; height: 56px; border-radius: 18px; border: 0; cursor: pointer; display: grid; place-items: center; background: linear-gradient(160deg, #ffd978, #c9a25a); color: var(--sea); box-shadow: 0 10px 26px rgba(138,102,48,.45); }
+.fab svg { width: 28px; height: 28px; }
+@media (min-width: 900px) {
+  .app { grid-template-columns: 236px 1fr; }
+  .top { grid-column: 1 / -1; }
+  .nav { position: sticky; top: 62px; align-self: start; height: calc(100dvh - 62px); grid-template-columns: 1fr; align-content: start; gap: 4px; padding: 16px 12px; border-top: 0; border-right: 1px solid var(--line); background: #fff; }
+  .nav button { grid-auto-flow: column; justify-content: start; gap: 12px; padding: 12px 14px; font-size: 14.5px; }
+  .nav button.on { background: #eef2f8; }
+  .nav button.on::before { top: 10px; left: 0; width: 3px; height: 26px; }
+  .nav .nav-more { display: none; } .nav .nav-more-only { display: grid; }
+  .nav .dot { position: static; box-shadow: none; margin-left: auto; }
+  main { padding: 22px 26px 60px; }
+  .fab { bottom: 28px; right: 28px; }
+}
+
+/* ---------- elemek ---------- */
+h2.vt { font: 800 26px/1.05 var(--display); letter-spacing: .03em; text-transform: uppercase; color: var(--sea); margin: 4px 0 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+h2.vt small { font: 600 13px/1.2 var(--body); letter-spacing: 0; text-transform: none; color: var(--mut); }
+h3.st { font: 800 13px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--gold-d); margin: 22px 2px 10px; display: flex; align-items: center; gap: 8px; }
+h3.st .n { background: var(--sea); color: #fff; border-radius: 99px; padding: 3px 8px; font-size: 11px; letter-spacing: 0; }
+.card { background: var(--card); border-radius: var(--r); box-shadow: var(--sh); padding: 14px; }
+.stack { display: grid; gap: 10px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mut { color: var(--mut); } .sm { font-size: 13px; } .xs { font-size: 12px; }
+.btn { appearance: none; border: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; border-radius: 12px; font: 800 14.5px/1.1 var(--body); background: #eef1f5; color: var(--sea); text-decoration: none; }
+.btn svg { width: 18px; height: 18px; }
+.btn:active { transform: translateY(1px); }
+.btn.pri { background: var(--sea); color: #fff; } .btn.gold { background: linear-gradient(160deg, #ffd978, #c9a25a); color: var(--sea); }
+.btn.ok { background: var(--green); color: #fff; } .btn.warn { background: #fff4e3; color: #9a5a00; } .btn.bad { background: #fde9e7; color: #b3261e; }
+.btn.line { background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); }
+.btn.sm { min-height: 36px; padding: 7px 12px; font-size: 13.5px; border-radius: 10px; }
+.btn.block { width: 100%; }
+.btn[disabled] { opacity: .5; pointer-events: none; }
+.seg { display: inline-grid; grid-auto-flow: column; background: #e8e3d7; border-radius: 12px; padding: 3px; gap: 2px; }
+.seg button { all: unset; cursor: pointer; padding: 9px 16px; border-radius: 10px; font: 800 14px/1 var(--body); color: var(--mut); text-align: center; }
+.seg button.on { background: #fff; color: var(--sea); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { all: unset; cursor: pointer; white-space: nowrap; padding: 8px 14px; border-radius: 99px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); font: 700 13.5px/1 var(--body); color: var(--mut); display: inline-flex; gap: 6px; align-items: center; }
+.chip.on { background: var(--sea); color: #fff; box-shadow: none; }
+.chip .c { background: rgba(0,0,0,.08); border-radius: 99px; padding: 2px 7px; font-size: 11.5px; }
+.chip.on .c { background: rgba(255,255,255,.2); }
+
+/* állapotcímkék */
+.tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 99px; font: 800 11.5px/1 var(--body); white-space: nowrap; }
+.tag.pending { background: #fff1dc; color: #9a5a00; } .tag.approved { background: #e3edfd; color: #1d4fa8; } .tag.paid { background: #e1f4e9; color: #1d7446; }
+.tag.block { background: #ebedf0; color: #4d5966; } .tag.rejected, .tag.cancelled, .tag.expired { background: #fbe7e5; color: #a3261e; }
+.tag.src { background: #f1ece0; color: var(--gold-d); }
+.apt-b { display: inline-grid; place-items: center; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 8px; background: var(--ac, var(--sea)); color: #fff; font: 900 14px/1 var(--display); letter-spacing: .02em; }
+
+/* figyelmeztető kártyák */
+.alert { display: flex; gap: 12px; align-items: flex-start; padding: 13px 14px; border-radius: 14px; background: #fff; box-shadow: var(--sh); border-left: 5px solid var(--c, var(--gold)); }
+.alert svg { width: 26px; height: 26px; color: var(--c, var(--gold)); margin-top: 1px; }
+.alert b { display: block; font-size: 15px; }
+.alert .acts { margin-top: 8px; }
+.alert.waste { --c: #3c9a5f; background: linear-gradient(90deg, #eef8f1, #fff 60%); }
+.alert.waste.today { --c: var(--orange); background: linear-gradient(90deg, #fff4e3, #fff 60%); }
+.alert.pend { --c: var(--orange); } .alert.warn { --c: var(--red); } .alert.info { --c: var(--sky); }
+
+/* napi / heti nézet */
+.daybar { display: flex; align-items: center; gap: 8px; margin: 2px 0 12px; flex-wrap: wrap; }
+.daybar .dn { font: 800 20px/1.1 var(--display); letter-spacing: .04em; text-transform: uppercase; color: var(--sea); flex: 1; min-width: 0; }
+.daybar .dn small { display: block; font: 600 12.5px/1.3 var(--body); letter-spacing: 0; text-transform: none; color: var(--mut); }
+.navbtn { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 12px; background: #fff; display: grid; place-items: center; box-shadow: var(--sh); color: var(--sea); }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 4px; }
+.stat { background: #fff; border-radius: 14px; box-shadow: var(--sh); padding: 11px 10px; text-align: center; }
+.stat b { display: block; font: 900 26px/1 var(--display); color: var(--sea); }
+.stat span { font: 700 11px/1.2 var(--body); color: var(--mut); text-transform: uppercase; letter-spacing: .06em; }
+.stat.in b { color: var(--green); } .stat.out b { color: var(--red); }
+.gcard { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: #fff; border-radius: 14px; box-shadow: var(--sh); padding: 12px; cursor: pointer; border-left: 5px solid var(--ac, var(--sea)); }
+.gcard .nm { font-weight: 800; font-size: 15.5px; line-height: 1.2; }
+.gcard .meta { font-size: 12.5px; color: var(--mut); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.gcard .acts { display: flex; gap: 6px; }
+.call { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: #e1f4e9; color: var(--green); }
+.call.mail { background: #e3edfd; color: var(--blue); }
+.empty { text-align: center; padding: 18px 12px; color: var(--mut); font-size: 13.5px; background: rgba(255,255,255,.55); border-radius: 14px; border: 1.5px dashed var(--line); }
+.free { display: flex; gap: 6px; flex-wrap: wrap; }
+.free span { padding: 6px 10px; border-radius: 10px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); font-weight: 700; font-size: 13px; display: inline-flex; gap: 6px; align-items: center; }
+.free i { width: 9px; height: 9px; border-radius: 50%; background: var(--ac); }
+.swap { display: flex; gap: 8px; align-items: center; padding: 9px 12px; border-radius: 12px; background: #fff4e3; color: #8a4f00; font-size: 13px; font-weight: 700; }
+.wk { display: grid; gap: 10px; }
+.wkday { background: #fff; border-radius: 14px; box-shadow: var(--sh); overflow: hidden; }
+.wkday.today { box-shadow: 0 0 0 2px var(--gold), var(--sh); }
+.wkh { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--soft); border-bottom: 1px solid var(--line); cursor: pointer; }
+.wkh .d { font: 900 22px/1 var(--display); color: var(--sea); width: 34px; text-align: center; }
+.wkh .w { font-weight: 800; font-size: 14px; line-height: 1.1; } .wkh .w small { display: block; font-weight: 600; color: var(--mut); font-size: 12px; }
+.wkh .sp { flex: 1; }
+.wkb { padding: 8px 12px 10px; display: grid; gap: 6px; }
+.mv { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 3px 0; }
+.mv .ar { font: 900 12px/1 var(--body); width: 58px; flex: none; text-transform: uppercase; letter-spacing: .04em; }
+.mv .ar.in { color: var(--green); } .mv .ar.out { color: var(--red); }
+.mv .who { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wtag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 99px; background: color-mix(in srgb, var(--wc) 16%, #fff); color: color-mix(in srgb, var(--wc) 75%, #000); font: 800 11.5px/1 var(--body); }
+.wtag svg { width: 13px; height: 13px; }
+.occ { display: grid; grid-template-columns: 76px repeat(7, 1fr); gap: 3px; font-size: 11px; }
+.occ .h { text-align: center; font-weight: 800; color: var(--mut); padding-bottom: 2px; }
+.occ .a { font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 5px; overflow: hidden; white-space: nowrap; }
+.occ .a i { width: 8px; height: 8px; border-radius: 50%; background: var(--ac); flex: none; }
+.occ .c { height: 22px; border-radius: 6px; background: #eef1f5; }
+.occ .c.b { background: var(--ac); } .occ .c.p { background: repeating-linear-gradient(45deg, var(--ac) 0 4px, color-mix(in srgb, var(--ac) 45%, #fff) 4px 8px); } .occ .c.x { background: #b9c1ca; }
+
+/* foglalások listája */
+.search { position: relative; margin-bottom: 10px; }
+.search input { width: 100%; padding: 12px 14px 12px 42px; border-radius: 14px; border: 0; background: #fff; box-shadow: var(--sh); font-size: 15px; }
+.search svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--mut); }
+.bk { display: grid; grid-template-columns: auto 1fr; gap: 12px; background: #fff; border-radius: 14px; box-shadow: var(--sh); padding: 12px; cursor: pointer; border-left: 5px solid var(--ac, var(--sea)); }
+.bk .dt { text-align: center; min-width: 46px; } .bk .dt b { display: block; font: 900 24px/1 var(--display); color: var(--sea); } .bk .dt span { font: 800 11px/1 var(--body); text-transform: uppercase; color: var(--mut); }
+.bk .l1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .bk .nm { font-weight: 800; font-size: 15px; }
+.bk .l2 { font-size: 12.5px; color: var(--mut); margin-top: 4px; display: flex; gap: 4px 12px; flex-wrap: wrap; }
+.bk.dim { opacity: .62; }
+
+/* naptár (idővonal) */
+.cal-wrap { background: #fff; border-radius: var(--r); box-shadow: var(--sh); overflow: hidden; }
+.cal-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.cal { --w: 38px; position: relative; display: grid; grid-template-columns: 92px repeat(var(--n), var(--w)); min-width: max-content; }
+.cal .hd { position: sticky; top: 0; height: 44px; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: var(--mut); border-bottom: 1px solid var(--line); background: #fff; line-height: 1.05; text-align: center; }
+.cal .hd b { display: block; font: 900 15px/1 var(--display); color: var(--ink); }
+.cal .hd.we { background: #faf7f0; } .cal .hd.td { background: var(--sea); color: #fff; } .cal .hd.td b { color: var(--gold-2); }
+.cal .nm { position: sticky; left: 0; z-index: 3; background: #fff; display: flex; align-items: center; gap: 7px; padding: 0 8px; font-weight: 800; font-size: 13px; border-right: 1px solid var(--line); border-bottom: 1px solid #f0ece3; height: 46px; }
+.cal .nm i { width: 10px; height: 10px; border-radius: 50%; background: var(--ac); }
+.cal .corner { position: sticky; left: 0; z-index: 4; background: #fff; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line); display: grid; place-items: center; font-size: 11px; color: var(--mut); font-weight: 800; }
+.cal .cell { height: 46px; border-bottom: 1px solid #f0ece3; border-left: 1px solid #f5f2ea; cursor: pointer; }
+.cal .cell.we { background: #fcfaf5; } .cal .cell.td { background: #eef3fb; }
+.cal .wrow { height: 26px; display: grid; place-items: center; border-bottom: 1px solid var(--line); }
+.cal .wrow i { width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; background: var(--wc); color: #fff; }
+.cal .wrow i svg { width: 10px; height: 10px; }
+.cal .nm.wl { height: 26px; font-size: 11.5px; color: var(--mut); border-bottom: 1px solid var(--line); }
+.bar { position: absolute; height: 32px; border-radius: 9px; background: var(--ac); color: #fff; font: 800 12px/32px var(--body); padding: 0 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; z-index: 2; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+.bar.pending, .bar.approved { background: repeating-linear-gradient(45deg, var(--ac) 0 6px, color-mix(in srgb, var(--ac) 70%, #fff) 6px 12px); }
+.bar.block { background: #8c97a3; } .bar.ext { box-shadow: inset 0 0 0 2px rgba(255,255,255,.75); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--mut); padding: 10px 12px; border-top: 1px solid var(--line); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; } .legend i { width: 18px; height: 10px; border-radius: 3px; background: var(--sea-3); }
+
+/* űrlapok */
+.f { display: grid; gap: 6px; } .f > span { font: 700 12.5px/1.2 var(--body); color: var(--mut); }
+.f input, .f select, .f textarea { width: 100%; padding: 12px 13px; border-radius: 12px; border: 1.5px solid var(--line); background: #fff; font-size: 15.5px; min-height: 46px; }
+.f input:focus, .f select:focus, .f textarea:focus { outline: none; border-color: var(--sky); box-shadow: 0 0 0 3px rgba(42,134,173,.15); }
+.f textarea { min-height: 80px; resize: vertical; }
+.f .hint { font-size: 12px; color: var(--mut); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 520px) { .grid3 { grid-template-columns: 1fr 1fr; } }
+.suf { position: relative; } .suf input { padding-right: 44px; } .suf i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 13px; color: var(--mut); font-weight: 700; }
+.sw { display: flex; align-items: center; gap: 12px; padding: 12px 0; cursor: pointer; }
+.sw input { appearance: none; width: 48px; height: 28px; border-radius: 99px; background: #cfd5dc; position: relative; cursor: pointer; flex: none; transition: background .2s; margin: 0; }
+.sw input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.sw input:checked { background: var(--green); } .sw input:checked::after { transform: translateX(20px); }
+.sw b { display: block; font-size: 14.5px; } .sw small { color: var(--mut); font-size: 12.5px; }
+.radio { display: grid; gap: 8px; }
+.radio label { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); cursor: pointer; }
+.radio label:has(input:checked) { box-shadow: inset 0 0 0 2px var(--sea); background: #f3f6fb; }
+.radio input { accent-color: var(--sea); width: 20px; height: 20px; margin: 1px 0 0; flex: none; }
+.radio b { display: block; } .radio small { color: var(--mut); font-size: 12.5px; }
+details.sec { background: #fff; border-radius: var(--r); box-shadow: var(--sh); margin-bottom: 10px; }
+details.sec > summary { list-style: none; cursor: pointer; padding: 15px 16px; display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 15.5px; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary .ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: #eef2f8; color: var(--sea); flex: none; }
+details.sec > summary small { display: block; font-weight: 600; font-size: 12.5px; color: var(--mut); }
+details.sec > summary::after { content: ""; margin-left: auto; width: 10px; height: 10px; border-right: 2.5px solid var(--mut); border-bottom: 2.5px solid var(--mut); transform: rotate(45deg); transition: transform .2s; flex: none; }
+details.sec[open] > summary::after { transform: rotate(-135deg); }
+details.sec > .in { padding: 0 16px 16px; display: grid; gap: 12px; }
+.tbl-wrap { overflow-x: auto; margin: 0 -4px; }
+table.pt { border-collapse: separate; border-spacing: 4px; min-width: 100%; }
+table.pt th { font-size: 12px; text-align: left; color: var(--mut); font-weight: 800; white-space: nowrap; padding: 2px 4px; }
+table.pt td input { width: 96px; padding: 9px 8px; border-radius: 10px; border: 1.5px solid var(--line); font-size: 14px; }
+table.pt th input { width: 96px; padding: 7px 8px; border-radius: 9px; border: 1.5px solid var(--line); font-size: 12.5px; font-weight: 700; display: block; margin-bottom: 3px; }
+.mini-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 8px; align-items: end; padding: 10px; border-radius: 12px; background: var(--soft); }
+@media (max-width: 640px) { .mini-row { grid-template-columns: 1fr 1fr; } }
+.x-btn { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: #fde9e7; color: #b3261e; }
+.copy { display: flex; gap: 8px; align-items: center; }
+.copy input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--soft); font-size: 12.5px; color: var(--mut); }
+.savebar { position: sticky; bottom: calc(76px + var(--safe-b)); z-index: 20; display: flex; gap: 10px; justify-content: flex-end; padding: 10px; margin-top: 14px; background: rgba(255,255,255,.95); backdrop-filter: blur(8px); border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.14); }
+@media (min-width: 900px) { .savebar { bottom: 16px; } }
+
+/* hulladék */
+.wt { border-left: 5px solid var(--wc); }
+.wt .hd { display: flex; align-items: center; gap: 10px; }
+.wt .hd .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--wc); color: #fff; flex: none; }
+.wt .hd b { font-size: 16px; } .wt .hd small { display: block; color: var(--mut); font-size: 12.5px; }
+.up { display: grid; gap: 6px; }
+.up .u { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #fff; border-radius: 12px; box-shadow: var(--sh); }
+.up .u .d { font: 900 20px/1 var(--display); color: var(--sea); width: 30px; text-align: center; }
+.up .u .w { font-size: 12px; color: var(--mut); font-weight: 700; width: 74px; line-height: 1.15; }
+.up .u.tm { box-shadow: 0 0 0 2px #3c9a5f, var(--sh); }
+.datelist { display: flex; flex-wrap: wrap; gap: 6px; }
+.datelist span { display: inline-flex; align-items: center; gap: 6px; padding: 6px 6px 6px 10px; border-radius: 99px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); font-size: 13px; font-weight: 700; }
+.datelist button { all: unset; cursor: pointer; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: #f1ede4; font-size: 14px; line-height: 1; }
+.colors { display: flex; gap: 8px; flex-wrap: wrap; }
+.colors button { all: unset; cursor: pointer; width: 32px; height: 32px; border-radius: 50%; background: var(--wc); box-shadow: inset 0 0 0 3px #fff, 0 0 0 1.5px var(--line); }
+.colors button.on { box-shadow: inset 0 0 0 3px #fff, 0 0 0 3px var(--sea); }
+
+/* felugró lap (bottom sheet) */
+.sheet-bg { position: fixed; inset: 0; z-index: 90; background: rgba(7,29,56,.45); backdrop-filter: blur(2px); animation: fadeIn .2s; }
+.sheet { position: fixed; z-index: 91; left: 0; right: 0; bottom: 0; max-height: 92dvh; overflow-y: auto; background: var(--bg); border-radius: 22px 22px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,.25); animation: up .28s cubic-bezier(.2,.8,.2,1); padding: 0 0 calc(18px + var(--safe-b)); overscroll-behavior: contain; }
+.sheet .grab { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 10px 16px 8px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+.sheet .grab::before { content: ""; position: absolute; top: 6px; left: 50%; width: 40px; height: 4px; margin-left: -20px; border-radius: 4px; background: #cfc7b6; }
+.sheet .grab h3 { margin: 10px 0 2px; font: 800 20px/1.1 var(--display); letter-spacing: .03em; text-transform: uppercase; color: var(--sea); flex: 1; }
+.sheet .grab .icon-btn { background: #fff; margin-top: 8px; width: 38px; height: 38px; }
+.sheet .body { padding: 14px 16px; display: grid; gap: 12px; }
+@media (min-width: 760px) { .sheet { left: 50%; right: auto; bottom: auto; top: 50%; width: min(620px, 94vw); max-height: 88vh; transform: translate(-50%, -50%); border-radius: 22px; animation: pop .22s ease; } }
+@keyframes fadeIn { from { opacity: 0; } }
+@keyframes up { from { transform: translateY(100%); } }
+@keyframes pop { from { opacity: 0; transform: translate(-50%, -46%); } }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 14px; background: #fff; border-radius: 14px; padding: 14px; box-shadow: var(--sh); }
+.kv dt { color: var(--mut); font-weight: 700; } .kv dd { margin: 0; font-weight: 600; word-break: break-word; }
+.big-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.big-acts .btn { min-height: 50px; }
+.log { font-size: 12.5px; color: var(--mut); display: grid; gap: 4px; }
+
+/* értesítő buborék, betöltés */
+.toast { position: fixed; z-index: 120; left: 50%; bottom: calc(92px + var(--safe-b)); transform: translateX(-50%); background: var(--sea-2); color: #fff; padding: 12px 18px; border-radius: 14px; font-weight: 700; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.3); max-width: calc(100vw - 32px); animation: up .25s; }
+.toast.err { background: #b3261e; }
+.busy { position: fixed; z-index: 110; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold-2), transparent); background-size: 50% 100%; animation: load 1s linear infinite; }
+@keyframes load { from { background-position: -50% 0; } to { background-position: 150% 0; } }
+.skel { height: 74px; border-radius: 14px; background: linear-gradient(90deg, #ebe6da, #f6f3ec, #ebe6da); background-size: 200% 100%; animation: sk 1.2s infinite; }
+@keyframes sk { to { background-position: -200% 0; } }
+.help { font-size: 12.5px; color: var(--mut); background: #fff; border-radius: 12px; padding: 10px 12px; border: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-bin" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 6.5l8.5 7 8.5-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-in" viewBox="0 0 24 24"><path d="M14 4h5v16h-5M3 12h11M10 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M10 4H5v16h5M21 12H10M17 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 18V7M3 13h18v5M21 13a3 3 0 0 0-3-3h-7v3M7 11.5a1.5 1.5 0 1 0 0-.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2zM12 10v5M12 18h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-sync" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-money" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-sail" viewBox="0 0 24 24"><path d="M12 3v14M13 4c4 4 6 8 6 12h-6zM11 6c-3 3-5 6.5-5.5 10H11zM3 18h18l-2.5 3h-13z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-door" viewBox="0 0 24 24"><path d="M5 21V4a1 1 0 0 1 1-1h9l4 2v16M3 21h18M12 12h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div id="root"></div>
+
+<script>
+/* ==========================================================================
+   Zephyr Apartmanház – admin app
+   A foglalási rendszer (virtualis-seta/api/index.php) teljes kezelése egy helyen:
+   napi / heti vendégfogadás, foglalások, naptár, kézi foglalás és zárolás,
+   hulladékszállítás emlékeztetővel, programok, árak és minden beállítás.
+   A belépés ugyanaz, mint a weboldal tulajdonosi felületén.
+   ========================================================================== */
+(function () {
+  "use strict";
+  const API = "../virtualis-seta/api/index.php?r=";
+  const TK = "zephyr-admin-token";
+  const LOGO = "../Zephyr%20Apartman%20Kell%C3%A9kek/zephyr-logo.png";
+  const HU_M = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
+  const HU_MS = ["jan.", "febr.", "márc.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szept.", "okt.", "nov.", "dec."];
+  const WD = ["vasárnap", "hétfő", "kedd", "szerda", "csütörtök", "péntek", "szombat"];
+  const WDS = ["V", "H", "K", "Sze", "Cs", "P", "Szo"];
+  const ST = { pending: "Jóváhagyásra vár", approved: "Előlegre vár", paid: "Végleges", rejected: "Elutasítva", cancelled: "Törölve", expired: "Lejárt", block: "Zárolva" };
+  const SRC = { airbnb: "Airbnb", szallas: "Szállás.hu", egyeb: "Külső naptár", manual: "Kézi", web: "Weboldal" };
+  const BLOCKING = ["pending", "approved", "paid", "block"];
+  const CATS = { fesztival: "Fesztivál", koncert: "Koncert", sport: "Sport", gasztro: "Gasztro", kultura: "Kultúra", csalad: "Családi", egyeb: "Egyéb" };
+  const WCOLORS = ["#5b6b7a", "#2a86ad", "#f2b233", "#3c9a5f", "#8a6630", "#e2483d", "#7a5cc2"];
+
+  /* ---------- segédek ---------- */
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+  const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const ico = (n, cls = "i") => `<svg class="${cls}"><use href="#i-${n}"/></svg>`;
+  const money = (n) => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " Ft";
+  const ymd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const pd = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addD = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return ymd(d); };
+  const nightsOf = (a, b) => Math.round((pd(b) - pd(a)) / 864e5);
+  const hu = (s) => { if (!s) return "–"; const d = pd(s); return d.getFullYear() + ". " + HU_M[d.getMonth()] + " " + d.getDate() + "."; };
+  const huS = (s) => { const d = pd(s); return HU_MS[d.getMonth()] + " " + d.getDate() + "."; };
+  const wd = (s) => WD[pd(s).getDay()];
+  const tel = (p) => String(p || "").replace(/[^\d+]/g, "");
+  const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} } };
+
+  /* ---------- állapot ---------- */
+  const A = {
+    tok: store.get(TK) || "", demo: false, data: null, waste: null, events: null,
+    view: store.get("zadm-view") || "ma", mode: store.get("zadm-mode") || "day", day: null,
+    filter: "todo", q: "", month: null, busy: 0, root: $("#root"),
+  };
+
+  /* ==========================================================================
+     API (vagy bemutató mód)
+     ========================================================================== */
+  async function api(r, body) {
+    if (A.demo) return Demo.call(r, body);
+    A.busy++; busyBar();
+    try {
+      const res = await fetch(API + r, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json", "X-Zephyr-Token": A.tok }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+      let j = null; try { j = await res.json(); } catch (e) { throw Object.assign(new Error("A szerver nem válaszolt megfelelően. (Csak a tárhelyen, PHP-val működik.)"), { offline: true }); }
+      if (res.status === 401 && r !== "login") { logout(true); throw new Error(j.message || "Lejárt a belépés."); }
+      if (!res.ok) throw new Error(j.message || "Hiba történt.");
+      return j;
+    } catch (e) {
+      if (e instanceof TypeError) throw Object.assign(new Error("Nincs kapcsolat a szerverrel. Ellenőrizd az internetet."), { offline: true });
+      throw e;
+    } finally { A.busy--; busyBar(); }
+  }
+  function busyBar() { let b = $(".busy"); if (A.busy && !b) { b = document.createElement("div"); b.className = "busy"; document.body.appendChild(b); } if (!A.busy && b) b.remove(); }
+  function toast(msg, err) { $$(".toast").forEach((t) => t.remove()); const t = document.createElement("div"); t.className = "toast" + (err ? " err" : ""); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), err ? 5200 : 3200); }
+  async function run(fn) { try { return await fn(); } catch (e) { toast(e.message, true); } }
+
+  async function loadAll() {
+    const [d, w] = await Promise.all([api("bookings"), api("waste").catch(() => null)]);
+    A.data = d; A.waste = w;
+    if (!A.day) A.day = d.today;
+    if (!A.month) A.month = d.today.slice(0, 7);
+  }
+  async function loadEvents() { A.events = (await api("events_all")).events; }
+
+  /* ---------- bemutató mód (a weboldal előnézetéhez, szerver nélkül) ---------- */
+  const Demo = (() => {
+    let D = null;
+    function seed() {
+      const t = ymd(new Date());
+      const apts = [["korvett", "Korvett", 1, 4, "#e2483d"], ["dingi", "Dingi", 2, 2, "#3fb37f"], ["fregatt", "Fregatt", 3, 4, "#3d8fe2"], ["kaloz", "Kalóz", 4, 2, "#9b6be2"], ["schooner", "Schooner", 5, 4, "#2bb3c0"]]
+        .map(([id, name, no, cap, color]) => ({ id, name, no, cap, price: cap > 2 ? 30000 : 22000, color, active: 1 }));
+      const seasons = [["Előszezon", "05-15", "06-18"], ["Június vége", "06-19", "06-30"], ["Főszezon", "07-01", "08-22"], ["Augusztus vége", "08-23", "08-31"], ["Szeptember", "09-01", "09-19"], ["Utószezon", "09-20", "10-15"]]
+        .map(([name, from, to]) => ({ name, from, to, prices: Object.fromEntries(apts.map((a) => [a.id, a.price])) }));
+      const mk = (apt, ci, n, name, status, extra = {}) => ({ id: Math.random().toString(16).slice(2, 10), ref: "ZB-" + ci.replace(/-/g, "").slice(2) + "-" + Math.random().toString(36).slice(2, 6).toUpperCase(), apt, checkin: ci, checkout: addD(ci, n), nights: n, adults: 2, children: 0, name, phone: "+36 30 123 4567", email: "vendeg@example.com", total: n * 30000, deposit: n * 9000, tax: 1200 * n, created: Date.now() / 1000 - 86400, source: "web", status, label: "", admin_note: "", log: [{ t: Date.now() / 1000 - 86400, s: status, u: "vendég", x: "Foglalási kérés" }], ...extra });
+      const B = [
+        mk("korvett", addD(t, -3), 3, "Kovács Anna", "paid", { adults: 2, children: 2 }),
+        mk("korvett", t, 4, "Nagy Péter", "paid"),
+        mk("dingi", addD(t, -1), 5, "Szabó Eszter", "paid"),
+        mk("fregatt", addD(t, 1), 3, "Tóth Gábor", "approved", { children: 1 }),
+        mk("kaloz", addD(t, 2), 2, "Horváth Lilla", "pending"),
+        mk("schooner", addD(t, -2), 2, "Molnár család", "paid", { source: "szallas", phone: "", email: "" }),
+        mk("schooner", t, 6, "Airbnb vendég", "paid", { source: "airbnb", phone: "", email: "", total: 0, deposit: 0 }),
+        mk("fregatt", addD(t, 5), 4, "Varga Bence", "paid"),
+        mk("kaloz", addD(t, 6), 3, "", "block", { label: "Karbantartás", name: "", phone: "", email: "", total: 0, source: "manual" }),
+        mk("dingi", addD(t, 9), 2, "Kiss Réka", "pending"),
+      ];
+      const w = (wday) => { let d = t; while (pd(d).getDay() !== wday) d = addD(d, 1); return d; };
+      D = {
+        today: t, warnings: [], initial: false,
+        settings: { apartments: apts, seasons, price_rules: [], tax: 600, deposit_pct: 30, min_nights: 2, max_nights: 30, lead_days: 1, horizon_days: 400, season_from: "05-15", season_to: "10-15", weekend_pct: 0, checkin: "14:00", checkout: "10:00", phone: "+36 20 536 3120", email: "kucserabalazs79@gmail.com", notify_email: "kucserabalazs79@gmail.com", address: "8621 Zamárdi, Gáspár András utca 58.", bank_holder: "", bank_name: "", bank_account: "", bank_iban: "", bank_swift: "", bank_address: "", szep_otp: "SZK/2022/002754", szep_mbh: "S14598", szep_kh: "84059114", ntak: "MA22033593 / MA22033128", pending_days: 3, pay_days: 5, rules_url: "", privacy_url: "", prices_checked: 1, ical: {}, ical_key: "demo", sync_log: {}, remind_hour: 18, remind_waste: 1, guest_mode: "day", week_day: 0, remind_email: "" },
+        bookings: B, ical_links: {},
+        waste: [
+          { id: "a1", name: "Kommunális hulladék", kind: "weekly", weekday: pd(addD(t, 1)).getDay(), nth: 1, start: t, season_from: "", season_to: "", dates: [], skip: [], note: "Reggel 6 óráig legyen kint.", color: "#5b6b7a", active: 1 },
+          { id: "a2", name: "Szelektív (sárga zsák)", kind: "biweekly", weekday: 3, nth: 1, start: w(3), season_from: "", season_to: "", dates: [], skip: [], note: "", color: "#f2b233", active: 1 },
+          { id: "a3", name: "Zöldhulladék", kind: "monthly", weekday: 5, nth: 1, start: t, season_from: "04-01", season_to: "11-30", dates: [], skip: [], note: "Kötegelve, max. 1 m", color: "#3c9a5f", active: 1 },
+        ],
+        events: [{ id: "e1", from: addD(t, 4), to: "", time: "20:00", title: "Koncert a Szabadidőparkban", place: "Zamárdi", cat: "koncert", desc: "", url: "", ticket: "", img: "", top: 1, hidden: 0 }],
+      };
+    }
+    function wasteDates(types, from, to) {   /* ugyanaz a szabály, mint a szerveren */
+      const o = [];
+      for (const t of types) {
+        if (!t.active) continue; const hit = new Set();
+        if (t.kind === "dates") t.dates.forEach((d) => { if (d >= from && d <= to) hit.add(d); });
+        else {
+          for (let d = from; d <= to; d = addD(d, 1)) {
+            if (pd(d).getDay() !== +t.weekday) continue;
+            if (t.season_from && t.season_to) { const md = d.slice(5); const ok = t.season_from <= t.season_to ? md >= t.season_from && md <= t.season_to : md >= t.season_from || md <= t.season_to; if (!ok) continue; }
+            if (t.kind === "weekly") hit.add(d);
+            else if (t.kind === "biweekly") { if (Math.abs(nightsOf(t.start, d)) % 14 === 0) hit.add(d); }
+            else { const dom = +d.slice(8); const n = Math.ceil(dom / 7); const dim = new Date(+d.slice(0, 4), +d.slice(5, 7), 0).getDate(); if ((+t.nth === -1 && dim - dom < 7) || +t.nth === n) hit.add(d); }
+          }
+          t.dates.forEach((d) => { if (d >= from && d <= to) hit.add(d); });
+        }
+        hit.forEach((d) => { if (!t.skip.includes(d)) o.push({ date: d, id: t.id, name: t.name, note: t.note, color: t.color }); });
+      }
+      return o.sort((a, b) => (a.date + a.name).localeCompare(b.date + b.name));
+    }
+    const wp = () => ({ today: D.today, types: D.waste, upcoming: wasteDates(D.waste, D.today, addD(D.today, 120)), kinds: { weekly: "hetente", biweekly: "kéthetente", monthly: "havonta", dates: "csak megadott napokon" }, feed: "https://balatoni-udules.hu/virtualis-seta/api/index.php?r=teendok_ical&key=…", cron: "", last_sent: "" });
+    async function call(r, b) {
+      if (!D) seed();
+      await new Promise((ok) => setTimeout(ok, 120));
+      const eff = (x) => x;
+      switch (r) {
+        case "login": return { ok: true, token: "demo" };
+        case "bookings": return { today: D.today, bookings: D.bookings.map(eff), settings: D.settings, warnings: D.warnings, initial: false, ical_links: {} };
+        case "waste": return wp();
+        case "waste_save": D.waste = b.types.map((t, i) => ({ ...t, id: t.id || "w" + Date.now() + i, dates: t.dates || [], skip: t.skip || [], active: t.active ? 1 : 0 })); return { ok: true, message: "Hulladéknaptár elmentve (bemutató).", ...wp() };
+        case "events_all": return { events: D.events };
+        case "events_save": D.events = b.events; return { ok: true, message: D.events.length + " program elmentve (bemutató).", events: D.events };
+        case "save_settings": Object.assign(D.settings, b.settings); return { ok: true, message: "Beállítások elmentve (bemutató).", settings: D.settings };
+        case "action": {
+          const i = D.bookings.findIndex((x) => x.id === b.id); const x = D.bookings[i];
+          if (b.do === "delete") { D.bookings.splice(i, 1); return { ok: true, message: "Véglegesen törölve." }; }
+          if (b.do === "note") { x.admin_note = b.reason; return { ok: true, message: "Megjegyzés elmentve.", booking: x }; }
+          x.status = { approve: "approved", paid: "paid", reject: "rejected", cancel: "cancelled", resend: x.status }[b.do];
+          x.log.push({ t: Date.now() / 1000, s: x.status, u: "tulajdonos", x: ST[x.status] });
+          return { ok: true, message: "Kész (bemutató mód – a vendég nem kap e-mailt).", booking: x };
+        }
+        case "manual": { const x = { id: Math.random().toString(16).slice(2, 10), ref: "ZK-DEMO", apt: b.apt, checkin: b.checkin, checkout: b.checkout, nights: nightsOf(b.checkin, b.checkout), adults: b.adults, children: b.children, name: b.name, phone: b.phone, email: b.email, total: 0, deposit: 0, created: Date.now() / 1000, source: "manual", status: b.kind === "paid" ? "paid" : "block", label: b.label || (b.kind === "paid" ? "" : "Zárolva"), admin_note: b.admin_note, log: [] }; D.bookings.push(x); return { ok: true, message: "Rögzítve (bemutató).", booking: x }; }
+        case "sync": return { ok: true, message: "Bemutató módban nincs naptárszinkron." };
+        case "test_mail": case "remind_test": return { ok: true, message: "Bemutató módban nem megy ki e-mail." };
+        case "password": return { ok: true, message: "Bemutató módban a jelszó nem változik." };
+        case "logout": return { ok: true };
+      }
+      return { ok: true };
+    }
+    return { call };
+  })();
+
+  /* ==========================================================================
+     Adat-segédek
+     ========================================================================== */
+  const S = () => A.data.settings;
+  const apts = (all) => S().apartments.filter((a) => all || +a.active);
+  const aptOf = (id) => S().apartments.find((a) => a.id === id) || { name: id, color: "#0b2f5e", no: "?" };
+  const active = (b) => BLOCKING.includes(b.status);
+  const books = () => A.data.bookings;
+  const isExt = (b) => ["airbnb", "szallas", "egyeb"].includes(b.source);
+  const who = (b) => b.status === "block" ? (b.label || "Zárolva") + (b.name ? " – " + b.name : "") : (b.name || "Vendég");
+  const pax = (b) => (+b.adults || 0) + (+b.children || 0);
+  const wasteOn = (d) => (A.waste ? A.waste.upcoming.filter((x) => x.date === d) : []);
+  function movesOn(d) {
+    const act = books().filter(active);
+    return {
+      arr: act.filter((b) => b.checkin === d), dep: act.filter((b) => b.checkout === d),
+      stay: act.filter((b) => b.checkin < d && b.checkout > d),
+      night: act.filter((b) => b.checkin <= d && b.checkout > d),
+    };
+  }
+  const tag = (st) => `<span class="tag ${st}">${ST[st] || st}</span>`;
+  const srcTag = (b) => b.source && SRC[b.source] && b.source !== "web" ? `<span class="tag src">${SRC[b.source]}</span>` : "";
+  const aptB = (id) => { const a = aptOf(id); return `<span class="apt-b" style="--ac:${a.color}" title="${esc(a.name)}">${esc(a.no)}</span>`; };
+  const pendCount = () => (A.data ? books().filter((b) => b.status === "pending").length : 0);
+
+  /* ==========================================================================
+     Belépés
+     ========================================================================== */
+  function loginView(err) {
+    A.root.innerHTML = `<div class="login"><div class="login-card">
+      <img src="${LOGO}" alt="Zephyr Apartman">
+      <h1>Admin</h1>
+      <form id="lf">
+        <label class="f"><span>Jelszó</span><input type="password" name="pw" autocomplete="current-password" required autofocus></label>
+        <button class="btn pri block" type="submit">${ico("lock")}Belépés</button>
+        ${err ? `<div class="alert warn">${ico("alert")}<div>${esc(err)}</div></div>` : ""}
+      </form>
+      <p class="login-note">Ugyanaz a jelszó, mint a weboldal tulajdonosi felületén.<br>A belépés 30 napig megmarad ezen az eszközön.</p>
+      <button class="btn line sm" id="demoBtn" type="button" style="margin-top:6px">Bemutató mód (próba adatokkal)</button>
+    </div></div>`;
+    $("#lf").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const pw = e.target.pw.value;
+      try {
+        const j = await api("login", { password: pw });
+        A.tok = j.token; store.set(TK, j.token); await start();
+      } catch (er) { loginView(er.offline ? er.message + " Kipróbálhatod bemutató módban." : er.message); }
+    });
+    $("#demoBtn").addEventListener("click", async () => { A.demo = true; await start(); });
+  }
+  async function logout(expired) {
+    if (!expired && !A.demo) { try { await api("logout", {}); } catch (e) {} }
+    A.tok = ""; store.set(TK, null); A.data = null; A.demo = false; loginView(expired ? "Lejárt a belépés, lépj be újra." : "");
+  }
+
+  /* ==========================================================================
+     Keret
+     ========================================================================== */
+  const VIEWS = [
+    ["ma", "Ma", "home"], ["fog", "Foglalások", "list"], ["nap", "Naptár", "cal"], ["hull", "Hulladék", "bin"],
+    ["prog", "Programok", "star"], ["beall", "Beállítások", "gear"],
+  ];
+  function shell() {
+    A.root.innerHTML = `<div class="app">
+      <header class="top">
+        <img src="${LOGO}" alt="">
+        <div class="tt"><b>Admin</b><span id="topSub"></span></div>
+        ${A.demo ? `<span class="demo-pill">Bemutató</span>` : ""}
+        <span class="sp"></span>
+        <button class="icon-btn" id="reload" aria-label="Frissítés">${ico("sync")}</button>
+      </header>
+      <nav class="nav" id="nav">
+        ${VIEWS.map(([k, l, i]) => `<button type="button" data-v="${k}" class="${["prog", "beall"].includes(k) ? "nav-more-only" : ""}">${ico(i)}<span>${l}</span>${k === "fog" ? `<span class="dot" id="pendDot" hidden></span>` : ""}</button>`).join("")}
+        <button type="button" class="nav-more" data-more="1">${ico("more")}<span>Több</span></button>
+      </nav>
+      <main id="main"></main>
+      <button class="fab" id="fab" aria-label="Új foglalás vagy zárolás">${ico("plus")}</button>
+    </div>`;
+    $("#nav").addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.more) return moreSheet();
+      go(b.dataset.v);
+    });
+    $("#reload").addEventListener("click", () => run(async () => { SED = null; WED = null; await loadAll(); if (A.view === "prog") await loadEvents(); render(); toast("Frissítve."); }));
+    $("#fab").addEventListener("click", () => newSheet({}));
+  }
+  function moreSheet() {
+    sheet("Továbbiak", `<div class="stack">
+      <button class="btn line block" data-g="prog" style="justify-content:flex-start">${ico("star")}Programok, rendezvények</button>
+      <button class="btn line block" data-g="beall" style="justify-content:flex-start">${ico("gear")}Beállítások, árak</button>
+      <button class="btn line block" data-g="new" style="justify-content:flex-start">${ico("plus")}Új foglalás / zárolás</button>
+      <a class="btn line block" href="../uj/" target="_blank" rel="noopener" style="justify-content:flex-start">${ico("link")}Weboldal megnyitása</a>
+      <button class="btn bad block" data-g="out" style="justify-content:flex-start">${ico("door")}Kijelentkezés</button>
+    </div>`, (el, close) => {
+      el.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-g]"); if (!b) return; close();
+        if (b.dataset.g === "out") logout(); else if (b.dataset.g === "new") newSheet({}); else go(b.dataset.g);
+      });
+    });
+  }
+  async function go(v) {
+    A.view = v; store.set("zadm-view", v);
+    if (v === "prog" && !A.events) await run(loadEvents);
+    render(); scrollTo(0, 0);
+  }
+  function render() {
+    if (!A.data) return;
+    $$("#nav button[data-v]").forEach((b) => b.classList.toggle("on", b.dataset.v === A.view));
+    const more = $("#nav .nav-more"); if (more) more.classList.toggle("on", ["prog", "beall"].includes(A.view));
+    const pc = pendCount(), dot = $("#pendDot"); if (dot) { dot.hidden = !pc; dot.textContent = pc; }
+    const t = A.data.today; $("#topSub").textContent = wd(t) + ", " + huS(t);
+    $("#fab").hidden = !["ma", "fog", "nap"].includes(A.view);
+    const m = $("#main");
+    ({ ma: viewToday, fog: viewList, nap: viewCal, hull: viewWaste, prog: viewProg, beall: viewSettings }[A.view] || viewToday)(m);
+  }
+
+  /* ==========================================================================
+     Felugró lap
+     ========================================================================== */
+  function sheet(title, html, mount) {
+    const bg = document.createElement("div"); bg.className = "sheet-bg";
+    const el = document.createElement("div"); el.className = "sheet"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+    el.innerHTML = `<div class="grab"><h3>${title}</h3><button class="icon-btn" data-x="1" aria-label="Bezárás">${ico("x")}</button></div><div class="body">${html}</div>`;
+    document.body.append(bg, el); document.body.style.overflow = "hidden";
+    const close = () => { bg.remove(); el.remove(); document.body.style.overflow = ""; removeEventListener("keydown", onKey); };
+    const onKey = (e) => { if (e.key === "Escape") close(); };
+    addEventListener("keydown", onKey);
+    bg.addEventListener("click", close); el.querySelector("[data-x]").addEventListener("click", close);
+    if (mount) mount(el.querySelector(".body"), close);
+    return close;
+  }
+  function confirmSheet(title, text, okLabel, cls, extra) {
+    return new Promise((res) => {
+      let done = false;
+      const close = sheet(title, `<p style="margin:0">${text}</p>${extra || ""}<div class="big-acts"><button class="btn line" data-c="0">Mégse</button><button class="btn ${cls || "pri"}" data-c="1">${okLabel}</button></div>`, (el, cl) => {
+        el.addEventListener("click", (e) => { const b = e.target.closest("[data-c]"); if (!b) return; done = true; const vals = {}; $$("[data-k]", el).forEach((i) => (vals[i.dataset.k] = i.type === "checkbox" ? i.checked : i.value)); cl(); res(b.dataset.c === "1" ? vals : null); });
+      });
+      const obs = new MutationObserver(() => { if (!document.body.contains($(".sheet")) && !done) { obs.disconnect(); res(null); } });
+      obs.observe(document.body, { childList: true });
+      void close;
+    });
+  }
+
+  /* ==========================================================================
+     MA – napi / heti vendégfogadás
+     ========================================================================== */
+  function alertsHtml() {
+    const t = A.data.today, tm = addD(t, 1); let h = "";
+    const wt = wasteOn(t), wm = wasteOn(tm);
+    if (wm.length) h += `<div class="alert waste">${ico("bin")}<div><b>Holnap hulladékszállítás: ${wm.map((x) => esc(x.name)).join(", ")}</b><span class="sm">Ma este tedd ki a kukát${wm.some((x) => x.note) ? " – " + esc(wm.map((x) => x.note).filter(Boolean).join("; ")) : "."}</span></div></div>`;
+    if (wt.length) h += `<div class="alert waste today">${ico("bin")}<div><b>Ma viszik: ${wt.map((x) => esc(x.name)).join(", ")}</b><span class="sm">Ha még nincs kint, most tedd ki; elszállítás után vidd vissza a kukát.</span></div></div>`;
+    const pc = pendCount();
+    if (pc) h += `<div class="alert pend">${ico("bell")}<div><b>${pc} foglalási kérés vár jóváhagyásra</b><div class="acts"><button class="btn sm gold" data-go="fog-todo">Megnézem</button></div></div></div>`;
+    const sys = (A.data.initial ? ["Még az ideiglenes jelszóval vagy belépve – változtasd meg a Beállítások → Jelszó részben."] : []).concat(A.data.warnings || []);
+    const conflict = sys.filter((w) => /^ÜTKÖZÉS/.test(w));
+    conflict.forEach((w) => { h += `<div class="alert warn">${ico("alert")}<div class="sm"><b>Ütközés!</b>${esc(w.replace(/^ÜTKÖZÉS:\s*/, ""))}</div></div>`; });
+    const rest = sys.filter((w) => !/^ÜTKÖZÉS/.test(w));
+    if (rest.length) h += `<details class="alert info sysw"><summary class="row" style="gap:10px">${ico("gear")}<b style="flex:1">${rest.length} beállítási teendő</b><span class="mut xs">megnyitás</span></summary><ul class="sm" style="margin:8px 0 0;padding-left:18px">${rest.map((w) => `<li style="margin-bottom:4px">${esc(w)}</li>`).join("")}</ul><button class="btn sm line" data-go="beall" style="margin-top:6px">Beállítások</button></details>`;
+    return h ? `<div class="stack" style="margin-bottom:6px">${h}</div>` : "";
+  }
+  function gcard(b, kind) {
+    const a = aptOf(b.apt), n = nightsOf(b.checkin, b.checkout);
+    const meta = [];
+    if (b.status !== "block") meta.push(`${pax(b)} fő${+b.children ? ` (${b.children} gyermek)` : ""}`);
+    meta.push(kind === "dep" ? `érkezett: ${huS(b.checkin)}` : kind === "stay" ? `távozik: ${wd(b.checkout)}, ${huS(b.checkout)}` : `${n} éj · távozik ${huS(b.checkout)}`);
+    if (kind === "arr") meta.push(`${S().checkin}-tól`); if (kind === "dep") meta.push(`${S().checkout}-ig`);
+    return `<div class="gcard" style="--ac:${a.color}" data-open="${b.id}">
+      ${aptB(b.apt)}
+      <div style="min-width:0"><div class="nm">${esc(who(b))}</div><div class="meta"><span>${esc(a.name)}</span>${meta.map((m) => `<span>${esc(m)}</span>`).join("")}</div>
+        <div class="row" style="gap:6px;margin-top:6px">${b.status !== "paid" ? tag(b.status) : ""}${srcTag(b)}${b.admin_note ? `<span class="tag block">📝 megjegyzés</span>` : ""}</div></div>
+      <div class="acts">${b.phone ? `<a class="call" href="tel:${tel(b.phone)}" aria-label="Hívás" data-stop="1">${ico("phone")}</a>` : ""}${b.email && !b.phone ? `<a class="call mail" href="mailto:${esc(b.email)}" aria-label="E-mail" data-stop="1">${ico("mail")}</a>` : ""}</div>
+    </div>`;
+  }
+  function viewToday(m) {
+    const d = A.day, t = A.data.today;
+    let h = alertsHtml();
+    h += `<div class="daybar">
+      <button class="navbtn" data-dd="-1" aria-label="Előző">${ico("left")}</button>
+      <div class="dn">${A.mode === "day" ? (d === t ? "Ma" : d === addD(t, 1) ? "Holnap" : d === addD(t, -1) ? "Tegnap" : esc(wd(d))) : "7 nap"}<small>${A.mode === "day" ? esc(wd(d)) + ", " + hu(d) : huS(d) + " – " + huS(addD(d, 6))}</small></div>
+      <button class="navbtn" data-dd="1" aria-label="Következő">${ico("right")}</button>
+      ${d !== t ? `<button class="btn sm line" data-today="1">Ma</button>` : ""}
+      <div class="seg" role="tablist"><button data-mode="day" class="${A.mode === "day" ? "on" : ""}">Nap</button><button data-mode="week" class="${A.mode === "week" ? "on" : ""}">Hét</button></div>
+    </div>`;
+    h += A.mode === "day" ? dayHtml(d) : weekHtml(d);
+    m.innerHTML = h;
+    m.onclick = (e) => {
+      if (e.target.closest("[data-stop]")) return;
+      const b = e.target.closest("[data-dd],[data-today],[data-mode],[data-open],[data-go],[data-day]"); if (!b) return;
+      if (b.dataset.dd) { A.day = addD(A.day, (A.mode === "day" ? 1 : 7) * +b.dataset.dd); render(); }
+      else if (b.dataset.today) { A.day = t; render(); }
+      else if (b.dataset.mode) { A.mode = b.dataset.mode; store.set("zadm-mode", A.mode); render(); }
+      else if (b.dataset.open) detailSheet(b.dataset.open);
+      else if (b.dataset.day) { A.day = b.dataset.day; A.mode = "day"; store.set("zadm-mode", "day"); render(); scrollTo(0, 0); }
+      else if (b.dataset.go === "beall") go("beall");
+      else if (b.dataset.go) { A.filter = "todo"; go("fog"); }
+    };
+  }
+  function dayHtml(d) {
+    const mv = movesOn(d), all = apts(), busy = new Set(mv.night.map((b) => b.apt));
+    const free = all.filter((a) => !busy.has(a.id));
+    const wt = wasteOn(d);
+    let h = `<div class="stats">
+      <div class="stat"><b>${busy.size}/${all.length}</b><span>Foglalt</span></div>
+      <div class="stat in"><b>${mv.arr.length}</b><span>Érkezik</span></div>
+      <div class="stat out"><b>${mv.dep.length}</b><span>Távozik</span></div>
+      <div class="stat"><b>${mv.night.filter((b) => b.status !== "block").reduce((s, b) => s + pax(b), 0)}</b><span>Vendég</span></div>
+    </div>`;
+    if (wt.length) h += `<div class="row" style="margin:10px 2px 0">${wt.map((x) => `<span class="wtag" style="--wc:${x.color}">${ico("bin")}${esc(x.name)} – szállítás</span>`).join("")}</div>`;
+    const swaps = mv.arr.filter((b) => mv.dep.some((x) => x.apt === b.apt));
+    if (swaps.length) h += `<div class="swap" style="margin-top:10px">${ico("swap")}Vendégváltás: ${swaps.map((b) => esc(aptOf(b.apt).name)).join(", ")} – takarítás ${esc(S().checkout)} és ${esc(S().checkin)} között</div>`;
+    h += `<h3 class="st">${ico("out")}Távozik <span class="n">${mv.dep.length}</span></h3>`;
+    h += mv.dep.length ? `<div class="stack">${mv.dep.map((b) => gcard(b, "dep")).join("")}</div>` : `<div class="empty">Ma senki nem távozik.</div>`;
+    h += `<h3 class="st">${ico("in")}Érkezik <span class="n">${mv.arr.length}</span></h3>`;
+    h += mv.arr.length ? `<div class="stack">${mv.arr.map((b) => gcard(b, "arr")).join("")}</div>` : `<div class="empty">Ma nincs érkező vendég.</div>`;
+    h += `<h3 class="st">${ico("bed")}Itt tartózkodik <span class="n">${mv.stay.length}</span></h3>`;
+    h += mv.stay.length ? `<div class="stack">${mv.stay.map((b) => gcard(b, "stay")).join("")}</div>` : `<div class="empty">Nincs maradó vendég.</div>`;
+    h += `<h3 class="st">${ico("check")}Szabad éjszakára <span class="n">${free.length}</span></h3>`;
+    h += free.length ? `<div class="free">${free.map((a) => `<span style="--ac:${a.color}"><i></i>${esc(a.name)}</span>`).join("")}</div>` : `<div class="empty">Minden apartman foglalt.</div>`;
+    return h;
+  }
+  function weekHtml(d) {
+    const days = [...Array(7)].map((_, i) => addD(d, i)), t = A.data.today;
+    let h = `<div class="card" style="margin-bottom:12px"><div class="occ">
+      <div></div>${days.map((x) => `<div class="h">${WDS[pd(x).getDay()]}<br>${pd(x).getDate()}</div>`).join("")}
+      ${apts().map((a) => `<div class="a" style="--ac:${a.color}"><i></i>${esc(a.name)}</div>` + days.map((x) => {
+        const b = books().find((b) => active(b) && b.apt === a.id && b.checkin <= x && b.checkout > x);
+        const cls = !b ? "" : b.status === "block" ? "x" : b.status === "paid" ? "b" : "p";
+        return `<div class="c ${cls}" style="--ac:${a.color}" ${b ? `data-open="${b.id}" title="${esc(who(b))}"` : ""}></div>`;
+      }).join("")).join("")}
+    </div></div><div class="wk">`;
+    for (const x of days) {
+      const mv = movesOn(x), wt = wasteOn(x);
+      const swaps = mv.arr.filter((b) => mv.dep.some((y) => y.apt === b.apt));
+      h += `<div class="wkday ${x === t ? "today" : ""}">
+        <div class="wkh" data-day="${x}"><span class="d">${pd(x).getDate()}</span><span class="w">${x === t ? "Ma" : x === addD(t, 1) ? "Holnap" : esc(wd(x))}<small>${esc(huS(x))}${x === t || x === addD(t, 1) ? " · " + esc(wd(x)) : ""}</small></span><span class="sp"></span>
+          ${wt.map((w) => `<span class="wtag" style="--wc:${w.color}">${ico("bin")}${esc(w.name)}</span>`).join("")}
+          <span class="tag block">${mv.night.length}/${apts().length}</span></div>
+        <div class="wkb">${!mv.arr.length && !mv.dep.length ? `<span class="mut sm">Nincs érkezés vagy távozás.</span>` : ""}
+          ${mv.dep.map((b) => `<div class="mv" data-open="${b.id}"><span class="ar out">Távozik</span>${aptB(b.apt)}<span class="who">${esc(who(b))}</span></div>`).join("")}
+          ${mv.arr.map((b) => `<div class="mv" data-open="${b.id}"><span class="ar in">Érkezik</span>${aptB(b.apt)}<span class="who">${esc(who(b))}</span>${b.status !== "paid" ? tag(b.status) : ""}</div>`).join("")}
+          ${swaps.length ? `<div class="swap">${ico("swap")}Vendégváltás: ${swaps.map((b) => esc(aptOf(b.apt).name)).join(", ")}</div>` : ""}
+        </div></div>`;
+    }
+    return h + `</div>`;
+  }
+
+  /* ==========================================================================
+     FOGLALÁSOK
+     ========================================================================== */
+  function viewList(m) {
+    const t = A.data.today, q = A.q.trim().toLowerCase();
+    const F = {
+      todo: ["Teendő", (b) => ["pending", "approved"].includes(b.status) && b.checkout >= t],
+      soon: ["Közelgő", (b) => active(b) && b.checkout >= t],
+      now: ["Most itt", (b) => active(b) && b.checkin <= t && b.checkout > t],
+      past: ["Elmúlt", (b) => active(b) && b.checkout < t],
+      closed: ["Lemondott", (b) => ["rejected", "cancelled", "expired"].includes(b.status)],
+      all: ["Mind", () => true],
+    };
+    const match = (b) => !q || [b.name, b.ref, b.phone, b.email, b.label, aptOf(b.apt).name, b.admin_note].join(" ").toLowerCase().includes(q);
+    let list = books().filter(F[A.filter][1]).filter(match);
+    list.sort((a, b) => A.filter === "past" || A.filter === "closed" ? b.checkin.localeCompare(a.checkin) : a.checkin.localeCompare(b.checkin));
+    let h = `<h2 class="vt">Foglalások <small>${books().filter((b) => active(b) && b.checkout >= t).length} aktív</small></h2>
+      <div class="search">${ico("search")}<input type="search" id="q" placeholder="Keresés: név, telefon, azonosító, apartman…" value="${esc(A.q)}"></div>
+      <div class="chips">${Object.entries(F).map(([k, [l, fn]]) => `<button class="chip ${A.filter === k ? "on" : ""}" data-f="${k}">${l}<span class="c">${books().filter(fn).length}</span></button>`).join("")}</div>
+      <div class="stack" style="margin-top:6px">`;
+    h += list.length ? list.map(bkRow).join("") : `<div class="empty">${q ? "Nincs találat." : A.filter === "todo" ? "Nincs teendő – minden kérés el van intézve. 👍" : "Nincs ilyen foglalás."}</div>`;
+    m.innerHTML = h + `</div>`;
+    const qi = $("#q", m);
+    qi.addEventListener("input", () => { A.q = qi.value; const pos = qi.selectionStart; viewList(m); const n = $("#q", m); n.focus(); n.setSelectionRange(pos, pos); });
+    m.onclick = (e) => {
+      const f = e.target.closest("[data-f]"); if (f) { A.filter = f.dataset.f; viewList(m); return; }
+      const o = e.target.closest("[data-open]"); if (o) detailSheet(o.dataset.open);
+    };
+  }
+  function bkRow(b) {
+    const a = aptOf(b.apt), n = nightsOf(b.checkin, b.checkout), t = A.data.today, d = pd(b.checkin);
+    const dim = ["rejected", "cancelled", "expired"].includes(b.status) || b.checkout < t;
+    return `<div class="bk ${dim ? "dim" : ""}" style="--ac:${a.color}" data-open="${b.id}">
+      <div class="dt"><b>${d.getDate()}</b><span>${HU_MS[d.getMonth()]}</span></div>
+      <div style="min-width:0"><div class="l1">${aptB(b.apt)}<span class="nm">${esc(who(b))}</span>${tag(b.status)}${srcTag(b)}</div>
+        <div class="l2"><span>${esc(a.name)}</span><span>${huS(b.checkin)} – ${huS(b.checkout)} · ${n} éj</span>${b.status !== "block" ? `<span>${pax(b)} fő</span>` : ""}${+b.total ? `<span>${money(b.total)}</span>` : ""}<span>${esc(b.ref)}</span></div></div>
+    </div>`;
+  }
+  function detailSheet(id) {
+    const b = books().find((x) => x.id === id); if (!b) return;
+    const a = aptOf(b.apt), n = nightsOf(b.checkin, b.checkout), st = b.status, ext = isExt(b);
+    const acts = [];
+    if (!ext) {
+      if (["pending", "expired"].includes(st)) acts.push(["approve", "Jóváhagyás", "ok", "check"], ["reject", "Elutasítás", "bad", "x"]);
+      if (st === "approved") acts.push(["paid", "Előleg megjött", "ok", "money"], ["resend", "Bekérő újraküldése", "line", "mail"]);
+      if (["pending", "expired"].includes(st)) acts.push(["paid", "Fizetve (végleges)", "line", "money"]);
+      if (["approved", "paid", "block"].includes(st)) acts.push(["cancel", st === "block" ? "Zárolás feloldása" : "Lemondás / törlés", "bad", "x"]);
+      if (["rejected", "cancelled", "expired"].includes(st)) acts.push(["delete", "Végleges törlés", "bad", "x"]);
+    } else acts.push(["delete", "Eltávolítás a naptárból", "bad", "x"]);
+    const kv = (k, v) => v ? `<dt>${k}</dt><dd>${v}</dd>` : "";
+    const html = `
+      <div class="row">${aptB(b.apt)}<b style="font-size:17px">${esc(a.name)}</b>${tag(st)}${srcTag(b)}</div>
+      <dl class="kv">
+        ${kv("Vendég", esc(who(b)))}
+        ${kv("Érkezés", esc(wd(b.checkin)) + ", " + hu(b.checkin) + " " + esc(S().checkin) + "-tól")}
+        ${kv("Távozás", esc(wd(b.checkout)) + ", " + hu(b.checkout) + " " + esc(S().checkout) + "-ig")}
+        ${kv("Éjszakák", n)}
+        ${st !== "block" ? kv("Létszám", `${+b.adults || 0} felnőtt${+b.children ? ", " + b.children + " gyermek" : ""}`) : ""}
+        ${kv("Telefon", b.phone ? `<a href="tel:${tel(b.phone)}">${esc(b.phone)}</a>` : "")}
+        ${kv("E-mail", b.email ? `<a href="mailto:${esc(b.email)}">${esc(b.email)}</a>` : "")}
+        ${kv("Végösszeg", +b.total ? money(b.total) + (+b.tax ? ` <span class="mut sm">(ebből IFA ${money(b.tax)})</span>` : "") : "")}
+        ${kv("Előleg", +b.deposit ? money(b.deposit) : "")}
+        ${b.discount ? kv("Kedvezmény", "-" + money(b.discount) + ` (${b.discount_pct}%)`) : ""}
+        ${kv("Születési hely, idő", [b.birth_place, b.birth_date].filter(Boolean).map(esc).join(", "))}
+        ${kv("Okmány", esc(b.id_doc))}
+        ${kv("Vendég üzenete", esc(b.note))}
+        ${kv("Csoport", b.group ? esc(b.group) + ` (${b.group_size} apartman)` : "")}
+        ${kv("Azonosító", esc(b.ref))}
+        ${b.conflict ? kv("⚠ Ütközés", esc(b.conflict)) : ""}
+      </dl>
+      ${b.phone || b.email ? `<div class="big-acts">${b.phone ? `<a class="btn ok" href="tel:${tel(b.phone)}">${ico("phone")}Hívás</a>` : ""}${b.email ? `<a class="btn line" href="mailto:${esc(b.email)}?subject=${encodeURIComponent("Zephyr Apartmanház – " + b.ref)}">${ico("mail")}E-mail</a>` : ""}${b.phone ? `<a class="btn line" href="sms:${tel(b.phone)}">${ico("mail")}SMS</a>` : ""}</div>` : ""}
+      ${ext ? `<div class="help">Ez a foglalás a(z) ${esc(SRC[b.source])} oldaláról érkezett naptárszinkronnal – módosítani ott lehet. Itt megjegyzést írhatsz hozzá.</div>` : ""}
+      ${acts.length ? `<div class="big-acts">${acts.map(([k, l, c, i]) => `<button class="btn ${c}" data-act="${k}">${ico(i)}${l}</button>`).join("")}</div>` : ""}
+      <label class="f"><span>Saját megjegyzés (csak te látod)</span><textarea id="note" placeholder="pl. kulcsátadás 16 órakor, babaágy kell…">${esc(b.admin_note || "")}</textarea></label>
+      <button class="btn line" data-act="note">${ico("check")}Megjegyzés mentése</button>
+      ${(b.log || []).length ? `<div class="log"><b>Előzmények</b>${b.log.map((l) => `<span>${new Date(l.t * 1000).toLocaleString("hu-HU", { dateStyle: "short", timeStyle: "short" })} – ${esc(ST[l.s] || l.s)}${l.x ? ": " + esc(l.x) : ""}</span>`).join("")}</div>` : ""}`;
+    sheet(esc(who(b)), html, (el, close) => {
+      el.addEventListener("click", async (e) => {
+        const bt = e.target.closest("[data-act]"); if (!bt) return;
+        const act = bt.dataset.act; const body = { id: b.id, do: act };
+        if (act === "note") body.reason = $("#note", el).value;
+        if (act === "reject" || act === "cancel") {
+          const v = await confirmSheet(act === "reject" ? "Elutasítás" : st === "block" ? "Zárolás feloldása" : "Lemondás", st === "block" ? "A napok újra foglalhatók lesznek." : "A napok felszabadulnak.", act === "reject" ? "Elutasítom" : "Rendben", "bad",
+            st === "block" ? "" : `<label class="f"><span>Indoklás (a vendég e-mailjébe kerül)</span><textarea data-k="reason" placeholder="pl. Sajnos erre az időszakra már nincs szabad apartmanunk."></textarea></label><label class="sw"><input type="checkbox" data-k="notify" ${b.email ? "checked" : "disabled"}><span><b>E-mail a vendégnek</b><small>${b.email ? esc(b.email) : "nincs megadva e-mail cím"}</small></span></label>`);
+          if (!v) return; body.reason = v.reason || ""; body.notify = !!v.notify;
+        }
+        if (act === "delete") {
+          const v = await confirmSheet("Végleges törlés", ext ? "A foglalás eltűnik ebből a naptárból. Ha a platformon még megvan, a következő szinkronnál visszajön – kivéve, ha bejelölöd." : "A foglalás minden adata véglegesen törlődik.", "Törlés", "bad",
+            ext ? `<label class="sw"><input type="checkbox" data-k="ignore"><span><b>A szinkron se hozza vissza</b><small>pl. ha a platformon hibásan maradt bent</small></span></label>` : "");
+          if (!v) return; body.confirm = 1; body.ignore = !!v.ignore;
+        }
+        if (act === "approve" && !(await confirmSheet("Jóváhagyás", `A vendég e-mailben megkapja az előleg (${money(b.deposit)}) utalásához szükséges adatokat.`, "Jóváhagyom", "ok"))) return;
+        if (act === "paid" && !(await confirmSheet("Előleg beérkezett", "A foglalás végleges lesz, a vendég visszaigazolást kap.", "Végleges", "ok"))) return;
+        await run(async () => { const j = await api("action", body); toast(j.message); close(); await loadAll(); render(); });
+      });
+    });
+  }
+
+  /* ==========================================================================
+     ÚJ FOGLALÁS / ZÁROLÁS
+     ========================================================================== */
+  function newSheet(pre) {
+    const t = A.data.today, ci = pre.checkin || (A.view === "ma" ? A.day : t), co = pre.checkout || addD(ci, Math.max(1, +S().min_nights || 2));
+    const html = `
+      <div class="seg" style="width:100%;grid-auto-columns:1fr"><button type="button" data-kind="block" class="${pre.kind === "paid" ? "" : "on"}">Zárolás</button><button type="button" data-kind="paid" class="${pre.kind === "paid" ? "on" : ""}">Foglalás (telefonos, fizetett)</button></div>
+      <div class="help" id="kindHelp"></div>
+      <label class="f"><span>Apartman</span><select id="n_apt">${apts().map((a) => `<option value="${a.id}" ${pre.apt === a.id ? "selected" : ""}>${a.no}. ${esc(a.name)} (${a.cap} fő)</option>`).join("")}</select></label>
+      <div class="grid2"><label class="f"><span>Érkezés</span><input type="date" id="n_ci" value="${ci}"></label><label class="f"><span>Távozás</span><input type="date" id="n_co" value="${co}"></label></div>
+      <div class="mut sm" id="n_info"></div>
+      <div id="guestF">
+        <label class="f"><span>Vendég neve</span><input id="n_name" autocomplete="off"></label>
+        <div class="grid2" style="margin-top:10px"><label class="f"><span>Telefon</span><input id="n_phone" type="tel"></label><label class="f"><span>E-mail</span><input id="n_email" type="email"></label></div>
+        <div class="grid2" style="margin-top:10px"><label class="f"><span>Felnőtt</span><input id="n_ad" type="number" min="1" max="12" value="2"></label><label class="f"><span>Gyermek</span><input id="n_ch" type="number" min="0" max="10" value="0"></label></div>
+      </div>
+      <label class="f" id="labelF"><span>Ok / felirat</span><input id="n_label" placeholder="pl. Saját használat, Karbantartás, Festés"></label>
+      <label class="f"><span>Megjegyzés (csak te látod)</span><textarea id="n_note"></textarea></label>
+      <button class="btn gold block" id="n_save">${ico("check")}Rögzítés</button>`;
+    sheet("Új bejegyzés", html, (el, close) => {
+      let kind = pre.kind === "paid" ? "paid" : "block";
+      const upd = () => {
+        $$("[data-kind]", el).forEach((b) => b.classList.toggle("on", b.dataset.kind === kind));
+        $("#guestF", el).hidden = kind === "block";
+        $("#kindHelp", el).textContent = kind === "block" ? "A napok lezárulnak a weboldalon és a kiküldött naptárakban (Szállás.hu, Airbnb), vendég nélkül." : "Telefonon, személyesen egyeztetett foglalás – rögtön végleges, a rendszer az árat a beállítások szerint számolja. A vendég nem kap automatikus e-mailt.";
+        const a = $("#n_ci", el).value, b = $("#n_co", el).value;
+        $("#n_info", el).textContent = a && b && b > a ? `${nightsOf(a, b)} éjszaka · ${wd(a)} – ${wd(b)}` : "A távozás legyen az érkezés után.";
+      };
+      el.addEventListener("click", (e) => { const k = e.target.closest("[data-kind]"); if (k) { kind = k.dataset.kind; upd(); } });
+      el.addEventListener("input", upd); upd();
+      $("#n_save", el).addEventListener("click", () => run(async () => {
+        const body = { kind, apt: $("#n_apt", el).value, checkin: $("#n_ci", el).value, checkout: $("#n_co", el).value, name: $("#n_name", el).value, phone: $("#n_phone", el).value, email: $("#n_email", el).value, adults: +$("#n_ad", el).value || 1, children: +$("#n_ch", el).value || 0, label: $("#n_label", el).value, admin_note: $("#n_note", el).value };
+        if (kind === "paid" && !body.name.trim()) throw new Error("Add meg a vendég nevét.");
+        const j = await api("manual", body); toast(j.message); close(); await loadAll(); render();
+      }));
+    });
+  }
+
+  /* ==========================================================================
+     NAPTÁR – havi idővonal apartmanonként
+     ========================================================================== */
+  function viewCal(m) {
+    const [y, mo] = A.month.split("-").map(Number), first = ymd(new Date(y, mo - 1, 1)), n = new Date(y, mo, 0).getDate(), last = addD(first, n - 1);
+    const t = A.data.today, days = [...Array(n)].map((_, i) => addD(first, i));
+    const W = innerWidth < 600 ? 36 : 40, NM = 92;
+    const list = apts(true);
+    let h = `<div class="daybar"><button class="navbtn" data-mm="-1" aria-label="Előző hónap">${ico("left")}</button>
+      <div class="dn">${y}. ${HU_M[mo - 1]}<small>Koppints egy sávra vagy üres napra</small></div>
+      <button class="navbtn" data-mm="1" aria-label="Következő hónap">${ico("right")}</button>${A.month !== t.slice(0, 7) ? `<button class="btn sm line" data-mm="0">Ma</button>` : ""}</div>`;
+    h += `<div class="cal-wrap"><div class="cal-scroll" id="cs"><div class="cal" style="--n:${n};--w:${W}px">
+      <div class="corner">${HU_MS[mo - 1]}</div>
+      ${days.map((d) => { const wdx = pd(d).getDay(); return `<div class="hd ${wdx === 0 || wdx === 6 ? "we" : ""} ${d === t ? "td" : ""}">${WDS[wdx]}<b>${pd(d).getDate()}</b></div>`; }).join("")}
+      <div class="nm wl">${ico("bin")}Kuka</div>
+      ${days.map((d) => { const w = wasteOn(d); return `<div class="wrow">${w.length ? `<i style="--wc:${w[0].color}" title="${esc(w.map((x) => x.name).join(", "))}">${ico("bin")}</i>` : ""}</div>`; }).join("")}
+      ${list.map((a) => `<div class="nm" style="--ac:${a.color}"><i></i>${esc(a.name)}</div>` + days.map((d) => { const wdx = pd(d).getDay(); return `<div class="cell ${wdx === 0 || wdx === 6 ? "we" : ""} ${d === t ? "td" : ""}" data-apt="${a.id}" data-d="${d}"></div>`; }).join("")).join("")}
+    `;
+    /* foglalási sávok: az érkezés napjának délutánjától a távozás napjának délelőttjéig */
+    const top0 = 44 + 26;
+    list.forEach((a, row) => {
+      books().filter((b) => active(b) && b.apt === a.id && b.checkout > first && b.checkin <= last).forEach((b) => {
+        const s = Math.max(-0.5, nightsOf(first, b.checkin)), e = Math.min(n + 0.5, nightsOf(first, b.checkout));
+        const left = NM + (s + 0.5) * W + 2, width = (e - s) * W - 4;
+        h += `<div class="bar ${b.status} ${isExt(b) ? "ext" : ""}" style="--ac:${a.color};left:${left}px;width:${Math.max(width, 14)}px;top:${top0 + row * 47 + 7}px" data-open="${b.id}" title="${esc(who(b))}">${esc(who(b))}</div>`;
+      });
+    });
+    h += `</div></div><div class="legend"><span><i></i>Végleges</span><span><i style="background:repeating-linear-gradient(45deg,#12407a 0 4px,#8aa4c8 4px 8px)"></i>Függő / előlegre vár</span><span><i style="background:#8c97a3"></i>Zárolva</span><span><i style="box-shadow:inset 0 0 0 2px #fff,0 0 0 1px #12407a"></i>Szállás.hu / Airbnb</span></div></div>`;
+    m.innerHTML = h;
+    if (A.month === t.slice(0, 7)) { const cs = $("#cs", m); cs.scrollLeft = Math.max(0, (pd(t).getDate() - 3) * W); }
+    m.onclick = (e) => {
+      const mm = e.target.closest("[data-mm]"); if (mm) { const v = +mm.dataset.mm; A.month = v === 0 ? t.slice(0, 7) : ymd(new Date(y, mo - 1 + v, 1)).slice(0, 7); render(); return; }
+      const o = e.target.closest("[data-open]"); if (o) { detailSheet(o.dataset.open); return; }
+      const c = e.target.closest(".cell"); if (c) newSheet({ apt: c.dataset.apt, checkin: c.dataset.d, checkout: addD(c.dataset.d, Math.max(1, +S().min_nights || 2)) });
+    };
+  }
+
+  /* ==========================================================================
+     HULLADÉK + EMLÉKEZTETŐK
+     ========================================================================== */
+  let WED = null;   /* szerkesztés alatt álló hulladéktípusok */
+  function ruleText(x) {
+    const d = WD[+x.weekday];
+    let r = x.kind === "weekly" ? `Minden ${d}` : x.kind === "biweekly" ? `Kéthetente ${d} (${huS(x.start)}-tól)` : x.kind === "monthly" ? `Havonta, a hónap ${+x.nth === -1 ? "utolsó" : x.nth + "."} ${d}ja` : `${x.dates.length} megadott nap`;
+    if (x.kind !== "dates" && x.season_from && x.season_to) r += ` · ${x.season_from.replace("-", ".")}. – ${x.season_to.replace("-", ".")}.`;
+    return r;
+  }
+  function viewWaste(m) {
+    if (!A.waste) { m.innerHTML = `<div class="empty">A hulladéknaptár nem tölthető be. Frissítsd az oldalt.</div>`; return; }
+    if (!WED) WED = JSON.parse(JSON.stringify(A.waste.types));
+    const s = S(), t = A.data.today, upAll = A.waste.upcoming.slice(0, 16), up = upAll.slice(0, 5);
+    let h = `<h2 class="vt">Hulladék & emlékeztetők</h2>`;
+    h += `<h3 class="st">${ico("cal")}Következő szállítások</h3>`;
+    h += up.length ? `<div class="up">${up.map((x) => `<div class="u ${x.date === addD(t, 1) ? "tm" : ""}"><span class="d">${pd(x.date).getDate()}</span><span class="w">${x.date === t ? "Ma" : x.date === addD(t, 1) ? "Holnap" : esc(wd(x.date))}<br>${esc(huS(x.date))}</span><span class="wtag" style="--wc:${x.color}">${ico("bin")}${esc(x.name)}</span>${x.date === addD(t, 1) ? `<span class="tag pending" style="margin-left:auto">ma este ki!</span>` : ""}</div>`).join("")}</div>`
+      : `<div class="empty">Még nincs megadva szállítási rend. Add hozzá lent a hulladéktípusokat.</div>`;
+    if (upAll.length > up.length) h += `<details style="margin-top:8px"><summary class="btn sm line" style="list-style:none;display:inline-flex">További ${upAll.length - up.length} időpont</summary><div class="up" style="margin-top:8px">${upAll.slice(up.length).map((x) => `<div class="u"><span class="d">${pd(x.date).getDate()}</span><span class="w">${esc(wd(x.date))}<br>${esc(huS(x.date))}</span><span class="wtag" style="--wc:${x.color}">${ico("bin")}${esc(x.name)}</span></div>`).join("")}</div></details>`;
+
+    h += `<h3 class="st">${ico("bin")}Szállítási rend</h3><div class="stack" id="wlist">`;
+    WED.forEach((x, i) => {
+      h += `<div class="card wt" style="--wc:${x.color}">
+        <div class="hd"><span class="ic">${ico("bin")}</span><div style="flex:1;min-width:0"><b>${esc(x.name || "Új hulladéktípus")}</b><small>${esc(ruleText(x))}</small></div>
+          <label class="sw" style="padding:0"><input type="checkbox" data-w="${i}" data-k="active" ${x.active ? "checked" : ""} aria-label="Aktív"></label></div>
+        <details style="margin-top:10px"><summary class="btn sm line" style="list-style:none;display:inline-flex">Szerkesztés</summary>
+          <div class="stack" style="margin-top:12px">
+            <label class="f"><span>Megnevezés</span><input data-w="${i}" data-k="name" value="${esc(x.name)}" placeholder="pl. Kommunális, Szelektív, Zöldhulladék"></label>
+            <div class="grid2"><label class="f"><span>Gyakoriság</span><select data-w="${i}" data-k="kind">${Object.entries(A.waste.kinds).map(([k, l]) => `<option value="${k}" ${x.kind === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+              ${x.kind !== "dates" ? `<label class="f"><span>Melyik napon</span><select data-w="${i}" data-k="weekday">${[1, 2, 3, 4, 5, 6, 0].map((d) => `<option value="${d}" ${+x.weekday === d ? "selected" : ""}>${WD[d]}</option>`).join("")}</select></label>` : "<span></span>"}</div>
+            ${x.kind === "biweekly" ? `<label class="f"><span>Egy biztos szállítási nap (ebből számolja a kéthetes ritmust)</span><input type="date" data-w="${i}" data-k="start" value="${esc(x.start)}"></label>` : ""}
+            ${x.kind === "monthly" ? `<label class="f"><span>A hónap hányadik ${WD[+x.weekday]}ja</span><select data-w="${i}" data-k="nth">${[1, 2, 3, 4, -1].map((n) => `<option value="${n}" ${+x.nth === n ? "selected" : ""}>${n === -1 ? "utolsó" : n + "."}</option>`).join("")}</select></label>` : ""}
+            ${x.kind !== "dates" ? `<div class="grid2"><label class="f"><span>Csak ettől (hó-nap, nem kötelező)</span><input data-w="${i}" data-k="season_from" value="${esc(x.season_from)}" placeholder="pl. 04-01" maxlength="5"></label><label class="f"><span>Eddig</span><input data-w="${i}" data-k="season_to" value="${esc(x.season_to)}" placeholder="pl. 11-30" maxlength="5"></label></div>` : ""}
+            <div class="f"><span>${x.kind === "dates" ? "Szállítási napok" : "Pótnapok (ünnep miatti áthelyezés)"}</span><div class="datelist">${x.dates.map((d, j) => `<span>${esc(huS(d))} ${d.slice(0, 4)}<button data-wdel="${i}" data-list="dates" data-j="${j}" aria-label="Törlés">×</button></span>`).join("") || `<span class="mut xs" style="box-shadow:none;background:none;padding:6px 0">nincs</span>`}</div>
+              <div class="row"><input type="date" id="wd_${i}" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--line)"><button class="btn sm line" data-wadd="${i}" data-list="dates">Hozzáad</button></div></div>
+            ${x.kind !== "dates" ? `<div class="f"><span>Elmaradó napok (pl. ünnepnap)</span><div class="datelist">${x.skip.map((d, j) => `<span>${esc(huS(d))} ${d.slice(0, 4)}<button data-wdel="${i}" data-list="skip" data-j="${j}" aria-label="Törlés">×</button></span>`).join("") || `<span class="mut xs" style="box-shadow:none;background:none;padding:6px 0">nincs</span>`}</div>
+              <div class="row"><input type="date" id="ws_${i}" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--line)"><button class="btn sm line" data-wadd="${i}" data-list="skip">Hozzáad</button></div></div>` : ""}
+            <label class="f"><span>Megjegyzés az emlékeztetőbe</span><input data-w="${i}" data-k="note" value="${esc(x.note)}" placeholder="pl. reggel 6-ig legyen kint, sárga zsákban"></label>
+            <div class="f"><span>Szín</span><div class="colors">${WCOLORS.map((c) => `<button type="button" style="--wc:${c}" class="${x.color === c ? "on" : ""}" data-wcol="${i}" data-c="${c}" aria-label="Szín"></button>`).join("")}</div></div>
+            <button class="btn bad sm" data-wrm="${i}">${ico("x")}Típus törlése</button>
+          </div></details></div>`;
+    });
+    h += `</div><div class="row" style="margin-top:10px"><button class="btn line" id="wAdd">${ico("plus")}Új hulladéktípus</button><button class="btn pri" id="wSave">${ico("check")}Szállítási rend mentése</button></div>`;
+
+    h += `<h3 class="st">${ico("bell")}Emlékeztetők</h3>
+      <div class="card stack">
+        <label class="sw"><input type="checkbox" id="r_waste" ${+s.remind_waste ? "checked" : ""}><span><b>Hulladék: szólj előző nap</b><small>E-mail a szállítás előtti napon, és figyelmeztetés itt az appban.</small></span></label>
+        <div class="f"><span>Vendégfogadás emlékeztető</span>
+          <div class="radio">
+            <label><input type="radio" name="gm" value="day" ${s.guest_mode === "day" ? "checked" : ""}><span><b>Egy nappal előtte</b><small>Minden este: ki érkezik és ki távozik holnap.</small></span></label>
+            <label><input type="radio" name="gm" value="week" ${s.guest_mode === "week" ? "checked" : ""}><span><b>Heti áttekintés – egy héttel előre</b><small>Hetente egyszer a következő 7 nap összes érkezése, távozása.</small></span></label>
+            <label><input type="radio" name="gm" value="off" ${s.guest_mode === "off" ? "checked" : ""}><span><b>Ki</b><small>Vendégekről nem kérek emlékeztetőt.</small></span></label>
+          </div></div>
+        <div class="grid2">
+          <label class="f"><span>Mikor küldje (óra)</span><select id="r_hour">${[...Array(24)].map((_, hh) => `<option value="${hh}" ${+s.remind_hour === hh ? "selected" : ""}>${String(hh).padStart(2, "0")}:00 után</option>`).join("")}</select></label>
+          <label class="f" id="wdF" ${s.guest_mode === "week" ? "" : "hidden"}><span>Heti áttekintés napja</span><select id="r_wd">${[1, 2, 3, 4, 5, 6, 0].map((d) => `<option value="${d}" ${+s.week_day === d ? "selected" : ""}>${WD[d]}</option>`).join("")}</select></label>
+        </div>
+        <label class="f"><span>Kinek menjen (üresen: az értesítési cím – ${esc(s.notify_email)})</span><input type="email" id="r_mail" value="${esc(s.remind_email)}" placeholder="${esc(s.notify_email)}"></label>
+        <div class="row"><button class="btn pri" id="rSave">${ico("check")}Mentés</button><button class="btn line" id="rTest">${ico("mail")}Próba e-mail most</button></div>
+        <p class="mut xs" style="margin:0">Az e-mail naponta egyszer megy ki a beállított óra után, ha holnapra van teendő${A.waste.last_sent ? ` · utoljára: ${esc(hu(A.waste.last_sent))}` : ""}.</p>
+      </div>
+      <h3 class="st">${ico("phone")}Értesítés a telefonon</h3>
+      <div class="card stack">
+        <p style="margin:0">Iratkozz fel a <b>„Zephyr – teendők”</b> naptárra: a telefonod saját naptára (iPhone, Google Naptár) előző nap ${String(+s.remind_hour).padStart(2, "0")}:00-kor csörög a kukáért, a vendégérkezésekért pedig a fent választott módon – akkor is, ha az app nincs megnyitva.</p>
+        <div class="copy"><input readonly value="${esc(A.waste.feed)}" id="feed"><button class="btn sm line" data-copy="feed">${ico("copy")}Másol</button></div>
+        <div class="row"><a class="btn gold" href="${esc(A.waste.feed.replace(/^https?:/, "webcal:"))}">${ico("cal")}Feliratkozás (iPhone / Mac)</a>
+          <a class="btn line" href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent(A.waste.feed.replace(/^https?:/, "webcal:"))}" target="_blank" rel="noopener">${ico("cal")}Google Naptár</a></div>
+        <p class="mut xs" style="margin:0">A link titkos kulcsot tartalmaz – ne oszd meg. Ha kiszivárgott, a Beállítások → Naptárszinkron részben új kulcs kérhető.</p>
+      </div>`;
+    if (A.waste.cron) h += `<div class="help" style="margin-top:12px"><b>Tipp a pontos időzítéshez:</b> az ELIN.hu admin felületén (Ütemezett feladatok / Cron) állíts be óránkénti futást erre a címre: <span style="word-break:break-all">${esc(A.waste.cron)}</span>. Enélkül is működik: a weboldal első látogatása vagy az app megnyitása a beállított óra után elindítja a küldést.</div>`;
+    m.innerHTML = h;
+
+    const markDirty = () => { const b = $("#wSave", m); if (b) b.classList.add("gold"), b.classList.remove("pri"); };
+    m.oninput = m.onchange = (e) => {
+      const el = e.target;
+      if (el.dataset.w != null) {
+        const x = WED[+el.dataset.w], k = el.dataset.k;
+        x[k] = el.type === "checkbox" ? (el.checked ? 1 : 0) : ["weekday", "nth"].includes(k) ? +el.value : el.value;
+        markDirty();
+        if (e.type === "change" && ["kind", "weekday", "active"].includes(k)) viewWaste(m), reopen(+el.dataset.w);
+        else { const card = el.closest(".card"); if (card && k === "name") $("b", card).textContent = x.name || "Új hulladéktípus"; if (card) $(".hd small", card).textContent = ruleText(x); }
+      }
+      if (el.name === "gm") $("#wdF", m).hidden = el.value !== "week";
+    };
+    const reopen = (i) => { const d = $$("#wlist details", m)[i]; if (d) d.open = true; };
+    m.onclick = async (e) => {
+      const b = e.target.closest("button,a"); if (!b) return;
+      if (b.dataset.wadd != null) { const i = +b.dataset.wadd, inp = $((b.dataset.list === "dates" ? "#wd_" : "#ws_") + i, m); if (!inp.value) return toast("Válassz dátumot.", true); WED[i][b.dataset.list].push(inp.value); WED[i][b.dataset.list].sort(); viewWaste(m); reopen(i); markDirty(); }
+      else if (b.dataset.wdel != null) { const i = +b.dataset.wdel; WED[i][b.dataset.list].splice(+b.dataset.j, 1); viewWaste(m); reopen(i); markDirty(); }
+      else if (b.dataset.wcol != null) { WED[+b.dataset.wcol].color = b.dataset.c; viewWaste(m); reopen(+b.dataset.wcol); markDirty(); }
+      else if (b.dataset.wrm != null) { if (await confirmSheet("Törlés", `Törlöd: „${esc(WED[+b.dataset.wrm].name)}”? (A mentéssel lesz végleges.)`, "Törlés", "bad")) { WED.splice(+b.dataset.wrm, 1); viewWaste(m); markDirty(); } }
+      else if (b.id === "wAdd") { WED.push({ id: "", name: "", kind: "weekly", weekday: 1, nth: 1, start: t, season_from: "", season_to: "", dates: [], skip: [], note: "", color: WCOLORS[WED.length % WCOLORS.length], active: 1 }); viewWaste(m); reopen(WED.length - 1); $$("#wlist details", m)[WED.length - 1].querySelector("input").focus(); }
+      else if (b.id === "wSave") run(async () => { const bad = WED.find((x) => !x.name.trim()); if (bad) throw new Error("Minden hulladéktípusnak adj nevet."); const j = await api("waste_save", { types: WED }); A.waste = j; WED = null; toast(j.message); viewWaste(m); });
+      else if (b.id === "rSave") run(async () => { const j = await api("save_settings", { settings: { remind_waste: $("#r_waste", m).checked ? 1 : 0, guest_mode: ($("input[name=gm]:checked", m) || {}).value || "day", remind_hour: +$("#r_hour", m).value, week_day: +$("#r_wd", m).value, remind_email: $("#r_mail", m).value.trim() } }); A.data.settings = j.settings; toast("Emlékeztetők elmentve."); viewWaste(m); });
+      else if (b.id === "rTest") run(async () => { const j = await api("remind_test", {}); toast(j.message, !j.ok); });
+      else if (b.dataset.copy) copyVal($("#" + b.dataset.copy, m).value);
+    };
+  }
+  function copyVal(v) { (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(() => toast("Kimásolva."), () => { prompt("Másold ki:", v); }); }
+
+  /* ==========================================================================
+     PROGRAMOK
+     ========================================================================== */
+  function viewProg(m) {
+    if (!A.events) { m.innerHTML = `<div class="stack"><div class="skel"></div><div class="skel"></div></div>`; return; }
+    const t = A.data.today;
+    const ev = A.events.slice().sort((a, b) => (a.from + a.time).localeCompare(b.from + b.time));
+    const up = ev.filter((e) => (e.to || e.from) >= t), past = ev.filter((e) => (e.to || e.from) < t);
+    const row = (e) => `<div class="bk ${e.hidden ? "dim" : ""}" style="--ac:${e.top ? "#c9a25a" : "#2a86ad"}" data-ev="${e.id}">
+      <div class="dt"><b>${pd(e.from).getDate()}</b><span>${HU_MS[pd(e.from).getMonth()]}</span></div>
+      <div style="min-width:0"><div class="l1"><span class="nm">${esc(e.title)}</span>${e.top ? `<span class="tag pending">★ Kiemelt</span>` : ""}${e.hidden ? `<span class="tag block">Rejtett</span>` : ""}</div>
+      <div class="l2"><span>${esc(CATS[e.cat] || "")}</span>${e.to ? `<span>– ${huS(e.to)}</span>` : ""}${e.time ? `<span>${esc(e.time)}</span>` : ""}${e.place ? `<span>${esc(e.place)}</span>` : ""}</div></div></div>`;
+    m.innerHTML = `<h2 class="vt">Programok <small>a kezdőoldal „Rendezvények” részén jelennek meg</small></h2>
+      <button class="btn gold" id="evNew">${ico("plus")}Új program</button>
+      <h3 class="st">Közelgő <span class="n">${up.length}</span></h3><div class="stack">${up.map(row).join("") || `<div class="empty">Nincs közelgő program.</div>`}</div>
+      ${past.length ? `<details style="margin-top:14px"><summary class="btn sm line" style="list-style:none;display:inline-flex">Elmúlt programok (${past.length})</summary><div class="stack" style="margin-top:10px">${past.map(row).join("")}</div>${`<button class="btn bad sm" id="evClean" style="margin-top:10px">${ico("x")}Elmúltak törlése</button>`}</details>` : ""}`;
+    m.onclick = async (e) => {
+      const r = e.target.closest("[data-ev]"); if (r) return evSheet(A.events.find((x) => x.id === r.dataset.ev));
+      if (e.target.closest("#evNew")) return evSheet(null);
+      if (e.target.closest("#evClean") && (await confirmSheet("Elmúlt programok törlése", `${past.length} elmúlt program törlődik.`, "Törlés", "bad"))) saveEvents(A.events.filter((x) => (x.to || x.from) >= t));
+    };
+  }
+  async function saveEvents(list) { await run(async () => { const j = await api("events_save", { events: list }); A.events = j.events; toast(j.message); render(); }); }
+  function evSheet(ev) {
+    const e = ev || { id: "", from: A.data.today, to: "", time: "", title: "", place: "Zamárdi", cat: "egyeb", desc: "", url: "", ticket: "", img: "", top: 0, hidden: 0 };
+    const html = `
+      <label class="f"><span>Megnevezés</span><input id="e_title" value="${esc(e.title)}" placeholder="pl. Zamárdi Strandfesztivál"></label>
+      <div class="grid2"><label class="f"><span>Kezdés</span><input type="date" id="e_from" value="${esc(e.from)}"></label><label class="f"><span>Vége (ha több napos)</span><input type="date" id="e_to" value="${esc(e.to)}"></label></div>
+      <div class="grid2"><label class="f"><span>Időpont</span><input id="e_time" value="${esc(e.time)}" placeholder="pl. 20:00"></label><label class="f"><span>Kategória</span><select id="e_cat">${Object.entries(CATS).map(([k, l]) => `<option value="${k}" ${e.cat === k ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
+      <label class="f"><span>Helyszín</span><input id="e_place" value="${esc(e.place)}"></label>
+      <label class="f"><span>Leírás</span><textarea id="e_desc">${esc(e.desc)}</textarea></label>
+      <label class="f"><span>Bővebben (link)</span><input id="e_url" value="${esc(e.url)}" placeholder="https://"></label>
+      <label class="f"><span>Jegyvásárlás (link)</span><input id="e_ticket" value="${esc(e.ticket)}" placeholder="https://"></label>
+      <label class="f"><span>Kép (link)</span><input id="e_img" value="${esc(e.img)}" placeholder="https://"></label>
+      <label class="sw"><input type="checkbox" id="e_top" ${e.top ? "checked" : ""}><span><b>Kiemelt</b><small>előre kerül, arany jelöléssel</small></span></label>
+      <label class="sw"><input type="checkbox" id="e_hidden" ${e.hidden ? "checked" : ""}><span><b>Rejtett</b><small>elmentve, de nem látszik a weboldalon</small></span></label>
+      <div class="big-acts">${ev ? `<button class="btn bad" id="e_del">${ico("x")}Törlés</button>` : `<span></span>`}<button class="btn gold" id="e_save">${ico("check")}Mentés</button></div>`;
+    sheet(ev ? "Program szerkesztése" : "Új program", html, (el, close) => {
+      $("#e_save", el).addEventListener("click", async () => {
+        const n = { ...e, title: $("#e_title", el).value.trim(), from: $("#e_from", el).value, to: $("#e_to", el).value, time: $("#e_time", el).value, cat: $("#e_cat", el).value, place: $("#e_place", el).value, desc: $("#e_desc", el).value, url: $("#e_url", el).value, ticket: $("#e_ticket", el).value, img: $("#e_img", el).value, top: $("#e_top", el).checked ? 1 : 0, hidden: $("#e_hidden", el).checked ? 1 : 0 };
+        if (!n.title) return toast("Adj nevet a programnak.", true);
+        const list = ev ? A.events.map((x) => (x.id === ev.id ? n : x)) : A.events.concat([n]);
+        close(); await saveEvents(list);
+      });
+      const del = $("#e_del", el); if (del) del.addEventListener("click", async () => { close(); await saveEvents(A.events.filter((x) => x.id !== ev.id)); });
+    });
+  }
+
+  /* ==========================================================================
+     BEÁLLÍTÁSOK
+     ========================================================================== */
+  let SED = null;
+  function viewSettings(m) {
+    if (!SED) SED = JSON.parse(JSON.stringify(S()));
+    const s = SED, aps = s.apartments;
+    const num = (k, l, suf, min, max, hint) => `<label class="f"><span>${l}</span><span class="suf"><input type="number" data-s="${k}" value="${esc(s[k])}" min="${min}" max="${max}" inputmode="numeric">${suf ? `<i>${suf}</i>` : ""}</span>${hint ? `<span class="hint">${hint}</span>` : ""}</label>`;
+    const txt = (k, l, ph, type) => `<label class="f"><span>${l}</span><input type="${type || "text"}" data-s="${k}" value="${esc(s[k])}" placeholder="${esc(ph || "")}"></label>`;
+    const sec = (ic, title, sub, body, open) => `<details class="sec" ${open ? "open" : ""}><summary><span class="ic">${ico(ic)}</span><span>${title}<small>${sub}</small></span></summary><div class="in">${body}</div></details>`;
+    const links = A.data.ical_links || {};
+    let h = `<h2 class="vt">Beállítások</h2>`;
+    h += sec("money", "Árak szezononként", "alapár / éj apartmanonként és időszakonként", `
+      <div class="tbl-wrap"><table class="pt"><thead><tr><th></th>${s.seasons.map((x, j) => `<th><input data-se="${j}" data-k="name" value="${esc(x.name)}" aria-label="Időszak neve"><span class="row" style="gap:3px;flex-wrap:nowrap"><input data-se="${j}" data-k="from" value="${esc(x.from)}" maxlength="5" style="width:62px;padding:7px 4px;text-align:center" aria-label="Kezdete">–<input data-se="${j}" data-k="to" value="${esc(x.to)}" maxlength="5" style="width:62px;padding:7px 4px;text-align:center" aria-label="Vége"></span></th>`).join("")}</tr></thead>
+      <tbody>${aps.map((a) => `<tr><th><span class="row" style="gap:6px;flex-wrap:nowrap">${aptB(a.id)}${esc(a.name)}</span></th>${s.seasons.map((x, j) => `<td><input type="number" step="500" min="0" data-sp="${j}" data-apt="${a.id}" value="${esc((x.prices || {})[a.id] || "")}" aria-label="${esc(a.name)} ${esc(x.name)}"></td>`).join("")}</tr>`).join("")}</tbody></table></div>
+      <p class="mut xs" style="margin:0">Az időszak határai hó-nap formában (pl. 07-01). Az utolsó nap az utolsó éjszaka napja. Szezonon kívül az apartman alapára él.</p>
+      <label class="sw"><input type="checkbox" data-s="prices_checked" ${+s.prices_checked ? "checked" : ""}><span><b>Az árakat ellenőriztem</b><small>eltűnik a figyelmeztetés</small></span></label>
+      ${num("weekend_pct", "Hétvégi felár (péntek, szombat éj)", "%", 0, 100)}`, false);
+    h += sec("cal", "Időszakos árak", "egyedi ár egy adott időszakra (pl. fesztivál)", `
+      <div class="stack" id="prs">${(s.price_rules || []).map((r, i) => `<div class="mini-row">
+        <label class="f"><span>Ettől</span><input type="date" data-pr="${i}" data-k="from" value="${esc(r.from)}"></label>
+        <label class="f"><span>Eddig</span><input type="date" data-pr="${i}" data-k="to" value="${esc(r.to)}"></label>
+        <label class="f"><span>Apartman</span><select data-pr="${i}" data-k="apt"><option value="all">Mind</option>${aps.map((a) => `<option value="${a.id}" ${r.apt === a.id ? "selected" : ""}>${esc(a.name)}</option>`).join("")}</select></label>
+        <label class="f"><span>Ár / éj</span><input type="number" step="500" data-pr="${i}" data-k="price" value="${esc(r.price)}"></label>
+        <button class="x-btn" data-prdel="${i}" aria-label="Törlés">${ico("x")}</button></div>`).join("") || `<div class="empty">Nincs időszakos ár.</div>`}</div>
+      <button class="btn line sm" id="prAdd" style="justify-self:start">${ico("plus")}Időszakos ár</button>`);
+    h += sec("bed", "Apartmanok", "név, férőhely, alapár, kiadható-e", aps.map((a, i) => `
+      <div class="mini-row" style="grid-template-columns:auto 1fr 90px 120px auto">
+        ${aptB(a.id)}
+        <label class="f"><span>Név</span><input data-ap="${i}" data-k="name" value="${esc(a.name)}"></label>
+        <label class="f"><span>Férőhely</span><input type="number" min="1" max="12" data-ap="${i}" data-k="cap" value="${esc(a.cap)}"></label>
+        <label class="f"><span>Alapár / éj</span><input type="number" step="500" data-ap="${i}" data-k="price" value="${esc(a.price)}"></label>
+        <label class="sw" style="padding:0" title="Kiadható"><input type="checkbox" data-ap="${i}" data-k="active" ${+a.active ? "checked" : ""}></label></div>`).join("") + `<p class="mut xs" style="margin:0">A kikapcsolt apartman nem foglalható a weboldalon.</p>`);
+    h += sec("lock", "Foglalási szabályok", "éjszakák, előleg, határidők, adó", `
+      <div class="grid2">${num("min_nights", "Minimum éjszaka", "éj", 1, 60)}${num("max_nights", "Maximum éjszaka", "éj", 1, 120)}</div>
+      <div class="grid2">${num("lead_days", "Legkorábban ennyi nappal előre", "nap", 0, 60, "0 = aznapra is")}${num("horizon_days", "Legfeljebb ennyi napra előre", "nap", 30, 420)}</div>
+      <div class="grid2">${num("deposit_pct", "Előleg", "%", 0, 100)}${num("tax", "Idegenforgalmi adó / fő / éj", "Ft", 0, 100000, "18 év felett")}</div>
+      <div class="grid2">${num("pending_days", "Kérés jóváhagyási ideje", "nap", 1, 14, "utána lejár")}${num("pay_days", "Előleg fizetési határidő", "nap", 1, 30)}</div>
+      <div class="grid2">${txt("checkin", "Érkezés ettől", "14:00")}${txt("checkout", "Távozás eddig", "10:00")}</div>
+      <div class="grid2">${txt("season_from", "Foglalható szezon kezdete (hó-nap)", "05-15")}${txt("season_to", "Szezon vége (hó-nap)", "10-15")}</div>`);
+    h += sec("phone", "Kapcsolat és fizetés", "elérhetőség, bankszámla, SZÉP-kártya, NTAK", `
+      <div class="grid2">${txt("phone", "Telefon", "", "tel")}${txt("email", "E-mail (a vendégeknek)", "", "email")}</div>
+      ${txt("address", "Cím")}${txt("ntak", "NTAK regisztrációs szám")}
+      <div class="grid2">${txt("bank_holder", "Számlatulajdonos")}${txt("bank_name", "Bank neve")}</div>
+      ${txt("bank_account", "Bankszámlaszám", "12345678-12345678-12345678")}
+      <div class="grid2">${txt("bank_iban", "IBAN (külföldi utaláshoz)")}${txt("bank_swift", "SWIFT/BIC")}</div>
+      ${txt("bank_address", "Bank címe (külföldi utaláshoz)")}
+      <div class="grid3">${txt("szep_otp", "OTP SZÉP szerződésszám")}${txt("szep_mbh", "MBH SZÉP azonosító")}${txt("szep_kh", "K&H SZÉP azonosító")}</div>
+      <div class="grid2">${txt("rules_url", "Házirend linkje", "üresen: Kellékek/hazirend.pdf")}${txt("privacy_url", "Adatkezelési tájékoztató linkje", "üresen: Kellékek mappa")}</div>`);
+    h += sec("mail", "Értesítések", "új foglalásról e-mail", `
+      ${txt("notify_email", "Új foglalásról ide jön értesítés", "", "email")}
+      <button class="btn line sm" id="testMail" style="justify-self:start">${ico("mail")}Próba e-mail</button>
+      <div class="help">A hulladék- és vendégfogadás-emlékeztető a <b>Hulladék</b> fülön állítható.</div>`);
+    h += sec("sync", "Naptárszinkron", "Szállás.hu, Airbnb, Google Naptár", `
+      <p class="mut sm" style="margin:0"><b>Behozott naptárak</b> – a platformok iCal exportlinkje. A foglalásaik itt zárolják a napokat.</p>
+      ${aps.filter((a) => +a.active).map((a) => `<div class="card" style="box-shadow:none;background:var(--soft)"><div class="row" style="margin-bottom:8px">${aptB(a.id)}<b>${esc(a.name)}</b></div><div class="stack">
+        ${[["szallas", "Szállás.hu"], ["airbnb", "Airbnb"], ["egyeb", "Egyéb"]].map(([k, l]) => `<label class="f"><span>${l} naptár linkje</span><input data-ical="${a.id}" data-src="${k}" value="${esc(((s.ical || {})[a.id] || {})[k] || "")}" placeholder="https://…"></label>`).join("")}</div>
+        ${links[a.id] ? `<p class="mut xs" style="margin:10px 0 6px"><b>Kiküldés</b> – ezt add meg a platformnál:</p>
+        <div class="stack"><div class="copy"><input readonly value="${esc(links[a.id].szallas)}" id="lk_${a.id}_sz"><button class="btn sm line" data-copy="lk_${a.id}_sz">Szállás.hu</button></div>
+        <div class="copy"><input readonly value="${esc(links[a.id].airbnb)}" id="lk_${a.id}_ab"><button class="btn sm line" data-copy="lk_${a.id}_ab">Airbnb</button></div></div>` : ""}</div>`).join("")}
+      ${links.google ? `<div class="copy"><input readonly value="${esc(links.google)}" id="lk_g"><button class="btn sm line" data-copy="lk_g">Google (részletes)</button></div>` : ""}
+      ${Object.keys(s.sync_log || {}).length ? `<div class="log">${Object.entries(s.sync_log).map(([k, l]) => `<span>${l.ok ? "✔" : "✖"} ${esc(k)}: ${esc(l.msg || "")}</span>`).join("")}</div>` : ""}
+      <div class="row"><button class="btn line sm" id="syncNow">${ico("sync")}Szinkron most</button><label class="sw" style="padding:0"><input type="checkbox" data-s="regen_ical_key"><span><b>Új titkos kulcs mentéskor</b><small>a régi linkek megszűnnek</small></span></label></div>`);
+    h += sec("lock", "Jelszó", "belépési jelszó megváltoztatása", `
+      <label class="f"><span>Jelenlegi jelszó</span><input type="password" id="pw0" autocomplete="current-password"></label>
+      <label class="f"><span>Új jelszó (legalább 8 karakter)</span><input type="password" id="pw1" autocomplete="new-password"></label>
+      <button class="btn line" id="pwSave" style="justify-self:start">${ico("lock")}Jelszó módosítása</button>`, A.data.initial);
+    h += `<div class="row" style="margin-top:14px"><button class="btn bad" id="logout">${ico("door")}Kijelentkezés</button><a class="btn line" href="../uj/" target="_blank" rel="noopener">${ico("link")}Weboldal</a></div>`;
+    h += `<div class="savebar"><button class="btn line" id="sReset">Elvetés</button><button class="btn pri" id="sSave">${ico("check")}Beállítások mentése</button></div>`;
+    m.innerHTML = h;
+
+    const dirty = () => { const b = $("#sSave", m); b.classList.add("gold"); b.classList.remove("pri"); };
+    m.oninput = m.onchange = (e) => {
+      const el = e.target, v = el.type === "checkbox" ? (el.checked ? 1 : 0) : el.value; let hit = true;
+      if (el.dataset.s) s[el.dataset.s] = el.type === "number" ? +v : v;
+      else if (el.dataset.se != null) s.seasons[+el.dataset.se][el.dataset.k] = v;
+      else if (el.dataset.sp != null) { const x = s.seasons[+el.dataset.sp]; x.prices = x.prices || {}; x.prices[el.dataset.apt] = +v; }
+      else if (el.dataset.pr != null) s.price_rules[+el.dataset.pr][el.dataset.k] = el.dataset.k === "price" ? +v : v;
+      else if (el.dataset.ap != null) aps[+el.dataset.ap][el.dataset.k] = el.type === "number" ? +v : v;
+      else if (el.dataset.ical) { s.ical = s.ical || {}; s.ical[el.dataset.ical] = s.ical[el.dataset.ical] || {}; s.ical[el.dataset.ical][el.dataset.src] = v; }
+      else hit = false;
+      if (hit) dirty();
+    };
+    m.onclick = async (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.id === "prAdd") { s.price_rules = (s.price_rules || []).concat([{ from: A.data.today, to: addD(A.data.today, 2), apt: "all", price: 0 }]); keepOpen(() => viewSettings(m)); dirty(); }
+      else if (b.dataset.prdel != null) { s.price_rules.splice(+b.dataset.prdel, 1); keepOpen(() => viewSettings(m)); dirty(); }
+      else if (b.id === "sReset") { SED = null; viewSettings(m); toast("Módosítások elvetve."); }
+      else if (b.id === "sSave") run(async () => {
+        const out = { ...s }; ["sync_log", "ical_key", "last_sync", "ext_ignored", "mig_otp"].forEach((k) => delete out[k]);
+        const j = await api("save_settings", { settings: out }); SED = null; await loadAll(); toast(j.message); keepOpen(() => viewSettings(m));
+      });
+      else if (b.id === "testMail") run(async () => { const j = await api("test_mail", {}); toast(j.message, !j.ok); });
+      else if (b.id === "syncNow") run(async () => { const j = await api("sync", {}); toast(j.message); await loadAll(); SED = null; keepOpen(() => viewSettings(m)); });
+      else if (b.id === "pwSave") run(async () => { const j = await api("password", { old: $("#pw0", m).value, new: $("#pw1", m).value }); A.data.initial = false; toast(j.message); $("#pw0", m).value = $("#pw1", m).value = ""; });
+      else if (b.id === "logout") logout();
+      else if (b.dataset.copy) copyVal($("#" + b.dataset.copy, m).value);
+    };
+    function keepOpen(fn) { const open = $$("details.sec", m).map((d) => d.open); const y = scrollY; fn(); $$("details.sec", m).forEach((d, i) => (d.open = !!open[i])); scrollTo(0, y); }
+  }
+
+  /* ==========================================================================
+     Indítás
+     ========================================================================== */
+  async function start() {
+    shell();
+    $("#main").innerHTML = `<div class="stack"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>`;
+    try { await loadAll(); if (A.view === "prog") await loadEvents(); render(); }
+    catch (e) { if (A.tok || A.demo) loginView(e.message); }
+  }
+  /* visszatéréskor (pl. telefon felébresztése) friss adatok */
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && A.data && !$(".sheet")) run(async () => { await loadAll(); render(); }); });
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register("sw.js").catch(() => {});
+  if (/[?&]demo\b/.test(location.search)) { A.demo = true; start(); }
+  else if (A.tok) start(); else loginView();
+})();
+</script>
+</body>
+</html>

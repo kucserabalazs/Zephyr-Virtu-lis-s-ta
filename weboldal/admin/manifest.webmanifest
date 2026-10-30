@@ -1,0 +1,17 @@
+{
+  "name": "Zephyr Admin",
+  "short_name": "Zephyr Admin",
+  "description": "A Zephyr Apartmanház weboldalának és foglalásainak kezelése",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "hu",
+  "theme_color": "#0b2f5e",
+  "background_color": "#f4f1ea",
+  "icons": [
+    { "src": "../Zephyr%20Apartman%20Kell%C3%A9kek/favicon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "../Zephyr%20Apartman%20Kell%C3%A9kek/favicon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "../Zephyr%20Apartman%20Kell%C3%A9kek/favicon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
