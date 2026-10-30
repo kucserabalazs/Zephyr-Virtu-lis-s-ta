@@ -108,3 +108,4 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Hivatkozás mindenhonnan relatívan: `../Zephyr%20Apartman%20Kell%C3%A9kek/<fájl>` (a kezdőoldalról és a sétából is).
 - A foglalási ablak házirend- és adatkezelési linkje alapból ide mutat (demóban és a PHP-ban is, ha a tulajdonosi felületen üres a mező); a tulajdonosi felületen relatív útvonal is megadható.
 - Kezdőoldal láblécében: Házirend · Adatkezelési tájékoztató linkek; a lábléc logója a Kellékek mappából jön.
+- Ikoncsomag (2026-10-30): a Kellékek mappában favicon.ico/.svg/.webp, favicon-16/32/48/192/512.png, apple-touch-icon.png, Zephyr_Apartman_1024x1024.png, site.webmanifest (relatív útvonalakkal); `weboldal/favicon.ico` a gyökérben is. Fejléc-tagek: `forras/fejlec.txt` (séta) és `forras/kezdooldal-forras.html`.
