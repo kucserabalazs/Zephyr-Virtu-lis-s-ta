@@ -15,6 +15,13 @@ mb_internal_encoding('UTF-8');
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
+/* az admin app a GitHub Pages-ről is elérheti a foglalási rendszert (telefonra telepített app) */
+$zb_origin = isset($_SERVER['HTTP_ORIGIN']) ? (string) $_SERVER['HTTP_ORIGIN'] : '';
+if (in_array($zb_origin, array('https://kucserabalazs.github.io'), true)) {
+    header('Access-Control-Allow-Origin: ' . $zb_origin); header('Vary: Origin');
+    header('Access-Control-Allow-Headers: Content-Type, X-Zephyr-Token'); header('Access-Control-Allow-Methods: GET, POST, OPTIONS'); header('Access-Control-Max-Age: 86400');
+}
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 /* Az első belépési jelszó (kivonat). Belépés után a foglalási ablak admin részében megváltoztatható. */
 const ZB_INITIAL_HASH = '$2y$10$AW.XpFaNg0RNYNMz/mwQaOpUvoujNL7zj9FYQK7yEcRRuJG/YY8Bq';

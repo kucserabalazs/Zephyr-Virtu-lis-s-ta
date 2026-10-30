@@ -331,7 +331,8 @@ table.pt th input { width: 96px; padding: 7px 8px; border-radius: 9px; border: 1
    ========================================================================== */
 (function () {
   "use strict";
-  const API = "../virtualis-seta/api/index.php?r=";
+  /* a tárhelyen a saját API-t használja; a GitHub Pages-ről (telefonra telepített app) az éles tárhelyét */
+  const API = /\.github\.io$/i.test(location.hostname) ? "https://balatoni-udules.hu/virtualis-seta/api/index.php?r=" : "../virtualis-seta/api/index.php?r=";
   const TK = "zephyr-admin-token";
   const LOGO = "../Zephyr%20Apartman%20Kell%C3%A9kek/zephyr-logo.png";
   const HU_M = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
