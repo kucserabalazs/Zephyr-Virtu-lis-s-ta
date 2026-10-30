@@ -102,3 +102,9 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Letölthető csomagok: `zephyr-frissites-csak-kod.zip` (csak `virtualis-seta/index.html` → `/web/virtualis-seta`), `zephyr-feltoltes.zip` (teljes, képekkel → `/web`).
 - Visszajelzésre vár: a mahjong telefonon (Teknős álló képernyőn kicsi lapokkal), a regatta új iránya valódi telefonon, és hogy a feltöltés után az élő oldalon is rendben vannak-e a képek.
 - **Okt. 30. hajnal (3):** a tulajdonos kérésére a képes lapok (apartmanhajók, Zephyr, Tihany, Badacsony, Zamárdi, Balaton) **klasszikus mahjong-stílusúak**: fénykép-szerű háttér helyett a motívum közvetlenül az elefántcsont lapon, piros–zöld–kék tussal, pikkelyhullámmal, alatta a név (hajók sötétkék, tájak zöld, Zephyr piros betűvel; `PIC`, `nameC`, `sailC`, `sqC`, `hullC`). Ha keverésnél a maradék lapok egymás tetején vannak, a keverés egymás mellé, sorokba rakja ki őket, így mindig megoldható.
+
+## Kellékek mappa (2026-10-30)
+- `weboldal/Zephyr Apartman Kellékek/` – hivatalos dokumentumok: `adatkezelesi-tajekoztato.pdf`, `hazirend.pdf`, `zephyr-logo.png`.
+- Hivatkozás mindenhonnan relatívan: `../Zephyr%20Apartman%20Kell%C3%A9kek/<fájl>` (a kezdőoldalról és a sétából is).
+- A foglalási ablak házirend- és adatkezelési linkje alapból ide mutat (demóban és a PHP-ban is, ha a tulajdonosi felületen üres a mező); a tulajdonosi felületen relatív útvonal is megadható.
+- Kezdőoldal láblécében: Házirend · Adatkezelési tájékoztató linkek; a lábléc logója a Kellékek mappából jön.

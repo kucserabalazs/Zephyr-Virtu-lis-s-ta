@@ -516,7 +516,7 @@ case 'config':
     out(array('demo' => false, 'today' => today(), 'tax' => (int) $s['tax'], 'deposit_pct' => (int) $s['deposit_pct'],
         'min_nights' => (int) $s['min_nights'], 'max_nights' => (int) $s['max_nights'], 'lead_days' => (int) $s['lead_days'], 'horizon_days' => (int) $s['horizon_days'],
         'checkin' => $s['checkin'], 'checkout' => $s['checkout'], 'phone' => $s['phone'], 'email' => $s['email'], 'address' => $s['address'],
-        'rules_url' => $s['rules_url'], 'privacy_url' => $s['privacy_url'], 'apartments' => $apts,
+        'rules_url' => $s['rules_url'] !== '' ? $s['rules_url'] : '../Zephyr%20Apartman%20Kell%C3%A9kek/hazirend.pdf', 'privacy_url' => $s['privacy_url'] !== '' ? $s['privacy_url'] : '../Zephyr%20Apartman%20Kell%C3%A9kek/adatkezelesi-tajekoztato.pdf', 'apartments' => $apts,
         'ntak' => $s['ntak'], 'szep' => $szep, 'intl' => $s['bank_iban'] ? true : false));
 
 case 'availability':
@@ -769,7 +769,7 @@ case 'save_settings':
         if (isset($in[$k])) { $v = clean($in[$k], 160); if ($v !== '' && !filter_var($v, FILTER_VALIDATE_EMAIL)) { fail('Hibás e-mail cím: ' . $v); } $s[$k] = $v; }
     }
     foreach (array('rules_url', 'privacy_url') as $k) {
-        if (isset($in[$k])) { $v = clean($in[$k], 300); $s[$k] = ($v === '' || preg_match('#^https?://#i', $v)) ? $v : ''; }
+        if (isset($in[$k])) { $v = clean($in[$k], 300); $s[$k] = ($v === '' || preg_match('#^(https?://|\.\./|/)#i', $v)) ? $v : ''; }
     }
     if (isset($in['prices_checked'])) { $s['prices_checked'] = $in['prices_checked'] ? 1 : 0; }
     if (isset($in['ical']) && is_array($in['ical'])) {

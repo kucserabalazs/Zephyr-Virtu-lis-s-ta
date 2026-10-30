@@ -1393,7 +1393,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   /* ---------- bemutató adatok (ha nincs szerver) ---------- */
   function demoConfig() {
     const t = new Date(); const today = ymd(t);
-    return { demo: true, today, tax: 600, deposit_pct: 30, min_nights: 2, max_nights: 30, lead_days: 0, horizon_days: 400, checkin: "14:00", checkout: "10:00", phone: "+36 20 536 3120", email: "info@balatoni-udules.hu", address: "8621 Zamárdi, Gáspár András utca 58.", rules_url: "", privacy_url: "", ntak: "MA22033593 / MA22033128", szep: ["OTP", "MBH", "K&H"], intl: true,
+    return { demo: true, today, tax: 600, deposit_pct: 30, min_nights: 2, max_nights: 30, lead_days: 0, horizon_days: 400, checkin: "14:00", checkout: "10:00", phone: "+36 20 536 3120", email: "info@balatoni-udules.hu", address: "8621 Zamárdi, Gáspár András utca 58.", rules_url: "../Zephyr%20Apartman%20Kell%C3%A9kek/hazirend.pdf", privacy_url: "../Zephyr%20Apartman%20Kell%C3%A9kek/adatkezelesi-tajekoztato.pdf", ntak: "MA22033593 / MA22033128", szep: ["OTP", "MBH", "K&H"], intl: true,
       apartments: [{ id: "korvett", name: "Korvett", no: 1, cap: 4, price: 30000, color: "#e2483d" }, { id: "dingi", name: "Dingi", no: 2, cap: 2, price: 22000, color: "#3fb37f" }, { id: "fregatt", name: "Fregatt", no: 3, cap: 4, price: 30000, color: "#3d8fe2" }, { id: "kaloz", name: "Kalóz", no: 4, cap: 2, price: 22000, color: "#9b6be2" }, { id: "schooner", name: "Schooner", no: 5, cap: 4, price: 32000, color: "#2bb3c0" }] };
   }
   function demoDays(cfg, apt) {
@@ -9597,7 +9597,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     /* ---------- képes lapok, klasszikus mahjong-stílusban: motívum közvetlenül az elefántcsont lapon,
        hagyományos piros–zöld–kék tussal, alatta a név. 100 × 140 egységben rajzolva (motívum: 4–102, név: 108–134) ---------- */
     const LOGO = new Image(); let logoOk = false;
-    LOGO.onload = () => { logoOk = true; IMG.w = 0; }; LOGO.src = "img/zephyr-logo.png";
+    LOGO.onload = () => { logoOk = true; IMG.w = 0; }; LOGO.src = "../Zephyr%20Apartman%20Kell%C3%A9kek/zephyr-logo.png";
     const R2 = (seed) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
     function ln(g, x1, y1, x2, y2, w, c) { g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.lineWidth = w; g.strokeStyle = c; g.lineCap = "round"; g.stroke(); }
     const NV = "#14365f", RD = "#c2302a", GR = "#1d7a50", GRL = "#5aa36a", BL = "#1f63ad", IV = "#fbf7ec", GD = "#c99a2e", YL = "#f2c51e";
