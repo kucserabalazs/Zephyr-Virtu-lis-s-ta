@@ -659,6 +659,8 @@ body { background-image: var(--grain); }
 .ev-cal small { display: block; margin-top: 8px; color: var(--ink-2); font-size: 12px; }
 .ev-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .ev-b { font: 800 11px/1 var(--body); letter-spacing: .06em; padding: 5px 8px; border-radius: 6px; background: #eef4f8; color: var(--sea); }
+.ev-km { font-weight: 800; color: var(--sea); }
+.ev-cross { margin-top: 8px; font-size: 13.5px; color: #7a5a1e; background: #fbf4e4; border-radius: 10px; padding: 7px 10px; } .ev-cross a { color: var(--sea); font-weight: 800; }
 .ev-b.ev-free { background: #e1f4e9; color: #1d7446; } .ev-b.price { background: #fff3d6; color: #8a6300; }
 .ev-when-b { display: inline-block; margin-top: 6px; font-style: normal; font: 900 11px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--sea); background: #ffd978; padding: 4px 7px; border-radius: 5px; }
 .ev-body p.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -1677,7 +1679,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   /* ---------------------------------------------------------------- rendezvények – programajánló (szűrők, naptár, forrás, útvonal, strukturált adat) */
   const EVC = { fesztival: "Fesztivál", koncert: "Koncert", sport: "Sport", gasztro: "Gasztro", kultura: "Kultúra", csalad: "Családi", egyeb: "Egyéb" };
   let EVS = [], evCat = "", evDemo = false, evUpd = "";
-  const EQ = { when: "", town: "", free: false, kids: false, indoor: false, day: "", cal: false, mo: 0, open: {} };
+  const EQ = { when: "", zone: "", town: "", free: false, kids: false, indoor: false, day: "", cal: false, mo: 0, open: {} };
   function demoEvents() {
     const t = new Date(), add = (n) => { const d = new Date(t); d.setDate(d.getDate() + n); return ymd(d); };
     return [
@@ -1704,16 +1706,19 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     if (EQ.when === "month") { const a = new Date(t.getFullYear(), t.getMonth() + EQ.mo, 1), b = new Date(t.getFullYear(), t.getMonth() + EQ.mo + 1, 0); return [ymd(a) < T ? T : ymd(a), ymd(b)]; }
     return null;
   }
+  const EVZ = [["", "Bármilyen távolság"], ["gyalog", "🚶 Gyalog"], ["bike", "🚲 Biciklivel"], ["hajo", "⛴ Hajóval, komppal"], ["auto", "🚗 Autóval"]];
+  const evW = (e) => e.where || { zone: e.town === "Zamárdi" || !e.town ? "gyalog" : "egyeb", km: null, bike: e.town === "Zamárdi" ? 1 : 0 };
+  const evZoneOk = (e) => !EQ.zone || (EQ.zone === "bike" ? +evW(e).bike === 1 : evW(e).zone === EQ.zone);
   function evFiltered(ignoreCat) {
     const r = evRange();
-    return EVS.filter((e) => (ignoreCat || !evCat || e.cat === evCat) && (!EQ.town || e.town === EQ.town) && (!EQ.free || e.free) && (!EQ.kids || e.kids) && (!EQ.indoor || e.indoor) && (!r || evOverlap(e, r[0], r[1])));
+    return EVS.filter((e) => (ignoreCat || !evCat || e.cat === evCat) && evZoneOk(e) && (!EQ.town || e.town === EQ.town) && (!EQ.free || e.free) && (!EQ.kids || e.kids) && (!EQ.indoor || e.indoor) && (!r || evOverlap(e, r[0], r[1])));
   }
   const huDay = (s) => { const d = pd(s); return `${HU_MS[d.getMonth()]} ${d.getDate()}.`; };
   const mapUrl = (e) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([e.place, e.town && !(e.place || "").includes(e.town) ? e.town : "", "Magyarország"].filter(Boolean).join(", "));
   function evCalendar() {
     const t = new Date(), T = ymd(t), m0 = new Date(t.getFullYear(), t.getMonth() + EQ.mo, 1), y = m0.getFullYear(), mo = m0.getMonth(), days = new Date(y, mo + 1, 0).getDate(), lead = (m0.getDay() + 6) % 7;
     const base = evFiltered(false).filter(() => true), cnt = {};
-    for (let d = 1; d <= days; d++) { const s = ymd(new Date(y, mo, d)); cnt[s] = EVS.filter((e) => evOn(e, s) && (!evCat || e.cat === evCat) && (!EQ.town || e.town === EQ.town) && (!EQ.free || e.free) && (!EQ.kids || e.kids) && (!EQ.indoor || e.indoor)).length; }
+    for (let d = 1; d <= days; d++) { const s = ymd(new Date(y, mo, d)); cnt[s] = EVS.filter((e) => evOn(e, s) && (!evCat || e.cat === evCat) && evZoneOk(e) && (!EQ.town || e.town === EQ.town) && (!EQ.free || e.free) && (!EQ.kids || e.kids) && (!EQ.indoor || e.indoor)).length; }
     let h = `<div class="ev-cal"><div class="ev-cal-hd"><button type="button" class="ev-nav" data-mo="-1" ${EQ.mo <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><b>${y}. ${HU_M[mo]}</b><button type="button" class="ev-nav" data-mo="1" ${EQ.mo >= 11 ? "disabled" : ""} aria-label="Következő hónap">›</button></div><div class="ev-cal-g">`;
     h += ["H", "K", "Sze", "Cs", "P", "Szo", "V"].map((w) => `<span class="w">${w}</span>`).join("") + "<span></span>".repeat(lead);
     for (let d = 1; d <= days; d++) { const s = ymd(new Date(y, mo, d)), n = cnt[s], past = s < T; h += `<button type="button" class="d${s === T ? " today" : ""}${n ? " has" : ""}${EQ.day === s ? " on" : ""}" data-day="${s}" ${past || !n ? "disabled" : ""} aria-label="${d}. – ${n} program"><b>${d}</b>${n ? `<i>${n > 3 ? "•••" : "•".repeat(n)}</i>` : ""}</button>`; }
@@ -1732,9 +1737,10 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const cats = [...new Set(EVS.map((e) => e.cat))], towns = [...new Set(EVS.map((e) => e.town).filter(Boolean))].sort((a, b) => a.localeCompare(b, "hu"));
     const W = [["", "Mind"], ["today", "Ma"], ["weekend", "Hétvégén"], ["7", "Következő 7 nap"], ["month", "Havi naptár"]];
     const tog = (k, l, ic) => `<button type="button" class="chip tg" data-tg="${k}" aria-pressed="${EQ[k]}">${ic}${l}</button>`;
-    const any = EQ.when || EQ.town || EQ.free || EQ.kids || EQ.indoor || evCat || EQ.day;
+    const any = EQ.when || EQ.zone || EQ.town || EQ.free || EQ.kids || EQ.indoor || evCat || EQ.day;
     $("evBar").innerHTML = EVS.length ? `<div class="ev-filters">
         <div class="ev-row ev-when" role="group" aria-label="Időszak">${W.map(([k, n]) => `<button type="button" class="chip" data-when="${k}" aria-pressed="${EQ.when === k && !EQ.day}">${n}</button>`).join("")}</div>
+        ${EVS.some((e) => e.where) ? `<div class="ev-row ev-zone" role="group" aria-label="Távolság">${EVZ.filter(([k]) => !k || EVS.some((e) => k === "bike" ? +evW(e).bike === 1 : evW(e).zone === k)).map(([k, n]) => `<button type="button" class="chip" data-zone="${k}" aria-pressed="${EQ.zone === k}">${n}</button>`).join("")}</div>` : ""}
         <div class="ev-row">${towns.length > 1 ? `<label class="ev-town"><svg><use href="#i-pin"/></svg><select id="evTown" aria-label="Település"><option value="">Minden település</option>${towns.map((t) => `<option ${EQ.town === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>` : ""}
           ${[["", "Minden típus"]].concat(cats.map((c) => [c, EVC[c] || "Egyéb"])).map(([k, n]) => `<button type="button" class="chip" data-cat="${k}" aria-pressed="${evCat === k}">${esc(n)}</button>`).join("")}</div>
         <div class="ev-row">${tog("free", "Ingyenes", "🎟️ ")}${tog("kids", "Gyerekbarát", "🧒 ")}${tog("indoor", "Rossz időben is", "☔ ")}${any ? `<button type="button" class="ev-reset" data-reset="1">Szűrők törlése ✕</button>` : ""}</div>
@@ -1757,10 +1763,11 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
         ${e.img ? `<img class="ev-img" src="${esc(e.img)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
         <div class="ev-date"><span>${HU_MS[d.getMonth()]}</span><b${to && to.getMonth() === d.getMonth() ? ' style="font-size:25px;letter-spacing:-.02em"' : ""}>${d.getDate()}${to && to.getMonth() === d.getMonth() ? "–" + to.getDate() : ""}</b><small>${esc(range)}</small>${when ? `<em class="ev-when-b">${when}</em>` : ""}</div>
         <div class="ev-body"><div class="ev-tags"><span class="ev-cat">${esc(EVC[e.cat] || "Egyéb")}${evDemo ? `<span class="demo-tag">példa</span>` : ""}</span>${e.free ? `<span class="ev-b ev-free">Ingyenes</span>` : e.price ? `<span class="ev-b price">${esc(e.price)}</span>` : ""}${e.kids ? `<span class="ev-b">Gyerekbarát</span>` : ""}${e.indoor ? `<span class="ev-b">Rossz időben is</span>` : ""}</div><h3>${esc(e.title)}</h3>
-          <div class="ev-info">${e.time ? `<span><svg><use href="#i-clock"/></svg>${esc(e.time)}</span>` : ""}${e.place || e.town ? `<span><svg><use href="#i-pin"/></svg>${esc([e.place, e.town && !(e.place || "").includes(e.town) ? e.town : ""].filter(Boolean).join(", "))}</span>` : ""}</div>
+          <div class="ev-info">${e.time ? `<span><svg><use href="#i-clock"/></svg>${esc(e.time)}</span>` : ""}${e.place || e.town ? `<span><svg><use href="#i-pin"/></svg>${esc([e.place, e.town && !(e.place || "").includes(e.town) ? e.town : ""].filter(Boolean).join(", "))}</span>` : ""}${evW(e).km ? `<span class="ev-km">${{ gyalog: "🚶", bicikli: "🚲", hajo: "⛴", auto: "🚗" }[evW(e).zone] || ""} kb. ${evW(e).km} km a háztól</span>` : ""}</div>
+          ${evW(e).cross ? `<div class="ev-cross">⛴ ${esc(evW(e).cross)}${evW(e).ferry ? ` · <a href="${esc(evW(e).ferry)}" target="_blank" rel="noopener">menetrend ↗</a>` : ""}</div>` : ""}
           ${e.desc ? `<p class="${long && !open ? "clamp" : ""}">${esc(e.desc)}</p>${long ? `<button type="button" class="ev-more" data-open="${esc(e.id)}">${open ? "Kevesebb ▴" : "Tovább ▾"}</button>` : ""}` : ""}
           ${e.src || e.checked ? `<small class="ev-src">${e.src ? `Forrás: ${e.url && e.url !== "#" ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.src)}</a>` : esc(e.src)}` : ""}${e.src && e.checked ? " · " : ""}${e.checked ? `ellenőrizve: ${esc(huDay(e.checked))}` : ""}</small>` : ""}</div>
-        <div class="ev-acts">${e.ticket ? `<a class="btn btn-red btn-sm" href="${esc(e.ticket)}" target="_blank" rel="noopener"><svg><use href="#i-ticket"/></svg>Jegyfoglalás</a>` : ""}${e.url ? `<a class="btn btn-line btn-sm" href="${esc(e.url)}" target="_blank" rel="noopener"><svg><use href="#i-ext"/></svg>Bővebben</a>` : ""}${e.place || e.town ? `<a class="btn btn-line btn-sm" href="${mapUrl(e)}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>Útvonal</a>` : ""}</div>
+        <div class="ev-acts">${e.ticket ? `<a class="btn btn-red btn-sm" href="${esc(e.ticket)}" target="_blank" rel="noopener"><svg><use href="#i-ticket"/></svg>Jegyfoglalás</a>` : ""}${e.url ? `<a class="btn btn-line btn-sm" href="${esc(e.url)}" target="_blank" rel="noopener"><svg><use href="#i-ext"/></svg>Bővebben</a>` : ""}${e.place || e.town ? `<a class="btn btn-line btn-sm" href="${esc(evW(e).map || mapUrl(e))}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>Útvonal${evW(e).map ? (evW(e).zone === "gyalog" ? " gyalog" : " autóval") : ""}</a>` : ""}${evW(e).map_bike ? `<a class="btn btn-line btn-sm" href="${esc(evW(e).map_bike)}" target="_blank" rel="noopener">🚲 Biciklivel</a>` : ""}</div>
       </article>`;
     });
     $("evList").innerHTML = h + "</div>" + evMore();
@@ -1791,16 +1798,17 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   $("evBar").addEventListener("click", (e) => {
     const c = e.target.closest("[data-cat]"); if (c) { evCat = c.dataset.cat; return renderEvents(); }
+    const zb = e.target.closest("[data-zone]"); if (zb) { EQ.zone = zb.dataset.zone; return renderEvents(); }
     const w = e.target.closest("[data-when]"); if (w) { EQ.when = w.dataset.when; EQ.day = ""; EQ.mo = 0; return renderEvents(); }
     const t = e.target.closest("[data-tg]"); if (t) { EQ[t.dataset.tg] = !EQ[t.dataset.tg]; return renderEvents(); }
-    if (e.target.closest("[data-reset]")) { Object.assign(EQ, { when: "", town: "", free: false, kids: false, indoor: false, day: "", mo: 0 }); evCat = ""; return renderEvents(); }
+    if (e.target.closest("[data-reset]")) { Object.assign(EQ, { when: "", zone: "", town: "", free: false, kids: false, indoor: false, day: "", mo: 0 }); evCat = ""; return renderEvents(); }
   });
   $("evBar").addEventListener("change", (e) => { if (e.target.id === "evTown") { EQ.town = e.target.value; renderEvents(); } });
   $("evList").addEventListener("click", (e) => {
     const n = e.target.closest("[data-mo]"); if (n) { EQ.mo = Math.max(0, Math.min(11, EQ.mo + +n.dataset.mo)); EQ.day = ""; return renderEvents(); }
     const d = e.target.closest("[data-day]"); if (d) { EQ.day = EQ.day === d.dataset.day ? "" : d.dataset.day; if (!EQ.day) EQ.when = "month"; return renderEvents(); }
     const o = e.target.closest("[data-open]"); if (o) { EQ.open[o.dataset.open] = !EQ.open[o.dataset.open]; return renderEvents(); }
-    if (e.target.closest("[data-reset]")) { Object.assign(EQ, { when: "", town: "", free: false, kids: false, indoor: false, day: "", mo: 0 }); evCat = ""; return renderEvents(); }
+    if (e.target.closest("[data-reset]")) { Object.assign(EQ, { when: "", zone: "", town: "", free: false, kids: false, indoor: false, day: "", mo: 0 }); evCat = ""; return renderEvents(); }
   });
   loadEvents();
 

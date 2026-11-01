@@ -143,3 +143,11 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - **Duplikátumszűrés:** `ev_key` = név (évszám nélkül, első 6 szó) + kezdőnap + település; importnál és a nyilvános listában is. A forrásban törölt jövőbeli program `gone=1` (nem látszik), a `STATUS:CANCELLED` is. Kézzel javított importált program (`man=1`) nem íródik felül. 60 napnál régebben lejárt programok automatikusan törlődnek.
 - **Kezdőoldal:** Mind / Ma / Hétvégén / Következő 7 nap / Havi naptár (pöttyös havi rács, napra koppintás), település-választó, típusok, Ingyenes / Gyerekbarát / Rossz időben is; kártyán belépődíj- és jelzőcímkék, „Ma/Holnap”, Útvonal (Google Térkép), Forrás + ellenőrizve, hosszú leírás „Tovább”; „További balatoni programok” linkek (csak hivatkozás); schema.org Event JSON-LD (`#evLd`).
 - **Forrás-jogok:** a Programturizmus jogi nyilatkozata tiltja az üzleti célú átvételt – csak link. We Love Balaton / Csodálatos Balaton: nincs nyilvános feed. Önkormányzati/Tourinform oldalak innen nem voltak elérhetők – a tulajdonos vegyen fel olyan iCal/RSS-t, amelynek kiadója engedi.
+
+## 14. Vendég-programlevél (érkezés előtt, távolság szerint) – 2026-11-01
+- API (`virtualis-seta/api/index.php`): `EV_GEO` (települések koordinátái), `EV_CROSS` (komp/hajó az északi partra), `ev_km`, `ev_where` (zóna: gyalog ≤3 km / bicikli déli part ≤ `guest_ev_bike_km` / hajó-komp / autó; Google Térkép útvonal-linkek kulcs nélkül), `guest_events`, `mail_guest_programs`, `guest_ev_run` (naponta 9 után, cron vagy oldalbetöltés), `guest_page` (vendég saját oldala, leiratkozással).
+- Útvonalak: `vendeg_programok` (HMAC-kulcsos link), `guest_ev_send` (kézi küldés / próba), `guest_ev_preview`. A nyilvános `events` minden programhoz `where` mezőt ad.
+- Beállítások: `guest_ev`, `guest_ev_days` (7), `guest_ev_approved` (0), `guest_ev_bike_km` (25), `ferry_url` (https://bahart.hu/). Foglalásnál: `ev_sent`, `ev_optout`.
+- Egyszeri migráció: érkezés 14:00 → 15:00 (`mig_ci15`).
+- Kezdőoldal: távolságszűrő a programajánló ablakban, km-jelzés, komp/hajó tájékoztató, „Útvonal autóval/gyalog” + „Biciklivel” gomb.
+- Admin app → Több → Programok: „Programlevél a vendégeknek” kártya (be/ki, napok, km, menetrend-link, próbalevél, következő érkezők állapota); foglalás részleteinél „Programlevél küldése most”.
