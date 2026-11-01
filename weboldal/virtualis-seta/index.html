@@ -5956,12 +5956,6 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         g.beginPath(); g.moveTo(r.x - w, r.y); g.quadraticCurveTo(r.x, r.y - 1.1 * a, r.x + w, r.y); g.stroke();
         g.strokeStyle = `rgba(0,20,40,${.12 * a})`; g.beginPath(); g.moveTo(r.x - w * .8, r.y + .8); g.quadraticCurveTo(r.x, r.y + 1.4, r.x + w * .8, r.y + .8); g.stroke();
       });
-      wv.gl.forEach((p) => {  /* napfény-csillanások: négyágú villanások */
-        const a = Math.max(0, Math.sin(ts * p.f + p.ph)); if (a < .55) return; const q = (a - .55) / .45, sz = .6 + q * 1.6;
-        g.fillStyle = `rgba(255,252,235,${.75 * q})`; g.beginPath(); g.moveTo(p.x - sz * 1.8, p.y); g.lineTo(p.x, p.y - sz * .35); g.lineTo(p.x + sz * 1.8, p.y); g.lineTo(p.x, p.y + sz * .35); g.closePath(); g.fill();
-        g.beginPath(); g.moveTo(p.x, p.y - sz * .9); g.lineTo(p.x + sz * .25, p.y); g.lineTo(p.x, p.y + sz * .9); g.lineTo(p.x - sz * .25, p.y); g.closePath(); g.fill();
-        if (q > .8) { p.x = Math.random() * W; }
-      });
     }
     const gulls = [0, 1, 2].map((i) => ({ x: Math.random() * 1400, y: 14 + i * 9, vx: (Math.random() < .5 ? -1 : 1) * rnd(10, 16), ph: rnd(0, 6), mode: "fly", tgt: -1, t0: 0 }));
     let gullNext = performance.now() / 1000 + rnd(6, 14);
@@ -6313,19 +6307,28 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
           if (k > 4.1 && e.said === 1) { e.said = 2; sndMegaphone(2.2); }
           if (k > 7.2) { e.ph = "turn"; e.tt = ts; }
         } else if (e.ph === "turn") {
-          const k = Math.min(1, (ts - e.tt) / .9); e.flip = Math.cos(k * Math.PI);
-          if (k >= 1) { e.ph = "out"; e.kd = -d; e.flip = 1; e.ot = ts; }
+          if (ts - e.tt > 2.6 + 2 * .7) { e.ph = "out"; e.kd = -d; e.flip = 1; e.ot = ts; }  /* mindhárom kajak befejezte a fordulót */
         } else if (e.ph === "out") {
           const k = ts - e.ot; e.kx += e.kd * .07 * dt;
           if (k > .8) { if (e.jd !== e.kd) e.jd = e.kd; e.js = Math.min(1, e.js + dt * .5); e.jx += e.jd * (.05 + Math.max(0, k - 2.4) * .12) * dt; }
           if ((e.kd < 0 ? e.kx < -.05 : e.kx > 1.05) && (e.jx < -.08 || e.jx > 1.08)) extra = null;
         }
         if (extra) fronts.push(() => {  /* a vitorlások előtt rajzolódik */
-          const mode = e.ph === "in" || e.ph === "out" ? "paddle" : e.ph === "turn" ? "rest" : "rest";
+          const mode = e.ph === "in" || e.ph === "out" || e.ph === "turn" ? "paddle" : "rest";
+          const KR = 9 * Z, KD = 3.2;  /* forduló íve: sugár és mélységi lapítás */
           K.forEach((q, i) => {
-            const kx = e.kx * W - d * q.o * Z, ky = wy - 1 + q.y + Math.sin(ts * 2 + q.p) * .6;
+            let kx = e.kx * W - d * q.o * Z, ky = wy - 1 + q.y + Math.sin(ts * 2 + q.p) * .6, kd = e.ph === "out" ? e.kd : d, sx = 1;
+            if (e.ph === "turn" || e.ph === "out") {  /* sima, egymás után induló U-forduló a néző felé, közben elfordul a kajak */
+              const u = Math.max(0, Math.min(1, ((e.ph === "out" ? 99 : ts - e.tt) - i * .7) / 2.6)), a = Math.PI * ease(u);
+              const back = e.ph === "out" ? Math.exp(-(ts - e.ot) * .5) : 1;
+              kx += d * KR * Math.sin(a); ky += KD * (1 - Math.cos(a)) * back;
+              if (e.ph === "turn") {
+                const c = Math.cos(a); sx = (c < 0 ? -1 : 1) * Math.max(.28, Math.abs(c));
+                if (u > 0 && u < 1) for (let j = 1; j < 8; j++) { const aj = a - j * .16; if (aj <= 0) break; g.fillStyle = `rgba(255,255,255,${.55 * (1 - j / 8)})`; g.beginPath(); g.ellipse(e.kx * W - d * q.o * Z + d * KR * Math.sin(aj), wy + q.y + KD * (1 - Math.cos(aj)) + 1, 1.6 - j * .12, .5, 0, 0, Math.PI * 2); g.fill(); }
+              }
+            }
             const m = e.ph === "stop" && i === 0 && ts - e.ts > 4.6 && ts - e.ts < 6.8 ? "wave" : mode;
-            kayak(kx, ky, e.ph === "out" ? e.kd : d, q.c, q.v, ts, q.p, m, e.ph === "turn" ? e.flip : 1, q.tan, q.cap);
+            kayak(kx, ky, kd, q.c, q.v, ts, q.p, m, sx, q.tan, q.cap);
           });
           const jy = wy - 4 + Math.sin(ts * 3.1) * (e.js > .1 ? .4 : .8);
           const talking = e.ph === "stop" && ts - e.ts > .8 && ts - e.ts < 7.4;
