@@ -25,6 +25,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
 
 /* Az első belépési jelszó (kivonat). Belépés után a foglalási ablak admin részében megváltoztatható. */
 const ZB_INITIAL_HASH = '$2y$10$AW.XpFaNg0RNYNMz/mwQaOpUvoujNL7zj9FYQK7yEcRRuJG/YY8Bq';
+const ZB_ADMIN_EMAIL = 'kucserabalazs79@gmail.com';   /* ide jön a belépési ellenőrzőkód (kétlépcsős védelem) */
 const ZB_DATA_DIR = __DIR__ . '/data';
 const ZB_DB = ZB_DATA_DIR . '/db.php';
 const ZB_BLOCKING = array('pending', 'approved', 'paid', 'block');
@@ -772,6 +773,27 @@ case 'login':
     if (!rate_hit($db, 'login', 8, 900)) { db_save($db); fail('Túl sok sikertelen próbálkozás. Várj 15 percet.', 429); }
     $pw = isset($P['password']) ? (string) $P['password'] : '';
     if (!password_verify($pw, $db['pass'])) { db_save($db); usleep(400000); fail('Hibás jelszó.', 401); }
+    /* kétlépcsős védelem: helyes jelszó után e-mailben küldött 6 jegyű ellenőrzőkód (10 percig érvényes, 5 próbálkozás) */
+    $code = isset($P['code']) ? preg_replace('/\D/', '', (string) $P['code']) : '';
+    $to = ZB_ADMIN_EMAIL;
+    if ($code === '') {
+        if (!rate_hit($db, 'otp', 5, 900)) { db_save($db); fail('Túl sok kódkérés. Várj 15 percet.', 429); }
+        $c = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $db['otp'] = array('h' => hash('sha256', $c), 'exp' => time() + 600, 'tries' => 0);
+        db_save($db);
+        $sent = send_mail($db['settings'], $to, 'Belépési kód: ' . $c . ' – Zephyr admin',
+            "Szia!\n\nA Zephyr tulajdonosi felületére most valaki a helyes jelszóval próbál belépni.\n\nAz ellenőrzőkód: " . $c . "\n\nA kód 10 percig érvényes. Ha nem te voltál, ne add meg a kódot sehol, és változtasd meg a jelszót.\n");
+        if (!$sent) { fail('Nem sikerült elküldeni az ellenőrzőkódot e-mailben. Próbáld újra később.', 500); }
+        $at = strpos($to, '@'); $mask = substr($to, 0, 2) . str_repeat('•', max(1, $at - 2)) . substr($to, $at);
+        out(array('ok' => true, 'need_code' => true, 'sent_to' => $mask));
+    }
+    $o = isset($db['otp']) ? $db['otp'] : null;
+    if (!$o || $o['exp'] < time()) { unset($db['otp']); db_save($db); fail('Az ellenőrzőkód lejárt. Kérj újat.', 401); }
+    if (!hash_equals($o['h'], hash('sha256', $code))) {
+        $db['otp']['tries']++; if ($db['otp']['tries'] >= 5) { unset($db['otp']); }
+        db_save($db); usleep(400000); fail('Hibás ellenőrzőkód.', 401);
+    }
+    unset($db['otp']);
     $tok = bin2hex(random_bytes(24));
     $db['tokens'][hash('sha256', $tok)] = time() + 30 * 86400;
     db_save($db);

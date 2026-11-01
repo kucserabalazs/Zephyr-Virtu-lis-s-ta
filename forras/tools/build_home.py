@@ -14,6 +14,7 @@ shim='''<script>
 (function () {
   const $ = (id) => document.getElementById(id);
   let device = innerWidth <= 700 ? "phone" : "pc"; addEventListener("resize", () => { device = innerWidth <= 700 ? "phone" : "pc"; });
+  const REG_RS = 1.25;  /* gépen és táblagépen 25%-kal nagyobb verseny; telefonon változatlan */
   const AC = undefined, outBus = () => null, fxBurst = () => {}, fxTone = () => {}, walking = false;
 ''' + reg + '''
 })();

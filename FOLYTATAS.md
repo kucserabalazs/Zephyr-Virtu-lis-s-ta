@@ -1,6 +1,6 @@
 # Zephyr Apartman – a projekt állása és folytatási útmutató
 
-Utolsó mentés: 2026. október 30. hajnal (utolsó commit után ezt a fájlt olvasd el először) · Ezt a fájlt olvasd el először egy új munkamenet elején.
+Utolsó mentés: 2026. november 1. hajnal (a `finomitas-2026-11` ágon; lásd a 12. pontot) · Ezt a fájlt olvasd el először egy új munkamenet elején.
 
 ## 1. Mi ez a projekt?
 A Zephyr Apartmanház (8621 Zamárdi, Gáspár András utca 58., tulajdonos: Kucsera Balázs) weboldalának megújítása:
@@ -118,3 +118,21 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Szerver nélkül (GitHub Pages) bemutató módban fut próbaadatokkal (`?demo`).
 - Új API: `waste`, `waste_save`, `remind_test`, `teendok_ical` (kulccsal; hulladék előző nap a beállított órakor, vendégérkezés 1 nappal vagy 7 nappal előre). Beállítások: `remind_hour`, `remind_waste`, `guest_mode` (day/week/off), `week_day`, `remind_email`.
 - Napi emlékeztető e-mail: a beállított óra után naponta egyszer (cron: `?r=cron&key=…`, vagy a kezdőoldal / app első betöltése indítja). Heti módban a választott napon 7 napos áttekintés, a többi napon csak a kuka.
+
+## 12. Állás 2026. nov. 1. hajnal – „finomítás” kör (ág: `finomitas-2026-11`, a main-be még NINCS beolvasztva)
+- **Szabály:** a tulajdonos nem kér szerkezeti átírást és szövegcserét kérés nélkül – csak a meglévő elemek részleteinek kidolgozását. (Egy nagy átalakítást okt. 31-én elvetett: „borzalmas lett, csináld vissza”.) Változtatás előtt mutatni kell (claude.ai előnézet), main-be csak jóváhagyás után.
+- Előnézetek (claude.ai): kezdőoldal – https://claude.ai/artifact/WehAkHNWGr8toMUp1vQyPJ · séta – https://claude.ai/artifact/5JDHAnuPHejorWhWDd2ecr (a kezdőoldal előnézete erre linkel; HOME → a kezdőoldal eredeti előnézete MarcoyQiN2vBjunbMeAjpw) · admin app – https://claude.ai/artifact/Vo1WoZmZHQgTC92stkYBY8. Az előnézet forrása: `weboldal/uj/preview.html` (gitignore; a build után a `build/w/home/index.html` másolata).
+- **Vitorlásverseny (`regatta` a séta forrásában; a kezdőoldalra a `build_home.py` másolja, `REG_RS = 1.25` gépen/táblagépen nagyobb, telefonon változatlan):**
+  - versenyhajók: lobogó, hullámzó vitorlaél, lécek, szélszalagok, spinakker rugós felhúzással/pukkanással, orrember, egyedi testszínek (`sc.hull`), orrszám, Z-embléma; **bójakerülés sima ívben** (`b.turn`: a, a0, r, sp, k; `b.fx` rövidülés = elfordulás; `DZ` mélység), a bója mögött rajzolódik, ha mögötte jár; valódi nyomvonal (`b.tr`, `wake()`).
+  - víz: fodrok és szélfoltok (`water()`; a csillogást a tulajdonos kérésére kivettük); sirályok (`gulls`, bójára szállnak, felrebbennek).
+  - **A tulajdonos hajója: Raptor 27 „Zephyr”** (fehér grósz, piros génua – `raptor()`, `zephyrBoat()`, `ZB`): legelöl halad, véletlenszerűen bóját kerül (megállás előtt csak teljes kört), középen megáll, Balázs feláll és röviden integet, szóbuborék: „Szia! Balázs vagyok, várlak a Zephyrben! ♥”. Teszt: `#zephyr` a cím végén. A „HUN 27” vitorlajel kitalált – valódi vitorlaszám/fotó a tulajdonostól.
+  - vendégek részletesen: bóják, motorcsónakok (`foamV`), rendőrség, helikopter, kimentett ember, léghajó, repülő, tengeralattjáró (kapitány integet), periszkóp, Titanic + mentőcsónakok; kajakosok egymás után, ívben fordulnak.
+  - **viharfelhő**: rétegzett, gomolygó, belső villódzás, esőfüggöny, villámcsapás a vízbe; **mindenre másképp hat** (`storm`, `stormAt(px)`, `stormG()`): víz sötétebb + tajték, vitorlások lobognak/dőlnek, bóják hánykolódnak, motorcsónak/kajak bukdácsol, sirályok elsodródnak, repülő turbulencia, léghajó sodródik.
+  - fejlesztői bemutató: `#regatta=plane|blimp|police|race|rescue|sub|titanic|buoy|steam|kayak|storm|monster`.
+- **Kezdőoldal:** nyitókép-gombok a verseny fölött; szimmetrikus apartmankártyák; lábléc javítva (logó: `img/zephyr-logo.png`); aláhúzás görgetésre (egy vonal); evező SUP-ikon; élő ikonok (kerékpár, grill, stég, felszereltség-ikonok, biztonsági táblázat SMIL-animációval, telefon); **rajzolt balatoni jelenetek a látnivalóknál** (`scene(i)`, amíg nincs fotó); dátumdoboz javítva; új kerékpáros fotó (`img/szolg/kerekpar0.jpg`, a tulajdonos HEIC-képéből).
+- **Lektorálás (ChatGPT-javaslat alapján):** egységes tegezés, kb. 140 szöveg. Nyitott döntések: „Rendezvények” → „Programok”?, „Helyi szépségek & értékek” → „Zamárdi és környéke”?, mintaprogramok elrejtése?; a foglalás „Kész” oldala még magáz.
+- **Foglalási ablak:** hullámzó fejléc, vitorlás az aktuális lépésnél, hajótípus-rajzok a kártyákon (`boatArt`), horgony/vitorla a naptárban, csillanó gombok, rajzolt sikeroldal.
+- **Admin app** (`weboldal/admin/index.html`): balatoni jelenet a belépésnél, hullámzó fejléc/menü, élő ikonok, csempeikonok, lüktető hívógomb, vitorlás jelzők.
+- **Nyitott:** a látnivalók 9 fotója a régi oldalon van (innen nem elérhető) – a tulajdonos később küldi; hulladéknaptár-linkek (nem érkeztek meg); érkezés 14:00 vagy 15:00 (a rendszer 14:00-t ír); a weboldalon belüli tulajdonosi felület kidolgozása (kérdés).
+- **Kétlépcsős admin-védelem (nov. 1.):** a helyes jelszó után a szerver 6 jegyű ellenőrzőkódot küld e-mailben a `ZB_ADMIN_EMAIL` címre (`kucserabalazs79@gmail.com`, `api/index.php` eleje); 10 percig érvényes, 5 próbálkozás, kódkérés 5/15 perc. API: `login` {password} → `{need_code, sent_to}`; `login` {password, code} → `{token}`. Kliensek: admin app (`codeView`), weboldal tulajdonosi felülete (`A.otp`, „Új kódot kérek”). **Feltétel: a tárhelyen működjön a PHP `mail()`** – különben nem lehet belépni (feltöltés előtt próba e-mail a Beállításokban). A token továbbra is 30 napig él az eszközön.
+- **Nov. 1. 04:20:** a tulajdonos kérésére minden mentés kész: a `finomitas-2026-11` ág beolvasztva a `main`-be és feltöltve a GitHubra; teljes és kódmentés zip a beszélgetésben.
