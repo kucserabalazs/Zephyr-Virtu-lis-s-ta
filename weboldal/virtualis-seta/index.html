@@ -2107,12 +2107,24 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 
   /* ---------- Programajánló / rendezvények (a kezdőoldalon jelennek meg) ---------- */
   const EVC = { fesztival: "Fesztivál", koncert: "Koncert", sport: "Sport", gasztro: "Gasztro", kultura: "Kultúra", csalad: "Családi", egyeb: "Egyéb" };
-  async function loadEv() { try { const r = await call("events_all"); A.ev = r.events || []; A.evToday = r.today; } catch (x) { A.err = x.message; } render(); }
+  async function loadEv() { try { const r = await call("events_all"); A.ev = r.events || []; A.evToday = r.today; A.feeds = r.feeds || []; A.evUpd = r.updated || ""; } catch (x) { A.err = x.message; } render(); }
   function progView() {
     if (!A.ev) return `<div class="zfb-loading"><i></i><span>Programok betöltése…</span></div>`;
     const t = A.evToday || A.data.today, E = A.evEdit;
     let h = `<section class="zad-sec"><h3>Programajánló – rendezvények</h3><p class="zfb-fine" style="margin:-6px 0 12px">Ezek a kezdőoldal „Programajánló / Rendezvények” részében jelennek meg, dátum szerint. A lejárt programok maguktól eltűnnek a kezdőoldalról.</p>
       ${E ? "" : `<button type="button" class="zfb-btn" data-evnew="1">+ Új program</button>`}</section>`;
+    if (!E) {
+      const F = A.feeds || [];
+      h += `<section class="zad-sec"><h3>Programforrások <em>${F.length}</em></h3><p class="zfb-fine" style="margin:-6px 0 12px">Olyan naptárlinkek, amelyekből a programok naponta maguktól frissülnek: <b>iCal (.ics)</b>, eseménydátumos <b>RSS</b> vagy WordPress „The Events Calendar” (…/wp-json/tribe/events/v1/events). Csak olyan forrást adj meg, amelynek kiadója engedi az átvételt. A duplikátumok és a forrásból törölt programok kiszűrődnek.${A.evUpd ? ` Utolsó frissítés: <b>${esc(A.evUpd)}</b>.` : ""}</p>
+        <form class="zad-form" data-form="feeds">${F.concat([{ id: "", name: "", url: "", town: "", cat: "egyeb", on: 1 }]).map((f, i) => `<div class="zad-grid zad-feed" style="margin-bottom:10px">
+          <label class="zad-f"><span>${f.id ? "Forrás neve" : "Új forrás neve"}</span><input name="f${i}_name" value="${esc(f.name || "")}" placeholder="pl. Zamárdi önkormányzat"></label>
+          <label class="zad-f wide"><span>Link (iCal / RSS / WordPress)</span><input type="url" name="f${i}_url" value="${esc(f.url || "")}" placeholder="https://…"></label>
+          <label class="zad-f"><span>Alapértelmezett település</span><input name="f${i}_town" value="${esc(f.town || "")}" placeholder="pl. Zamárdi"></label>
+          <label class="zad-f"><span>Alapértelmezett kategória</span><select name="f${i}_cat">${Object.entries(EVC).map(([k, n]) => `<option value="${k}" ${f.cat === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+          <input type="hidden" name="f${i}_id" value="${esc(f.id || "")}"><label class="zad-chk"><input type="checkbox" name="f${i}_on" ${f.on ? "checked" : ""}> Bekapcsolva</label>
+          ${f.id ? `<small class="zfb-fine" style="grid-column:1/-1;margin:0">${f.last ? (f.ok ? "✓ " : "⚠ ") + esc(f.last) + " – " + esc(f.msg || "") : "Még nem frissült."} Törléshez ürítsd ki a linket.</small>` : ""}</div>`).join("")}
+          <div class="zad-acts"><button type="submit" class="zad-b pri">Források mentése</button><button type="button" class="zad-b" data-evimport="1">Frissítés most</button></div></form></section>`;
+    }
     if (E) {
       const v = (k) => esc(E[k] == null ? "" : E[k]);
       h += `<form class="zad-form" data-form="ev"><h3 class="zad-h4" style="margin-top:0">${E.id ? "Program szerkesztése" : "Új program"}</h3><div class="zad-grid">
@@ -2121,22 +2133,31 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
         <label class="zad-f"><span>Utolsó nap (ha több napos)</span><input type="date" name="to" value="${v("to")}"></label>
         <label class="zad-f"><span>Időpont</span><input name="time" value="${v("time")}" placeholder="pl. 18:00-tól"></label>
         <label class="zad-f"><span>Helyszín</span><input name="place" value="${v("place")}" placeholder="pl. Zamárdi Szabadstrand"></label>
+        <label class="zad-f"><span>Település</span><input name="town" list="zadTowns" value="${v("town")}" placeholder="pl. Zamárdi"><datalist id="zadTowns">${["Zamárdi", "Siófok", "Balatonföldvár", "Szántód", "Kőröshegy", "Balatonszárszó", "Balatonszemes", "Balatonlelle", "Balatonboglár", "Fonyód", "Tihany", "Balatonfüred", "Keszthely", "Badacsony"].map((x) => `<option>${x}</option>`).join("")}</datalist></label>
+        <label class="zad-f"><span>Belépődíj</span><input name="price" value="${v("price")}" placeholder="pl. ingyenes, 2500 Ft, 3000–5000 Ft"></label>
         <label class="zad-f"><span>Kategória</span><select name="cat">${Object.entries(EVC).map(([k, n]) => `<option value="${k}" ${E.cat === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
         <label class="zad-f wide"><span>Rövid leírás</span><textarea name="desc" rows="3">${v("desc")}</textarea></label>
         <label class="zad-f"><span>Bővebben – a rendezvény saját oldala</span><input type="url" name="url" value="${v("url")}" placeholder="https://…"></label>
         <label class="zad-f"><span>Jegyfoglalás / jegyvásárlás linkje</span><input type="url" name="ticket" value="${v("ticket")}" placeholder="https://…"></label>
         <label class="zad-f wide"><span>Kép linkje (nem kötelező)</span><input name="img" value="${v("img")}" placeholder="https://… vagy /uj/img/programok/kep.jpg"></label>
+        <label class="zad-f"><span>Forrás neve</span><input name="src" value="${v("src")}" placeholder="pl. Zamárdi Tourinform, plakát, saját"></label>
+        <label class="zad-f"><span>Utoljára ellenőrizve</span><input type="date" name="checked" value="${v("checked")}"></label>
       </div><div class="zad-checks" style="display:flex;gap:18px;flex-wrap:wrap;margin-top:12px">
         <label class="zad-chk"><input type="checkbox" name="top" ${E.top ? "checked" : ""}> Kiemelt program (nagyobb kártya)</label>
-        <label class="zad-chk"><input type="checkbox" name="hidden" ${E.hidden ? "checked" : ""}> Rejtve (nem látszik a kezdőoldalon)</label></div>
+        <label class="zad-chk"><input type="checkbox" name="hidden" ${E.hidden ? "checked" : ""}> Rejtve (nem látszik a kezdőoldalon)</label>
+        <label class="zad-chk"><input type="checkbox" name="free" ${E.free ? "checked" : ""}> Ingyenes</label>
+        <label class="zad-chk"><input type="checkbox" name="kids" ${E.kids ? "checked" : ""}> Gyerekbarát</label>
+        <label class="zad-chk"><input type="checkbox" name="indoor" ${E.indoor ? "checked" : ""}> Rossz időben is (beltéri)</label></div>
+        ${E.feed ? `<p class="zfb-fine" style="margin:10px 0 0">Ez a program forrásból érkezett (${esc(E.src || "")}). Ha itt módosítod, a következő frissítés nem írja felül.</p>` : ""}
         <div class="zad-acts" style="margin-top:14px"><button type="submit" class="zad-b pri">Mentés</button><button type="button" class="zad-b" data-evcancel="1">Mégse</button></div></form>`;
     }
     const up = A.ev.filter((e) => (e.to || e.from) >= t), past = A.ev.filter((e) => (e.to || e.from) < t);
     const row = (e) => `<article class="zad-c zad-ev${e.hidden ? " off" : ""}" style="--ac:${e.top ? "#f2b233" : "#0b2f5e"}">
       <div class="zad-c-hd"><b>${esc(e.title)}</b><span class="zad-st st-approved">${EVC[e.cat] || "Egyéb"}</span></div>
       <div class="zad-c-dates"><b>${hu(e.from)}${e.to ? " – " + hu(e.to) : ""}</b>${e.time ? ` <span>${esc(e.time)}</span>` : ""}</div>
-      ${e.place ? `<div class="zad-c-who">${esc(e.place)}</div>` : ""}${e.desc ? `<p class="zad-note">${esc(e.desc)}</p>` : ""}
-      <div class="zad-c-who"><small>${e.url ? "🔗 Bővebben link · " : ""}${e.ticket ? "🎫 Jegy link · " : ""}${e.top ? "★ Kiemelt · " : ""}${e.hidden ? "Rejtve" : "Látható"}</small></div>
+      ${e.place || e.town ? `<div class="zad-c-who">${esc([e.place, e.town && !(e.place || "").includes(e.town) ? e.town : ""].filter(Boolean).join(" · "))}</div>` : ""}${e.desc ? `<p class="zad-note">${esc(e.desc)}</p>` : ""}
+      <div class="zad-c-who"><small>${e.price ? "💶 " + esc(e.price) + " · " : ""}${e.free ? "Ingyenes · " : ""}${e.kids ? "Gyerekbarát · " : ""}${e.indoor ? "Rossz időben is · " : ""}${e.url ? "🔗 Bővebben link · " : ""}${e.ticket ? "🎫 Jegy link · " : ""}${e.top ? "★ Kiemelt · " : ""}${e.gone ? "⚠ Törölve a forrásban – nem látszik · " : ""}${e.hidden ? "Rejtve" : "Látható"}</small></div>
+      ${e.src || e.checked ? `<div class="zad-c-who"><small>${e.src ? "Forrás: " + esc(e.src) : ""}${e.src && e.checked ? " · " : ""}${e.checked ? "ellenőrizve: " + esc(e.checked) : ""}${e.man ? " · kézzel javítva" : ""}</small></div>` : ""}
       <div class="zad-acts"><button type="button" class="zad-b" data-evedit="${e.id}">Szerkesztés</button><button type="button" class="zad-b" data-evdup="${e.id}">Másolat</button><button type="button" class="zad-b del" data-evdel="${e.id}">Törlés</button></div></article>`;
     h += `<section class="zad-sec"><h3>Közelgő programok <em>${up.length}</em></h3>${up.length ? `<div class="zad-cards">${up.map(row).join("")}</div>` : `<p class="zad-empty">Még nincs felvéve program. Az „+ Új program” gombbal adhatsz hozzá.</p>`}</section>`;
     if (past.length) h += `<section class="zad-sec"><button type="button" class="zad-link" data-evpast="1">${A.evPast ? "▾" : "▸"} Elmúlt programok (${past.length})</button>${A.evPast ? `<div class="zad-cards">${past.map(row).join("")}</div>` : ""}</section>`;
@@ -2192,6 +2213,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     if (b.dataset.otpResend && A.otp) { try { const r = await call("login", { password: A.otp.pw }); A.otp.to = r.sent_to || A.otp.to; A.err = ""; A.msg = "Új kódot küldtünk."; } catch (x) { A.err = x.message; } render(); return; }
     if (b.dataset.tab) { if (A.tab === "settings") grabSettings(); A.tab = b.dataset.tab; A.err = ""; A.msg = ""; render(); el.querySelector(".zad-body").scrollTop = 0; if (A.tab === "prog" && !A.ev) loadEv(); return; }
     if (b.dataset.reload) { if (A.tab === "prog") { A.ev = null; render(); return loadEv(); } return load(); }
+    if (b.dataset.evimport) { A.busy = true; render(); try { const r = await call("ev_import", {}); A.feeds = r.feeds; A.ev = r.events; A.evUpd = r.updated; A.busy = false; flash(r.message); try { window.dispatchEvent(new Event("zephyr-events-changed")); } catch (z) {} } catch (x) { A.busy = false; A.err = x.message; render(); } return; }
     if (b.dataset.evnew) { A.evEdit = { cat: "egyeb" }; render(); el.querySelector(".zad-body").scrollTop = 0; return; }
     if (b.dataset.evcancel) { A.evEdit = null; return render(); }
     if (b.dataset.evpast) { A.evPast = !A.evPast; return render(); }
@@ -2228,8 +2250,14 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       catch (x) { A.busy = false; A.err = x.message; if (/lejárt/i.test(x.message)) A.otp = null; render(); }
       return;
     }
+    if (kind === "feeds") {
+      const feeds = []; for (let i = 0; fd["f" + i + "_url"] !== undefined; i++) { if (fd["f" + i + "_url"]) feeds.push({ id: fd["f" + i + "_id"], name: fd["f" + i + "_name"], url: fd["f" + i + "_url"], town: fd["f" + i + "_town"], cat: fd["f" + i + "_cat"], on: !!fd["f" + i + "_on"] }); }
+      A.busy = true; render();
+      try { const r = await call("ev_feeds_save", { feeds }); A.feeds = r.feeds; A.busy = false; flash(r.message); await loadEv(); } catch (x) { A.busy = false; A.err = x.message; render(); }
+      return;
+    }
     if (kind === "ev") {
-      const E = Object.assign({}, A.evEdit, fd, { top: !!fd.top, hidden: !!fd.hidden });
+      const E = Object.assign({}, A.evEdit, fd, { top: !!fd.top, hidden: !!fd.hidden, free: !!fd.free, kids: !!fd.kids, indoor: !!fd.indoor });
       if (!E.title || !E.from) { A.err = "A program neve és az első nap kötelező."; return render(); }
       if (E.to && E.to < E.from) { A.err = "Az utolsó nap nem lehet az első nap előtt."; return render(); }
       const list = A.ev.slice(); const i = E.id ? list.findIndex((x) => x.id === E.id) : -1;

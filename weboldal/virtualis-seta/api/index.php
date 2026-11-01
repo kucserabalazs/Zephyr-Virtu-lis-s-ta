@@ -8,6 +8,7 @@
  *   vendég:  config · availability (apt, from, to) · book (POST)
  *   admin:   login · logout · me · bookings · action · manual · settings · save_settings · password
  *   admin app (admin/): waste · waste_save · remind_test   ·   naptár: teendok_ical (key) – hulladék + vendégérkezés emlékeztetővel
+ *   programajánló: events (nyilvános) · events_all · events_save · ev_feeds_save · ev_import (admin) – források: iCal, RSS (eseménydátummal), WordPress „The Events Calendar” JSON
  */
 
 date_default_timezone_set('Europe/Budapest');
@@ -254,6 +255,165 @@ function http_get($url) {
     $body = @file_get_contents($url, false, $ctx);
     return array($body === false ? 0 : 200, $body === false ? '' : $body, $body === false ? 'letöltési hiba' : '');
 }
+/* ------------------------------ programajánló: segédfüggvények (2026-11) – mezők, duplikátumszűrés, forrásimport */
+const EV_CATS = array('fesztival', 'koncert', 'sport', 'gasztro', 'kultura', 'csalad', 'egyeb');
+const EV_TOWNS = array('Zamárdi', 'Siófok', 'Balatonföldvár', 'Szántód', 'Kőröshegy', 'Balatonszárszó', 'Balatonszemes', 'Balatonlelle', 'Balatonboglár', 'Fonyód', 'Balatonkenese', 'Balatonvilágos', 'Tihany', 'Balatonfüred', 'Balatonalmádi', 'Révfülöp', 'Badacsony', 'Szigliget', 'Keszthely', 'Hévíz', 'Balatonmáriafürdő', 'Balatonkeresztúr', 'Vonyarcvashegy', 'Csopak', 'Paloznak');
+function ev_norm($s) {
+    $s = mb_strtolower((string) $s);
+    $s = strtr($s, array('á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ö' => 'o', 'ő' => 'o', 'ú' => 'u', 'ü' => 'u', 'ű' => 'u'));
+    return trim(preg_replace('/[^a-z0-9]+/', ' ', $s));
+}
+/* duplikátumkulcs: név (évszámok, „2026” stb. nélkül) + kezdőnap + település */
+function ev_key($e) {
+    $t = preg_replace('/\b(19|20)\d{2}\b/', '', ev_norm(isset($e['title']) ? $e['title'] : ''));
+    $t = implode(' ', array_slice(array_filter(explode(' ', $t)), 0, 6));
+    return $t . '|' . (isset($e['from']) ? $e['from'] : '') . '|' . ev_norm(isset($e['town']) ? $e['town'] : '');
+}
+function ev_guess_town($txt, $def) {
+    $n = ' ' . ev_norm($txt) . ' ';
+    foreach (EV_TOWNS as $tw) { if (strpos($n, ' ' . ev_norm($tw) . ' ') !== false) { return $tw; } }
+    return $def;
+}
+function ev_guess_cat($txt, $def) {
+    $n = ev_norm($txt);
+    $map = array('fesztival' => 'fesztival|napok|vigasso|majalis|unnep', 'csalad' => 'gyerek|csalad|baba|bab|mese|jatszohaz', 'koncert' => 'koncert|zenekar|dj |dalest|opera|jazz|rock', 'sport' => 'futas|futo|verseny|kupa|regatta|tura|kerekpar|uszas|sup |triatlon',
+        'gasztro' => 'gasztro|bor|fozo|halasz|kostolo|street food|pinces', 'kultura' => 'kiallitas|szinhaz|muzeum|eloadas|mozi|film|irodalm|tarlat');
+    foreach ($map as $c => $re) { if (preg_match('/' . $re . '/', $n)) { return $c; } }
+    return in_array($def, EV_CATS, true) ? $def : 'egyeb';
+}
+function ev_flags($txt, $price) {
+    $n = ev_norm($txt . ' ' . $price);
+    return array('free' => preg_match('/ingyenes|dijtalan|belepes dijmentes|free entry/', $n) || trim((string) $price) === '0' ? 1 : 0,
+        'kids' => preg_match('/gyerek|csalad|mese|jatszo|ovis|baba/', $n) ? 1 : 0,
+        'indoor' => preg_match('/kiallitas|muzeum|szinhaz|mozi|terem|fedett|sportcsarnok|templom|galeria|konferencia/', $n) ? 1 : 0);
+}
+/* egy program adatainak tisztítása (kézi mentésnél és importnál is) */
+function ev_clean($e, $url) {
+    $f = isset($e['from']) ? (string) $e['from'] : ''; $t = isset($e['to']) ? (string) $e['to'] : '';
+    $chk = isset($e['checked']) && valid_date((string) $e['checked']) ? (string) $e['checked'] : today();
+    return array('id' => isset($e['id']) && preg_match('/^[a-f0-9]{6,16}$/', (string) $e['id']) ? (string) $e['id'] : bin2hex(random_bytes(6)),
+        'from' => $f, 'to' => $t === $f ? '' : $t, 'time' => clean(isset($e['time']) ? $e['time'] : '', 40), 'title' => clean(isset($e['title']) ? $e['title'] : '', 140),
+        'place' => clean(isset($e['place']) ? $e['place'] : '', 140), 'town' => clean(isset($e['town']) ? $e['town'] : '', 60),
+        'cat' => isset($e['cat']) && in_array($e['cat'], EV_CATS, true) ? $e['cat'] : 'egyeb', 'desc' => clean_ml(isset($e['desc']) ? $e['desc'] : '', 1500),
+        'price' => clean(isset($e['price']) ? $e['price'] : '', 80),
+        'url' => $url(isset($e['url']) ? $e['url'] : ''), 'ticket' => $url(isset($e['ticket']) ? $e['ticket'] : ''), 'img' => $url(isset($e['img']) ? $e['img'] : ''),
+        'src' => clean(isset($e['src']) ? $e['src'] : '', 80), 'checked' => $chk,
+        'free' => !empty($e['free']) ? 1 : 0, 'kids' => !empty($e['kids']) ? 1 : 0, 'indoor' => !empty($e['indoor']) ? 1 : 0,
+        'top' => !empty($e['top']) ? 1 : 0, 'hidden' => !empty($e['hidden']) ? 1 : 0,
+        'feed' => isset($e['feed']) ? preg_replace('/[^a-f0-9]/', '', (string) $e['feed']) : '', 'ext' => isset($e['ext']) ? clean($e['ext'], 200) : '',
+        'gone' => !empty($e['gone']) ? 1 : 0, 'man' => !empty($e['man']) ? 1 : 0);
+}
+function ev_url_fn() { return function ($v) { $v = clean($v, 400); return ($v === '' || preg_match('#^(https?://|/)#i', $v)) ? $v : 'https://' . $v; }; }
+/* ---- forrásformátumok: iCal (.ics), WordPress „The Events Calendar” JSON, RSS/Atom eseménydátummal ---- */
+function ev_ics_date($v, $params) {
+    if (preg_match('/^(\d{4})(\d{2})(\d{2})(T(\d{2})(\d{2})(\d{2})(Z)?)?$/', $v, $m)) {
+        if (empty($m[4])) { return array("$m[1]-$m[2]-$m[3]", ''); }
+        $ts = gmmktime((int) $m[5], (int) $m[6], 0, (int) $m[2], (int) $m[3], (int) $m[1]);
+        if (!empty($m[8])) { return array(date('Y-m-d', $ts), date('H:i', $ts)); }   /* UTC → helyi idő */
+        return array("$m[1]-$m[2]-$m[3]", "$m[5]:$m[6]");
+    }
+    return array('', '');
+}
+function ev_parse_ics($body) {
+    $body = preg_replace("/\r?\n[ \t]/", '', str_replace("\r\n", "\n", $body)); $out = array(); $cur = null;
+    $un = function ($s) { return trim(str_replace(array('\\n', '\\N', '\\,', '\;', '\\\\'), array("\n", "\n", ',', ';', '\\'), $s)); };
+    foreach (explode("\n", $body) as $ln) {
+        if ($ln === 'BEGIN:VEVENT') { $cur = array(); continue; }
+        if ($ln === 'END:VEVENT') { if ($cur) { $out[] = $cur; } $cur = null; continue; }
+        if ($cur === null || strpos($ln, ':') === false) { continue; }
+        list($k, $v) = explode(':', $ln, 2); $kp = explode(';', $k); $name = strtoupper($kp[0]);
+        if ($name === 'DTSTART') { list($cur['from'], $cur['time']) = ev_ics_date(trim($v), $kp); }
+        elseif ($name === 'DTEND') { list($d, $tm) = ev_ics_date(trim($v), $kp); if ($d && strlen(trim($v)) === 8) { $d = date('Y-m-d', strtotime($d . ' -1 day')); } $cur['to'] = $d; }
+        elseif ($name === 'SUMMARY') { $cur['title'] = $un($v); }
+        elseif ($name === 'LOCATION') { $cur['place'] = $un($v); }
+        elseif ($name === 'DESCRIPTION') { $cur['desc'] = $un($v); }
+        elseif ($name === 'URL') { $cur['url'] = trim($v); }
+        elseif ($name === 'UID') { $cur['ext'] = trim($v); }
+        elseif ($name === 'STATUS') { $cur['status'] = strtoupper(trim($v)); }
+    }
+    return $out;
+}
+function ev_parse_tribe($j) {
+    $out = array();
+    foreach ((array) $j['events'] as $e) {
+        $v = isset($e['venue']) && is_array($e['venue']) ? $e['venue'] : array();
+        $out[] = array('title' => html_entity_decode(strip_tags((string) $e['title']), ENT_QUOTES, 'UTF-8'), 'from' => substr((string) $e['start_date'], 0, 10), 'to' => substr((string) $e['end_date'], 0, 10),
+            'time' => !empty($e['all_day']) ? 'egész nap' : substr((string) $e['start_date'], 11, 5), 'place' => trim((isset($v['venue']) ? $v['venue'] : '') . (isset($v['address']) && $v['address'] ? ', ' . $v['address'] : '')),
+            'town' => isset($v['city']) ? (string) $v['city'] : '', 'desc' => html_entity_decode(strip_tags((string) (isset($e['excerpt']) && $e['excerpt'] ? $e['excerpt'] : $e['description'])), ENT_QUOTES, 'UTF-8'),
+            'url' => (string) $e['url'], 'price' => isset($e['cost']) ? strip_tags((string) $e['cost']) : '', 'img' => isset($e['image']['url']) ? (string) $e['image']['url'] : '', 'ext' => 'tribe-' . $e['id']);
+    }
+    return $out;
+}
+function ev_parse_rss($body) {
+    $out = array(); if (!function_exists('simplexml_load_string')) { return $out; }
+    $x = @simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA | LIBXML_NONET); if (!$x) { return $out; }
+    $items = isset($x->channel->item) ? $x->channel->item : (isset($x->entry) ? $x->entry : array());
+    foreach ($items as $it) {
+        $ns = $it->getNamespaces(true); $start = '';
+        foreach (array('ev', 'xcal', 'event') as $p) { if (isset($ns[$p])) { $c = $it->children($ns[$p]); foreach (array('startdate', 'dtstart', 'start') as $f) { if (isset($c->$f)) { $start = (string) $c->$f; } } } }
+        if ($start === '') { continue; }   /* esemény-dátum nélküli hír nem program – kihagyjuk */
+        $ts = strtotime($start); if (!$ts) { continue; }
+        $link = isset($it->link['href']) ? (string) $it->link['href'] : (string) $it->link;
+        $out[] = array('title' => trim(strip_tags((string) $it->title)), 'from' => date('Y-m-d', $ts), 'time' => date('H:i', $ts) === '00:00' ? '' : date('H:i', $ts),
+            'desc' => trim(html_entity_decode(strip_tags((string) ($it->description ? $it->description : $it->summary)), ENT_QUOTES, 'UTF-8')), 'url' => $link, 'ext' => (string) ($it->guid ? $it->guid : $link));
+    }
+    return $out;
+}
+/* egy forrás frissítése: új programok felvétele, változások átvétele, duplikátumok kihagyása, a forrásból törölt jövőbeli programok jelölése */
+function ev_import_feed(&$db, &$feed) {
+    list($code, $body, $err) = http_get($feed['url']);
+    $feed['last'] = date('Y-m-d H:i');
+    if ($code !== 200 || $body === '') { $feed['ok'] = 0; $feed['msg'] = $err ? $err : 'Hibás válasz (HTTP ' . $code . ')'; return; }
+    $t = ltrim($body);
+    if (strpos($t, 'BEGIN:VCALENDAR') !== false) { $items = ev_parse_ics($t); $fmt = 'iCal'; }
+    elseif ($t[0] === '{' && ($j = json_decode($t, true)) && isset($j['events'])) { $items = ev_parse_tribe($j); $fmt = 'WordPress-eseménynaptár'; }
+    elseif ($t[0] === '<') { $items = ev_parse_rss($t); $fmt = 'RSS'; }
+    else { $feed['ok'] = 0; $feed['msg'] = 'Ismeretlen formátum (iCal, RSS vagy WordPress-eseménynaptár kell).'; return; }
+    $today = today(); $max = add_days($today, 400); $url = ev_url_fn();
+    $keys = array(); foreach ($db['events'] as $i => $e) { $keys[ev_key($e)] = $i; }
+    $seen = array(); $add = 0; $upd = 0; $dup = 0;
+    foreach ($items as $it) {
+        if (empty($it['title']) || empty($it['from']) || !valid_date($it['from'])) { continue; }
+        $end = !empty($it['to']) && valid_date($it['to']) ? $it['to'] : $it['from'];
+        if ($end < $today || $it['from'] > $max) { continue; }
+        $txt = $it['title'] . ' ' . (isset($it['desc']) ? $it['desc'] : '') . ' ' . (isset($it['place']) ? $it['place'] : '');
+        $it['town'] = !empty($it['town']) ? $it['town'] : ev_guess_town($txt, isset($feed['town']) ? $feed['town'] : '');
+        $it['cat'] = ev_guess_cat($txt, isset($feed['cat']) ? $feed['cat'] : 'egyeb');
+        $it += ev_flags($txt, isset($it['price']) ? $it['price'] : '');
+        $it['src'] = $feed['name']; $it['feed'] = $feed['id']; $it['checked'] = $today; $it['ext'] = !empty($it['ext']) ? $it['ext'] : ev_key($it);
+        if (!empty($it['desc'])) { $it['desc'] = mb_substr(preg_replace('/\s+/u', ' ', $it['desc']), 0, 600); }
+        $seen[$it['ext']] = 1;
+        $cancel = isset($it['status']) && $it['status'] === 'CANCELLED';
+        $idx = null; foreach ($db['events'] as $i => $e) { if (!empty($e['feed']) && $e['feed'] === $feed['id'] && $e['ext'] === $it['ext']) { $idx = $i; break; } }
+        if ($idx !== null) {
+            $old = $db['events'][$idx];
+            if (!empty($old['man'])) { $db['events'][$idx]['checked'] = $today; $db['events'][$idx]['gone'] = $cancel ? 1 : 0; continue; }   /* kézzel javított program: csak az ellenőrzés dátuma frissül */
+            $n = ev_clean(array_merge($old, $it, array('id' => $old['id'], 'top' => $old['top'], 'hidden' => $old['hidden'], 'gone' => $cancel ? 1 : 0)), $url);
+            if ($n != $old) { $upd++; } $db['events'][$idx] = $n; continue;
+        }
+        if ($cancel) { continue; }
+        $k = ev_key($it);
+        if (isset($keys[$k])) { $dup++; $db['events'][$keys[$k]]['checked'] = $today; continue; }   /* már szerepel (kézzel vagy másik forrásból) */
+        $n = ev_clean($it, $url); $db['events'][] = $n; $keys[$k] = count($db['events']) - 1; $add++;
+    }
+    $gone = 0;
+    foreach ($db['events'] as $i => $e) {
+        if (!empty($e['feed']) && $e['feed'] === $feed['id'] && !isset($seen[$e['ext']]) && ($e['to'] ? $e['to'] : $e['from']) >= $today && empty($e['gone']) && empty($e['man'])) { $db['events'][$i]['gone'] = 1; $gone++; }
+    }
+    $feed['ok'] = 1; $feed['count'] = count($items);
+    $feed['msg'] = $fmt . ': ' . count($items) . ' tétel · ' . $add . ' új · ' . $upd . ' frissítve · ' . $dup . ' már szerepelt' . ($gone ? ' · ' . $gone . ' törölve a forrásban' : '');
+}
+function ev_import_all(&$db) {
+    if (!isset($db['events']) || !is_array($db['events'])) { $db['events'] = array(); }
+    $feeds = isset($db['settings']['ev_feeds']) && is_array($db['settings']['ev_feeds']) ? $db['settings']['ev_feeds'] : array();
+    foreach ($feeds as $i => $f) { if (!empty($f['on']) && !empty($f['url'])) { ev_import_feed($db, $feeds[$i]); } }
+    $db['settings']['ev_feeds'] = $feeds;
+    /* a 60 napnál régebben véget ért programok automatikusan törlődnek (a tárhely tiszta marad) */
+    $lim = add_days(today(), -60); $db['events'] = array_values(array_filter($db['events'], function ($e) use ($lim) { return ($e['to'] ? $e['to'] : $e['from']) >= $lim; }));
+    $db['ev_sync'] = date('Y-m-d H:i');
+    return $feeds;
+}
+function ev_due($db) { return !empty($db['settings']['ev_feeds']) && (empty($db['ev_sync']) || substr($db['ev_sync'], 0, 10) !== today()); }
 function sync_feed(&$db, $apt, $src, $url) {
     list($code, $body, $err) = http_get($url);
     if ($code !== 200 || strpos($body, 'BEGIN:VCALENDAR') === false) { return array('ok' => false, 'msg' => $err ? $err : 'Hibás válasz (HTTP ' . $code . ')'); }
@@ -999,7 +1159,7 @@ case 'sync':
 case 'cron':  /* tárhely ütemezőből: …/api/index.php?r=cron&key=… */
     $db = db_load();
     if (!hash_equals((string) $db['settings']['ical_key'], isset($_GET['key']) ? (string) $_GET['key'] : '')) { fail('Hozzáférés megtagadva.', 403); }
-    $log = sync_all($db); $rm = remind_due($db) ? remind_run($db) : null; db_save($db); out(array('ok' => true, 'log' => $log, 'remind' => $rm));
+    $log = sync_all($db); $rm = remind_due($db) ? remind_run($db) : null; $evf = ev_due($db) ? ev_import_all($db) : null; db_save($db); out(array('ok' => true, 'log' => $log, 'remind' => $rm, 'programs' => $evf));
 
 case 'ical':  /* naptár-kiküldés: Airbnb, Szállás.hu, Google Naptár */
     $db = db_load();
@@ -1016,40 +1176,70 @@ case 'ical':  /* naptár-kiküldés: Airbnb, Szállás.hu, Google Naptár */
 case 'events':
     $db = db_load(); $t = today(); $list = array();
     if (remind_due($db)) { remind_run($db); db_save($db); }   /* a kezdőoldal látogatása is elindítja a napi emlékeztetőt */
-    foreach ((array) (isset($db['events']) ? $db['events'] : array()) as $e) { if ((isset($e['to']) && $e['to'] ? $e['to'] : $e['from']) >= $t && empty($e['hidden'])) { $list[] = $e; } }
+    if (ev_due($db)) { ev_import_all($db); db_save($db); }   /* naponta egyszer a forrásokból is frissül */
+    $seenK = array();
+    foreach ((array) (isset($db['events']) ? $db['events'] : array()) as $e) {
+        if ((isset($e['to']) && $e['to'] ? $e['to'] : $e['from']) < $t || !empty($e['hidden']) || !empty($e['gone'])) { continue; }
+        $k = ev_key($e); if (isset($seenK[$k])) { continue; } $seenK[$k] = 1;   /* duplikátum kiszűrése */
+        unset($e['feed'], $e['ext'], $e['man'], $e['gone'], $e['hidden']); $list[] = $e;
+    }
     usort($list, function ($a, $b) { return strcmp($a['from'] . $a['time'], $b['from'] . $b['time']); });
     header('Cache-Control: public, max-age=300');
-    out(array('today' => $t, 'events' => $list));
+    out(array('today' => $t, 'events' => $list, 'updated' => isset($db['ev_sync']) ? $db['ev_sync'] : ''));
 
 case 'events_all':
     $db = db_load(); require_admin($db);
     $list = isset($db['events']) ? $db['events'] : array();
     usort($list, function ($a, $b) { return strcmp($a['from'] . $a['time'], $b['from'] . $b['time']); });
-    out(array('today' => today(), 'events' => $list));
+    out(array('today' => today(), 'events' => $list, 'feeds' => isset($db['settings']['ev_feeds']) ? $db['settings']['ev_feeds'] : array(), 'updated' => isset($db['ev_sync']) ? $db['ev_sync'] : ''));
 
 case 'events_save':
     if ($method !== 'POST') { fail('POST kell.', 405); }
     $db = db_load(); require_admin($db);
     $in = isset($P['events']) && is_array($P['events']) ? $P['events'] : array();
-    $url = function ($v) { $v = clean($v, 400); return ($v === '' || preg_match('#^(https?://|/)#i', $v)) ? $v : 'https://' . $v; };
-    $cats = array('fesztival', 'koncert', 'sport', 'gasztro', 'kultura', 'csalad', 'egyeb');
-    $o = array();
-    foreach (array_slice($in, 0, 400) as $e) {
+    $url = ev_url_fn(); $o = array(); $prev = array();
+    foreach ((array) (isset($db['events']) ? $db['events'] : array()) as $e) { $prev[$e['id']] = $e; }
+    foreach (array_slice($in, 0, 800) as $e) {
         if (!is_array($e)) { continue; }
-        $f = isset($e['from']) ? (string) $e['from'] : ''; $t = isset($e['to']) ? (string) $e['to'] : '';
         $title = clean(isset($e['title']) ? $e['title'] : '', 140);
         if ($title === '') { continue; }
+        $f = isset($e['from']) ? (string) $e['from'] : ''; $t = isset($e['to']) ? (string) $e['to'] : '';
         if (!valid_date($f)) { fail('Hibás kezdő dátum: „' . $title . '”.'); }
         if ($t !== '' && (!valid_date($t) || $t < $f)) { fail('A záró dátum nem lehet a kezdés előtt: „' . $title . '”.'); }
-        $c = isset($e['cat']) && in_array($e['cat'], $cats, true) ? $e['cat'] : 'egyeb';
-        $o[] = array('id' => isset($e['id']) && preg_match('/^[a-f0-9]{6,16}$/', (string) $e['id']) ? (string) $e['id'] : bin2hex(random_bytes(6)),
-            'from' => $f, 'to' => $t === $f ? '' : $t, 'time' => clean(isset($e['time']) ? $e['time'] : '', 40), 'title' => $title,
-            'place' => clean(isset($e['place']) ? $e['place'] : '', 140), 'cat' => $c, 'desc' => clean_ml(isset($e['desc']) ? $e['desc'] : '', 1500),
-            'url' => $url(isset($e['url']) ? $e['url'] : ''), 'ticket' => $url(isset($e['ticket']) ? $e['ticket'] : ''), 'img' => $url(isset($e['img']) ? $e['img'] : ''),
-            'top' => !empty($e['top']) ? 1 : 0, 'hidden' => !empty($e['hidden']) ? 1 : 0);
+        $n = ev_clean($e, $url);
+        $old = isset($prev[$n['id']]) ? $prev[$n['id']] : null;
+        if ($old) {   /* importált program kézi javítása: a következő frissítés nem írja felül */
+            $cmp = function ($x) { unset($x['checked'], $x['man'], $x['gone'], $x['top'], $x['hidden']); return $x; };
+            if ($cmp(ev_clean($old, $url)) != $cmp($n)) { $n['man'] = !empty($n['feed']) ? 1 : 0; $n['checked'] = today(); $n['gone'] = 0; }
+        }
+        $o[] = $n;
     }
     $db['events'] = $o; db_save($db);
     out(array('ok' => true, 'message' => count($o) . ' program elmentve.', 'events' => $o));
+
+case 'ev_feeds_save':   /* programforrások (iCal / RSS / WordPress-eseménynaptár) mentése */
+    if ($method !== 'POST') { fail('POST kell.', 405); }
+    $db = db_load(); require_admin($db); $url = ev_url_fn(); $old = array();
+    foreach ((array) (isset($db['settings']['ev_feeds']) ? $db['settings']['ev_feeds'] : array()) as $f) { $old[$f['id']] = $f; }
+    $out = array();
+    foreach (array_slice((array) (isset($P['feeds']) ? $P['feeds'] : array()), 0, 30) as $f) {
+        if (!is_array($f)) { continue; } $u = $url(isset($f['url']) ? $f['url'] : ''); if ($u === '' || !preg_match('#^https?://#i', $u)) { continue; }
+        $id = isset($f['id']) && preg_match('/^[a-f0-9]{6,16}$/', (string) $f['id']) ? (string) $f['id'] : bin2hex(random_bytes(5));
+        $o = isset($old[$id]) ? $old[$id] : array();
+        $out[] = array('id' => $id, 'name' => clean(isset($f['name']) && $f['name'] !== '' ? $f['name'] : parse_url($u, PHP_URL_HOST), 80), 'url' => $u,
+            'town' => clean(isset($f['town']) ? $f['town'] : '', 60), 'cat' => isset($f['cat']) && in_array($f['cat'], EV_CATS, true) ? $f['cat'] : 'egyeb', 'on' => !empty($f['on']) ? 1 : 0,
+            'last' => isset($o['last']) ? $o['last'] : '', 'ok' => isset($o['ok']) ? $o['ok'] : null, 'msg' => isset($o['msg']) ? $o['msg'] : '', 'count' => isset($o['count']) ? $o['count'] : 0);
+    }
+    $ids = array_column($out, 'id');
+    $db['events'] = array_values(array_filter((array) $db['events'], function ($e) use ($ids) { return empty($e['feed']) || in_array($e['feed'], $ids, true) || !empty($e['man']); }));   /* törölt forrás programjai is törlődnek */
+    $db['settings']['ev_feeds'] = $out; db_save($db);
+    out(array('ok' => true, 'message' => count($out) . ' programforrás elmentve.', 'feeds' => $out));
+
+case 'ev_import':   /* „Frissítés most” a tulajdonosi felületről */
+    if ($method !== 'POST') { fail('POST kell.', 405); }
+    $db = db_load(); require_admin($db); $feeds = ev_import_all($db); db_save($db);
+    $list = $db['events']; usort($list, function ($a, $b) { return strcmp($a['from'] . $a['time'], $b['from'] . $b['time']); });
+    out(array('ok' => true, 'message' => $feeds ? count($feeds) . ' forrás frissítve.' : 'Nincs megadva programforrás.', 'feeds' => $feeds, 'events' => $list, 'updated' => $db['ev_sync']));
 
 /* ------------------------------ viharjelzés (HungaroMet, 10 percenként frissítve) */
 case 'vihar':
