@@ -159,3 +159,9 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Teszt: `scratchpad/waste/runs_eszak_2026.json` (a valódi PDF szövegfutamai), `t1.php`, `synt.pdf` + `t2.php`.
 - Admin app → Hulladék: „Automatikus naptár – Siókom” kártya (be/ki, állapot, napló, link, Frissítés most).
 - **Látnivalók:** 6 szabad licencű fotó a Wikimedia Commonsról (hotlink, `photo` + `credit` mező, a kártyán „Fotó: …”, a rács alatt forrás- és licenclista). Nincs szabad kép: Tájház, Világháborúk Múzeuma, Kalandpark – ott marad a rajzolt jelenet.
+
+## 16. Programajánló látványa a vitorlásverseny szintjén – 2026-11-01
+- A programajánló ablak fejlécében **igazi vitorlásverseny** fut (a `build_home.py` a regatta második példányát `evpRegatta` vászonra köti; csak nyitott ablaknál fut, közben a nyitóképi verseny szünetel – `evp-lock`), mögötte napszak szerinti SVG-jelenet (`evScene`: ég, nap/hold, felhők, Tihany apátsággal, Badacsony, hullámok).
+- Kategóriánként mozgó illusztrációk (`evArt`, `EVCOL` színek), kategóriaszínű dátumcédula, kiemelt szalag, csoportcímkés szűrők („Mikor? / Milyen messze? / Mit keresel? / Extrák”), forgó hajókormány a hónapcímnél.
+- Minden programhoz **mini Balaton-térkép** (`evMap`, `EVGEO`, `LAKE`, valós arányú vetítés): Zephyr-jel, helyszín, szaggatott útvonal, hajó/komp esetén áthajózó kishajó.
+- A főoldali előzetes: jelenetsáv, zászlós gyorsgombok, kategóriaszínű mini kártyák illusztrációval.
