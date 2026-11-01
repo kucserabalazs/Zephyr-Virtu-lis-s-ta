@@ -5070,7 +5070,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     let W = 0, H = 104, last = performance.now();
     /* ritka vendégek: rendezői motorcsónak, rendőrmotorcsónak, repülőgép */
     const DEMO = /mentes/.test(location.hash + location.search), DEMO_M = /szorny|polip/.test(location.hash + location.search), DEMO_B = /boja/.test(location.hash + location.search), DEMO_S = /tengeralattjaro/.test(location.hash + location.search), DEMO_G = /gozos/.test(location.hash + location.search), DEMO_K = /kajak/.test(location.hash + location.search), DEMO_V = /vihar/.test(location.hash + location.search), DEMO_T = /titanic/.test(location.hash + location.search);  /* bemutató: #mentes a cím végén -> azonnal helikopteres mentés */
-    let extras = [], extra = null, recent = [], nextExtra = performance.now() + (DEMO || DEMO_M || DEMO_B || DEMO_S || DEMO_G || DEMO_K || DEMO_V || DEMO_T ? 1500 : rnd(20000, 45000));
+    const FORCE = (location.hash.match(/regatta=(\w+)/) || [])[1];  /* fejlesztői bemutató: #regatta=plane stb. */
+    let extras = [], extra = null, recent = [], nextExtra = performance.now() + (FORCE || DEMO || DEMO_M || DEMO_B || DEMO_S || DEMO_G || DEMO_K || DEMO_V || DEMO_T ? 1500 : rnd(20000, 45000));
     const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, titanic: .9, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
     const Z = 1.45;  /* járművek nagyítása */
     function lg(y0, y1, a, b) { const q = g.createLinearGradient(0, y0, 0, y1); q.addColorStop(0, a); q.addColorStop(1, b); return q; }
@@ -5201,124 +5202,227 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.restore();
     }
     function buoyAt(x, y, n, sc, rot) { g.save(); g.translate(x, y); g.rotate(rot || 0); g.scale(sc, sc); buoy(0, 0, null, n); g.restore(); }
-    function buoy(x, y, t, n) {  /* versenybója: sárga vagy piros, számozott */
-      const b = t == null ? 0 : Math.sin(t * 2 + x) * 1.2, col = n % 2 ? "#f2c21b" : "#e5262f";
-      /* henger: test, felső ellipszis, árnyékolás */
-      const gr = g.createLinearGradient(x - 5, 0, x + 5, 0); gr.addColorStop(0, "rgba(0,0,0,.25)"); gr.addColorStop(.4, "rgba(255,255,255,.25)"); gr.addColorStop(1, "rgba(0,0,0,.3)");
-      g.fillStyle = col; g.fillRect(x - 5, y - 12 + b, 10, 12); g.fillStyle = gr; g.fillRect(x - 5, y - 12 + b, 10, 12);
-      g.fillStyle = col; g.beginPath(); g.ellipse(x, y + b, 5, 1.6, 0, 0, Math.PI); g.fill();
-      g.fillStyle = n % 2 ? "#ffe27a" : "#ff6b62"; g.beginPath(); g.ellipse(x, y - 12 + b, 5, 1.6, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = n % 2 ? "#14202a" : "#fff"; g.font = "800 8px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(n), x, y - 5.5 + b);
-      g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 1; g.beginPath(); g.ellipse(x, y + 2 + b, 7, 1.6, 0, 0, Math.PI * 2); g.stroke();
+    function buoy(x, y, t, n) {  /* versenybója: felfújható henger, varratok, fehér sáv, csillanás, fodrozódó víz */
+      const tt = t == null ? 0 : t, b = t == null ? 0 : Math.sin(tt * 2 + x) * 1.2, tilt = t == null ? 0 : Math.sin(tt * 1.6 + x * .7) * .07;
+      const yel = n % 2, col = yel ? "#f2c21b" : "#e5262f", hi = yel ? "#ffe680" : "#ff7a70", dk = yel ? "#a87f08" : "#8e1717";
+      if (t != null) {  /* tükörkép és táguló gyűrűk */
+        g.save(); for (let k = 0; k < 4; k++) { g.globalAlpha = .26 - k * .05; g.fillStyle = k % 2 ? hi : col; g.fillRect(x - 4.5 + k * .6 + Math.sin(tt * 3 + k * 1.7 + x) * 1.3, y + 2.2 + k * 1.5, 9 - k * 1.8, .8); } g.restore();
+        for (let k = 0; k < 2; k++) { const q = (tt * .45 + k * .5 + x * .013) % 1; g.strokeStyle = `rgba(255,255,255,${.38 * (1 - q)})`; g.lineWidth = .7; g.beginPath(); g.ellipse(x, y + 1.6, 6 + q * 9, 1.4 + q * 1.6, 0, 0, Math.PI * 2); g.stroke(); }
+      }
+      g.save(); g.translate(x, y + b); g.rotate(tilt);
+      const gr = g.createLinearGradient(-5, 0, 5, 0); gr.addColorStop(0, dk); gr.addColorStop(.28, col); gr.addColorStop(.42, hi); gr.addColorStop(.62, col); gr.addColorStop(1, dk);
+      g.fillStyle = gr; g.beginPath(); g.moveTo(-5, -12); g.lineTo(-5, 0); g.ellipse(0, 0, 5, 1.6, 0, Math.PI, 0, true); g.lineTo(5, -12); g.closePath(); g.fill();
+      g.strokeStyle = "rgba(0,0,0,.16)"; g.lineWidth = .35; g.beginPath(); g.moveTo(-2.6, -11.6); g.lineTo(-2.6, 1.2); g.moveTo(2.6, -11.6); g.lineTo(2.6, 1.2); g.stroke();  /* varratok */
+      const wb = g.createLinearGradient(-5, 0, 5, 0); wb.addColorStop(0, "#c9cfd4"); wb.addColorStop(.4, "#ffffff"); wb.addColorStop(1, "#aab2b9");
+      g.fillStyle = wb; g.fillRect(-5, -10.6, 10, 1.5);
+      g.fillStyle = "rgba(255,255,255,.4)"; g.fillRect(-3, -11, .9, 11.4);  /* csillanás */
+      g.fillStyle = yel ? "#14202a" : "#fff"; g.font = "800 7px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.save(); g.globalAlpha = .25; g.fillStyle = "#000"; g.fillText(String(n), .4, -4.6); g.restore(); g.fillText(String(n), 0, -5);
+      const tg = g.createRadialGradient(-1.4, -12.4, .3, 0, -12, 5); tg.addColorStop(0, hi); tg.addColorStop(1, col);
+      g.fillStyle = tg; g.beginPath(); g.ellipse(0, -12, 5, 1.6, 0, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = dk; g.lineWidth = .3; g.beginPath(); g.ellipse(0, -12, 3.6, 1.1, 0, 0, Math.PI * 2); g.stroke();
+      g.strokeStyle = "#5b636b"; g.lineWidth = .5; g.beginPath(); g.arc(0, -12.4, .9, Math.PI, 0); g.stroke();  /* emelőfül */
+      g.restore();
+      g.fillStyle = "rgba(255,255,255,.55)"; g.beginPath(); g.ellipse(x, y + 1 + b * .5, 6.4, 1.3, 0, 0, Math.PI * 2); g.fill();  /* hab a vízvonalon */
+      g.fillStyle = "rgba(20,60,90,.35)"; g.beginPath(); g.ellipse(x, y + 1.4 + b * .5, 4.6, .8, 0, 0, Math.PI * 2); g.fill();
+    }
+    function foamV(len, spread, t, wk, s0) {  /* V alakú nyomvonal habbal, a hajó helyi koordinátáiban (orr: +x) */
+      g.save(); g.globalAlpha = wk;
+      for (let k = 0; k < 14; k++) {
+        const u = k / 13, x0 = s0 - u * len, a = (1 - u);
+        g.strokeStyle = `rgba(255,255,255,${.7 * a})`; g.lineWidth = .9;
+        g.beginPath(); g.moveTo(x0, 3 - u * spread * .12 + Math.sin(t * 6 + k) * .2); g.lineTo(x0 - len / 13, 3 - (u + 1 / 13) * spread * .12); g.stroke();
+        g.beginPath(); g.moveTo(x0, 4 + u * spread + Math.sin(t * 5 + k) * .3); g.lineTo(x0 - len / 13, 4 + (u + 1 / 13) * spread); g.stroke();
+        if (k % 2 === 0) { g.fillStyle = `rgba(255,255,255,${.5 * a})`; g.beginPath(); g.arc(x0 + Math.sin(t * 9 + k * 3) * 1.5, 3.6 + Math.cos(t * 7 + k) * u * spread * .4, .5 + u * .8, 0, Math.PI * 2); g.fill(); }
+      }
+      const fg = g.createLinearGradient(s0, 0, s0 - len * .5, 0); fg.addColorStop(0, "rgba(255,255,255,.75)"); fg.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = fg; g.beginPath(); g.ellipse(s0 - len * .22, 3.7, len * .25, 2 + Math.sin(t * 8) * .3, 0, 0, Math.PI * 2); g.fill();  /* propeller-kavarás */
+      g.restore();
     }
     function motorboat(x, y, dir, police, t, wk) {
       wk = wk == null ? 1 : wk;
       g.save(); g.translate(x, y); g.scale(dir * Z, Z);
-      /* V alakú hullámnyom, spriccelő víz */
-      g.globalAlpha = wk; g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = 1;
-      g.beginPath(); g.moveTo(-14, 3); g.quadraticCurveTo(-34, 1, -58, -1); g.moveTo(-14, 4); g.quadraticCurveTo(-34, 6, -58, 8); g.stroke();
-      g.fillStyle = "rgba(255,255,255,.55)"; g.beginPath(); g.ellipse(-24, 3.5, 10, 2.2, 0, 0, Math.PI * 2); g.fill();
-      for (let k = 0; k < 5; k++) { g.fillStyle = "rgba(255,255,255,.8)"; g.beginPath(); g.arc(12 + Math.sin(t * 20 + k) * 2, 1 - k * .7 - Math.abs(Math.sin(t * 9 + k)) * 2, .6, 0, Math.PI * 2); g.fill(); }
-      g.globalAlpha = 1;
-      /* hajótest színátmenettel, csíkok */
-      const hull = new Path2D("M-15 -2 L 10 -2 Q 17 -1 19 1.5 L 13 4.5 L -14 4.5 Z");
-      g.fillStyle = police ? lg(-2, 4.5, "#2a74c8", "#123f78") : lg(-2, 4.5, "#ffffff", "#c9d4df"); g.fill(hull);
-      g.save(); g.clip(hull);
-      if (police) { g.fillStyle = "#fff"; g.fillRect(-15, .4, 34, 1.4); for (let k = -14; k < 14; k += 3) { g.fillStyle = (k / 3) % 2 ? "#f2c21b" : "#1f5fa8"; g.fillRect(k, 2.2, 1.5, 1.5); } }
-      else { g.fillStyle = "#e5262f"; g.fillRect(-15, .5, 34, 1.2); g.fillStyle = "#0b2f5e"; g.fillRect(-15, 2.4, 34, .7); }
+      foamV(46, 7, t, wk, -15);
+      /* orrhullám: felcsapó vízfal és fröccs */
+      g.save(); g.globalAlpha = wk;
+      g.fillStyle = "rgba(255,255,255,.8)"; g.beginPath(); g.moveTo(19, 2); g.quadraticCurveTo(12, -1.2 - Math.sin(t * 14) * .5, 4, 3); g.quadraticCurveTo(12, 4.6, 19, 3.4); g.closePath(); g.fill();
+      for (let k = 0; k < 7; k++) { const q = (t * 2.2 + k / 7) % 1; g.fillStyle = `rgba(255,255,255,${.85 * (1 - q)})`; g.beginPath(); g.arc(15 - q * 8 + Math.sin(k * 3) * 1.5, 1 - Math.sin(q * Math.PI) * (3 + k % 3), .45 + q * .5, 0, Math.PI * 2); g.fill(); }
       g.restore();
-      /* korlát */
-      g.strokeStyle = "#e8edf2"; g.lineWidth = .4; g.beginPath(); g.moveTo(-13, -4); g.lineTo(6, -4); for (let k = -13; k <= 6; k += 4) { g.moveTo(k, -4); g.lineTo(k, -2); } g.stroke();
-      /* kabin, szélvédő */
-      g.fillStyle = police ? "#f4f6f8" : "#0b2f5e"; g.beginPath(); g.moveTo(-8, -2); g.lineTo(-8, -8); g.lineTo(1, -8); g.lineTo(5, -2); g.closePath(); g.fill();
-      g.fillStyle = "rgba(150,205,255,.95)"; g.beginPath(); g.moveTo(-6.5, -3); g.lineTo(-6.5, -7); g.lineTo(.4, -7); g.lineTo(3.2, -3); g.closePath(); g.fill();
-      g.strokeStyle = police ? "#1f5fa8" : "#fff"; g.lineWidth = .4; g.beginPath(); g.moveTo(-3, -7); g.lineTo(-3, -3); g.stroke();
-      /* motor a tatnál */
-      g.fillStyle = "#2b2f36"; g.fillRect(-17.5, -3.5, 3, 6); g.fillStyle = "#8a939c"; g.fillRect(-17, 2.5, 1.2, 3);
-      /* vezető */
-      g.fillStyle = "#f2b233"; g.beginPath(); g.arc(-4.5, -5.2, 1, 0, Math.PI * 2); g.fill();
-      if (police) {  /* villogó fényhíd, antenna */
-        const on = Math.floor(t * 6) % 2;
-        g.fillStyle = "#2b2f36"; g.fillRect(-5, -9.2, 6, 1.2);
-        g.fillStyle = on ? "#3aa0ff" : "#123f78"; g.fillRect(-5, -10.6, 2.8, 1.6); g.fillStyle = on ? "#5a1010" : "#ff3b30"; g.fillRect(-2, -10.6, 2.8, 1.6);
-        g.fillStyle = on ? "rgba(58,160,255,.35)" : "rgba(255,59,48,.35)"; g.beginPath(); g.arc(on ? -3.6 : -.6, -9.8, 4, 0, Math.PI * 2); g.fill();
-        g.strokeStyle = "#e8edf2"; g.lineWidth = .4; g.beginPath(); g.moveTo(-7, -8); g.lineTo(-8, -14); g.stroke();
-      } else {  /* rendezői zászló és bója-jelzés */
-        g.strokeStyle = "#e8edf2"; g.lineWidth = .5; g.beginPath(); g.moveTo(-12, -2); g.lineTo(-12, -13); g.stroke();
-        g.fillStyle = "#f2b233"; g.fillRect(-12, -13, 6, 4); g.fillStyle = "#0b2f5e"; g.fillRect(-12, -11.6, 6, 1.2);
-        g.fillStyle = "#e5262f"; g.beginPath(); g.arc(8, -3, 1.2, 0, Math.PI * 2); g.fill();
+      /* tükörkép */
+      g.save(); g.globalAlpha = .18; g.fillStyle = police ? "#1f5fa8" : "#e9eef2"; for (let k = 0; k < 3; k++) g.fillRect(-14 + Math.sin(t * 3 + k) * 1.2, 5.6 + k * 1.4, 30 - k * 6, .7); g.restore();
+      /* mélyen V-alakú hajótest, gerinccsík, ütközőléc */
+      const hull = new Path2D("M-15 -2.2 L 10 -2.2 Q 17.5 -1.4 19.5 1.2 L 13.5 4.6 L -14 4.6 L -15.4 1 Z");
+      g.fillStyle = police ? lg(-2.2, 4.6, "#2f7ed6", "#0f3566") : lg(-2.2, 4.6, "#ffffff", "#bcc8d3"); g.fill(hull);
+      g.save(); g.clip(hull);
+      if (police) {  /* Battenburg-mintás csík és felirat */
+        g.fillStyle = "#fff"; g.fillRect(-16, .1, 36, 1.5);
+        for (let k = -15; k < 16; k += 2.4) { g.fillStyle = Math.round(k / 2.4) % 2 ? "#f2c21b" : "#1f5fa8"; g.fillRect(k, 2.1, 1.2, 1.2); g.fillStyle = Math.round(k / 2.4) % 2 ? "#1f5fa8" : "#f2c21b"; g.fillRect(k + 1.2, 2.1, 1.2, 1.2); }
+        g.save(); g.scale(dir, 1); g.fillStyle = "#0b2f5e"; g.font = "800 1.35px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("RENDŐRSÉG", dir * 1, .9); g.restore();
+      } else { g.fillStyle = "#e5262f"; g.fillRect(-16, .3, 36, 1.3); g.fillStyle = "#0b2f5e"; g.fillRect(-16, 2.2, 36, .6); g.fillStyle = "#f2b233"; g.fillRect(-16, 2.9, 36, .25); }
+      g.fillStyle = "rgba(0,0,0,.22)"; g.beginPath(); g.moveTo(-15, 3.4); g.lineTo(14.6, 3.6); g.lineTo(13.5, 4.6); g.lineTo(-14, 4.6); g.closePath(); g.fill();  /* fenék árnyéka */
+      g.fillStyle = "rgba(255,255,255,.25)"; g.fillRect(-15, -2, 30, .5);
+      g.restore();
+      g.strokeStyle = "#2b2f36"; g.lineWidth = .7; g.beginPath(); g.moveTo(-15.2, -2.2); g.lineTo(10, -2.2); g.quadraticCurveTo(17.5, -1.4, 19.5, 1.2); g.stroke();  /* ütközőléc */
+      /* korlát oszlopokkal, orrkorlát */
+      g.strokeStyle = "#e8edf2"; g.lineWidth = .35; g.beginPath(); g.moveTo(-13, -4.4); g.lineTo(9, -4.4); g.quadraticCurveTo(14, -4, 16.5, -1.6);
+      for (let k = -13; k <= 9; k += 3.6) { g.moveTo(k, -4.4); g.lineTo(k, -2.2); } g.stroke();
+      /* kabin: tető, oldalablak, kettős szélvédő tükröződéssel */
+      g.fillStyle = police ? lg(-9, -2, "#ffffff", "#d6dde4") : lg(-9, -2, "#16437a", "#0b2f5e"); g.beginPath(); g.moveTo(-8.5, -2.2); g.lineTo(-8.5, -8.4); g.lineTo(1.2, -8.4); g.lineTo(5.6, -2.2); g.closePath(); g.fill();
+      const ws = g.createLinearGradient(-6, -7, 3, -3); ws.addColorStop(0, "#bfe3ff"); ws.addColorStop(.5, "#6fb6e8"); ws.addColorStop(.52, "#e8f6ff"); ws.addColorStop(.6, "#7fbfe9"); ws.addColorStop(1, "#3a7fb8");
+      g.fillStyle = ws; g.beginPath(); g.moveTo(-7, -3.2); g.lineTo(-7, -7.4); g.lineTo(.6, -7.4); g.lineTo(3.8, -3.2); g.closePath(); g.fill();
+      g.strokeStyle = police ? "#1f5fa8" : "#d9e2ea"; g.lineWidth = .45; g.beginPath(); g.moveTo(-3.2, -7.4); g.lineTo(-3.2, -3.2); g.stroke();
+      g.fillStyle = police ? "#1f5fa8" : "#f2b233"; g.fillRect(-8.6, -8.9, 10, .6);  /* tetőperem */
+      /* vezető (sapka, mentőmellény) a szélvédő mögött */
+      g.fillStyle = "#14202a"; g.beginPath(); g.arc(-4.8, -5.6, 1.15, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#e8b58c"; g.beginPath(); g.arc(-4.6, -5.4, .95, 0, Math.PI * 2); g.fill();
+      g.fillStyle = police ? "#0b2f5e" : "#e5262f"; g.beginPath(); g.arc(-4.7, -5.9, 1, Math.PI, 0); g.fill(); g.fillRect(-4.7, -6, 1.8, .45);
+      g.fillStyle = "#ff7a1a"; g.fillRect(-5.8, -4.4, 2.4, 1.6);
+      /* farmotor: burkolat, csík, kormánytőke, csavar */
+      const ob = new Path2D("M-18.6 -4.4 Q -18.6 -6 -16.8 -6 L -15 -6 Q -14.2 -6 -14.2 -5 L -14.2 -1.6 L -18.6 -1.6 Z");
+      g.fillStyle = lg(-6, -1.6, "#3a3f47", "#16191d"); g.fill(ob); g.fillStyle = police ? "#3aa0ff" : "#e5262f"; g.fillRect(-18.6, -3.8, 4.4, .45);
+      g.fillStyle = "#9aa3ab"; g.fillRect(-17.4, -1.6, 1.4, 5.2); g.fillStyle = "#6c757d"; g.fillRect(-17.8, 3.2, 2.2, .8);
+      const pb = 1.6 * Math.abs(Math.sin(t * 40)); g.fillStyle = "rgba(200,200,200,.6)"; g.fillRect(-18.2 - .2, 3.6 - pb / 2, .5, pb + .4);
+      if (police) {  /* villogó fényhíd, kék-piros fénycsóva, antenna, keresőlámpa */
+        const on = Math.floor(t * 6) % 2, on2 = Math.floor(t * 12) % 2;
+        g.fillStyle = "#2b2f36"; g.fillRect(-5.4, -9.6, 6.8, 1);
+        g.fillStyle = on ? "#3aa0ff" : "#123f78"; g.fillRect(-5.2, -11, 3, 1.5); g.fillStyle = on ? "#5a1010" : "#ff3b30"; g.fillRect(-1.9, -11, 3, 1.5);
+        g.fillStyle = "rgba(255,255,255,.6)"; g.fillRect(-5, -10.9, 2.6, .35); g.fillRect(-1.7, -10.9, 2.6, .35);
+        const glow = g.createRadialGradient(on ? -3.7 : -.4, -10.2, 0, on ? -3.7 : -.4, -10.2, on2 ? 7 : 5);
+        glow.addColorStop(0, on ? "rgba(58,160,255,.55)" : "rgba(255,59,48,.55)"); glow.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = glow; g.beginPath(); g.arc(on ? -3.7 : -.4, -10.2, on2 ? 7 : 5, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = "#e8edf2"; g.lineWidth = .35; g.beginPath(); g.moveTo(-7.4, -8.4); g.lineTo(-8.6, -15.5); g.stroke();
+        g.fillStyle = "#f4f6f8"; g.beginPath(); g.arc(-8.6, -15.6, .4, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#cfd6dd"; g.fillRect(3, -9.2, 1.6, 1); g.fillStyle = "rgba(255,250,210,.9)"; g.fillRect(4.4, -9, .4, .6);
+        g.fillStyle = "#e5262f"; g.fillRect(-12, -6.6, .4, 4.4); g.fillStyle = "#1f5fa8"; g.beginPath(); g.moveTo(-11.6, -6.6); g.lineTo(-9 + Math.sin(t * 8) * .3, -6 + Math.sin(t * 9) * .2); g.lineTo(-11.6, -5.2); g.fill();
+      } else {  /* rendezői zászló lobogva, bójaszállító fedélzet, mentőgyűrű */
+        g.strokeStyle = "#e8edf2"; g.lineWidth = .45; g.beginPath(); g.moveTo(-12, -2.2); g.lineTo(-12, -14); g.stroke();
+        g.fillStyle = "#f4f6f8"; g.beginPath(); g.arc(-12, -14.2, .4, 0, Math.PI * 2); g.fill();
+        const fw = (k) => Math.sin(t * 8 - k * .9) * .35 * k / 6;
+        g.fillStyle = "#f2b233"; g.beginPath(); g.moveTo(-12, -13.6); for (let k = 0; k <= 6; k++) g.lineTo(-12 - k, -13.6 + fw(k)); for (let k = 6; k >= 0; k--) g.lineTo(-12 - k, -9.6 + fw(k)); g.closePath(); g.fill();
+        g.fillStyle = "#0b2f5e"; g.beginPath(); g.moveTo(-12, -12.1); for (let k = 0; k <= 6; k++) g.lineTo(-12 - k, -12.1 + fw(k)); for (let k = 6; k >= 0; k--) g.lineTo(-12 - k, -11.1 + fw(k)); g.closePath(); g.fill();
+        g.strokeStyle = "#e5262f"; g.lineWidth = .8; g.beginPath(); g.arc(-10.4, -1.6, 1.1, 0, Math.PI * 2); g.stroke();
+        g.strokeStyle = "#fff"; g.lineWidth = .8; g.setLineDash([.6, .9]); g.beginPath(); g.arc(-10.4, -1.6, 1.1, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+        g.fillStyle = "#e5262f"; g.beginPath(); g.arc(8.6, -3.2, 1.1, 0, Math.PI * 2); g.fill(); g.fillStyle = "rgba(255,255,255,.5)"; g.beginPath(); g.arc(8.3, -3.5, .35, 0, Math.PI * 2); g.fill();
       }
       g.restore();
     }
-    function heli(x, y, dir, t) {
+    function heli(x, y, dir, t) {  /* mentőhelikopter: két lapátos rotor, elmosódó rotorkör, farokrotor, pilóta, csörlő, villogó fények */
       g.save(); g.translate(x, y); g.scale(dir * Z, Z);
-      g.fillStyle = "rgba(255,255,255,.08)"; g.beginPath(); g.ellipse(2, -5.5, 15, 1.6, 0, 0, Math.PI * 2); g.fill();  /* rotorkör */
-      const r = 15 * Math.abs(Math.cos(t * 40));
-      g.strokeStyle = "#e8edf2"; g.lineWidth = 1; g.beginPath(); g.moveTo(2 - r, -5.6); g.lineTo(2 + r, -5.6); g.stroke();
-      g.fillStyle = "#2b2f36"; g.fillRect(1, -5.4, 2, 2);
-      /* farok, farokrotor */
-      g.fillStyle = "#e5262f"; g.beginPath(); g.moveTo(-4, -2); g.lineTo(-17, -1); g.lineTo(-17, 1); g.lineTo(-4, 2); g.closePath(); g.fill();
-      g.fillStyle = "#f4f6f8"; g.fillRect(-14, -.4, 6, .8);
-      g.fillStyle = "#e5262f"; g.beginPath(); g.moveTo(-15, -1); g.lineTo(-18, -5); g.lineTo(-16.4, -5); g.lineTo(-13.5, -1); g.closePath(); g.fill();
-      const tr = 3.2 * Math.abs(Math.sin(t * 50)); g.strokeStyle = "#e8edf2"; g.lineWidth = .6; g.beginPath(); g.moveTo(-17.4, -3.6 - tr); g.lineTo(-17.4, -3.6 + tr); g.stroke();
-      /* törzs színátmenettel, ablakok, mentőkereszt */
-      g.fillStyle = lg(-4, 4, "#ff5a4f", "#b51d1d"); g.beginPath(); g.ellipse(2, 0, 8.5, 4.4, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = "rgba(170,215,255,.95)"; g.beginPath(); g.ellipse(6.5, -.6, 3.8, 3, 0, -Math.PI / 2, Math.PI / 2); g.fill();
-      g.fillStyle = "rgba(170,215,255,.9)"; g.fillRect(-1.8, -2.2, 2.2, 1.8);
-      g.fillStyle = "#fff"; g.fillRect(-1.3, .6, 3.2, 1); g.fillRect(-.2, -.5, 1, 3.2);
-      /* csörlőkar, talpak */
-      g.strokeStyle = "#cfd6dd"; g.lineWidth = .6; g.beginPath(); g.moveTo(0, 3.4); g.lineTo(0, 5.4); g.moveTo(-3, 4); g.lineTo(-3, 6); g.moveTo(6, 3.6); g.lineTo(6, 6); g.stroke();
-      g.strokeStyle = "#14202a"; g.lineWidth = .9; g.beginPath(); g.moveTo(-5, 6); g.lineTo(8.5, 6); g.quadraticCurveTo(10, 6, 10, 5); g.stroke();
+      const rd = g.createRadialGradient(2, -6.2, 1, 2, -6.2, 16); rd.addColorStop(0, "rgba(255,255,255,.04)"); rd.addColorStop(.8, "rgba(255,255,255,.12)"); rd.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = rd; g.beginPath(); g.ellipse(2, -6.2, 16, 1.9, 0, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = "#e8edf2"; g.lineWidth = .9; g.lineCap = "round";
+      for (let k = 0; k < 2; k++) { const a = t * 38 + k * Math.PI, r = 15.5 * Math.cos(a), dz = Math.sin(a) * 1.2; g.globalAlpha = .55 + .45 * Math.abs(Math.cos(a)); g.beginPath(); g.moveTo(2, -6.2); g.lineTo(2 + r, -6.2 + dz); g.stroke(); }
+      g.globalAlpha = 1;
+      g.fillStyle = "#2b2f36"; g.fillRect(1.3, -6.2, 1.4, 2.2); g.fillStyle = "#4a525a"; g.beginPath(); g.ellipse(2, -6.3, 1.4, .6, 0, 0, Math.PI * 2); g.fill();
+      /* farok: elvékonyodó gerenda csíkkal, vezérsík, farokrotor-kör */
+      const tb = new Path2D("M-3.5 -2.4 L -17 -1.2 L -17 .9 L -3.5 2.6 Z");
+      g.fillStyle = lg(-2.4, 2.6, "#ff5a4f", "#a8191b"); g.fill(tb);
+      g.fillStyle = "#f4f6f8"; g.beginPath(); g.moveTo(-5, -.6); g.lineTo(-15, -.3); g.lineTo(-15, .3); g.lineTo(-5, .9); g.closePath(); g.fill();
+      g.fillStyle = "#c21f1f"; g.beginPath(); g.moveTo(-14.6, -1.1); g.lineTo(-18.2, -6); g.lineTo(-16.4, -6); g.lineTo(-13.2, -1); g.closePath(); g.fill();
+      g.fillStyle = "#c21f1f"; g.beginPath(); g.moveTo(-12, .6); g.lineTo(-15, 2.4); g.lineTo(-13.6, .5); g.closePath(); g.fill();
+      g.fillStyle = "rgba(255,255,255,.14)"; g.beginPath(); g.arc(-17.4, -4, 2.6, 0, Math.PI * 2); g.fill();
+      const tr = 2.6 * Math.cos(t * 55); g.strokeStyle = "#e8edf2"; g.lineWidth = .5; g.beginPath(); g.moveTo(-17.4, -4 - tr); g.lineTo(-17.4, -4 + tr); g.moveTo(-17.4 - tr * .4, -4); g.lineTo(-17.4 + tr * .4, -4); g.stroke();
+      /* törzs: színátmenet, sárga csík, ablakok, pilóta, mentőkereszt, nyitott ajtó */
+      const body = new Path2D(); body.ellipse(2, 0, 8.6, 4.5, 0, 0, Math.PI * 2);
+      g.fillStyle = lg(-4.5, 4.5, "#ff6b5f", "#a8191b"); g.fill(body);
+      g.save(); g.clip(body); g.fillStyle = "#f2c21b"; g.fillRect(-7, 1.6, 18, .9); g.fillStyle = "rgba(255,255,255,.3)"; g.fillRect(-6, -4, 16, 1.1); g.restore();
+      const cg = g.createLinearGradient(5, -3, 10, 2); cg.addColorStop(0, "#d9f0ff"); cg.addColorStop(.5, "#7cbfe8"); cg.addColorStop(1, "#3a7fb8");
+      g.fillStyle = cg; g.beginPath(); g.ellipse(6.6, -.7, 3.9, 3.1, 0, -Math.PI / 2, Math.PI / 2); g.fill();
+      g.fillStyle = "#14202a"; g.beginPath(); g.arc(6.8, -1.6, .9, 0, Math.PI * 2); g.fill(); g.fillStyle = "#f4f6f8"; g.beginPath(); g.arc(6.8, -1.9, .9, Math.PI, 0); g.fill();  /* pilóta sisakban */
+      g.fillStyle = "#14202a"; g.fillRect(-2.4, -2.6, 3.4, 4.2); g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(-2.4, -2.6, .5, 4.2);  /* nyitott oldalajtó */
+      g.fillStyle = "#fff"; g.fillRect(-6.4, -.4, 2.8, .9); g.fillRect(-5.45, -1.35, .9, 2.8);
+      g.fillStyle = "#cfd6dd"; g.fillRect(-2.6, -3.2, 3.6, .5); g.strokeStyle = "#cfd6dd"; g.lineWidth = .5; g.beginPath(); g.moveTo(.6, -3); g.lineTo(.6, 3.4); g.stroke();  /* csörlőkar */
+      /* talpak merevítőkkel */
+      g.strokeStyle = "#cfd6dd"; g.lineWidth = .55; g.beginPath(); g.moveTo(-2.6, 3.8); g.lineTo(-3.4, 6); g.moveTo(5.4, 3.8); g.lineTo(6.2, 6); g.stroke();
+      g.strokeStyle = "#14202a"; g.lineWidth = .9; g.beginPath(); g.moveTo(-5.6, 6); g.lineTo(8.4, 6); g.quadraticCurveTo(10.2, 6, 10.4, 4.8); g.stroke();
+      /* villogó jelzőfények */
+      if (Math.floor(t * 3) % 2) { g.fillStyle = "#ff3b30"; g.beginPath(); g.arc(1, -4.6, .5, 0, Math.PI * 2); g.fill(); g.fillStyle = "rgba(255,59,48,.35)"; g.beginPath(); g.arc(1, -4.6, 2.2, 0, Math.PI * 2); g.fill(); }
+      if (Math.floor(t * 5 + .5) % 4 === 0) { g.fillStyle = "rgba(255,255,255,.9)"; g.beginPath(); g.arc(-17.2, -.2, .5, 0, Math.PI * 2); g.fill(); }
       g.restore();
     }
-    function person(x, y, arms) {
+    function person(x, y, arms) {  /* mentett ember: sisak, narancs mentőruha, hevederek, kar- és lábmozgás */
       g.save(); g.translate(x, y); g.scale(Z, Z);
-      g.fillStyle = "#e8b58c"; g.beginPath(); g.arc(0, -4, 1.3, 0, Math.PI * 2); g.fill();
-      g.fillStyle = "#14202a"; g.beginPath(); g.arc(0, -4.4, 1.3, Math.PI, 0); g.fill();
-      g.fillStyle = "#ff7a1a"; g.fillRect(-1.7, -2.6, 3.4, 3.6); g.fillStyle = "#fff"; g.fillRect(-1.7, -1.4, 3.4, .5);
-      if (arms) { g.strokeStyle = "#ff7a1a"; g.lineWidth = .9; g.beginPath(); g.moveTo(-1.5, -2); g.lineTo(-3.6, -4.6 - Math.sin(arms) * 1.4); g.moveTo(1.5, -2); g.lineTo(3.6, -4.6 + Math.sin(arms) * 1.4); g.stroke(); }
+      const a = arms || 0, sw = Math.sin(a);
+      g.strokeStyle = "#e86a12"; g.lineWidth = .9; g.lineCap = "round";
+      g.beginPath(); g.moveTo(-.6, 1); g.lineTo(-1 - sw * .5, 3.4); g.moveTo(.6, 1); g.lineTo(1 + sw * .5, 3.4); g.stroke();  /* lábak */
+      g.fillStyle = "#14202a"; g.beginPath(); g.arc(-1 - sw * .5, 3.6, .45, 0, Math.PI * 2); g.arc(1 + sw * .5, 3.6, .45, 0, Math.PI * 2); g.fill();
+      g.fillStyle = lg(-2.8, 1.2, "#ff8a2a", "#e0600c"); g.beginPath(); g.moveTo(-1.8, -2.6); g.lineTo(1.8, -2.6); g.lineTo(1.5, 1.2); g.lineTo(-1.5, 1.2); g.closePath(); g.fill();
+      g.strokeStyle = "#f4f6f8"; g.lineWidth = .35; g.beginPath(); g.moveTo(-1.6, -2.4); g.lineTo(1.3, .9); g.moveTo(1.6, -2.4); g.lineTo(-1.3, .9); g.stroke();  /* heveder */
+      g.fillStyle = "#c9d1d8"; g.fillRect(-1.7, -.9, 3.4, .35);  /* fényvisszaverő csík */
+      g.strokeStyle = "#ff7a1a"; g.lineWidth = .85;
+      if (a) { g.beginPath(); g.moveTo(-1.5, -2.1); g.lineTo(-3.4, -4.6 - sw * 1.4); g.moveTo(1.5, -2.1); g.lineTo(3.4, -4.6 + sw * 1.4); g.stroke(); g.fillStyle = "#e8b58c"; g.beginPath(); g.arc(-3.4, -4.7 - sw * 1.4, .4, 0, Math.PI * 2); g.arc(3.4, -4.7 + sw * 1.4, .4, 0, Math.PI * 2); g.fill(); }
+      else { g.beginPath(); g.moveTo(-1.5, -2.1); g.lineTo(-.4, -6); g.moveTo(1.5, -2.1); g.lineTo(.4, -6); g.stroke(); }  /* kapaszkodik a kötélbe */
+      g.fillStyle = "#e8b58c"; g.beginPath(); g.arc(0, -3.9, 1.25, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#f4f6f8"; g.beginPath(); g.arc(0, -4.2, 1.35, Math.PI * 1.05, -.05); g.fill(); g.fillStyle = "#e5262f"; g.fillRect(-1.3, -4.3, 2.6, .3);
+      g.fillStyle = "#14202a"; g.beginPath(); g.arc(.5, -3.8, .18, 0, Math.PI * 2); g.fill();
       g.restore();
     }
-    function blimp(x, y, dir) {  /* léghajó Zephyr felirattal */
+    function blimp(x, y, dir) {  /* léghajó: gömbölyű burok varratokkal, kötélzet, gondola, forgó légcsavarok, villogó fények */
+      const t = performance.now() / 1000;
       g.save(); g.translate(x, y); g.scale(dir * Z, Z);
-      const env = new Path2D(); env.ellipse(0, 0, 27, 8.5, 0, 0, Math.PI * 2);
-      g.fillStyle = lg(-8.5, 8.5, "#ffffff", "#b8c5d2"); g.fill(env);
+      /* kötélzet a burok és a gondola között */
+      g.strokeStyle = "rgba(60,80,100,.45)"; g.lineWidth = .2; g.beginPath(); [-14, -8, 8, 14].forEach((k) => { g.moveTo(k, 7.2); g.lineTo(k * .4, 8.2); }); g.stroke();
+      const env = new Path2D(); env.moveTo(-27, 0); env.bezierCurveTo(-27, -6.5, -14, -9, 2, -9); env.bezierCurveTo(20, -9, 28.5, -5, 28.5, 0); env.bezierCurveTo(28.5, 5, 20, 9, 2, 9); env.bezierCurveTo(-14, 9, -27, 6.5, -27, 0); env.closePath();
+      const eg = g.createRadialGradient(-2, -5.5, 2, 0, 0, 30); eg.addColorStop(0, "#ffffff"); eg.addColorStop(.55, "#e3e9ef"); eg.addColorStop(1, "#97a6b4");
+      g.fillStyle = eg; g.fill(env);
       g.save(); g.clip(env);
-      g.strokeStyle = "rgba(20,40,60,.12)"; g.lineWidth = .5; for (let k = -21; k <= 21; k += 7) { g.beginPath(); g.ellipse(k, 0, 1.5, 8.5, 0, 0, Math.PI * 2); g.stroke(); }
-      g.fillStyle = "#e5262f"; g.fillRect(-27, 1.4, 54, 1.8); g.fillStyle = "#1f5fa8"; g.fillRect(-27, 3.2, 54, .9);
-      g.fillStyle = "rgba(255,255,255,.55)"; g.beginPath(); g.ellipse(-4, -5, 16, 2, 0, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = "rgba(20,40,60,.12)"; g.lineWidth = .4; for (let k = -21; k <= 24; k += 5) { g.beginPath(); g.ellipse(k, 0, 1.2 + Math.abs(k) * .04, 9, 0, 0, Math.PI * 2); g.stroke(); }
+      g.beginPath(); g.moveTo(-27, -3); g.bezierCurveTo(-10, -6.6, 14, -6.6, 28.5, -2.5); g.stroke();
+      g.fillStyle = "#e5262f"; g.fillRect(-28, 1.6, 58, 1.7); g.fillStyle = "#1f5fa8"; g.fillRect(-28, 3.3, 58, .8); g.fillStyle = "#f2b233"; g.fillRect(-28, 4.1, 58, .3);
+      g.fillStyle = "rgba(255,255,255,.6)"; g.beginPath(); g.ellipse(-2, -5.6, 17, 1.7, -.02, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "rgba(0,20,40,.12)"; g.beginPath(); g.ellipse(2, 7.6, 24, 2.6, 0, 0, Math.PI * 2); g.fill();
       g.restore();
-      /* kormánylapok */
-      g.fillStyle = "#1f5fa8"; g.beginPath(); g.moveTo(-21, -3); g.lineTo(-31, -11); g.lineTo(-29.5, -2); g.closePath(); g.fill();
-      g.beginPath(); g.moveTo(-21, 3); g.lineTo(-31, 11); g.lineTo(-29.5, 2); g.closePath(); g.fill();
-      g.fillStyle = "#0b2f5e"; g.beginPath(); g.moveTo(-22, -.6); g.lineTo(-32, -1.4); g.lineTo(-32, 1.4); g.lineTo(-22, .6); g.closePath(); g.fill();
-      /* gondola ablakokkal, propellerek */
-      g.fillStyle = "#0b2f5e"; g.beginPath(); g.moveTo(-7, 8); g.lineTo(7, 8); g.lineTo(5.5, 12); g.lineTo(-5.5, 12); g.closePath(); g.fill();
-      g.fillStyle = "rgba(170,215,255,.95)"; for (let k = -5; k <= 3; k += 2.6) g.fillRect(k, 9, 1.8, 1.6);
-      const pr = 2.4 * Math.abs(Math.sin(performance.now() / 30)); g.strokeStyle = "#e8edf2"; g.lineWidth = .5;
-      g.beginPath(); g.moveTo(-8.5, 10 - pr); g.lineTo(-8.5, 10 + pr); g.moveTo(8.5, 10 - pr); g.lineTo(8.5, 10 + pr); g.stroke();
-      g.fillStyle = "#2b2f36"; g.fillRect(-8, 9.5, 1.2, 1.2); g.fillRect(6.8, 9.5, 1.2, 1.2);
-      /* Zephyr felirat (mindig olvasható irányban) */
-      g.scale(dir, 1); g.fillStyle = "#0b2f5e"; g.font = "800 6.6px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ZEPHYR", 0, -2.6);
-      g.fillStyle = "#e5262f"; g.font = "700 2.6px Manrope, Arial, sans-serif"; g.fillText("APARTMAN · ZAMÁRDI", 0, 1.8 + 3.6);
+      g.fillStyle = "#cfd8e0"; g.beginPath(); g.ellipse(28, 0, 1, 2.6, 0, 0, Math.PI * 2); g.fill();  /* orrkúp */
+      /* vezérsíkok csíkkal és kormánylapokkal */
+      const fin = (s) => { g.fillStyle = lg(s * 3, s * 11, "#2a6fc0", "#123f78"); g.beginPath(); g.moveTo(-20, s * 3); g.lineTo(-31, s * 11.5); g.lineTo(-29.6, s * 2); g.closePath(); g.fill(); g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = .3; g.beginPath(); g.moveTo(-27.6, s * 8.6); g.lineTo(-28.6, s * 2.3); g.stroke(); g.fillStyle = "#f2b233"; g.beginPath(); g.moveTo(-29.3, s * 9.3); g.lineTo(-31, s * 11.5); g.lineTo(-30.2, s * 7.6); g.closePath(); g.fill(); };
+      fin(-1); fin(1);
+      g.fillStyle = "#0b2f5e"; g.beginPath(); g.moveTo(-22, -.6); g.lineTo(-32.4, -1.5); g.lineTo(-32.4, 1.5); g.lineTo(-22, .6); g.closePath(); g.fill();
+      /* gondola: ablaksor, ajtó, kapaszkodó */
+      const gd = new Path2D("M-7.5 8 L 7.5 8 Q 8 8 7.8 8.8 L 6 12.2 Q 5.6 12.8 4.8 12.8 L -5 12.8 Q -5.8 12.8 -6.2 12.2 L -7.8 8.8 Q -8 8 -7.5 8 Z");
+      g.fillStyle = lg(8, 12.8, "#16437a", "#0b2f5e"); g.fill(gd);
+      const wg = g.createLinearGradient(0, 9, 0, 10.8); wg.addColorStop(0, "#d9f0ff"); wg.addColorStop(1, "#5fa6d8"); g.fillStyle = wg;
+      for (let k = -5.4; k <= 4; k += 2.3) g.fillRect(k, 9.1, 1.7, 1.7);
+      g.fillStyle = "#f2b233"; g.fillRect(-7, 11.4, 14, .35); g.fillStyle = "#14202a"; g.fillRect(4.6, 9.1, 1.4, 3);
+      /* légcsavarok tartókarral, elmosódó körrel */
+      [-9.2, 9.2].forEach((px) => { g.strokeStyle = "#5b6670"; g.lineWidth = .4; g.beginPath(); g.moveTo(px * .7, 10); g.lineTo(px, 10); g.stroke(); g.fillStyle = "#2b2f36"; g.beginPath(); g.ellipse(px, 10, 1.2, .8, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = "rgba(255,255,255,.14)"; g.beginPath(); g.ellipse(px - .9, 10, .5, 2.6, 0, 0, Math.PI * 2); g.fill(); const pr = 2.6 * Math.cos(t * 30 + px); g.strokeStyle = "#e8edf2"; g.lineWidth = .5; g.beginPath(); g.moveTo(px - .9, 10 - pr); g.lineTo(px - .9, 10 + pr); g.stroke(); });
+      /* jelzőfények */
+      if (Math.floor(t * 2) % 2) { g.fillStyle = "#ff3b30"; g.beginPath(); g.arc(-31, 11.4, .5, 0, Math.PI * 2); g.fill(); g.fillStyle = "rgba(255,59,48,.3)"; g.beginPath(); g.arc(-31, 11.4, 2, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = "#3fe07a"; g.beginPath(); g.arc(27.8, 1.8, .35, 0, Math.PI * 2); g.fill();
+      /* Zephyr felirat (mindig olvasható irányban), árnyékkal */
+      g.scale(dir, 1); g.font = "800 6.6px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillStyle = "rgba(0,20,40,.18)"; g.fillText("ZEPHYR", .3, -2.3); g.fillStyle = "#0b2f5e"; g.fillText("ZEPHYR", 0, -2.6);
+      g.fillStyle = "#e5262f"; g.font = "700 2.6px Manrope, Arial, sans-serif"; g.fillText("APARTMAN · ZAMÁRDI", 0, 5.4);
       g.restore();
     }
-    function plane(x, y, dir) {
+    function plane(x, y, dir) {  /* utasszállító: kondenzcsíkok, festés, ablaksor, ajtók, két hajtómű, villogó fények */
+      const t = performance.now() / 1000;
       g.save(); g.translate(x, y); g.scale(dir * Z, Z);
-      g.strokeStyle = "rgba(255,255,255,.6)"; g.lineWidth = .9; g.setLineDash([2.5, 2.5]);
-      g.beginPath(); g.moveTo(-14, -.4); g.lineTo(-70, .4); g.moveTo(-6, 1.6); g.lineTo(-60, 2.8); g.stroke(); g.setLineDash([]);
-      /* hátsó szárny, függőleges vezérsík */
-      g.fillStyle = "#dfe6ec"; g.beginPath(); g.moveTo(-10, 0); g.lineTo(-15, -2.6); g.lineTo(-13, 0); g.closePath(); g.fill();
-      g.fillStyle = "#e5262f"; g.beginPath(); g.moveTo(-9, -1); g.lineTo(-14, -8); g.lineTo(-11.5, -8); g.lineTo(-5, -1); g.closePath(); g.fill();
-      /* törzs */
-      g.fillStyle = lg(-2.6, 2.6, "#ffffff", "#c3ced8"); g.beginPath(); g.moveTo(-12, -1.2); g.lineTo(9, -2); g.quadraticCurveTo(14, -1.6, 15, .4); g.quadraticCurveTo(13, 2, 9, 2.2); g.lineTo(-11, 1.4); g.closePath(); g.fill();
-      g.fillStyle = "#1f5fa8"; g.fillRect(-11, .2, 22, .7);
-      g.fillStyle = "#14202a"; for (let k = -7; k <= 8; k += 1.7) g.fillRect(k, -1.1, .8, .8);
-      g.fillStyle = "#14202a"; g.beginPath(); g.moveTo(11.6, -1.4); g.lineTo(13.6, -.6); g.lineTo(11.6, -.2); g.closePath(); g.fill();
-      /* szárny, hajtómű */
-      g.fillStyle = "#cfd8e0"; g.beginPath(); g.moveTo(1, .4); g.lineTo(-5, 7); g.lineTo(-2.4, 7); g.lineTo(5, .6); g.closePath(); g.fill();
-      g.fillStyle = "#8a939c"; g.beginPath(); g.ellipse(-.6, 3.4, 2, .9, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = (Math.floor(performance.now() / 600) % 2) ? "#ff3b30" : "rgba(255,59,48,.2)"; g.beginPath(); g.arc(-4.6, 6.8, .5, 0, Math.PI * 2); g.fill();
+      /* kondenzcsíkok: hajtóműveknél vékonyak, hátrafelé szélesednek és oszlanak */
+      for (let k = 0; k < 48; k++) { const u = k / 47, px = -9 - u * 72; [[2.2, 1], [3.6, .7]].forEach(([yy, al]) => { g.fillStyle = `rgba(255,255,255,${.2 * (1 - u) * al})`; g.beginPath(); g.ellipse(px, yy + u * 1.4 + Math.sin(k * .5 + t) * u * .6, 2.6, .3 + u * 1.4, 0, 0, Math.PI * 2); g.fill(); }); }
+      /* távoli szárny és hajtómű */
+      g.fillStyle = "#aeb9c3"; g.beginPath(); g.moveTo(2, -1); g.lineTo(-2.5, -5.5); g.lineTo(-1, -5.5); g.lineTo(5, -1.2); g.closePath(); g.fill();
+      g.fillStyle = "#7d8790"; g.beginPath(); g.ellipse(0, -2.6, 1.6, .7, 0, 0, Math.PI * 2); g.fill();
+      /* vízszintes és függőleges vezérsík Z logóval */
+      g.fillStyle = "#dfe6ec"; g.beginPath(); g.moveTo(-10, .2); g.lineTo(-15.4, 3); g.lineTo(-13.6, 3); g.lineTo(-8.4, .4); g.closePath(); g.fill();
+      const vf = new Path2D("M-8.6 -1.2 L -14 -8.6 L -11.4 -8.6 L -5 -1.2 Z"); g.fillStyle = lg(-8.6, -1, "#e5262f", "#a8191b"); g.fill(vf);
+      g.save(); g.clip(vf); g.fillStyle = "#1f5fa8"; g.beginPath(); g.moveTo(-14, -8.6); g.lineTo(-9, -3); g.lineTo(-7, -3); g.lineTo(-12, -8.6); g.fill(); g.restore();
+      g.save(); g.translate(-10.6, -5); g.scale(dir, 1); g.fillStyle = "#fff"; g.font = "900 2.6px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Z", 0, 0); g.restore();
+      /* törzs színátmenettel, csíkok, ablaksor, ajtók, pilótafülke */
+      const fus = new Path2D(); fus.moveTo(-12.4, -1.3); fus.lineTo(9, -2.1); fus.quadraticCurveTo(14.2, -1.8, 15.4, .3); fus.quadraticCurveTo(13.4, 2.1, 9, 2.3); fus.lineTo(-11.2, 1.5); fus.quadraticCurveTo(-13, .6, -12.4, -1.3); fus.closePath();
+      g.fillStyle = lg(-2.3, 2.3, "#ffffff", "#b9c5d0"); g.fill(fus);
+      g.save(); g.clip(fus); g.fillStyle = "#1f5fa8"; g.fillRect(-13, .3, 30, .6); g.fillStyle = "#e5262f"; g.fillRect(-13, .9, 30, .3); g.fillStyle = "rgba(255,255,255,.6)"; g.fillRect(-12, -1.9, 26, .4); g.restore();
+      g.fillStyle = "#1d2a36"; for (let k = -7.4; k <= 7.6; k += 1.25) { g.beginPath(); g.ellipse(k, -.8, .32, .38, 0, 0, Math.PI * 2); g.fill(); }
+      g.strokeStyle = "rgba(60,80,100,.5)"; g.lineWidth = .18; g.strokeRect(8.4, -1.6, .9, 1.9); g.strokeRect(-9.6, -1.3, .9, 1.9);
+      g.fillStyle = "#14202a"; g.beginPath(); g.moveTo(11.8, -1.5); g.lineTo(13.9, -.7); g.lineTo(13.6, -.3); g.lineTo(11.8, -.4); g.closePath(); g.fill();
+      g.fillStyle = "rgba(160,210,255,.6)"; g.beginPath(); g.moveTo(12, -1.35); g.lineTo(13.2, -.9); g.lineTo(12, -.85); g.closePath(); g.fill();
+      /* közeli szárny fékszárnyvonallal, winglet, hajtómű */
+      g.fillStyle = lg(.4, 7, "#dfe6ec", "#aeb9c3"); g.beginPath(); g.moveTo(1.4, .4); g.lineTo(-5.4, 7.2); g.lineTo(-2.6, 7.2); g.lineTo(5.6, .7); g.closePath(); g.fill();
+      g.strokeStyle = "rgba(60,80,100,.4)"; g.lineWidth = .2; g.beginPath(); g.moveTo(.2, 1.6); g.lineTo(-4.4, 6.4); g.stroke();
+      g.fillStyle = "#e5262f"; g.beginPath(); g.moveTo(-5.4, 7.2); g.lineTo(-6.4, 8.8); g.lineTo(-5, 8.8); g.lineTo(-4.2, 7.2); g.closePath(); g.fill();
+      g.fillStyle = lg(2.4, 4.4, "#9aa3ab", "#5f6870"); g.beginPath(); g.ellipse(-.8, 3.5, 2.3, 1, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "#2b2f36"; g.beginPath(); g.ellipse(1.4, 3.5, .4, .9, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = "#cfd6dd"; g.fillRect(-3.4, 3.2, .6, .6);
+      /* fények: piros villogó, fehér szárnyvég-stroboszkóp */
+      if (Math.floor(t * 1.6) % 2) { g.fillStyle = "#ff3b30"; g.beginPath(); g.arc(-1, -2.2, .45, 0, Math.PI * 2); g.fill(); g.fillStyle = "rgba(255,59,48,.3)"; g.beginPath(); g.arc(-1, -2.2, 1.8, 0, Math.PI * 2); g.fill(); }
+      if (Math.floor(t * 2.5) % 3 === 0) { g.fillStyle = "#fff"; g.beginPath(); g.arc(-6, 8.6, .55, 0, Math.PI * 2); g.fill(); g.fillStyle = "rgba(255,255,255,.4)"; g.beginPath(); g.arc(-6, 8.6, 2.2, 0, Math.PI * 2); g.fill(); }
       g.restore();
     }
     /* Tengeri szörny: pikkelyes, uszonyos kígyótest csápokkal, világító szemmel */
@@ -5371,53 +5475,83 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     /* Tengeralattjáró periszkóppal */
     function periscope(x, y, h, look, t) {
       if (h <= 0) return;
-      g.save(); g.beginPath(); g.rect(x - 20, 0, 40, y + 1); g.clip();
+      g.save(); g.beginPath(); g.rect(x - 30, 0, 60, y + 1); g.clip();
       g.translate(x, y); g.scale(Z, Z);
       const top = -16 * h;
-      g.fillStyle = lg(0, 0, "#5b6670", "#2c343b"); const pg = g.createLinearGradient(-1.2, 0, 1.2, 0); pg.addColorStop(0, "#2c343b"); pg.addColorStop(.45, "#9aa5ae"); pg.addColorStop(1, "#2c343b");
+      const pg = g.createLinearGradient(-1.2, 0, 1.2, 0); pg.addColorStop(0, "#232a30"); pg.addColorStop(.4, "#a9b4bd"); pg.addColorStop(.55, "#6c7780"); pg.addColorStop(1, "#232a30");
       g.fillStyle = pg; g.fillRect(-1.1, top + 2, 2.2, -top);
-      g.fillStyle = "#3d474f"; g.fillRect(-1.5, top + 6, 3, 1); g.fillRect(-1.5, top + 10, 3, 1);  /* gyűrűk */
+      g.fillStyle = "#3d474f"; [6, 10, 14].forEach((k) => g.fillRect(-1.5, top + k, 3, .9));  /* gyűrűk */
+      g.fillStyle = "rgba(255,255,255,.25)"; g.fillRect(-.5, top + 2, .35, -top);
+      g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(-1.1, -1.2, 2.2, 1.2);  /* nedves sáv a víznél */
       g.save(); g.translate(0, top); g.scale(look, 1);
-      g.fillStyle = pg; g.beginPath(); g.moveTo(-1.6, 3); g.lineTo(-1.6, -.6); g.quadraticCurveTo(-1.6, -1.8, 0, -1.8); g.lineTo(3.4, -1.8); g.lineTo(3.4, 1.4); g.lineTo(1.6, 1.4); g.lineTo(1.6, 3); g.closePath(); g.fill();
-      g.fillStyle = "#14202a"; g.fillRect(3, -1.5, .7, 2.6);
-      g.fillStyle = `rgba(255,255,255,${.5 + .5 * Math.abs(Math.sin(t * 3))})`; g.fillRect(3.25, -1.1, .35, .9);  /* üveg csillanása */
+      g.fillStyle = pg; g.beginPath(); g.moveTo(-1.6, 3); g.lineTo(-1.6, -.6); g.quadraticCurveTo(-1.6, -1.9, 0, -1.9); g.lineTo(3.5, -1.9); g.lineTo(3.5, 1.5); g.lineTo(1.6, 1.5); g.lineTo(1.6, 3); g.closePath(); g.fill();
+      g.fillStyle = "#3d474f"; g.fillRect(-1.6, -2.3, 3.4, .5);
+      g.fillStyle = "#0c1218"; g.fillRect(3, -1.6, .8, 2.8);
+      const lens = g.createLinearGradient(3, -1.6, 3.8, 1.2); lens.addColorStop(0, "#5fd0ff"); lens.addColorStop(1, "#0b3d5c"); g.fillStyle = lens; g.fillRect(3.15, -1.4, .55, 2.4);
+      g.fillStyle = `rgba(255,255,255,${.4 + .6 * Math.abs(Math.sin(t * 3))})`; g.fillRect(3.25, -1.2, .3, .8);  /* üveg csillanása */
+      if (Math.sin(t * 3) > .9) { g.fillStyle = "rgba(255,255,255,.5)"; g.beginPath(); g.arc(3.5, -.8, 2.4, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = "#e5262f"; g.beginPath(); g.arc(-1, -2.6, .35, 0, Math.PI * 2); g.fill();
       g.restore(); g.restore();
-      /* hullámzó nyom a periszkóp körül */
-      g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = 1;
-      g.beginPath(); g.ellipse(x, y + 1, 4 + Math.sin(t * 6) * 1, 1, 0, 0, Math.PI * 2); g.stroke();
+      /* tollszerű V-nyom és fröccs a periszkóp mögött */
+      g.strokeStyle = "rgba(255,255,255,.8)"; g.lineWidth = 1;
+      g.beginPath(); g.ellipse(x, y + 1, (4 + Math.sin(t * 6)) * Z * .8, 1, 0, 0, Math.PI * 2); g.stroke();
+      g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = .7; g.beginPath(); g.moveTo(x, y + 1); g.lineTo(x - look * 22, y - .5); g.moveTo(x, y + 1.5); g.lineTo(x - look * 22, y + 3.5); g.stroke();
+      for (let k = 0; k < 4; k++) { const q = (t * 2 + k / 4) % 1; g.fillStyle = `rgba(255,255,255,${.8 * (1 - q)})`; g.beginPath(); g.arc(x + look * (2 - q * 3), y - Math.sin(q * Math.PI) * 3, .7, 0, Math.PI * 2); g.fill(); }
     }
     function submarine(x, y, s, dir, t) {
       if (s <= 0) return;
-      g.save(); g.beginPath(); g.rect(x - 90, 0, 180, y + 1.5); g.clip();
+      g.save(); g.beginPath(); g.rect(x - 100, 0, 200, y + 1.5); g.clip();
       g.translate(x, y + (1 - s) * 22 * Z); g.scale(dir * Z, Z);
-      /* hajótest */
+      /* hajótest: lemezsorok, fedélzeti csík, elárasztónyílások, piros fenékfestés */
       const hull = new Path2D(); hull.moveTo(-34, 0); hull.quadraticCurveTo(-34, -6.5, -24, -7); hull.lineTo(26, -7); hull.quadraticCurveTo(36, -6, 37, -1); hull.quadraticCurveTo(36, 4, 26, 5); hull.lineTo(-24, 5); hull.quadraticCurveTo(-34, 4.5, -34, 0); hull.closePath();
-      g.fillStyle = lg(-7, 5, "#5d6a75", "#1f262c"); g.fill(hull);
+      g.fillStyle = lg(-7, 5, "#66737e", "#1b2126"); g.fill(hull);
       g.save(); g.clip(hull);
-      g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = .4; for (let k = -26; k < 30; k += 6) { g.beginPath(); g.moveTo(k, -7); g.lineTo(k, 5); g.stroke(); }
-      g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(-30, -6.2, 62, 1.2);
-      g.fillStyle = "#8b1d1d"; g.fillRect(-34, 2.6, 72, 2.6);  /* piros vízvonal alatti festés */
+      g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = .35; for (let k = -28; k < 34; k += 5) { g.beginPath(); g.moveTo(k, -7); g.lineTo(k + .6, 5); g.stroke(); }
+      g.beginPath(); g.moveTo(-34, -2.4); g.lineTo(37, -2.4); g.stroke();
+      g.fillStyle = "rgba(255,255,255,.2)"; g.fillRect(-30, -6.4, 62, 1);
+      g.fillStyle = "#3a434a"; g.fillRect(-26, -7.4, 50, 1.1);  /* fedélzet */
+      g.fillStyle = "#0c1014"; for (let k = -22; k <= 22; k += 2.2) g.fillRect(k, 1.2, 1.3, .6);  /* elárasztónyílások */
+      g.fillStyle = "#8b1d1d"; g.fillRect(-34, 2.6, 72, 2.6);
       g.restore();
-      for (let k = -18; k <= 20; k += 4) { g.fillStyle = "#14202a"; g.beginPath(); g.arc(k, -3.2, .6, 0, Math.PI * 2); g.fill(); }  /* szegecssor */
-      /* torony */
+      for (let k = -18; k <= 20; k += 4) { g.fillStyle = "#14202a"; g.beginPath(); g.arc(k, -3.6, .5, 0, Math.PI * 2); g.fill(); g.fillStyle = "rgba(255,255,255,.25)"; g.beginPath(); g.arc(k - .15, -3.75, .2, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = "#2a3239"; [-16, 18].forEach((k) => { g.fillRect(k - 1, -8.2, 2, .9); });  /* bitták */
+      g.fillStyle = "#3d474f"; g.beginPath(); g.ellipse(24, -7.4, 1.6, .5, 0, 0, Math.PI * 2); g.fill();  /* fedélzeti zsilip */
+      /* orr-mélységkormány */
+      g.fillStyle = "#2a3239"; g.beginPath(); g.moveTo(28, -2.6); g.lineTo(33, -1.6); g.lineTo(28, -1.2); g.closePath(); g.fill();
+      /* torony: korlát, ablakok, felirat, toronyszárny, árbocok, forgó radar, kapitány a nyílásban */
       const sail = new Path2D(); sail.moveTo(-6, -7); sail.lineTo(-4, -19); sail.lineTo(7, -19); sail.quadraticCurveTo(10, -18, 10, -14); sail.lineTo(12, -7); sail.closePath();
-      g.fillStyle = lg(-19, -7, "#6c7a86", "#2a3239"); g.fill(sail);
-      g.fillStyle = "#2a3239"; g.fillRect(-1, -24, 1.4, 5); g.fillRect(3, -22, 1, 3);  /* periszkóp, antenna */
-      g.fillStyle = "#3d474f"; g.fillRect(-2, -21, 3.4, 1.2);
+      g.fillStyle = lg(-19, -7, "#76848f", "#283036"); g.fill(sail);
+      g.save(); g.clip(sail); g.fillStyle = "rgba(255,255,255,.15)"; g.fillRect(-6, -19, 3, 12); g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = .3; g.beginPath(); g.moveTo(-6, -13); g.lineTo(12, -13); g.stroke(); g.restore();
+      g.strokeStyle = "#cfd6dd"; g.lineWidth = .25; g.beginPath(); g.moveTo(-4, -21); g.lineTo(7, -21); for (let k = -4; k <= 7; k += 2.2) { g.moveTo(k, -21); g.lineTo(k, -19); } g.stroke();
+      g.fillStyle = "#2a3239"; g.fillRect(-1, -25, 1.4, 6); g.fillStyle = "#3d474f"; g.fillRect(-2, -22, 3.4, 1.1);
+      g.fillStyle = "#2a3239"; g.fillRect(3, -24, .8, 5);
+      const ra = Math.cos(t * 3); g.fillStyle = "#4a555e"; g.fillRect(3.4 - 2 * Math.abs(ra), -25, 4 * Math.abs(ra) + .3, .7);
       g.fillStyle = "rgba(170,215,255,.9)"; for (let k = -2.5; k <= 6; k += 2.8) g.fillRect(k, -17, 1.8, 1.2);
-      g.fillStyle = "#f2b233"; g.font = "800 4px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.save(); g.scale(dir, 1); g.fillText("Z-58", dir * 3, -10); g.restore();
-      g.fillStyle = "#2a3239"; g.beginPath(); g.moveTo(-1, -12); g.lineTo(-7, -11); g.lineTo(-1, -10.5); g.closePath(); g.fill();  /* toronyszárny */
-      /* farok: kormány, propeller */
+      if (s > .9) {  /* kapitány tányérsapkában integet */
+        g.fillStyle = "#1d2a36"; g.fillRect(5.2, -21.8, 2.2, 2.8);
+        g.fillStyle = "#e8b58c"; g.beginPath(); g.arc(6.3, -23, .9, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#f4f6f8"; g.fillRect(5.2, -24.2, 2.2, .6); g.fillStyle = "#14202a"; g.fillRect(5.4, -23.7, 2.4, .3);
+        const wv = Math.sin(t * 7) * .5; g.strokeStyle = "#1d2a36"; g.lineWidth = .6; g.beginPath(); g.moveTo(7.2, -21.4); g.lineTo(8.6 + wv, -24.4); g.stroke();
+      }
+      g.fillStyle = "#f2b233"; g.font = "800 4px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.save(); g.scale(dir, 1); g.fillText("Z-58", dir * 3, -10); g.restore();
+      g.fillStyle = "#2a3239"; g.beginPath(); g.moveTo(-1, -12.4); g.lineTo(-8, -11.2); g.lineTo(-1, -10.4); g.closePath(); g.fill();
+      /* zászló a tornyon */
+      g.strokeStyle = "#cfd6dd"; g.lineWidth = .25; g.beginPath(); g.moveTo(-4, -19); g.lineTo(-4.4, -26); g.stroke();
+      [["#ce2939", 0], ["#ffffff", 1], ["#477050", 2]].forEach(([c, i]) => { g.fillStyle = c; g.beginPath(); g.moveTo(-4.4, -26 + i); for (let k = 0; k <= 4; k++) g.lineTo(-4.4 - k, -26 + i + Math.sin(t * 7 - k) * .25 * k / 4); for (let k = 4; k >= 0; k--) g.lineTo(-4.4 - k, -25 + i + Math.sin(t * 7 - k) * .25 * k / 4); g.fill(); });
+      /* farok: kormánylapok, ötlapátos csavar */
       g.fillStyle = "#2a3239"; g.beginPath(); g.moveTo(-30, -3); g.lineTo(-38, -10); g.lineTo(-36, -2); g.closePath(); g.fill();
       g.beginPath(); g.moveTo(-30, 1); g.lineTo(-38, 7); g.lineTo(-36, 0); g.closePath(); g.fill();
-      const pr = 3 * Math.abs(Math.sin(t * 25)); g.fillStyle = "#b08d3a"; g.fillRect(-38.5, -pr / 2 - .5, 1.2, pr + 1);
+      for (let k = 0; k < 5; k++) { const a = t * 18 + k * Math.PI * 2 / 5, py = Math.sin(a) * 2.6; g.fillStyle = Math.cos(a) > 0 ? "#c9a24a" : "#8a6a28"; g.beginPath(); g.ellipse(-38.4, -.6 + py / 2, .5, Math.abs(py) / 2 + .3, 0, 0, Math.PI * 2); g.fill(); }
       /* lefolyó víz, hab */
       g.fillStyle = "rgba(220,240,255,.75)";
-      for (let k = 0; k < 10; k++) { const fx = -28 + k * 6.4, q = (t * 2 + k * .37) % 1; g.fillRect(fx, -7 + q * 8, .5, 1.6); }
+      for (let k = 0; k < 14; k++) { const fx = -30 + k * 4.8, q = (t * 2 + k * .37) % 1; g.fillRect(fx, -7 + q * 8, .45, 1.6); }
+      for (let k = 0; k < 4; k++) { const q = (t * 1.5 + k * .25) % 1; g.fillStyle = `rgba(220,240,255,${.7 * (1 - q)})`; g.fillRect(-4 + k * 4, -19 + q * 12, .4, 1.4); }
       g.restore();
-      g.strokeStyle = "rgba(255,255,255,.8)"; g.lineWidth = 1.2;  /* orrhullám és nyom */
-      g.beginPath(); g.moveTo(x + dir * 36 * Z, y + 1); g.quadraticCurveTo(x + dir * 42 * Z, y - 2, x + dir * 46 * Z, y + 1.5); g.stroke();
-      g.lineWidth = .8; g.beginPath(); g.moveTo(x - dir * 34 * Z, y + 1); g.lineTo(x - dir * 70 * Z, y + 2); g.stroke();
+      g.strokeStyle = "rgba(255,255,255,.85)"; g.lineWidth = 1.2;  /* orrhullám és nyom */
+      g.beginPath(); g.moveTo(x + dir * 36 * Z, y + 1); g.quadraticCurveTo(x + dir * 42 * Z, y - 2.4, x + dir * 47 * Z, y + 1.5); g.stroke();
+      g.fillStyle = "rgba(255,255,255,.6)"; g.beginPath(); g.ellipse(x + dir * 38 * Z, y + 1, 6 * Z, 1.4, 0, 0, Math.PI * 2); g.fill();
+      g.lineWidth = .8; g.beginPath(); g.moveTo(x - dir * 34 * Z, y + 1); g.lineTo(x - dir * 74 * Z, y + 2); g.moveTo(x - dir * 34 * Z, y + 2.4); g.lineTo(x - dir * 70 * Z, y + 5); g.stroke();
+      for (let k = 0; k < 6; k++) { const q = (t * .8 + k / 6) % 1; g.fillStyle = `rgba(255,255,255,${.6 * (1 - q)})`; g.beginPath(); g.arc(x - dir * (38 + q * 34) * Z, y + 2 + Math.sin(k * 2.3) * 1.5, .6 + q, 0, Math.PI * 2); g.fill(); }
     }
     /* ---------- Óriáspolip: csápok körülfonják és a mélybe húzzák a hajót ---------- */
     const fronts = [], ease = (k) => (k = Math.max(0, Math.min(1, k)), k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
@@ -5507,14 +5641,36 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.strokeStyle = "#5b3a22"; g.lineWidth = .55; g.beginPath(); g.moveTo(46, -6); g.lineTo(45, -40); g.moveTo(-50, -12); g.lineTo(-51, -37); g.stroke();
       g.strokeStyle = "rgba(220,220,220,.55)"; g.lineWidth = .2; g.beginPath(); g.moveTo(64, -8); g.lineTo(45, -40); g.lineTo(-51, -37); g.lineTo(-61, -6); g.stroke();
       g.fillStyle = "#c0392b"; g.beginPath(); g.moveTo(-61, -6); g.lineTo(-61, -11); g.lineTo(-56, -10); g.lineTo(-61, -9); g.fill();
+      /* finom részletek: korlátok, horgony, tatzászló, utasok a fedélzeten, árboclámpák, gőzsíp-csövek */
+      g.strokeStyle = "rgba(240,236,224,.7)"; g.lineWidth = .18; g.beginPath();
+      [[-47, 43, -12.4], [-39, 33, -16.4], [-60, 58, -6.6]].forEach(([x0, x1, yy]) => { g.moveTo(x0, yy - .9); g.lineTo(x1, yy - .9); for (let k = x0; k <= x1; k += 1.6) { g.moveTo(k, yy - .9); g.lineTo(k, yy); } }); g.stroke();
+      g.strokeStyle = "#9aa3ab"; g.lineWidth = .35; g.beginPath(); g.arc(58.6, -4.4, .6, 0, Math.PI * 2); g.moveTo(58.6, -3.8); g.lineTo(58.6, -2); g.moveTo(57.8, -2.6); g.quadraticCurveTo(58.6, -1.4, 59.4, -2.6); g.stroke();
+      g.strokeStyle = "#5b3a22"; g.lineWidth = .3; g.beginPath(); g.moveTo(-61, -6); g.lineTo(-61.4, -13); g.stroke();
+      const ft = typeof t === "number" ? t : 0;
+      g.fillStyle = "#c0392b"; g.beginPath(); g.moveTo(-61.4, -13); for (let k = 0; k <= 5; k++) g.lineTo(-61.4 - k, -13 + Math.sin(ft * 5 - k) * .25 * k / 5); for (let k = 5; k >= 0; k--) g.lineTo(-61.4 - k, -10.6 + Math.sin(ft * 5 - k) * .25 * k / 5); g.closePath(); g.fill();
+      g.fillStyle = "#1f3a7a"; g.fillRect(-62.2, -13, .8 * 1.6, 1.2);
+      for (let k = 0; k < 9; k++) { const px = -42 + k * 9.3 + (k % 2) * 1.4; g.fillStyle = ["#2b2f36", "#6b2e2e", "#1f3a5e", "#e9e2d0"][k % 4]; g.fillRect(px - .35, -14.1, .7, 1.6); g.fillStyle = "#e8b58c"; g.beginPath(); g.arc(px, -14.5, .38, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = "#f4f1e6"; [-24.6, -10.6, 3.4].forEach((fx) => g.fillRect(fx, -33, .5, 3));
+      if (lights) { [[45, -40], [-51, -37]].forEach(([mx, my]) => { g.fillStyle = "#fff6c8"; g.beginPath(); g.arc(mx, my + 1, .45, 0, Math.PI * 2); g.fill(); g.fillStyle = "rgba(255,240,180,.35)"; g.beginPath(); g.arc(mx, my + 1, 2.2, 0, Math.PI * 2); g.fill(); }); }
     }
-    function lifeboat(x, y, dir, t, row) {
+    function lifeboat(x, y, dir, t, row) {  /* mentőcsónak: deszkázat, perem, sorszám, evezősök mellényben, valódi evezőcsapások */
       g.save(); g.translate(x, y); g.scale(dir * Z * .8, Z * .8);
-      if (row) { g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = .5; g.beginPath(); g.moveTo(-7, 1.6); g.quadraticCurveTo(-13, 2.2, -20, 2); g.stroke(); }
-      g.fillStyle = "#f4f4ef"; g.beginPath(); g.moveTo(-7, -1); g.lineTo(7, -1); g.quadraticCurveTo(6, 2.6, 2, 2.8); g.lineTo(-4, 2.8); g.quadraticCurveTo(-7, 2.4, -7, -1); g.fill();
-      g.fillStyle = "#c0392b"; g.fillRect(-7, -1, 14, .5);
-      [-4, -1, 2, 5].forEach((px, i) => { g.fillStyle = i % 2 ? "#ff7a1a" : "#f2b233"; g.fillRect(px - .7, -3.4, 1.4, 2.4); g.fillStyle = "#e8b58c"; g.beginPath(); g.arc(px, -4.1, .65, 0, Math.PI * 2); g.fill(); });
-      if (row) { const a = Math.sin(t * 5) * .6; g.strokeStyle = "#8d6e63"; g.lineWidth = .4; [-2.5, 3.5].forEach((ox) => { g.beginPath(); g.moveTo(ox, -2); g.lineTo(ox - 4 * Math.cos(a), 1.5 + Math.sin(a) * 1.2); g.stroke(); }); }
+      if (row) { g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = .5; g.beginPath(); g.moveTo(-7, 1.6); g.quadraticCurveTo(-13, 2.2, -20, 2); g.moveTo(-7, 2.4); g.quadraticCurveTo(-12, 3.6, -18, 4); g.stroke(); }
+      const a = Math.sin(t * 5) * .6, lift = Math.cos(t * 5);
+      if (row) { g.strokeStyle = "#6d4c3d"; g.lineWidth = .4; [-2.5, 3.5].forEach((ox) => { g.beginPath(); g.moveTo(ox, -2.4); g.lineTo(ox - 4 * Math.cos(a), 1.5 + Math.sin(a) * 1.2 - (lift > 0 ? 1.2 : 0)); g.stroke(); }); }  /* túlsó evezők */
+      const hl = new Path2D("M-7 -1 L 7 -1 Q 6 2.6 2 2.8 L -4 2.8 Q -7 2.4 -7 -1 Z");
+      g.fillStyle = lg(-1, 2.8, "#ffffff", "#d4d4cc"); g.fill(hl);
+      g.save(); g.clip(hl); g.strokeStyle = "rgba(90,90,80,.25)"; g.lineWidth = .18; for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(-7, -.2 + k * .8); g.lineTo(7, -.2 + k * .8); g.stroke(); } g.restore();
+      g.fillStyle = "#c0392b"; g.fillRect(-7, -1.2, 14, .6); g.fillStyle = "#8a5a32"; g.fillRect(-7.2, -1.5, 14.4, .35);
+      g.save(); g.scale(dir, 1); g.fillStyle = "#14202a"; g.font = "800 1.4px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("T · 4", dir * 3.6, .9); g.restore();
+      [-4, -1, 2, 5].forEach((px, i) => {
+        const lean = row && i > 0 && i < 3 ? Math.sin(t * 5) * .5 : 0;
+        g.fillStyle = i % 2 ? "#ff7a1a" : "#f2b233"; g.beginPath(); g.moveTo(px - .8, -1.2); g.lineTo(px + .8, -1.2); g.lineTo(px + .7 - lean, -3.6); g.lineTo(px - .7 - lean, -3.6); g.closePath(); g.fill();
+        g.fillStyle = "#f4f6f8"; g.fillRect(px - .7 - lean * .6, -2.6, 1.4, .3);
+        g.fillStyle = "#e8b58c"; g.beginPath(); g.arc(px - lean, -4.2, .62, 0, Math.PI * 2); g.fill();
+        g.fillStyle = ["#2b2f36", "#6b4a2e", "#14202a", "#c9a14a"][i]; g.beginPath(); g.arc(px - lean, -4.45, .64, Math.PI, 0); g.fill();
+      });
+      if (row) { g.strokeStyle = "#8d6e63"; g.lineWidth = .45; [-2.5, 3.5].forEach((ox) => { const ex = ox - 4 * Math.cos(a), ey = 1.5 + Math.sin(a) * 1.2 - (lift > 0 ? 1.2 : 0); g.beginPath(); g.moveTo(ox, -2); g.lineTo(ex, ey); g.stroke(); g.fillStyle = "#8d6e63"; g.beginPath(); g.ellipse(ex, ey, .9, .35, Math.atan2(ey + 2, ex - ox), 0, Math.PI * 2); g.fill(); if (lift < -.6) { g.fillStyle = "rgba(255,255,255,.8)"; g.beginPath(); g.arc(ex - .6, 2.4, .5, 0, Math.PI * 2); g.fill(); } }); }
       g.restore();
     }
     function sndOcto() {  /* óriáspolip: mély, bugyborékoló morgás */
@@ -5768,7 +5924,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     function frame(t) {
       requestAnimationFrame(frame);
       if (document.body.classList.contains("walk-on") || document.hidden) { last = t; return; }
-      const rs = device === "phone" ? .52 : 1;  /* telefonon kisebb regatta */
+      const rs = device === "phone" ? .52 : (typeof REG_RS !== "undefined" ? REG_RS : 1);  /* a kezdőoldalon gépen/táblagépen nagyobb */  /* telefonon kisebb regatta */
       if (c.width !== innerWidth * 2 || c._rs !== rs) { c.width = innerWidth * 2; c.height = Math.round(H * rs * 2); c._rs = rs; W = innerWidth / rs; }
       const dt = Math.min(.05, (t - last) / 1000); last = t; const ts = t / 1000;
       g.setTransform(2 * rs, 0, 0, 2 * rs, 0, 0); g.clearRect(0, 0, W, H);
@@ -5778,7 +5934,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         const busy = extras.map((q) => q.kind), pool = Object.keys(KINDS).filter((k) => !busy.includes(k) && !recent.includes(k)
           && !((k === "rescue" || k === "monster") && (busy.includes("rescue") || busy.includes("monster"))) && !(k === "buoy" && busy.includes("race")) && !(k === "race" && busy.includes("buoy")) && !(k === "kayak" && busy.includes("police")) && !(k === "police" && busy.includes("kayak"))
           && !(["titanic", "storm", "monster", "rescue", "steam"].includes(k) && busy.some((q) => ["titanic", "storm", "monster", "rescue", "steam"].includes(q))));
-        let kind = DEMO ? "rescue" : DEMO_M ? "monster" : DEMO_B ? "buoy" : DEMO_S ? "sub" : DEMO_G ? "steam" : DEMO_K ? "kayak" : DEMO_V ? "storm" : DEMO_T ? "titanic" : null;
+        let kind = FORCE && KINDS[FORCE] && !busy.includes(FORCE) ? FORCE : DEMO ? "rescue" : DEMO_M ? "monster" : DEMO_B ? "buoy" : DEMO_S ? "sub" : DEMO_G ? "steam" : DEMO_K ? "kayak" : DEMO_V ? "storm" : DEMO_T ? "titanic" : null;
         if (!kind && pool.length) { let sum = pool.reduce((a, k) => a + KINDS[k], 0), r = Math.random() * sum; kind = pool.find((k) => (r -= KINDS[k]) < 0) || pool[0]; }
         if (kind && !((DEMO || DEMO_M || DEMO_B || DEMO_S || DEMO_G || DEMO_K || DEMO_V || DEMO_T) && busy.includes(kind))) {
           const ex = { kind, dir: Math.random() < .5 ? -1 : 1, x: 0 }; ex.x = ex.dir > 0 ? -.06 : 1.06; ex.v = kind === "plane" ? rnd(.06, .08) : kind === "blimp" ? rnd(.01, .014) : rnd(.038, .05);

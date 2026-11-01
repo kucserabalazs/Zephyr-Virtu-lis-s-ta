@@ -128,7 +128,7 @@ html.intro-on body { overflow: hidden; }
 .hero::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, rgba(7,29,56,.5) 0%, rgba(7,29,56,.18) 45%, transparent 70%), linear-gradient(180deg, rgba(7,29,56,.55) 0%, rgba(7,29,56,.05) 30%, rgba(7,29,56,.15) 55%, rgba(7,29,56,.88) 100%); }
 .hero-boats { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 /* vitorlásverseny a nyitókép alján (a sétából) */
-.home-regatta { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 104px; z-index: 2; pointer-events: none; }
+.home-regatta { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 130px; z-index: 2; pointer-events: none; }
 @media (max-width: 700px) { .home-regatta { height: 54px; } }
 .hero-in { position: relative; z-index: 3; padding-block: 140px 70px; display: grid; gap: 6px; }
 .hero-logo { width: min(420px, 78vw); height: auto; filter: drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 14px rgba(255,255,255,.45)); opacity: 0; transform: translateY(20px) scale(.96); animation: rise 1s .2s cubic-bezier(.2,.8,.2,1) forwards; }
@@ -449,10 +449,10 @@ body { background-image: var(--grain); }
 .hero-cue { transition: opacity .3s; } .hero-cue:hover { opacity: 1; }
 .hero-note { letter-spacing: .02em; }
 /* a gombok, a „Görgess” jel és a cím a vitorlásverseny fölé kerül (ne lógjanak bele) */
-.hero-in { padding-bottom: 168px; }
-.hero-cue { bottom: 110px; }
-.hero-note { bottom: 112px; }
-@media (max-width: 700px) { .hero-in { padding-bottom: 104px; } .hero-cue { bottom: 62px; } }
+.hero-in { padding-bottom: 194px; }
+.hero-cue { bottom: 136px; }
+.hero-note { bottom: 138px; }
+@media (max-width: 700px) { .hero-in { padding-bottom: 104px; } .hero-cue { bottom: 62px; } .hero-note { bottom: 112px; } }
 .hero-note::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #ffd978; box-shadow: 0 0 0 3px rgba(255,217,120,.25); vertical-align: 1px; }
 
 /* kötél-elválasztó: két rézkarika a végeken */
