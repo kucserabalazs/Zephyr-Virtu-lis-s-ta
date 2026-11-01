@@ -1280,6 +1280,32 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 .zfb-selbar .zfb-btn { margin: 0; }
 .zfb-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
 .zfb-chips .zfb-apt-chip { margin: 0; }
+
+/* további apartman panel (3. lépés) */
+.zfx-open { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 14px; width: 100%; margin: 4px 0 18px; padding: 12px 16px 12px 12px; border-radius: 16px; color: #0b2a4a;
+  background: linear-gradient(180deg, #f2f8fd, #e3effa); border: 2px dashed #2f7fc4; transition: transform .18s, box-shadow .18s, background .18s; }
+.zfx-open:hover, .zfx-open:focus-visible { transform: translateY(-1px); background: linear-gradient(180deg, #e8f3fc, #d6e8f7); box-shadow: 0 8px 20px rgba(11,47,94,.15); }
+.zfx-plus { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font: 900 26px/1 sans-serif; color: #fff; background: linear-gradient(180deg, #3a8fd6, #1d5fa0); box-shadow: inset 0 -2px 0 rgba(0,0,0,.2), 0 3px 8px rgba(29,95,160,.35); }
+.zfx-open b { display: block; font: 800 16px/1.25 inherit; } .zfx-open small { display: block; font: 600 13.5px/1.3 inherit; color: #4a5f72; margin-top: 2px; }
+.zfx-panel { margin: 4px 0 20px; padding: 14px; border-radius: 18px; background: linear-gradient(180deg, #f4f9fd, #eaf3fa); box-shadow: inset 0 0 0 1px rgba(11,47,94,.1); }
+.zfx-hd { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; } .zfx-hd > div { flex: 1; }
+.zfx-hd h3 { margin: 0; font: 800 17px/1.25 inherit; color: #0b2a4a; } .zfx-hd p { margin: 3px 0 0; font: 600 13.5px/1.3 inherit; color: #4a5f72; }
+.zfx-x { all: unset; cursor: pointer; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 700 22px/1 sans-serif; color: #0b2a4a; background: rgba(11,47,94,.08); } .zfx-x:hover { background: rgba(11,47,94,.16); }
+.zfx-list { display: grid; gap: 10px; }
+.zfx-apt { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-radius: 14px; background: #fff; border: 2px solid var(--ac); box-shadow: 0 3px 10px rgba(11,47,94,.07); }
+.zfx-apt.na { border-style: dashed; background: #fbfcfd; }
+.zfx-apt .zfb-no { flex: none; }
+.zfx-t { flex: 1; min-width: 0; } .zfx-t b { font: 800 16px/1.2 inherit; color: #0b2a4a; } .zfx-t small { display: block; font: 600 13.5px/1.3 inherit; color: #5a6b7b; margin-top: 2px; }
+.zfx-t em { display: block; font-style: normal; font: 800 15px/1.3 inherit; color: #1a6b3a; margin-top: 4px; }
+.zfx-apt.ok { align-items: center; }
+.zfx-btn { all: unset; box-sizing: border-box; cursor: pointer; flex: none; padding: 10px 14px; border-radius: 999px; font: 800 14.5px/1.1 inherit; color: #0b2a4a; background: linear-gradient(180deg, #ffe08a, #f2b233); box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 0 rgba(138,102,48,.3); }
+.zfx-btn:hover { filter: brightness(1.05); }
+.zfx-btn.alt { margin-top: 8px; color: #fff; background: linear-gradient(180deg, #3a8fd6, #1d5fa0); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 -2px 0 rgba(0,0,0,.2); }
+.zfx-opt { display: flex; gap: 8px; margin: 8px 0 0; padding: 9px 11px; border-radius: 12px; background: #fff7dd; color: #4a3a12; font: 600 14px/1.4 inherit; box-shadow: inset 0 0 0 1px rgba(242,178,51,.45); }
+.zfx-opt b { color: #0b2a4a; } .zfx-opt.none { background: #f3f5f7; color: #5a6b7b; box-shadow: none; }
+.zfx-guests { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(11,47,94,.12); } .zfx-guests > p { margin: 0 0 6px; font: 700 14px/1.3 inherit; color: #0b2a4a; }
+.zfb-apt-chip.has-rm { position: relative; padding-right: 52px; border-radius: 18px; } .zfb-apt-chip.has-rm small { flex-basis: 100%; padding-left: 46px; margin-top: -6px; } .zfb-apt-chip .zfx-rm { all: unset; text-decoration: none; cursor: pointer; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 700 20px/1 sans-serif; color: #8a1f1f; background: rgba(226,72,61,.12); } .zfb-apt-chip .zfx-rm:hover { background: rgba(226,72,61,.25); }
+@media (max-width: 760px) { .zfx-apt.ok { flex-wrap: wrap; } .zfx-apt.ok .zfx-btn { width: 100%; text-align: center; } .zfx-t b { font-size: 17px; } .zfx-opt { font-size: 15px; } .zfx-btn { font-size: 15.5px; } }
 .zfb-chip-more { all: unset; cursor: pointer; font: 800 12.5px/1 Manrope, sans-serif; color: var(--navy); text-decoration: underline; padding: 8px 4px; }
 .zfb-row.sub span { padding-left: 14px; font-size: 13px; }
 .zfb-row.disc { color: #1e7a3c; } .zfb-row.disc b { color: #1e7a3c; } .zfb-row.disc small { display: block; color: #4a7a5a; font-weight: 600; }
@@ -1642,6 +1668,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   /* több apartman egy foglalásban (közös időszak): st.apts a kiválasztottak, st.apt az első */
   const selApts = () => st.apts.map((id) => cfg.apartments.find((a) => a.id === id)).filter(Boolean);
   const capTotal = () => selApts().reduce((n, a) => n + a.cap, 0);
+  function sortApts() { st.apts.sort((x, y) => cfg.apartments.findIndex((a) => a.id === x) - cfg.apartments.findIndex((a) => a.id === y)); st.apt = st.apts[0] || null; }
   function toggleApt(id) {
     if (!aptFree(id)) return;
     const i = st.apts.indexOf(id); if (i >= 0) st.apts.splice(i, 1); else st.apts.push(id);
@@ -1688,6 +1715,45 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const put = (k, n) => { let i = 0, guard = 0; while (n > 0 && guard++ < 200) { const o = out[i % out.length]; if (o.adults + o.children < o.a.cap) { o[k]++; n--; } i++; } };
     put("adults", st.adults); put("children", st.children);
     return out;
+  }
+
+  /* ---------- további apartman a foglaláshoz (3. lépés): ugyanarra az időszakra, vagy ±1 héttel eltolva, amikor mind szabad ---------- */
+  const HU_WDA = ["vasárnapi", "hétfői", "keddi", "szerdai", "csütörtöki", "pénteki", "szombati"];
+  const shortD = (s) => { const d = pd(s); return HU_M[d.getMonth()].slice(0, 3) + ". " + d.getDate() + "."; };
+  function shiftFor(id) {   /* a legkisebb eltolás (±7 nap), amikor a már kiválasztott apartmanok ÉS ez is szabad a teljes, azonos hosszú időszakra */
+    const ids = st.apts.concat(id), n = diff(st.ci, st.co), first = addD(cfg.today, cfg.lead_days || 0);
+    for (let k = 1; k <= 7; k++) for (const sg of [-1, 1]) {
+      const ci = addD(st.ci, k * sg), co = addD(ci, n); if (ci < first) continue;
+      if (ids.every((x) => freeAll(x, ci, co))) return { ci, co, k: k * sg, n: ids.length };
+    }
+    return null;
+  }
+  addEventListener("zephyr-lang", () => { try { if (el && !el.hidden && st && st.step === 3) render(); } catch (e) {} });
+  function addPanel() {
+    const others = cfg.apartments.filter((a) => !st.apts.includes(a.id));
+    const ciWd = pd(st.ci).getDay(), card = (a) => {
+      if (aptFree(a.id)) { const tot = aptTotal(a.id);
+        return `<div class="zfx-apt ok" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span><div class="zfx-t"><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő · szabad a választott időszakban</small><em>${money(tot)} · ${diff(st.ci, st.co)} éj</em></div><button type="button" class="zfx-btn" data-addapt="${a.id}">+ Hozzáadom</button></div>`; }
+      const sh = shiftFor(a.id);
+      if (!sh) return `<div class="zfx-apt na" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span><div class="zfx-t"><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő · ebben az időszakban foglalt</small><p class="zfx-opt none">±1 héten belül nincs olyan időszak, amikor ${st.apts.length > 1 ? "a választott apartmanokkal" : "a választott apartmannal"} együtt szabad lenne.</p></div></div>`;
+      const nw = pd(sh.ci).getDay(), days = Math.abs(sh.k), lg = (window.ZI18N && ZI18N.lang) || "hu";
+      /* a javaslat mondata: a kiválasztott nyelven áll össze (napnév és dátum a nyelv szerint), ezért a fordítómotor nem nyúl hozzá */
+      const T = (hu, r) => { let x = (window.ZI18N && ZI18N.t(hu)) || hu; Object.keys(r || {}).forEach((k) => { x = x.split("{" + k + "}").join(r[k]); }); return x; };
+      const wdN = (dt) => lg === "hu" ? HU_WDA[pd(dt).getDay()] : new Intl.DateTimeFormat(lg, { weekday: "long" }).format(pd(dt));
+      const dN = (dt) => lg === "hu" ? shortD(dt) : new Intl.DateTimeFormat(lg, { month: "short", day: "numeric" }).format(pd(dt));
+      const cap1 = (x) => x.charAt(0).toUpperCase() + x.slice(1);
+      const how = cap1(nw !== ciWd ? T("{WD1} helyett {WD2} érkezéssel", { WD1: wdN(st.ci), WD2: wdN(sh.ci) }) : T(sh.k < 0 ? "Egy héttel korábbi érkezéssel" : "Egy héttel későbbi érkezéssel"));
+      const k1 = sh.k < 0 ? "(1 nappal korábban)" : "(1 nappal később)", when = days === 1 && window.ZI18N && ZI18N.t(k1) !== k1 ? ZI18N.t(k1) : T(sh.k < 0 ? "({N} nappal korábban)" : "({N} nappal később)", { N: days }), all = sh.n === 2 ? T("mindkét apartman szabad:") : T("mind a {N} apartman szabad:", { N: sh.n });
+      return `<div class="zfx-apt na" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span><div class="zfx-t"><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő · a választott időszakban foglalt</small>
+        <p class="zfx-opt" data-noi18n><span class="zfx-ic" aria-hidden="true">✨</span><span><b>${esc(how)}</b> ${esc(when)} ${esc(all)} <b>${esc(dN(sh.ci))} – ${esc(dN(sh.co))}</b>, ${esc(T("ugyanúgy {N} éj.", { N: diff(sh.ci, sh.co) }))}</span></p>
+        <button type="button" class="zfx-btn alt" data-shift="${a.id}|${sh.ci}|${sh.co}">Erre az időszakra váltok és hozzáadom</button></div></div>`;
+    };
+    const cap = capTotal(), needN = st.adults + st.children, adultErr = st.apts.length > st.adults;
+    return `<section class="zfx-panel" aria-label="További apartman">
+      <header class="zfx-hd"><div><h3>További apartman ugyanerre az időszakra</h3><p>${huDate(st.ci)} – ${huDate(st.co)} · ${diff(st.ci, st.co)} éj</p></div><button type="button" class="zfx-x" data-addmore="0" aria-label="Bezárás">×</button></header>
+      <div class="zfx-list">${others.length ? others.map(card).join("") : `<p class="zfx-opt none">Már minden apartman benne van a foglalásban.</p>`}</div>
+      ${st.apts.length > 1 ? `<div class="zfx-guests"><p>Összesen ${cap} férőhely – állítsd be, hányan jöttök:</p>${stepper("adults", st.adults, Math.max(1, st.apts.length), cap - st.children, "Felnőtt", "18 év felett")}${stepper("children", st.children, 0, cap - st.adults, "Gyermek", "18 év alatt")}${adultErr ? `<p class="zfb-selerr">Minden apartmanhoz legalább egy felnőtt vendég kell.</p>` : ""}</div>` : ""}
+    </section>`;
   }
 
   /* ---------- számítás ---------- */
@@ -1790,8 +1856,8 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       <div class="zfb-row muted"><span>Fennmaradó összeg érkezéskor</span><b>${money(q.rest)}</b></div>
     </div>`;
   }
-  function chips(extra, btn) {
-    return `<div class="zfb-chips">` + distrib().map((o) => `<div class="zfb-apt-chip" style="--ac:${o.a.color}"><span class="zfb-no">${o.a.no}</span><b>${esc(o.a.name)}</b><small>${extra ? extra : "legfeljebb " + o.a.cap + " fő"}${st.apts.length > 1 ? ` · ${o.adults} felnőtt${o.children ? ", " + o.children + " gyermek" : ""}` : ""}</small></div>`).join("")
+  function chips(extra, btn, rm) {
+    return `<div class="zfb-chips">` + distrib().map((o) => `<div class="zfb-apt-chip${rm && st.apts.length > 1 ? " has-rm" : ""}" style="--ac:${o.a.color}"><span class="zfb-no">${o.a.no}</span><b>${esc(o.a.name)}</b><small>${extra ? extra : "legfeljebb " + o.a.cap + " fő"}${st.apts.length > 1 ? ` · ${o.adults} felnőtt${o.children ? ", " + o.children + " gyermek" : ""}` : ""}</small>${rm && st.apts.length > 1 ? `<button type="button" class="zfx-rm" data-rmapt="${o.apt}" aria-label="${esc(o.a.name)} eltávolítása">×</button>` : ""}</div>`).join("")
       + (btn ? `<button type="button" class="zfb-chip-more" data-go="2">${st.apts.length > 1 ? "apartmanok módosítása" : "+ apartman hozzáadása / másik"}</button>` : "") + `</div>`;
   }
   /* ---------- a tó: felfújt, lebegő apartman-csónakok; ami nem felel meg az időpontnak / létszámnak, elsüllyed ---------- */
@@ -2016,6 +2082,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const priv = cfg.privacy_url ? `<a href="${esc(cfg.privacy_url)}" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>` : "adatkezelési tájékoztatót";
     return demoNote() + `<div class="zfb-cal-wrap"><form class="zfb-form" novalidate>
       <h2 class="zfb-h">A foglaló adatai</h2>
+      ${st.addOpen ? addPanel() : `<button type="button" class="zfx-open" data-addmore="1"><span class="zfx-plus">+</span><span><b>További apartman foglalása erre az időszakra</b><small>Nagyobb társasággal több apartmant is foglalhattok egyszerre</small></span></button>`}
       <div class="zfb-grid">
         ${inp("name", "Teljes név *", "text", 'autocomplete="name" required class="wide"')}
         ${inp("phone", "Telefonszám *", "tel", 'autocomplete="tel" required placeholder="+36 …"')}
@@ -2031,7 +2098,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       <div class="zfb-actions"><button type="button" class="zfb-btn ghost" data-go="${st.back || 1}">‹ Vissza</button><button type="submit" class="zfb-btn" ${st.loading ? "disabled" : ""}>${st.loading ? "Küldés…" : "Foglalási kérés elküldése"}</button></div>
       <p class="zfb-fine">A foglalás elküldésével a napokat ideiglenesen lefoglaljuk. Jóváhagyás után e-mailben küldjük az előleg (${cfg.deposit_pct}%) átutalásához szükséges adatokat; a foglalás az előleg beérkezésével válik véglegessé.</p>
     </form>
-    <aside class="zfb-side">${st.apts.length > 1 ? chips("", false) : `<div class="zfb-apt-chip" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span><b>${esc(a.name)}</b><small>${st.adults} felnőtt${st.children ? ", " + st.children + " gyermek" : ""}</small></div>`}
+    <aside class="zfb-side">${st.apts.length > 1 ? chips("", false, true) : `<div class="zfb-apt-chip" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span><b>${esc(a.name)}</b><small>${st.adults} felnőtt${st.children ? ", " + st.children + " gyermek" : ""}</small></div>`}
       <div class="zfb-dates"><div><small>Érkezés</small><b>${huDate(st.ci, true)}</b><em>${esc(cfg.checkin)}-tól</em></div><div><small>Távozás</small><b>${huDate(st.co, true)}</b><em>${esc(cfg.checkout)}-ig</em></div></div>
       ${breakdown(q)}</aside></div>`;
   }
@@ -2071,6 +2138,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   /* a kiválasztás igazítása: ami elsüllyedt, kikerül; az előre megnyitott apartman magától kijelölődik, ha szabad */
   function fixSel() {
+    if (st.step === 3) { st.apts = st.apts.filter(aptFree); st.apt = st.apts[0] || null; return; }   /* az adatoknál hozzáadott apartmanok maradnak */
     if (st.step === 2 && st.pre) { st.apts = [st.pre]; st.apt = st.pre; return; }   /* az apartman saját naptárában maradunk, a foglalás innen végigvihető */
     const ok = (id) => { const a = cfg.apartments.find((x) => x.id === id); return a && st.ci && st.co && !aptState(a).down; };
     st.apts = st.apts.filter(ok);
@@ -2093,12 +2161,16 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       st.apts.sort((x, y) => cfg.apartments.findIndex((a) => a.id === x) - cfg.apartments.findIndex((a) => a.id === y)); st.apt = st.apts[0] || null; return render();
     }
     if (b.dataset.near) { const [ci, co] = b.dataset.near.split("|"); st.ci = ci; st.co = co; fixSel(); const m0 = pd(cfg.today), m1 = pd(ci); st.month = Math.max(0, (m1.getFullYear() - m0.getFullYear()) * 12 + m1.getMonth() - m0.getMonth()); return render(); }
-    if (b.dataset.go) { st.step = +b.dataset.go; st.err = ""; return render(); }
+    if (b.dataset.addmore != null) { st.addOpen = b.dataset.addmore === "1"; render(); const pn = el.querySelector(".zfx-panel, .zfx-open"); if (pn) pn.scrollIntoView({ block: "nearest", behavior: "smooth" }); return; }
+    if (b.dataset.addapt) { const id = b.dataset.addapt; if (aptFree(id) && !st.apts.includes(id)) { st.apts.push(id); sortApts(); } return render(); }
+    if (b.dataset.shift) { const [id, ci, co] = b.dataset.shift.split("|"); if (st.apts.concat(id).every((x) => freeAll(x, ci, co))) { st.ci = ci; st.co = co; if (!st.apts.includes(id)) st.apts.push(id); sortApts(); } return render(); }
+    if (b.dataset.rmapt) { st.apts = st.apts.filter((x) => x !== b.dataset.rmapt); st.apt = st.apts[0]; const cap = capTotal(); st.adults = Math.min(st.adults, cap); st.children = Math.min(st.children, cap - st.adults); return render(); }
+    if (b.dataset.go) { st.step = +b.dataset.go; st.err = ""; st.addOpen = false; return render(); }
     if (b.dataset.close) return close();
     if (b.dataset.owner) { close("noret"); if (window.ZephyrAdmin) setTimeout(() => window.ZephyrAdmin.open(), 320); return; }
     if (b.dataset.m) { st.month = Math.max(0, Math.min(12, st.month + +b.dataset.m)); return render(); }
     if (b.dataset.clear) { st.ci = st.co = null; st.apts = []; return render(); }
-    if (b.dataset.st) { const k = b.dataset.st, pa = st.pre && cfg.apartments.find((a) => a.id === st.pre), cap = pa ? pa.cap : cfg.apartments.reduce((c, a) => c + a.cap, 0); st[k] = Math.max(k === "adults" ? 1 : 0, Math.min(cap - (k === "adults" ? st.children : st.adults), st[k] + +b.dataset.v)); fixSel(); return render(); }
+    if (b.dataset.st) { const k = b.dataset.st, pa = st.pre && cfg.apartments.find((a) => a.id === st.pre), cap = st.step === 3 ? capTotal() : pa ? pa.cap : cfg.apartments.reduce((c, a) => c + a.cap, 0); st[k] = Math.max(k === "adults" ? 1 : 0, Math.min(cap - (k === "adults" ? st.children : st.adults), st[k] + +b.dataset.v)); fixSel(); return render(); }
     if (b.dataset.day) {
       const d = b.dataset.day;
       if (!st.ci || st.co || d <= st.ci) { if (st.map[d] && st.map[d].free) { st.ci = d; st.co = null; } }
@@ -2124,6 +2196,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     if (!F.birth_place || F.birth_place.trim().length < 2) return bad("Kérjük, add meg a születési helyed.", "birth_place");
     if (!F.birth_date || F.birth_date > addD(cfg.today, -18 * 365)) return bad("Kérjük, add meg a születési időd (a foglalónak nagykorúnak kell lennie).", "birth_date");
     if (!/^[A-Za-z0-9-]{5,20}$/.test((F.id_doc || "").replace(/\s/g, ""))) return bad("Kérjük, add meg a személyi igazolványod vagy útleveled számát.", "id_doc");
+    if (st.apts.length > st.adults) { st.addOpen = true; st.err = "Minden apartmanhoz legalább egy felnőtt vendég kell – növeld a felnőttek számát, vagy vegyél ki egy apartmant."; return render(); }
     if (!F.accept) return bad("A foglaláshoz el kell fogadnod a házirendet és az adatkezelési tájékoztatót.", "accept");
     st.loading = true; st.err = ""; render();
     try {

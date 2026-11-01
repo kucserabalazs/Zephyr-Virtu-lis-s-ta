@@ -192,3 +192,10 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - claude.ai előnézet: a szótárak az előnézet mellett `nyelv/` alatt (Artifact files).
 - Ismert apróság: a {#} jelölők sorrendje kötött (dátumoknál pl. „2026, December 5”).
 - Build: `forras/tools/build.sh` (a /home/claude/build/build.sh erre mutat).
+
+## 20. További apartman az adatok lépésben + ±1 hét optimalizáló – 2026-11-01
+- 3. lépés (adatok): „További apartman foglalása erre az időszakra” gomb → `addPanel()`: a szabad apartmanok „+ Hozzáadom” (`data-addapt`), a foglaltaknál `shiftFor(id)` keres ±7 napon belül azonos hosszú időszakot, amikor a már kiválasztottak ÉS ez is szabad (legkisebb eltolás) → „Csütörtöki helyett szombati érkezéssel (2 nappal később) mindkét apartman szabad: …” + „Erre az időszakra váltok és hozzáadom” (`data-shift`).
+- A javaslat mondata a kiválasztott nyelven áll össze (`ZI18N.t` sablonok `{WD1}/{WD2}/{N}`, napnév/dátum `Intl`), `data-noi18n`; nyelvváltáskor újrarajzol.
+- Oldalsáv: több apartmannál × eltávolítás (`data-rmapt`); létszám-léptető a panelben (max = összes férőhely); beküldéskor ellenőrzi: apartmanonként legalább 1 felnőtt.
+- `fixSel()`: 3. lépésben csak a dátum szerinti szabadságot nézi (a kapacitás miatt nem dobja ki a hozzáadott apartmant).
+- Új feliratok 23 nyelven: `forras/i18n/munka/uj/uj.json` (beolvasztva a szótárakba), + „{#} éj” kulcs.
