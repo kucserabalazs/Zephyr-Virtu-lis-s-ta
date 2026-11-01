@@ -448,6 +448,11 @@ body { background-image: var(--grain); }
 .hero h1 .w:nth-child(2) { background: linear-gradient(180deg, #fff3c7 0%, #ffd978 45%, #e0a93a 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)); }
 .hero-cue { transition: opacity .3s; } .hero-cue:hover { opacity: 1; }
 .hero-note { letter-spacing: .02em; }
+/* a gombok, a „Görgess” jel és a cím a vitorlásverseny fölé kerül (ne lógjanak bele) */
+.hero-in { padding-bottom: 168px; }
+.hero-cue { bottom: 110px; }
+.hero-note { bottom: 112px; }
+@media (max-width: 700px) { .hero-in { padding-bottom: 104px; } .hero-cue { bottom: 62px; } }
 .hero-note::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #ffd978; box-shadow: 0 0 0 3px rgba(255,217,120,.25); vertical-align: 1px; }
 
 /* kötél-elválasztó: két rézkarika a végeken */
