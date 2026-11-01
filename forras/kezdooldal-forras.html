@@ -408,6 +408,140 @@ html.intro-on body { overflow: hidden; }
   *, *::before, *::after { animation-duration: .01s !important; animation-delay: 0s !important; transition-duration: .01s !important; }
   html { scroll-behavior: auto; }
 }
+/* =====================================================================
+   Finomított részletek (2026-11) – a meglévő elemek kidolgozása, szerkezet- és szövegváltoztatás nélkül:
+   vászon- és papírtextúra, rézhatású gombok, kötélvégek, fényes élek, finom animációk és állapotok.
+   ===================================================================== */
+:root {
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .28 0 0 0 0 .18 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  --brass: linear-gradient(180deg, #fff1c4 0%, #e9c983 30%, #b88b46 62%, #8a6630 100%);
+}
+::selection { background: rgba(255,217,120,.6); color: var(--ink); }
+html { scrollbar-color: #c9a25a var(--sail-2); }
+body { background-image: var(--grain); }
+.sec-cream { background-image: var(--grain), radial-gradient(900px 420px at 10% 0%, rgba(255,255,255,.55), transparent 70%); }
+.sec-dark { background-image: radial-gradient(1200px 600px at 80% -10%, #164377 0%, transparent 60%), repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0 2px, transparent 2px 7px); }
+.sec-dark::before { content: ""; position: absolute; inset: 0 0 auto; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,217,120,.45), transparent); }
+
+/* gombok: fényes perem, áthúzó csillanás, rézgomb mélység */
+.btn { position: relative; overflow: hidden; isolation: isolate; }
+.btn::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.45) 50%, transparent 65%); transform: translateX(-120%); transition: transform .7s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.btn:hover::after { transform: translateX(120%); }
+.btn-gold { box-shadow: 0 8px 22px rgba(242,178,51,.35), inset 0 1px 0 rgba(255,255,255,.75), inset 0 -2px 0 rgba(138,102,48,.35), 0 0 0 1px rgba(138,102,48,.25); }
+.btn-gold:hover { box-shadow: 0 12px 28px rgba(242,178,51,.45), inset 0 1px 0 rgba(255,255,255,.75), inset 0 -2px 0 rgba(138,102,48,.35), 0 0 0 1px rgba(138,102,48,.35); }
+.btn-red { box-shadow: 0 8px 22px rgba(226,72,61,.35), inset 0 1px 0 rgba(255,255,255,.3), inset 0 -2px 0 rgba(0,0,0,.18); }
+.btn-sea { box-shadow: 0 8px 22px rgba(11,47,94,.3), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -2px 0 rgba(0,0,0,.25); }
+.btn-ghost:hover { background: rgba(255,255,255,.22); border-color: #fff; }
+.btn-line:hover { background: var(--sea); color: #fff; }
+.btn svg { transition: transform .35s cubic-bezier(.3,1.6,.5,1); }
+.btn:hover svg { transform: rotate(-8deg) scale(1.12); }
+
+/* fejléc: kötél-aláhúzás a menüpontokon, logó finom lebegése */
+.nav-links a { position: relative; transition: background .2s, color .2s; }
+.nav-links a::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 4px; height: 3px; border-radius: 2px; background: repeating-linear-gradient(45deg, #f4dfa3 0 3px, #c9a25a 3px 6px, #8a6630 6px 8px); transform: scaleX(0); transform-origin: left; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.nav-links a:hover::after, .nav-links a:focus-visible::after { transform: scaleX(1); }
+.nav-logo img { transition: transform .4s cubic-bezier(.3,1.6,.5,1); }
+.nav-logo:hover img { transform: rotate(-3deg) scale(1.04); }
+.nav.solid { border-bottom: 1px solid rgba(255,217,120,.18); }
+
+/* nyitókép: finom fénytörés a címen, arany körvonal-csillanás */
+.hero h1 .w:nth-child(2) { background: linear-gradient(180deg, #fff3c7 0%, #ffd978 45%, #e0a93a 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 6px 22px rgba(0,0,0,.45)); }
+.hero-cue { transition: opacity .3s; } .hero-cue:hover { opacity: 1; }
+.hero-note { letter-spacing: .02em; }
+.hero-note::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #ffd978; box-shadow: 0 0 0 3px rgba(255,217,120,.25); vertical-align: 1px; }
+
+/* kötél-elválasztó: két rézkarika a végeken */
+.rope { position: relative; }
+.rope::before, .rope::after { content: ""; position: absolute; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff4cf, #c9a25a 55%, #6b4a1e); box-shadow: 0 2px 4px rgba(0,0,0,.3), inset 0 0 0 4px rgba(0,0,0,.08); }
+.rope::before { left: max(8px, calc(50% - 610px)); } .rope::after { right: max(8px, calc(50% - 610px)); }
+
+/* szekciófejek: kötélvégű felcím, aláhúzó ecsetvonás a kurzív részen */
+.eyebrow::after { content: ""; width: 34px; height: 2px; margin-left: 4px; background: linear-gradient(90deg, currentColor, transparent); opacity: .7; }
+.sec-head h2 { text-shadow: 0 1px 0 rgba(255,255,255,.6); hyphens: manual; }
+.sec-dark .sec-head h2 { text-shadow: 0 2px 18px rgba(0,0,0,.35); }
+.sec-head h2 em { position: relative; display: inline-block; }
+.sec-head h2 em::after { content: ""; position: absolute; left: .1em; right: 0; bottom: -.08em; height: .14em; border-radius: 50%; background: currentColor; opacity: .22; transform: scaleX(0) rotate(-1.5deg); transform-origin: left; transition: transform 1.1s .25s cubic-bezier(.2,.8,.2,1); }
+.sec-head.in h2 em::after, .no-io .sec-head h2 em::after { transform: scaleX(1) rotate(-1.5deg); }
+.compass-wm { animation: wmSpin 120s linear infinite; }
+@keyframes wmSpin { to { transform: rotate(360deg); } }
+
+/* virtuális séta szalag: fényes keret, lüktető 360° jelvény */
+.tour-banner { box-shadow: 0 24px 60px rgba(7,29,56,.35), 0 0 0 1px rgba(255,217,120,.25), inset 0 0 0 1px rgba(255,255,255,.06); }
+.tb-360 { box-shadow: 0 0 0 0 rgba(255,217,120,.55); animation: tbPulse 2.8s ease-out infinite; border: 1px solid rgba(255,217,120,.45); }
+@keyframes tbPulse { 0% { box-shadow: 0 0 0 0 rgba(255,217,120,.5); } 70%, 100% { box-shadow: 0 0 0 14px rgba(255,217,120,0); } }
+.tb-feat span { transition: background .2s, transform .2s; } .tour-banner:hover .tb-feat span { background: rgba(255,255,255,.16); }
+.tb-img::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 70%, rgba(7,29,56,.55)); pointer-events: none; }
+
+/* apartmankártyák: varrott zászló, belső vászonkeret, színes alsó perem, képfelirat csúszása */
+.apt { box-shadow: 0 2px 0 var(--line), 0 14px 34px rgba(20,32,42,.08), inset 0 -4px 0 var(--ac); }
+.apt::after { content: ""; position: absolute; inset: 6px; border: 1px dashed rgba(201,162,90,.0); border-radius: 13px; pointer-events: none; transition: border-color .3s; }
+.apt:hover::after { border-color: rgba(201,162,90,.45); }
+.apt-flag { background: linear-gradient(180deg, rgba(255,255,255,.22), transparent 40%), var(--ac); text-shadow: 0 2px 3px rgba(0,0,0,.3); }
+.apt-flag::after { content: ""; position: absolute; left: 5px; right: 5px; top: 4px; bottom: 12px; border: 1px dashed rgba(255,255,255,.55); border-bottom: 0; pointer-events: none; }
+.apt:hover .apt-flag { animation: flagWave 1.2s ease-in-out; transform-origin: top center; }
+@keyframes flagWave { 25% { transform: skewX(4deg) scaleY(1.04); } 60% { transform: skewX(-3deg); } }
+.apt-img::after { transition: background .4s; }
+.apt:hover .apt-img::after { background: linear-gradient(180deg, transparent 35%, rgba(7,29,56,.72)); }
+.apt-cnt { box-shadow: 0 4px 12px rgba(0,0,0,.2); transition: transform .3s; } .apt:hover .apt-cnt { transform: translateY(-3px); }
+.apt-body h3 { text-shadow: 0 1px 0 #fff; }
+.apt-body h3 small { padding: 3px 0; border-bottom: 2px solid color-mix(in srgb, var(--ac) 35%, transparent); }
+.apt-meta span { padding: 4px 9px 4px 7px; border-radius: 999px; background: var(--sail); }
+.amen span { transition: transform .2s, border-color .2s, box-shadow .2s; }
+.amen span:hover { transform: translateY(-2px); border-color: var(--rope); box-shadow: 0 6px 14px rgba(20,32,42,.08); }
+.amen svg { animation: wheelTurn 14s linear infinite; }
+@keyframes wheelTurn { to { transform: rotate(360deg); } }
+
+/* szolgáltatások: képfelirat rácsúszik, ikon ringatózik, tételek finoman beúsznak */
+.svc-media button::after { content: attr(aria-label); position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 12px 10px; font: 700 12.5px/1.25 var(--body); color: #fff; background: linear-gradient(transparent, rgba(5,16,30,.8)); transform: translateY(100%); transition: transform .35s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.svc-media button:hover::after, .svc-media button:focus-visible::after { transform: none; }
+.svc-media button { box-shadow: 0 12px 30px rgba(0,0,0,.3), 0 0 0 1px rgba(255,217,120,.18); }
+.svc-ico { animation: icoRock 5s ease-in-out infinite; box-shadow: 0 10px 24px rgba(242,178,51,.3), inset 0 1px 0 rgba(255,255,255,.7), inset 0 -3px 0 rgba(138,102,48,.3); }
+@keyframes icoRock { 50% { transform: rotate(4deg) translateY(-2px); } }
+.free { box-shadow: 0 4px 10px rgba(226,72,61,.35); position: relative; }
+.free::before { content: ""; position: absolute; left: -5px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: var(--sea); }
+.sec-dark .free::before { background: #0b2f5e; }
+.svc-txt li { transition: transform .25s; } .svc-txt li:hover { transform: translateX(4px); }
+
+/* rendezvények: jegyszerű perem, kategóriacímkék */
+.chip { transition: background .2s, border-color .2s, transform .2s; } .chip:hover { border-color: var(--rope); transform: translateY(-1px); }
+.ev { transition: transform .25s, box-shadow .25s; } .ev:hover { transform: translateY(-3px); box-shadow: 0 2px 0 var(--line), 0 16px 34px rgba(20,32,42,.12); }
+.ev-date { background: linear-gradient(180deg, #164377, var(--sea)); }
+.ev-empty { background-image: var(--grain); }
+.ev-empty svg { animation: icoRock 4s ease-in-out infinite; }
+
+/* látnivalók: polaroid-szerű keret, iránytű-vízjel a helyőrzőn */
+.sight-img { background: radial-gradient(circle at 70% 20%, rgba(255,255,255,.18), transparent 45%), linear-gradient(135deg, #2a86ad, #0b2f5e); }
+.sight-img .ph::before { content: ""; position: absolute; width: 170px; height: 170px; border-radius: 50%; border: 2px dashed rgba(255,255,255,.22); animation: wmSpin 60s linear infinite; }
+.sight-img .ph svg { filter: drop-shadow(0 6px 12px rgba(0,0,0,.35)); animation: pinBob 3s ease-in-out infinite; }
+@keyframes pinBob { 50% { transform: translateY(-6px); } }
+.sight-tag { border: 1px solid rgba(255,217,120,.35); }
+.sight-body h3 { transition: color .2s; } .sight:hover .sight-body h3 { color: var(--red); }
+
+/* biztonság: hullámzó vízjel, lámpa üvegcsillanása, kártyák mélysége */
+.sos a { transition: transform .25s, box-shadow .25s; } .sos a:hover { transform: translateY(-4px); }
+.sos a::after { content: ""; position: absolute; inset: 0; background: linear-gradient(120deg, rgba(255,255,255,.18), transparent 40%); pointer-events: none; }
+.sos svg.bg { transition: transform .6s cubic-bezier(.3,1.5,.5,1); } .sos a:hover svg.bg { transform: rotate(-12deg) scale(1.12); }
+.lamp::after { content: ""; position: absolute; left: 18%; top: 14%; width: 30%; height: 22%; border-radius: 50%; background: rgba(255,255,255,.6); filter: blur(2px); }
+.storm { background-image: radial-gradient(400px 200px at 100% 0%, rgba(42,134,173,.25), transparent 70%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+.hc { transition: transform .25s, box-shadow .25s; } .hc:hover { transform: translateY(-3px); box-shadow: 0 2px 0 var(--line), 0 16px 32px rgba(20,32,42,.1); }
+.vest svg { animation: icoRock 4.5s ease-in-out infinite; }
+.rules, .fc { background-image: linear-gradient(180deg, #fff, #fffdf8); }
+
+/* lábléc: hullámos felső perem, rézszegélyű SZÉP-jelvények */
+.foot { position: relative; background-image: radial-gradient(800px 300px at 10% 0%, rgba(42,134,173,.18), transparent 70%); }
+.foot h4 { display: flex; align-items: center; gap: 8px; } .foot h4::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--brass); box-shadow: 0 0 0 2px rgba(255,217,120,.2); }
+.szep span { box-shadow: inset 0 0 0 1px #c9a25a, 0 2px 6px rgba(0,0,0,.25); }
+.soc a { transition: background .2s, transform .3s; } .soc a:hover { background: var(--red); transform: translateY(-3px) rotate(-6deg); }
+
+/* galéria: üveges vezérlők */
+.lb-nav, .lb-x { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); transition: background .2s, transform .2s; }
+.lb-nav:hover { transform: translateY(-50%) scale(1.08); }
+.lb-th button { transition: opacity .2s, transform .2s; } .lb-th button:hover { opacity: .9; transform: translateY(-2px); }
+
+/* finom beúszás görgetéskor (csak ha a böngésző támogatja; szöveg és elrendezés változatlan) */
+.fx-in { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .9s cubic-bezier(.2,.8,.2,1); transition-delay: var(--fd, 0s); }
+.fx-in.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .fx-in { opacity: 1; transform: none; } .compass-wm, .amen svg, .svc-ico, .tb-360 { animation: none; } }
 :root { --knot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a5 5 0 0 1 5 5c0 2-1.2 3.4-2.6 4.5L12 13l-2.4-1.5C8.2 10.4 7 9 7 7a5 5 0 0 1 5-5zm0 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5 13l7 4 7-4 2 2-9 7-9-7z'/%3E%3C/svg%3E"); }
 </style>
 <!--ZEPHYR-BOOKING-CSS-->
@@ -770,7 +904,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const PREVIEW = /(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/i.test(location.hostname) || !/^https?:$/.test(location.protocol);
-  const TOUR_PREVIEW = "https://claude.ai/artifact/SMR1LuVh1U2VLuCgzJY9oD";
+  const TOUR_PREVIEW = "https://claude.ai/artifact/5JDHAnuPHejorWhWDd2ecr";
   const tourUrl = (scene) => PREVIEW ? TOUR_PREVIEW + (scene ? "#" + scene : "") : TOUR + "?honnan=kezdolap" + (scene ? "#" + scene : "");
   const HU_M = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
   const HU_MS = ["jan.", "febr.", "márc.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szept.", "okt.", "nov.", "dec."];
@@ -808,7 +942,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   (function hero() {
     const v = $("heroVideo"), heroEl = v.closest(".hero"), sc = $("heroScene"), scN = $("heroSceneName"), pb = $("heroPause");
     const conn = navigator.connection || {};
-    if (!PREVIEW && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
       v.src = (innerWidth <= 760 || conn.saveData) ? HERO_VIDEO_MOBILE : HERO_VIDEO;
       v.addEventListener("canplay", () => { v.classList.add("on"); heroEl.classList.add("has-video"); sc.hidden = false; v.play().catch(() => {}); }, { once: true });
       v.addEventListener("error", () => { v.remove(); sc.remove(); }, { once: true });
@@ -1027,6 +1161,18 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   $("evBar").addEventListener("click", (e) => { const b = e.target.closest("[data-cat]"); if (b) { evCat = b.dataset.cat; renderEvents(); } });
   loadEvents();
+
+  /* ---------------------------------------------------------------- finom beúszás görgetéskor (2026-11) */
+  (function fx() {
+    if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) { document.documentElement.classList.add("no-io"); return; }
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -6% 0px" });
+    document.querySelectorAll(".sec-head").forEach((el) => io.observe(el));
+    document.querySelectorAll(".apt, .svc, .sight, .hc, .sos > a, .tour-banner, .rules, .vest, .storm, .fc").forEach((el) => {
+      const r = el.getBoundingClientRect(); if (r.top < innerHeight) return;   /* ami már látszik, az nem villan */
+      const i = el.parentElement ? [...el.parentElement.children].indexOf(el) : 0;
+      el.classList.add("fx-in"); el.style.setProperty("--fd", (i % 3) * 0.09 + "s"); io.observe(el);
+    });
+  })();
 
   /* ---------------------------------------------------------------- kattintások: galéria, foglalás, tulajdonos */
   document.addEventListener("click", (e) => {

@@ -7895,6 +7895,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
      A bal oldali, keskeny lapra koppintva a kocka arra az oldalra fordul. A kettő nem keveredik:
      csak akkor forgat, ha az ujj/egér legalább pár képpontot elmozdult. */
   const SITE_HOME = "../uj/";   /* az új kezdőoldal a séta mappája mellett (tárhelyen és GitHub Pages-en is így működik) */
+  const HOME_PREVIEW = "https://claude.ai/artifact/MarcoyQiN2vBjunbMeAjpw";   /* a kezdőoldal claude.ai-os bemutatója */
   const CUBE_NAMES = { 1: "Helyszín", 2: "Házvázlat (Map)", 3: "Vissza (Back)", 4: "Kezdőlap (Home)", 5: "Beállítások (Settings)", 6: "Eszközkészlet (Inventory)" };
   const CUBE_OFF = 26, CUBE_TILT = -14;   /* nyugalmi térbeli helyzet: elfordítás és felülnézet (fok) */
   const cubeSt = { ry: 0, rx: 0 };   /* rx: -90 = teteje (Settings), +90 = alja (Inventory) */
@@ -7902,7 +7903,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   const fromHome = /(^|[?&])honnan=kezdolap/.test(location.search) || (() => { try { const r = new URL(document.referrer); return r.host === location.host && !/\/virtualis-seta\//.test(r.pathname); } catch (e) { return false; } })();
   function cubeFront() { if (cubeSt.rx <= -45) return 5; if (cubeSt.rx >= 45) return 6; return [1, 2, 3, 4][((Math.round(-cubeSt.ry / 90) % 4) + 4) % 4]; }
   function goHome() {
-    if (!/balatoni-udules\.hu$|github\.io$|^localhost$|^127\./.test(location.hostname)) { toast("A kezdőlap a weboldalon érhető el (balatoni-udules.hu).", 3500); return; }
+    if (!/balatoni-udules\.hu$|github\.io$|^localhost$|^127\./.test(location.hostname)) {   /* claude.ai bemutató: a kezdőoldal bemutatója új lapon */
+      const w = window.open(HOME_PREVIEW, "_blank", "noopener"); if (!w) toast("A kezdőlap: " + HOME_PREVIEW, 5000); return; }
     try { const r = document.referrer && new URL(document.referrer); if (r && r.host === location.host && r.href.split("#")[0] === new URL(SITE_HOME, location.href).href && history.length > 1) { history.back(); return; } } catch (e) {}
     location.href = SITE_HOME;
   }
@@ -8244,7 +8246,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         3(g) { base(g, false); const gr = g.createLinearGradient(0, 40, 0, 300); gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#cbd8e4"); icon(g, "M28 7L5 28l23 21V36h5c12 0 19 6 23 19 4-21-6-34-23-34h-5z", CW / 2 - 136, 34, 4.6, gr); label(g, "BACK", CH - 52, 150); },
         5(g, w, h) { baseSq(g, w, h, false); gear(g, w / 2, h * .42, h * .27); labelSq(g, "SETTINGS", w, h * .86, h * .17); },
         6(g, w, h) { baseSq(g, w, h, false); clip(g, w / 2, h * .43, h * .3); labelSq(g, "INVENTORY", w, h * .86, h * .16); },
-        4(g) { base(g, true); const gr = g.createLinearGradient(0, 40, 0, 300); gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#ffe0dc"); icon(g, "M32 5L3 31h9v27h15V42h10v16h15V31h9L49 19V9h-8v3z", CW / 2 - 142, 32, 4.45, gr); label(g, "HOME", CH - 52, 150); }
+        4(g) { base(g, true); const gr = g.createLinearGradient(0, 40, 0, 300); gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#ffe0dc"); icon(g, "M32 5L3 31h9v27h15V42h10v16h15V31h9L49 19V9h-8v3z", CW / 2 - 118, 22, 3.7, gr); label(g, "HOME", CH - 52, 150); }
       };
       const maxAniso = R.capabilities.getMaxAnisotropy ? R.capabilities.getMaxAnisotropy() : 1;
       /* teteje (Settings) és alja (Inventory) – négyzetes panelek */
