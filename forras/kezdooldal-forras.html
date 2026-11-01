@@ -574,29 +574,42 @@ body { background-image: var(--grain); }
   .lb-tt { flex-direction: column; align-items: flex-start; gap: 3px; flex: 1 1 0; min-width: 0; }
   .lb-hd h3 { font-size: 19px; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .lb-hd .cap { font-size: 15px; color: #dce7f1; }
-  .lb-hd .sp, .lb-x, .lb-ap { display: none; }
+  .lb-hd .sp, .lb-x, .lb-ap { display: none; } .lb-hd .lb-tt { flex: 1 1 0; }
   .lb-back { padding: 4px; } .lb-bk-tx { display: none; } .lb-bk-ic { width: 42px; height: 42px; } .lb-bk-ic svg { width: 23px; height: 23px; }
-  .lb .lb-tour { flex: none; padding: 10px 13px; font-size: 14px; gap: 6px; } .lb-hd .lb-tour b { display: none; } .lb-tour em { display: inline; }
+  .lb .lb-tour { padding: 10px 13px; font-size: 15px; gap: 6px; } .lb-hd .lb-tour b { display: none; } .lb-tour em { display: inline; }
 }
 @media (prefers-reduced-motion: reduce) { .lb-bk-ic::after { animation: none; } }
 
-/* galéria: mindig elérhető foglalás gomb (az adott apartman naptárával nyílik) */
+/* galéria: kis foglalás gomb a fejlécben, lent kis vitorlásverseny, teljes képernyős nézet */
 .lb { grid-template-rows: auto minmax(0, 1fr) auto auto; }
-.lb-bar { display: flex; justify-content: center; padding: 12px var(--gutR) 0 var(--gut); }
-.lb-book { all: unset; box-sizing: border-box; cursor: pointer; position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 14px; min-width: min(460px, 100%); padding: 9px 12px 9px 9px; border-radius: 999px; color: #fff;
-  background: linear-gradient(180deg, #f2665b, #d63a30 60%, #b92c24); box-shadow: 0 12px 30px rgba(226,72,61,.45), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -3px 0 rgba(120,20,15,.35), 0 0 0 1px rgba(120,20,15,.4); transition: transform .18s, box-shadow .18s; }
-.lb-book::before { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); transform: skewX(-20deg); animation: lbShine 3.6s ease-in-out 1s infinite; }
-@keyframes lbShine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
-.lb-book:hover, .lb-book:focus-visible { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(226,72,61,.55), inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 2px #ffd978; }
-.lb-bk-cal { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #b92c24; background: radial-gradient(circle at 35% 30%, #fff, #ffe9e6 70%, #f5c6c0); box-shadow: inset 0 -2px 0 rgba(150,40,30,.25), 0 2px 6px rgba(0,0,0,.25); }
-.lb-bk-cal svg { width: 24px; height: 24px; }
-.lb-bk-t { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.lb-bk-t b { font: 900 18px/1.1 var(--body); letter-spacing: .01em; }
-.lb-bk-t small { font: 700 13px/1.2 var(--body); color: #ffe3df; }
-.lb-bk-ar { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
-.lb-bk-ar svg { width: 20px; height: 20px; } .lb-book:hover .lb-bk-ar svg { animation: lbBkNudge2 .6s ease; } @keyframes lbBkNudge2 { 40% { transform: translateX(3px); } }
-@media (max-width: 700px) { .lb-bar { padding: 10px 12px 0; } .lb-book { width: 100%; } .lb-bk-t b { font-size: 18px; } .lb-bk-t small { font-size: 13.5px; } }
-@media (prefers-reduced-motion: reduce) { .lb-book::before { animation: none; } }
+.lb-acts { display: flex; gap: 8px; flex: none; }
+.lb-book { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 16px; border-radius: 999px; color: #fff; font: 800 14px/1.1 var(--body);
+  background: linear-gradient(180deg, #f2665b, #d63a30 60%, #b92c24); box-shadow: 0 6px 18px rgba(226,72,61,.4), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(120,20,15,.35), 0 0 0 1px rgba(120,20,15,.4); transition: transform .18s, box-shadow .18s; }
+.lb-book svg { width: 18px; height: 18px; } .lb-book:hover, .lb-book:focus-visible { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(226,72,61,.5), 0 0 0 2px #ffd978; }
+.lb-reg { height: 83px; overflow: hidden; }
+.lb-reg canvas { display: block; width: 100%; height: 100%; }
+.lb-stage img { cursor: zoom-in; }
+.lb-fsback, .lb-fscap { display: none; }
+.lb.lb-full { grid-template-rows: minmax(0, 1fr); padding: 0; background: #000; }
+.lb.lb-full .lb-hd, .lb.lb-full .lb-reg, .lb.lb-full .lb-th { display: none; }
+.lb.lb-full .lb-stage { padding: 0; height: 100vh; height: 100dvh; }
+.lb.lb-full .lb-stage img { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; object-fit: contain; border-radius: 0; box-shadow: none; cursor: zoom-out; }
+.lb.lb-full .lb-stage img { object-fit: cover; }
+.lb.lb-full .lb-stage img.pan { animation: lbPan 14s ease-in-out infinite alternate; } @keyframes lbPan { from { object-position: 0% 50%; } to { object-position: 100% 50%; } }
+.lb-fshint { display: none; }
+.lb.lb-full .lb-fshint { display: block; position: absolute; z-index: 3; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); padding: 9px 16px; border-radius: 999px; background: rgba(5,16,30,.65); color: #fff; font: 700 15px/1.2 var(--body); white-space: nowrap; animation: lbHint 5s ease forwards; pointer-events: none; }
+@keyframes lbHint { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@media (orientation: landscape) { .lb.lb-full .lb-fshint { display: none; } }
+.lb.lb-full .lb-fsback { display: inline-flex; position: absolute; z-index: 3; left: calc(14px + env(safe-area-inset-left, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); background: rgba(5,16,30,.55); }
+.lb.lb-full .lb-fscap { display: block; position: absolute; z-index: 3; right: calc(14px + env(safe-area-inset-right, 0px)); top: calc(18px + env(safe-area-inset-top, 0px)); padding: 8px 14px; border-radius: 999px; background: rgba(5,16,30,.6); color: #fff; font: 800 15px/1 var(--body); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+.lb.lb-full .lb-nav { z-index: 3; background: rgba(5,16,30,.5); }
+@media (max-width: 700px) {
+  .lb-hd { flex-wrap: wrap; row-gap: 10px; }
+  .lb-acts { order: 5; flex: 1 0 100%; } .lb-acts > * { flex: 1 1 0; }
+  .lb-acts .lb-tour, .lb-book { padding: 10px 12px; font-size: 15px; }
+  .lb-reg { height: 54px; }
+  .lb.lb-full .lb-fsback .lb-bk-tx { display: inline; } .lb.lb-full .lb-fsback { padding: 4px 14px 4px 4px; }
+}
 
 /* finom beúszás görgetéskor (csak ha a böngésző támogatja; szöveg és elrendezés változatlan) */
 .fx-in { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .9s cubic-bezier(.2,.8,.2,1); transition-delay: var(--fd, 0s); }
@@ -1096,9 +1109,9 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
 </footer>
 
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Képgaléria">
-  <div class="lb-hd"><button type="button" class="lb-back" id="lbBack" aria-label="Vissza az oldalra"><span class="lb-bk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/><path d="M8.5 12H20" opacity=".55"/></svg></span><span class="lb-bk-tx">Vissza</span></button><div class="lb-tt"><h3 id="lbTitle"></h3><span class="cap" id="lbCap"></span></div><span class="sp"></span><a class="btn btn-gold lb-tour" id="lbTour" href="#"><svg><use href="#i-360"/></svg><b>Virtuális séta ide</b><em>360° séta</em></a><button type="button" class="lb-x" id="lbX" aria-label="Galéria bezárása">×</button></div>
-  <div class="lb-stage" id="lbStage"><button type="button" class="lb-nav p" id="lbP" aria-label="Előző kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div id="lbMedia" style="display:contents"></div><button type="button" class="lb-nav n" id="lbN" aria-label="Következő kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div>
-  <div class="lb-bar"><button type="button" class="lb-book" id="lbBook"><span class="lb-bk-cal"><svg><use href="#i-cal"/></svg></span><span class="lb-bk-t"><b id="lbBookT">Foglalás</b><small>Szabad napok, árak – foglalás pár lépésben</small></span><span class="lb-bk-ar"><svg><use href="#i-arrow"/></svg></span></button></div>
+  <div class="lb-hd"><button type="button" class="lb-back" id="lbBack" aria-label="Vissza az oldalra"><span class="lb-bk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/><path d="M8.5 12H20" opacity=".55"/></svg></span><span class="lb-bk-tx">Vissza</span></button><div class="lb-tt"><h3 id="lbTitle"></h3><span class="cap" id="lbCap"></span></div><span class="sp"></span><div class="lb-acts"><a class="btn btn-gold lb-tour" id="lbTour" href="#"><svg><use href="#i-360"/></svg><b>Virtuális séta ide</b><em>360° séta</em></a><button type="button" class="lb-book" id="lbBook"><svg><use href="#i-cal"/></svg><span id="lbBookT">Foglalás</span></button></div><button type="button" class="lb-x" id="lbX" aria-label="Galéria bezárása">×</button></div>
+  <div class="lb-stage" id="lbStage"><button type="button" class="lb-nav p" id="lbP" aria-label="Előző kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div id="lbMedia" style="display:contents"></div><button type="button" class="lb-back lb-fsback" id="lbFsBack" aria-label="Vissza a galériához"><span class="lb-bk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/><path d="M8.5 12H20" opacity=".55"/></svg></span><span class="lb-bk-tx">Vissza</span></button><span class="lb-fscap" id="lbFsCap"></span><span class="lb-fshint">Fordítsd el a telefont az egész képhez</span><button type="button" class="lb-nav n" id="lbN" aria-label="Következő kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div>
+  <div class="lb-reg"><canvas id="lbRegatta" aria-hidden="true"></canvas></div>
   <div class="lb-th" id="lbTh"></div>
 </div>
 
@@ -1322,29 +1335,38 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   const LB = { list: [], i: 0, title: "", tourBase: "" };
   function openLb(title, list, i, apt) {
     LB.list = list; LB.i = i || 0; LB.title = title; LB.apt = apt || "";
-    $("lbBookT").textContent = LB.apt ? "Foglalás · " + title.replace(/\s+apartman$/i, "") : "Foglalás";
+    $("lbBookT").textContent = "Foglalás"; $("lbBook").title = LB.apt ? "Foglalás – " + title : "Foglalás";
     { const m = /^(.*?)(\s+apartman)$/i.exec(title); $("lbTitle").innerHTML = m ? `${esc(m[1])}<span class="lb-ap">${esc(m[2])}</span>` : esc(title); }
     $("lbTh").innerHTML = list.map((x, k) => `<button type="button" data-k="${k}" aria-label="${esc(x.cap)}"><img src="${esc(x.th || x.poster || x.src)}" alt="" loading="lazy"></button>`).join("");
-    $("lb").hidden = false; document.documentElement.style.overflow = "hidden"; showLb(); $("lbBack").focus();
+    $("lb").hidden = false; document.documentElement.style.overflow = "hidden"; document.documentElement.classList.add("lb-lock"); showLb(); $("lbBack").focus();
   }
   function showLb() {
     const x = LB.list[LB.i]; if (!x) return;
     $("lbMedia").innerHTML = x.video ? `<video src="${esc(x.video)}" controls autoplay playsinline poster="${esc(x.poster || "")}"></video>` : `<img src="${esc(x.src)}" alt="${esc(LB.title + " – " + x.cap)}">`;
-    $("lbCap").textContent = `${x.cap} · ${LB.i + 1} / ${LB.list.length}`;
+    $("lbCap").textContent = `${x.cap} · ${LB.i + 1} / ${LB.list.length}`; $("lbFsCap").textContent = `${LB.i + 1} / ${LB.list.length}`; fitFull();
     const t = $("lbTour"); if (x.scene) { t.hidden = false; t.href = tourUrl(x.scene); if (PREVIEW) t.target = "_blank"; t.querySelector("b").textContent = "Virtuális séta ide: " + x.cap; } else t.hidden = true;
     $("lbTh").querySelectorAll("button").forEach((b) => b.setAttribute("aria-current", String(+b.dataset.k === LB.i)));
     const c = $("lbTh").querySelector('[aria-current="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
     const nx = LB.list[(LB.i + 1) % LB.list.length]; if (nx && !nx.video) { const im = new Image(); im.src = nx.src; }
   }
   const stepLb = (d) => { LB.i = (LB.i + d + LB.list.length) % LB.list.length; showLb(); };
-  function closeLb() { $("lb").hidden = true; $("lbMedia").innerHTML = ""; document.documentElement.style.overflow = ""; }
+  function closeLb() { setFull(false); document.documentElement.classList.remove("lb-lock"); $("lb").hidden = true; $("lbMedia").innerHTML = ""; document.documentElement.style.overflow = ""; }
   $("lbX").addEventListener("click", closeLb); $("lbBack").addEventListener("click", closeLb);
   $("lbBook").addEventListener("click", () => {   /* a régi, apartman szerinti foglalás: rögtön az apartman naptára nyílik; a Vissza a képekhez hoz vissza */
     if (!window.ZephyrBooking) return; const back = { t: LB.title, l: LB.list, i: LB.i, a: LB.apt }; closeLb();
     ZephyrBooking.open({ apt: back.a, direct: !!back.a, backLabel: "Vissza a képekhez", back: () => openLb(back.t, back.l, back.i, back.a) }); }); $("lbP").addEventListener("click", () => stepLb(-1)); $("lbN").addEventListener("click", () => stepLb(1));
   $("lbTh").addEventListener("click", (e) => { const b = e.target.closest("[data-k]"); if (b) { LB.i = +b.dataset.k; showLb(); } });
-  $("lb").addEventListener("click", (e) => { if (e.target === $("lbStage")) closeLb(); });
-  document.addEventListener("keydown", (e) => { if ($("lb").hidden) return; if (e.key === "Escape") closeLb(); if (e.key === "ArrowRight") stepLb(1); if (e.key === "ArrowLeft") stepLb(-1); });
+  /* teljes képernyős nézet: a nagy képre koppintva kitölti a képernyőt, lapozható, a Vissza nyíl a galériába visz */
+  function fitFull() { const im = $("lbMedia").querySelector("img"); if (!im) return; const f = () => { if (!im.naturalWidth) return; const r = im.naturalWidth / im.naturalHeight, v = innerWidth / innerHeight; im.classList.toggle("pan", Math.max(r / v, v / r) >= 1.35); }; if (im.complete) f(); else im.addEventListener("load", f, { once: true }); }
+  function setFull(on) { const lb = $("lb"); if (lb.classList.contains("lb-full") === on) return; lb.classList.toggle("lb-full", on);
+    try { if (on && lb.requestFullscreen && !document.fullscreenElement) lb.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+    fitFull(); }
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && $("lb").classList.contains("lb-full")) setFull(false); });
+  addEventListener("resize", fitFull);
+  $("lbMedia").addEventListener("click", (e) => { if (e.target.tagName === "IMG") setFull(!$("lb").classList.contains("lb-full")); });
+  $("lbFsBack").addEventListener("click", () => setFull(false));
+  $("lb").addEventListener("click", (e) => { if (e.target === $("lbStage") && !$("lb").classList.contains("lb-full")) closeLb(); });
+  document.addEventListener("keydown", (e) => { if ($("lb").hidden) return; if (e.key === "Escape") { if ($("lb").classList.contains("lb-full")) setFull(false); else closeLb(); } if (e.key === "ArrowRight") stepLb(1); if (e.key === "ArrowLeft") stepLb(-1); });
   (function swipe() { let x0 = null, y0 = 0; const st = $("lbStage");
     st.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
     st.addEventListener("touchend", (e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) stepLb(dx < 0 ? 1 : -1); }); })();
