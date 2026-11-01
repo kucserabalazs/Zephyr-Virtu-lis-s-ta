@@ -5074,41 +5074,130 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, titanic: .9, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
     const Z = 1.45;  /* járművek nagyítása */
     function lg(y0, y1, a, b) { const q = g.createLinearGradient(0, y0, 0, y1); q.addColorStop(0, a); q.addColorStop(1, b); return q; }
-    function boat(x, y, s, dir, sc, heel) {
-      s *= Z;
-      /* nyomvonal és orrhab */
-      g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = 1;
-      g.beginPath(); g.moveTo(x - dir * 11 * s, y + 3 * s); g.quadraticCurveTo(x - dir * 22 * s, y + 4.5 * s, x - dir * 34 * s, y + 4 * s); g.stroke();
-      g.beginPath(); g.moveTo(x - dir * 11 * s, y + 3.5 * s); g.quadraticCurveTo(x - dir * 20 * s, y + 2 * s, x - dir * 28 * s, y + 2.6 * s); g.stroke();
-      g.fillStyle = "rgba(255,255,255,.75)"; g.beginPath(); g.ellipse(x + dir * 11 * s, y + 3 * s, 2.4 * s, .9 * s, 0, 0, Math.PI * 2); g.fill();
-      g.save(); g.translate(x, y); g.scale(dir * s, s); g.rotate(heel);
-      /* hajótest: színátmenet, fehér fedélzetvonal, vízvonal-csík, tükör */
-      g.fillStyle = lg(-1, 4, "#24384a", "#0d1a26"); g.beginPath(); g.moveTo(-11, -.6); g.lineTo(12, -.6); g.quadraticCurveTo(10.5, 3, 7, 4); g.lineTo(-9, 4); g.lineTo(-11.5, 1.5); g.closePath(); g.fill();
-      g.strokeStyle = "#f4f6f8"; g.lineWidth = .7; g.beginPath(); g.moveTo(-11, -.6); g.lineTo(12, -.6); g.stroke();
-      g.strokeStyle = sc[1] === "#ffffff" ? "#e5262f" : sc[1]; g.lineWidth = .6; g.beginPath(); g.moveTo(-10, 2.6); g.lineTo(9.5, 2.6); g.stroke();
-      /* legénység */
-      g.fillStyle = "#f2b233"; g.beginPath(); g.arc(-6, -1.8, .9, 0, Math.PI * 2); g.arc(-3.6, -1.8, .9, 0, Math.PI * 2); g.fill();
-      /* árboc, keresztfák, bum, vantni */
-      g.strokeStyle = "#e8edf2"; g.lineWidth = .9; g.beginPath(); g.moveTo(0, -.6); g.lineTo(0, -24); g.stroke();
-      g.lineWidth = .5; g.beginPath(); g.moveTo(-2, -15); g.lineTo(2, -15); g.moveTo(0, -24); g.lineTo(11.5, -.6); g.moveTo(0, -24); g.lineTo(-10.5, -.6); g.stroke();
-      g.strokeStyle = "#b9c2cb"; g.lineWidth = .8; g.beginPath(); g.moveTo(.4, -2.4); g.lineTo(dir < 0 ? -9 : -10, -2.4); g.stroke();
-      /* nagyvitorla lécekkel és vitorlaszámmal */
-      g.fillStyle = sc[0]; g.beginPath(); g.moveTo(-.4, -23); g.quadraticCurveTo(-6, -12, -9.6, -2.8); g.lineTo(-.4, -2.8); g.closePath(); g.fill();
-      g.strokeStyle = "rgba(20,32,42,.25)"; g.lineWidth = .35;
-      [-18, -13, -8].forEach((yy) => { g.beginPath(); g.moveTo(-.6, yy); g.lineTo(-.6 - (yy + 23) * .34, yy); g.stroke(); });
-      g.fillStyle = "rgba(20,32,42,.55)"; g.font = "800 3px Manrope, Arial, sans-serif"; g.textAlign = "center";
-      g.save(); g.scale(dir, 1); g.fillText(String((sc.n || 7)), dir * -4, -9); g.restore();
-      if (dir < 0) {  /* hátszél: csíkos, kidagadt spinakker */
-        const sp = new Path2D("M1 -23 C 15 -26 24 -12 16 -1 L 9 -1 Q 13 -12 1 -22 Z");
-        g.fillStyle = sc[1] === "#ffffff" ? "#e5262f" : sc[1]; g.fill(sp);
-        g.save(); g.clip(sp); g.fillStyle = "rgba(255,255,255,.75)"; g.fillRect(0, -18, 30, 3); g.fillStyle = "#f2b233"; g.fillRect(0, -10, 30, 2.4); g.restore();
-        g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = .4; g.stroke(sp);
-        g.strokeStyle = "#b9c2cb"; g.lineWidth = .4; g.beginPath(); g.moveTo(16, -1); g.lineTo(10, -.6); g.stroke();
-      } else {  /* orrvitorla */
-        g.fillStyle = sc[1]; g.beginPath(); g.moveTo(.6, -22); g.quadraticCurveTo(7, -12, 10.8, -1.4); g.lineTo(1, -1.4); g.closePath(); g.fill();
-        g.strokeStyle = "rgba(20,32,42,.2)"; g.lineWidth = .35; g.stroke();
+    const lerp = (a, b, k) => a + (b - a) * k, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    function qpt(p0, p1, p2, k) { const u = 1 - k; return [u * u * p0[0] + 2 * u * k * p1[0] + k * k * p2[0], u * u * p0[1] + 2 * u * k * p1[1] + k * k * p2[1]]; }
+    function shade(x0, x1, deep) { const q = g.createLinearGradient(x0, 0, x1, 0); q.addColorStop(0, `rgba(10,22,34,${deep})`); q.addColorStop(.42, "rgba(255,255,255,.16)"); q.addColorStop(.8, "rgba(255,255,255,0)"); q.addColorStop(1, "rgba(10,22,34,.1)"); return q; }
+    function wake(b, ts) {  /* valódi nyomvonal: a hajó útját követi, a bója körül is ívben */
+      const tr = b.tr, L = 3.2, s = b.s * Z; if (!tr || tr.length < 2) return;
+      g.lineCap = "round";
+      for (let i = 1; i < tr.length; i++) {
+        const p = tr[i - 1], q = tr[i], a0 = (ts - p.t) / L, a1 = (ts - q.t) / L; if (a0 >= 1) continue;
+        const s0 = 1.2 + a0 * 14 * s, s1 = 1.2 + a1 * 14 * s, al = (1 - a1) * (1 - a1);
+        g.strokeStyle = `rgba(255,255,255,${al * .55})`; g.lineWidth = .8;
+        g.beginPath(); g.moveTo(p.x, p.y + 3 * s + s0 * .4); g.lineTo(q.x, q.y + 3 * s + s1 * .4);
+        g.moveTo(p.x, p.y + 3 * s - s0 * .16); g.lineTo(q.x, q.y + 3 * s - s1 * .16); g.stroke();
+        if (a1 < .45) { g.strokeStyle = `rgba(235,248,255,${(.45 - a1) * .9})`; g.lineWidth = (2.2 - a1 * 3) * s; g.beginPath(); g.moveTo(p.x, p.y + 3.2 * s); g.lineTo(q.x, q.y + 3.2 * s); g.stroke(); }
+        if (i % 3 === 0 && a1 < .7) { g.fillStyle = `rgba(255,255,255,${(.7 - a1) * .6})`; g.beginPath(); g.arc(q.x + Math.sin(q.t * 7) * s, q.y + 3 * s + Math.cos(q.t * 5) * s1 * .25, .45 * s, 0, Math.PI * 2); g.fill(); }
       }
-      g.fillStyle = "#e5262f"; g.beginPath(); g.moveTo(0, -24); g.lineTo(4, -23.2); g.lineTo(0, -22.2); g.closePath(); g.fill();
+    }
+    function boat(x, y, s, dir, sc, heel, o) {
+      o = o || {};
+      const t = o.t || 0, ph = o.ph || 0, lf = clamp(o.luff || 0, 0, 1), fx = o.fx == null ? dir : o.fx;
+      const sg = fx < 0 ? -1 : 1, ax = Math.max(.3, Math.abs(fx)), spk = o.spk == null ? (dir < 0 ? 1 : 0) : o.spk;
+      const acc = sc[1] === "#ffffff" ? "#e5262f" : sc[1];
+      s *= Z * (o.k || 1);
+      if (!o.trail) {  /* nyomvonal és orrhab (álló kép) */
+        g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(x - dir * 11 * s, y + 3 * s); g.quadraticCurveTo(x - dir * 22 * s, y + 4.5 * s, x - dir * 34 * s, y + 4 * s); g.stroke();
+        g.beginPath(); g.moveTo(x - dir * 11 * s, y + 3.5 * s); g.quadraticCurveTo(x - dir * 20 * s, y + 2 * s, x - dir * 28 * s, y + 2.6 * s); g.stroke();
+      }
+      /* tükörkép: a hajótest és a vitorlák remegő színcsíkjai a vízen */
+      g.save();
+      for (let k = 0; k < 6; k++) {
+        const yy = y + (4.4 + k * 1.5) * s, off = Math.sin(t * 2.6 + k * 1.9 + ph) * 1.3 * s, w = (19 - k * 2.6) * ax * s;
+        g.globalAlpha = .2 - k * .028; g.fillStyle = k < 2 ? "#0d1a26" : k % 2 ? sc[0] : (spk > .5 ? acc : sc[1]);
+        g.fillRect(x - sg * (k < 2 ? 0 : 3 * ax) * s - w * .5 + off, yy, w, .75 * s);
+      }
+      g.restore();
+      /* orrhullám: bajusz és fröccs */
+      const bx = x + sg * ax * 11.5 * s, bw = 1 - ax;
+      g.fillStyle = "rgba(255,255,255,.8)"; g.beginPath(); g.ellipse(bx, y + 3 * s, (2.2 * ax + 3 * bw) * s, .9 * s, 0, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = .7;
+      g.beginPath(); g.moveTo(bx, y + 2.6 * s); g.quadraticCurveTo(bx - sg * 4 * ax * s, y + 1.8 * s, bx - sg * 8 * ax * s, y + 3.1 * s); g.stroke();
+      for (let k = 0; k < 3; k++) { const q = (t * 1.6 + k / 3 + ph) % 1; g.fillStyle = `rgba(255,255,255,${.7 * (1 - q)})`; g.beginPath(); g.arc(bx + sg * q * 2.2 * s, y + (2.6 - Math.sin(q * Math.PI) * 2.2) * s, .4 * s, 0, Math.PI * 2); g.fill(); }
+      g.save(); g.translate(x, y); if (o.roll) g.rotate(o.roll * (1 - ax)); g.scale(sg * ax * s, s); g.rotate(heel);
+      /* hajótest: ívelt fedélzetvonal, fényes oldal, vízvonal-csík, algagátló, tükör, korlát */
+      const hull = new Path2D("M-11 -.8 Q 1 -.1 12.3 -1.2 Q 10.7 2.8 7 4 L -9 4 L -11.6 1.4 Z");
+      g.fillStyle = lg(-1, 4, "#2c4458", "#0a1620"); g.fill(hull);
+      g.save(); g.clip(hull);
+      g.fillStyle = "rgba(255,255,255,.13)"; g.fillRect(-12, -1.2, 25, 1.3);
+      g.fillStyle = "rgba(120,24,30,.75)"; g.fillRect(-12, 3.1, 25, 1.2);
+      g.strokeStyle = acc; g.lineWidth = .6; g.beginPath(); g.moveTo(-11, 2.6); g.lineTo(11, 2.6); g.stroke();
+      g.fillStyle = "rgba(255,255,255,.08)"; g.beginPath(); g.ellipse(4, .6, 6, .7, 0, 0, Math.PI * 2); g.fill();
+      g.restore();
+      g.strokeStyle = "#f4f6f8"; g.lineWidth = .7; g.beginPath(); g.moveTo(-11, -.8); g.quadraticCurveTo(1, -.1, 12.3, -1.2); g.stroke();
+      g.strokeStyle = "rgba(225,232,240,.55)"; g.lineWidth = .22; g.beginPath();
+      for (let k = -9; k <= 9; k += 3) { g.moveTo(k, -.6); g.lineTo(k, -2.3); }
+      g.moveTo(-9.4, -2.3); g.quadraticCurveTo(1, -1.9, 9.6, -2.4); g.lineTo(11.6, -1.1); g.stroke();
+      g.strokeStyle = "#8a6a44"; g.lineWidth = .32; g.beginPath(); g.moveTo(-6.4, -1.7); g.lineTo(-10.6, -1); g.stroke();  /* kormányrúd */
+      /* árboc-merevítés: hátsó merevítő, vantnik, kettős keresztfák */
+      g.strokeStyle = "rgba(205,214,224,.7)"; g.lineWidth = .3; g.beginPath(); g.moveTo(0, -24); g.lineTo(-10.8, -.8);
+      g.moveTo(0, -24); g.lineTo(2.2, -15); g.lineTo(1.6, -.8); g.moveTo(0, -24); g.lineTo(-2.2, -15); g.lineTo(-1.6, -.8); g.stroke();
+      /* nagyvitorla: lobogó hátsó él, lécek, gyűrődés, szálas jelzőszalagok, vitorlaszám */
+      const tr = lerp(1, .74, clamp(spk, 0, 1));
+      const MH = [-.4, -23.4], MC = [-9.6 * tr, -3.1], MQ = [-6.4 * tr - lf * Math.sin(t * 15 + ph) * 2.6 + Math.sin(t * 1.7 + ph) * .3, -12.5];
+      const N = 12, Lc = [];
+      for (let k = 0; k <= N; k++) { const u = k / N, p = qpt(MH, MQ, MC, u), w = Math.sin(u * Math.PI) * (.14 + lf * 1.5) * Math.sin(t * (8 + lf * 11) + ph - u * 7); Lc.push([p[0] + w, p[1] + w * .3]); }
+      const main = new Path2D(); main.moveTo(MH[0], MH[1]); Lc.forEach((p) => main.lineTo(p[0], p[1])); main.lineTo(-.4, -3.1); main.closePath();
+      g.fillStyle = sc[0]; g.fill(main); g.fillStyle = shade(-.4, MC[0], .2); g.fill(main);
+      g.save(); g.clip(main);
+      g.strokeStyle = "rgba(20,32,42,.1)"; g.lineWidth = .18; g.beginPath(); for (let k = 1; k < 6; k++) { const yy = -23 + k * 3.4; g.moveTo(-.4, yy); g.lineTo(-11, yy + 1.2); } g.stroke();  /* panelvarratok */
+      if (lf > .06) { g.strokeStyle = `rgba(10,22,34,${lf * .32})`; g.lineWidth = .34; g.beginPath(); for (let j = 0; j < 3; j++) { const p = Lc[3 + j * 3], m = Math.sin(t * 13 + j * 2 + ph) * 1.4; g.moveTo(-.5, -21 + j * 5.5); g.quadraticCurveTo((p[0] - .5) * .5 + m, (-21 + j * 5.5 + p[1]) * .5 + m * .4, p[0], p[1]); } g.stroke(); }
+      g.restore();
+      g.strokeStyle = "rgba(20,32,42,.28)"; g.lineWidth = .3; g.stroke(main);
+      g.strokeStyle = "rgba(20,32,42,.32)"; g.lineWidth = .34; g.beginPath(); [3, 6, 9].forEach((k) => { const p = Lc[k]; g.moveTo(p[0], p[1]); g.lineTo(p[0] + 2.6, p[1] + .15); }); g.stroke();
+      g.strokeStyle = acc; g.lineWidth = .28; g.beginPath(); [3, 6, 9].forEach((k, j) => { const p = Lc[k]; g.moveTo(p[0], p[1]); g.quadraticCurveTo(p[0] - .9, p[1] + Math.sin(t * 21 + j) * .4, p[0] - 1.9, p[1] + Math.sin(t * 23 + j * 2) * (.5 + lf)); }); g.stroke();
+      g.fillStyle = "#f4f6f8"; g.fillRect(-.9, -23.6, .9, .7);  /* fejlap */
+      g.fillStyle = "rgba(20,32,42,.55)"; g.font = "800 3px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "alphabetic";
+      g.save(); g.translate(-4.2 * tr + (Lc[7][0] - qpt(MH, MQ, MC, 7 / 12)[0]) * .4, -8.4); g.scale(sg, 1); g.fillText(String(sc.n || 7), 0, 0); g.restore();
+      /* árboc enyhe hajlással, bum, csatlós, szkót */
+      g.strokeStyle = "#e8edf2"; g.lineWidth = .9; g.beginPath(); g.moveTo(0, -.8); g.quadraticCurveTo(.45, -12, 0, -24.2); g.stroke();
+      g.strokeStyle = "rgba(60,72,84,.5)"; g.lineWidth = .25; g.beginPath(); g.moveTo(.35, -1); g.quadraticCurveTo(.8, -12, .35, -24); g.stroke();
+      g.strokeStyle = "#b9c2cb"; g.lineWidth = .8; g.beginPath(); g.moveTo(.4, -3.1); g.lineTo(MC[0] - .5, -3.1); g.stroke();
+      g.strokeStyle = "rgba(200,208,216,.8)"; g.lineWidth = .22; g.beginPath(); g.moveTo(0, -1); g.lineTo(-2.8 * tr, -3); g.moveTo(-7 * tr, -3.1); g.lineTo(-7.2, -.9); g.stroke();
+      /* orrvitorla: felcsavarodik, amikor a spinakker felmegy */
+      const jf = clamp(1 - spk * 1.5, 0, 1);
+      if (jf > .02) {
+        const JH = [.7, -21.6], JQ = [6.3, -11.2], JT = [11.6, -1.2], JC = [1.3 + lf * Math.sin(t * 17 + ph) * 1.2, -1.9], JL = [-.6 - lf * Math.sin(t * 14 + ph + 1) * 2.4, -11.4];
+        const lu = [], le = [];
+        for (let k = 0; k <= 10; k++) { const u = k / 10, f = qpt(JH, JQ, JT, u), p = qpt(JH, JL, JC, u), w = Math.sin(u * Math.PI) * (.12 + lf * 1.3) * Math.sin(t * (9 + lf * 12) + ph * 1.3 - u * 8); lu.push(f); le.push([lerp(f[0], p[0] + w, jf), lerp(f[1], p[1] + w * .3, jf)]); }
+        const jib = new Path2D(); jib.moveTo(JH[0], JH[1]); lu.forEach((p) => jib.lineTo(p[0], p[1])); for (let k = 10; k >= 0; k--) jib.lineTo(le[k][0], le[k][1]); jib.closePath();
+        g.fillStyle = sc[1]; g.fill(jib); g.fillStyle = shade(10, 1, .16); g.fill(jib);
+        g.strokeStyle = "rgba(20,32,42,.24)"; g.lineWidth = .3; g.stroke(jib);
+        if (jf > .6) { g.strokeStyle = "#e5262f"; g.lineWidth = .26; g.beginPath(); [.35, .55, .75].forEach((u, j) => { const f = lu[Math.round(u * 10)]; g.moveTo(f[0] - 1.1, f[1]); g.lineTo(f[0] - 2.3, f[1] + Math.sin(t * 19 + j * 2) * .45); }); g.stroke(); }
+        g.strokeStyle = "rgba(200,208,216,.7)"; g.lineWidth = .2; g.beginPath(); g.moveTo(le[10][0], le[10][1]); g.lineTo(-1.6, -.9); g.stroke();
+      }
+      g.strokeStyle = "rgba(205,214,224,.8)"; g.lineWidth = .28; g.beginPath(); g.moveTo(0, -23.6); g.lineTo(11.6, -1.2); g.stroke();  /* előmerevítő */
+      /* spinakker: felhúzás, kipukkanás, lélegző domborulat */
+      if (spk > .02) {
+        const h = clamp(spk * 1.8, .05, 1), f = clamp((spk - .3) / .7, 0, 1.2), fl = (f > 0 && f < 1 ? Math.sin(f * Math.PI) : 0) + lf * .4;
+        const F = [1, -23, 15, -26, 24, -12, 16, -1, 9, -1, 13, -12, 1, -22], C = [1, -23, 2.6, -22, 4, -12, 3.4, -3, 2.4, -3, 2.6, -12, 1, -22.4];
+        const P = F.map((v, i) => lerp(C[i], v, f));
+        P[4] += Math.sin(t * 13 + ph) * fl * 2.6 + Math.sin(t * 1.9 + ph) * .5; P[3] += Math.cos(t * 11 + ph) * fl * 1.6; P[6] += Math.sin(t * 9 + ph) * fl * 1.2; P[10] += Math.sin(t * 12 + ph + 2) * fl * 1.4;
+        g.save(); g.translate(0, -1); g.scale(1, h); g.translate(0, 1);
+        const sp = new Path2D(); sp.moveTo(P[0], P[1]); sp.bezierCurveTo(P[2], P[3], P[4], P[5], P[6], P[7]); sp.lineTo(P[8], P[9]); sp.quadraticCurveTo(P[10], P[11], P[12], P[13]); sp.closePath();
+        g.fillStyle = acc; g.fill(sp);
+        g.save(); g.clip(sp); g.fillStyle = "rgba(255,255,255,.8)"; g.fillRect(0, -18.5, 30, 3); g.fillStyle = "#f2b233"; g.fillRect(0, -10.5, 30, 2.4);
+        const rg = g.createRadialGradient(P[4] * .55, -13, .5, P[4] * .55, -13, 15); rg.addColorStop(0, "rgba(255,255,255,.22)"); rg.addColorStop(.6, "rgba(255,255,255,0)"); rg.addColorStop(1, "rgba(0,10,20,.3)"); g.fillStyle = rg; g.fillRect(-2, -27, 32, 28);
+        g.strokeStyle = "rgba(0,10,20,.14)"; g.lineWidth = .2; g.beginPath(); for (let k = 1; k < 4; k++) { g.moveTo(1, -23); g.quadraticCurveTo(lerp(P[10], P[4], k / 4) + 1, -13, lerp(P[8], P[6], k / 4), -1); } g.stroke();
+        g.restore();
+        g.strokeStyle = "rgba(0,0,0,.22)"; g.lineWidth = .35; g.stroke(sp);
+        g.restore();
+        if (f > .45) { g.strokeStyle = "#d9dfe5"; g.lineWidth = .4; g.beginPath(); g.moveTo(.3, -6.5); g.lineTo(P[8] + .4, -1.8); g.stroke(); g.strokeStyle = "#b9c2cb"; g.lineWidth = .22; g.beginPath(); g.moveTo(P[6], -1 + (P[7] + 1) * h); g.lineTo(10, -.6); g.stroke(); }
+      }
+      /* legénység: mentőmellény, sisak; kiül, a fordulóban lebukik */
+      [[-6.4, "#f2b233", "#0b2f5e"], [-3.6, "#e5262f", "#ffffff"]].forEach(([cx, vest, cap], i) => {
+        const duck = lf * (i ? 1 : .6), lean = (1 - clamp(spk, 0, 1)) * .55 + Math.sin(t * 1.3 + ph + i * 2) * .1;
+        g.strokeStyle = "#1d2a36"; g.lineWidth = .8; g.lineCap = "round"; g.beginPath(); g.moveTo(cx, -.9); g.lineTo(cx - lean * .7, -2.5 + duck); g.stroke();
+        g.fillStyle = vest; g.beginPath(); g.ellipse(cx - lean * .4, -1.8 + duck * .6, .55, .8, -lean * .4, 0, Math.PI * 2); g.fill();
+        g.fillStyle = "#f1c9a5"; g.beginPath(); g.arc(cx - lean * .8, -3.1 + duck, .52, 0, Math.PI * 2); g.fill();
+        g.fillStyle = cap; g.beginPath(); g.arc(cx - lean * .8, -3.2 + duck, .55, Math.PI, 0); g.fill();
+      });
+      /* árbocfej-zászló: a szél irányába lobog */
+      const fd = -sg; g.fillStyle = "#e5262f"; g.beginPath(); g.moveTo(0, -24.6);
+      for (let k = 1; k <= 6; k++) g.lineTo(fd * k * .75, -24.6 + Math.sin(t * 9 - k * .9 + ph) * .1 * k + k * .07);
+      for (let k = 6; k >= 0; k--) g.lineTo(fd * k * .75, -23.4 + Math.sin(t * 9 - k * .9 + ph) * .1 * k - k * .12);
+      g.closePath(); g.fill();
       g.restore();
     }
     function buoyAt(x, y, n, sc, rot) { g.save(); g.translate(x, y); g.rotate(rot || 0); g.scale(sc, sc); buoy(0, 0, null, n); g.restore(); }
@@ -6011,38 +6100,57 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         if (extra.x < -.08 || extra.x > 1.08) extra = null;
       }
       if (!extra) extras.splice(extras.indexOf(ex), 1); }
-      BUOYS.forEach((bx, i) => { if (bx != null) buoy(bx * W, wy - 2, ts, BNUM[i]); });
+      const DZ = .16;  /* bója körüli ív mélységi lapítása */
       boats.forEach((b) => {
+        if (b.fx == null) { b.fx = b.dir; b.spk = b.dir < 0 ? 1 : 0; b.spv = 0; b.lf = 0; b.tr = []; b.dy = b.dy || 0; }
         if (!reduce && !b.hold) {
-          if (b.turn) {  /* bója megkerülése: kört ír le körülötte */
-            b.turn.a += dt * 2.4 * b.turn.sp;
-            if (BUOYS[b.turn.i] == null) { b.dir = b.turn.out; b.turn = null; b.dy = 0; return; }
-            const ax = BUOYS[b.turn.i] * W;
-            b.x = (ax + Math.cos(b.turn.a) * b.turn.r) / W; b.dy = Math.sin(b.turn.a) * 5;
-            b.dir = Math.sin(b.turn.a) * b.turn.sp > 0 ? -1 : 1;
-            if (Math.abs(b.turn.a - b.turn.a0) >= Math.PI * b.turn.k) { b.dir = b.turn.out; b.turn = null; b.dy = 0; }
+          if (b.turn) {  /* bója megkerülése: sima ív a bója körül, a hajó közben elfordul */
+            const T = b.turn;
+            if (BUOYS[T.i] == null) { b.dir = b.fx < 0 ? -1 : 1; b.fx = b.dir; b.turn = null; }
+            else {
+              T.a += dt * (b.v * W * .85 / T.r) * T.sp;
+              const done = Math.abs(T.a - T.a0) >= Math.PI * T.k; if (done) T.a = T.a0 + Math.PI * T.k * T.sp;
+              b.x = (BUOYS[T.i] * W + Math.cos(T.a) * T.r) / W; b.dy = T.dy0 + (Math.sin(T.a) - Math.sin(T.a0)) * T.r * DZ;
+              b.fx = -Math.sin(T.a) * T.sp; b.dir = b.fx < 0 ? -1 : 1;
+              if (done) { b.fx = b.dir; b.turn = null; }
+            }
           } else {
             const bt = b.bt || 1; b.boost = (b.boost || 1) + (bt - (b.boost || 1)) * Math.min(1, dt * (bt > (b.boost || 1) ? 1.4 : .6)); b.bt = 1;  /* viharszél */
-            b.x += b.dir * b.v * b.boost * dt;
+            const px = b.x; b.x += b.dir * b.v * b.boost * dt; b.fx = b.dir;
+            b.dy += -b.dy * Math.min(1, dt * .3);
             BUOYS.forEach((bx, i) => {
-              if (i !== b.lastBuoy && Math.abs(b.x - bx) * W < 14 && Math.random() < .5) {  /* véletlenszerűen megkerüli a bóját */
-                const out = Math.random() < .5 ? -1 : 1, from = b.x < bx ? Math.PI : 0;
-                b.turn = { i, a: from, a0: from, r: 14, sp: b.dir > 0 ? -1 : 1, k: out === b.dir ? 2 : 1, out };
-                b.lastBuoy = i;
-              } else if (i !== b.lastBuoy && Math.abs(b.x - bx) * W < 14) b.lastBuoy = i;
+              if (bx == null || b.turn || i === b.lastBuoy || (px - bx) * (b.x - bx) > 0) return;
+              b.lastBuoy = i;
+              if (Math.random() < .5 && (b.boost || 1) < 1.5) {  /* véletlenszerűen megkerüli a bóját */
+                const side = b.dy - b.lane * 3 > -1 ? 1 : -1, a0 = side * Math.PI / 2;
+                b.turn = { i, a: a0, a0, r: rnd(16, 21), sp: -b.dir * side, k: Math.random() < .5 ? 2 : 1, dy0: b.dy };
+              }
             });
-            if (b.x > 1.04) { b.x = -.04; b.lastBuoy = -1; b.v = rnd(.008, .016); }
-            if (b.x < -.04) { b.x = 1.04; b.lastBuoy = -1; b.v = rnd(.008, .016); }
+            if (b.x > 1.04) { b.x = -.04; b.lastBuoy = -1; b.v = rnd(.008, .016); b.tr.length = 0; }
+            if (b.x < -.04) { b.x = 1.04; b.lastBuoy = -1; b.v = rnd(.008, .016); b.tr.length = 0; }
           }
+          /* vitorlák: lobogás a fordulóban, spinakker rugós felhúzása / leszedése */
+          const tgL = b.turn ? .3 + .7 * (1 - Math.abs(b.fx)) : 0;
+          b.lf += (tgL - b.lf) * Math.min(1, dt * (tgL > b.lf ? 4 : 1.5));
+          b.spv += (((b.fx < -.25 ? 1 : 0) - b.spk) * 7 - b.spv * 3.3) * dt; b.spk = clamp(b.spk + b.spv * dt, -.05, 1.25);
         }
-        const bst = (b.boost || 1) - 1, bob = Math.sin(ts * 2.2 + b.ph) * (1.2 + bst * .4), heel = Math.sin(ts * 1.4 + b.ph) * .06 + (b.turn ? -b.dir * .12 : 0) + bst * .07;
-        if (bst > .5) { const bx = b.x * W + b.dir * 12 * b.s * Z, by = wy - 1 - b.lane * 3; for (let k = 0; k < 6; k++) { const q = ((ts * 3 + k / 6 + b.ph) % 1); g.fillStyle = `rgba(255,255,255,${.85 * (1 - q) * Math.min(1, bst / 2)})`; g.beginPath(); g.arc(bx + b.dir * q * 6, by + 3 - Math.sin(q * Math.PI) * 6, .7 + q * 1.2, 0, Math.PI * 2); g.fill(); } g.strokeStyle = `rgba(255,255,255,${Math.min(.8, bst / 3)})`; g.lineWidth = 1; g.beginPath(); g.moveTo(b.x * W - b.dir * 12 * b.s * Z, by + 4); g.quadraticCurveTo(b.x * W - b.dir * 40 * b.s * Z, by + 6, b.x * W - b.dir * 70 * b.s * Z, by + 5); g.stroke(); }
+        b.wy = wy - 1 + (b.dy || 0) - b.lane * 3;
+        if (!reduce && !b.sink) { const l = b.tr[b.tr.length - 1]; if (l && Math.abs(l.x - b.x * W) > 40) b.tr.length = 0; if (!l || ts - l.t > .06) b.tr.push({ x: b.x * W, y: b.wy, t: ts }); while (b.tr.length && ts - b.tr[0].t > 3.2) b.tr.shift(); }
+      });
+      const order = boats.slice().sort((p, q) => p.wy - q.wy);
+      order.forEach((b) => { if (!b.sink) wake(b, ts); });
+      const drawBoat = (b) => {
+        const bst = (b.boost || 1) - 1, bob = Math.sin(ts * 2.2 + b.ph) * (1.2 + bst * .4), heel = Math.sin(ts * 1.4 + b.ph) * .06 + (b.turn ? -b.dir * .1 : 0) + bst * .07;
+        if (bst > .5) { const bx = b.x * W + b.dir * 12 * b.s * Z, by = wy - 1 - b.lane * 3; for (let k = 0; k < 6; k++) { const q = ((ts * 3 + k / 6 + b.ph) % 1); g.fillStyle = `rgba(255,255,255,${.85 * (1 - q) * Math.min(1, bst / 2)})`; g.beginPath(); g.arc(bx + b.dir * q * 6, by + 3 - Math.sin(q * Math.PI) * 6, .7 + q * 1.2, 0, Math.PI * 2); g.fill(); } }
         if (b.sink) {  /* süllyedő hajó: a vízvonal alatt eltűnik, megbillen */
           g.save(); g.beginPath(); g.rect(0, 0, W, wy + 2); g.clip();
-          boat(b.x * W, wy - 1 + b.sink, b.s, b.dir, b.sc, b.dir * b.sink * .02);
+          boat(b.x * W, wy - 1 + b.sink, b.s, b.dir, b.sc, b.dir * b.sink * .02, { t: ts, ph: b.ph, spk: b.spk, luff: .7 });
           g.restore();
-        } else boat(b.x * W, wy - 1 + bob + (b.dy || 0) - b.lane * 3, b.s, b.dir, b.sc, heel);
-      });
+        } else boat(b.x * W, b.wy + bob, b.s, b.dir, b.sc, heel, { t: ts, ph: b.ph, fx: b.fx, luff: b.lf, spk: b.spk, k: 1 + (b.wy - wy + 1) * .012, trail: !reduce, roll: b.turn ? -b.turn.sp * b.dir * .2 : 0 });
+      };
+      order.filter((b) => b.wy < wy - 2).forEach(drawBoat);  /* a bója mögött haladók */
+      BUOYS.forEach((bx, i) => { if (bx != null) buoy(bx * W, wy - 2, ts, BNUM[i]); });
+      order.filter((b) => b.wy >= wy - 2).forEach(drawBoat);
       fronts.forEach((f) => f()); fronts.length = 0;  /* a hajó előtti rétegek (pl. polipcsápok) */
     }
     requestAnimationFrame(frame);
