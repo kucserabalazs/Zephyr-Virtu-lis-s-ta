@@ -1948,7 +1948,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   function toLake() { direct = false; st.pre = null; buildMap(); fixSel(); st.step = 1; render(); el.querySelector(".zfb-body").scrollTop = 0; }
   function viewAptCal() {
-    const a = apt(); if (!a) return viewCal();
+    const a = apt() || (st.pre && cfg.apartments.find((x) => x.id === st.pre)); if (!a) return viewCal();
     const base = pd(cfg.today), months = [], per = window.innerWidth < 760 ? 1 : 2;
     for (let i = 0; i < per; i++) { const d = new Date(base.getFullYear(), base.getMonth() + st.month + i, 1); months.push(monthGrid(d.getFullYear(), d.getMonth())); }
     const err = selError(), q = !err ? quote() : null, near = err && st.ci && st.co && /foglalt/.test(err) ? nearest() : null;
@@ -2060,6 +2060,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   /* a kiválasztás igazítása: ami elsüllyedt, kikerül; az előre megnyitott apartman magától kijelölődik, ha szabad */
   function fixSel() {
+    if (st.step === 2 && st.pre) { st.apts = [st.pre]; st.apt = st.pre; return; }   /* az apartman saját naptárában maradunk, a foglalás innen végigvihető */
     const ok = (id) => { const a = cfg.apartments.find((x) => x.id === id); return a && st.ci && st.co && !aptState(a).down; };
     st.apts = st.apts.filter(ok);
     if (st.pre && !st.apts.length && ok(st.pre)) st.apts = [st.pre];
