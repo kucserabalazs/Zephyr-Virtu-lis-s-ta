@@ -3393,7 +3393,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       g.fillStyle = "#e5262f"; g.fillRect(px - .95, sh + 1.6, 1.9, .3);
       g.strokeStyle = "#e8b58c"; g.lineWidth = .62;
       g.beginPath(); g.moveTo(px + .6, sh + .5); g.lineTo(px + 1.6, sh + 2.2 - st * .4); g.lineTo(-10.2 + st * 2, -4.6 + st * .2); g.stroke();  /* kormányzó kar a kormányrúdon */
-      if (wv > 0) { const a = -1.35 - wv * .75 + Math.sin(t * 7) * .55 * wv, ex = px - .6 + Math.cos(a) * 1.7, ey = sh + .4 + Math.sin(a) * 1.7, fa = a + Math.sin(t * 7) * .7, hx2 = ex + Math.cos(fa) * 1.8, hy2 = ey + Math.sin(fa) * 1.8;
+      if (wv > 0) { const a = -1.35 - wv * .7 + Math.sin(t * 5) * .3 * wv, ex = px - .6 + Math.cos(a) * 1.7, ey = sh + .4 + Math.sin(a) * 1.7, fa = a + Math.sin(t * 5) * .35, hx2 = ex + Math.cos(fa) * 1.8, hy2 = ey + Math.sin(fa) * 1.8;
         g.beginPath(); g.moveTo(px - .6, sh + .4); g.lineTo(ex, ey); g.lineTo(hx2, hy2); g.stroke(); g.fillStyle = "#e8b58c"; g.beginPath(); g.arc(hx2, hy2, .45, 0, Math.PI * 2); g.fill(); }  /* integető kar */
       else { g.beginPath(); g.moveTo(px - .6, sh + .4); g.lineTo(px - .9, sh + 2.4); g.lineTo(px - .2, hip - .4); g.stroke(); }
       g.strokeStyle = "#8a6a44"; g.lineWidth = .4; g.beginPath(); g.moveTo(-15.6, -3.8); g.lineTo(-9.6 + st * 1.6, -4.7); g.stroke();  /* kormányrúd */
@@ -3419,7 +3419,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       if (!reduce) {
         if (b.ph === "sail") { b.x += b.dir * b.v * dt; if ((b.x - .5) * b.dir > -.035 && (b.x - .5) * b.dir < 0) { b.ph = "slow"; b.t0 = ts; } }
         else if (b.ph === "slow") { const k = Math.min(1, (ts - b.t0) / 2.2); b.x += b.dir * b.v * (1 - k) * (1 - k) * dt; if (k >= 1) { b.ph = "wave"; b.t0 = ts; } }
-        else if (b.ph === "wave") { if (ts - b.t0 > 7) { b.ph = "go"; b.t0 = ts; } }
+        else if (b.ph === "wave") { if (ts - b.t0 > 5.2) { b.ph = "go"; b.t0 = ts; } }
         else if (b.ph === "go") { const k = Math.min(1, (ts - b.t0) / 2.5); b.x += b.dir * b.v * k * k * dt; if (k >= 1) b.ph = "sail2"; }
         else if (b.ph === "sail2") { b.x += b.dir * b.v * dt; if (b.x > 1.1 || b.x < -.1) { b.ph = "away"; b.t0 = ts; b.wait = rnd(14, 30); b.tr.length = 0; } }
         else if (b.ph === "away") { if (ts - b.t0 > b.wait) { b.dir = Math.random() < .5 ? -1 : 1; b.x = b.dir > 0 ? -.1 : 1.1; b.ph = "sail"; } }
@@ -3428,13 +3428,13 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       const sk = stormAt(b.x * W), stopped = b.ph === "wave" ? 1 : b.ph === "slow" ? Math.min(1, (ts - b.t0) / 2.2) : b.ph === "go" ? 1 - Math.min(1, (ts - b.t0) / 2.5) : 0;
       b.lf += (Math.max(stopped * .55, sk * .6) - b.lf) * Math.min(1, dt * 2);
       const wt = b.ph === "wave" ? ts - b.t0 : -1;
-      b.stand += ((wt > .4 && wt < 6.6 ? 1 : 0) - b.stand) * Math.min(1, dt * 3);
-      b.wave += ((wt > 1 && wt < 6.2 ? 1 : 0) - b.wave) * Math.min(1, dt * 4);
+      b.stand += ((wt > .4 && wt < 4.8 ? 1 : 0) - b.stand) * Math.min(1, dt * 3);
+      b.wave += ((wt > 1.1 && wt < 3.6 ? 1 : 0) - b.wave) * Math.min(1, dt * 4);
       const y = wy + 2 + Math.sin(ts * 1.8) * (.8 + sk * 1.4), x = b.x * W;
       const l = b.tr[b.tr.length - 1]; if (!reduce && (!l || ts - l.t > .06)) b.tr.push({ x, y: y - 1, t: ts }); while (b.tr.length && ts - b.tr[0].t > 3.2) b.tr.shift();
       wake(b, ts);
       raptor(x, y, b.dir, ts, { luff: b.lf, wave: b.wave, stand: b.stand, spd: 1 - stopped, heel: Math.sin(ts * 1.2) * (.025 + sk * .08) - (1 - stopped) * .03 });
-      if (wt > 1.2 && wt < 6.2) { const a = Math.min(1, (wt - 1.2) * 4) * Math.min(1, (6.2 - wt) * 4); zbBubble(x - b.dir * 54 * Z * .98, y - 40 * Z * .98, a, x - b.dir * 12 * Z * .98); }
+      if (wt > 1.2 && wt < 4.6) { const a = Math.min(1, (wt - 1.2) * 4) * Math.min(1, (4.6 - wt) * 4); zbBubble(x - b.dir * 54 * Z * .98, y - 40 * Z * .98, a, x - b.dir * 12 * Z * .98); }
     }
     function frame(t) {
       requestAnimationFrame(frame);
