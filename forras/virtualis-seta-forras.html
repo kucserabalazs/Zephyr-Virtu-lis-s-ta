@@ -1586,11 +1586,12 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     if (ignorePop) { ignorePop = false; window.__zbPop = Date.now(); return; }
     if (isOpen()) { histPushed = false; window.__zbPop = Date.now(); close(); }
   });
+  let direct = false;   /* a galériából közvetlenül az apartmanba nyitva: a fejléc Vissza gombja oda visz vissza */
   async function open(opts) {
     opts = opts || {};
     if (!el) build();
     reset(null);
-    backTo = typeof opts.back === "function" ? opts.back : null;
+    backTo = typeof opts.back === "function" ? opts.back : null; direct = !!opts.direct;
     const lbl = el.querySelector(".zfb-back span"); if (lbl) { lbl.textContent = opts.backLabel || (/virtualis-seta/.test(location.pathname) ? "Vissza a sétához" : "Vissza az oldalra"); lbl.dataset.orig = lbl.textContent; }
     if (!histPushed) { try { history.pushState({ zfb: 1 }, "", location.href); histPushed = true; } catch (e) {} }
     el.hidden = false; requestAnimationFrame(() => el.classList.add("on"));
@@ -1617,7 +1618,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     document.body.appendChild(el);
     el.querySelector(".zfb-bg").addEventListener("click", () => close());
     el.querySelector(".zfb-x").addEventListener("click", () => close());
-    el.querySelector(".zfb-back").addEventListener("click", () => { if (st && st.step === 2) toLake(); else close(); });
+    el.querySelector(".zfb-back").addEventListener("click", () => { if (st && st.step === 2 && !direct) toLake(); else close(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && el && !el.hidden) close(); });
     el.addEventListener("click", onClick); el.addEventListener("submit", (e) => { e.preventDefault(); submit(); }); el.addEventListener("input", onInput); el.addEventListener("change", onInput);
   }
@@ -1715,7 +1716,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   /* ---------- megjelenítés ---------- */
   function render() {
     steps();
-    const bl = el.querySelector(".zfb-back span"); if (bl) { if (!bl.dataset.orig) bl.dataset.orig = bl.textContent; bl.textContent = st.step === 2 ? "Vissza a tóhoz" : bl.dataset.orig; }
+    const bl = el.querySelector(".zfb-back span"); if (bl) { if (!bl.dataset.orig) bl.dataset.orig = bl.textContent; bl.textContent = st.step === 2 && !direct ? "Vissza a tóhoz" : bl.dataset.orig; }
     if (st.step === 1) { paint(viewCal()); return lakeAnim(); }
     if (st.step === 2) return paint(viewAptCal());
     if (st.step === 2) return paint(viewApts());
@@ -1945,7 +1946,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const m0 = pd(cfg.today), m1 = pd(st.ci || cfg.today); st.month = Math.max(0, (m1.getFullYear() - m0.getFullYear()) * 12 + m1.getMonth() - m0.getMonth());
     st.step = 2; st.err = ""; render(); el.querySelector(".zfb-body").scrollTop = 0;
   }
-  function toLake() { st.pre = null; buildMap(); fixSel(); st.step = 1; render(); el.querySelector(".zfb-body").scrollTop = 0; }
+  function toLake() { direct = false; st.pre = null; buildMap(); fixSel(); st.step = 1; render(); el.querySelector(".zfb-body").scrollTop = 0; }
   function viewAptCal() {
     const a = apt(); if (!a) return viewCal();
     const base = pd(cfg.today), months = [], per = window.innerWidth < 760 ? 1 : 2;
@@ -1953,7 +1954,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const err = selError(), q = !err ? quote() : null, near = err && st.ci && st.co && /foglalt/.test(err) ? nearest() : null;
     return demoNote() + `<div class="zfb-cal-wrap">
       <div class="zfb-cal">
-        <button type="button" class="zfa-back" data-lake="1"><span>‹</span> Vissza a tóhoz – másik apartman</button>
+        ${direct ? `<button type="button" class="zfa-back" data-closeback="1"><span>‹</span> Vissza a képekhez</button>` : `<button type="button" class="zfa-back" data-lake="1"><span>‹</span> Vissza a tóhoz – másik apartman</button>`}
         <div class="zfa-ban" style="--ac:${a.color}"><div class="zfa-boat">${shipArt(a.id, a.color, "")}</div><div class="zfa-t"><small>Most itt vagy:</small><b>${esc(a.name)} apartman</b><span>${a.no}. apartman · legfeljebb ${a.cap} fő · ${money(a.price)}-tól / éj</span></div></div>
         <div class="zfa-sw"><span>Másik apartman:</span>${cfg.apartments.filter((x) => x.id !== a.id).map((x) => `<button type="button" data-goapt="${x.id}" style="--ac:${x.color}"><i>${x.no}</i>${esc(x.name)}</button>`).join("")}</div>
         <div class="zfb-mnav"><button type="button" data-m="-1" ${st.month <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><span>Válaszd ki az érkezés, majd a távozás napját</span><button type="button" data-m="1" ${st.month >= 12 ? "disabled" : ""} aria-label="Következő hónap">›</button></div>
@@ -2065,6 +2066,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     st.apt = st.apts[0] || null;
   }
   async function onClick(e) {
+    if (e.target.closest("[data-closeback]")) { close(); return; }
     const b = e.target.closest("button, [data-apt]"); if (!b || b.disabled) return;
     if (b.dataset.apt) return toggleApt(b.dataset.apt);
     if (b.dataset.allapt) { st.pre = null; buildMap(); return render(); }

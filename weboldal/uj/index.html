@@ -585,6 +585,24 @@ body { background-image: var(--grain); }
 }
 @media (prefers-reduced-motion: reduce) { .lb-bk-ic::after { animation: none; } }
 
+/* galéria: mindig elérhető foglalás gomb (az adott apartman naptárával nyílik) */
+.lb { grid-template-rows: auto minmax(0, 1fr) auto auto; }
+.lb-bar { display: flex; justify-content: center; padding: 12px var(--gutR) 0 var(--gut); }
+.lb-book { all: unset; box-sizing: border-box; cursor: pointer; position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 14px; min-width: min(460px, 100%); padding: 9px 12px 9px 9px; border-radius: 999px; color: #fff;
+  background: linear-gradient(180deg, #f2665b, #d63a30 60%, #b92c24); box-shadow: 0 12px 30px rgba(226,72,61,.45), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -3px 0 rgba(120,20,15,.35), 0 0 0 1px rgba(120,20,15,.4); transition: transform .18s, box-shadow .18s; }
+.lb-book::before { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); transform: skewX(-20deg); animation: lbShine 3.6s ease-in-out 1s infinite; }
+@keyframes lbShine { 0%, 60% { left: -60%; } 100% { left: 130%; } }
+.lb-book:hover, .lb-book:focus-visible { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(226,72,61,.55), inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 2px #ffd978; }
+.lb-bk-cal { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #b92c24; background: radial-gradient(circle at 35% 30%, #fff, #ffe9e6 70%, #f5c6c0); box-shadow: inset 0 -2px 0 rgba(150,40,30,.25), 0 2px 6px rgba(0,0,0,.25); }
+.lb-bk-cal svg { width: 24px; height: 24px; }
+.lb-bk-t { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lb-bk-t b { font: 900 18px/1.1 var(--body); letter-spacing: .01em; }
+.lb-bk-t small { font: 700 13px/1.2 var(--body); color: #ffe3df; }
+.lb-bk-ar { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
+.lb-bk-ar svg { width: 20px; height: 20px; } .lb-book:hover .lb-bk-ar svg { animation: lbBkNudge2 .6s ease; } @keyframes lbBkNudge2 { 40% { transform: translateX(3px); } }
+@media (max-width: 700px) { .lb-bar { padding: 10px 12px 0; } .lb-book { width: 100%; } .lb-bk-t b { font-size: 18px; } .lb-bk-t small { font-size: 13.5px; } }
+@media (prefers-reduced-motion: reduce) { .lb-book::before { animation: none; } }
+
 /* finom beúszás görgetéskor (csak ha a böngésző támogatja; szöveg és elrendezés változatlan) */
 .fx-in { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .9s cubic-bezier(.2,.8,.2,1); transition-delay: var(--fd, 0s); }
 .fx-in.in { opacity: 1; transform: none; }
@@ -1522,6 +1540,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Képgaléria">
   <div class="lb-hd"><button type="button" class="lb-back" id="lbBack" aria-label="Vissza az oldalra"><span class="lb-bk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/><path d="M8.5 12H20" opacity=".55"/></svg></span><span class="lb-bk-tx">Vissza</span></button><div class="lb-tt"><h3 id="lbTitle"></h3><span class="cap" id="lbCap"></span></div><span class="sp"></span><a class="btn btn-gold lb-tour" id="lbTour" href="#"><svg><use href="#i-360"/></svg><b>Virtuális séta ide</b><em>360° séta</em></a><button type="button" class="lb-x" id="lbX" aria-label="Galéria bezárása">×</button></div>
   <div class="lb-stage" id="lbStage"><button type="button" class="lb-nav p" id="lbP" aria-label="Előző kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div id="lbMedia" style="display:contents"></div><button type="button" class="lb-nav n" id="lbN" aria-label="Következő kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div>
+  <div class="lb-bar"><button type="button" class="lb-book" id="lbBook"><span class="lb-bk-cal"><svg><use href="#i-cal"/></svg></span><span class="lb-bk-t"><b id="lbBookT">Foglalás</b><small>Szabad napok, árak – foglalás pár lépésben</small></span><span class="lb-bk-ar"><svg><use href="#i-arrow"/></svg></span></button></div>
   <div class="lb-th" id="lbTh"></div>
 </div>
 
@@ -1743,8 +1762,9 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
 
   /* ---------------------------------------------------------------- galéria */
   const LB = { list: [], i: 0, title: "", tourBase: "" };
-  function openLb(title, list, i) {
-    LB.list = list; LB.i = i || 0; LB.title = title;
+  function openLb(title, list, i, apt) {
+    LB.list = list; LB.i = i || 0; LB.title = title; LB.apt = apt || "";
+    $("lbBookT").textContent = LB.apt ? "Foglalás · " + title.replace(/\s+apartman$/i, "") : "Foglalás";
     { const m = /^(.*?)(\s+apartman)$/i.exec(title); $("lbTitle").innerHTML = m ? `${esc(m[1])}<span class="lb-ap">${esc(m[2])}</span>` : esc(title); }
     $("lbTh").innerHTML = list.map((x, k) => `<button type="button" data-k="${k}" aria-label="${esc(x.cap)}"><img src="${esc(x.th || x.poster || x.src)}" alt="" loading="lazy"></button>`).join("");
     $("lb").hidden = false; document.documentElement.style.overflow = "hidden"; showLb(); $("lbBack").focus();
@@ -1760,7 +1780,10 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   const stepLb = (d) => { LB.i = (LB.i + d + LB.list.length) % LB.list.length; showLb(); };
   function closeLb() { $("lb").hidden = true; $("lbMedia").innerHTML = ""; document.documentElement.style.overflow = ""; }
-  $("lbX").addEventListener("click", closeLb); $("lbBack").addEventListener("click", closeLb); $("lbP").addEventListener("click", () => stepLb(-1)); $("lbN").addEventListener("click", () => stepLb(1));
+  $("lbX").addEventListener("click", closeLb); $("lbBack").addEventListener("click", closeLb);
+  $("lbBook").addEventListener("click", () => {   /* a régi, apartman szerinti foglalás: rögtön az apartman naptára nyílik; a Vissza a képekhez hoz vissza */
+    if (!window.ZephyrBooking) return; const back = { t: LB.title, l: LB.list, i: LB.i, a: LB.apt }; closeLb();
+    ZephyrBooking.open({ apt: back.a, direct: !!back.a, backLabel: "Vissza a képekhez", back: () => openLb(back.t, back.l, back.i, back.a) }); }); $("lbP").addEventListener("click", () => stepLb(-1)); $("lbN").addEventListener("click", () => stepLb(1));
   $("lbTh").addEventListener("click", (e) => { const b = e.target.closest("[data-k]"); if (b) { LB.i = +b.dataset.k; showLb(); } });
   $("lb").addEventListener("click", (e) => { if (e.target === $("lbStage")) closeLb(); });
   document.addEventListener("keydown", (e) => { if ($("lb").hidden) return; if (e.key === "Escape") closeLb(); if (e.key === "ArrowRight") stepLb(1); if (e.key === "ArrowLeft") stepLb(-1); });
@@ -2108,7 +2131,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
 
   /* ---------------------------------------------------------------- kattintások: galéria, foglalás, tulajdonos */
   document.addEventListener("click", (e) => {
-    const g = e.target.closest("[data-gal]"); if (g) { const a = APTS.find((x) => x.id === g.dataset.gal); if (a && a.pics.length) openLb(a.name + " apartman", a.pics, 0); return; }
+    const g = e.target.closest("[data-gal]"); if (g) { const a = APTS.find((x) => x.id === g.dataset.gal); if (a && a.pics.length) openLb(a.name + " apartman", a.pics, 0, a.id); return; }
     const s = e.target.closest("[data-svc]"); if (s) { const x = SERVICES.find((y) => y.id === s.dataset.svc); if (x) openLb(x.title, x.media, +s.dataset.i || 0); return; }
     const b = e.target.closest("[data-book]"); if (b) { e.preventDefault(); if (window.ZephyrBooking) ZephyrBooking.open({ apt: b.dataset.book || "" }); return; }
     const o = e.target.closest(".owner-link[data-owner]"); if (o) { if (window.ZephyrAdmin) ZephyrAdmin.open({ tab: o.dataset.owner || "" }); }
@@ -2204,11 +2227,12 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     if (ignorePop) { ignorePop = false; window.__zbPop = Date.now(); return; }
     if (isOpen()) { histPushed = false; window.__zbPop = Date.now(); close(); }
   });
+  let direct = false;   /* a galériából közvetlenül az apartmanba nyitva: a fejléc Vissza gombja oda visz vissza */
   async function open(opts) {
     opts = opts || {};
     if (!el) build();
     reset(null);
-    backTo = typeof opts.back === "function" ? opts.back : null;
+    backTo = typeof opts.back === "function" ? opts.back : null; direct = !!opts.direct;
     const lbl = el.querySelector(".zfb-back span"); if (lbl) { lbl.textContent = opts.backLabel || (/virtualis-seta/.test(location.pathname) ? "Vissza a sétához" : "Vissza az oldalra"); lbl.dataset.orig = lbl.textContent; }
     if (!histPushed) { try { history.pushState({ zfb: 1 }, "", location.href); histPushed = true; } catch (e) {} }
     el.hidden = false; requestAnimationFrame(() => el.classList.add("on"));
@@ -2235,7 +2259,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     document.body.appendChild(el);
     el.querySelector(".zfb-bg").addEventListener("click", () => close());
     el.querySelector(".zfb-x").addEventListener("click", () => close());
-    el.querySelector(".zfb-back").addEventListener("click", () => { if (st && st.step === 2) toLake(); else close(); });
+    el.querySelector(".zfb-back").addEventListener("click", () => { if (st && st.step === 2 && !direct) toLake(); else close(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && el && !el.hidden) close(); });
     el.addEventListener("click", onClick); el.addEventListener("submit", (e) => { e.preventDefault(); submit(); }); el.addEventListener("input", onInput); el.addEventListener("change", onInput);
   }
@@ -2333,7 +2357,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   /* ---------- megjelenítés ---------- */
   function render() {
     steps();
-    const bl = el.querySelector(".zfb-back span"); if (bl) { if (!bl.dataset.orig) bl.dataset.orig = bl.textContent; bl.textContent = st.step === 2 ? "Vissza a tóhoz" : bl.dataset.orig; }
+    const bl = el.querySelector(".zfb-back span"); if (bl) { if (!bl.dataset.orig) bl.dataset.orig = bl.textContent; bl.textContent = st.step === 2 && !direct ? "Vissza a tóhoz" : bl.dataset.orig; }
     if (st.step === 1) { paint(viewCal()); return lakeAnim(); }
     if (st.step === 2) return paint(viewAptCal());
     if (st.step === 2) return paint(viewApts());
@@ -2563,7 +2587,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const m0 = pd(cfg.today), m1 = pd(st.ci || cfg.today); st.month = Math.max(0, (m1.getFullYear() - m0.getFullYear()) * 12 + m1.getMonth() - m0.getMonth());
     st.step = 2; st.err = ""; render(); el.querySelector(".zfb-body").scrollTop = 0;
   }
-  function toLake() { st.pre = null; buildMap(); fixSel(); st.step = 1; render(); el.querySelector(".zfb-body").scrollTop = 0; }
+  function toLake() { direct = false; st.pre = null; buildMap(); fixSel(); st.step = 1; render(); el.querySelector(".zfb-body").scrollTop = 0; }
   function viewAptCal() {
     const a = apt(); if (!a) return viewCal();
     const base = pd(cfg.today), months = [], per = window.innerWidth < 760 ? 1 : 2;
@@ -2571,7 +2595,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const err = selError(), q = !err ? quote() : null, near = err && st.ci && st.co && /foglalt/.test(err) ? nearest() : null;
     return demoNote() + `<div class="zfb-cal-wrap">
       <div class="zfb-cal">
-        <button type="button" class="zfa-back" data-lake="1"><span>‹</span> Vissza a tóhoz – másik apartman</button>
+        ${direct ? `<button type="button" class="zfa-back" data-closeback="1"><span>‹</span> Vissza a képekhez</button>` : `<button type="button" class="zfa-back" data-lake="1"><span>‹</span> Vissza a tóhoz – másik apartman</button>`}
         <div class="zfa-ban" style="--ac:${a.color}"><div class="zfa-boat">${shipArt(a.id, a.color, "")}</div><div class="zfa-t"><small>Most itt vagy:</small><b>${esc(a.name)} apartman</b><span>${a.no}. apartman · legfeljebb ${a.cap} fő · ${money(a.price)}-tól / éj</span></div></div>
         <div class="zfa-sw"><span>Másik apartman:</span>${cfg.apartments.filter((x) => x.id !== a.id).map((x) => `<button type="button" data-goapt="${x.id}" style="--ac:${x.color}"><i>${x.no}</i>${esc(x.name)}</button>`).join("")}</div>
         <div class="zfb-mnav"><button type="button" data-m="-1" ${st.month <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><span>Válaszd ki az érkezés, majd a távozás napját</span><button type="button" data-m="1" ${st.month >= 12 ? "disabled" : ""} aria-label="Következő hónap">›</button></div>
@@ -2683,6 +2707,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     st.apt = st.apts[0] || null;
   }
   async function onClick(e) {
+    if (e.target.closest("[data-closeback]")) { close(); return; }
     const b = e.target.closest("button, [data-apt]"); if (!b || b.disabled) return;
     if (b.dataset.apt) return toggleApt(b.dataset.apt);
     if (b.dataset.allapt) { st.pre = null; buildMap(); return render(); }
