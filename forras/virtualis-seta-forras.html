@@ -1006,19 +1006,22 @@ body.walk-on .gm-dock { display: none; }
 .zfl.down .zfl-bub { animation: zflBub 2.6s ease-in infinite; } .zfl.down .zfl-bub.b2 { animation-delay: .9s; } .zfl.down .zfl-bub.b3 { animation-delay: 1.7s; }
 @keyframes zflBub { 0% { opacity: 0; transform: translateY(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(4px, -40px); } }
 /* a kéz a víz alól jön fel: a doboz a vízfelszínnél levágja a kart, a hullám rátakar */
-.zfl-hand { position: absolute; z-index: 1; left: 50%; top: 0; width: 124px; height: 104px; margin-left: -54px; overflow: hidden; pointer-events: none; }
-.zfl-hand svg { position: absolute; left: 20px; bottom: -46px; width: 84px; height: 140px; transform: translateY(150px); transition: transform 1.1s cubic-bezier(.45,0,.35,1) 0s; }
-.zfl.down .zfl-hand svg { transform: translateY(0); transition: transform 1.6s cubic-bezier(.2,.9,.3,1.05) 1.2s; }
-.zfl.down .zfl-hand .zh-arm { transform-box: view-box; transform-origin: 45px 150px; animation: zhWave 1.3s ease-in-out 2.8s infinite; }
-@keyframes zhWave { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(11deg); } }
-.zfl-splash { position: absolute; z-index: 3; left: 50%; top: 92px; width: 1px; height: 1px; margin-left: 4px; pointer-events: none; }
-.zfl-splash i { position: absolute; left: -16px; top: -4px; width: 32px; height: 8px; border-radius: 50%; border: 2px solid rgba(255,255,255,.9); opacity: 0; }
-.zfl.down .zfl-splash i { animation: zhRip 2s ease-out 1.6s infinite; } .zfl.down .zfl-splash i:nth-child(2) { animation-delay: 2.3s; } .zfl.down .zfl-splash i:nth-child(3) { animation-delay: 3s; }
+.zfl-hand { position: absolute; z-index: 1; left: 50%; top: 0; width: 120px; height: 104px; margin-left: -60px; overflow: hidden; pointer-events: none; }
+.zfl-hand svg { position: absolute; left: 38px; bottom: -37px; width: 66px; height: 124px; transform: translateY(132px); transition: transform 1.8s cubic-bezier(.45,0,.4,1) 0s; }
+.zfl.down .zfl-hand svg { transform: translateY(0); transition: transform 3.4s cubic-bezier(.25,.75,.35,1) 1.4s; }
+.zfl.down .zfl-hand .zh-arm { transform-box: view-box; transform-origin: 27px 112px; animation: zhWave 2.4s ease-in-out 4.9s infinite; }
+@keyframes zhWave { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(8deg); } }
+.zfl-splash { position: absolute; z-index: 3; left: 50%; top: 92px; width: 1px; height: 1px; margin-left: 0; pointer-events: none; }
+.zfl-splash i { position: absolute; left: -14px; top: -4px; width: 28px; height: 8px; border-radius: 50%; border: 2px solid rgba(255,255,255,.9); opacity: 0; }
+.zfl.down .zfl-splash i { animation: zhRip 2.6s ease-out 2s infinite; } .zfl.down .zfl-splash i:nth-child(2) { animation-delay: 2.9s; } .zfl.down .zfl-splash i:nth-child(3) { animation-delay: 3.8s; }
 @keyframes zhRip { 0% { opacity: .95; transform: scale(.5); } 100% { opacity: 0; transform: scale(2.4); } }
 /* sorrend: süllyedéskor előbb a hajó merül, aztán jön fel a kéz; felszabaduláskor előbb a kéz húzódik vissza, aztán emelkedik a hajó */
-.zfl .zfl-boat { transition-delay: .9s; } .zfl.down .zfl-boat { transition-delay: 0s; }
-.zfl.off { cursor: default; } .zfl.off .zfl-boat { transform: translateY(40px) rotate(10deg) scale(.9); opacity: .5; filter: grayscale(1); }
-@media (max-width: 760px) { .zfl-hand { width: 100px; height: 84px; margin-left: -20px; } .zfl-hand svg { left: 16px; width: 70px; height: 118px; bottom: -40px; } .zfl-splash { top: 80px; margin-left: 26px; } .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 100px; } .zfl-wave { top: 80px; } .zfl-bub { top: 92px; } .zfl.down .zfl-boat { transform: translateY(56px) rotate(-16deg) scale(.92); } }
+.zfl .zfl-boat { transition-delay: 1.5s; } .zfl.down .zfl-boat { transition-delay: 0s; }
+.zfl.off { cursor: default; } .zfl.off .zfl-boat { transition-delay: 0s; }
+/* Kadett: saját használatú, nem süllyed el, csak „Privát” jelölést kap */
+.zfl-priv { position: absolute; z-index: 4; right: 6px; top: 6px; transform: rotate(3deg); padding: 2px 8px; border-radius: 6px; background: linear-gradient(#f3e3c0, #e2c992); border: 1.5px solid #8a6630; box-shadow: 0 2px 5px rgba(0,30,60,.25); color: #5a3d14; font: 900 11px/1.2 Manrope, Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; pointer-events: none; }
+.zfl.off .zfl-st { color: #8a6630; }
+@media (max-width: 760px) { .zfl-hand { width: 100px; height: 84px; margin-left: -50px; } .zfl-hand svg { left: 32px; width: 54px; height: 101px; bottom: -30px; transform: translateY(116px); } .zfl-splash { top: 80px; } .zfl-priv { right: 4px; top: 4px; } .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 100px; } .zfl-wave { top: 80px; } .zfl-bub { top: 92px; } .zfl.down .zfl-boat { transform: translateY(56px) rotate(-16deg) scale(.92); } }
 @media (prefers-reduced-motion: reduce) { .zfl-bob, .zfl-wave, .zfl-lake::before, .zfl-bub { animation: none !important; } .zfl-boat { transition-duration: .01s; } }
 /* időpont-első foglalás: összegző sáv, nem szabad apartman, legközelebbi szabad időszak */
 .zfb-when { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 12px 16px; margin: 0 0 14px; border-radius: 16px; background: linear-gradient(135deg, #0b2f5e, #164377); color: #fff; box-shadow: 0 8px 20px rgba(11,47,94,.18); }
@@ -1727,7 +1730,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     return demoNote() + `<div class="zfb-when"><div><small>Érkezés</small><b>${huDate(st.ci, true)}</b><em>${esc(cfg.checkin)}-tól</em></div><div><small>Távozás</small><b>${huDate(st.co, true)}</b><em>${esc(cfg.checkout)}-ig</em></div><div><small>Vendégek</small><b>${st.adults} felnőtt${st.children ? ", " + st.children + " gyermek" : ""}</b><em>${diff(st.ci, st.co)} éjszaka</em></div><button type="button" class="zfb-link" data-go="1">módosítás</button></div>
       <h2 class="zfb-h">${nFree ? `${nFree} apartman szabad erre az időszakra` : "Erre az időszakra nincs szabad apartman"}</h2>
       <p class="zfb-multi-tip">${fit ? "Válaszd ki, melyikben laknátok." : nFree ? `${need} főhöz válassz több apartmant – egy foglalásban, ugyanarra az időszakra.` : ""} Nagyobb társasággal több apartmant is lefoglalhatsz egyszerre.</p>
-      <div class="zfb-apts">${list.map(card).join("")}${cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfb-apt zfb-apt-off" style="--ac:#f08a24" aria-disabled="true" title="A Kadett apartman nem foglalható"><span class="zfb-no">6</span><b>Kadett</b><small>legfeljebb 4 fő</small><em class="zfb-full">Foglalt</em><i>Nem foglalható</i>${boatArt("kadett", "#f08a24")}</div>`}</div>
+      <div class="zfb-apts">${list.map(card).join("")}${cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfb-apt zfb-apt-off" style="--ac:#f08a24" aria-disabled="true" title="A Kadett saját használatú, nem foglalható"><span class="zfb-no">6</span><b>Kadett</b><small>legfeljebb 4 fő</small><em class="zfb-full">Privát</em><i>Nem foglalható</i>${boatArt("kadett", "#f08a24")}</div>`}</div>
       <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · ${cap} férőhely / ${need} fő${err ? `<br><small class="zfb-selerr">${esc(err)}</small>` : ""}` : "Válassz egy vagy több szabad apartmant"}</span><button type="button" class="zfb-btn" data-next="3" ${err ? "disabled" : ""}>Tovább az adatokhoz ›</button></div>
       <p class="zfb-fine">Az árak az idegenforgalmi adót nem tartalmazzák (18 év felett ${money(cfg.tax)} / fő / éj) · a teljes összeget a következő lépésben látod.</p>
       <button type="button" class="zfb-apt-link" data-owner="1">Tulajdonosi belépés ›</button>`;
@@ -1847,20 +1850,36 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       ${no ? `<g transform="translate(18 24)"><circle r="11" fill="#fff" stroke="${c}" stroke-width="2.4"/><text y="5" text-anchor="middle" font-size="14" font-weight="900" font-family="Manrope, sans-serif" fill="${c}">${no}</text></g>` : ""}
       <ellipse cx="82" cy="106" rx="66" ry="4.5" fill="rgba(7,29,56,.2)"/></svg>`;
   }
-  /* elsüllyedt apartman: egyetlen emberi kéz nyúl fel a víz alól, a kezében zászló „FOGLALT” felirattal, és lengeti */
-  const HAND = `<span class="zfl-hand"><svg viewBox="0 0 90 150" aria-hidden="true"><defs>
-      <linearGradient id="zhSkin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9a37a"/><stop offset=".45" stop-color="#f6cfab"/><stop offset="1" stop-color="#c98f66"/></linearGradient>
-      <linearGradient id="zhWet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#2b7aaa" stop-opacity=".45"/></linearGradient></defs>
+  /* elsüllyedt apartman: egyetlen emberi kéz nyúl fel lassan a víz alól, ökölben tartja a zászlórudat, a zászlón „FOGLALT”, és lengeti */
+  const HAND = `<span class="zfl-hand"><svg viewBox="0 0 80 150" aria-hidden="true"><defs>
+      <linearGradient id="zhSkin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c98a62"/><stop offset=".35" stop-color="#efc29d"/><stop offset=".62" stop-color="#f7d3b3"/><stop offset="1" stop-color="#cf9670"/></linearGradient>
+      <linearGradient id="zhArm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bf8059"/><stop offset=".4" stop-color="#ebbb95"/><stop offset=".7" stop-color="#f2c8a5"/><stop offset="1" stop-color="#c18560"/></linearGradient>
+      <linearGradient id="zhWet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".55" stop-color="#3d8fbf" stop-opacity=".12"/><stop offset="1" stop-color="#1f6f9e" stop-opacity=".5"/></linearGradient>
+      <radialGradient id="zhNail" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff3ee"/><stop offset="1" stop-color="#e9b5a4"/></radialGradient></defs>
     <g class="zh-arm">
-      <path d="M44 120 V6" stroke="#6b4426" stroke-width="3" stroke-linecap="round"/><circle cx="44" cy="5" r="3.2" fill="#e0b85c" stroke="#8a6630" stroke-width=".8"/>
-      <g class="zh-flag"><path d="M46 8 Q62 4 86 9 L86 43 Q64 38 46 42 Z" fill="#d62828" stroke="#9e1b1b" stroke-width="1"><animate attributeName="d" values="M46 8 Q62 4 86 9 L86 43 Q64 38 46 42 Z;M46 8 Q64 13 86 7 L86 41 Q62 47 46 42 Z;M46 8 Q62 4 86 9 L86 43 Q64 38 46 42 Z" dur=".9s" repeatCount="indefinite"/></path>
-        <g><animateTransform attributeName="transform" type="translate" values="0 0;0 1.6;0 0" dur=".9s" repeatCount="indefinite"/><text x="65" y="28" text-anchor="middle" font-family="Manrope, Arial, sans-serif" font-size="8.4" font-weight="900" fill="#fff" letter-spacing=".2">FOGLALT</text><path d="M52 33 H80" stroke="#fff" stroke-width="1" opacity=".6"/></g></g>
-      <path d="M33 150 C33 128 34 112 36 98 Q37 90 37 86 L53 86 Q53 92 54 98 C56 112 57 128 57 150 Z" fill="url(#zhSkin)"/>
-      <path d="M33 150 C33 128 34 112 36 98 Q37 90 37 86 L53 86 Q53 92 54 98 C56 112 57 128 57 150 Z" fill="url(#zhWet)"/>
-      <path d="M36 88 Q35 74 38 68 L52 68 Q55 74 54 88 Z" fill="url(#zhSkin)"/>
-      ${[0, 1, 2, 3].map((k) => `<rect x="${35.5 + (k === 0 || k === 3 ? 1 : 0)}" y="${66 + k * 5.2}" width="${19 - (k === 3 ? 2 : 0)}" height="5.6" rx="2.8" fill="url(#zhSkin)" stroke="#b77d55" stroke-width=".7"/><path d="M${51 - (k === 3 ? 2 : 0)} ${67 + k * 5.2} q2.4 1.8 0 3.6" stroke="#b77d55" stroke-width=".6" fill="none"/>`).join("")}
-      <path d="M37 69 Q40 60 47 58 Q51 57.5 51 61 Q50 63.5 46 64.5 Q42 66 40 70 Z" fill="url(#zhSkin)" stroke="#b77d55" stroke-width=".7"/><path d="M47.5 59.2 q2 .4 2.4 2" stroke="#fff" stroke-width=".7" opacity=".6" fill="none"/>
-      ${[0, 1, 2].map((k) => `<circle cx="${41 + k * 5}" cy="${95 + k * 9}" r=".9" fill="#fff" opacity=".7"><animate attributeName="cy" values="${95 + k * 9};${120 + k * 6}" dur="${1.4 + k * .3}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="${1.4 + k * .3}s" repeatCount="indefinite"/></circle>`).join("")}
+      <path d="M27 92 V7" stroke="#5e3b20" stroke-width="2.6" stroke-linecap="round"/><path d="M26.2 92 V8" stroke="#a87a4e" stroke-width=".7" opacity=".7"/>
+      <circle cx="27" cy="5.4" r="2.8" fill="#e6bf62" stroke="#8a6630" stroke-width=".7"/>
+      <path d="M28.4 8 Q48 2 78 9 L78 41 Q50 35 28.4 40 Z" fill="#d62828" stroke="#9e1b1b" stroke-width=".9"><animate attributeName="d" values="M28.4 8 Q48 2 78 9 L78 41 Q50 35 28.4 40 Z;M28.4 8 Q52 14 78 6 L78 38 Q48 46 28.4 40 Z;M28.4 8 Q48 2 78 9 L78 41 Q50 35 28.4 40 Z" dur="1.6s" repeatCount="indefinite"/></path>
+      <g><animateTransform attributeName="transform" type="translate" values="0 0;0 1.6;0 0" dur="1.6s" repeatCount="indefinite"/><text x="52.5" y="27.5" text-anchor="middle" textLength="41" lengthAdjust="spacingAndGlyphs" font-family="Manrope, Arial, sans-serif" font-size="10" font-weight="900" fill="#fff">FOGLALT</text></g>
+      <g transform="translate(27 80) scale(.8) translate(-27 -80)">
+        <path d="M17.5 78 C17.5 88 19 93 19.5 100 C20 118 18 140 17 172 L41 172 C40 140 38.5 118 38.5 100 C38.5 93 39.5 88 39.5 78 Z" fill="url(#zhArm)"/>
+        <path d="M21 84 Q29 86.5 37 84 M21.5 87.5 Q29 89.5 36.5 87.5" stroke="#b37752" stroke-width=".6" fill="none" opacity=".7"/>
+        <path d="M33.5 96 C34.5 108 34 122 33 140" stroke="#d9a47e" stroke-width="1.4" fill="none" opacity=".6"/><path d="M23 98 C22.5 112 23 128 22 146" stroke="#fff" stroke-width=".9" fill="none" opacity=".25"/>
+        <path d="M17 60 C16 53 20 50 25 50 L35 50 C39 50 41.5 52.5 41.5 56 L41.5 74 C41.5 79.5 37.5 82 33.5 82 L24 82.5 C19.5 82.5 17.5 79 17.5 75 Z" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
+        <rect x="27" y="50.3" width="16.2" height="7.6" rx="3.6" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
+        <rect x="27" y="57.3" width="17" height="7.4" rx="3.6" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
+        <rect x="27" y="64.1" width="16.2" height="6.9" rx="3.4" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
+        <rect x="27" y="70.4" width="13.8" height="6.2" rx="3.1" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
+        <path d="M36 51.5 q1.6 3 0 5.6 M36.8 58.5 q1.6 3 0 5.4 M36 65.2 q1.5 2.8 0 4.9 M34.4 71.4 q1.3 2.5 0 4.3" stroke="#b07550" stroke-width=".55" fill="none"/>
+        <path d="M40.5 52.2 q1.6 1.8 .2 4 M41.4 59 q1.6 1.8 .2 4 M40.6 65.8 q1.4 1.7 .2 3.6 M38.4 71.8 q1.2 1.6 .2 3.2" stroke="#fff" stroke-width=".6" fill="none" opacity=".55"/>
+        <path d="M17 73 C15.8 64.5 19.5 58.3 26.5 55.6 L34.6 53.3 C38.4 52.6 40.2 54.8 39.3 57.4 C38.5 59.6 36 60.3 33.3 60.8 L27.6 62.6 C24.6 64 23.4 67.4 23.6 71.6 Z" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
+        <path d="M27.8 57.2 q2.6 .6 4.6 2.6" stroke="#b07550" stroke-width=".55" fill="none"/>
+        <ellipse cx="36.6" cy="55.9" rx="2.5" ry="1.7" transform="rotate(-16 36.6 55.9)" fill="url(#zhNail)" stroke="#c98f7c" stroke-width=".4"/>
+        <path d="M18.6 66 Q20 61 24 58.4" stroke="#fff" stroke-width=".9" fill="none" opacity=".45" stroke-linecap="round"/>
+        <path d="M17.5 76 C19 80 22 81.6 25 81.8" stroke="#a96f4a" stroke-width=".55" fill="none" opacity=".7"/>
+        <path d="M17.5 60 C17 120 17 140 17 172 L41 172 C41 140 41.5 120 41.5 56 Z" fill="url(#zhWet)" opacity=".85"/>
+        ${[0, 1, 2].map((k) => `<ellipse cx="${22 + k * 6.5}" cy="${84 + k * 7}" rx=".8" ry="1.2" fill="#fff" opacity=".75"><animate attributeName="cy" values="${84 + k * 7};${112 + k * 4}" dur="${2 + k * .4}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".85;0" dur="${2 + k * .4}s" repeatCount="indefinite"/></ellipse>`).join("")}
+      </g>
     </g></svg></span><span class="zfl-splash"><i></i><i></i><i></i></span>`;
   function floatSvg(a) {
     const c = a.color, id = "zg" + (a.id || a.no);
@@ -1884,7 +1903,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
         ${!s2.down && st.ci && st.co ? `<span class="zfl-pick" data-pick="1" role="checkbox" aria-checked="${on}" aria-label="${esc(a.name)} kijelölése">${on ? "✓" : ""}</span>` : ""}<span class="zfl-boat"><span class="zfl-bob">${shipArt(a.id, a.color, a.no)}</span></span><i class="zfl-bub"></i><i class="zfl-bub b2"></i><i class="zfl-bub b3"></i><span class="zfl-wave"></span>${HAND}
         <span class="zfl-lab"><span class="zfl-nm">${esc(a.name)}</span><span class="zfl-cap">legfeljebb ${a.cap} fő</span><span class="zfl-pr">${price}</span><span class="zfl-st">${on ? "✓ Kiválasztva" : s2.down ? esc(s2.why) + " · naptár ›" : dated ? (s2.why ? esc(s2.why) : "Szabad · belépés ›") : "Naptár, belépés ›"}</span></span>
       </button>`; }).join("");
-    const kad = cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfl down off" style="--ac:#f08a24"><span class="zfl-boat"><span class="zfl-bob">${shipArt("kadett", "#f08a24", 6)}</span></span><span class="zfl-wave"></span>${HAND}<span class="zfl-lab"><span class="zfl-nm">Kadett</span><span class="zfl-cap">legfeljebb 4 fő</span><span class="zfl-st">Nem kiadó</span></span></div>`;
+    const kad = cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfl off" style="--ac:#f08a24" title="A Kadett saját használatú, nem foglalható"><span class="zfl-priv">Privát</span><span class="zfl-boat"><span class="zfl-bob">${shipArt("kadett", "#f08a24", 6)}</span></span><span class="zfl-wave"></span><span class="zfl-lab"><span class="zfl-nm">Kadett</span><span class="zfl-cap">legfeljebb 4 fő</span><span class="zfl-st">Privát · nem foglalható</span></span></div>`;
     return `<section class="zfl-lake"><h3 class="zfl-h">Apartmanjaink a tavon</h3><p class="zfl-tip">${dated ? "A felszínen maradtak szabadok erre az időszakra. Koppints egy hajóra, és belépsz az apartmanba; a kis karikával többet is kijelölhetsz egy foglaláshoz." : "Koppints egy hajóra: belépsz az apartmanba, és látod a saját naptárát, szabad napjait."}</p>
       <div class="zfl-grid">${flo}${kad}</div></section>
       <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · ${capTotal()} férőhely / ${need()} fő${err ? `<br><small class="zfb-selerr">${esc(err)}</small>` : ""}` : dated ? "Válassz egy vagy több apartmant a tavon" : "Előbb add meg az időpontot"}</span><button type="button" class="zfb-btn" data-next="3" ${!sel.length || err ? "disabled" : ""}>Tovább az adatokhoz ›</button></div>
