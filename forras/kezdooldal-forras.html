@@ -1138,33 +1138,35 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   const HERO_SCENES = [[0, "Balatoni panoráma"], [5, "Zephyr Apartmanház"], [11, "Teraszos apartmanok"], [16, "Grill- és bográcsozóterasz"],
     [19.6, "Zamárdi kikötő"], [25.3, "Vitorlázás a Balatonon"], [31.3, "A zamárdi part"], [38.3, "Naplemente a Balatonon"], [43.8, "Balatoni panoráma"]];
 
-  const G = (id, n) => ({ src: "img/galeria/" + id + ".jpg", th: "img/galeria/" + id + "-k.jpg", cap: n, scene: id });
+  /* képek: id-xl.jpg (2560 px, nagyítva) · id.jpg (1280 px, kártya) · id-k.jpg (480×320, bélyegkép) – a mesterfotókból (Névtelen meghajtó, ZEPHIR KÉPEK TELJES) */
+  const G = (id, n, sc) => ({ src: "img/galeria/" + id + "-xl.jpg", th: "img/galeria/" + id + "-k.jpg", cap: n, scene: sc === undefined ? id : sc });
   const APTS = [
     { id: "korvett", no: 1, name: "Korvett", type: "családi apartman", cap: 4, where: "első, földszint", color: "#e2483d", cover: "korvett-nappali", entry: "korvett-eloszoba",
-      pics: [["korvett-nappali", "Nappali"], ["korvett-konyha", "Konyha"], ["korvett-halo", "Hálószoba"], ["korvett-halo2", "Hálószoba · ablak"], ["korvett-terasz", "Terasz"], ["korvett-eloszoba", "Előszoba"], ["korvett-furdo", "Fürdőszoba"]] },
-    { id: "dingi", no: 2, name: "Dingi", type: "stúdió apartman", cap: 2, where: "középső, földszint", color: "#3fb37f", cover: "dingi-ulosarok", entry: "dingi-eloter",
-      pics: [["dingi-ulosarok", "Szoba · ülősarok"], ["dingi-konyha", "Szoba · konyha"], ["dingi-ablak", "Szoba · ablak"], ["dingi-eloter", "Előtér"], ["dingi-furdo", "Fürdőszoba"]] },
+      pics: [["korvett-nappali", "Nappali", "korvett-nappali"], ["korvett-nappali-etkezo", "Nappali és étkező", "korvett-nappali"], ["korvett-konyha", "Konyha és étkező", "korvett-konyha"], ["korvett-konyhasarok", "Konyhasarok", "korvett-konyha"], ["korvett-halo", "Hálószoba", "korvett-halo"], ["korvett-halo-szekreny", "Hálószoba · gardróbszekrény", "korvett-halo2"], ["korvett-nappali-halo", "Nappali · a hálószoba felé", "korvett-nappali"], ["korvett-furdo", "Fürdőszoba", "korvett-furdo"], ["korvett-terasz", "Saját terasz", "korvett-terasz"]] },
+    { id: "dingi", no: 2, name: "Dingi", type: "stúdió apartman", cap: 2, where: "középső, földszint", color: "#3fb37f", cover: "dingi-szoba", entry: "dingi-eloter",
+      pics: [["dingi-szoba", "Szoba · kanapé", "dingi-ulosarok"], ["dingi-szoba-agy", "Szoba · kinyitott ággyal", "dingi-ulosarok"], ["dingi-szoba-fotel", "Szoba · ágy és fotel", "dingi-ablak"], ["dingi-szekreny", "Szoba · szekrény és asztalka", "dingi-ablak"], ["dingi-konyha", "Konyhasarok", "dingi-konyha"], ["dingi-reggelizo", "Reggelizősarok", "dingi-konyha"], ["dingi-terasz", "Fedett terasz", "fedett-bejaro"], ["dingi-eloter", "Előtér", "dingi-eloter"], ["dingi-furdo", "Fürdőszoba", "dingi-furdo"]] },
     { id: "fregatt", no: 3, name: "Fregatt", type: "családi apartman", cap: 4, where: "első, emelet", color: "#3d8fe2", cover: "fregatt-nappali", entry: "fregatt-bejarat",
-      pics: [["fregatt-nappali", "Nappali"], ["fregatt-konyha", "Konyha"], ["fregatt-halo", "Hálószoba"], ["fregatt-halo2", "Hálószoba · ágy"], ["fregatt-erkely", "Erkély"], ["fregatt-erkely2", "Erkély · kilátás"], ["fregatt-erkely-halo", "Erkély · hálószoba"], ["fregatt-bejarat", "Bejárat"], ["fregatt-eloszoba", "Előszoba"], ["fregatt-halo-ajto", "Hálószoba ajtaja"], ["fregatt-furdo", "Fürdőszoba"]] },
-    { id: "kaloz", no: 4, name: "Kalóz", type: "stúdió apartman", cap: 2, where: "középső, emelet", color: "#9b6be2", cover: "kaloz-eloter", entry: "kaloz-bejarat",
-      pics: [["kaloz-eloter", "Előtér"], ["kaloz-szoba", "Szoba · ágy"], ["kaloz-konyha", "Szoba · konyha"], ["kaloz-asztal", "Szoba · szekrény"], ["kaloz-bejarat", "Bejárat"], ["kaloz-furdo", "Fürdőszoba"]] },
-    { id: "schooner", no: 5, name: "Schooner", type: "családi apartman", cap: 4, where: "hátsó, földszint", color: "#2bb3c0", cover: "schooner-nappali", entry: "schooner-eloter",
-      pics: [["schooner-nappali", "Konyha"], ["schooner-nappali2", "Szoba · étkező"], ["schooner-konyha", "Szoba · ágy"], ["schooner-halo", "Hálószoba"], ["schooner-halo2", "Hálószoba · ajtó"], ["schooner-haloajto", "Hálószoba ajtaja"], ["schooner-terasz2", "Terasz"], ["schooner-eloter", "Előtér · konyha"], ["schooner-furdo", "Fürdőszoba"]] },
-    { id: "kadett", no: 6, name: "Kadett", type: "családi apartman", cap: 4, where: "hátsó, emelet", color: "#f08a24", off: true, pics: [] }
+      pics: [["fregatt-nappali", "Nappali", "fregatt-nappali"], ["fregatt-nappali2", "Nappali · kanapé", "fregatt-nappali"], ["fregatt-etkezo", "Étkező", "fregatt-konyha"], ["fregatt-konyha", "Konyha és étkező", "fregatt-konyha"], ["fregatt-halo", "Hálószoba", "fregatt-halo"], ["fregatt-halo-szekreny", "Hálószoba · szekrény", "fregatt-halo2"], ["fregatt-halo-agy", "Hálószoba · franciaágy", "fregatt-halo"], ["fregatt-erkely", "Erkély a hálószobából", "fregatt-erkely-halo"], ["fregatt-furdo", "Fürdőszoba", "fregatt-furdo"]] },
+    { id: "kaloz", no: 4, name: "Kalóz", type: "stúdió apartman", cap: 2, where: "középső, emelet", color: "#9b6be2", cover: "kaloz-szoba", entry: "kaloz-bejarat",
+      pics: [["kaloz-szoba", "Szoba · kanapé", "kaloz-szoba"], ["kaloz-ulosarok", "Szoba · ülősarok", "kaloz-szoba"], ["kaloz-szekreny", "Szoba · szekrény és asztal", "kaloz-asztal"], ["kaloz-agy", "Szoba · kinyitott ággyal", "kaloz-szoba"], ["kaloz-konyha", "Konyhasarok", "kaloz-konyha"], ["kaloz-furdo", "Fürdőszoba", "kaloz-furdo"], ["kaloz-bejarat", "Bejárat · fedett terasz", "kaloz-bejarat"], ["kaloz-terasz", "Emeleti terasz · kilátás a kertre", "emeleti-terasz"]] },
+    { id: "schooner", no: 5, name: "Schooner", type: "családi apartman", cap: 4, where: "hátsó, földszint", color: "#2bb3c0", cover: "schooner-szoba", entry: "schooner-eloter",
+      pics: [["schooner-szoba", "Nappali · kanapé", "schooner-nappali2"], ["schooner-konyhasarok", "Nappali és konyhasarok", "schooner-nappali"], ["schooner-konyha", "Konyha", "schooner-konyha"], ["schooner-etkezo", "Étkező", "schooner-nappali2"], ["schooner-halo", "Hálószoba", "schooner-halo"], ["schooner-halo2", "Hálószoba · Balaton-térkép", "schooner-halo2"], ["schooner-szekreny", "Tolóajtós gardróbszekrény", "schooner-haloajto"], ["schooner-furdo", "Fürdőszoba", "schooner-furdo"], ["schooner-terasz", "Fedett terasz", "schooner-terasz2"]] },
+    { id: "kadett", no: 6, name: "Kadett", type: "családi apartman", cap: 4, where: "hátsó, emelet", color: "#f08a24", off: true, pics: [["kadett-nappali", "Nappali", ""], ["kadett-nappali-etkezo", "Nappali és étkező", ""], ["kadett-konyha", "Konyha és étkező", ""], ["kadett-konyhasarok", "Konyhasarok", ""], ["kadett-halo", "Hálószoba", ""], ["kadett-halo-szekreny", "Hálószoba · szekrény", ""], ["kadett-paravan", "Paravánnal leválasztott hálórész", ""], ["kadett-terasz", "Terasz", ""], ["kadett-terasz2", "Terasz · kert", ""]] }
   ];
-  APTS.forEach((a) => (a.pics = a.pics.map(([id, n]) => G(id, n))));
+  APTS.forEach((a) => (a.pics = a.pics.map(([id, n, sc]) => G(id, n, sc))));
 
   const S = (f, n, scene) => ({ src: "img/szolg/" + f + ".jpg", th: "img/szolg/" + f + "-k.jpg", cap: n, scene });
+  const SX = (f, n, scene) => ({ src: "img/szolg/" + f + "-xl.jpg", th: "img/szolg/" + f + "-k.jpg", cap: n, scene });   /* mesterfotók (2560 px) */
   /* Szolgáltatások – ide bármikor tehetsz új képet (img/szolg/…) vagy videót ({ video: "video/sup.mp4", cap: "…" }) */
   const SERVICES = [
     { id: "kerekpar", title: "Kerékpár", sub: "vendégeinknek ingyenesen", ico: "bike", free: 1, scene: "biciklik",
       text: "Kerékpárjainkat díjmentesen használhatod. Tekerj le a strandra, indulj el a Balaton-parti kerékpárúton a szomszédos települések felé, vagy kerekezz fel a Kőhegyi kilátóhoz.",
       list: ["Felnőtt kerékpárok a ház melletti kertben", "Kompresszor a gumik felfújásához", "Pár perc alatt elérheted a kerékpárutat"],
-      media: [S("kerekpar0", "Kerékpárok a ház előtt", "biciklik"), S("kerekpar1", "Kerékpárok a kertben", "sup"), S("kerekpar2", "Kerékpárok", "sup"), S("kerekpar3", "Kerti tároló és hűtő", "biciklik")] },
+      media: [S("kerekpar0", "Kerékpárok a ház előtt", "biciklik"), SX("szolg-kerekpar", "Kerékpárok és SUP-ok a kertben", "biciklik"), S("kerekpar1", "Kerékpárok a kertben", "sup"), S("kerekpar2", "Kerékpárok", "sup"), S("kerekpar3", "Kerti tároló és hűtő", "biciklik")] },
     { id: "sup", title: "SUP", sub: "állj fel a víz tetejére", ico: "sup", free: 1, scene: "sup",
       text: "SUP-deszkáinkat lapáttal együtt, díjmentesen használhatod. A napozóstégről könnyen vízre szállhatsz. A nádas és a csendes reggelek különösen szépek a vízről nézve.",
       list: ["SUP-deszkák lapáttal", "Mentőmellényt minden vendégünknek biztosítunk", "Indulás előtt ellenőrizd az aktuális viharjelzést"],
-      media: [S("sup1", "SUP-deszkák", "sup"), S("sup2", "A stég a vízről", "steg-viz"), S("strand1", "A strand füves partja", "strand-part")] },
+      media: [SX("szolg-sup", "SUP-deszkák és kerékpárok", "sup"), SX("szolg-sup-naplemente", "SUP naplementében", "steg-viz"), S("sup1", "SUP-deszkák", "sup"), S("sup2", "A stég a vízről", "steg-viz"), S("strand1", "A strand füves partja", "strand-part")] },
     { id: "grill", title: "Grill & bográcsozás", sub: "közös esték a kertben", ico: "grill", scene: "kert",
       text: "A fedett kerti grillezőnél együtt készülhet a vacsora. Kérésre bográcsot, grilltárcsát és a grillezéshez szükséges felszerelést is adunk, faszénnel és begyújtóval együtt.",
       list: ["Fedett grillező és kerti asztalok", "Bogrács és grilltárcsa kérésre", "Faszén és begyújtó – kérjük, használat után pótold", "Kerti hűtő az italoknak"],
@@ -1172,7 +1174,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     { id: "steg", title: "Privát napozóstég", sub: "a saját kis Balatonunk", ico: "steg", free: 1, scene: "steg",
       text: "A Gáspár András utcán néhány perc sétával éred el a kis strandot és a nádas között található napozóstéget. Reggeli kávé a víz fölött, napozás, esti fények – itt mindegyiknek megvan a maga ideje.",
       list: ["Saját stég a Balatonon", "Füves partú kis strand", "Lépcső a vízbe a nádas között"],
-      media: [S("steg1", "Napozóstég", "steg"), S("steg2", "Napozóstég a vízről", "steg-viz"), S("steg3", "Fürdés a nádas között", "strand-viz")] }
+      media: [SX("szolg-steg-naplemente", "Naplemente a stégről", "steg"), S("steg1", "Napozóstég", "steg"), SX("szolg-naplemente2", "Esti fények a Balaton fölött", "steg-viz"), SX("szolg-naplemente3", "Naplemente a zamárdi parton", "strand-viz"), S("steg2", "Napozóstég a vízről", "steg-viz"), S("steg3", "Fürdés a nádas között", "strand-viz")] }
   ];
   const SVC_ICO = {
     bike: '<svg class="ai-bike" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path class="mv" d="M2 18h6M1 24h5M3 30h4" stroke-width="1.6" opacity=".5"/><g class="bob"><g class="whl"><circle cx="11" cy="32" r="8"/><path d="M11 24v16M3 32h16M5.3 26.3l11.4 11.4M16.7 26.3L5.3 37.7" stroke-width="1"/></g><g class="whl"><circle cx="37" cy="32" r="8"/><path d="M37 24v16M29 32h16M31.3 26.3l11.4 11.4M42.7 26.3L31.3 37.7" stroke-width="1"/></g><path d="M11 32l8-14h13l5 14M19 18l5 14h-4M32 18l-2-5h-4M17 15h5"/><g class="crk"><path d="M24 32l3 4M24 32l-3-4" stroke-width="2.2"/></g><circle cx="24" cy="32" r="2" fill="currentColor"/><path d="M34 13h5l-1 4h-4z" fill="currentColor" stroke-width="1.6"/></g></svg>',
