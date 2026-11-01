@@ -483,7 +483,7 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
     if (!A.day) A.day = d.today;
     if (!A.month) A.month = d.today.slice(0, 7);
   }
-  async function loadEvents() { A.events = (await api("events_all")).events; }
+  async function loadEvents() { const j = await api("events_all"); A.events = j.events; A.feeds = j.feeds || []; A.evUpd = j.updated || ""; }
 
   /* ---------- bemutató mód (a weboldal előnézetéhez, szerver nélkül) ---------- */
   const Demo = (() => {
@@ -510,7 +510,7 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
       const w = (wday) => { let d = t; while (pd(d).getDay() !== wday) d = addD(d, 1); return d; };
       D = {
         today: t, warnings: [], initial: false,
-        settings: { apartments: apts, seasons, price_rules: [], tax: 600, deposit_pct: 30, min_nights: 2, max_nights: 30, lead_days: 1, horizon_days: 400, season_from: "05-15", season_to: "10-15", weekend_pct: 0, checkin: "14:00", checkout: "10:00", phone: "+36 20 536 3120", email: "kucserabalazs79@gmail.com", notify_email: "kucserabalazs79@gmail.com", address: "8621 Zamárdi, Gáspár András utca 58.", bank_holder: "", bank_name: "", bank_account: "", bank_iban: "", bank_swift: "", bank_address: "", szep_otp: "SZK/2022/002754", szep_mbh: "S14598", szep_kh: "84059114", ntak: "MA22033593 / MA22033128", pending_days: 3, pay_days: 5, rules_url: "", privacy_url: "", prices_checked: 1, ical: {}, ical_key: "demo", sync_log: {}, remind_hour: 18, remind_waste: 1, guest_mode: "day", week_day: 0, remind_email: "" },
+        settings: { apartments: apts, seasons, price_rules: [], tax: 600, deposit_pct: 30, min_nights: 2, max_nights: 30, lead_days: 1, horizon_days: 400, season_from: "05-15", season_to: "10-15", weekend_pct: 0, checkin: "14:00", checkout: "10:00", phone: "+36 20 536 3120", email: "kucserabalazs79@gmail.com", notify_email: "kucserabalazs79@gmail.com", address: "8621 Zamárdi, Gáspár András utca 58.", bank_holder: "", bank_name: "", bank_account: "", bank_iban: "", bank_swift: "", bank_address: "", szep_otp: "SZK/2022/002754", szep_mbh: "S14598", szep_kh: "84059114", ntak: "MA22033593 / MA22033128", pending_days: 3, pay_days: 5, rules_url: "", privacy_url: "", prices_checked: 1, ical: {}, ical_key: "demo", sync_log: {}, remind_hour: 18, remind_waste: 1, guest_mode: "day", week_day: 0, remind_email: "", guest_ev: 1, guest_ev_days: 7, guest_ev_approved: 0, guest_ev_bike_km: 25, ferry_url: "https://bahart.hu/" },
         bookings: B, ical_links: {},
         waste: [
           { id: "a1", name: "Kommunális hulladék", kind: "weekly", weekday: pd(addD(t, 1)).getDay(), nth: 1, start: t, season_from: "", season_to: "", dates: [], skip: [], note: "Reggel 6 óráig legyen kint.", color: "#5b6b7a", active: 1 },
@@ -551,6 +551,8 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
         case "waste_save": D.waste = b.types.map((t, i) => ({ ...t, id: t.id || "w" + Date.now() + i, dates: t.dates || [], skip: t.skip || [], active: t.active ? 1 : 0 })); return { ok: true, message: "Hulladéknaptár elmentve (bemutató).", ...wp() };
         case "events_all": return { events: D.events };
         case "events_save": D.events = b.events; return { ok: true, message: D.events.length + " program elmentve (bemutató).", events: D.events };
+        case "ev_feeds_save": D.feeds = (b.feeds || []).map((f, i) => ({ ...f, id: f.id || "f" + Date.now() + i })); return { ok: true, message: D.feeds.length + " programforrás elmentve (bemutató).", feeds: D.feeds };
+        case "ev_import": return { ok: true, message: "Bemutató módban a források nem frissülnek.", feeds: D.feeds || [], events: D.events, updated: "" };
         case "save_settings": Object.assign(D.settings, b.settings); return { ok: true, message: "Beállítások elmentve (bemutató).", settings: D.settings };
         case "action": {
           const i = D.bookings.findIndex((x) => x.id === b.id); const x = D.bookings[i];
@@ -562,7 +564,7 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
         }
         case "manual": { const x = { id: Math.random().toString(16).slice(2, 10), ref: "ZK-DEMO", apt: b.apt, checkin: b.checkin, checkout: b.checkout, nights: nightsOf(b.checkin, b.checkout), adults: b.adults, children: b.children, name: b.name, phone: b.phone, email: b.email, total: 0, deposit: 0, created: Date.now() / 1000, source: "manual", status: b.kind === "paid" ? "paid" : "block", label: b.label || (b.kind === "paid" ? "" : "Zárolva"), admin_note: b.admin_note, log: [] }; D.bookings.push(x); return { ok: true, message: "Rögzítve (bemutató).", booking: x }; }
         case "sync": return { ok: true, message: "Bemutató módban nincs naptárszinkron." };
-        case "test_mail": case "remind_test": return { ok: true, message: "Bemutató módban nem megy ki e-mail." };
+        case "test_mail": case "remind_test": case "guest_ev_send": return { ok: true, message: "Bemutató módban nem megy ki e-mail." };
         case "password": return { ok: true, message: "Bemutató módban a jelszó nem változik." };
         case "logout": return { ok: true };
       }
@@ -904,16 +906,19 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
         ${kv("Vendég üzenete", esc(b.note))}
         ${kv("Csoport", b.group ? esc(b.group) + ` (${b.group_size} apartman)` : "")}
         ${kv("Azonosító", esc(b.ref))}
+        ${!ext && b.email && ["approved", "paid"].includes(st) ? kv("Programlevél", b.ev_optout ? "leiratkozott" : b.ev_sent ? "elküldve: " + esc(huS(b.ev_sent)) : "az érkezés előtti héten magától megy") : ""}
         ${b.conflict ? kv("⚠ Ütközés", esc(b.conflict)) : ""}
       </dl>
       ${b.phone || b.email ? `<div class="big-acts">${b.phone ? `<a class="btn ok" href="tel:${tel(b.phone)}">${ico("phone")}Hívás</a>` : ""}${b.email ? `<a class="btn line" href="mailto:${esc(b.email)}?subject=${encodeURIComponent("Zephyr Apartmanház – " + b.ref)}">${ico("mail")}E-mail</a>` : ""}${b.phone ? `<a class="btn line" href="sms:${tel(b.phone)}">${ico("mail")}SMS</a>` : ""}</div>` : ""}
       ${ext ? `<div class="help">Ez a foglalás a(z) ${esc(SRC[b.source])} oldaláról érkezett naptárszinkronnal – módosítani ott lehet. Itt megjegyzést írhatsz hozzá.</div>` : ""}
+      ${!ext && b.email && !b.ev_optout && ["approved", "paid"].includes(st) && b.checkout >= A.data.today ? `<button class="btn line" data-gev="1">${ico("cal")}Programlevél küldése most</button>` : ""}
       ${acts.length ? `<div class="big-acts">${acts.map(([k, l, c, i]) => `<button class="btn ${c}" data-act="${k}">${ico(i)}${l}</button>`).join("")}</div>` : ""}
       <label class="f"><span>Saját megjegyzés (csak te látod)</span><textarea id="note" placeholder="pl. kulcsátadás 16 órakor, babaágy kell…">${esc(b.admin_note || "")}</textarea></label>
       <button class="btn line" data-act="note">${ico("check")}Megjegyzés mentése</button>
       ${(b.log || []).length ? `<div class="log"><b>Előzmények</b>${b.log.map((l) => `<span>${new Date(l.t * 1000).toLocaleString("hu-HU", { dateStyle: "short", timeStyle: "short" })} – ${esc(ST[l.s] || l.s)}${l.x ? ": " + esc(l.x) : ""}</span>`).join("")}</div>` : ""}`;
     sheet(esc(who(b)), html, (el, close) => {
       el.addEventListener("click", async (e) => {
+        if (e.target.closest("[data-gev]")) return run(async () => { const j = await api("guest_ev_send", { id: b.id }); toast(j.message, !j.ok); close(); await loadAll(); render(); });
         const bt = e.target.closest("[data-act]"); if (!bt) return;
         const act = bt.dataset.act; const body = { id: b.id, do: act };
         if (act === "note") body.reason = $("#note", el).value;
@@ -1120,35 +1125,74 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
     const row = (e) => `<div class="bk ${e.hidden ? "dim" : ""}" style="--ac:${e.top ? "#c9a25a" : "#2a86ad"}" data-ev="${e.id}">
       <div class="dt"><b>${pd(e.from).getDate()}</b><span>${HU_MS[pd(e.from).getMonth()]}</span></div>
       <div style="min-width:0"><div class="l1"><span class="nm">${esc(e.title)}</span>${e.top ? `<span class="tag pending">★ Kiemelt</span>` : ""}${e.hidden ? `<span class="tag block">Rejtett</span>` : ""}</div>
-      <div class="l2"><span>${esc(CATS[e.cat] || "")}</span>${e.to ? `<span>– ${huS(e.to)}</span>` : ""}${e.time ? `<span>${esc(e.time)}</span>` : ""}${e.place ? `<span>${esc(e.place)}</span>` : ""}</div></div></div>`;
+      <div class="l2"><span>${esc(CATS[e.cat] || "")}</span>${e.to ? `<span>– ${huS(e.to)}</span>` : ""}${e.time ? `<span>${esc(e.time)}</span>` : ""}${e.place || e.town ? `<span>${esc([e.place, e.town && !(e.place || "").includes(e.town) ? e.town : ""].filter(Boolean).join(" · "))}</span>` : ""}${e.price ? `<span>${esc(e.price)}</span>` : ""}${e.free ? `<span class="tag paid">Ingyenes</span>` : ""}${e.kids ? `<span class="tag approved">Gyerekbarát</span>` : ""}${e.indoor ? `<span class="tag src">Rossz időben is</span>` : ""}${e.gone ? `<span class="tag rejected">Törölve a forrásban</span>` : ""}</div>
+      ${e.src || e.checked ? `<div class="l2"><span>${e.src ? "Forrás: " + esc(e.src) : ""}</span>${e.checked ? `<span>ellenőrizve: ${esc(e.checked)}</span>` : ""}${e.man ? `<span>kézzel javítva</span>` : ""}</div>` : ""}</div></div>`;
     m.innerHTML = `<h2 class="vt">Programok <small>a kezdőoldal „Rendezvények” részén jelennek meg</small></h2>
       <button class="btn gold" id="evNew">${ico("plus")}Új program</button>
+      <h3 class="st">Programforrások <span class="n">${(A.feeds || []).length}</span></h3>
+      <div class="card"><p class="mut sm" style="margin:0 0 10px">Naponta maguktól frissülő naptárlinkek: iCal (.ics), eseménydátumos RSS vagy WordPress „The Events Calendar”. Csak engedélyezett forrást adj meg. A duplikátumok és a forrásban törölt programok kiszűrődnek.${A.evUpd ? ` Utolsó frissítés: <b>${esc(A.evUpd)}</b>.` : ""}</p>
+        <div class="stack">${(A.feeds || []).map((f) => `<div class="row" style="justify-content:space-between"><div style="min-width:0"><b>${esc(f.name)}</b> ${f.on ? "" : `<span class="tag block">Kikapcsolva</span>`}<div class="mut xs" style="word-break:break-all">${esc(f.url)}</div><div class="xs ${f.ok === 0 ? "" : "mut"}">${f.last ? (f.ok ? "✓ " : "⚠ ") + esc(f.last) + " – " + esc(f.msg || "") : "Még nem frissült."}</div></div><button class="btn sm line" data-fdel="${esc(f.id)}">${ico("x")}</button></div>`).join("") || `<div class="empty">Még nincs programforrás.</div>`}</div>
+        <div class="grid2" style="margin-top:10px"><label class="f"><span>Forrás neve</span><input id="f_name" placeholder="pl. Zamárdi önkormányzat"></label><label class="f"><span>Alapértelmezett település</span><input id="f_town" placeholder="Zamárdi"></label></div>
+        <label class="f"><span>Link (iCal / RSS / WordPress)</span><input id="f_url" type="url" placeholder="https://…"></label>
+        <div class="row" style="margin-top:8px"><button class="btn line" id="fAdd">${ico("plus")}Forrás hozzáadása</button><button class="btn pri" id="fRun">${ico("sync")}Frissítés most</button></div></div>
+      ${gevCard()}
       <h3 class="st">Közelgő <span class="n">${up.length}</span></h3><div class="stack">${up.map(row).join("") || `<div class="empty">Nincs közelgő program.</div>`}</div>
       ${past.length ? `<details style="margin-top:14px"><summary class="btn sm line" style="list-style:none;display:inline-flex">Elmúlt programok (${past.length})</summary><div class="stack" style="margin-top:10px">${past.map(row).join("")}</div>${`<button class="btn bad sm" id="evClean" style="margin-top:10px">${ico("x")}Elmúltak törlése</button>`}</details>` : ""}`;
     m.onclick = async (e) => {
       const r = e.target.closest("[data-ev]"); if (r) return evSheet(A.events.find((x) => x.id === r.dataset.ev));
       if (e.target.closest("#evNew")) return evSheet(null);
+      const fd = e.target.closest("[data-fdel]"); if (fd) return saveFeeds((A.feeds || []).filter((f) => f.id !== fd.dataset.fdel));
+      if (e.target.closest("#fAdd")) { const u = $("#f_url").value.trim(); if (!/^https?:\/\//i.test(u)) return toast("Adj meg egy https:// kezdetű linket.", true); return saveFeeds((A.feeds || []).concat([{ name: $("#f_name").value.trim(), url: u, town: $("#f_town").value.trim(), cat: "egyeb", on: 1 }])); }
+      if (e.target.closest("#gSave")) return run(async () => { const j = await api("save_settings", { settings: { guest_ev: $("#g_on").checked ? 1 : 0, guest_ev_approved: $("#g_appr").checked ? 1 : 0, guest_ev_days: +$("#g_days").value, guest_ev_bike_km: +$("#g_km").value, ferry_url: $("#g_ferry").value.trim() } }); A.data.settings = j.settings; toast("Vendég-programlevél beállítás elmentve."); render(); });
+      if (e.target.closest("#gTest")) return run(async () => { const j = await api("guest_ev_send", {}); toast(j.message, !j.ok); });
+      const gs = e.target.closest("[data-gsend]"); if (gs) return run(async () => { const j = await api("guest_ev_send", { id: gs.dataset.gsend }); toast(j.message, !j.ok); await loadAll(); render(); });
+      if (e.target.closest("#fRun")) return run(async () => { const j = await api("ev_import", {}); A.feeds = j.feeds; A.events = j.events; A.evUpd = j.updated; toast(j.message); render(); });
       if (e.target.closest("#evClean") && (await confirmSheet("Elmúlt programok törlése", `${past.length} elmúlt program törlődik.`, "Törlés", "bad"))) saveEvents(A.events.filter((x) => (x.to || x.from) >= t));
     };
   }
+  /* érkezés előtti programlevél a vendégeknek – beállítás és állapot */
+  function gevCard() {
+    const s = S(), t = A.data.today, days = +s.guest_ev_days || 7;
+    const addD = (d, n) => { const x = pd(d); x.setDate(x.getDate() + n); return ymd(x); };
+    const arr = books().filter((b) => b.checkin > t && ["paid", "approved"].includes(b.status) && !isExt(b)).sort((a, b) => a.checkin.localeCompare(b.checkin)).slice(0, 12);
+    const stat = (b) => b.ev_optout ? `<span class="tag block">Leiratkozott</span>` : !b.email ? `<span class="tag block">Nincs e-mail</span>` : b.ev_sent ? `<span class="tag paid">Elküldve: ${esc(huS(b.ev_sent))}</span>`
+      : b.status === "approved" && !+s.guest_ev_approved ? `<span class="tag approved">Előleg után megy</span>` : `<span class="tag pending">Megy: ${esc(huS(addD(b.checkin, -days) > t ? addD(b.checkin, -days) : t))}</span>`;
+    return `<h3 class="st">${ico("mail")}Programlevél a vendégeknek</h3>
+      <div class="card stack">
+        <p class="mut sm" style="margin:0">Az érkezés előtti héten minden vendég automatikusan e-mailt kap az ottléte alatti programokról, <b>távolság szerint</b> (gyalog, biciklivel, hajóval/komppal, autóval), <b>Google Térkép útvonallal</b>, a hajó- és kompmenetrend linkjével, és egy saját, telefonon is kényelmes programoldallal. Ingyenes, magától megy – a vendég egy kattintással leiratkozhat.</p>
+        <label class="sw"><input type="checkbox" id="g_on" ${+s.guest_ev ? "checked" : ""}><span><b>Automatikus programlevél bekapcsolva</b><small>Naponta egyszer, reggel 9 után nézi meg az érkezőket.</small></span></label>
+        <label class="sw"><input type="checkbox" id="g_appr" ${+s.guest_ev_approved ? "checked" : ""}><span><b>Már az előleg beérkezése előtt is</b><small>Kikapcsolva csak a végleges (fizetett) foglalások kapják.</small></span></label>
+        <div class="grid2"><label class="f"><span>Hány nappal érkezés előtt</span><select id="g_days">${[3, 5, 7, 10, 14].map((n) => `<option value="${n}" ${days === n ? "selected" : ""}>${n} nappal előtte</option>`).join("")}</select></label>
+          <label class="f"><span>Biciklivel elérhető, ha legfeljebb (km)</span><input type="number" id="g_km" min="5" max="60" value="${+s.guest_ev_bike_km || 25}"></label></div>
+        <label class="f"><span>Hajó- és kompmenetrend linkje</span><input type="url" id="g_ferry" value="${esc(s.ferry_url || "https://bahart.hu/")}"></label>
+        <div class="row"><button class="btn pri" id="gSave">${ico("check")}Mentés</button><button class="btn line" id="gTest">${ico("mail")}Próbalevél magamnak</button></div>
+        ${arr.length ? `<b class="sm">Következő érkezők</b><div class="stack">${arr.map((b) => `<div class="row" style="justify-content:space-between;gap:8px"><div style="min-width:0"><b>${esc(who(b))}</b> <span class="mut xs">${esc(aptOf(b.apt).name)} · ${esc(huS(b.checkin))} – ${esc(huS(b.checkout))}</span><div>${stat(b)}</div></div>${b.email && !b.ev_optout ? `<button class="btn sm line" data-gsend="${esc(b.id)}">${ico("mail")}${b.ev_sent ? "Újra" : "Most"}</button>` : ""}</div>`).join("")}</div>` : `<p class="mut xs" style="margin:0">Most nincs közelgő visszaigazolt érkezés.</p>`}
+      </div>`;
+  }
+  async function saveFeeds(list) { await run(async () => { const j = await api("ev_feeds_save", { feeds: list }); A.feeds = j.feeds; toast(j.message); await loadEvents(); render(); }); }
   async function saveEvents(list) { await run(async () => { const j = await api("events_save", { events: list }); A.events = j.events; toast(j.message); render(); }); }
   function evSheet(ev) {
-    const e = ev || { id: "", from: A.data.today, to: "", time: "", title: "", place: "Zamárdi", cat: "egyeb", desc: "", url: "", ticket: "", img: "", top: 0, hidden: 0 };
+    const e = ev || { id: "", from: A.data.today, to: "", time: "", title: "", place: "Zamárdi", town: "Zamárdi", cat: "egyeb", desc: "", price: "", url: "", ticket: "", img: "", src: "", checked: A.data.today, free: 0, kids: 0, indoor: 0, top: 0, hidden: 0 };
     const html = `
       <label class="f"><span>Megnevezés</span><input id="e_title" value="${esc(e.title)}" placeholder="pl. Zamárdi Strandfesztivál"></label>
       <div class="grid2"><label class="f"><span>Kezdés</span><input type="date" id="e_from" value="${esc(e.from)}"></label><label class="f"><span>Vége (ha több napos)</span><input type="date" id="e_to" value="${esc(e.to)}"></label></div>
       <div class="grid2"><label class="f"><span>Időpont</span><input id="e_time" value="${esc(e.time)}" placeholder="pl. 20:00"></label><label class="f"><span>Kategória</span><select id="e_cat">${Object.entries(CATS).map(([k, l]) => `<option value="${k}" ${e.cat === k ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
-      <label class="f"><span>Helyszín</span><input id="e_place" value="${esc(e.place)}"></label>
+      <div class="grid2"><label class="f"><span>Helyszín</span><input id="e_place" value="${esc(e.place || "")}"></label><label class="f"><span>Település</span><input id="e_town" value="${esc(e.town || "")}" placeholder="pl. Siófok"></label></div>
+      <label class="f"><span>Belépődíj</span><input id="e_price" value="${esc(e.price || "")}" placeholder="pl. ingyenes, 2500 Ft"></label>
       <label class="f"><span>Leírás</span><textarea id="e_desc">${esc(e.desc)}</textarea></label>
       <label class="f"><span>Bővebben (link)</span><input id="e_url" value="${esc(e.url)}" placeholder="https://"></label>
       <label class="f"><span>Jegyvásárlás (link)</span><input id="e_ticket" value="${esc(e.ticket)}" placeholder="https://"></label>
       <label class="f"><span>Kép (link)</span><input id="e_img" value="${esc(e.img)}" placeholder="https://"></label>
+      <div class="grid2"><label class="f"><span>Forrás neve</span><input id="e_src" value="${esc(e.src || "")}" placeholder="pl. Tourinform"></label><label class="f"><span>Ellenőrizve</span><input type="date" id="e_checked" value="${esc(e.checked || "")}"></label></div>
+      <label class="sw"><input type="checkbox" id="e_free" ${e.free ? "checked" : ""}><span><b>Ingyenes</b><small>a szűrőben és a kártyán jelölve</small></span></label>
+      <label class="sw"><input type="checkbox" id="e_kids" ${e.kids ? "checked" : ""}><span><b>Gyerekbarát</b><small>családoknak ajánlott</small></span></label>
+      <label class="sw"><input type="checkbox" id="e_indoor" ${e.indoor ? "checked" : ""}><span><b>Rossz időben is</b><small>beltéri vagy fedett helyszín</small></span></label>
       <label class="sw"><input type="checkbox" id="e_top" ${e.top ? "checked" : ""}><span><b>Kiemelt</b><small>előre kerül, arany jelöléssel</small></span></label>
       <label class="sw"><input type="checkbox" id="e_hidden" ${e.hidden ? "checked" : ""}><span><b>Rejtett</b><small>elmentve, de nem látszik a weboldalon</small></span></label>
       <div class="big-acts">${ev ? `<button class="btn bad" id="e_del">${ico("x")}Törlés</button>` : `<span></span>`}<button class="btn gold" id="e_save">${ico("check")}Mentés</button></div>`;
     sheet(ev ? "Program szerkesztése" : "Új program", html, (el, close) => {
       $("#e_save", el).addEventListener("click", async () => {
-        const n = { ...e, title: $("#e_title", el).value.trim(), from: $("#e_from", el).value, to: $("#e_to", el).value, time: $("#e_time", el).value, cat: $("#e_cat", el).value, place: $("#e_place", el).value, desc: $("#e_desc", el).value, url: $("#e_url", el).value, ticket: $("#e_ticket", el).value, img: $("#e_img", el).value, top: $("#e_top", el).checked ? 1 : 0, hidden: $("#e_hidden", el).checked ? 1 : 0 };
+        const n = { ...e, title: $("#e_title", el).value.trim(), from: $("#e_from", el).value, to: $("#e_to", el).value, time: $("#e_time", el).value, cat: $("#e_cat", el).value, place: $("#e_place", el).value, town: $("#e_town", el).value.trim(), price: $("#e_price", el).value.trim(), src: $("#e_src", el).value.trim(), checked: $("#e_checked", el).value, free: $("#e_free", el).checked ? 1 : 0, kids: $("#e_kids", el).checked ? 1 : 0, indoor: $("#e_indoor", el).checked ? 1 : 0, desc: $("#e_desc", el).value, url: $("#e_url", el).value, ticket: $("#e_ticket", el).value, img: $("#e_img", el).value, top: $("#e_top", el).checked ? 1 : 0, hidden: $("#e_hidden", el).checked ? 1 : 0 };
         if (!n.title) return toast("Adj nevet a programnak.", true);
         const list = ev ? A.events.map((x) => (x.id === ev.id ? n : x)) : A.events.concat([n]);
         close(); await saveEvents(list);

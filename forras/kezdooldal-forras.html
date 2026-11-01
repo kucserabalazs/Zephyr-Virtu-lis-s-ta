@@ -621,6 +621,91 @@ body { background-image: var(--grain); }
 @keyframes scZl { 0%, 10% { transform: translate(216px, 150px); } 70%, 100% { transform: translate(300px, 174px); } }
 @keyframes scHrt { 50% { transform: translate(200px, 212px) scale(1.04); } 0%, 100% { transform: translate(200px, 214px) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .ai-bike *, .ai-grill *, .ai-steg *, .am *, .scn-svg * { animation: none !important; } }
+/* ---- programajánló (2026-11): szűrősor, havi naptár, címkék, forrás, útvonal ---- */
+.ev-bar { display: block; }
+.ev-filters { display: grid; gap: 10px; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.75); border: 1.5px solid var(--line); box-shadow: 0 10px 24px rgba(20,32,42,.05); backdrop-filter: blur(6px); }
+.ev-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ev-when .chip { font-weight: 800; }
+.ev-town { display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-radius: 999px; background: #fff; border: 1.5px solid var(--line); }
+.ev-town svg { width: 15px; height: 15px; color: var(--red); }
+.ev-town select { all: unset; cursor: pointer; padding: 9px 4px; font: 700 13.5px/1 var(--body); color: var(--ink); }
+.chip.tg[aria-pressed="true"] { background: var(--gold, #f2b233); border-color: var(--gold, #f2b233); color: var(--sea); }
+.ev-reset { all: unset; cursor: pointer; font: 800 12.5px/1 var(--body); color: var(--red); padding: 8px 6px; text-decoration: underline; text-underline-offset: 3px; }
+.owner-link { margin-top: 10px; }
+.ev-count { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 18px 2px 4px; color: var(--ink-2); font-size: 14px; }
+.ev-count b { color: var(--sea); font: 900 20px/1 var(--display); }
+.ev-upd { margin-left: auto; font-size: 12.5px; color: var(--ink-2); opacity: .8; }
+.ev-cal { margin: 16px 0 6px; padding: 14px; border-radius: 18px; background: #fff; border: 1.5px solid var(--line); box-shadow: 0 10px 24px rgba(20,32,42,.06); max-width: 560px; }
+.ev-cal-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ev-cal-hd b { font: 900 22px/1 var(--display); text-transform: uppercase; letter-spacing: .06em; color: var(--sea); }
+.ev-nav { all: unset; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--sea); color: #fff; font: 800 20px/1 sans-serif; }
+.ev-nav:disabled { opacity: .3; cursor: default; }
+.ev-cal-g { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.ev-cal-g .w { text-align: center; font: 800 11px/1 var(--body); color: var(--ink-2); padding: 4px 0; }
+.ev-cal-g .d { all: unset; box-sizing: border-box; cursor: pointer; aspect-ratio: 1; border-radius: 10px; display: grid; place-content: center; text-align: center; background: var(--sail, #f6f1e6); border: 1.5px solid transparent; transition: transform .15s, border-color .15s; }
+.ev-cal-g .d b { font: 800 14px/1 var(--body); color: var(--ink); }
+.ev-cal-g .d i { font-style: normal; font-size: 10px; line-height: 1; color: var(--red); letter-spacing: 1px; }
+.ev-cal-g .d.has { background: #fff; border-color: var(--rope, #c9a25a); }
+.ev-cal-g .d.has:hover { transform: scale(1.06); }
+.ev-cal-g .d:disabled { cursor: default; opacity: .45; }
+.ev-cal-g .d.has:disabled { opacity: .45; }
+.ev-cal-g .d.today b { color: var(--red); }
+.ev-cal-g .d.on { background: var(--sea); border-color: var(--sea); } .ev-cal-g .d.on b, .ev-cal-g .d.on i { color: #ffd978; }
+.ev-cal small { display: block; margin-top: 8px; color: var(--ink-2); font-size: 12px; }
+.ev-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ev-b { font: 800 11px/1 var(--body); letter-spacing: .06em; padding: 5px 8px; border-radius: 6px; background: #eef4f8; color: var(--sea); }
+.ev-km { font-weight: 800; color: var(--sea); }
+.ev-cross { margin-top: 8px; font-size: 13.5px; color: #7a5a1e; background: #fbf4e4; border-radius: 10px; padding: 7px 10px; } .ev-cross a { color: var(--sea); font-weight: 800; }
+.ev-b.ev-free { background: #e1f4e9; color: #1d7446; } .ev-b.price { background: #fff3d6; color: #8a6300; }
+.ev-when-b { display: inline-block; margin-top: 6px; font-style: normal; font: 900 11px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--sea); background: #ffd978; padding: 4px 7px; border-radius: 5px; }
+.ev-body p.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ev-more { all: unset; cursor: pointer; justify-self: start; font: 800 12.5px/1 var(--body); color: var(--sea); padding: 2px 0; }
+.ev-src { color: var(--ink-2); font-size: 12px; opacity: .85; } .ev-src a { color: var(--sea); font-weight: 700; }
+.ev-more-src { margin-top: 26px; padding: 14px 16px; border-radius: 16px; border: 1.5px dashed var(--line); display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; background: rgba(255,255,255,.55); }
+.ev-more-src b { font: 800 13px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--sea); }
+.ev-more-src span { display: flex; flex-wrap: wrap; gap: 8px; }
+.ev-more-src a { padding: 7px 11px; border-radius: 999px; background: #fff; border: 1.5px solid var(--line); font: 700 13px/1 var(--body); color: var(--ink-2); text-decoration: none; }
+.ev-more-src a:hover { border-color: var(--rope); color: var(--sea); }
+@media (max-width: 700px) {
+  .ev-filters { padding: 10px; border-radius: 14px; }
+  .ev-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+  .ev-row::-webkit-scrollbar { display: none; }
+  .ev-row .chip, .ev-town { flex: none; }
+  .ev-upd { margin-left: 0; width: 100%; }
+  .ev-acts .btn { min-width: 0; }
+}
+/* ---- programajánló: rövid előzetes a főoldalon, a teljes ajánló külön ablakban ---- */
+.ev-teaser { display: grid; gap: 16px; }
+.ev-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.ev-quick button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; background: #fff; border: 1.5px solid var(--line); font: 800 13.5px/1 var(--body); color: var(--sea); transition: border-color .2s, transform .2s; }
+.ev-quick button:hover { border-color: var(--rope); transform: translateY(-1px); }
+.ev-quick button i { font-style: normal; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; display: grid; place-items: center; background: var(--sea); color: #ffd978; font-size: 12px; }
+.ev-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.ev-mini a { all: unset; cursor: pointer; display: grid; grid-template-columns: 62px 1fr; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; background: #fff; box-shadow: 0 2px 0 var(--line), 0 12px 26px rgba(20,32,42,.07); transition: transform .2s, box-shadow .2s; min-width: 0; }
+.ev-mini a:hover { transform: translateY(-3px); box-shadow: 0 2px 0 var(--line), 0 18px 34px rgba(20,32,42,.12); }
+.ev-mini .d { border-radius: 12px; background: linear-gradient(180deg, #164377, var(--sea)); color: #fff; text-align: center; padding: 8px 0; }
+.ev-mini .d span { display: block; font: 800 10.5px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: #ffd978; }
+.ev-mini .d b { display: block; font: 900 28px/1 var(--display); margin-top: 3px; }
+.ev-mini .t { min-width: 0; display: grid; gap: 4px; }
+.ev-mini .t b { font: 800 15.5px/1.2 var(--body); color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ev-mini .t small { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-open { justify-self: start; }
+.ev-open i { font-style: normal; margin-left: 6px; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,.35); }
+.evp { position: fixed; inset: 0; z-index: 120; display: flex; flex-direction: column; background: var(--sail-2, #f5efe2); background-image: var(--grain); animation: evpIn .35s cubic-bezier(.2,.8,.2,1); }
+.evp[hidden] { display: none; }
+@keyframes evpIn { from { opacity: 0; transform: translateY(24px); } }
+.evp-hd { display: flex; align-items: center; gap: 14px; padding: 12px max(16px, calc((100vw - 1200px) / 2)); padding-top: calc(12px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #0b2f5e, #1b4c86); color: #fff; position: relative; box-shadow: 0 6px 20px rgba(7,29,56,.25); }
+.evp-hd::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 8px; opacity: .45; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8'%3E%3Cpath d='M0 5 q5 -4 10 0 t10 0 t10 0 t10 0 V8 H0z' fill='%23ffd978'/%3E%3C/svg%3E") 0 100% / 40px 8px repeat-x; }
+.evp-hd b { font: 900 24px/1 var(--display); text-transform: uppercase; letter-spacing: .06em; }
+.evp-hd small { display: block; font: 600 12px/1.2 var(--body); opacity: .8; margin-top: 3px; }
+.evp-hd .sp { flex: 1; }
+.evp-x { all: unset; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.14); font: 700 26px/1 sans-serif; transition: background .2s, transform .3s; }
+.evp-x:hover { background: var(--red); transform: rotate(90deg); }
+.evp-back { all: unset; cursor: pointer; padding: 9px 13px; border-radius: 999px; background: rgba(255,255,255,.14); font: 800 13px/1 var(--body); }
+.evp-body { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 18px max(16px, calc((100vw - 1200px) / 2)) calc(40px + env(safe-area-inset-bottom, 0px)); }
+html.evp-lock, html.evp-lock body { overflow: hidden; }
+@media (max-width: 900px) { .ev-mini { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .evp-hd b { font-size: 20px; } .evp-back span { display: none; } .ev-open { justify-self: stretch; } }
 @media (prefers-reduced-motion: reduce) { .fx-in { opacity: 1; transform: none; } .compass-wm, .amen svg, .svc-ico, .tb-360 { animation: none; } }
 :root { --knot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a5 5 0 0 1 5 5c0 2-1.2 3.4-2.6 4.5L12 13l-2.4-1.5C8.2 10.4 7 9 7 7a5 5 0 0 1 5-5zm0 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5 13l7 4 7-4 2 2-9 7-9-7z'/%3E%3C/svg%3E"); }
 </style>
@@ -761,10 +846,13 @@ body { background-image: var(--grain); }
       <h2>Rendezvények <em>Zamárdiban és környékén</em></h2>
       <p class="lead">Összegyűjtöttük a környék fontosabb programjait dátum szerint. Ahol van rá lehetőség, jegyet is foglalhatsz, vagy további részleteket olvashatsz a rendezvény saját oldalán.</p>
     </div>
-    <div class="ev-bar" id="evBar"></div>
-    <div id="evList" aria-live="polite"></div>
+    <div class="ev-teaser" id="evTeaser"></div>
   </div>
 </section>
+<div class="evp" id="evp" hidden role="dialog" aria-modal="true" aria-label="Programajánló">
+  <header class="evp-hd"><button type="button" class="evp-back" data-evp-close="1">‹ <span>Vissza az oldalra</span></button><div><b>Programajánló</b><small>Zamárdi és a Balaton programjai</small></div><span class="sp"></span><button type="button" class="evp-x" data-evp-close="1" aria-label="Bezárás">×</button></header>
+  <div class="evp-body"><div class="ev-bar" id="evBar"></div><div id="evList" aria-live="polite"></div></div>
+</div>
 
 <div class="rope" aria-hidden="true"></div>
 
@@ -1231,45 +1319,140 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   storm(); weather(); setInterval(storm, 10 * 60 * 1000);
 
-  /* ---------------------------------------------------------------- rendezvények */
+  /* ---------------------------------------------------------------- rendezvények – programajánló (szűrők, naptár, forrás, útvonal, strukturált adat) */
   const EVC = { fesztival: "Fesztivál", koncert: "Koncert", sport: "Sport", gasztro: "Gasztro", kultura: "Kultúra", csalad: "Családi", egyeb: "Egyéb" };
-  let EVS = [], evCat = "", evDemo = false;
+  let EVS = [], evCat = "", evDemo = false, evUpd = "";
+  const EQ = { when: "", zone: "", town: "", free: false, kids: false, indoor: false, day: "", cal: false, mo: 0, open: {} };
   function demoEvents() {
     const t = new Date(), add = (n) => { const d = new Date(t); d.setDate(d.getDate() + n); return ymd(d); };
     return [
-      { id: "d1", from: add(12), to: add(14), time: "egész nap", title: "Példa: nyári fesztivál a szabadstrandon", place: "Zamárdi Szabadstrand", cat: "fesztival", desc: "Így jelenik meg egy rendezvény. A tulajdonosi felület „Programok” fülén lehet felvenni a valódi programokat.", url: "#", ticket: "#", top: 1 },
-      { id: "d2", from: add(20), time: "19:00", title: "Példa: koncert a Balaton Szíve téren", place: "Balaton Szíve tér", cat: "koncert", desc: "Rövid leírás, időpont, helyszín, és a rendezvény saját oldalának linkje.", url: "#" },
-      { id: "d3", from: add(41), time: "9:00", title: "Példa: futóverseny a parton", place: "Zamárdi", cat: "sport", ticket: "#" }
+      { id: "d1", from: add(12), to: add(14), time: "egész nap", title: "Példa: nyári fesztivál a szabadstrandon", place: "Zamárdi Szabadstrand", town: "Zamárdi", cat: "fesztival", price: "ingyenes", free: 1, kids: 1, desc: "Így jelenik meg egy rendezvény. A tulajdonosi felület „Programok” fülén lehet felvenni a valódi programokat.", url: "#", ticket: "#", top: 1, src: "példa", checked: add(0) },
+      { id: "d2", from: add(20), time: "19:00", title: "Példa: koncert a Balaton Szíve téren", place: "Balaton Szíve tér", town: "Zamárdi", cat: "koncert", price: "3500 Ft", desc: "Rövid leírás, időpont, helyszín, és a rendezvény saját oldalának linkje.", url: "#", src: "példa", checked: add(0) },
+      { id: "d3", from: add(41), time: "9:00", title: "Példa: futóverseny a parton", place: "Zamárdi", town: "Zamárdi", cat: "sport", ticket: "#" }
     ];
   }
   async function loadEvents() {
-    try { if (PREVIEW) throw new Error("preview"); const r = await fetch((window.ZEPHYR_API || "") + "?r=events", { cache: "no-store" }); if (!r.ok) throw new Error(""); EVS = (await r.json()).events || []; }
+    try { if (PREVIEW) throw new Error("preview"); const r = await fetch((window.ZEPHYR_API || "") + "?r=events", { cache: "no-store" }); if (!r.ok) throw new Error(""); const j = await r.json(); EVS = j.events || []; evUpd = j.updated || ""; evDemo = false; }
     catch (e) { EVS = demoEvents(); evDemo = true; }
-    renderEvents();
+    renderEvents(); evTeaser();
+    if (location.hash === "#programajanlo" || location.hash === "#programok") evOpen("");
+  }
+  const evEnd = (e) => e.to || e.from;
+  const evOn = (e, d) => e.from <= d && evEnd(e) >= d;
+  const evOverlap = (e, a, b) => e.from <= b && evEnd(e) >= a;
+  function evRange() {
+    const t = new Date(), T = ymd(t), add = (n) => { const d = new Date(t); d.setDate(d.getDate() + n); return ymd(d); }, wd = t.getDay();
+    if (EQ.day) return [EQ.day, EQ.day];
+    if (EQ.when === "today") return [T, T];
+    if (EQ.when === "weekend") { const toSun = (7 - wd) % 7, toFri = wd === 0 || wd === 6 ? 0 : 5 - wd; return [add(toFri), add(toSun)]; }
+    if (EQ.when === "7") return [T, add(6)];
+    if (EQ.when === "month") { const a = new Date(t.getFullYear(), t.getMonth() + EQ.mo, 1), b = new Date(t.getFullYear(), t.getMonth() + EQ.mo + 1, 0); return [ymd(a) < T ? T : ymd(a), ymd(b)]; }
+    return null;
+  }
+  const EVZ = [["", "Bármilyen távolság"], ["gyalog", "🚶 Gyalog"], ["bike", "🚲 Biciklivel"], ["hajo", "⛴ Hajóval, komppal"], ["auto", "🚗 Autóval"]];
+  const evW = (e) => e.where || { zone: e.town === "Zamárdi" || !e.town ? "gyalog" : "egyeb", km: null, bike: e.town === "Zamárdi" ? 1 : 0 };
+  const evZoneOk = (e) => !EQ.zone || (EQ.zone === "bike" ? +evW(e).bike === 1 : evW(e).zone === EQ.zone);
+  function evFiltered(ignoreCat) {
+    const r = evRange();
+    return EVS.filter((e) => (ignoreCat || !evCat || e.cat === evCat) && evZoneOk(e) && (!EQ.town || e.town === EQ.town) && (!EQ.free || e.free) && (!EQ.kids || e.kids) && (!EQ.indoor || e.indoor) && (!r || evOverlap(e, r[0], r[1])));
+  }
+  const huDay = (s) => { const d = pd(s); return `${HU_MS[d.getMonth()]} ${d.getDate()}.`; };
+  const mapUrl = (e) => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent([e.place, e.town && !(e.place || "").includes(e.town) ? e.town : "", "Magyarország"].filter(Boolean).join(", "));
+  function evCalendar() {
+    const t = new Date(), T = ymd(t), m0 = new Date(t.getFullYear(), t.getMonth() + EQ.mo, 1), y = m0.getFullYear(), mo = m0.getMonth(), days = new Date(y, mo + 1, 0).getDate(), lead = (m0.getDay() + 6) % 7;
+    const base = evFiltered(false).filter(() => true), cnt = {};
+    for (let d = 1; d <= days; d++) { const s = ymd(new Date(y, mo, d)); cnt[s] = EVS.filter((e) => evOn(e, s) && (!evCat || e.cat === evCat) && evZoneOk(e) && (!EQ.town || e.town === EQ.town) && (!EQ.free || e.free) && (!EQ.kids || e.kids) && (!EQ.indoor || e.indoor)).length; }
+    let h = `<div class="ev-cal"><div class="ev-cal-hd"><button type="button" class="ev-nav" data-mo="-1" ${EQ.mo <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><b>${y}. ${HU_M[mo]}</b><button type="button" class="ev-nav" data-mo="1" ${EQ.mo >= 11 ? "disabled" : ""} aria-label="Következő hónap">›</button></div><div class="ev-cal-g">`;
+    h += ["H", "K", "Sze", "Cs", "P", "Szo", "V"].map((w) => `<span class="w">${w}</span>`).join("") + "<span></span>".repeat(lead);
+    for (let d = 1; d <= days; d++) { const s = ymd(new Date(y, mo, d)), n = cnt[s], past = s < T; h += `<button type="button" class="d${s === T ? " today" : ""}${n ? " has" : ""}${EQ.day === s ? " on" : ""}" data-day="${s}" ${past || !n ? "disabled" : ""} aria-label="${d}. – ${n} program"><b>${d}</b>${n ? `<i>${n > 3 ? "•••" : "•".repeat(n)}</i>` : ""}</button>`; }
+    void base;
+    return h + `</div><small>A pöttyök a napi programok számát jelzik – koppints egy napra.</small></div>`;
+  }
+  function evLd(list) {  /* strukturált adat (schema.org/Event) a keresőknek */
+    try {
+      const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: list.slice(0, 30).map((e, i) => ({ "@type": "ListItem", position: i + 1, item: Object.assign({ "@type": "Event", name: e.title, startDate: e.from + (/^\d{1,2}:\d{2}$/.test(e.time || "") ? "T" + e.time.padStart(5, "0") : ""), endDate: e.to || undefined, eventStatus: "https://schema.org/EventScheduled", eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+        location: { "@type": "Place", name: e.place || e.town || "Balaton", address: { "@type": "PostalAddress", addressLocality: e.town || "Zamárdi", addressCountry: "HU" } }, description: e.desc || undefined, url: e.url && e.url !== "#" ? e.url : undefined, isAccessibleForFree: e.free ? true : undefined, image: e.img || undefined }) })) };
+      let s = document.getElementById("evLd"); if (!s) { s = document.createElement("script"); s.type = "application/ld+json"; s.id = "evLd"; document.head.appendChild(s); }
+      s.textContent = evDemo ? "" : JSON.stringify(ld);
+    } catch (x) { /* nem kritikus */ }
   }
   function renderEvents() {
-    const cats = [...new Set(EVS.map((e) => e.cat))];
-    $("evBar").innerHTML = (EVS.length ? [["", "Mind"]].concat(cats.map((c) => [c, EVC[c] || "Egyéb"])).map(([k, n]) => `<button type="button" class="chip" data-cat="${k}" aria-pressed="${evCat === k}">${esc(n)}</button>`).join("") : "") + `<button type="button" class="owner-link" data-owner="prog">Programok szerkesztése (tulajdonos)</button>`;
-    const list = EVS.filter((e) => !evCat || e.cat === evCat);
-    if (!list.length) { $("evList").innerHTML = `<div class="ev-empty"><svg><use href="#i-cal"/></svg><b>Hamarosan feltöltjük az idei programokat.</b><span>Addig is nézze meg a helyi látnivalókat lejjebb.</span></div>`; return; }
-    let h = "", lastM = "";
+    const cats = [...new Set(EVS.map((e) => e.cat))], towns = [...new Set(EVS.map((e) => e.town).filter(Boolean))].sort((a, b) => a.localeCompare(b, "hu"));
+    const W = [["", "Mind"], ["today", "Ma"], ["weekend", "Hétvégén"], ["7", "Következő 7 nap"], ["month", "Havi naptár"]];
+    const tog = (k, l, ic) => `<button type="button" class="chip tg" data-tg="${k}" aria-pressed="${EQ[k]}">${ic}${l}</button>`;
+    const any = EQ.when || EQ.zone || EQ.town || EQ.free || EQ.kids || EQ.indoor || evCat || EQ.day;
+    $("evBar").innerHTML = EVS.length ? `<div class="ev-filters">
+        <div class="ev-row ev-when" role="group" aria-label="Időszak">${W.map(([k, n]) => `<button type="button" class="chip" data-when="${k}" aria-pressed="${EQ.when === k && !EQ.day}">${n}</button>`).join("")}</div>
+        ${EVS.some((e) => e.where) ? `<div class="ev-row ev-zone" role="group" aria-label="Távolság">${EVZ.filter(([k]) => !k || EVS.some((e) => k === "bike" ? +evW(e).bike === 1 : evW(e).zone === k)).map(([k, n]) => `<button type="button" class="chip" data-zone="${k}" aria-pressed="${EQ.zone === k}">${n}</button>`).join("")}</div>` : ""}
+        <div class="ev-row">${towns.length > 1 ? `<label class="ev-town"><svg><use href="#i-pin"/></svg><select id="evTown" aria-label="Település"><option value="">Minden település</option>${towns.map((t) => `<option ${EQ.town === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>` : ""}
+          ${[["", "Minden típus"]].concat(cats.map((c) => [c, EVC[c] || "Egyéb"])).map(([k, n]) => `<button type="button" class="chip" data-cat="${k}" aria-pressed="${evCat === k}">${esc(n)}</button>`).join("")}</div>
+        <div class="ev-row">${tog("free", "Ingyenes", "🎟️ ")}${tog("kids", "Gyerekbarát", "🧒 ")}${tog("indoor", "Rossz időben is", "☔ ")}${any ? `<button type="button" class="ev-reset" data-reset="1">Szűrők törlése ✕</button>` : ""}</div>
+      </div>` + `<button type="button" class="owner-link" data-owner="prog">Programok szerkesztése (tulajdonos)</button>` : `<button type="button" class="owner-link" data-owner="prog">Programok szerkesztése (tulajdonos)</button>`;
+    const list = evFiltered(false), r = evRange();
+    let h = "";
+    if (EQ.when === "month" || EQ.day) h += evCalendar();
+    if (EVS.length) h += `<p class="ev-count"><b>${list.length}</b> program${r ? ` · ${r[0] === r[1] ? huDay(r[0]) : huDay(r[0]) + " – " + huDay(r[1])}` : ""}${EQ.day ? ` <button type="button" class="ev-reset" data-day="">a nap kijelölésének törlése ✕</button>` : ""}${evUpd ? `<span class="ev-upd">Frissítve: ${esc(evUpd.slice(0, 10).replace(/-/g, ". "))}.</span>` : ""}</p>`;
+    if (!EVS.length) { $("evList").innerHTML = `<div class="ev-empty"><svg><use href="#i-cal"/></svg><b>Hamarosan feltöltjük az idei programokat.</b><span>Addig is nézd meg a helyi látnivalókat lejjebb.</span></div>` + evMore(); evLd([]); return; }
+    if (!list.length) { $("evList").innerHTML = h + `<div class="ev-empty"><svg><use href="#i-cal"/></svg><b>Erre a szűrésre most nincs program.</b><span><button type="button" class="ev-reset" data-reset="1">Szűrők törlése</button></span></div>` + evMore(); return; }
+    let lastM = ""; const T = ymd(new Date()), tm = new Date(); tm.setDate(tm.getDate() + 1); const TM = ymd(tm);
     list.forEach((e) => {
       const d = pd(e.from), m = d.getFullYear() + "-" + d.getMonth();
       if (m !== lastM) { h += `${lastM ? "</div>" : ""}<h3 class="ev-month">${d.getFullYear()}. ${HU_M[d.getMonth()]}</h3><div class="evs">`; lastM = m; }
       const to = e.to ? pd(e.to) : null;
       const range = to ? `${HU_MS[d.getMonth()]} ${d.getDate()}. – ${to.getMonth() !== d.getMonth() ? HU_MS[to.getMonth()] + " " : ""}${to.getDate()}.` : HU_WD[d.getDay()];
+      const when = evOn(e, T) ? "Ma" : evOn(e, TM) ? "Holnap" : "";
+      const long = (e.desc || "").length > 180, open = EQ.open[e.id];
       h += `<article class="ev${e.top ? " top" : ""}">
         ${e.img ? `<img class="ev-img" src="${esc(e.img)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
-        <div class="ev-date"><span>${HU_MS[d.getMonth()]}</span><b${to && to.getMonth() === d.getMonth() ? ' style="font-size:25px;letter-spacing:-.02em"' : ""}>${d.getDate()}${to && to.getMonth() === d.getMonth() ? "–" + to.getDate() : ""}</b><small>${esc(range)}</small></div>
-        <div class="ev-body"><span class="ev-cat">${esc(EVC[e.cat] || "Egyéb")}${evDemo ? `<span class="demo-tag">példa</span>` : ""}</span><h3>${esc(e.title)}</h3>
-          <div class="ev-info">${e.time ? `<span><svg><use href="#i-clock"/></svg>${esc(e.time)}</span>` : ""}${e.place ? `<span><svg><use href="#i-pin"/></svg>${esc(e.place)}</span>` : ""}</div>
-          ${e.desc ? `<p>${esc(e.desc)}</p>` : ""}</div>
-        <div class="ev-acts">${e.ticket ? `<a class="btn btn-red btn-sm" href="${esc(e.ticket)}" target="_blank" rel="noopener"><svg><use href="#i-ticket"/></svg>Jegyfoglalás</a>` : ""}${e.url ? `<a class="btn btn-line btn-sm" href="${esc(e.url)}" target="_blank" rel="noopener"><svg><use href="#i-ext"/></svg>Bővebben</a>` : ""}</div>
+        <div class="ev-date"><span>${HU_MS[d.getMonth()]}</span><b${to && to.getMonth() === d.getMonth() ? ' style="font-size:25px;letter-spacing:-.02em"' : ""}>${d.getDate()}${to && to.getMonth() === d.getMonth() ? "–" + to.getDate() : ""}</b><small>${esc(range)}</small>${when ? `<em class="ev-when-b">${when}</em>` : ""}</div>
+        <div class="ev-body"><div class="ev-tags"><span class="ev-cat">${esc(EVC[e.cat] || "Egyéb")}${evDemo ? `<span class="demo-tag">példa</span>` : ""}</span>${e.free ? `<span class="ev-b ev-free">Ingyenes</span>` : e.price ? `<span class="ev-b price">${esc(e.price)}</span>` : ""}${e.kids ? `<span class="ev-b">Gyerekbarát</span>` : ""}${e.indoor ? `<span class="ev-b">Rossz időben is</span>` : ""}</div><h3>${esc(e.title)}</h3>
+          <div class="ev-info">${e.time ? `<span><svg><use href="#i-clock"/></svg>${esc(e.time)}</span>` : ""}${e.place || e.town ? `<span><svg><use href="#i-pin"/></svg>${esc([e.place, e.town && !(e.place || "").includes(e.town) ? e.town : ""].filter(Boolean).join(", "))}</span>` : ""}${evW(e).km ? `<span class="ev-km">${{ gyalog: "🚶", bicikli: "🚲", hajo: "⛴", auto: "🚗" }[evW(e).zone] || ""} kb. ${evW(e).km} km a háztól</span>` : ""}</div>
+          ${evW(e).cross ? `<div class="ev-cross">⛴ ${esc(evW(e).cross)}${evW(e).ferry ? ` · <a href="${esc(evW(e).ferry)}" target="_blank" rel="noopener">menetrend ↗</a>` : ""}</div>` : ""}
+          ${e.desc ? `<p class="${long && !open ? "clamp" : ""}">${esc(e.desc)}</p>${long ? `<button type="button" class="ev-more" data-open="${esc(e.id)}">${open ? "Kevesebb ▴" : "Tovább ▾"}</button>` : ""}` : ""}
+          ${e.src || e.checked ? `<small class="ev-src">${e.src ? `Forrás: ${e.url && e.url !== "#" ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.src)}</a>` : esc(e.src)}` : ""}${e.src && e.checked ? " · " : ""}${e.checked ? `ellenőrizve: ${esc(huDay(e.checked))}` : ""}</small>` : ""}</div>
+        <div class="ev-acts">${e.ticket ? `<a class="btn btn-red btn-sm" href="${esc(e.ticket)}" target="_blank" rel="noopener"><svg><use href="#i-ticket"/></svg>Jegyfoglalás</a>` : ""}${e.url ? `<a class="btn btn-line btn-sm" href="${esc(e.url)}" target="_blank" rel="noopener"><svg><use href="#i-ext"/></svg>Bővebben</a>` : ""}${e.place || e.town ? `<a class="btn btn-line btn-sm" href="${esc(evW(e).map || mapUrl(e))}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>Útvonal${evW(e).map ? (evW(e).zone === "gyalog" ? " gyalog" : " autóval") : ""}</a>` : ""}${evW(e).map_bike ? `<a class="btn btn-line btn-sm" href="${esc(evW(e).map_bike)}" target="_blank" rel="noopener">🚲 Biciklivel</a>` : ""}</div>
       </article>`;
     });
-    $("evList").innerHTML = h + "</div>";
+    $("evList").innerHTML = h + "</div>" + evMore();
+    evLd(list);
   }
-  $("evBar").addEventListener("click", (e) => { const b = e.target.closest("[data-cat]"); if (b) { evCat = b.dataset.cat; renderEvents(); } });
+  function evTeaser() {  /* főoldal: csak rövid előzetes – a teljes ajánló külön ablakban nyílik */
+    const T = ymd(new Date()), up = EVS.filter((e) => evEnd(e) >= T), cnt = (w) => { const o = EQ.when, dd = EQ.day; EQ.when = w; EQ.day = ""; const r = evRange(); EQ.when = o; EQ.day = dd; return up.filter((e) => evOverlap(e, r[0], r[1])).length; };
+    if (!up.length) { $("evTeaser").innerHTML = `<div class="ev-empty"><svg><use href="#i-cal"/></svg><b>Hamarosan feltöltjük az idei programokat.</b><span>Addig is nézd meg a helyi látnivalókat lejjebb.</span></div><button type="button" class="owner-link" data-owner="prog">Programok szerkesztése (tulajdonos)</button>`; return; }
+    $("evTeaser").innerHTML = `<div class="ev-quick">${[["today", "Ma"], ["weekend", "Hétvégén"], ["7", "Következő 7 nap"], ["month", "Havi naptár"]].map(([k, n]) => `<button type="button" data-evp="${k}">${n}${k !== "month" && cnt(k) ? `<i>${cnt(k)}</i>` : ""}</button>`).join("")}</div>
+      <div class="ev-mini">${up.slice(0, 3).map((e) => { const d = pd(e.from); return `<a href="#programajanlo" data-evp="" data-evid="${esc(e.id)}"><span class="d"><span>${HU_MS[d.getMonth()]}</span><b>${d.getDate()}</b></span><span class="t"><b>${esc(e.title)}</b><small>${esc([e.time, e.town || e.place].filter(Boolean).join(" · "))}${evDemo ? " · példa" : ""}</small></span></a>`; }).join("")}</div>
+      <button type="button" class="btn btn-red ev-open" data-evp=""><svg><use href="#i-cal"/></svg>Belépés a programajánlóba<i>${up.length}</i></button>`;
+  }
+  function evOpen(when) {
+    Object.assign(EQ, { when: when || "", day: "", mo: 0 }); renderEvents();
+    const p = $("evp"); p.hidden = false; document.documentElement.classList.add("evp-lock"); p.querySelector(".evp-body").scrollTop = 0; p.querySelector(".evp-x").focus();
+    if (location.hash !== "#programajanlo") history.pushState({ evp: 1 }, "", "#programajanlo");
+  }
+  function evClose(fromPop) { const p = $("evp"); if (p.hidden) return; p.hidden = true; document.documentElement.classList.remove("evp-lock"); if (!fromPop && location.hash === "#programajanlo") history.back(); }
+  document.addEventListener("click", (e) => { const o = e.target.closest("[data-evp]"); if (o) { e.preventDefault(); evOpen(o.dataset.evp); return; } if (e.target.closest("[data-evp-close]")) evClose(); });
+  addEventListener("popstate", () => { if (location.hash !== "#programajanlo") evClose(true); else if ($("evp").hidden) evOpen(""); });
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("evp").hidden) evClose(); });
+  function evMore() {  /* további megbízható programforrások – csak hivatkozás, tartalmat nem veszünk át */
+    return `<div class="ev-more-src"><b>További balatoni programok</b><span>
+      <a href="https://www.programturizmus.hu/ajanlat-zamardi-nyari-programok-fesztivalok.html" target="_blank" rel="noopener">Zamárdi – Programturizmus ↗</a>
+      <a href="https://www.programturizmus.hu/taj-balaton.html" target="_blank" rel="noopener">Balaton – eseménynaptár ↗</a>
+      <a href="https://welovebalaton.hu/" target="_blank" rel="noopener">We Love Balaton ↗</a>
+      <a href="https://bahart.hu/" target="_blank" rel="noopener">Balatoni hajózás (BAHART) ↗</a></span></div>`;
+  }
+  $("evBar").addEventListener("click", (e) => {
+    const c = e.target.closest("[data-cat]"); if (c) { evCat = c.dataset.cat; return renderEvents(); }
+    const zb = e.target.closest("[data-zone]"); if (zb) { EQ.zone = zb.dataset.zone; return renderEvents(); }
+    const w = e.target.closest("[data-when]"); if (w) { EQ.when = w.dataset.when; EQ.day = ""; EQ.mo = 0; return renderEvents(); }
+    const t = e.target.closest("[data-tg]"); if (t) { EQ[t.dataset.tg] = !EQ[t.dataset.tg]; return renderEvents(); }
+    if (e.target.closest("[data-reset]")) { Object.assign(EQ, { when: "", zone: "", town: "", free: false, kids: false, indoor: false, day: "", mo: 0 }); evCat = ""; return renderEvents(); }
+  });
+  $("evBar").addEventListener("change", (e) => { if (e.target.id === "evTown") { EQ.town = e.target.value; renderEvents(); } });
+  $("evList").addEventListener("click", (e) => {
+    const n = e.target.closest("[data-mo]"); if (n) { EQ.mo = Math.max(0, Math.min(11, EQ.mo + +n.dataset.mo)); EQ.day = ""; return renderEvents(); }
+    const d = e.target.closest("[data-day]"); if (d) { EQ.day = EQ.day === d.dataset.day ? "" : d.dataset.day; if (!EQ.day) EQ.when = "month"; return renderEvents(); }
+    const o = e.target.closest("[data-open]"); if (o) { EQ.open[o.dataset.open] = !EQ.open[o.dataset.open]; return renderEvents(); }
+    if (e.target.closest("[data-reset]")) { Object.assign(EQ, { when: "", zone: "", town: "", free: false, kids: false, indoor: false, day: "", mo: 0 }); evCat = ""; return renderEvents(); }
+  });
   loadEvents();
 
   /* ---------------------------------------------------------------- finom beúszás görgetéskor (2026-11) */
