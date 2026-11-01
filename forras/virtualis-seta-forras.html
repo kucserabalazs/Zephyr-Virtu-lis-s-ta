@@ -1695,7 +1695,9 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     el.querySelector(".zfb-ntak").innerHTML = `<span>Zephyr Apartmanház · ${esc(cfg.address || "")}</span>` + (cfg.ntak ? `<span>NTAK regisztrációs szám: <b>${esc(cfg.ntak)}</b></span>` : "");
     const pre = opts.apt && cfg.apartments.find((a) => a.id === opts.apt);
     await loadAll();
-    if (pre) enterApt(pre.id);
+    /* apartmanról (kártya, galéria, séta) nyitva is az új menet indul: előbb az időpont – az apartman szabad napjait mutatja,
+       egy koppintással az összes apartman naptára; a régi, apartmanonkénti naptár csak a tavon az apartmanra koppintva nyílik */
+    if (pre) { direct = false; st.pre = pre.id; buildMap(); fixSel(); render(); }
   }
   function close(mode) {
     if (!el || el.hidden) return; el.classList.remove("on"); document.documentElement.classList.remove("zfb-lock");
