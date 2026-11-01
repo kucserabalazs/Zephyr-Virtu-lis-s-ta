@@ -556,6 +556,66 @@ body { background-image: var(--grain); }
 .lb-nav:hover { transform: translateY(-50%) scale(1.08); }
 .lb-th button { transition: opacity .2s, transform .2s; } .lb-th button:hover { opacity: .9; transform: translateY(-2px); }
 
+/* galéria fejléc: kidolgozott „Vissza” nyíl, egy sorban marad telefonon is */
+.lb { grid-template-columns: minmax(0, 1fr); }
+.lb-hd { flex-wrap: nowrap; min-width: 0; background: linear-gradient(180deg, rgba(10,36,66,.95), rgba(5,16,30,.0)); }
+.lb-tt { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.lb-back { all: unset; cursor: pointer; flex: none; display: inline-flex; align-items: center; gap: 9px; padding: 5px 16px 5px 5px; border-radius: 999px; color: #fff; font: 800 15px/1 var(--body); letter-spacing: .02em;
+  background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.07)); box-shadow: inset 0 0 0 1px rgba(255,217,120,.55), inset 0 1px 0 rgba(255,255,255,.35), 0 6px 18px rgba(0,0,0,.35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: transform .18s, box-shadow .18s, background .18s; }
+.lb-back:hover, .lb-back:focus-visible { transform: translateX(-2px); background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.1)); box-shadow: inset 0 0 0 1.5px #ffd978, 0 8px 22px rgba(0,0,0,.4); }
+.lb-bk-ic { position: relative; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #0b2a4a; background: radial-gradient(circle at 35% 30%, #fff1bf, #ffd978 45%, #e0a52c 100%); box-shadow: inset 0 -2px 0 rgba(138,102,48,.45), inset 0 1px 0 rgba(255,255,255,.8), 0 2px 6px rgba(0,0,0,.35); }
+.lb-bk-ic::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid rgba(255,217,120,.5); animation: lbBkPulse 2.4s ease-out infinite; }
+@keyframes lbBkPulse { 0% { transform: scale(.85); opacity: .9; } 100% { transform: scale(1.25); opacity: 0; } }
+.lb-bk-ic svg { width: 20px; height: 20px; }
+.lb-back:hover .lb-bk-ic svg { animation: lbBkNudge .6s ease; } @keyframes lbBkNudge { 40% { transform: translateX(-3px); } }
+.lb-tour em { display: none; font-style: normal; }
+@media (max-width: 700px) {
+  .lb-hd { gap: 10px; padding: 10px 12px; }
+  .lb-tt { flex-direction: column; align-items: flex-start; gap: 3px; flex: 1 1 0; min-width: 0; }
+  .lb-hd h3 { font-size: 19px; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .lb-hd .cap { font-size: 15px; color: #dce7f1; }
+  .lb-hd .sp, .lb-x, .lb-ap { display: none; } .lb-hd .lb-tt { flex: 1 1 0; }
+  .lb-back { padding: 4px; } .lb-bk-tx { display: none; } .lb-bk-ic { width: 42px; height: 42px; } .lb-bk-ic svg { width: 23px; height: 23px; }
+  .lb .lb-tour { padding: 10px 13px; font-size: 15px; gap: 6px; } .lb-hd .lb-tour b { display: none; } .lb-tour em { display: inline; }
+}
+@media (prefers-reduced-motion: reduce) { .lb-bk-ic::after { animation: none; } }
+
+/* galéria: kis foglalás gomb a fejlécben, lent kis vitorlásverseny, teljes képernyős nézet */
+.lb { grid-template-rows: auto minmax(0, 1fr) auto auto; }
+.lb-acts { display: flex; gap: 8px; flex: none; }
+.lb-book { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 16px; border-radius: 999px; color: #fff; font: 800 14px/1.1 var(--body);
+  background: linear-gradient(180deg, #f2665b, #d63a30 60%, #b92c24); box-shadow: 0 6px 18px rgba(226,72,61,.4), inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(120,20,15,.35), 0 0 0 1px rgba(120,20,15,.4); transition: transform .18s, box-shadow .18s; }
+.lb-book svg { width: 18px; height: 18px; } .lb-book:hover, .lb-book:focus-visible { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(226,72,61,.5), 0 0 0 2px #ffd978; }
+.lb-reg { height: 83px; overflow: hidden; }
+.lb-reg canvas { display: block; width: 100%; height: 100%; }
+.lb-stage img { cursor: zoom-in; }
+.lb-fsback, .lb-fscap { display: none; }
+.lb.lb-full { grid-template-rows: minmax(0, 1fr); padding: 0; background: #000; }
+.lb.lb-full .lb-hd, .lb.lb-full .lb-reg, .lb.lb-full .lb-th { display: none; }
+.lb.lb-full .lb-stage { padding: 0; height: 100vh; height: 100dvh; }
+.lb.lb-full .lb-stage img { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; object-fit: contain; border-radius: 0; box-shadow: none; cursor: zoom-out; }
+.lb.lb-full .lb-stage img { object-fit: cover; }
+.lb.lb-full .lb-stage img.pan { animation: lbPan 14s ease-in-out infinite alternate; touch-action: none; cursor: grab; } .lb.lb-full .lb-stage img.pan.man { animation: none; transition: object-position .12s linear; } @keyframes lbPan { from { object-position: 0% 50%; } to { object-position: 100% 50%; } }
+.lb-fshint { display: none; }
+.lb.lb-full .lb-fshint { display: block; position: absolute; z-index: 3; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); padding: 9px 16px; border-radius: 999px; background: rgba(5,16,30,.65); color: #fff; font: 700 15px/1.25 var(--body); width: max-content; max-width: calc(100% - 32px); text-align: center; animation: lbHint 5s ease forwards; pointer-events: none; }
+@keyframes lbHint { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+.lb.lb-full:not(.has-pan) .lb-fshint { display: none; }
+.lb-tilt { all: unset; box-sizing: border-box; cursor: pointer; position: absolute; z-index: 4; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: none; align-items: center; gap: 10px; width: min(340px, calc(100% - 32px)); padding: 10px 14px; border-radius: 18px; color: #0b2a4a;
+  background: linear-gradient(180deg, #fff3c4, #ffd978); box-shadow: 0 10px 26px rgba(0,0,0,.45), inset 0 1px 0 #fff, inset 0 -2px 0 rgba(138,102,48,.35); }
+.lb.lb-full .lb-tilt:not([hidden]) { display: flex; }
+.lb-tilt-ic { font-size: 26px; animation: lbTiltIc 1.6s ease-in-out infinite; } @keyframes lbTiltIc { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(14deg); } }
+.lb-tilt b { display: block; font: 900 16px/1.2 var(--body); } .lb-tilt small { display: block; font: 700 13.5px/1.25 var(--body); color: #4a3a12; }
+.lb.lb-full .lb-fsback { display: inline-flex; position: absolute; z-index: 3; left: calc(14px + env(safe-area-inset-left, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); background: rgba(5,16,30,.55); }
+.lb.lb-full .lb-fscap { display: block; position: absolute; z-index: 3; right: calc(14px + env(safe-area-inset-right, 0px)); top: calc(18px + env(safe-area-inset-top, 0px)); padding: 8px 14px; border-radius: 999px; background: rgba(5,16,30,.6); color: #fff; font: 800 15px/1 var(--body); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+.lb.lb-full .lb-nav { z-index: 3; background: rgba(5,16,30,.5); }
+@media (max-width: 700px) {
+  .lb-hd { flex-wrap: wrap; row-gap: 10px; }
+  .lb-acts { order: 5; flex: 1 0 100%; } .lb-acts > * { flex: 1 1 0; }
+  .lb-acts .lb-tour, .lb-book { padding: 10px 12px; font-size: 15px; }
+  .lb-reg { height: 54px; }
+  .lb.lb-full .lb-fsback .lb-bk-tx { display: inline; } .lb.lb-full .lb-fsback { padding: 4px 14px 4px 4px; }
+}
+
 /* finom beúszás görgetéskor (csak ha a böngésző támogatja; szöveg és elrendezés változatlan) */
 .fx-in { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .9s cubic-bezier(.2,.8,.2,1); transition-delay: var(--fd, 0s); }
 .fx-in.in { opacity: 1; transform: none; }
@@ -1054,8 +1114,9 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
 </footer>
 
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Képgaléria">
-  <div class="lb-hd"><h3 id="lbTitle"></h3><span class="cap" id="lbCap"></span><span class="sp"></span><a class="btn btn-gold" id="lbTour" href="#"><svg><use href="#i-360"/></svg><b>Virtuális séta ide</b></a><button type="button" class="lb-x" id="lbX" aria-label="Galéria bezárása">×</button></div>
-  <div class="lb-stage" id="lbStage"><button type="button" class="lb-nav p" id="lbP" aria-label="Előző kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div id="lbMedia" style="display:contents"></div><button type="button" class="lb-nav n" id="lbN" aria-label="Következő kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div>
+  <div class="lb-hd"><button type="button" class="lb-back" id="lbBack" aria-label="Vissza az oldalra"><span class="lb-bk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/><path d="M8.5 12H20" opacity=".55"/></svg></span><span class="lb-bk-tx">Vissza</span></button><div class="lb-tt"><h3 id="lbTitle"></h3><span class="cap" id="lbCap"></span></div><span class="sp"></span><div class="lb-acts"><a class="btn btn-gold lb-tour" id="lbTour" href="#"><svg><use href="#i-360"/></svg><b>Virtuális séta ide</b><em>360° séta</em></a><button type="button" class="lb-book" id="lbBook"><svg><use href="#i-cal"/></svg><span id="lbBookT">Foglalás</span></button></div><button type="button" class="lb-x" id="lbX" aria-label="Galéria bezárása">×</button></div>
+  <div class="lb-stage" id="lbStage"><button type="button" class="lb-nav p" id="lbP" aria-label="Előző kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div id="lbMedia" style="display:contents"></div><button type="button" class="lb-back lb-fsback" id="lbFsBack" aria-label="Vissza a galériához"><span class="lb-bk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/><path d="M8.5 12H20" opacity=".55"/></svg></span><span class="lb-bk-tx">Vissza</span></button><span class="lb-fscap" id="lbFsCap"></span><button type="button" class="lb-tilt" id="lbTilt" hidden><span class="lb-tilt-ic">📱</span><span><b>Mozgás bekapcsolása</b><small></small></span></button><span class="lb-fshint" id="lbFsHint">Döntsd a telefont vagy húzd az ujjad – körbenézhetsz a képen</span><button type="button" class="lb-nav n" id="lbN" aria-label="Következő kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div>
+  <div class="lb-reg"><canvas id="lbRegatta" aria-hidden="true"></canvas></div>
   <div class="lb-th" id="lbTh"></div>
 </div>
 
@@ -1277,30 +1338,74 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
 
   /* ---------------------------------------------------------------- galéria */
   const LB = { list: [], i: 0, title: "", tourBase: "" };
-  function openLb(title, list, i) {
-    LB.list = list; LB.i = i || 0; LB.title = title;
-    $("lbTitle").textContent = title;
+  function openLb(title, list, i, apt) {
+    LB.list = list; LB.i = i || 0; LB.title = title; LB.apt = apt || "";
+    $("lbBookT").textContent = "Foglalás"; $("lbBook").title = LB.apt ? "Foglalás – " + title : "Foglalás";
+    { const m = /^(.*?)(\s+apartman)$/i.exec(title); $("lbTitle").innerHTML = m ? `${esc(m[1])}<span class="lb-ap">${esc(m[2])}</span>` : esc(title); }
     $("lbTh").innerHTML = list.map((x, k) => `<button type="button" data-k="${k}" aria-label="${esc(x.cap)}"><img src="${esc(x.th || x.poster || x.src)}" alt="" loading="lazy"></button>`).join("");
-    $("lb").hidden = false; document.documentElement.style.overflow = "hidden"; showLb(); $("lbX").focus();
+    $("lb").hidden = false; document.documentElement.style.overflow = "hidden"; document.documentElement.classList.add("lb-lock"); showLb(); $("lbBack").focus();
   }
   function showLb() {
     const x = LB.list[LB.i]; if (!x) return;
     $("lbMedia").innerHTML = x.video ? `<video src="${esc(x.video)}" controls autoplay playsinline poster="${esc(x.poster || "")}"></video>` : `<img src="${esc(x.src)}" alt="${esc(LB.title + " – " + x.cap)}">`;
-    $("lbCap").textContent = `${x.cap} · ${LB.i + 1} / ${LB.list.length}`;
+    $("lbCap").textContent = `${x.cap} · ${LB.i + 1} / ${LB.list.length}`; $("lbFsCap").textContent = `${LB.i + 1} / ${LB.list.length}`; fitFull();
     const t = $("lbTour"); if (x.scene) { t.hidden = false; t.href = tourUrl(x.scene); if (PREVIEW) t.target = "_blank"; t.querySelector("b").textContent = "Virtuális séta ide: " + x.cap; } else t.hidden = true;
     $("lbTh").querySelectorAll("button").forEach((b) => b.setAttribute("aria-current", String(+b.dataset.k === LB.i)));
     const c = $("lbTh").querySelector('[aria-current="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
     const nx = LB.list[(LB.i + 1) % LB.list.length]; if (nx && !nx.video) { const im = new Image(); im.src = nx.src; }
   }
-  const stepLb = (d) => { LB.i = (LB.i + d + LB.list.length) % LB.list.length; showLb(); };
-  function closeLb() { $("lb").hidden = true; $("lbMedia").innerHTML = ""; document.documentElement.style.overflow = ""; }
-  $("lbX").addEventListener("click", closeLb); $("lbP").addEventListener("click", () => stepLb(-1)); $("lbN").addEventListener("click", () => stepLb(1));
+  const stepLb = (d) => { LB.i = (LB.i + d + LB.list.length) % LB.list.length; FP.x = 50; showLb(); };
+  function closeLb() { setFull(false); document.documentElement.classList.remove("lb-lock"); $("lb").hidden = true; $("lbMedia").innerHTML = ""; document.documentElement.style.overflow = ""; }
+  $("lbX").addEventListener("click", closeLb); $("lbBack").addEventListener("click", closeLb);
+  $("lbBook").addEventListener("click", () => {   /* a régi, apartman szerinti foglalás: rögtön az apartman naptára nyílik; a Vissza a képekhez hoz vissza */
+    if (!window.ZephyrBooking) return; const back = { t: LB.title, l: LB.list, i: LB.i, a: LB.apt }; closeLb();
+    ZephyrBooking.open({ apt: back.a, direct: !!back.a, backLabel: "Vissza a képekhez", back: () => openLb(back.t, back.l, back.i, back.a) }); }); $("lbP").addEventListener("click", () => stepLb(-1)); $("lbN").addEventListener("click", () => stepLb(1));
   $("lbTh").addEventListener("click", (e) => { const b = e.target.closest("[data-k]"); if (b) { LB.i = +b.dataset.k; showLb(); } });
-  $("lb").addEventListener("click", (e) => { if (e.target === $("lbStage")) closeLb(); });
-  document.addEventListener("keydown", (e) => { if ($("lb").hidden) return; if (e.key === "Escape") closeLb(); if (e.key === "ArrowRight") stepLb(1); if (e.key === "ArrowLeft") stepLb(-1); });
+  /* teljes képernyős nézet: a nagy képre koppintva kitölti a képernyőt, lapozható, a Vissza nyíl a galériába visz */
+  function fitFull() { const im = $("lbMedia").querySelector("img"); if (!im) return; const f = () => { if (!im.naturalWidth) return; const r = im.naturalWidth / im.naturalHeight, v = innerWidth / innerHeight; const pan = Math.max(r / v, v / r) >= 1.35; im.classList.toggle("pan", pan); $("lb").classList.toggle("has-pan", pan); if (pan && FP.sens) fpSet(FP.x); }; if (im.complete) f(); else im.addEventListener("load", f, { once: true }); }
+  function setFull(on) { const lb = $("lb"); if (lb.classList.contains("lb-full") === on) return; lb.classList.toggle("lb-full", on);
+    try { if (on && lb.requestFullscreen && !document.fullscreenElement) lb.requestFullscreen().catch(() => {}); else if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+    fitFull(); }
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && $("lb").classList.contains("lb-full")) setFull(false); });
+  addEventListener("resize", fitFull);
+  /* körbenézés a teljes képen: a telefon döntésével (mozgásérzékelő) vagy ujjhúzással */
+  const FP = { x: 50, base: null, moved: false, dn: null, sens: false, gotOri: false };
+  const fpImg = () => { const im = $("lbMedia").querySelector("img.pan"); return $("lb").classList.contains("lb-full") ? im : null; };
+  function fpSet(x) { const im = fpImg(); if (!im) return; FP.x = Math.max(0, Math.min(100, x)); im.classList.add("man"); im.style.objectPosition = FP.x.toFixed(1) + "% 50%"; }
+  function fpReset() { FP.x = 50; FP.base = null; }
+  function onTilt(e) { if (!fpImg() || e.gamma == null) return;
+    const land = Math.abs((screen.orientation && screen.orientation.angle) || window.orientation || 0) === 90;
+    const v = land ? (e.beta || 0) * ((screen.orientation ? screen.orientation.angle : window.orientation) === 90 ? 1 : -1) : e.gamma;
+    if (FP.base == null) FP.base = v; FP.sens = true; fpSet(50 + (v - FP.base) * 2.6); }
+  let tiltOn = false;
+  function onMotion(e) { if (FP.gotOri) return; const a = e.accelerationIncludingGravity; if (!a || a.x == null || !fpImg()) return;   /* tartalék, ha csak a gyorsulásmérő érhető el */
+    const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const g = Math.asin(Math.max(-1, Math.min(1, (ios ? 1 : -1) * a.x / 9.81))) * 180 / Math.PI;
+    if (FP.base == null) FP.base = g; FP.sens = true; fpHideBtn(); fpSet(50 + (g - FP.base) * 2.6); }
+  function listenTilt() { if (tiltOn) return; tiltOn = true; addEventListener("deviceorientation", (e) => { if (e.gamma != null) { FP.gotOri = true; fpHideBtn(); onTilt(e); } }); addEventListener("devicemotion", onMotion); }
+  function askTilt() {   /* iPhone: a mozgásérzékelőt csak közvetlenül egy koppintásra lehet kérni (tájolás és mozgás külön) */
+    const D = window.DeviceOrientationEvent, M = window.DeviceMotionEvent; const reqs = [];
+    try { if (D && typeof D.requestPermission === "function") reqs.push(D.requestPermission()); } catch (e) {}
+    try { if (M && typeof M.requestPermission === "function") reqs.push(M.requestPermission()); } catch (e) {}
+    if (!reqs.length) { listenTilt(); return; }
+    Promise.allSettled(reqs).then((r) => { if (r.some((x) => x.status === "fulfilled" && x.value === "granted")) listenTilt(); else fpNoSensor(true); });
+  }
+  function fpHideBtn() { const b = $("lbTilt"); if (b) b.hidden = true; }
+  function fpNoSensor(denied) { const b = $("lbTilt"); if (!b || !$("lb").classList.contains("lb-full") || !$("lb").classList.contains("has-pan") || FP.sens) return;
+    b.hidden = false; b.querySelector("small").textContent = denied ? "A telefon nem engedte – koppints ide újra, és válaszd az Engedélyezést" : "Koppints ide, és a kép a telefon döntésével mozog"; }
+  let tiltAsked = false;
+  $("lbMedia").addEventListener("click", (e) => { if (e.target.tagName !== "IMG") return; if (FP.moved) { FP.moved = false; return; }
+    const on = !$("lb").classList.contains("lb-full"); if (on && !tiltAsked) { tiltAsked = true; askTilt(); } fpReset(); setFull(on); if (on) setTimeout(() => fpNoSensor(false), 1600); else fpHideBtn(); });
+  $("lbTilt").addEventListener("click", (e) => { e.stopPropagation(); askTilt(); setTimeout(() => fpNoSensor(true), 1800); });
+  $("lbStage").addEventListener("pointerdown", (e) => { if (!fpImg() || e.target.tagName !== "IMG") return; FP.dn = { x: e.clientX, p: FP.x }; FP.moved = false; });
+  addEventListener("pointermove", (e) => { if (!FP.dn) return; const dx = e.clientX - FP.dn.x; if (Math.abs(dx) > 6) FP.moved = true; if (FP.moved) fpSet(FP.dn.p - dx / innerWidth * 160); });
+  addEventListener("pointerup", () => { FP.dn = null; setTimeout(() => { FP.moved = false; }, 350); });
+  $("lbFsBack").addEventListener("click", () => setFull(false));
+  $("lb").addEventListener("click", (e) => { if (e.target === $("lbStage") && !$("lb").classList.contains("lb-full")) closeLb(); });
+  document.addEventListener("keydown", (e) => { if ($("lb").hidden) return; if (e.key === "Escape") { if ($("lb").classList.contains("lb-full")) setFull(false); else closeLb(); } if (e.key === "ArrowRight") stepLb(1); if (e.key === "ArrowLeft") stepLb(-1); });
   (function swipe() { let x0 = null, y0 = 0; const st = $("lbStage");
     st.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
-    st.addEventListener("touchend", (e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) stepLb(dx < 0 ? 1 : -1); }); })();
+    st.addEventListener("touchend", (e) => { if (x0 == null) return; if (fpImg()) { x0 = null; return; } const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null; if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) stepLb(dx < 0 ? 1 : -1); }); })();
 
   /* ---------------------------------------------------------------- látnivalók */
   /* ---------------------------------------------------------------- látnivalók: rajzolt jelenetek (amíg nincs fotó) – Balaton, napsütés, vitorlás */
@@ -1642,7 +1747,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
 
   /* ---------------------------------------------------------------- kattintások: galéria, foglalás, tulajdonos */
   document.addEventListener("click", (e) => {
-    const g = e.target.closest("[data-gal]"); if (g) { const a = APTS.find((x) => x.id === g.dataset.gal); if (a && a.pics.length) openLb(a.name + " apartman", a.pics, 0); return; }
+    const g = e.target.closest("[data-gal]"); if (g) { const a = APTS.find((x) => x.id === g.dataset.gal); if (a && a.pics.length) openLb(a.name + " apartman", a.pics, 0, a.id); return; }
     const s = e.target.closest("[data-svc]"); if (s) { const x = SERVICES.find((y) => y.id === s.dataset.svc); if (x) openLb(x.title, x.media, +s.dataset.i || 0); return; }
     const b = e.target.closest("[data-book]"); if (b) { e.preventDefault(); if (window.ZephyrBooking) ZephyrBooking.open({ apt: b.dataset.book || "" }); return; }
     const o = e.target.closest(".owner-link[data-owner]"); if (o) { if (window.ZephyrAdmin) ZephyrAdmin.open({ tab: o.dataset.owner || "" }); }
@@ -1653,3 +1758,5 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
 </script>
 <!--ZEPHYR-BOOKING-JS-->
 <!--ZEPHYR-REGATTA-JS-->
+<!--ZEPHYR-I18N-->
+<script>/* zászlós nyelvválasztó a menüsorban */ if (window.ZI18N) ZI18N.mountPicker(document.querySelector("#nav .wrap"), { before: document.getElementById("burger") });</script>

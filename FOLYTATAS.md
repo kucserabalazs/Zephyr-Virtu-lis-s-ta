@@ -165,3 +165,26 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Kategóriánként mozgó illusztrációk (`evArt`, `EVCOL` színek), kategóriaszínű dátumcédula, kiemelt szalag, csoportcímkés szűrők („Mikor? / Milyen messze? / Mit keresel? / Extrák”), forgó hajókormány a hónapcímnél.
 - Minden programhoz **mini Balaton-térkép** (`evMap`, `EVGEO`, `LAKE`, valós arányú vetítés): Zephyr-jel, helyszín, szaggatott útvonal, hajó/komp esetén áthajózó kishajó.
 - A főoldali előzetes: jelenetsáv, zászlós gyorsgombok, kategóriaszínű mini kártyák illusztrációval.
+
+## 17. Admin app látványa + nagyobb betűk telefonon – 2026-11-01
+- Fejléc: napszak szerinti balatoni SVG-jelenet (`zxScene`), minden ma éjjel foglalt apartman egy vitorlás a saját színével és számával, elöl a Zephyr piros génuával (`topScene()` a `render()`-ben, csak változáskor rajzol újra).
+- Napi csempék illusztrációval (`statArt`): ház az apartmanok ablakaival (foglalt = világít), érkező / távozó vitorlás a stégnél, mentőöv. Hulladék-figyelmeztetésen kukásautó (`ZX_TRUCK`), üres állapotban ringó bója, kártyákon lobogó apartmanzászló, naptársávok vitorlaszalag-stílusban, szakaszcímek aranyérmes ikonnal, alsó menüben ringó kis vitorlás.
+- Telefonon (≤899 px) kb. 8–12%-kal nagyobb betűk és sötétebb szürke (`--mut: #46535f`) a jobb olvashatóságért.
+
+## 18. Foglalás: előbb az időpont, utána a szabad apartmanok – 2026-11-01
+- Új menet (`ZephyrBooking`, a séta forrásában, a kezdőoldal is ezt használja): **1. Időpont és vendégek** (közös naptár: egy nap szabad, ha legalább egy apartman szabad; ár = a legkedvezőbb szabad) → **2. Szabad apartmanok** (csak a teljes időszakra szabadok választhatók, a teljes szállásdíjjal; a foglaltak szürkén; több apartman egy foglalásban, férőhely-ellenőrzéssel) → 3. Adatok → 4. Kész.
+- Függvények: `loadAll` (minden apartman elérhetősége), `buildMap`, `freeAll`, `aptFree`, `freeApts`, `aptTotal`, `nearest` (legközelebbi azonos hosszú szabad időszak ±21 nap), `selError` (1. lépés), `aptError` (2. lépés).
+- Ha egy apartman oldaláról nyitják (`open({ apt })`), az 1. lépés annak a naptárát mutatja (`st.pre`), a 2. lépésben előre ki van jelölve, de a többi szabad is látszik.
+- A szerveroldali `/book` nem változott.
+
+## 19. Nyelvi alap (i18n) – 2026-11-01, ág: `nyelvi-alap-2026-11`
+- Motor: `forras/i18n/zephyr-i18n.js` (a build beírja a kezdőlapba és a sétába a `<!--ZEPHYR-I18N-->` helyére: `forras/tools/build_i18n.py`).
+- Nyelvfelismerés: `?lang=xx` → kézi választás (localStorage `zephyr-lang`) → böngésző/telefon nyelvei → angol (ha kész) → magyar. Csak kész szótárú nyelvre vált.
+- Szótár = magyar felirat → fordítás: `forras/i18n/nyelv/xx.json` (a build átmásolja: `weboldal/nyelv/`, az oldalak `../nyelv/xx.json`-t töltenek). Számok: `{#}`; „A · B” összetett feliratot részenként is fordít.
+- Kész nyelv = amelyik szótárában van fordítás (a build számolja). A többi a választóban „hamarosan”.
+- 24 nyelv: hu en de fr it es nl pl cs sk ro hr pt ru tr zh ja ko vi id hi bn ur ar; ar/ur jobbról balra (`dir="rtl"`, `html.zi-rtl`).
+- Mesterlista: `forras/i18n/nyelv/hu.json` (gyűjtő bejárással: 630 felirat). Gyűjtő mód: `?forditas=gyujt`, majd `ZI18N.collected()`.
+- Nem fordul automatikusan: vásznon rajzolt szöveg (regatta, játékok), a PHP e-mailek; ezeket a fordítás idején külön kell kezelni.
+- Választó: kezdőlap menüsor (zászló + kód, legördülő), séta: Beállítások panel „Nyelv · Language”.
+- Teendő a végén: teljes feliratgyűjtés (séta összes jelenete, admin nélkül), majd 23 nyelvre fordítás → `xx.json` fájlok.
+- Build: `forras/tools/build.sh` (a /home/claude/build/build.sh erre mutat).
