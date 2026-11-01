@@ -681,7 +681,7 @@ body.walk-on .walk-bar { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); 
   .thumb, .hint, .loader { transition: none; }
   .loader .bar i { animation: none; width: 100%; }
 }
-/* ---- Apartman-mappa (eszközjegyzék) ---- */
+/* ---- Apartmanmappa (eszközjegyzék) ---- */
 .bk-wrap { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; perspective: 2200px; outline: none; }
 .bk-back { position: absolute; inset: 0; background: rgba(8,18,30,.62); backdrop-filter: blur(4px); opacity: 0; transition: opacity .4s; }
 .bk-wrap.on .bk-back { opacity: 1; }
@@ -1535,12 +1535,12 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   function selError() {
     if (!st.ci) return "Válaszd ki az érkezés napját a naptárban.";
-    if (!st.co) return "Most válaszd ki a távozás napját.";
+    if (!st.co) return "Ezután válaszd ki a távozás napját.";
     const n = diff(st.ci, st.co);
     if (n < cfg.min_nights) return `Legalább ${cfg.min_nights} éjszakára lehet foglalni.`;
     if (n > cfg.max_nights) return `Online legfeljebb ${cfg.max_nights} éjszakára foglalhatsz – hosszabb tartózkodáshoz hívj minket: ${cfg.phone}`;
-    if (!rangeOk(st.ci, st.co)) return st.apts.length > 1 ? "A kiválasztott időszakban valamelyik apartman foglalt." : "A kiválasztott időszakban van foglalt nap.";
-    if (st.apts.length > 1 && st.adults < st.apts.length) return "Több apartmannál minden apartmanba legalább egy felnőtt kell.";
+    if (!rangeOk(st.ci, st.co)) return st.apts.length > 1 ? "A kiválasztott időszakban legalább egy apartman már foglalt." : "A kiválasztott időszakban legalább egy nap már foglalt.";
+    if (st.apts.length > 1 && st.adults < st.apts.length) return "Ha több apartmant választasz, minden apartmanhoz adj meg legalább egy felnőtt vendéget.";
     return "";
   }
 
@@ -1555,7 +1555,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   function demoNote() { return cfg.demo ? `<p class="zfb-demo">Bemutató mód – a foglalási rendszer a weboldalra feltöltve, élő naptárral működik. Itt az árak és a foglaltság csak minták.</p>` : ""; }
   function viewApts() {
     const sel = selApts(), cap = capTotal();
-    return demoNote() + `<h2 class="zfb-h">Melyik apartmant foglalnád?</h2><p class="zfb-multi-tip">Nagyobb társasággal több apartmant is kiválaszthatsz egy foglalásban – ugyanarra az időszakra.</p><div class="zfb-apts">` + cfg.apartments.map((a) => `
+    return demoNote() + `<h2 class="zfb-h">Melyik apartmant választod?</h2><p class="zfb-multi-tip">Nagyobb társasággal több apartmant is lefoglalhatsz egy foglalásban, ugyanarra az időszakra.</p><div class="zfb-apts">` + cfg.apartments.map((a) => `
       <button type="button" class="zfb-apt${st.apts.includes(a.id) ? " sel" : ""}" data-apt="${a.id}" aria-pressed="${st.apts.includes(a.id)}" style="--ac:${a.color}">
         <span class="zfb-no">${a.no}</span><span class="zfb-check" aria-hidden="true"></span><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő</small><em>${money(a.price)}-tól / éj</em><i>${st.apts.includes(a.id) ? "Kiválasztva ✓" : "Kiválasztom ›"}</i>
       </button>`).join("") + (cfg.apartments.some((a) => a.id === "kadett") ? "" : `
@@ -1899,7 +1899,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const blk = all.filter((b) => b.status === "block" && b.checkout >= t && !isExt(b));
     const ext = (src) => all.filter((b) => isExt(b) && b.source === src && b.checkout >= t);
     const closed = all.filter((b) => ["rejected", "cancelled", "expired"].includes(b.status) || (["paid", "block"].includes(b.status) && b.checkout < t && !isExt(b))).sort((a, b) => (b.created || 0) - (a.created || 0));
-    let h = sec("Jóváhagyásra vár", pend, pend.length ? `Ha ${A.data.settings.pending_days} napon belül nem döntesz, a kérés lejár és a napok felszabadulnak.` : "");
+    let h = sec("Jóváhagyásra vár", pend, pend.length ? `Ha ${A.data.settings.pending_days} napon belül nem döntesz, a kérés lejár, és a napok újra foglalhatóvá válnak.` : "");
     h += sec("Jóváhagyva – előlegre vár", appr);
     h += sec("Végleges foglalások", paid);
     h += sec("Szállás.hu foglalások", ext("szallas"), "Ehhez a naptárhoz igazodik minden: a Szállás.hu-ról jött napok itt és az Airbnb-n is lezárva. Itt nem módosíthatók.");
@@ -2425,9 +2425,9 @@ const PLANS = {
       ["wc", 0.07, 5.2, 0.45, 0.45, "", -90],
       ["box", 0.02, 5.7, 0.35, 0.4, "bojler"],
       ["sink", 0.1, 4.6, 0.55, 0.5],
-      ["box", 0.05, 6.4, 0.5, 0.6, "takarítószeres szekrény"],
-      ["box", 0.05, 7.08, 0.5, 0.6, "takarítószeres szekrény"],
-      ["shed", 0.05, 7.8, 0.5, 1.05, "zárható sufni"],
+      ["box", 0.05, 6.4, 0.5, 0.6, "tisztítószeres szekrény"],
+      ["box", 0.05, 7.08, 0.5, 0.6, "tisztítószeres szekrény"],
+      ["shed", 0.05, 7.8, 0.5, 1.05, "zárható tároló"],
       ["stairs", 4.5, 7.2, 0.9, 1.7, "lépcső a Kadetthez"], ["stairs", 4.5, 6.3, 0.9, 0.9, "", 0, "landing"], ["stairs", 3.25, 6.3, 1.25, 0.9],
       ["table6", 0.7, 7.29, 1.6, 0.75, "asztal", 90]] },
   /* Út a strandhoz és a privát stéghez – vázlat, nem méretarányos */
@@ -2569,7 +2569,7 @@ PLANS.dingi.furn.push(
   ["stairs", 6.78, 0.1, 0.85, 0.85, "", 0, "landing"],
   ["stairs", 6.78, 0.95, 0.85, 1],
   ["door", 7.65, 2, 0.1, 0.8, "Korvett bejárat"],
-  ["box", 6.17, 1.16, 0.5, 0.5, "mentőmellény állvány"],
+  ["box", 6.17, 1.16, 0.5, 0.5, "mentőmellénytartó"],
   ["box", 7, 3.09, 0.6, 0.8, "ágyneműs szekrény"],
   ["box", 5.14, 1.08, 0.45, 0.45, "porszívó"],
   ["box", 5.63, 1.08, 0.45, 0.45, "vasaló"],
@@ -2586,7 +2586,7 @@ PLANS.kadett.furn = PLANS.kadett.furn.filter((f) => f[2] < 6.2 || f[0] === "wind
   ["spiral", 0.05, 6.4, 1.1, 1.1, "csigalépcső"],
   ["stairs", 4.5, 6.3, 0.9, 0.9, "", 0, "landing"], ["stairs", 4.5, 7.2, 0.9, 2.0, "lépcső le a Schoonerhez"],
   ["fence", 4.42, 7.2, 0.06, 2.0, "korlát"],
-  ["box", 0, 7.39, 0.5, 0.8, "szennyestároló láda"],
+  ["box", 0, 7.39, 0.5, 0.8, "szennyestartó láda"],
   ["box", -0.02, 8.9, 0.5, 0.36, "klíma"], ["box", -0.02, 8.5, 0.5, 0.36, "klíma"],
   ["table5", 1.29, 7.85, 1.94, 0.91, "asztal"], ["box", 1.35, 6.45, 0.8, 0.15, "összecsukható ruhaszárító"],  /* két összetolt asztal, 5 szék; a napozóágy felőli oldalon nincs szék */
   ["lounger", 3.66, 7.38, 0.6, 1.8, "napozóágy"]
@@ -2781,8 +2781,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       $("gyroAsk").hidden = true;
       try {
         const r = await DOE.requestPermission();
-        if (r !== "granted") { setGyro(false); toast("A mozgásérzékelő engedélyezése elmaradt. Húzással továbbra is körbenézhetsz."); return; }
-      } catch (e) { setGyro(false); toast("A mozgásérzékelő ebben a nézetben nem érhető el. Húzással körbenézhetsz."); return; }
+        if (r !== "granted") { setGyro(false); toast("Nem engedélyezted a mozgásérzékelőt. Húzással továbbra is körbenézhetsz."); return; }
+      } catch (e) { setGyro(false); toast("Ebben a nézetben nem használható a mozgásérzékelő. Húzással körbenézhetsz."); return; }
     }
     window.addEventListener("deviceorientation", onOrient);
     setGyro(true);
@@ -2790,7 +2790,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     setTimeout(() => {
       if (gyroOn && !gyroSeen) {
         setGyro(false);
-        if (fromClick) toast("A mozgásérzékelő nem küld adatot. Nyisd meg az oldalt közvetlenül a böngészőben (Safari vagy Chrome), és engedélyezd a mozgás és tájolás elérését.", 6000);
+        if (fromClick) toast("Nem érkezik adat a mozgásérzékelőtől. Nyisd meg az oldalt közvetlenül a böngészőben (Safari vagy Chrome), és engedélyezd a mozgás- és tájolásérzékelést.", 6000);
       }
     }, 1500);
   }
@@ -3067,7 +3067,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
   /* ---------- Interaktív sárga jelek: grill begyújtása, csap, zuhany, kompresszor + matrac, SUP-jelenet, kerékpártúra ---------- */
   const FX_OF = { grill: "grill", tap: "tap", shower: "shower", compressor: "compressor", sup: "sup", fridge: "fridge", bin: "bin", highchair: "highchair", rack: "rack", vest: "vest" };
-  const INFO_SIZE = { "Mentőmellények": 1.35, "Apartman-mappa": 1.6 };  /* nagyobb jelek */
+  const INFO_SIZE = { "Mentőmellények": 1.35, "Apartmanmappa": 1.6 };  /* nagyobb jelek */
   function fxKind(info, sceneId) { const ik = infoIconKey(info); if (ik === "binder") return "binder"; if (ik === "bike" && sceneId === "kert") return "bike"; return FX_OF[ik] || null; }
   let fxCv = null, fxG = null, fxList = [], fxRaf = 0, fxLast = 0, stegReturn = null;
   const fr = (a, b) => a + Math.random() * (b - a);
@@ -4081,7 +4081,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       bR(g, -6, -8, 66, 16, 8, "#b0bec5", BO, 2.5); bC(g, 4, 0, 6, "#eceff1", BO, 2); bR(g, 34, -8, 26, 16, 8, "#1f5fa8", BO, 2);
       g.restore();
     } };
-  IT.corkscrew = { n: "Dugóhúzó", q: "", d: "Szárnyas dugóhúzó: becsavarod, a szárnyakat lenyomod, és a dugó kijön.", s: [[2.4, "cork"]],
+  IT.corkscrew = { n: "Dugóhúzó", q: "", d: "Szárnyas dugóhúzó: csavard a dugóba, majd nyomd le a szárnyakat – így könnyen kihúzhatod a dugót.", s: [[2.4, "cork"]],
     f(g, t, A) {
       if (!A) { g.translate(0, 20); g.scale(.72, .72); }
       const scr = A ? k01(t, .2, 1.3) : 1, wing = A ? k01(t, 1.3, 2.2) : .3, pull = A ? k01(t, 2.2, 2.8) : 0;
@@ -4096,7 +4096,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.restore();
       if (pull >= 1) bT(g, "POP!", 40, cork - 10, 20, "#c2185b", 900);
     } };
-  IT.canopener = { n: "Konzervnyitó", q: "", d: "A konzerv peremén körbetekerve felnyitja a fedelet.", s: [[.3, "crank"], [2.6, "pop"]],
+  IT.canopener = { n: "Konzervnyitó", q: "", d: "A konzervnyitóval a doboz pereme mentén haladva nyithatod fel a fedelet.", s: [[.3, "crank"], [2.6, "pop"]],
     f(g, t, A) {
       const rot = A ? Math.min(1, t / 2.4) : 0, lift = A ? k01(t, 2.5, 3) : 0;
       bR(g, -40, -20, 80, 70, 4, "#cfd8dc", BO, 2.5); bR(g, -40, 0, 80, 34, 0, "#e53935", 0); bT(g, "KUKORICA", 0, 17, 11, "#fff", 900); bR(g, -40, -20, 80, 70, 4, null, BO, 2.5);
@@ -4109,7 +4109,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         g.save(); g.translate(0, -2); g.rotate(A ? t * 9 : 0); bR(g, -3, -3, 26, 6, 3, "#90a4ae", BO, 1.5); bC(g, 22, 0, 5, "#1f5fa8", BO, 1.5); g.restore();
         g.restore(); }
     } };
-  IT.scissors = { n: "Olló", q: "", d: "Konyhai olló – csomagolás, fűszernövény vagy pizza vágásához.", s: [[.3, "snip"], [.85, "snip"], [1.4, "snip"], [1.95, "snip"]],
+  IT.scissors = { n: "Olló", q: "", d: "Konyhai olló – csomagolás, fűszernövények vagy pizza vágásához.", s: [[.3, "snip"], [.85, "snip"], [1.4, "snip"], [1.95, "snip"]],
     f(g, t, A) {
       const x = A ? -110 + Math.min(1, t / 2.4) * 180 : 0, open = A ? Math.abs(Math.sin(t * Math.PI / .55)) * .45 : .3;
       if (A) { const cut = Math.max(-120, Math.min(120, x + 20)); if (cut > -120) { bR(g, -120, 20, cut + 120, 28, 0, "#fff8e1", "#bcaaa4", 1.5); bR(g, -120, 52, cut + 120, 28, 0, "#fff8e1", "#bcaaa4", 1.5); } bR(g, cut, 20, 120 - cut, 60, 0, "#fff8e1", "#bcaaa4", 1.5);
@@ -4138,7 +4138,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         bT(g, nm, x, 70, 14, BO, 800); chip(g, "6 db", x, -40, k01(t, 1 + k * .7, 1.3 + k * .7));
       });
     } };
-  IT.pot = { n: "Főzőlábos", q: "", d: "Fedős lábas levesnek, főzelékeknek, tésztavíznek.", s: [[1, "boil"]],
+  IT.pot = { n: "Főzőlábos", q: "", d: "Fedeles lábas leveshez, főzelékhez és tésztafőzéshez.", s: [[1, "boil"]],
     f(g, t, A) {
       const b = A ? k01(t, .4, 1.4) : 0, rattle = A && t > 1.4 ? Math.sin(t * 40) * 2 : 0;
       if (A) { bR(g, -70, 50, 140, 12, 3, "#455a64", BO, 2); for (let k = 0; k < 7; k++) flame(g, -48 + k * 16, 50, .9, t + k); }
@@ -4148,7 +4148,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.save(); g.translate(rattle, -12 - Math.abs(rattle)); bP(g, "M-56 0 Q0 -22 56 0 Z", "#cfd8dc", BO, 2.5); bR(g, -9, -18, 18, 8, 4, BO, 0); g.restore();
       if (b > 0) steam(g, 0, -30, t, 3, 50);
     } };
-  IT.colander = { n: "Tésztaszűrő", q: "", d: "A kifőtt tésztáról lecsöpögteti a vizet.", s: [[.3, "pour"]],
+  IT.colander = { n: "Tésztaszűrő", q: "", d: "A szűrővel lecsöpögtetheted a kifőtt tésztát.", s: [[.3, "pour"]],
     f(g, t, A) {
       bP(g, "M-60 -20 L60 -20 Q56 40 0 44 Q-56 40 -60 -20 Z", "#ffb74d", BO, 2.5); bR(g, -78, -26, 20, 8, 4, "#ffb74d", BO, 2); bR(g, 58, -26, 20, 8, 4, "#ffb74d", BO, 2);
       for (let r = 0; r < 3; r++) for (let k = -4; k <= 4; k++) bC(g, k * 11 * (1 - r * .12), 2 + r * 12, 2.4, "#6d4c41", 0);
@@ -4156,20 +4156,20 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         for (let k = 0; k < 9; k++) drip(g, -32 + k * 8, 44, t + k * .13, "rgba(100,181,246,.9)", 1); steam(g, 0, -40, t, 3, 40, .5); }
       else for (let k = 0; k < 6; k++) { g.strokeStyle = "#fbc02d"; g.lineWidth = 4; g.beginPath(); g.moveTo(-30 + k * 10, -24); g.bezierCurveTo(-24 + k * 10, -34, -16 + k * 10, -18, -10 + k * 10, -26); g.stroke(); }
     } };
-  IT.grater = { n: "Sajtreszelő", q: "", d: "Sajtot, zöldséget reszelhetsz vele – négy oldalú reszelő.", s: [[.3, "grate"], [.9, "grate"], [1.5, "grate"]],
+  IT.grater = { n: "Sajtreszelő", q: "", d: "Négyoldalú reszelő sajthoz és zöldségekhez.", s: [[.3, "grate"], [.9, "grate"], [1.5, "grate"]],
     f(g, t, A) {
       bP(g, "M-30 50 L-22 -40 L22 -40 L30 50 Z", "#cfd8dc", BO, 2.5); bR(g, -14, -58, 28, 18, 8, null, BO, 3);
       for (let r = 0; r < 7; r++) for (let k = 0; k < 4; k++) bE(g, -16 + k * 10 + r % 2 * 4, -28 + r * 11, 2.8, 1.4, BO, 0);
       if (A) { const y = -20 + Math.abs(Math.sin(t * Math.PI / .6)) * 50, cs = Math.max(.3, 1 - t / 4); g.save(); g.translate(48, y); bP(g, `M-12 ${-30 * cs} L28 ${-30 * cs} L28 ${30 * cs} L-12 ${30 * cs} Z`, "#ffd54f", BO, 2); for (let k = 0; k < 3; k++) bC(g, k * 8, -8 + k * 9, 3, "#ffb300", 0); g.restore();
         for (let k = 0; k < Math.min(30, t * 10); k++) { const xx = 40 + (k * 7) % 40 - 10, yy = 52 - (k % 5) * 3; g.strokeStyle = "#fbc02d"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(xx, yy); g.quadraticCurveTo(xx + 3, yy - 5, xx + 7, yy - 1); g.stroke(); } }
     } };
-  IT.pan = { n: "Serpenyő", q: "", d: "Tapadásmentes serpenyő – tükörtojás, rántotta, pirítás.", s: [[.6, "sizzle"]],
+  IT.pan = { n: "Serpenyő", q: "", d: "Tapadásmentes serpenyő tükörtojáshoz, rántottához és pirításhoz.", s: [[.6, "sizzle"]],
     f(g, t, A) {
       bE(g, -10, 20, 70, 22, "#37474f", BO, 2.5); bE(g, -10, 16, 58, 16, "#263238", 0); bR(g, 58, 12, 70, 12, 6, "#5d4037", BO, 2.5);
       if (A) { const e = k01(t, .3, .7); g.save(); g.translate(-12, 16 - (1 - e) * 60); bP(g, "M-30 0 C -34 -14 -10 -16 0 -12 C 14 -18 32 -10 28 2 C 24 14 -26 14 -30 0 Z", "#fff", "#e0e0e0", 1.5); bC(g, 0, -2, 10, "#ffb300", "#ef8f00", 1.5); bC(g, -3, -5, 3, "rgba(255,255,255,.7)", 0); g.restore();
         if (t > .7) { for (let k = 0; k < 6; k++) { const q = ((t * 2 + k / 6) % 1); bC(g, -50 + k * 18, 6 - q * 26, 1.8, `rgba(255,214,0,${1 - q})`, 0); } steam(g, -10, -4, t, 3, 40, .45); } }
     } };
-  IT.crepe = { n: "Palacsintasütő", q: "", d: "Lapos palacsintasütő – a palacsinta könnyen fordítható.", s: [[1, "whoosh"], [1.7, "pop"]],
+  IT.crepe = { n: "Palacsintasütő", q: "", d: "Lapos palacsintasütő – könnyen megfordíthatod benne a palacsintát.", s: [[1, "whoosh"], [1.7, "pop"]],
     f(g, t, A) {
       const fl = A ? k01(t, .9, 1.7) : 0;
       g.save(); g.rotate(A && t > .7 && t < 1.1 ? -.15 : 0);
@@ -4180,14 +4180,14 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.restore();
       if (A && fl >= 1) bT(g, "Hopp!", 0, -70, 20, "#c2185b", 900);
     } };
-  IT.smallcut = { n: "Kiskanál és kisvilla", q: "", d: "Kávéhoz, teához, desszerthez.", s: [[.4, "stir"]],
+  IT.smallcut = { n: "Kiskanál és kisvilla", q: "", d: "Kávéhoz, teához és desszerthez.", s: [[.4, "stir"]],
     f(g, t, A) {
       if (A) { cup(g, -30, 30, "#fff", 1.6, t); g.save(); g.translate(-30 + Math.sin(t * 6) * 10, -4); g.rotate(.4 + Math.sin(t * 6) * .1); bE(g, 0, 26, 6, 8, "#cfd8dc", BO, 2); bP(g, "M-1.5 18 L-2 -30 L2 -30 L1.5 18", "#cfd8dc", BO, 2); g.restore();
         bR(g, 30, 40, 80, 8, 4, "#fff", BO, 2); g.save(); g.translate(60, 20); g.rotate(-.3); bP(g, "M-2 30 L-2 -6 L2 -6 L2 30 Z M-6 -6 L-6 -22 M-2 -6 L-2 -22 M2 -6 L2 -22 M6 -6 L6 -22 M-7 -12 Q0 -2 7 -12", "#cfd8dc", BO, 2); g.restore(); bP(g, "M40 34 Q60 20 80 34 Z", "#8d6e63", BO, 2); return; }
       g.save(); g.translate(-14, 0); g.rotate(-.2); bE(g, 0, -26, 8, 10, "#cfd8dc", BO, 2.5); bP(g, "M-2 -16 L-2 36 L2 36 L2 -16", "#cfd8dc", BO, 2.5); g.restore();
       g.save(); g.translate(14, 0); g.rotate(.2); bP(g, "M-2 36 L-2 -10 L2 -10 L2 36 Z M-7 -10 L-7 -32 M-2 -10 L-2 -32 M2 -10 L2 -32 M7 -10 L7 -32 M-8 -18 Q0 -4 8 -18", "#cfd8dc", BO, 2.5); g.restore();
     } };
-  IT.kidset = { n: "Gyermek étkészlet", q: "", d: "Törhetetlen, színes tányér, pohár és evőeszköz a legkisebbeknek.", s: [[.3, "giggle"]],
+  IT.kidset = { n: "Gyermek étkészlet", q: "", d: "Színes, törhetetlen tányérok, poharak és evőeszközök a legkisebbeknek.", s: [[.3, "giggle"]],
     f(g, t, A) {
       const b = A ? Math.abs(Math.sin(t * 5)) * 6 : 0;
       plate(g, -20, 30, 50, 15, "#81d4fa"); bC(g, -32, 26, 3, BO, 0); bC(g, -10, 26, 3, BO, 0); bP(g, "M-34 33 Q-21 42 -8 33", null, BO, 2.5);
@@ -4196,7 +4196,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (A) { heart(g, -60, -50 - (t % 1.5) * 10, 7, "#f06292"); sparkle(g, 70, -40, 8, .5 + .5 * Math.sin(t * 6)); }
     } };
   /* ---- konyhai eszközök ---- */
-  IT.microwave = { n: "Mikrohullámú sütő", q: "", d: "Ételmelegítés percek alatt – a végén csilingel.", s: [[2.6, "ding"]],
+  IT.microwave = { n: "Mikrohullámú sütő", q: "", d: "Néhány perc alatt felmelegítheted az ételt; a készülék a végén csilingel.", s: [[2.6, "ding"]],
     f(g, t, A) {
       bR(g, -78, -42, 156, 84, 8, "#eceff1", BO, 2.5); bR(g, -68, -32, 100, 64, 4, A && t < 2.6 ? "#fff3c4" : "#37474f", BO, 2);
       if (A) { const a = t * 2.2; g.save(); g.translate(-18, 18); bE(g, 0, 6, 34, 6, "rgba(255,255,255,.6)", BO, 1.5); g.translate(Math.sin(a) * 6, 0); bP(g, "M-16 0 L16 0 L12 -14 L-12 -14 Z", "#ef5350", BO, 2); g.restore(); if (t > 1) steam(g, -18, -6, t, 2, 20, .5); }
@@ -4205,7 +4205,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       for (let k = 0; k < 3; k++) bC(g, 55, -2 + k * 11, 3.5, "#90a4ae", BO, 1);
       if (A && t > 2.6) { bT(g, "Ding!", 0, -60, 20, "#c2185b", 900); sparkle(g, 64, -50, 9, .8); }
     } };
-  IT.washer = { n: "Mosógép", q: "", d: "Beépített elöltöltős mosógép – mosókapszulával indítható.", s: [[.3, "wash"]],
+  IT.washer = { n: "Mosógép", q: "", d: "Beépített, elöltöltős mosógép. Mosókapszulával is használhatod.", s: [[.3, "wash"]],
     f(g, t, A) {
       bR(g, -54, -64, 108, 128, 8, "#fafafa", BO, 2.5); bR(g, -54, -64, 108, 22, 8, "#eceff1", BO, 2); bC(g, 32, -53, 6, "#90a4ae", BO, 1.5); bR(g, -44, -58, 34, 10, 2, "#cfd8dc", BO, 1);
       bC(g, 0, 14, 38, "#b0bec5", BO, 2.5); bC(g, 0, 14, 30, "#90caf9", BO, 2);
@@ -4225,7 +4225,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       bC(g, -35, -10, 3, A ? "#ff1744" : "#7f0000", 0);
       if (A) steam(g, 12, 0, t, 3, 30, .6);
     } };
-  IT.kettle = { n: "Vízforraló", q: "", d: "Pár perc alatt felforralja a vizet teához, kávéhoz.", s: [[.2, "boil"], [2.8, "click"]],
+  IT.kettle = { n: "Vízforraló", q: "", d: "A vízforralóval néhány perc alatt kész a forró víz teához vagy kávéhoz.", s: [[.2, "boil"], [2.8, "click"]],
     f(g, t, A) {
       bR(g, -50, 56, 100, 10, 4, "#455a64", BO, 2);
       bP(g, "M-38 54 L-30 -30 Q0 -44 30 -30 L38 54 Z", "#eceff1", BO, 2.5); bP(g, "M30 -20 C 62 -20 62 40 36 44", null, BO, 4); bP(g, "M-32 -18 L-58 -36 L-54 -26 L-36 -6", "#eceff1", BO, 2.5);
@@ -4242,13 +4242,13 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.fillStyle = "rgba(255,255,255,.3)"; g.fillRect(-46, -24, 10, 60);
       if (A && t < 2.2) { g.save(); g.globalCompositeOperation = "lighter"; g.fillStyle = "rgba(255,120,40,.25)"; g.fillRect(-40, -40, 80, 12); g.restore(); }
     } };
-  IT.hob = { n: "Főzőlap", q: "", d: "Kétzónás elektromos főzőlap – a kijelölt fokozaton felizzik.", s: [[.3, "click"]],
+  IT.hob = { n: "Főzőlap", q: "", d: "Kétzónás elektromos főzőlap, állítható fokozatokkal.", s: [[.3, "click"]],
     f(g, t, A) {
       bR(g, -84, -40, 168, 80, 6, "#cfd8dc", BO, 2.5);
       [-40, 40].forEach((x, i) => { const glow = A ? k01(t, .3 + i * .8, 1.3 + i * .8) : 0; bC(g, x, -2, 26, `rgb(${Math.round(55 + 200 * glow)},${Math.round(71 - 30 * glow)},${Math.round(79 - 60 * glow)})`, BO, 2.5); for (let r = 0; r < 3; r++) bC(g, x, -2, 8 + r * 6, null, `rgba(0,0,0,${.3 - glow * .2})`, 1.2); if (glow > .5) steam(g, x, -32, t, 2, 24, .35 * glow); });
       [-60, 60].forEach((x, i) => { g.save(); g.translate(x, 30); bC(g, 0, 0, 7, "#eceff1", BO, 2); g.rotate(A ? k01(t, .3 + i * .8, .8 + i * .8) * 2.4 : 0); bL(g, [[0, 0], [0, -6]], BO, 2); g.restore(); });
     } };
-  IT.fridgefreezer = { n: "Fagyasztós hűtőszekrény", q: "", d: "Hűtő és fagyasztó: hideg italok, jégkocka is készíthető.", s: [[.3, "door"]],
+  IT.fridgefreezer = { n: "Fagyasztós hűtőszekrény", q: "", d: "A hűtőben hidegen tarthatod az italokat, a fagyasztóban pedig jégkockát is készíthetsz.", s: [[.3, "door"]],
     f(g, t, A) {
       const o = A ? k01(t, .3, 1.1) : 0;
       bR(g, -40, -76, 80, 152, 8, "#fafafa", BO, 2.5); bL(g, [[-40, -30], [40, -30]], BO, 2);
@@ -4257,7 +4257,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       bR(g, -32, -66, 4, 22, 2, BO, 0);
       if (A) { bC(g, 60, -60, 12, "rgba(225,245,255,.9)", "#90caf9", 1.5); bT(g, "❄", 60, -60, 16, "#1e88e5", 900); bR(g, 52, -30, 16, 16, 3, "rgba(178,235,242,.8)", "#4dd0e1", 1.5); }
     } };
-  IT.papertowel = { n: "Papírtörlő", q: "", d: "Konyhai papírtörlő tekercs a kiömlött dolgokra.", s: [[.3, "rip"]],
+  IT.papertowel = { n: "Papírtörlő", q: "", d: "Konyhai papírtörlő a kiömlött folyadékok feltörléséhez.", s: [[.3, "rip"]],
     f(g, t, A) {
       const pull = A ? k01(t, .2, 1.2) : 0;
       bR(g, -8, 56, 16, 10, 2, "#8d6e63", BO, 2); bR(g, -2, -70, 4, 128, 2, "#8d6e63", BO, 1.5);
@@ -4279,7 +4279,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const q = k01(t, .2, 1.1); pod(-70 + q * 120, -40 + q * 70 - Math.sin(q * Math.PI) * 50, 1.2, q * 4);
       if (t > 1.1) for (let k = 0; k < 8; k++) { const r = ((t * .8 + k / 8) % 1); bC(g, 50 + Math.sin(k * 2.3) * 18 * r, 30 - r * 20, 3 + r * 4, `rgba(255,255,255,${1 - r})`, 0); }
     } };
-  IT.sponge = { n: "Mosogatószivacs", q: "", d: "Puha és dörzsölős oldal – az edények tisztításához.", s: [[.3, "scrub"]],
+  IT.sponge = { n: "Mosogatószivacs", q: "", d: "A szivacs puha és dörzsölős oldalával az edényeket is megtisztíthatod.", s: [[.3, "scrub"]],
     f(g, t, A) {
       if (A) plate(g, 0, 40, 70, 18, "#fff");
       g.save(); g.translate(A ? Math.sin(t * 9) * 30 : 0, A ? 18 : 0); g.rotate(A ? Math.sin(t * 9) * .1 : -.1);
@@ -4288,7 +4288,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (A) for (let k = 0; k < 7; k++) { const q = ((t * .7 + k / 7) % 1); bC(g, -40 + k * 13, 24 - q * 40, 3 + q * 5, `rgba(225,245,255,${.9 * (1 - q)})`, `rgba(130,180,220,${1 - q})`, 1); }
       if (A && t > 2) sparkle(g, 40, 30, 10, .5 + .5 * Math.sin(t * 8));
     } };
-  IT.breadbasket = { n: "Kenyérkosár", q: "", d: "Fonott kosár a kenyérnek, péksüteménynek.", s: [[.3, "pop"]],
+  IT.breadbasket = { n: "Kenyérkosár", q: "", d: "Fonott kosár kenyér és péksütemény kínálásához.", s: [[.3, "pop"]],
     f(g, t, A) {
       const b = (x, y, rot) => { g.save(); g.translate(x, y); g.rotate(rot); bE(g, 0, 0, 30, 14, "#d7a86e", "#8d6e63", 2); for (let k = -1; k <= 1; k++) bL(g, [[k * 12 - 4, -8], [k * 12 + 4, 6]], "#a1887f", 2); g.restore(); };
       const q = A ? k01(t, .2, .8) : 1;
@@ -4298,7 +4298,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       for (let k = -5; k <= 5; k++) bL(g, [[k * 11, -6], [k * 9, 50]], "rgba(93,64,55,.5)", 1.5);
       bP(g, "M-40 -6 Q-30 -20 0 -16 Q30 -20 40 -6", "#fff", "#e57373", 1.5);
     } };
-  IT.cloth = { n: "Törölgetőrongy", q: "", d: "Konyharuha a tiszta edények szárazra törléséhez.", s: [[.3, "whoosh"]],
+  IT.cloth = { n: "Törölgetőrongy", q: "", d: "Konyharuhával szárazra törölheted a tiszta edényeket.", s: [[.3, "whoosh"]],
     f(g, t, A) {
       if (A) { plate(g, -10, 34, 60, 16, "#fff"); for (let k = 0; k < 3; k++) { const q = Math.max(0, 1 - t / 2) ; bC(g, -30 + k * 20, 34, 4 * q, `rgba(100,181,246,${q})`, 0); } }
       g.save(); g.translate(A ? Math.sin(t * 6) * 26 : 0, A ? 0 : 0); g.rotate(A ? Math.sin(t * 6) * .15 : 0);
@@ -4307,7 +4307,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.restore();
       if (A && t > 2) sparkle(g, 30, 20, 10, .5 + .5 * Math.sin(t * 8));
     } };
-  IT.bin = { n: "Szemetes", q: "", d: "Pedálos szemetes – szelektíven gyűjtsd, köszönjük!", s: [[.3, "click"], [1.6, "thunk"]],
+  IT.bin = { n: "Szemetes", q: "", d: "Pedálos szemetes – kérjük, szelektíven gyűjtsd a hulladékot. Köszönjük!", s: [[.3, "click"], [1.6, "thunk"]],
     f(g, t, A) {
       const lid = A ? (t < .3 ? 0 : t < 1.5 ? k01(t, .3, .6) : 1 - k01(t, 1.5, 1.7)) : 0;
       bP(g, "M-36 -40 L36 -40 L30 60 Q30 66 24 66 L-24 66 Q-30 66 -30 60 Z", "#90a4ae", BO, 2.5); bR(g, -20, 60, 18, 8, 2, BO, 0);
@@ -4315,7 +4315,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (A && t > .5 && t < 1.6) { const q = k01(t, .5, 1.4); g.save(); g.translate(-60 + q * 60, -90 + q * 100); g.rotate(q * 5); bP(g, "M-10 -10 L10 -8 L8 10 L-8 10 Z", "#e0e0e0", BO, 1.5); g.restore(); }
       bL(g, [[-24, -20], [-22, 50]], "rgba(255,255,255,.4)", 4);
     } };
-  IT.binbag = { n: "Szemeteszsák", q: "", d: "Tartalék zsák a szemeteshez – a szekrényben találod.", s: [[.4, "rip"]],
+  IT.binbag = { n: "Szemeteszsák", q: "", d: "Tartalék szemeteszsákot a szekrényben találsz.", s: [[.4, "rip"]],
     f(g, t, A) {
       const u = A ? k01(t, .3, 1.6) : 0;
       bR(g, -50, 10, 50, 50, 25, "#263238", BO, 2.5); bC(g, -25, 35, 10, "#90a4ae", BO, 1.5);
@@ -4325,33 +4325,33 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   const jar = (g, x, y, col, lab, cnt) => { bR(g, x - 26, y - 34, 52, 72, 8, "rgba(255,255,255,.6)", BO, 2.5); bR(g, x - 28, y - 46, 56, 14, 4, col, BO, 2); bR(g, x - 22, y - 10, 44, 46, 5, cnt, 0); bR(g, x - 20, y - 26, 40, 16, 3, "#fff", BO, 1.2); bT(g, lab, x, y - 18, 8, BO, 900); };
   IT.coffeebean = { n: "Kávé", q: "", d: "Őrölt kávé a kávéfőzőhöz – jó reggelt!", s: [[.3, "pour"]],
     f(g, t, A) { jar(g, -20, 10, "#6d4c41", "KÁVÉ", "#4e342e"); for (let k = 0; k < 5; k++) { g.save(); g.translate(-30 + k * 6, 30 - (k % 2) * 10); bE(g, 0, 0, 5, 3.5, "#3e2723", 0, 0, .5); g.restore(); } if (A) { cup(g, 60, 30, "#fff", 1.2, t); bT(g, "☕", 60, -40, 22, BO, 400); } else cup(g, 46, 36, "#fff", .8); } };
-  IT.sugar = { n: "Cukor", q: "", d: "Kristálycukor kávéhoz, teához, sütéshez.", s: [[.4, "pour"]],
+  IT.sugar = { n: "Cukor", q: "", d: "Kristálycukor kávéhoz, teához és sütéshez.", s: [[.4, "pour"]],
     f(g, t, A) { jar(g, -20, 10, "#eceff1", "CUKOR", "#fafafa"); if (A) { cup(g, 60, 34, "#fff", 1.2, t); for (let k = 0; k < 14; k++) { const q = ((t * 1.5 + k / 14) % 1); bR(g, 50 + (k % 4) * 5, -40 + q * 60, 3, 3, .5, "#fff", "#b0bec5", .8); } } } };
   IT.salt = { n: "Só", q: "", d: "Konyhasó a főzéshez.", s: [[.4, "shake"]],
     f(g, t, A) { jar(g, -30, 10, "#1f5fa8", "SÓ", "#fff"); if (A) { bE(g, 60, 50, 40, 10, "#fff", BO, 2); for (let k = 0; k < 16; k++) { const q = ((t * 1.3 + k / 16) % 1); bC(g, 50 + (k % 5) * 5, -30 + q * 78, 1.6, "#90a4ae", 0); } } } };
   IT.sweet = { n: "Édesítőszer", q: "", d: "Kalóriamentes édesítő tabletta.", s: [[.4, "click"], [.9, "click"]],
     f(g, t, A) { g.save(); g.translate(-20, 0); bR(g, -22, -50, 44, 100, 10, "#ffffff", BO, 2.5); bR(g, -22, -50, 44, 22, 8, "#26a69a", BO, 2); bT(g, "ÉDES", 0, 6, 9, "#26a69a", 900); g.restore(); if (A) { cup(g, 60, 34, "#fff", 1.2, t); for (let k = 0; k < 2; k++) { const q = k01(t, .4 + k * .5, .9 + k * .5); bC(g, 0 + q * 60, -30 + q * 60 - Math.sin(q * Math.PI) * 30, 4, "#fff", BO, 1.2); } } } };
-  IT.tea = { n: "Tea", q: "", d: "Filteres teák – vízforralóval pillanatok alatt.", s: [[.4, "pour"]],
+  IT.tea = { n: "Tea", q: "", d: "Filteres teák – a vízforralóval gyorsan elkészítheted őket.", s: [[.4, "pour"]],
     f(g, t, A) { cup(g, 0, 30, "#fff", 1.6, A ? t : null); if (A) { const d = k01(t, 0, .8); bR(g, -40, 10, 56, 20, 0, `rgba(141,110,99,${.4 * d + .1})`, 0); } g.save(); g.translate(10, A ? -40 + k01(t, 0, .8) * 40 + Math.sin(t * 3) * 6 : -30); bL(g, [[0, -30], [0, 10]], "#9e9e9e", 1.5); bR(g, -8, 10, 16, 20, 2, "#bcaaa4", "#8d6e63", 1.5); bR(g, -6, -44, 12, 14, 2, "#e53935", BO, 1.2); g.restore(); } };
-  IT.extinguisher = { n: "Porral oltó", q: "", d: "Tűzoltó készülék – a konyhaszekrény tetején található.", s: [[.6, "spray"]],
+  IT.extinguisher = { n: "Porral oltó", q: "", d: "A tűzoltó készüléket a konyhaszekrény tetején találod.", s: [[.6, "spray"]],
     f(g, t, A) {
       bR(g, -22, -40, 44, 104, 18, "#e53935", BO, 2.5); bR(g, -14, -10, 28, 30, 3, "#fff", BO, 1.5); bT(g, "ABC", 0, 0, 8, "#c62828", 900); bT(g, "6 kg", 0, 12, 7, BO, 800);
       bR(g, -8, -56, 16, 18, 3, BO, 0); bP(g, "M8 -52 L34 -60 L36 -54 L10 -46 Z", "#455a64", BO, 2); bP(g, "M-8 -50 C -40 -50 -40 20 -30 40", null, BO, 3);
       if (A && t > .5) { for (let k = 0; k < 24; k++) { const q = ((t * 1.4 + k / 24) % 1); bC(g, -30 - q * 60 + Math.sin(k) * 8 * q, 42 + Math.cos(k * 2) * 16 * q, 3 + q * 10, `rgba(250,250,250,${.9 * (1 - q)})`, 0); } }
       if (A) bT(g, "Szekrény tetején", 70, -70, 11, "#c62828", 800);
     } };
-  IT.firstaid = { n: "Elsősegély csomag", q: "", d: "Sebtapasz, kötszer, fertőtlenítő – a konyhaszekrény tetején.", s: [[.3, "pop"]],
+  IT.firstaid = { n: "Elsősegélycsomag", q: "", d: "Sebtapaszt, kötszert és fertőtlenítőt a konyhaszekrény tetején találsz.", s: [[.3, "pop"]],
     f(g, t, A) {
       const o = A ? k01(t, .3, 1) : 0;
       bR(g, -54, -30, 108, 70, 8, "#43a047", BO, 2.5); bR(g, -8, -18, 16, 46, 2, "#fff", 0); bR(g, -23, -3, 46, 16, 2, "#fff", 0); bR(g, -14, -42, 28, 12, 4, null, BO, 3);
       if (o > 0) { [[-60, -60, "#ffe0b2"], [0, -80, "#fff"], [60, -60, "#e3f2fd"]].forEach(([x, y, c], i) => { const q = k01(t, .3 + i * .2, .9 + i * .2); g.save(); g.globalAlpha = q; g.translate(x * q, -20 + (y + 20) * q); bR(g, -16, -8, 32, 16, 6, c, BO, 1.5); if (i === 0) { bC(g, -6, 0, 2, "#bcaaa4", 0); bC(g, 6, 0, 2, "#bcaaa4", 0); } g.restore(); }); }
       if (A) bT(g, "Szekrény tetején", 0, 66, 11, "#2e7d32", 800);
     } };
-  IT.toothpick = { n: "Fogvájó", q: "", d: "Fogvájó tartóban – falatkákhoz is jó.", s: [[.3, "pop"]],
+  IT.toothpick = { n: "Fogvájó", q: "", d: "Fogvájó tartóban – falatkákhoz is használhatod.", s: [[.3, "pop"]],
     f(g, t, A) { bR(g, -22, -10, 44, 60, 6, "#d7ccc8", BO, 2.5); for (let k = 0; k < 9; k++) { const up = A && k === 4 ? k01(t, .3, .9) * 50 : 0; bL(g, [[-16 + k * 4, -10 - up], [-16 + k * 4 + (k - 4) * 1.2, -40 - up]], "#c49a52", 2); } if (A && t > 1) { bC(g, 50, 0, 14, "#ffcc80", BO, 2); bC(g, 50, 0, 7, "#e53935", 0); bL(g, [[50, -30], [50, 10]], "#c49a52", 2); } } };
-  IT.napkin = { n: "Szalvéta", q: "", d: "Papírszalvéta étkezéshez.", s: [[.3, "whoosh"]],
+  IT.napkin = { n: "Szalvéta", q: "", d: "Papírszalvéta az étkezésekhez.", s: [[.3, "whoosh"]],
     f(g, t, A) { for (let k = 0; k < 4; k++) { const q = A ? k01(t, .2 + k * .25, .6 + k * .25) : 0; g.save(); g.translate(-20 + k * 4 + q * (k - 1.5) * 50, 20 - k * 6 - q * 30); g.rotate(-.1 + q * (k - 1.5) * .3); bP(g, "M-40 -30 L40 -30 L40 30 L-40 30 Z", ["#fff", "#fff8e1", "#e3f2fd", "#fce4ec"][k], BO, 2); bL(g, [[-40, 30], [40, -30]], "rgba(0,0,0,.12)", 1.5); g.restore(); } } };
-  IT.saltpepper = { n: "Só- és borsszóró", q: "", d: "Az asztali só- és borsszóró pár.", s: [[.4, "shake"]],
+  IT.saltpepper = { n: "Só- és borsszóró", q: "", d: "Só- és borsszóró az asztalra.", s: [[.4, "shake"]],
     f(g, t, A) {
       [[-24, "#fff", "S"], [24, "#424242", "B"]].forEach(([x, c, l], i) => { g.save(); g.translate(x + (A && i === 0 ? Math.sin(t * 20) * 4 : 0), A && i === 0 ? -10 : 0); g.rotate(A && i === 0 ? Math.PI * .85 + Math.sin(t * 20) * .1 : 0); bP(g, "M-16 40 L-16 -16 Q-16 -36 0 -36 Q16 -36 16 -16 L16 40 Z", c, BO, 2.5); bR(g, -16, -40, 32, 14, 6, "#b0bec5", BO, 2); for (let k = 0; k < 3; k++) bC(g, -6 + k * 6, -34, 1.6, BO, 0); bT(g, l, 0, 12, 18, c === "#fff" ? BO : "#fff", 900); g.restore(); });
       if (A) { bE(g, -24, 70, 36, 9, "#fff", BO, 2); for (let k = 0; k < 10; k++) { const q = ((t * 1.6 + k / 10) % 1); bC(g, -30 + (k % 4) * 4, 34 + q * 34, 1.5, "#90a4ae", 0); } }
@@ -4365,18 +4365,18 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.restore();
       if (A) for (let k = 0; k < 6; k++) { const q = ((t + k / 6) % 1); bC(g, 30 + Math.sin(k * 3) * 30, -30 - q * 40, 4 + q * 5, `rgba(255,255,255,${1 - q})`, `rgba(79,195,247,${1 - q})`, 1); }
     } };
-  IT.comb = { n: "Fésű", q: "", d: "Fésű a rendezett frizurához.", s: [[.3, "whoosh"]],
+  IT.comb = { n: "Fésű", q: "", d: "Fésű a hajad igazításához.", s: [[.3, "whoosh"]],
     f(g, t, A) {
       if (A) { bC(g, 0, 40, 34, "#ffd7a8", BO, 2); for (let k = 0; k < 9; k++) { const p = Math.min(1, t / 2); g.strokeStyle = "#6d4c41"; g.lineWidth = 3; g.beginPath(); g.moveTo(-30 + k * 7.5, 18); g.quadraticCurveTo(-30 + k * 7.5 + (1 - p) * Math.sin(k * 2) * 12, 0, -28 + k * 7.5 + p * 4, -12 + (1 - p) * Math.cos(k) * 8); g.stroke(); } }
       g.save(); g.translate(A ? -80 + ((t * 70) % 160) : 0, A ? -26 : 0); bR(g, -54, -10, 108, 14, 4, "#8d6e63", BO, 2.5); for (let k = 0; k < 18; k++) bL(g, [[-48 + k * 5.6, 4], [-48 + k * 5.6, k < 8 ? 22 : 18]], BO, 2); g.restore();
     } };
-  IT.hairdryer = { n: "Hajszárító", q: "", d: "Hajszárító – két fokozat, hidegfújás.", s: [[.3, "blow"]],
+  IT.hairdryer = { n: "Hajszárító", q: "", d: "Hajszárító két fokozattal és hideg levegő funkcióval.", s: [[.3, "blow"]],
     f(g, t, A) {
       bR(g, -60, -26, 90, 44, 22, "#7e57c2", BO, 2.5); bP(g, "M30 -18 L56 -14 L56 10 L30 14 Z", "#5e35b1", BO, 2.5); bP(g, "M-30 14 L-20 70 L-2 70 L-6 14 Z", "#7e57c2", BO, 2.5); bR(g, -18, 40, 8, 12, 2, "#ffeb3b", BO, 1.2);
       for (let k = 0; k < 5; k++) bL(g, [[-52, -14 + k * 7], [-44, -14 + k * 7]], "#4527a0", 2);
       if (A) { for (let k = 0; k < 9; k++) { const q = ((t * 1.8 + k / 9) % 1); g.strokeStyle = `rgba(255,${Math.round(160 + 60 * q)},120,${.9 * (1 - q)})`; g.lineWidth = 3; g.beginPath(); const y = -10 + (k - 4) * 6 * (1 + q); g.moveTo(60 + q * 70, y); g.quadraticCurveTo(70 + q * 80, y - 6, 80 + q * 80, y); g.stroke(); } }
     } };
-  IT.towel = { n: "Törölköző", q: "személyenként", d: "Puha frottír törölköző – fürdéshez, strandoláshoz.", s: [[.3, "whoosh"]],
+  IT.towel = { n: "Törölköző", q: "személyenként", d: "Puha frottír törölköző fürdéshez és strandoláshoz.", s: [[.3, "whoosh"]],
     f(g, t, A) {
       const unf = A ? k01(t, .2, 1) : 0;
       if (!A) { for (let k = 0; k < 3; k++) { bR(g, -54, 24 - k * 22, 108, 22, 6, ["#26a69a", "#fff", "#1e88e5"][k], BO, 2.5); bL(g, [[-54, 30 - k * 22], [54, 30 - k * 22]], "rgba(0,0,0,.15)", 2); } return; }
@@ -4386,7 +4386,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.fillStyle = "#fff"; g.fillRect(-60, 20 * unf + 6, 120, 6); g.fillRect(-60, 90 * unf + 6, 120, 6);
       g.restore();
     } };
-  IT.toiletpaper = { n: "WC-papír", q: "", d: "Puha WC-papír, tartalék tekercs is van.", s: [[.3, "rip"]],
+  IT.toiletpaper = { n: "WC-papír", q: "", d: "WC-papírt és tartalék tekercset is találsz.", s: [[.3, "rip"]],
     f(g, t, A) {
       const u = A ? k01(t, .2, 1.4) : 0;
       bE(g, 0, 0, 40, 40, "#fff", BO, 2.5); bC(g, 0, 0, 12, "#d7ccc8", BO, 2); bP(g, `M40 0 L40 ${30 + u * 60} L4 ${30 + u * 60} L4 36`, "#fff", BO, 2.5); for (let k = 1; k <= 3; k++) bL(g, [[6, 30 + k * 20 * u], [38, 30 + k * 20 * u]], "rgba(0,0,0,.18)", 1.5);
@@ -4402,40 +4402,40 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       bR(g, -18, -30, 36, 90, 8, "#ab47bc", BO, 2.5); bR(g, -12, -46, 24, 18, 4, "#ce93d8", BO, 2); bR(g, -12, 0, 24, 30, 3, "#fff", BO, 1.2); bT(g, "✿", 0, 15, 16, "#ab47bc", 900);
       if (A) { for (let k = 0; k < 14; k++) { const q = ((t * .9 + k / 14) % 1); bC(g, 16 + q * 90, -40 - Math.sin(k * 2.1) * 30 * q, 2 + q * 6, `rgba(206,147,216,${.8 * (1 - q)})`, 0); } for (let k = 0; k < 3; k++) { const q = ((t * .5 + k / 3) % 1); bT(g, "✿", 60 + k * 26, -10 - q * 50, 14, `rgba(171,71,188,${1 - q})`, 900); } }
     } };
-  IT.handsoap = { n: "Kézmosó folyadék", q: "", d: "Pumpás folyékony szappan a mosdónál.", s: [[.5, "squirt"]],
+  IT.handsoap = { n: "Kézmosó folyadék", q: "", d: "Folyékony szappan a mosdónál, pumpás adagolóban.", s: [[.5, "squirt"]],
     f(g, t, A) {
       const press = A ? Math.max(0, Math.sin(Math.min(t, 1.2) * Math.PI / .6)) * 6 : 0;
       bR(g, -26, -20, 52, 80, 10, "rgba(255,183,77,.85)", BO, 2.5); bR(g, -6, -36 + press, 12, 18, 2, "#fff", BO, 2); bP(g, `M-6 ${-38 + press} L28 ${-38 + press} L28 ${-32 + press} L-6 ${-32 + press} Z`, "#fff", BO, 2);
       if (A) { bE(g, 54, 54, 34, 12, "#ffd7a8", BO, 2); if (t > .6) bC(g, 52, 44 - Math.max(0, 1 - (t - .6) * 3) * 60, 7, "rgba(255,183,77,.9)", BO, 1.2); for (let k = 0; k < 8; k++) { const q = ((t * .8 + k / 8) % 1); if (t < 1.2) break; bC(g, 40 + (k % 4) * 9, 40 - q * 50, 3 + q * 5, `rgba(255,255,255,${1 - q})`, `rgba(130,180,220,${1 - q})`, 1); } }
     } };
-  IT.amenity = { n: "Szállodai bekészítés", q: "", d: "Sampon, tusfürdő, szappan és testápoló kis kiszerelésben.", s: [[.3, "pop"], [.6, "pop"], [.9, "pop"]],
+  IT.amenity = { n: "Fürdőszobai bekészítés", q: "", d: "Kis kiszerelésű sampon, tusfürdő, szappan és testápoló.", s: [[.3, "pop"], [.6, "pop"], [.9, "pop"]],
     f(g, t, A) {
       [["#4fc3f7", "SAMPON"], ["#81c784", "TUSFÜRDŐ"], ["#ffb74d", "TESTÁPOLÓ"]].forEach(([c, l], i) => { const q = A ? k01(t, .2 + i * .3, .5 + i * .3) : 1; if (q <= 0) return; g.save(); g.translate(-50 + i * 50, 20 - (1 - q) * 40); g.globalAlpha = q; bR(g, -14, -36, 28, 64, 8, c, BO, 2); bR(g, -8, -46, 16, 12, 3, "#fff", BO, 1.5); g.save(); g.rotate(-Math.PI / 2); bT(g, l, 0, 0, 7, "#fff", 900); g.restore(); g.restore(); });
       if (!A || t > 1.2) { bR(g, -30, 50, 60, 18, 8, "#fff", BO, 2); bT(g, "SZAPPAN", 0, 59, 7, "#7e57c2", 900); }
       if (A && t > 1.2) sparkle(g, 70, -40, 10, .5 + .5 * Math.sin(t * 6));
     } };
   /* ---- hálószoba ---- */
-  IT.charger = { n: "Univerzális töltő", q: "", d: "Minden USB-s eszközt tölt: telefon, tablet, fejhallgató.", s: [[.6, "plug"]],
+  IT.charger = { n: "Univerzális töltő", q: "", d: "USB-csatlakozós eszközöket tölthetsz vele, például telefont, tabletet vagy fejhallgatót.", s: [[.6, "plug"]],
     f(g, t, A) {
       bR(g, -90, -24, 50, 48, 8, "#fafafa", BO, 2.5); for (let k = 0; k < 3; k++) bR(g, -80, -14 + k * 12, 30, 6, 2, BO, 0); bC(g, -46, 16, 3, A ? "#00e676" : "#9e9e9e", 0);
       const lv = A ? Math.min(1, Math.max(.12, (t - .6) / 3)) : .12;
       [[30, -10, 1], [90, 10, .7]].forEach(([x, y, s], i) => { const pl = A ? k01(t, .2 + i * .3, .6 + i * .3) : 1; g.strokeStyle = BO; g.lineWidth = 2.5; g.beginPath(); g.moveTo(-40, -6 + i * 12); g.bezierCurveTo(-10, -6 + i * 12, x - 30, y + 40, x - 4, y + 30 * s * pl); g.stroke(); phone(g, x, y, s, A && t > .6 ? "#1e88e5" : "#90caf9"); if (A && t > .6) { battery(g, x, y - 6 * s, lv, .7 * s); bT(g, "⚡", x, y + 12 * s, 12 * s, "#ffeb3b", 900); } });
     } };
-  IT.nightlamp = { n: "Érintős éjjeli lámpa", q: "", d: "Érintésre bekapcsol, újabb érintéssel erősebb, majd kikapcsol.", s: [[.8, "click"], [1.8, "click"]],
+  IT.nightlamp = { n: "Érintős éjjeli lámpa", q: "", d: "Érintsd meg a lámpát a bekapcsoláshoz. Újabb érintéssel növelheted a fényerőt, a következővel pedig kikapcsolhatod.", s: [[.8, "click"], [1.8, "click"]],
     f(g, t, A) {
       const lvl = A ? (t < .8 ? 0 : t < 1.8 ? .5 : 1) : 0;
       if (lvl > 0) { const gr = g.createRadialGradient(0, -24, 4, 0, -24, 110); gr.addColorStop(0, `rgba(255,236,150,${.7 * lvl})`); gr.addColorStop(1, "rgba(255,236,150,0)"); g.fillStyle = gr; g.beginPath(); g.arc(0, -24, 110, 0, Math.PI * 2); g.fill(); }
       bC(g, 0, -24, 36, lvl > 0 ? `rgb(255,${Math.round(236 + 19 * lvl)},${Math.round(160 + 60 * lvl)})` : "#eceff1", BO, 2.5); bR(g, -6, 10, 12, 34, 3, "#90a4ae", BO, 2); bE(g, 0, 48, 30, 8, "#78909c", BO, 2.5);
       if (A) { const ty = t < .8 ? k01(t, 0, .7) : t < 1.1 ? 1 - k01(t, .8, 1.1) : t < 1.8 ? k01(t, 1.1, 1.7) : 1 - k01(t, 1.8, 2.1); hand(g, 40 - ty * 10, 60 - ty * 22, .9, -.6); if ((t > .75 && t < 1) || (t > 1.75 && t < 2)) bC(g, 6, 44, 10, null, "rgba(255,193,7,.9)", 2); }
     } };
-  IT.phoneholder = { n: "Mobiltartó", q: "", d: "Az ágy mellett: a telefon kézre esik, töltés közben is.", s: [[.5, "click"]],
+  IT.phoneholder = { n: "Mobiltartó", q: "", d: "Az ágy melletti csatlakozónál kényelmesen töltheted a telefonodat.", s: [[.5, "click"]],
     f(g, t, A) {
       const d = A ? k01(t, .2, .9) : 1;
       bP(g, "M-50 50 L50 50 L40 40 L-40 40 Z", "#90a4ae", BO, 2.5); bP(g, "M-6 40 L-6 0 L6 0 L6 40", "#b0bec5", BO, 2.5); bP(g, "M-30 4 L30 4 L36 -6 L-36 -6 Z", "#b0bec5", BO, 2.5);
       g.save(); g.translate(0, -40 - (1 - d) * 60); g.rotate(-.08); phone(g, 0, 0, 1.3, A && d >= 1 ? "#1e88e5" : "#90caf9"); if (A && d >= 1) { bT(g, "22:30", 0, -8, 9, "#fff", 900); bT(g, "Jó éjt!", 0, 6, 6, "#fff", 700); } g.restore();
     } };
   /* ---- nappali ---- */
-  IT.acremote = { n: "Klíma távirányító", q: "", d: "A bejáratnál, a falon lévő tartóban találod.", s: [[.4, "whoosh"], [1.6, "beep"]],
+  IT.acremote = { n: "Klímatávirányító", q: "", d: "A klíma távirányítóját a bejáratnál, a fali tartóban találod.", s: [[.4, "whoosh"], [1.6, "beep"]],
     f(g, t, A) {
       if (A) {  /* fal, ajtó, tartó: kiemelkedik a távirányító */
         bR(g, -150, -100, 300, 200, 0, "#f5f1e8", 0); bR(g, -130, -80, 70, 170, 3, "#8d6e63", BO, 2.5); bC(g, -70, 10, 4, "#ffd54f", BO, 1.5); bT(g, "BEJÁRAT", -95, -88, 9, BO, 900);
@@ -4449,7 +4449,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       }
       bR(g, -18, -50, 36, 100, 10, "#fafafa", BO, 2.5); bR(g, -12, -40, 24, 18, 3, "#102027", 0); bT(g, "22°", 0, -31, 9, "#4fc3f7", 900); for (let k = 0; k < 4; k++) bC(g, -6 + (k % 2) * 12, -6 + Math.floor(k / 2) * 14, 4, "#90a4ae", 0); bC(g, 0, 34, 6, "#1e88e5", 0);
     } };
-  IT.tvremote = { n: "TV távirányító", q: "", d: "Bekapcsolás, csatornaváltás, hangerő.", s: [[.7, "beep"]],
+  IT.tvremote = { n: "TV távirányító", q: "", d: "A távirányítóval be- és kikapcsolhatod a tévét, csatornát válthatsz és állíthatod a hangerőt.", s: [[.7, "beep"]],
     f(g, t, A) {
       const on = A && t > .8;
       if (A) { bR(g, -10, -94, 150, 92, 6, "#212121", BO, 2.5); bR(g, -4, -88, 138, 80, 2, on ? "#4fc3f7" : "#37474f", 0);
@@ -4458,19 +4458,19 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         if (t > .5 && t < 1) for (let k = 0; k < 3; k++) { const q = ((t * 3 + k / 3) % 1); g.strokeStyle = `rgba(244,67,54,${1 - q})`; g.lineWidth = 2; g.beginPath(); g.arc(-70, -10, 8 + q * 30, -1.2, -.2); g.stroke(); } }
       g.save(); g.translate(A ? -90 : 0, A ? 30 : 0); g.rotate(A ? -.5 : 0); bR(g, -16, -54, 32, 108, 10, "#263238", BO, 2.5); bC(g, 0, -40, 5, "#e53935", 0); for (let k = 0; k < 9; k++) bC(g, -8 + (k % 3) * 8, -22 + Math.floor(k / 3) * 10, 2.6, "#90a4ae", 0); bR(g, -6, 14, 12, 26, 5, "#455a64", 0); g.restore();
     } };
-  IT.floorlamp = { n: "Állólámpa", q: "", d: "Hangulatos, meleg fény esténként.", s: [[.5, "click"]],
+  IT.floorlamp = { n: "Állólámpa", q: "", d: "Esténként meleg fényű világítás teszi otthonosabbá a szobát.", s: [[.5, "click"]],
     f(g, t, A) {
       const on = A ? k01(t, .5, .9) : 0;
       if (on > 0) { const gr = g.createRadialGradient(0, -50, 4, 0, -10, 140); gr.addColorStop(0, `rgba(255,224,130,${.75 * on})`); gr.addColorStop(1, "rgba(255,224,130,0)"); g.fillStyle = gr; g.beginPath(); g.moveTo(-24, -40); g.lineTo(24, -40); g.lineTo(110, 90); g.lineTo(-110, 90); g.closePath(); g.fill(); }
       bP(g, "M-26 -40 L26 -40 L18 -84 L-18 -84 Z", on > 0 ? "#fff8e1" : "#f5f5f5", BO, 2.5); bL(g, [[0, -40], [0, 80]], BO, 4); bE(g, 0, 84, 30, 7, "#546e7a", BO, 2.5);
       bL(g, [[6, -10], [12, 6]], "#9e9e9e", 1.5); bC(g, 12, 8, 3, "#9e9e9e", 0);
     } };
-  IT.ac = { n: "Klíma", q: "", d: "Hűt és fűt – távirányítóval állítható.", s: [[.3, "beep"], [.6, "wind"]],
+  IT.ac = { n: "Klíma", q: "", d: "A klímával hűthetsz és fűthetsz; a beállításokat a távirányítóval módosíthatod.", s: [[.3, "beep"], [.6, "wind"]],
     f(g, t, A) {
       bR(g, -90, -60, 180, 50, 10, "#fafafa", BO, 2.5); const fl = A ? k01(t, .3, .9) : 0; g.save(); g.translate(-80, -16); g.rotate(fl * .35); bR(g, 0, -4, 160, 8, 3, "#eceff1", BO, 2); g.restore(); bC(g, 74, -48, 3, A ? "#29b6f6" : "#9e9e9e", 0); bT(g, A ? "22°C" : "", 50, -48, 9, "#29b6f6", 900);
       if (A && t > .6) { for (let k = 0; k < 10; k++) { const q = ((t * .8 + k / 10) % 1); g.strokeStyle = `rgba(79,195,247,${.9 * (1 - q)})`; g.lineWidth = 3; g.beginPath(); const x = -70 + k * 16; g.moveTo(x, -6 + q * 70); g.quadraticCurveTo(x + 8, 4 + q * 70, x, 14 + q * 70); g.stroke(); } for (let k = 0; k < 4; k++) { const q = ((t * .5 + k / 4) % 1); bT(g, "❄", -60 + k * 40, 10 + q * 70, 14, `rgba(79,195,247,${1 - q})`, 900); } }
     } };
-  IT.shutter = { n: "Redőny", q: "", d: "Leeresztve sötétít, és nyáron hűvösen tartja a szobát.", s: [[.3, "roll"]],
+  IT.shutter = { n: "Redőny", q: "", d: "Leengedve sötétít, és segít hűvösebben tartani a szobát nyáron.", s: [[.3, "roll"]],
     f(g, t, A) {
       bR(g, -70, -70, 140, 140, 3, "#81d4fa", BO, 2.5); bC(g, 40, -40, 14, "#fff59d", 0); bR(g, -70, 20, 140, 50, 0, "#a5d6a7", 0); bL(g, [[0, -70], [0, 70]], BO, 2.5);
       const dn = A ? (t < 2 ? k01(t, .2, 1.8) : 1 - k01(t, 2.6, 4)) : .35;
@@ -4478,24 +4478,24 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       bR(g, -78, -84, 156, 16, 3, "#eceff1", BO, 2.5);
       if (A && dn > .95) { g.fillStyle = "rgba(0,0,0,.15)"; g.fillRect(-150, -100, 300, 200); bT(g, "Zzz", 100, -40, 16, "#1f5fa8", 900); }
     } };
-  IT.mosquito = { n: "Szúnyogháló", q: "", d: "Az ablakon a szúnyogháló kint tartja a rovarokat.", s: [[.8, "bzz"]],
+  IT.mosquito = { n: "Szúnyogháló", q: "", d: "Az ablakon lévő szúnyogháló segít távol tartani a rovarokat.", s: [[.8, "bzz"]],
     f(g, t, A) {
       bR(g, -60, -70, 120, 140, 3, "rgba(200,230,201,.4)", BO, 2.5); g.strokeStyle = "rgba(20,32,42,.25)"; g.lineWidth = 1; for (let k = -60; k <= 60; k += 7) { g.beginPath(); g.moveTo(k, -70); g.lineTo(k, 70); g.stroke(); } for (let k = -70; k <= 70; k += 7) { g.beginPath(); g.moveTo(-60, k); g.lineTo(60, k); g.stroke(); }
       if (A) { for (let i = 0; i < 3; i++) { const ph = (t * .9 + i * .33) % 1, x = 140 - Math.abs(Math.sin(ph * Math.PI)) * 74 - (i * 6), y = -30 + i * 30 + Math.sin(t * 12 + i) * 6; g.save(); g.translate(x, y); bL(g, [[0, 0], [12, 0]], "#424242", 2); bE(g, 4, -4, 6, 3, "rgba(200,220,255,.7)", "#424242", 1, -.4 + Math.sin(t * 60) * .3); bL(g, [[-8, 0], [0, 0]], "#424242", 1.2); if (ph > .45 && ph < .55) { bT(g, "!", 0, -14, 12, "#e53935", 900); } g.restore(); } bT(g, "Kint maradnak!", 0, 86, 13, "#2e7d32", 900); }
       else { g.save(); g.translate(80, -20); bL(g, [[0, 0], [12, 0]], "#424242", 2); bE(g, 4, -4, 6, 3, "rgba(200,220,255,.7)", "#424242", 1, -.4); g.restore(); }
     } };
   /* ---- terasz ---- */
-  IT.ashtray = { n: "Hamutál", q: "", d: "Dohányzás csak a teraszon – a hamutálba.", s: [[.3, "pop"]],
+  IT.ashtray = { n: "Hamutál", q: "", d: "Dohányozni csak a teraszon szabad; kérjük, használd a hamutálat.", s: [[.3, "pop"]],
     f(g, t, A) {
       bE(g, 0, 30, 60, 16, "#90a4ae", BO, 2.5); bE(g, 0, 26, 44, 10, "#546e7a", 0); [-1, 1].forEach((s) => bR(g, s * 52 - 6, 18, 12, 6, 2, "#78909c", BO, 1.2));
       if (A) { g.save(); g.translate(-10, 22); g.rotate(-.15); bR(g, -2, -4, 50, 8, 2, "#fff", BO, 1.5); bR(g, 34, -4, 14, 8, 1, "#ffb74d", 0); bC(g, -3, 0, 4, `rgb(255,${Math.round(90 + 60 * Math.sin(t * 6))},40)`, 0); g.restore(); steam(g, -14, 10, t, 2, 60, .45); bT(g, "Csak a teraszon", 0, -60, 13, "#c62828", 900); }
     } };
-  IT.standash = { n: "Álló hamutál", q: "", d: "A bejárat melletti álló hamutál – a csikket ide dobd.", s: [[.9, "thunk"]],
+  IT.standash = { n: "Álló hamutál", q: "", d: "A bejárat mellett álló hamutálba dobd a cigarettacsikket.", s: [[.9, "thunk"]],
     f(g, t, A) {
       bR(g, -18, -50, 36, 120, 10, "#b0bec5", BO, 2.5); bE(g, 0, -50, 18, 6, "#546e7a", BO, 2); bE(g, 0, 70, 30, 8, "#78909c", BO, 2.5);
       if (A) { const q = k01(t, .2, .9); g.save(); g.translate(-90 + q * 90, -90 + q * 40 - Math.sin(q * Math.PI) * 30); g.rotate(q * 6); bR(g, -10, -2, 20, 5, 2, "#fff", BO, 1); bR(g, 4, -2, 6, 5, 1, "#ffb74d", 0); g.restore(); if (t > .9) bT(g, "Köszönjük!", 60, -60, 13, "#2e7d32", 900); }
     } };
-  IT.rack = { n: "Ruhaszárító", q: "", d: "Kihajtható ruhaszárító a fürdőruháknak, törölközőknek.", s: [[.3, "whoosh"]],
+  IT.rack = { n: "Ruhaszárító", q: "", d: "Kihajtható ruhaszárító fürdőruhákhoz és törölközőkhöz.", s: [[.3, "whoosh"]],
     f(g, t, A) {
       const op = A ? k01(t, .2, 1) : .2;
       bL(g, [[-4, -40], [-30 - 30 * op, 70]], BO, 3.5); bL(g, [[4, -40], [30 + 30 * op, 70]], BO, 3.5);
@@ -4552,7 +4552,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     halo: { t: "Hálószoba", sub: "Kényelem éjjel", c: "#6a1b9a", ic: "nightlamp", items: ["charger", "nightlamp", "phoneholder", "towel"] },
     nappali: { t: "Nappali", sub: "Szórakozás és klíma", c: "#2e7d32", ic: "tvremote", items: ["acremote", "tvremote", "floorlamp", "ac", "shutter", "mosquito"] },
     terasz: { t: "Terasz", sub: "Szabadban", c: "#00796b", ic: "ashtray", items: ["ashtray", "standash", "rack"] },
-    info: { t: "Elérhetőség", sub: "WiFi, cím, kapcsolat", c: "#14202a", ic: null }
+    info: { t: "Elérhetőség", sub: "Wi-Fi, cím és kapcsolat", c: "#14202a", ic: null }
   };
   const BIG_APT = { korvett: 1, kaloz: 1, schooner: 1, kadett: 1 };
   const NO_WASHER = { dingi: 1 };
@@ -4569,7 +4569,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const gr = GROUPS.find((q) => q.id === gid) || { name: "Zephyr", no: "" };
     const pages = (BIG_APT[gid] ? ["konyha", "eszkoz", "furdo", "halo", "nappali", "terasz", "info"] : ["konyha", "eszkoz", "nappali", "furdo", "info"]);
     bkState = { gid, gr, pages, i: 0, stage: null };
-    bkEl = document.createElement("div"); bkEl.className = "bk-wrap"; bkEl.setAttribute("role", "dialog"); bkEl.setAttribute("aria-label", "Apartman-mappa – eszközjegyzék");
+    bkEl = document.createElement("div"); bkEl.className = "bk-wrap"; bkEl.setAttribute("role", "dialog"); bkEl.setAttribute("aria-label", "Apartmanmappa – eszközjegyzék");
     bkEl.innerHTML = `<div class="bk-back"></div>
       <div class="bk-book">
         <div class="bk-rings">${"<i></i>".repeat(9)}</div>
@@ -6088,8 +6088,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
             const k = ts - e.ts, mx = e.jx * W + e.jd * 15.5 * Z, my = jy - 12 * Z;
             /* hanghullámok a megafonból */
             if (k > 1.1) for (let i = 0; i < 3; i++) { const q = ((ts * 1.6 + i / 3) % 1); g.strokeStyle = `rgba(255,255,255,${.9 * (1 - q)})`; g.lineWidth = 1.2; g.beginPath(); g.arc(mx, my, 3 + q * 14, e.jd > 0 ? -.6 : Math.PI - .6, e.jd > 0 ? .6 : Math.PI + .6); g.stroke(); }
-            if (k > 1.1 && k < 4) bubble(e.jx * W, my - 8, "RENDŐRSÉG! Álljanak meg!", e.jx * W, Math.min(1, (k - 1.1) * 4) * Math.min(1, (4 - k) * 4));
-            if (k > 4.1 && k < 7.3) bubble(e.jx * W, my - 8, "Ez versenypálya!\nAzonnal hagyják el!", e.jx * W, Math.min(1, (k - 4.1) * 4) * Math.min(1, (7.3 - k) * 4));
+            if (k > 1.1 && k < 4) bubble(e.jx * W, my - 8, "Rendőrség! Állj meg!", e.jx * W, Math.min(1, (k - 1.1) * 4) * Math.min(1, (4 - k) * 4));
+            if (k > 4.1 && k < 7.3) bubble(e.jx * W, my - 8, "Ez versenypálya!\nAzonnal hagyd el!", e.jx * W, Math.min(1, (k - 4.1) * 4) * Math.min(1, (7.3 - k) * 4));
           }
         });
       } else if (extra) {
@@ -6217,7 +6217,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   const WALKS = {
     steg: { name: "Séta a napozóstégig", path: ["utca", "strand-ut1", "strand-ut2", "strand-bejarat", "strand-part", "strand-pallo", "strand-lepcso", "strand-viz", "steg-viz", "steg"] },
     home: { name: "Dimenziókapu az utcára", portal: "utca", look: .233 },
-    up: { name: "Fel a Fregatt és Kalóz apartmanokhoz", mode: "foot", path: ["oldal-bejaro", "fedett-bejaro", "emelet", "folyoso-fregatt"] }
+    up: { name: "Fel a Fregatt és a Kalóz apartmanhoz", mode: "foot", path: ["oldal-bejaro", "fedett-bejaro", "emelet", "folyoso-fregatt"] }
   };
   let walking = null;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -7160,7 +7160,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   /* A panorámaképek feliratai helyett nemzetközi jelek */
   const INFO_ICON = { "Kerti csap": "tap", "Mentőmellények": "vest", "Közös hűtő": "fridge", "Hulladékgyűjtő": "bin", "Grillező": "grill",
     "Kerti zuhanyzó": "shower", "Kerti mosogató": "sink", "SUP-ok": "sup", "Kerékpárok": "bike", "Kompresszor": "compressor",
-    "Kerti hűtőszekrény": "fridge", "Etetőszék": "highchair", "Ruhaszárító": "rack", "Apartman-mappa": "binder", "Napozóágy": "sunbed", "Pavilon": "terrace", "Kerti asztal": "dining", "Tároló": "shed", "Mosdó": "wc", "Napozóstég": "sundeck", "Franciaággyá\nnyitható": "sofabed" };
+    "Kerti hűtőszekrény": "fridge", "Etetőszék": "highchair", "Ruhaszárító": "rack", "Apartmanmappa": "binder", "Napozóágy": "sunbed", "Pavilon": "terrace", "Kerti asztal": "dining", "Tároló": "shed", "Mosdó": "wc", "Napozóstég": "sundeck", "Franciaággyá\nnyitható": "sofabed" };
   function infoIconKey(info) { return info[4] === "sign" ? null : info[3] === "P" ? "parking" : INFO_ICON[info[2]] || null; }
   /* Lakásalaprajzok (icons: true) piktogramjai */
   const ROOM_ICON = { "Hálószoba": "bed", "Nappali · konyha": ["sofa", "dining"], "Nappali": "sofa", "Konyha": "pot", "Fürdő": ["shower", "wc"], "Fürdőszoba": ["shower", "wc"],
@@ -7168,7 +7168,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   /* Bútorjelek: csak ahol a rajz magától nem egyértelmű; a többi felirat jel nélkül eltűnik */
   const FURN_ICON = { "szekrény": "coat", "bojler": "boiler", "TV": "tv", "klíma": "snow", "konyhapult": 0, "mosógép": "washer", "hűtő": "fridge",
     "ágy": "bed", "kanapéágy": "sofa", "fotel": "armchair", "asztal": "table", "étkezőasztal": "dining", "pouf": "pouf", "bejárati ajtó": "entry", "teraszajtó": 0,
-    "erkélyajtó": 0, "erkélyasztal": "table", "asztalka": "table", "kinyitható asztal": "table", "állólámpa": "floorlamp", "polc": "shelf", "csigalépcső": "roof", "lépcső a Kadetthez": "roof", "lépcső le a Schoonerhez": "stairs", "lépcső le a földszintre": "stairs", "lépcső fel az emeletre": "stairs", "Fregatt bejárat": "entry", "korlát": 0, "közös nagy hűtő": "fridge", "porszívó": "vacuum", "napozóágy": "sunbed", "szennyestároló láda": "laundry", "vasaló": "iron", "mentőmellény állvány": "vest", "összecsukható etetőszék": "highchair", "összecsukható ruhaszárító": "dryrack", "ágyneműs szekrény": "linen", "Korvett bejárat": "entry", "zárható sufni": "lock", "takarítószeres szekrény": "clean" };
+    "erkélyajtó": 0, "erkélyasztal": "table", "asztalka": "table", "kinyitható asztal": "table", "állólámpa": "floorlamp", "polc": "shelf", "csigalépcső": "roof", "lépcső a Kadetthez": "roof", "lépcső le a Schoonerhez": "stairs", "lépcső le a földszintre": "stairs", "lépcső fel az emeletre": "stairs", "Fregatt bejárat": "entry", "korlát": 0, "közös nagy hűtő": "fridge", "porszívó": "vacuum", "napozóágy": "sunbed", "szennyestartó láda": "laundry", "vasaló": "iron", "mentőmellénytartó": "vest", "összecsukható etetőszék": "highchair", "összecsukható ruhaszárító": "dryrack", "ágyneműs szekrény": "linen", "Korvett bejárat": "entry", "zárható tároló": "lock", "tisztítószeres szekrény": "clean" };
   /* Felirat nélküli tárgyak jele a típusuk alapján */
   const TYPE_ICON = { shower: "shower", wc: "wc", sink: "sink", bed: "bed", sofa: "sofa" };
   function siteParts(t) {
@@ -8070,9 +8070,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       <section class="set-sec"><h4>Nézet</h4><div class="set-devs" role="radiogroup" aria-label="Nézet eszköze">${devs.map(([k, n]) => `<button type="button" class="set-dev" role="radio" data-dev="${k}">${DEV_ICON[k]}<span>${n}</span></button>`).join("")}</div></section>
       <section class="set-sec"><h4>Megjelenítés</h4>
         ${sw("btnMap", ICS.map, "Alaprajz", "Házvázlat és lakásrajz a képernyőn")}
-        ${sw("btnRotate", ICS.rot, "Automatikus körbenézés", "A kép lassan magától forog")}
+        ${sw("btnRotate", ICS.rot, "Automatikus körbenézés", "A kép lassan, automatikusan körbefordul")}
         ${device !== "pc" ? sw("btnGyro", ICS.gyro, "Mozgás a telefon forgatásával", "Körbenézés a készülék mozgatásával") : ""}
-        ${sw("btnFull", ICS.full, "Teljes képernyő", "Kilépés: Esc vagy újra ez a gomb")}
+        ${sw("btnFull", ICS.full, "Teljes képernyő", "Kilépés: Esc billentyű vagy ez a gomb")}
       </section>
       <button type="button" class="set-book">Szabad napok, foglalás</button>
     </div>`;
@@ -8947,7 +8947,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
           const title = S.st === "intro" ? "Pizza a kacsáknak" : S.st === "win" ? `${S.lv}. szint teljesítve!` : "Most nem sikerült";
           g.fillText(title, W / 2, py + 34);
           g.fillStyle = "#e6eef6"; g.font = "600 14px Manrope, Arial, sans-serif";
-          const lines = S.st === "intro" ? [`Koppints a vízre – oda repül a pizza.`, `${c.time} mp alatt gyűjts ${c.target} pontot ${c.pizzas} pizzával!`, `Sorozatban eltalálva szorzó jár; a 2. szinttől`, `repülő madarakat is elkaphatsz röptében.`] : S.st === "win" ? [`${S.score} pont · ${S.fed} jóllakott madár`, `A következő szinten gyorsabbak a madarak,`, `és több pontot kell gyűjteni.`] : [`${S.score} / ${c.target} pont`, `Célozz a madár elé, mert úsznak!`];
+          const lines = S.st === "intro" ? [`Koppints a vízre – oda repül a pizza.`, `${c.time} mp alatt gyűjts ${c.target} pontot ${c.pizzas} pizzával!`, `Sorozatban eltalálva szorzó jár; a 2. szinttől`, `repülő madarakat is elkaphatsz röptében.`] : S.st === "win" ? [`${S.score} pont · ${S.fed} jóllakott madár`, `A következő szinten gyorsabbak a madarak,`, `és több pontot kell gyűjtened.`] : [`${S.score} / ${c.target} pont`, `Célozz a madarak elé, mert úsznak!`];
           lines.forEach((l, i) => g.fillText(l, W / 2, py + 66 + i * 21));
           const bwid = (pw - 50) / 2, by = py + ph - 58;
           const btn = (x, label, gold) => { g.fillStyle = gold ? "#f2b233" : "rgba(255,255,255,.16)"; g.beginPath(); g.roundRect ? g.roundRect(x, by, bwid, 42, 21) : g.rect(x, by, bwid, 42); g.fill(); g.fillStyle = gold ? "#14202a" : "#fff"; g.font = "800 15px Manrope, Arial, sans-serif"; g.fillText(label, x + bwid / 2, by + 22); return { x, y: by, w: bwid, h: 42 }; };
@@ -8956,7 +8956,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
           else L.b2 = btn(W / 2 - bwid / 2, "Újra", true);
         }
       },
-      help: "Koppints a vízre: oda dobod a pizzát. Célozz a madár elé – úsznak! Szintenként gyorsabbak, és a 2. szinttől repülő sirályokat, cséreket is elkaphatsz."
+      help: "Koppints a vízre: oda dobod a pizzát. Célozz a madarak elé – úsznak! Szintenként gyorsabbak, és a 2. szinttől repülő sirályokat, cséreket is elkaphatsz."
     };
   }
 
@@ -8977,7 +8977,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function gameRing() {
     let C = null;
     const mk = () => { const Z = gmRnd(8, 26); return { X: 0, Z, pts: Math.round(10 + Z * 1.6), v: gmRnd(-.5, .5), init: true }; };
-    const S = { targets: [mk(), mk(), mk()], rings: [], fx: [], score: 0, throws: 0, hits: 0, cool: 0, msg: "Koppints a bójára (vagy elé): oda dobod a mentőövet! A távolabbi bóják többet érnek." };
+    const S = { targets: [mk(), mk(), mk()], rings: [], fx: [], score: 0, throws: 0, hits: 0, cool: 0, msg: "Koppints a bójára (vagy elé): oda dobod a mentőövet! A távolabbi bóják több pontot érnek." };
     return {
       title: "Mentőöv-célbadobás",
       down(x, y) { if (!C || S.cool > 0) return; const p = unproj(C, x, y); if (p.Z < 3) return; S.rings.push({ tx: p.X, tz: p.Z, t: 0, T: .5 + p.Z * .025, h: 1 + p.Z * .07 }); S.cool = .45; S.throws++; gmSnd.pop(); },
@@ -9001,7 +9001,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         if (S.cool <= 0) { g.save(); g.translate(W / 2, H - 50); g.scale(1, .55); slotIcon(g, "buoy", 0, 0, Math.min(46, W * .09)); g.restore(); }
         gmText(g, W, S.msg, `Pont: ${S.score} · talált: ${S.hits}/${S.throws}`);
       },
-      help: "Koppints oda, ahová a mentőövet dobnád. A bóják lassan sodródnak – célozz eléjük!"
+      help: "Koppints oda, ahová a mentőövet dobnád. A bóják lassan sodródnak, ezért célozz eléjük!"
     };
   }
 
@@ -9089,13 +9089,13 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         const NM = CO.m.length;
         if (b.next < NM) {
           const m = CO.m[b.next], lg = CO.legs[b.next], dx = b.X - m[0], dz = b.Z - m[1], dist = Math.hypot(dx, dz);
-          if (dist < 1.6) { b.v *= .5; const pu = 1.6 / Math.max(.2, dist); b.X = m[0] + dx * pu; b.Z = m[1] + dz * pu; if (b.c.me && !b.hitMsg) { b.hitMsg = 1; S.msg = "Bójaérintés! Ne menj neki a bójának."; } }
+          if (dist < 1.6) { b.v *= .5; const pu = 1.6 / Math.max(.2, dist); b.X = m[0] + dx * pu; b.Z = m[1] + dz * pu; if (b.c.me && !b.hitMsg) { b.hitMsg = 1; S.msg = "Hozzáértél a bójához! Kerüld el a bójákat."; } }
           if (dist < 24) { const a = Math.atan2(dx, dz); if (b.lastA != null) b.acc += ad(a - b.lastA); b.lastA = a; } else { b.lastA = null; if (dist > 40) b.acc = 0; }
-          if (b.acc <= -lg.need && dist < 26) { b.next++; b.acc = 0; b.lastA = null; b.wp = 0; b.hitMsg = 0; if (!b.c.me) { const r = Math.random(); b.err = r < .12 ? 2 : r < .3 ? 1 : 0; b.path = null; if (b.next < NM && Math.random() < .07) b.miss = gmRnd(3, 6); } if (b.c.me) { gmSnd.coin(); S.msg = b.next < NM ? `${b.next}. bója szabályosan megkerülve – irány a ${b.next + 1}.!` : "Minden bója megkerülve – vissza a célvonalhoz a stég elé!"; } }
+          if (b.acc <= -lg.need && dist < 26) { b.next++; b.acc = 0; b.lastA = null; b.wp = 0; b.hitMsg = 0; if (!b.c.me) { const r = Math.random(); b.err = r < .12 ? 2 : r < .3 ? 1 : 0; b.path = null; if (b.next < NM && Math.random() < .07) b.miss = gmRnd(3, 6); } if (b.c.me) { gmSnd.coin(); S.msg = b.next < NM ? `${b.next}. bója szabályosan megkerülve – irány a ${b.next + 1}.!` : "Minden bóját megkerültél. Most térj vissza a stég előtti célvonalhoz!"; } }
           else if (b.acc >= lg.need) { b.acc = 0; if (b.c.me) { S.msg = "Rossz oldalon kerülted! A bóját BAL kéz felől (backbord) kell hagyni – kerüld meg újra."; fxTone(300, 220, .3, .03, "triangle"); } }
         }
         else if (b.pen > 0) { /* büntetőkör nélkül nem lehet célba érni */ }
-        else if (b.Z < CO.lz && b.X > -CO.lh - 2 && b.X < CO.lh + 2) { b.done = true; b.ft = S.t; S.res.push(b); if (b.c.me) { const pos = S.res.length; S.msg = pos === 1 ? "GYŐZTÉL! Első lettél!" : `Célba értél – ${pos}. hely.`; gmSnd.win(); S.best[S.lvl] = Math.min(S.best[S.lvl] || 1e9, S.t); } else fxTone(880, 880, .2, .02, "sine"); }
+        else if (b.Z < CO.lz && b.X > -CO.lh - 2 && b.X < CO.lh + 2) { b.done = true; b.ft = S.t; S.res.push(b); if (b.c.me) { const pos = S.res.length; S.msg = pos === 1 ? "Győztél! Első helyen értél célba!" : `Célba értél – ${pos}. hely.`; gmSnd.win(); S.best[S.lvl] = Math.min(S.best[S.lvl] || 1e9, S.t); } else fxTone(880, 880, .2, .02, "sine"); }
       }
     }
     /* gépi versenyző: a bóját kívülről, backbord felől kerüli (rávezető és kifutó pont), néha hibázik, és betartja a backbord–steuerbord szabályt */
@@ -9279,7 +9279,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     }
     /* rendezőhajó: kisebb motoros jacht a pályán kívül, orrával a szélbe; árboc versenyzászlókkal, szélzsák; négyfős legénység */
     const CMK = .72;   /* a rendezőhajó méretaránya */
-    const GRIPE = ["Hé! Vigyázz!", "Na de kérem!", "Ki adott neked hajót?!", "Kiömlött a kávém!", "Óvást teszünk!", "Ez büntetőkör!", "Hát ezt nem hiszem el!", "Látod, hogy itt állunk?!"];
+    const GRIPE = ["Hé, vigyázz!", "Na, de kérem!", "Ki adott neked hajót?", "Kiömlött a kávém!", "Óvást teszünk!", "Ez büntetőkör!", "Hát ezt nem hiszem el!", "Látod, hogy itt állunk?"];
     /* ember a rendezőhajón: póz (áll, csípőre tett kéz, integet, távcsövez, jegyzetel, zászlót tart, mérges), elesés */
     function person(g, x, y, u, o, t) {
       const fall = o.fall || 0, ph = o.ph || 0, w = o.kind === "w", skin = o.skin || "#e9b48c";
@@ -9418,7 +9418,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         S.cmHit = { age: 0, dir: b.X < cm.X ? 1 : -1, n: (S.cmHit ? S.cmHit.n + 1 : 0) };
         fxBurst(160, .35, .35, "lowpass", 1); fxTone(120, 60, .35, .05, "sine");
         if (!b.pen && !b.done) { b.pen = 1; b.penAcc = 0; }
-        if (b.c.me) S.msg = "Nekimentél a rendezőhajónak! Mindenki elesett a fedélzeten – büntetés: 360°-os kör."; else S.msg = `${b.c.n} nekiment a rendezőhajónak – büntetőkör!`;
+        if (b.c.me) S.msg = "Nekimentél a rendezőhajónak! Mindenki elesett a fedélzeten. Büntetés: egy 360°-os kör."; else S.msg = `${b.c.n} nekiment a rendezőhajónak – büntetőkör!`;
       }
     }
     function windCol() { const s2 = S.wstr; return s2 < .95 ? "#5cc8ff" : s2 < 1.1 ? "#ffd23f" : s2 < 1.22 ? "#ff9a2e" : "#ff4b3a"; }
@@ -9492,7 +9492,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         S.t += dt;
         S.boats.forEach((b) => { if (b.c.me) { b.rot += ((b.done ? 0 : S.steer * 1.05) - b.rot) * Math.min(1, dt * 3.5); } else ai(b, dt); sail(b, dt); cmCollide(b); });
         /* ütközés, backbord–steuerbord szabály, büntetőkör (360°) */
-        S.boats.forEach((b) => { b.foulCd = Math.max(0, b.foulCd - dt); if (b.pen > 0) { b.penAcc += Math.abs(b.rot) * dt; if (b.penAcc >= Math.PI * 2) { b.pen = 0; b.penAcc = 0; if (b.c.me) { S.msg = "Büntetőkör letudva – hajrá!"; gmSnd.coin(); } } } });
+        S.boats.forEach((b) => { b.foulCd = Math.max(0, b.foulCd - dt); if (b.pen > 0) { b.penAcc += Math.abs(b.rot) * dt; if (b.penAcc >= Math.PI * 2) { b.pen = 0; b.penAcc = 0; if (b.c.me) { S.msg = "Letudtad a büntetőkört – hajrá!"; gmSnd.coin(); } } } });
         for (let i = 0; i < S.boats.length; i++) for (let j = i + 1; j < S.boats.length; j++) {
           const a = S.boats[i], c = S.boats[j]; if (a.done || c.done) continue;
           const dx = c.X - a.X, dz = c.Z - a.Z, d = Math.hypot(dx, dz);
@@ -9505,7 +9505,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
           }
         }
         const me = S.boats.find((b) => b.c.me);
-        if (me && !me.done && Math.abs(ad(me.hd - S.wind)) < NOGO && me.v < 1.2) S.msg = "Szemből fúj a szél – így nem halad a hajó! Fordulj ki oldalra.";
+        if (me && !me.done && Math.abs(ad(me.hd - S.wind)) < NOGO && me.v < 1.2) S.msg = "Szemből fúj a szél, így nem halad a hajó. Fordulj oldalirányba!";
         else if (S.msg.startsWith("Szemből")) S.msg = "";
         if ((me.done && S.res.length >= Math.min(S.boats.length, 2)) || S.res.length === S.boats.length || S.t > 300) S.st = "done";
       },
@@ -10108,7 +10108,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
           g.fillStyle = "rgba(7,29,56,.88)"; g.beginPath(); g.roundRect ? g.roundRect(W / 2 - mw2 / 2, msgY, mw2, 34, 12) : g.rect(W / 2 - mw2 / 2, msgY, mw2, 34); g.fill();
           g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(S.msg, W / 2, msgY + 17, W - 40); g.globalAlpha = 1;
         }
-        if (S.st === "dead") bigPanel(g, W, H, "Elakadt a hajó", ["Az utolsó lapok egymás tetején maradtak,", "ezen keverés sem segít."], "Visszalépek", "Új játék");
+        if (S.st === "dead") bigPanel(g, W, H, "Elakadt a hajó", ["Az utolsó lapok egymás tetején maradtak.", "Ezen a keverés sem segít."], "Visszalépek", "Új játék");
         if (S.st === "stuck") bigPanel(g, W, H, "Nincs több szabad pár", [`${S.left} lap maradt a stégen.`, "Megkeverjem a maradék lapokat?"], "Keverés", "Visszalépek");
         if (S.st === "win") {
           S.conf.forEach((c) => { g.save(); g.translate(c.x * W, c.y * H); g.rotate(c.r); drawFlag(g, c.f, 6); g.restore(); });
@@ -10127,7 +10127,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function gmThanks() {
     const c = window.ZephyrGame.earn(); gmSave(gmMs, true);
     const r = document.createElement("div"); r.className = "gm-reward";
-    r.innerHTML = `<div class="gm-rw-card"><div class="gm-rw-badge">5%</div><h3>Köszönjük, hogy játszottál!</h3><p>Jó volt veled a stégen. Köszönetképpen <b>5% kedvezményt</b> kapsz a szállásdíjból, ha 24 órán belül foglalsz – az idegenforgalmi adót a kedvezmény nem érinti, a foglalásnál automatikusan levonjuk.</p><div class="gm-rw-acts"><button type="button" class="gm-rw-book">Foglalok most</button><button type="button" class="gm-rw-x">Köszönöm, bezárom</button></div></div>`;
+    r.innerHTML = `<div class="gm-rw-card"><div class="gm-rw-badge">5%</div><h3>Köszönjük, hogy játszottál!</h3><p>Jó volt veled a stégen. Ha 24 órán belül foglalsz, köszönetképpen <b>5% kedvezményt</b> adunk a szállásdíjból. A kedvezmény az idegenforgalmi adóra nem vonatkozik; a foglalásnál automatikusan levonjuk.</p><div class="gm-rw-acts"><button type="button" class="gm-rw-book">Foglalok most</button><button type="button" class="gm-rw-x">Köszönöm, bezárom</button></div></div>`;
     gmEl.appendChild(r); gmSnd.win();
     const fin = () => { r.remove(); gmCloseNow(); };
     r.querySelector(".gm-rw-x").addEventListener("click", fin);
