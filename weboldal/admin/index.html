@@ -371,6 +371,68 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
 .search input { transition: box-shadow .2s; } .search input:focus { outline: none; box-shadow: 0 0 0 3px rgba(42,134,173,.25), var(--sh); }
 .card { position: relative; }
 @media (prefers-reduced-motion: reduce) { .top::after, .top .tt b, .za-scene *, .login-card, .login-card img, .btn::after, .fab::after, .alert, .alert svg, .stat b, h3.st svg, .call, .tag.pending::before, .swap svg, .free i, .nav::before, .nav button.on svg, .dot { animation: none !important; } }
+/* ===== admin – látvány (vitorlásverseny-szint) ===== */
+.top { min-height: calc(76px + var(--safe-t)); background: #0b2f5e; isolation: isolate; align-items: flex-start; }
+.top .zx-wrap { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.top .zx-scene { width: 100%; height: 100%; display: block; }
+.top::after { display: none; }
+.top .tt b { filter: drop-shadow(0 2px 3px rgba(7,29,56,.7)); }
+.top .tt span { opacity: 1; font-weight: 700; text-shadow: 0 1px 4px rgba(7,29,56,.9); }
+.top .icon-btn { background: rgba(7,29,56,.45) !important; backdrop-filter: blur(4px); box-shadow: inset 0 0 0 1.5px rgba(255,217,120,.45); }
+.top img { filter: drop-shadow(0 0 1px #fff) drop-shadow(0 2px 8px rgba(7,29,56,.6)); }
+@media (min-width: 900px) { .top { min-height: 92px; align-items: center; } .nav { top: 92px; height: calc(100dvh - 92px); } }
+/* napi csempék: illusztrációval */
+.stat { padding: 10px 6px 11px; background: linear-gradient(#fff, #fbf8f0); }
+.stat::after { display: none; }
+.stat .zx-st { display: block; width: 100%; max-width: 70px; height: 38px; margin: 0 auto 4px; }
+.stat b { font-size: 25px; }
+/* hulladék-figyelmeztetés: begördülő kukásautó */
+.alert.waste { padding-bottom: 30px; }
+.alert .zx-truck { position: absolute; left: -80px; bottom: 4px; width: 62px; height: 26px; animation: zxDrive 9s linear infinite; }
+.alert.waste.today .zx-truck { animation-duration: 6s; }
+@keyframes zxDrive { 0% { left: -80px; } 45%, 55% { left: calc(100% - 90px); } 100% { left: calc(100% + 20px); } }
+.alert.waste::before { content: ""; position: absolute; left: 14px; right: 14px; bottom: 4px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, #b9c9bd 10%, #b9c9bd 90%, transparent); }
+/* üres állapot: bója ringatózik a vízen */
+.empty { position: relative; padding: 18px 12px 46px; border: none; background: linear-gradient(#fff 55%, #e8f2f8); box-shadow: inset 0 0 0 1.5px var(--line); overflow: hidden; }
+.empty::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 40'%3E%3Cpath d='M0 26 q15 -6 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 V40 H0Z' fill='%232a86ad' opacity='.25'/%3E%3Cg%3E%3CanimateTransform attributeName='transform' type='translate' values='0 0;0 -3;0 0' dur='2.6s' repeatCount='indefinite'/%3E%3Cpath d='M142 28 Q150 6 158 28 Z' fill='%23ff7a1a' stroke='%237a3300'/%3E%3Cpath d='M142 28 H158' stroke='%23fff' stroke-width='3'/%3E%3Cpath d='M150 10 V2 L158 5 L150 8' fill='%23ffd978' stroke='%238a6630' stroke-width='.8'/%3E%3C/g%3E%3C/svg%3E") center bottom / 300px 40px no-repeat; }
+/* vendégkártya, foglalás: lobogó apartmanzászló */
+.gcard, .bk { position: relative; border-left: 0 !important; padding-left: 18px; overflow: hidden; }
+.gcard::before, .bk::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px; background: linear-gradient(var(--ac), color-mix(in srgb, var(--ac) 60%, #071d38)); }
+.gcard::after, .bk::after { content: ""; position: absolute; left: 7px; top: 10px; width: 12px; height: 10px; background: var(--ac); clip-path: polygon(0 0, 100% 50%, 0 100%); transform-origin: left center; animation: zxPennant 1.6s ease-in-out infinite; opacity: .9; }
+@keyframes zxPennant { 50% { transform: scaleX(.7) skewY(6deg); } }
+.bk .dt { position: relative; padding: 6px 4px; border-radius: 10px; background: linear-gradient(165deg, color-mix(in srgb, var(--ac) 18%, #fff), #fff); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ac) 30%, transparent); }
+/* naptár: vitorlaszalag-sávok, mai nap mentőövvel */
+.bar { background: linear-gradient(180deg, color-mix(in srgb, var(--ac) 82%, #fff), var(--ac) 55%, color-mix(in srgb, var(--ac) 75%, #071d38)); box-shadow: 0 3px 8px rgba(7,29,56,.22), inset 0 1px 0 rgba(255,255,255,.35); padding-left: 18px; }
+.bar::before { content: ""; position: absolute; left: 6px; top: 9px; width: 8px; height: 14px; background: #fff; clip-path: polygon(0 0, 100% 100%, 0 100%); opacity: .85; }
+.cal .hd.today, .cal .hd.t { background: linear-gradient(#0b2f5e, #164377); }
+/* szakaszcím: aranyérem az ikon mögött, kötélvonal */
+h3.st svg { width: 22px; height: 22px; margin-right: 4px; padding: 3px; border-radius: 50%; background: var(--sea); color: #ffd978; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--gold); }
+h3.st::after { height: 8px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 8'%3E%3Cpath d='M0 5 q4 -4 7.5 0 t7.5 0 t7.5 0 t7.5 0' fill='none' stroke='%23c9a25a' stroke-width='1.6'/%3E%3C/svg%3E") 0 50% / 30px 8px repeat-x; opacity: .8; }
+/* alsó menü: az aktív fül fölött kis vitorlás ringatózik */
+.nav button.on::before { width: 26px; height: 16px; top: -15px; border-radius: 0; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 16'%3E%3Cpath d='M3 12 H23 L20 15 H6 Z' fill='%230b2f5e'/%3E%3Cpath d='M12 11 V1' stroke='%230b2f5e' stroke-width='1.2'/%3E%3Cpath d='M13 2 Q19 7 18 11 H13 Z' fill='%23fff' stroke='%230b2f5e' stroke-width='.6'/%3E%3Cpath d='M11 3 Q6 8 6 11 H11 Z' fill='%23e2483d'/%3E%3C/svg%3E"); animation: zxBob 2.4s ease-in-out infinite; box-shadow: none; background-color: transparent; }
+@keyframes zxBob { 50% { transform: translateY(-2px) rotate(-4deg); } }
+.nav button.on svg { color: var(--sea); filter: drop-shadow(0 2px 4px rgba(201,162,90,.5)); }
+@media (min-width: 900px) { .nav button.on::before { top: 15px; left: -2px; width: 4px; height: 26px; background: var(--gold); animation: none; border-radius: 3px; } }
+/* telefon: diszkréten nagyobb, kontrasztosabb betűk */
+@media (max-width: 899px) {
+  :root { --mut: #46535f; }
+  html, body { font-size: 16px; }
+  .sm { font-size: 14.5px; } .xs { font-size: 13.5px; }
+  .top .tt b { font-size: 20px; } .top .tt span { font-size: 13px; }
+  .nav button { font-size: 12px; }
+  h3.st { font-size: 14px; } h3.st .n { font-size: 12px; }
+  .alert b { font-size: 16.5px; }
+  .gcard .nm, .bk .nm { font-size: 17px; } .gcard .meta, .bk .l2 { font-size: 14px; }
+  .stat span { font-size: 12px; } .empty { font-size: 15px; }
+  .sw b { font-size: 15.5px; } .sw small, .radio small, .f .hint, .help, .log, .legend { font-size: 13.5px; }
+  .btn { font-size: 15.5px; } .btn.sm { font-size: 14.5px; }
+  .cal .hd { font-size: 12.5px; } .cal .nm { font-size: 14px; } .bar { font-size: 13px; }
+  .kv { font-size: 15px; } .wkh .w { font-size: 15px; } .wkh .w small { font-size: 13px; } .mv { font-size: 15px; }
+  .up .u .w { font-size: 13px; } .datelist span { font-size: 14px; }
+  details.sec > summary { font-size: 16.5px; } details.sec > summary small { font-size: 13.5px; }
+  .toast { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) { .alert .zx-truck, .gcard::after, .bk::after, .nav button.on::before { animation: none; } .alert .zx-truck { left: auto; right: 10px; } }
 </style>
 </head>
 <body>
@@ -437,6 +499,64 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
   const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  /* ================= admin – látvány: balatoni jelenet a fejlécben, illusztrált csempék ================= */
+  const ZRM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function zxBoat(x, y, s, dir, gen, dur, dx, num) {
+    const a = ZRM ? "" : `<animateTransform attributeName="transform" type="translate" values="0 0;${dx} 0${Math.abs(dx) < 200 ? ";0 0" : ""}" dur="${dur}s" begin="-${(dur * ((Math.abs(x) * 7 + 37) % 100) / 100).toFixed(1)}s" repeatCount="indefinite"/>`;
+    return `<g>${a}<g transform="translate(${x} ${y}) scale(${s * dir} ${s})">
+      <path d="M-34 0 Q-30 9 -18 10 L22 10 Q32 8 38 -1 Z" fill="#fff" stroke="#0b2f5e" stroke-width="1.6"/><path d="M-30 4 L34 3" stroke="${gen}" stroke-width="2" opacity=".8"/>
+      <path d="M-2 -1 L-2 -74" stroke="#0b2f5e" stroke-width="2.2"/>
+      <path d="M-1 -72 Q19 -38 15 -3 L-1 -3 Z" fill="#fbfaf6" stroke="#b9c3cc" stroke-width="1"><animate attributeName="d" values="M-1 -72 Q19 -38 15 -3 L-1 -3 Z;M-1 -72 Q23 -38 16 -3 L-1 -3 Z;M-1 -72 Q19 -38 15 -3 L-1 -3 Z" dur="3.4s" repeatCount="indefinite"/></path>
+      ${num ? `<text x="7" y="-30" text-anchor="middle" font-size="11" font-weight="900" fill="${gen}" transform="scale(${dir} 1)" style="transform-box:fill-box;transform-origin:center">${num}</text>` : ""}
+      <path d="M-4 -66 Q-28 -30 -31 -2 L-4 -2 Z" fill="${gen}"><animate attributeName="d" values="M-4 -66 Q-28 -30 -31 -2 L-4 -2 Z;M-4 -66 Q-33 -30 -32 -2 L-4 -2 Z;M-4 -66 Q-28 -30 -31 -2 L-4 -2 Z" dur="2.9s" repeatCount="indefinite"/></path>
+      <path d="M-2 -74 L-14 -78 L-2 -70" fill="#e2483d"><animate attributeName="d" values="M-2 -74 L-14 -78 L-2 -70;M-2 -74 L-15 -73 L-2 -70;M-2 -74 L-14 -78 L-2 -70" dur=".9s" repeatCount="indefinite"/></path>
+      <path d="M-40 12 Q-10 15 30 12" stroke="#fff" stroke-width="1.6" fill="none" opacity=".6"/></g></g>`;
+  }
+  /* a fejléc jelenete: napszak, Tihany, hullámok – minden ma éjjel foglalt apartman egy vitorlás a saját színével, elöl a Zephyr */
+  function zxScene(occ) {
+    const h = new Date().getHours(), night = h < 6 || h >= 20, dusk = !night && (h >= 17 || h < 8);
+    const sky = night ? ["#081a33", "#143a6a"] : dusk ? ["#22406f", "#e99a5a"] : ["#2a76b6", "#9ccfec"];
+    const lum = night ? `<circle cx="1040" cy="30" r="12" fill="#f6efd6"/><circle cx="1040" cy="30" r="26" fill="#f6efd6" opacity=".1"/>` + [[90, 20], [240, 34], [420, 14], [620, 28], [800, 18], [1150, 40]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="1.2" fill="#fff"><animate attributeName="opacity" values="1;.2;1" dur="${2 + i % 3}s" repeatCount="indefinite"/></circle>`).join("")
+      : `<circle cx="1040" cy="${dusk ? 58 : 30}" r="${dusk ? 20 : 15}" fill="${dusk ? "#ffb35c" : "#fff3c2"}"/><circle cx="1040" cy="${dusk ? 58 : 30}" r="40" fill="${dusk ? "#ffb35c" : "#fff3c2"}" opacity=".16"/>`;
+    const cloud = (x, y, s, dur) => `<g opacity="${night ? .2 : .9}">${ZRM ? "" : `<animateTransform attributeName="transform" type="translate" values="${-x - 200} 0;${1400 - x} 0" dur="${dur}s" begin="-${(dur * (x + 200) / 1600).toFixed(1)}s" repeatCount="indefinite"/>`}<g transform="translate(${x} ${y}) scale(${s})" fill="#fff"><ellipse rx="40" ry="11"/><ellipse cx="-18" cy="-7" rx="18" ry="11"/><ellipse cx="12" cy="-10" rx="22" ry="14"/></g></g>`;
+    const wave = (y, col, op, dur, amp) => `<path d="M-200 ${y} ${Array.from({ length: 18 }, () => `q 50 ${-amp} 100 0 t 0 0`).join(" ")} V 140 H -200 Z" fill="${col}" opacity="${op}">${ZRM ? "" : `<animateTransform attributeName="transform" type="translate" values="0 0;100 0" dur="${dur}s" repeatCount="indefinite"/>`}</path>`;
+    const sh = night ? "#0e2a4d" : dusk ? "#5d5070" : "#5c8ea6", sh2 = night ? "#143561" : dusk ? "#76657f" : "#78a6b9";
+    const boats = occ.map((o, i) => zxBoat(650 + i * 92, 114 - (i % 2) * 5, .46 + (i % 2) * .05, i % 2 ? -1 : 1, o.color, 26 + i * 5, (i % 2 ? -1 : 1) * 60, o.no)).join("");   /* helyben ringó-sodródó vitorlások */
+    return `<svg class="zx-scene" viewBox="0 0 1200 140" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs><linearGradient id="zxSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient>
+      <linearGradient id="zxSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${night ? "#163a66" : dusk ? "#3a5a86" : "#2a77a7"}"/><stop offset="1" stop-color="${night ? "#081a33" : "#0b2f5e"}"/></linearGradient></defs>
+      <rect width="1200" height="140" fill="url(#zxSky)"/>${lum}${cloud(700, 26, .8, 150)}${cloud(980, 16, .6, 190)}
+      <path d="M0 92 Q80 82 160 88 T320 86 L420 88 Q480 64 540 60 Q600 62 650 80 Q720 90 800 88 T1000 90 Q1100 84 1200 88 V110 H0 Z" fill="${sh2}"/>
+      <g fill="${sh}"><path d="M470 96 Q510 74 545 70 Q575 70 600 82 Q630 92 680 96 Z"/><rect x="537" y="52" width="4.5" height="18"/><rect x="546" y="52" width="4.5" height="18"/><path d="M536 53 L539.2 46 L542.4 53 Z M545 53 L548.2 46 L551.4 53 Z"/><rect x="534" y="65" width="20" height="8"/></g>
+      ${wave(100, "url(#zxSea)", 1, 8, 4)}${boats}
+      ${zxBoat(-120, 132, .56, 1, "#e2483d", 58, 1500, "")}
+      ${wave(126, night ? "#081a33" : "#0b2f5e", .95, 5, 5)}
+    </svg>`;
+  }
+  let ZXK = "";
+  function topScene() {
+    const el = $("#topScene"); if (!el || !A.data) return;
+    const t = A.data.today, occ = apts().filter((a) => books().some((b) => active(b) && b.status !== "block" && b.apt === a.id && b.checkin <= t && b.checkout > t)).map((a) => ({ color: a.color, no: a.no || "" }));
+    const k = occ.map((o) => o.color).join() + "|" + Math.floor(new Date().getHours() / 3); if (k === ZXK) return; ZXK = k;
+    el.innerHTML = zxScene(occ);
+  }
+  /* a napi csempék illusztrációi */
+  function statArt(kind, list) {
+    const A_ = (s) => ZRM ? "" : s;
+    if (kind === "busy") {
+      const n = Math.max(list.length, 1), w = Math.min(9, 40 / n);
+      return `<svg class="zx-st" viewBox="0 0 64 44" aria-hidden="true"><path d="M6 20 L32 6 L58 20 Z" fill="#c0392b"/><path d="M6 20 L32 6 L58 20" fill="none" stroke="#7a1d14" stroke-width="1.4"/><rect x="9" y="20" width="46" height="20" rx="2" fill="#f7f1e3" stroke="#c9a25a"/>
+        ${list.map((a, i) => `<rect x="${12 + i * (40 / n) + (40 / n - w) / 2}" y="25" width="${w}" height="9" rx="1.5" fill="${a.on ? "#ffd978" : "#cfd8e0"}" stroke="${a.color}" stroke-width="1.6">${a.on ? A_(`<animate attributeName="fill" values="#ffd978;#fff3c2;#ffd978" dur="${2.5 + i * .4}s" repeatCount="indefinite"/>`) : ""}</rect>`).join("")}
+        <rect x="44" y="9" width="5" height="8" fill="#7a1d14"/>${A_(`<circle cx="46.5" cy="6" r="2" fill="#fff" opacity=".6"><animate attributeName="cy" values="7;-2" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".6;0" dur="2s" repeatCount="indefinite"/></circle>`)}</svg>`;
+    }
+    if (kind === "in") return `<svg class="zx-st" viewBox="0 0 64 44" aria-hidden="true"><path d="M0 36 q8 -3 16 0 t16 0 t16 0 t16 0 V44 H0 Z" fill="#2a86ad" opacity=".35"/><rect x="46" y="22" width="18" height="4" fill="#8a6630"/><path d="M50 26 V40 M60 26 V40" stroke="#8a6630" stroke-width="2.4"/>
+      <g>${A_(`<animateTransform attributeName="transform" type="translate" values="-10 0;6 0;6 0;-10 0" keyTimes="0;.6;.85;1" dur="5s" repeatCount="indefinite"/>`)}<path d="M8 34 L34 34 L30 39 L12 39 Z" fill="#fff" stroke="#0b2f5e" stroke-width="1.3"/><path d="M21 33 V8" stroke="#0b2f5e" stroke-width="1.6"/><path d="M22 9 Q31 20 30 32 L22 32 Z" fill="#fff" stroke="#b9c3cc"/><path d="M20 12 Q12 22 11 32 L20 32 Z" fill="#2f9e63"/></g></svg>`;
+    if (kind === "out") return `<svg class="zx-st" viewBox="0 0 64 44" aria-hidden="true"><path d="M0 36 q8 -3 16 0 t16 0 t16 0 t16 0 V44 H0 Z" fill="#2a86ad" opacity=".35"/><rect x="0" y="22" width="18" height="4" fill="#8a6630"/><path d="M4 26 V40 M14 26 V40" stroke="#8a6630" stroke-width="2.4"/>
+      <g>${A_(`<animateTransform attributeName="transform" type="translate" values="0 0;24 -3" dur="4.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;.8;1" dur="4.5s" repeatCount="indefinite"/>`)}<path d="M20 34 L46 34 L42 39 L24 39 Z" fill="#fff" stroke="#0b2f5e" stroke-width="1.3"/><path d="M33 33 V8" stroke="#0b2f5e" stroke-width="1.6"/><path d="M34 9 Q43 20 42 32 L34 32 Z" fill="#fff" stroke="#b9c3cc"/><path d="M32 12 Q24 22 23 32 L32 32 Z" fill="#e2483d"/></g>
+      <g transform="translate(9 14)"><circle r="3" fill="#ffd9b8"/><path d="M0 3 V10" stroke="#0b2f5e" stroke-width="2.4"/><path d="M1 5 L6 -1" stroke="#ffd9b8" stroke-width="1.6" stroke-linecap="round">${A_(`<animateTransform attributeName="transform" type="rotate" values="-20 1 5;20 1 5;-20 1 5" dur=".8s" repeatCount="indefinite"/>`)}</path></g></svg>`;
+    return `<svg class="zx-st" viewBox="0 0 64 44" aria-hidden="true"><g transform="translate(32 22)">${A_(`<animateTransform attributeName="transform" type="rotate" values="0 32 22;8 32 22;0 32 22;-8 32 22;0 32 22" dur="6s" additive="sum" repeatCount="indefinite"/>`)}<circle r="17" fill="none" stroke="#fff" stroke-width="8"/>${[0, 90, 180, 270].map((r) => `<path d="M0 -21 A21 21 0 0 1 ${21 * Math.sin(Math.PI / 4)} ${-21 * Math.cos(Math.PI / 4)} L${13 * Math.sin(Math.PI / 4)} ${-13 * Math.cos(Math.PI / 4)} A13 13 0 0 0 0 -13 Z" fill="#e2483d" transform="rotate(${r})"/>`).join("")}<circle r="21" fill="none" stroke="#b33" stroke-width=".8"/><circle r="13" fill="none" stroke="#b33" stroke-width=".8"/></g><path d="M8 4 Q20 0 32 1" stroke="#c9a25a" stroke-width="1.6" fill="none"/></svg>`;
+  }
+  const ZX_TRUCK = `<svg class="zx-truck" viewBox="0 0 70 30" aria-hidden="true"><rect x="2" y="6" width="38" height="16" rx="3" fill="#3c9a5f"/><path d="M8 10 H34 M8 14 H34 M8 18 H34" stroke="#2c7a49" stroke-width="1.2"/><path d="M40 10 H52 L60 16 V22 H40 Z" fill="#f2f2f2" stroke="#3c9a5f" stroke-width="1.4"/><rect x="45" y="12" width="7" height="5" fill="#9fd0ea"/><circle cx="12" cy="24" r="4" fill="#26384a"/><circle cx="12" cy="24" r="1.5" fill="#ccc"/><circle cx="50" cy="24" r="4" fill="#26384a"/><circle cx="50" cy="24" r="1.5" fill="#ccc"/><rect x="56" y="5" width="3" height="3" fill="#f2b233"><animate attributeName="opacity" values="1;.2;1" dur=".8s" repeatCount="indefinite"/></rect></svg>`;
   const ico = (n, cls = "i") => `<svg class="${cls}"><use href="#i-${n}"/></svg>`;
   const money = (n) => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " Ft";
   const ymd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -657,7 +777,7 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
   ];
   function shell() {
     A.root.innerHTML = `<div class="app">
-      <header class="top">
+      <header class="top"><div class="zx-wrap" id="topScene"></div>
         <img src="${LOGO}" alt="">
         <div class="tt"><b>Admin</b><span id="topSub"></span></div>
         ${A.demo ? `<span class="demo-pill">Bemutató</span>` : ""}
@@ -703,7 +823,7 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
     $$("#nav button[data-v]").forEach((b) => b.classList.toggle("on", b.dataset.v === A.view));
     const more = $("#nav .nav-more"); if (more) more.classList.toggle("on", ["prog", "beall"].includes(A.view));
     const pc = pendCount(), dot = $("#pendDot"); if (dot) { dot.hidden = !pc; dot.textContent = pc; }
-    const t = A.data.today; $("#topSub").textContent = wd(t) + ", " + huS(t);
+    const t = A.data.today; $("#topSub").textContent = wd(t) + ", " + huS(t); topScene();
     $("#fab").hidden = !["ma", "fog", "nap"].includes(A.view);
     const m = $("#main");
     ({ ma: viewToday, fog: viewList, nap: viewCal, hull: viewWaste, prog: viewProg, beall: viewSettings }[A.view] || viewToday)(m);
@@ -742,8 +862,8 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
   function alertsHtml() {
     const t = A.data.today, tm = addD(t, 1); let h = "";
     const wt = wasteOn(t), wm = wasteOn(tm);
-    if (wm.length) h += `<div class="alert waste">${ico("bin")}<div><b>Holnap hulladékszállítás: ${wm.map((x) => esc(x.name)).join(", ")}</b><span class="sm">Ma este tedd ki a kukát${wm.some((x) => x.note) ? " – " + esc(wm.map((x) => x.note).filter(Boolean).join("; ")) : "."}</span></div></div>`;
-    if (wt.length) h += `<div class="alert waste today">${ico("bin")}<div><b>Ma viszik: ${wt.map((x) => esc(x.name)).join(", ")}</b><span class="sm">Ha még nincs kint, most tedd ki; elszállítás után vidd vissza a kukát.</span></div></div>`;
+    if (wm.length) h += `<div class="alert waste">${ZX_TRUCK}${ico("bin")}<div><b>Holnap hulladékszállítás: ${wm.map((x) => esc(x.name)).join(", ")}</b><span class="sm">Ma este tedd ki a kukát${wm.some((x) => x.note) ? " – " + esc(wm.map((x) => x.note).filter(Boolean).join("; ")) : "."}</span></div></div>`;
+    if (wt.length) h += `<div class="alert waste today">${ZX_TRUCK}${ico("bin")}<div><b>Ma viszik: ${wt.map((x) => esc(x.name)).join(", ")}</b><span class="sm">Ha még nincs kint, most tedd ki; elszállítás után vidd vissza a kukát.</span></div></div>`;
     const pc = pendCount();
     if (pc) h += `<div class="alert pend">${ico("bell")}<div><b>${pc} foglalási kérés vár jóváhagyásra</b><div class="acts"><button class="btn sm gold" data-go="fog-todo">Megnézem</button></div></div></div>`;
     const sys = (A.data.initial ? ["Még az ideiglenes jelszóval vagy belépve – változtasd meg a Beállítások → Jelszó részben."] : []).concat(A.data.warnings || []);
@@ -795,10 +915,10 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
     const free = all.filter((a) => !busy.has(a.id));
     const wt = wasteOn(d);
     let h = `<div class="stats">
-      <div class="stat"><b>${busy.size}/${all.length}</b><span>Foglalt</span></div>
-      <div class="stat in"><b>${mv.arr.length}</b><span>Érkezik</span></div>
-      <div class="stat out"><b>${mv.dep.length}</b><span>Távozik</span></div>
-      <div class="stat"><b>${mv.night.filter((b) => b.status !== "block").reduce((s, b) => s + pax(b), 0)}</b><span>Vendég</span></div>
+      <div class="stat">${statArt("busy", all.map((a) => ({ color: a.color, on: busy.has(a.id) })))}<b>${busy.size}/${all.length}</b><span>Foglalt</span></div>
+      <div class="stat in">${statArt("in")}<b>${mv.arr.length}</b><span>Érkezik</span></div>
+      <div class="stat out">${statArt("out")}<b>${mv.dep.length}</b><span>Távozik</span></div>
+      <div class="stat">${statArt("pax")}<b>${mv.night.filter((b) => b.status !== "block").reduce((s, b) => s + pax(b), 0)}</b><span>Vendég</span></div>
     </div>`;
     if (wt.length) h += `<div class="row" style="margin:10px 2px 0">${wt.map((x) => `<span class="wtag" style="--wc:${x.color}">${ico("bin")}${esc(x.name)} – szállítás</span>`).join("")}</div>`;
     const swaps = mv.arr.filter((b) => mv.dep.some((x) => x.apt === b.apt));

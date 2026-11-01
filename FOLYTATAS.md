@@ -165,3 +165,8 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Kategóriánként mozgó illusztrációk (`evArt`, `EVCOL` színek), kategóriaszínű dátumcédula, kiemelt szalag, csoportcímkés szűrők („Mikor? / Milyen messze? / Mit keresel? / Extrák”), forgó hajókormány a hónapcímnél.
 - Minden programhoz **mini Balaton-térkép** (`evMap`, `EVGEO`, `LAKE`, valós arányú vetítés): Zephyr-jel, helyszín, szaggatott útvonal, hajó/komp esetén áthajózó kishajó.
 - A főoldali előzetes: jelenetsáv, zászlós gyorsgombok, kategóriaszínű mini kártyák illusztrációval.
+
+## 17. Admin app látványa + nagyobb betűk telefonon – 2026-11-01
+- Fejléc: napszak szerinti balatoni SVG-jelenet (`zxScene`), minden ma éjjel foglalt apartman egy vitorlás a saját színével és számával, elöl a Zephyr piros génuával (`topScene()` a `render()`-ben, csak változáskor rajzol újra).
+- Napi csempék illusztrációval (`statArt`): ház az apartmanok ablakaival (foglalt = világít), érkező / távozó vitorlás a stégnél, mentőöv. Hulladék-figyelmeztetésen kukásautó (`ZX_TRUCK`), üres állapotban ringó bója, kártyákon lobogó apartmanzászló, naptársávok vitorlaszalag-stílusban, szakaszcímek aranyérmes ikonnal, alsó menüben ringó kis vitorlás.
+- Telefonon (≤899 px) kb. 8–12%-kal nagyobb betűk és sötétebb szürke (`--mut: #46535f`) a jobb olvashatóságért.
