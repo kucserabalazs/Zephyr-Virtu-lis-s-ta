@@ -30,7 +30,7 @@
  "+ Új program": "+ 新しいイベント",
  "+{#} kép": "+{#} 枚",
  ", eseménydátumos": "、開催日あり",
- ". Minden jog fenntartva.": "。All rights reserved.",
+ ". Minden jog fenntartva.": "。無断転載を禁じます。",
  "/ éj": "/ 泊",
  "= x{#}; x -= .{#}) g.lineTo(x, top(x)); g.closePath(); g.fillStyle = \"#{#}b{#}f{#}\"; g.fill(); g.save(); g.clip(); /* hosszanti kamrák csíkjai */ for (let k = {#}; k": "= x{#}; x -= .{#}) g.lineTo(x, top(x)); g.closePath(); g.fillStyle = \"#{#}b{#}f{#}\"; g.fill(); g.save(); g.clip(); /* hosszanti kamrák csíkjai */ for (let k = {#}; k",
  "[x * a * (.{#} + R() * .{#}), zNear + (zFar - zNear) * z + (R() - .{#}) * {#}]); const side = R()": "[x * a * (.{#} + R() * .{#}), zNear + (zFar - zNear) * z + (R() - .{#}) * {#}]); const side = R()",
