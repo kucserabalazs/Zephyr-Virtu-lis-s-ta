@@ -186,5 +186,9 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Mesterlista: `forras/i18n/nyelv/hu.json` (gyűjtő bejárással: 630 felirat). Gyűjtő mód: `?forditas=gyujt`, majd `ZI18N.collected()`.
 - Nem fordul automatikusan: vásznon rajzolt szöveg (regatta, játékok), a PHP e-mailek; ezeket a fordítás idején külön kell kezelni.
 - Választó: kezdőlap menüsor (zászló + kód, legördülő), séta: Beállítások panel „Nyelv · Language”.
-- Teendő a végén: teljes feliratgyűjtés (séta összes jelenete, admin nélkül), majd 23 nyelvre fordítás → `xx.json` fájlok.
+- KÉSZ (2026-11-01): teljes feliratgyűjtés (1426 felirat: kezdőlap, galéria, foglalás, séta 68 jelenet + forrásszövegek), 23 nyelvre lefordítva → `forras/i18n/nyelv/xx.json` (munkafájlok: `forras/i18n/munka/`, ellenőrző: `ellenoriz.py`).
+- Napnevek: `data-i18n="nap:H"` saját kulcs (a motor a `data-i18n` attribútumot előnyben részesíti).
+- Új szöveg után: gyűjtő mód (`?forditas=gyujt`) → új kulcsok fordítása a 23 fájlba.
+- claude.ai előnézet: a szótárak az előnézet mellett `nyelv/` alatt (Artifact files).
+- Ismert apróság: a {#} jelölők sorrendje kötött (dátumoknál pl. „2026, December 5”).
 - Build: `forras/tools/build.sh` (a /home/claude/build/build.sh erre mutat).
