@@ -812,6 +812,17 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
 .zfb-apt-admin { background: linear-gradient(160deg, #f3f6fb, #fff); border-style: dashed; }
 /* ===== a tó: lebegő, felfújt apartman-csónakok (elsüllyednek, ha nem felelnek meg) ===== */
 .zfb-selbar:not(.on) { position: static; }
+/* apartmannézet: jól látható „itt vagy” sáv, vissza gomb, gyors váltás */
+.zfa-back { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 12px 18px; border-radius: 999px; background: #0b2f5e; color: #fff; font: 800 16px/1 Manrope, sans-serif; box-shadow: 0 6px 16px rgba(11,47,94,.25); }
+.zfa-back span { font-size: 22px; line-height: .8; color: #ffd978; } .zfa-back:hover { background: #164377; }
+.zfa-ban { position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin: 0 0 12px; border-radius: 20px; overflow: hidden; color: #fff; background: linear-gradient(135deg, var(--ac), color-mix(in srgb, var(--ac) 55%, #071d38)); box-shadow: 0 10px 26px color-mix(in srgb, var(--ac) 35%, transparent); }
+.zfa-ban::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16px; opacity: .35; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 16'%3E%3Cpath d='M0 9 q5 -7 10 0 t10 0 t10 0 t10 0 V16 H0Z' fill='%23fff'/%3E%3C/svg%3E") 0 100% / 40px 16px repeat-x; animation: zflWv 4s linear infinite; }
+.zfa-boat { flex: none; width: 112px; height: 70px; animation: zflBob 3.2s ease-in-out infinite; } .zfa-boat svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
+.zfa-t { position: relative; z-index: 1; display: grid; gap: 3px; } .zfa-t small { font: 800 12px/1 Manrope, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #ffe7a3; } .zfa-t b { font: 900 26px/1.05 Manrope, sans-serif; } .zfa-t span { font-size: 13.5px; font-weight: 700; opacity: .92; }
+.zfa-sw { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 14px; } .zfa-sw > span { font-size: 13px; font-weight: 800; color: #5d6b78; }
+.zfa-sw button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px 7px 7px; border-radius: 999px; background: #fff; border: 2px solid var(--ac); font: 800 14px/1 Manrope, sans-serif; color: #14202a; }
+.zfa-sw button i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ac); color: #fff; font-style: normal; font-size: 12px; }
+@media (max-width: 760px) { .zfa-t b { font-size: 22px; } .zfa-boat { width: 92px; height: 58px; } }
 .zfb-selbar.on { z-index: 8; }
 .zfl-pick { position: absolute; z-index: 4; right: 10px; top: 10px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.92); border: 2.5px solid var(--ac); color: #fff; font: 900 16px/1 Manrope, sans-serif; box-shadow: 0 3px 8px rgba(7,29,56,.25); }
 .zfl.sel .zfl-pick { background: var(--ac); }
@@ -2152,7 +2163,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     if (!el) build();
     reset(null);
     backTo = typeof opts.back === "function" ? opts.back : null;
-    const lbl = el.querySelector(".zfb-back span"); if (lbl) lbl.textContent = opts.backLabel || (/virtualis-seta/.test(location.pathname) ? "Vissza a sétához" : "Vissza az oldalra");
+    const lbl = el.querySelector(".zfb-back span"); if (lbl) { lbl.textContent = opts.backLabel || (/virtualis-seta/.test(location.pathname) ? "Vissza a sétához" : "Vissza az oldalra"); lbl.dataset.orig = lbl.textContent; }
     if (!histPushed) { try { history.pushState({ zfb: 1 }, "", location.href); histPushed = true; } catch (e) {} }
     el.hidden = false; requestAnimationFrame(() => el.classList.add("on"));
     document.documentElement.classList.add("zfb-lock");
@@ -2178,7 +2189,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     document.body.appendChild(el);
     el.querySelector(".zfb-bg").addEventListener("click", () => close());
     el.querySelector(".zfb-x").addEventListener("click", () => close());
-    el.querySelector(".zfb-back").addEventListener("click", () => close());
+    el.querySelector(".zfb-back").addEventListener("click", () => { if (st && st.step === 2) toLake(); else close(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && el && !el.hidden) close(); });
     el.addEventListener("click", onClick); el.addEventListener("submit", (e) => { e.preventDefault(); submit(); }); el.addEventListener("input", onInput); el.addEventListener("change", onInput);
   }
@@ -2276,6 +2287,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   /* ---------- megjelenítés ---------- */
   function render() {
     steps();
+    const bl = el.querySelector(".zfb-back span"); if (bl) { if (!bl.dataset.orig) bl.dataset.orig = bl.textContent; bl.textContent = st.step === 2 ? "Vissza a tóhoz" : bl.dataset.orig; }
     if (st.step === 1) { paint(viewCal()); return lakeAnim(); }
     if (st.step === 2) return paint(viewAptCal());
     if (st.step === 2) return paint(viewApts());
@@ -2400,7 +2412,9 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const err = selError(), q = !err ? quote() : null, near = err && st.ci && st.co && /foglalt/.test(err) ? nearest() : null;
     return demoNote() + `<div class="zfb-cal-wrap">
       <div class="zfb-cal">
-        <div class="zfb-chips"><div class="zfb-apt-chip" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő</small></div><button type="button" class="zfb-chip-more" data-lake="1">‹ vissza a tóhoz, a többi apartmanhoz</button></div>
+        <button type="button" class="zfa-back" data-lake="1"><span>‹</span> Vissza a tóhoz – másik apartman</button>
+        <div class="zfa-ban" style="--ac:${a.color}"><div class="zfa-boat">${floatSvg(a)}</div><div class="zfa-t"><small>Most itt vagy:</small><b>${esc(a.name)} apartman</b><span>${a.no}. apartman · legfeljebb ${a.cap} fő · ${money(a.price)}-tól / éj</span></div></div>
+        <div class="zfa-sw"><span>Másik apartman:</span>${cfg.apartments.filter((x) => x.id !== a.id).map((x) => `<button type="button" data-goapt="${x.id}" style="--ac:${x.color}"><i>${x.no}</i>${esc(x.name)}</button>`).join("")}</div>
         <div class="zfb-mnav"><button type="button" data-m="-1" ${st.month <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><span>Válaszd ki az érkezés, majd a távozás napját</span><button type="button" data-m="1" ${st.month >= 12 ? "disabled" : ""} aria-label="Következő hónap">›</button></div>
         <div class="zfb-months">${months.join("")}</div>
         <div class="zfb-legend"><span><i class="lf"></i>szabad (ár / éj, ezer Ft)</span><span><i class="lb"></i>foglalt</span><span><i class="ls"></i>kiválasztva</span></div>
@@ -2514,6 +2528,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     if (b.dataset.apt) return toggleApt(b.dataset.apt);
     if (b.dataset.allapt) { st.pre = null; buildMap(); return render(); }
     if (b.dataset.lake) return toLake();
+    if (b.dataset.goapt) return enterApt(b.dataset.goapt);
     if (b.dataset.float && !e.target.closest("[data-pick]")) return enterApt(b.dataset.float);
     if (b.dataset.float) {
       const id = b.dataset.float, dated = st.ci && st.co, down = !!b.dataset.down;
