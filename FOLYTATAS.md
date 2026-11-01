@@ -170,3 +170,9 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Fejléc: napszak szerinti balatoni SVG-jelenet (`zxScene`), minden ma éjjel foglalt apartman egy vitorlás a saját színével és számával, elöl a Zephyr piros génuával (`topScene()` a `render()`-ben, csak változáskor rajzol újra).
 - Napi csempék illusztrációval (`statArt`): ház az apartmanok ablakaival (foglalt = világít), érkező / távozó vitorlás a stégnél, mentőöv. Hulladék-figyelmeztetésen kukásautó (`ZX_TRUCK`), üres állapotban ringó bója, kártyákon lobogó apartmanzászló, naptársávok vitorlaszalag-stílusban, szakaszcímek aranyérmes ikonnal, alsó menüben ringó kis vitorlás.
 - Telefonon (≤899 px) kb. 8–12%-kal nagyobb betűk és sötétebb szürke (`--mut: #46535f`) a jobb olvashatóságért.
+
+## 18. Foglalás: előbb az időpont, utána a szabad apartmanok – 2026-11-01
+- Új menet (`ZephyrBooking`, a séta forrásában, a kezdőoldal is ezt használja): **1. Időpont és vendégek** (közös naptár: egy nap szabad, ha legalább egy apartman szabad; ár = a legkedvezőbb szabad) → **2. Szabad apartmanok** (csak a teljes időszakra szabadok választhatók, a teljes szállásdíjjal; a foglaltak szürkén; több apartman egy foglalásban, férőhely-ellenőrzéssel) → 3. Adatok → 4. Kész.
+- Függvények: `loadAll` (minden apartman elérhetősége), `buildMap`, `freeAll`, `aptFree`, `freeApts`, `aptTotal`, `nearest` (legközelebbi azonos hosszú szabad időszak ±21 nap), `selError` (1. lépés), `aptError` (2. lépés).
+- Ha egy apartman oldaláról nyitják (`open({ apt })`), az 1. lépés annak a naptárát mutatja (`st.pre`), a 2. lépésben előre ki van jelölve, de a többi szabad is látszik.
+- A szerveroldali `/book` nem változott.

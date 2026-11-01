@@ -957,6 +957,20 @@ body.walk-on .gm-dock { display: none; }
 .zfb-apt-off .zfb-full { display: inline-block; align-self: flex-start; background: #e2483d; color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
 .zfb-apt-off i { color: #8a949c !important; }
 .zfb-apt-admin { background: linear-gradient(160deg, #f3f6fb, #fff); border-style: dashed; }
+/* időpont-első foglalás: összegző sáv, nem szabad apartman, legközelebbi szabad időszak */
+.zfb-when { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 12px 16px; margin: 0 0 14px; border-radius: 16px; background: linear-gradient(135deg, #0b2f5e, #164377); color: #fff; box-shadow: 0 8px 20px rgba(11,47,94,.18); }
+.zfb-when > div { display: grid; gap: 2px; } .zfb-when small { font: 800 10.5px/1 Manrope, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #ffd978; } .zfb-when b { font: 800 16px/1.15 Manrope, sans-serif; } .zfb-when em { font-style: normal; font-size: 12.5px; opacity: .8; }
+.zfb-when .zfb-link { margin-left: auto; color: #ffd978; }
+.zfb-apt-na { cursor: not-allowed; opacity: .55; filter: grayscale(.6); background: repeating-linear-gradient(135deg, #fff 0 10px, #f6f3ee 10px 20px); }
+.zfb-apt-na:hover { transform: none; box-shadow: 0 4px 0 rgba(20,32,42,.06); border-color: var(--line); }
+.zfb-apt-na .zfb-check { display: none; } .zfb-apt-na .zfb-full { display: inline-block; align-self: flex-start; background: #8a949c; color: #fff; padding: 4px 10px; border-radius: 999px; font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; } .zfb-apt-na i { color: #8a949c !important; }
+.zfb-apt small.zfb-apt-per { font-size: 12px; margin-top: -2px; }
+.zfb-ok { margin: 6px 0 2px; padding: 10px 12px; border-radius: 12px; background: #e6f6ec; color: #1d7446; font-weight: 800; }
+.zfb-near { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; margin: 2px 0 8px; padding: 11px 12px; border-radius: 12px; background: #fff7e3; border: 1.5px dashed #d9a441; color: #6b4a07; font-size: 14px; }
+.zfb-near:hover { background: #ffefc6; }
+.zfb-selerr { color: #b3261e; font-weight: 700; }
+@media (max-width: 760px) { .zfb-selbar.on { padding: 10px 12px; gap: 8px; } .zfb-selbar.on .zfb-btn { padding: 11px 16px; font-size: 15px; } .zfb-when { padding: 10px 12px; gap: 8px 16px; } .zfb-when b { font-size: 14.5px; } }
+.zfb-apt-link { all: unset; cursor: pointer; display: inline-block; margin-top: 6px; font-size: 12.5px; font-weight: 700; color: #66727b; text-decoration: underline; }
 .zfb-apt-admin .zfb-no { font-size: 15px; }
 .zad .zad-card { width: min(1100px, calc(100vw - 24px)); height: calc(100vh - 24px); height: calc(100dvh - 24px); max-height: none; }
 .zad .zfb-hd { flex-wrap: wrap; gap: 10px 14px; }
@@ -1491,7 +1505,8 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 
   /* ---------- állapot ---------- */
   let el = null, cfg = null, st = null;
-  function reset(apt) { st = { step: apt ? 2 : 1, apt: apt || null, apts: apt ? [apt] : [], maps: {}, days: null, map: {}, ci: null, co: null, adults: 2, children: 0, month: 0, form: {}, result: null, loading: false, err: "" }; }
+  /* menet: 1. időpont és létszám (a vendég szabadsága fix) → 2. az abban az időszakban szabad apartmanok → 3. adatok → 4. kész */
+  function reset(apt) { st = { step: 1, pre: apt || null, apt: null, apts: [], maps: {}, days: null, map: {}, ci: null, co: null, adults: 2, children: 0, month: 0, form: {}, result: null, loading: false, err: "" }; }
 
   /* visszalépés: bármelyik lépésből vissza oda, ahonnan a foglalást megnyitották (séta, játék, beállítások, kezdőoldal) */
   let backTo = null, histPushed = false, ignorePop = false;
@@ -1515,7 +1530,8 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     }
     el.querySelector(".zfb-ntak").innerHTML = `<span>Zephyr Apartmanház · ${esc(cfg.address || "")}</span>` + (cfg.ntak ? `<span>NTAK regisztrációs szám: <b>${esc(cfg.ntak)}</b></span>` : "");
     const pre = opts.apt && cfg.apartments.find((a) => a.id === opts.apt);
-    if (pre) await chooseApt(pre.id); else render();
+    if (pre) st.pre = pre.id;
+    await loadAll();
   }
   function close(mode) {
     if (!el || el.hidden) return; el.classList.remove("on"); document.documentElement.classList.remove("zfb-lock");
@@ -1536,7 +1552,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   function paint(html) { el.querySelector(".zfb-body").innerHTML = html; }
   function steps() {
-    const names = ["Apartman", "Időpont és vendégek", "Adatok", "Kész"];
+    const names = ["Időpont és vendégek", "Szabad apartmanok", "Adatok", "Kész"];
     el.querySelector(".zfb-steps").innerHTML = names.map((n, i) => `<li class="${st.step === i + 1 ? "on" : st.step > i + 1 ? "done" : ""}"><i>${st.step > i + 1 ? "✓" : i + 1}</i><span>${n}</span></li>`).join("");
   }
   const apt = () => cfg.apartments.find((a) => a.id === st.apt);
@@ -1544,27 +1560,44 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   const selApts = () => st.apts.map((id) => cfg.apartments.find((a) => a.id === id)).filter(Boolean);
   const capTotal = () => selApts().reduce((n, a) => n + a.cap, 0);
   function toggleApt(id) {
+    if (!aptFree(id)) return;
     const i = st.apts.indexOf(id); if (i >= 0) st.apts.splice(i, 1); else st.apts.push(id);
     st.apts.sort((x, y) => cfg.apartments.findIndex((a) => a.id === x) - cfg.apartments.findIndex((a) => a.id === y));
     st.apt = st.apts[0] || null; render();
   }
-  async function chooseApt(id) { st.apts = [id]; return loadDays(); }
-  async function loadDays() {
-    if (!st.apts.length) return;
-    st.apt = st.apts[0]; st.step = 2; st.ci = st.co = null; st.days = null; st.err = "";
-    const cap = capTotal(); st.adults = Math.max(1, Math.min(Math.max(st.adults, st.apts.length), cap)); st.children = Math.max(0, Math.min(st.children, cap - st.adults));
-    render();
+  /* minden apartman szabad napjai egyszerre (az időpontválasztáshoz) */
+  async function loadAll() {
+    st.days = null; st.err = ""; render();
     try {
-      const to = addD(cfg.today, Math.min(420, (cfg.horizon_days || 400) + 1));
-      const res = await Promise.all(st.apts.map((id) => cfg.demo ? Promise.resolve({ days: demoDays(cfg, id) }) : api("/availability?apt=" + id + "&from=" + cfg.today + "&to=" + to)));
-      st.maps = {}; st.apts.forEach((id, k) => { const m = {}; res[k].days.forEach((d) => (m[d.d] = d)); st.maps[id] = m; });
-      st.map = {}; st.days = res[0].days.map((d0) => {
-        const parts = st.apts.map((id) => st.maps[id][d0.d]);
-        const x = { d: d0.d, p: parts.reduce((n, q) => n + (q ? q.p : 0), 0), free: parts.every((q) => q && q.free) };
-        st.map[d0.d] = x; return x;
-      });
+      const to = addD(cfg.today, Math.min(420, (cfg.horizon_days || 400) + 1)), ids = cfg.apartments.map((a) => a.id);
+      const res = await Promise.all(ids.map((id) => cfg.demo ? Promise.resolve({ days: demoDays(cfg, id) }) : api("/availability?apt=" + id + "&from=" + cfg.today + "&to=" + to)));
+      st.maps = {}; ids.forEach((id, k) => { const m = {}; res[k].days.forEach((d) => (m[d.d] = d)); st.maps[id] = m; });
+      buildMap();
     } catch (e) { st.err = e.message; }
     render();
+  }
+  /* a naptár egy napja akkor szabad, ha legalább egy (vagy az előre kiválasztott) apartman szabad; ár: a legolcsóbb szabad */
+  function buildMap() {
+    const ids = st.pre ? [st.pre] : cfg.apartments.map((a) => a.id), first = st.maps[ids[0]] || {};
+    st.map = {}; st.days = Object.keys(first).sort().map((d) => {
+      const fr = ids.map((id) => st.maps[id][d]).filter((q) => q && q.free);
+      const x = { d, free: fr.length > 0, p: fr.length ? Math.min(...fr.map((q) => q.p)) : 0, n: fr.length };
+      st.map[d] = x; return x;
+    });
+  }
+  const freeAll = (id, ci, co) => { const m = st.maps[id] || {}; for (let d = ci; d < co; d = addD(d, 1)) { if (!m[d] || !m[d].free) return false; } return true; };
+  const aptFree = (id) => !!(st.ci && st.co && freeAll(id, st.ci, st.co));
+  const freeApts = (ci, co) => cfg.apartments.filter((a) => freeAll(a.id, ci || st.ci, co || st.co));
+  const aptTotal = (id) => { let n = 0; for (let d = st.ci; d < st.co; d = addD(d, 1)) n += ((st.maps[id] || {})[d] || {}).p || 0; return n; };
+  /* ha nincs elég szabad hely: a legközelebbi azonos hosszú időszak (±21 nap), amikor van */
+  function nearest() {
+    const n = diff(st.ci, st.co), need = st.adults + st.children;
+    for (let k = 1; k <= 21; k++) for (const sgn of [1, -1]) {
+      const ci = addD(st.ci, k * sgn); if (ci < addD(cfg.today, cfg.lead_days || 0)) continue;
+      const co = addD(ci, n), fa = freeApts(ci, co).filter((a) => !st.pre || a.id === st.pre);
+      if (fa.reduce((c, a) => c + a.cap, 0) >= need && fa.length) return { ci, co, n: fa.length };
+    }
+    return null;
   }
   /* létszám elosztása: felnőttek, majd gyermekek körforgásban a szabad helyekre */
   function distrib() {
@@ -1575,7 +1608,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
 
   /* ---------- számítás ---------- */
-  function rangeOk(ci, co) { for (let d = ci; d < co; d = addD(d, 1)) { const x = st.map[d]; if (!x || !x.free) return false; } return true; }
+  function rangeOk(ci, co) { return (st.pre ? [cfg.apartments.find((a) => a.id === st.pre)] : cfg.apartments).some((a) => a && freeAll(a.id, ci, co)); }
   function quote() {
     if (!st.ci || !st.co) return null;
     const n = diff(st.ci, st.co); let acc = 0; const per = [], byApt = {};
@@ -1594,35 +1627,45 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const n = diff(st.ci, st.co);
     if (n < cfg.min_nights) return `Legalább ${cfg.min_nights} éjszakára lehet foglalni.`;
     if (n > cfg.max_nights) return `Online legfeljebb ${cfg.max_nights} éjszakára foglalhatsz – hosszabb tartózkodáshoz hívj minket: ${cfg.phone}`;
-    if (!rangeOk(st.ci, st.co)) return st.apts.length > 1 ? "A kiválasztott időszakban legalább egy apartman már foglalt." : "A kiválasztott időszakban legalább egy nap már foglalt.";
-    if (st.apts.length > 1 && st.adults < st.apts.length) return "Ha több apartmant választasz, minden apartmanhoz adj meg legalább egy felnőtt vendéget.";
+    if (!rangeOk(st.ci, st.co)) return st.pre ? "Ebben az időszakban ez az apartman már foglalt – válassz másik időpontot, vagy nézd meg a többi apartmant." : "Ebben az időszakban sajnos nincs szabad apartman.";
+    const fa = freeApts().filter((a) => !st.pre || a.id === st.pre), cap = fa.reduce((c, a) => c + a.cap, 0);
+    if (st.adults + st.children > cap) return `Ebben az időszakban legfeljebb ${cap} főnek van szabad helyünk.`;
+    return "";
+  }
+  /* az apartmanválasztás hibája (2. lépés) */
+  function aptError() {
+    if (!st.apts.length) return "Válassz egy vagy több szabad apartmant.";
+    const cap = capTotal(), need = st.adults + st.children;
+    if (cap < need) return `A kiválasztott ${st.apts.length > 1 ? "apartmanokban" : "apartmanban"} legfeljebb ${cap} fő fér el – ${need} főhöz válassz még egy apartmant.`;
+    if (st.apts.length > st.adults) return "Minden apartmanhoz legalább egy felnőtt vendég kell.";
     return "";
   }
 
   /* ---------- megjelenítés ---------- */
   function render() {
     steps();
-    if (st.step === 1) return paint(viewApts());
-    if (st.step === 2) return paint(viewCal());
+    if (st.step === 1) return paint(viewCal());
+    if (st.step === 2) return paint(viewApts());
     if (st.step === 3) return paint(viewForm());
     if (st.step === 4) return paint(viewDone());
   }
   function demoNote() { return cfg.demo ? `<p class="zfb-demo">Bemutató mód – a foglalási rendszer a weboldalra feltöltve, élő naptárral működik. Itt az árak és a foglaltság csak minták.</p>` : ""; }
   function viewApts() {
-    const sel = selApts(), cap = capTotal();
-    return demoNote() + `<h2 class="zfb-h">Melyik apartmant választod?</h2><p class="zfb-multi-tip">Nagyobb társasággal több apartmant is lefoglalhatsz egy foglalásban, ugyanarra az időszakra.</p><div class="zfb-apts">` + cfg.apartments.map((a) => `
-      <button type="button" class="zfb-apt${st.apts.includes(a.id) ? " sel" : ""}" data-apt="${a.id}" aria-pressed="${st.apts.includes(a.id)}" style="--ac:${a.color}">
-        <span class="zfb-no">${a.no}</span><span class="zfb-check" aria-hidden="true"></span><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő</small><em>${money(a.price)}-tól / éj</em><i>${st.apts.includes(a.id) ? "Kiválasztva ✓" : "Kiválasztom ›"}</i>${boatArt(a.id, a.color)}
-      </button>`).join("") + (cfg.apartments.some((a) => a.id === "kadett") ? "" : `
-      <div class="zfb-apt zfb-apt-off" style="--ac:#f08a24" aria-disabled="true" title="A Kadett apartman nem foglalható">
-        <span class="zfb-no">6</span><b>Kadett</b><small>legfeljebb 4 fő</small><em class="zfb-full">Foglalt</em><i>Nem foglalható</i>${boatArt("kadett", "#f08a24")}
-      </div>`) + `
-      <button type="button" class="zfb-apt zfb-apt-admin" data-owner="1" style="--ac:#0b2f5e" title="Tulajdonosi felület – jelszóval">
-        <span class="zfb-no">🔒</span><b>Admin</b><small>tulajdonosi belépés</small><em>Foglalások kezelése</em><i>Belépés jelszóval ›</i>${boatArt("admin", "#0b2f5e")}
-      </button></div>
-      <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · legfeljebb <b>${cap} fő</b>` : "Válassz egy vagy több apartmant"}</span><button type="button" class="zfb-btn" data-load="1" ${sel.length ? "" : "disabled"}>Tovább a naptárhoz ›</button></div>
-      <p class="zfb-fine">Érkezés ${esc(cfg.checkin)} órától, távozás ${esc(cfg.checkout)} óráig · Az árakhoz 18 év felett ${money(cfg.tax)} / fő / éj idegenforgalmi adó adódik.</p>
-      <p class="zfb-pay"><b>Fizetés:</b> előleg átutalással${cfg.intl ? " (külföldről is – IBAN / SWIFT)" : ""}${cfg.szep && cfg.szep.length ? `, a többi érkezéskor · <span class="zfb-szep">SZÉP-kártya: ${cfg.szep.map((x) => `<i>${esc(x)}</i>`).join("")}</span>` : ", a többi érkezéskor"}</p>`;
+    const sel = selApts(), cap = capTotal(), need = st.adults + st.children, err = aptError();
+    const list = cfg.apartments.slice().sort((x, y) => (aptFree(y.id) - aptFree(x.id)) || ((y.cap >= need) - (x.cap >= need)));
+    const nFree = list.filter((a) => aptFree(a.id)).length, fit = list.filter((a) => aptFree(a.id) && a.cap >= need).length;
+    const card = (a) => { const ok = aptFree(a.id), on = st.apts.includes(a.id), tot = ok ? aptTotal(a.id) : 0;
+      return `<button type="button" class="zfb-apt${on ? " sel" : ""}${ok ? "" : " zfb-apt-na"}" data-apt="${a.id}" aria-pressed="${on}" ${ok ? "" : 'aria-disabled="true"'} style="--ac:${a.color}">
+        <span class="zfb-no">${a.no}</span><span class="zfb-check" aria-hidden="true"></span><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő${ok && a.cap < need ? " · egyedül kevés" : ""}</small>
+        ${ok ? `<em>${money(tot)}</em><small class="zfb-apt-per">${diff(st.ci, st.co)} éj · átl. ${money(Math.round(tot / diff(st.ci, st.co) / 100) * 100)}/éj</small><i>${on ? "Kiválasztva ✓" : "Kiválasztom ›"}</i>` : `<em class="zfb-full">Foglalt</em><i>Ebben az időszakban nem szabad</i>`}${boatArt(a.id, a.color)}
+      </button>`; };
+    return demoNote() + `<div class="zfb-when"><div><small>Érkezés</small><b>${huDate(st.ci, true)}</b><em>${esc(cfg.checkin)}-tól</em></div><div><small>Távozás</small><b>${huDate(st.co, true)}</b><em>${esc(cfg.checkout)}-ig</em></div><div><small>Vendégek</small><b>${st.adults} felnőtt${st.children ? ", " + st.children + " gyermek" : ""}</b><em>${diff(st.ci, st.co)} éjszaka</em></div><button type="button" class="zfb-link" data-go="1">módosítás</button></div>
+      <h2 class="zfb-h">${nFree ? `${nFree} apartman szabad erre az időszakra` : "Erre az időszakra nincs szabad apartman"}</h2>
+      <p class="zfb-multi-tip">${fit ? "Válaszd ki, melyikben laknátok." : nFree ? `${need} főhöz válassz több apartmant – egy foglalásban, ugyanarra az időszakra.` : ""} Nagyobb társasággal több apartmant is lefoglalhatsz egyszerre.</p>
+      <div class="zfb-apts">${list.map(card).join("")}${cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfb-apt zfb-apt-off" style="--ac:#f08a24" aria-disabled="true" title="A Kadett apartman nem foglalható"><span class="zfb-no">6</span><b>Kadett</b><small>legfeljebb 4 fő</small><em class="zfb-full">Foglalt</em><i>Nem foglalható</i>${boatArt("kadett", "#f08a24")}</div>`}</div>
+      <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · ${cap} férőhely / ${need} fő${err ? `<br><small class="zfb-selerr">${esc(err)}</small>` : ""}` : "Válassz egy vagy több szabad apartmant"}</span><button type="button" class="zfb-btn" data-next="3" ${err ? "disabled" : ""}>Tovább az adatokhoz ›</button></div>
+      <p class="zfb-fine">Az árak az idegenforgalmi adót nem tartalmazzák (18 év felett ${money(cfg.tax)} / fő / éj) · a teljes összeget a következő lépésben látod.</p>
+      <button type="button" class="zfb-apt-link" data-owner="1">Tulajdonosi belépés ›</button>`;
   }
   function monthGrid(y, m) {
     const first = new Date(y, m, 1), start = (first.getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
@@ -1664,29 +1707,31 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   function chips(extra, btn) {
     return `<div class="zfb-chips">` + distrib().map((o) => `<div class="zfb-apt-chip" style="--ac:${o.a.color}"><span class="zfb-no">${o.a.no}</span><b>${esc(o.a.name)}</b><small>${extra ? extra : "legfeljebb " + o.a.cap + " fő"}${st.apts.length > 1 ? ` · ${o.adults} felnőtt${o.children ? ", " + o.children + " gyermek" : ""}` : ""}</small></div>`).join("")
-      + (btn ? `<button type="button" class="zfb-chip-more" data-go="1">${st.apts.length > 1 ? "apartmanok módosítása" : "+ apartman hozzáadása / másik"}</button>` : "") + `</div>`;
+      + (btn ? `<button type="button" class="zfb-chip-more" data-go="2">${st.apts.length > 1 ? "apartmanok módosítása" : "+ apartman hozzáadása / másik"}</button>` : "") + `</div>`;
   }
   function viewCal() {
-    const a = apt(), cap = capTotal();
-    if (st.err) return `<p class="zfb-err">${esc(st.err)}</p><button type="button" class="zfb-btn ghost" data-go="1">‹ Vissza</button>`;
+    const pa = st.pre && cfg.apartments.find((a) => a.id === st.pre), cap = pa ? pa.cap : cfg.apartments.reduce((c, a) => c + a.cap, 0);
+    if (st.err) return `<p class="zfb-err">${esc(st.err)}</p><button type="button" class="zfb-btn ghost" data-close="1">Bezárás</button>`;
     if (!st.days) return `<div class="zfb-loading"><i></i><span>Szabad napok betöltése…</span></div>`;
     const base = pd(cfg.today), months = [];
     const per = window.innerWidth < 760 ? 1 : 2;
     for (let i = 0; i < per; i++) { const d = new Date(base.getFullYear(), base.getMonth() + st.month + i, 1); months.push(monthGrid(d.getFullYear(), d.getMonth())); }
-    const maxMonth = 12, err = selError(), q = !err ? quote() : null;
+    const maxMonth = 12, err = selError(), fa = st.ci && st.co && !err ? freeApts().filter((a) => !st.pre || a.id === st.pre) : [];
+    const near = err && st.ci && st.co && /nincs|foglalt|helyünk/.test(err) ? nearest() : null;
     return demoNote() + `<div class="zfb-cal-wrap">
       <div class="zfb-cal">
-        ${chips("", true)}
+        <h2 class="zfb-h">Mikor jönnétek?</h2>
+        <p class="zfb-multi-tip">${pa ? `A(z) <b>${esc(pa.name)}</b> apartman szabad napjait látod – a következő lépésben a többi szabad apartman is megjelenik.` : "Add meg a szabadságod napjait – utána megmutatjuk, melyik apartman szabad akkor."}</p>
         <div class="zfb-mnav"><button type="button" data-m="-1" ${st.month <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><span>Válaszd ki az érkezés, majd a távozás napját</span><button type="button" data-m="1" ${st.month >= maxMonth ? "disabled" : ""} aria-label="Következő hónap">›</button></div>
         <div class="zfb-months">${months.join("")}</div>
-        <div class="zfb-legend"><span><i class="lf"></i>szabad (ár / éj, ezer Ft)</span><span><i class="lb"></i>foglalt</span><span><i class="ls"></i>kiválasztva</span></div>
+        <div class="zfb-legend"><span><i class="lf"></i>${pa ? "szabad (ár / éj, ezer Ft)" : "van szabad apartman (legkedvezőbb ár / éj, ezer Ft)"}</span><span><i class="lb"></i>${pa ? "foglalt" : "minden apartman foglalt"}</span><span><i class="ls"></i>kiválasztva</span></div>
       </div>
       <aside class="zfb-side">
         <div class="zfb-dates"><div><small>Érkezés</small><b>${st.ci ? huDate(st.ci) : "–"}</b><em>${esc(cfg.checkin)}-tól</em></div><div><small>Távozás</small><b>${st.co ? huDate(st.co) : "–"}</b><em>${esc(cfg.checkout)}-ig</em></div></div>
         ${stepper("adults", st.adults, 1, cap - st.children, "Felnőtt", "18 év felett")}
         ${stepper("children", st.children, 0, cap - st.adults, "Gyermek", "18 év alatt")}
-        ${err ? `<p class="zfb-tip">${esc(err)}</p>` : breakdown(q)}
-        <button type="button" class="zfb-btn" data-next="3" ${err ? "disabled" : ""}>Tovább az adatokhoz ›</button>
+        ${err ? `<p class="zfb-tip">${esc(err)}</p>${near ? `<button type="button" class="zfb-near" data-near="${near.ci}|${near.co}">Legközelebbi szabad időszak: <b>${huDate(near.ci)} – ${huDate(near.co)}</b> ›</button>` : ""}` : `<p class="zfb-ok">✓ ${fa.length} apartman szabad erre az időszakra</p>`}
+        <button type="button" class="zfb-btn" data-next="2" ${err ? "disabled" : ""}>Szabad apartmanok ›</button>
         ${st.ci ? `<button type="button" class="zfb-link" data-clear="1">dátumok törlése</button>` : ""}
       </aside></div>`;
   }
@@ -1756,21 +1801,26 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   async function onClick(e) {
     const b = e.target.closest("button, [data-apt]"); if (!b || b.disabled) return;
     if (b.dataset.apt) return toggleApt(b.dataset.apt);
-    if (b.dataset.load) return loadDays();
+    if (b.dataset.near) { const [ci, co] = b.dataset.near.split("|"); st.ci = ci; st.co = co; const m0 = pd(cfg.today), m1 = pd(ci); st.month = Math.max(0, (m1.getFullYear() - m0.getFullYear()) * 12 + m1.getMonth() - m0.getMonth()); return render(); }
     if (b.dataset.go) { st.step = +b.dataset.go; st.err = ""; return render(); }
     if (b.dataset.close) return close();
     if (b.dataset.owner) { close("noret"); if (window.ZephyrAdmin) setTimeout(() => window.ZephyrAdmin.open(), 320); return; }
     if (b.dataset.m) { st.month = Math.max(0, Math.min(12, st.month + +b.dataset.m)); return render(); }
     if (b.dataset.clear) { st.ci = st.co = null; return render(); }
-    if (b.dataset.st) { const k = b.dataset.st, cap = capTotal(); st[k] = Math.max(k === "adults" ? 1 : 0, Math.min(cap - (k === "adults" ? st.children : st.adults), st[k] + +b.dataset.v)); return render(); }
+    if (b.dataset.st) { const k = b.dataset.st, pa = st.pre && cfg.apartments.find((a) => a.id === st.pre), cap = pa ? pa.cap : cfg.apartments.reduce((c, a) => c + a.cap, 0); st[k] = Math.max(k === "adults" ? 1 : 0, Math.min(cap - (k === "adults" ? st.children : st.adults), st[k] + +b.dataset.v)); return render(); }
     if (b.dataset.day) {
       const d = b.dataset.day;
+      st.apts = [];
       if (!st.ci || st.co || d <= st.ci) { if (st.map[d] && st.map[d].free) { st.ci = d; st.co = null; } }
       else if (rangeOk(st.ci, d)) st.co = d;
       else if (st.map[d] && st.map[d].free) { st.ci = d; st.co = null; }
       return render();
     }
-    if (b.dataset.next) { st.step = +b.dataset.next; st.err = ""; render(); el.querySelector(".zfb-body").scrollTop = 0; return; }
+    if (b.dataset.next) {
+      const nx = +b.dataset.next;
+      if (nx === 2) { st.apts = st.apts.filter(aptFree); if (!st.apts.length) { const need = st.adults + st.children, fa = freeApts(); const one = (st.pre && fa.find((a) => a.id === st.pre)) || fa.find((a) => a.cap >= need && fa.length === 1); if (one) st.apts = [one.id]; } st.apt = st.apts[0] || null; }
+      st.step = nx; st.err = ""; render(); el.querySelector(".zfb-body").scrollTop = 0; return;
+    }
     if (b.type === "submit") { e.preventDefault(); return submit(); }
   }
   async function submit() {
