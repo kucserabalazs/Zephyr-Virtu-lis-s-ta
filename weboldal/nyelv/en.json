@@ -1455,5 +1455,17 @@
  "ugyanúgy {N} éj.": "still {N} nights.",
  "(1 nappal korábban)": "(1 day earlier)",
  "(1 nappal később)": "(1 day later)",
- "{#} éj": "{#} nights"
+ "{#} éj": "{#} nights",
+ "Keresési sáv: ±{N} nap": "Search window: ±{N} days",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "No dates within ±{N} days when it is free together with the chosen apartment.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "No dates within ±{N} days when it is free together with the chosen apartments.",
+ "Keresés kiterjesztése ±{N} napra": "Widen search to ±{N} days",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} days – the number of nights you are booking",
+ "A keresés elérte a foglalható időszak határát.": "The search has reached the limit of the bookable period.",
+ "{N} héttel korábbi érkezéssel": "Arriving {N} weeks earlier",
+ "{N} héttel későbbi érkezéssel": "Arriving {N} weeks later",
+ "a kért időszak": "the requested dates",
+ "javasolt időszak": "suggested dates",
+ "Szállásdíj az új időszakra": "Accommodation price for the new dates",
+ "szabad": "available"
 }

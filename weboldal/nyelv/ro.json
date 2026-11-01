@@ -1455,5 +1455,17 @@
  "ugyanúgy {N} éj.": "tot {N} nopți.",
  "(1 nappal korábban)": "(cu 1 zi mai devreme)",
  "(1 nappal később)": "(cu 1 zi mai târziu)",
- "{#} éj": "{#} nopți"
+ "{#} éj": "{#} nopți",
+ "Keresési sáv: ±{N} nap": "Interval de căutare: ±{N} zile",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "În ±{N} zile nu există nicio perioadă în care să fie liber împreună cu apartamentul ales.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "În ±{N} zile nu există nicio perioadă în care să fie liber împreună cu apartamentele alese.",
+ "Keresés kiterjesztése ±{N} napra": "Extindeți căutarea la ±{N} zile",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} zile – numărul de nopți pe care le rezervați",
+ "A keresés elérte a foglalható időszak határát.": "Căutarea a atins limita perioadei disponibile pentru rezervare.",
+ "{N} héttel korábbi érkezéssel": "Sosire cu {N} săptămâni mai devreme",
+ "{N} héttel későbbi érkezéssel": "Sosire cu {N} săptămâni mai târziu",
+ "a kért időszak": "perioada solicitată",
+ "javasolt időszak": "perioada propusă",
+ "Szállásdíj az új időszakra": "Prețul cazării pentru noua perioadă",
+ "szabad": "liber"
 }

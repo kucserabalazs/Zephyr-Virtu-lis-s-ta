@@ -1446,5 +1446,17 @@
  "mindkét apartman szabad:": "mindkét apartman szabad:",
  "mind a {N} apartman szabad:": "mind a {N} apartman szabad:",
  "ugyanúgy {N} éj.": "ugyanúgy {N} éj.",
- "{#} éj": "{#} éj"
+ "{#} éj": "{#} éj",
+ "Keresési sáv: ±{N} nap": "Keresési sáv: ±{N} nap",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.",
+ "Keresés kiterjesztése ±{N} napra": "Keresés kiterjesztése ±{N} napra",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} nappal bővítve – ennyi éjszakára foglalsz",
+ "A keresés elérte a foglalható időszak határát.": "A keresés elérte a foglalható időszak határát.",
+ "{N} héttel korábbi érkezéssel": "{N} héttel korábbi érkezéssel",
+ "{N} héttel későbbi érkezéssel": "{N} héttel későbbi érkezéssel",
+ "a kért időszak": "a kért időszak",
+ "javasolt időszak": "javasolt időszak",
+ "Szállásdíj az új időszakra": "Szállásdíj az új időszakra",
+ "szabad": "szabad"
 }

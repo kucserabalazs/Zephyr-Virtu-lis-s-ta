@@ -1453,5 +1453,17 @@
  "mindkét apartman szabad:": "kedua apartemen tersedia:",
  "mind a {N} apartman szabad:": "semua {N} apartemen tersedia:",
  "ugyanúgy {N} éj.": "tetap {N} malam.",
- "{#} éj": "{#} malam"
+ "{#} éj": "{#} malam",
+ "Keresési sáv: ±{N} nap": "Rentang pencarian: ±{N} hari",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "Dalam ±{N} hari tidak ada periode yang kosong bersamaan dengan apartemen yang dipilih.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "Dalam ±{N} hari tidak ada periode yang kosong bersamaan dengan apartemen-apartemen yang dipilih.",
+ "Keresés kiterjesztése ±{N} napra": "Perluas pencarian menjadi ±{N} hari",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} hari – sesuai jumlah malam yang Anda pesan",
+ "A keresés elérte a foglalható időszak határát.": "Pencarian telah mencapai batas periode yang dapat dipesan.",
+ "{N} héttel korábbi érkezéssel": "Tiba {N} minggu lebih awal",
+ "{N} héttel későbbi érkezéssel": "Tiba {N} minggu lebih lambat",
+ "a kért időszak": "tanggal yang diminta",
+ "javasolt időszak": "tanggal yang disarankan",
+ "Szállásdíj az új időszakra": "Harga menginap untuk tanggal baru",
+ "szabad": "tersedia"
 }

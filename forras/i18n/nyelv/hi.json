@@ -1453,5 +1453,17 @@
  "mindkét apartman szabad:": "दोनों अपार्टमेंट उपलब्ध हैं:",
  "mind a {N} apartman szabad:": "सभी {N} अपार्टमेंट उपलब्ध हैं:",
  "ugyanúgy {N} éj.": "अब भी {N} रातें।",
- "{#} éj": "{#} रातें"
+ "{#} éj": "{#} रातें",
+ "Keresési sáv: ±{N} nap": "खोज सीमा: ±{N} दिन",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "±{N} दिनों के भीतर ऐसी कोई अवधि नहीं है जब यह चुने गए अपार्टमेंट के साथ खाली हो।",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "±{N} दिनों के भीतर ऐसी कोई अवधि नहीं है जब यह चुने गए अपार्टमेंटों के साथ खाली हो।",
+ "Keresés kiterjesztése ±{N} napra": "खोज को ±{N} दिन तक बढ़ाएँ",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} दिन – जितनी रातें आप बुक कर रहे हैं",
+ "A keresés elérte a foglalható időszak határát.": "खोज बुकिंग योग्य अवधि की सीमा तक पहुँच गई है।",
+ "{N} héttel korábbi érkezéssel": "{N} सप्ताह पहले आगमन",
+ "{N} héttel későbbi érkezéssel": "{N} सप्ताह बाद आगमन",
+ "a kért időszak": "अनुरोधित तिथियाँ",
+ "javasolt időszak": "सुझाई गई तिथियाँ",
+ "Szállásdíj az új időszakra": "नई तिथियों के लिए आवास शुल्क",
+ "szabad": "उपलब्ध"
 }

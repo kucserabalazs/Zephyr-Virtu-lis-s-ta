@@ -1453,5 +1453,17 @@
  "mindkét apartman szabad:": "দুটি অ্যাপার্টমেন্টই খালি:",
  "mind a {N} apartman szabad:": "{N}টি অ্যাপার্টমেন্টই খালি:",
  "ugyanúgy {N} éj.": "এখনও {N} রাত।",
- "{#} éj": "{#} রাত"
+ "{#} éj": "{#} রাত",
+ "Keresési sáv: ±{N} nap": "অনুসন্ধানের পরিসর: ±{N} দিন",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "±{N} দিনের মধ্যে এমন কোনো সময় নেই যখন এটি নির্বাচিত অ্যাপার্টমেন্টের সাথে একসঙ্গে খালি।",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "±{N} দিনের মধ্যে এমন কোনো সময় নেই যখন এটি নির্বাচিত অ্যাপার্টমেন্টগুলোর সাথে একসঙ্গে খালি।",
+ "Keresés kiterjesztése ±{N} napra": "অনুসন্ধান ±{N} দিনে বাড়ান",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} দিন – আপনি যত রাত বুক করছেন",
+ "A keresés elérte a foglalható időszak határát.": "অনুসন্ধান বুকিংযোগ্য সময়ের সীমায় পৌঁছেছে।",
+ "{N} héttel korábbi érkezéssel": "{N} সপ্তাহ আগে আগমন",
+ "{N} héttel későbbi érkezéssel": "{N} সপ্তাহ পরে আগমন",
+ "a kért időszak": "অনুরোধকৃত তারিখ",
+ "javasolt időszak": "প্রস্তাবিত তারিখ",
+ "Szállásdíj az új időszakra": "নতুন তারিখের জন্য থাকার মূল্য",
+ "szabad": "খালি"
 }

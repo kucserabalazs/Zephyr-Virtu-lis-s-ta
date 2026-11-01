@@ -199,3 +199,4 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Oldalsáv: több apartmannál × eltávolítás (`data-rmapt`); létszám-léptető a panelben (max = összes férőhely); beküldéskor ellenőrzi: apartmanonként legalább 1 felnőtt.
 - `fixSel()`: 3. lépésben csak a dátum szerinti szabadságot nézi (a kapacitás miatt nem dobja ki a hozzáadott apartmant).
 - Új feliratok 23 nyelven: `forras/i18n/munka/uj/uj.json` (beolvasztva a szótárakba), + „{#} éj” kulcs.
+- Bővítés (2026-11-01 este): keresési sáv apartmanonként `st.sw[id]` (kezdő ±7, `SW0`; max ±63, `SWMAX`); ha nincs találat: „Keresés kiterjesztése ±N napra” (`data-widen`) – a foglalás éjszakáinak számával bővít. Foglaltsági idősáv `zxTimeline()` (sorok: érintett apartmanok; szaggatott = kért, arany = javasolt), hajórajzok a kártyákon és a fejlécben (`shipArt`), szállásdíj az új időszakra. Sablonok fordítása: `munka/uj/uj2.json`.

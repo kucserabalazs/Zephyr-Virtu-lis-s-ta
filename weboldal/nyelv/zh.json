@@ -1453,5 +1453,17 @@
  "mindkét apartman szabad:": "两套公寓均空闲：",
  "mind a {N} apartman szabad:": "全部 {N} 套公寓均空闲：",
  "ugyanúgy {N} éj.": "仍为 {N} 晚。",
- "{#} éj": "{#}晚"
+ "{#} éj": "{#}晚",
+ "Keresési sáv: ±{N} nap": "搜索范围：±{N} 天",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "在 ±{N} 天内没有与所选公寓同时空闲的时段。",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "在 ±{N} 天内没有与所选各公寓同时空闲的时段。",
+ "Keresés kiterjesztése ±{N} napra": "将搜索范围扩大到 ±{N} 天",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} 天 – 即您预订的晚数",
+ "A keresés elérte a foglalható időszak határát.": "搜索已达到可预订期限的边界。",
+ "{N} héttel korábbi érkezéssel": "提前 {N} 周入住",
+ "{N} héttel későbbi érkezéssel": "推迟 {N} 周入住",
+ "a kért időszak": "所选日期",
+ "javasolt időszak": "建议日期",
+ "Szállásdíj az új időszakra": "新日期的住宿费用",
+ "szabad": "空闲"
 }

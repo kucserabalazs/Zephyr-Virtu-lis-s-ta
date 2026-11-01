@@ -1455,5 +1455,17 @@
  "ugyanúgy {N} éj.": "по-прежнему ночей: {N}.",
  "(1 nappal korábban)": "(на 1 день раньше)",
  "(1 nappal később)": "(на 1 день позже)",
- "{#} éj": "{#} ноч."
+ "{#} éj": "{#} ноч.",
+ "Keresési sáv: ±{N} nap": "Диапазон поиска: ±{N} дн.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "В пределах ±{N} дн. нет периода, когда он свободен вместе с выбранным апартаментом.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "В пределах ±{N} дн. нет периода, когда он свободен вместе с выбранными апартаментами.",
+ "Keresés kiterjesztése ±{N} napra": "Расширить поиск до ±{N} дн.",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} дн. – столько ночей вы бронируете",
+ "A keresés elérte a foglalható időszak határát.": "Поиск достиг границы периода, доступного для бронирования.",
+ "{N} héttel korábbi érkezéssel": "Заезд на {N} нед. раньше",
+ "{N} héttel későbbi érkezéssel": "Заезд на {N} нед. позже",
+ "a kért időszak": "запрошенные даты",
+ "javasolt időszak": "предлагаемые даты",
+ "Szállásdíj az új időszakra": "Стоимость проживания на новые даты",
+ "szabad": "свободно"
 }

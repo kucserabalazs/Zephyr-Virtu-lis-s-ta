@@ -1453,5 +1453,17 @@
  "mindkét apartman szabad:": "両方のアパートメントが空いています：",
  "mind a {N} apartman szabad:": "{N}室すべてが空いています：",
  "ugyanúgy {N} éj.": "宿泊数は変わらず{N}泊。",
- "{#} éj": "{#}泊"
+ "{#} éj": "{#}泊",
+ "Keresési sáv: ±{N} nap": "検索範囲：±{N}日",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "±{N}日以内に、選択したアパートメントと同時に空いている期間はありません。",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "±{N}日以内に、選択したアパートメントすべてと同時に空いている期間はありません。",
+ "Keresés kiterjesztése ±{N} napra": "検索範囲を±{N}日に広げる",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N}日 – ご予約の泊数分",
+ "A keresés elérte a foglalható időszak határát.": "検索が予約可能期間の上限に達しました。",
+ "{N} héttel korábbi érkezéssel": "{N}週間早いご到着",
+ "{N} héttel későbbi érkezéssel": "{N}週間遅いご到着",
+ "a kért időszak": "ご希望の日程",
+ "javasolt időszak": "おすすめの日程",
+ "Szállásdíj az új időszakra": "新しい日程の宿泊料金",
+ "szabad": "空き"
 }

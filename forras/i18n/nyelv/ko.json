@@ -1453,5 +1453,17 @@
  "mindkét apartman szabad:": "두 아파트 모두 예약 가능:",
  "mind a {N} apartman szabad:": "{N}개 아파트 모두 예약 가능:",
  "ugyanúgy {N} éj.": "숙박은 그대로 {N}박.",
- "{#} éj": "{#}박"
+ "{#} éj": "{#}박",
+ "Keresési sáv: ±{N} nap": "검색 범위: ±{N}일",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "±{N}일 이내에 선택한 아파트와 함께 이용 가능한 기간이 없습니다.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "±{N}일 이내에 선택한 아파트들과 함께 이용 가능한 기간이 없습니다.",
+ "Keresés kiterjesztése ±{N} napra": "검색 범위를 ±{N}일로 확장",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N}일 – 예약하시는 숙박 일수만큼",
+ "A keresés elérte a foglalható időszak határát.": "검색이 예약 가능 기간의 한도에 도달했습니다.",
+ "{N} héttel korábbi érkezéssel": "{N}주 일찍 도착",
+ "{N} héttel későbbi érkezéssel": "{N}주 늦게 도착",
+ "a kért időszak": "요청한 날짜",
+ "javasolt időszak": "추천 날짜",
+ "Szállásdíj az új időszakra": "새 날짜의 숙박 요금",
+ "szabad": "예약 가능"
 }

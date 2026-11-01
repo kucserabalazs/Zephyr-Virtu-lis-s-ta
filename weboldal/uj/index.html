@@ -2490,6 +2490,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   const zxWd = (dt) => zxLang() === "hu" ? HU_WDA[pd(dt).getDay()] : new Intl.DateTimeFormat(zxLang(), { weekday: "long" }).format(pd(dt));
   const zxD = (dt) => zxLang() === "hu" ? shortD(dt) : new Intl.DateTimeFormat(zxLang(), { month: "short", day: "numeric" }).format(pd(dt));
   const zxNarrow = (dt) => zxLang() === "hu" ? ["V", "H", "K", "Sz", "Cs", "P", "Sz"][pd(dt).getDay()] : new Intl.DateTimeFormat(zxLang(), { weekday: "narrow" }).format(pd(dt));
+  const zxLong = (dt) => zxLang() === "hu" ? huDate(dt) : new Intl.DateTimeFormat(zxLang(), { year: "numeric", month: "long", day: "numeric" }).format(pd(dt));
   const zxCap = (x) => x.charAt(0).toUpperCase() + x.slice(1);
   /* kis idősáv: soronként az érintett apartmanok foglaltsága; szaggatott keret = a kért időszak, arany = a javasolt */
   function zxTimeline(ids, sh, win) {
@@ -2543,7 +2544,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const fleet = st.apts.map((id) => cfg.apartments.find((x) => x.id === id)).filter(Boolean);
     return `<section class="zfx-panel" aria-label="További apartman">
       <header class="zfx-hd"><div class="zfx-sea" aria-hidden="true"><span class="zfx-fleet">${fleet.map((a) => `<span class="zfx-fl" style="--ac:${a.color}">${shipArt(a.id, a.color, "")}</span>`).join("")}<span class="zfx-fl add">+</span></span><i class="w1"></i><i class="w2"></i></div>
-        <div class="zfx-ht"><h3>További apartman ugyanerre az időszakra</h3><p>${huDate(st.ci)} – ${huDate(st.co)} · ${n} éj</p></div><button type="button" class="zfx-x" data-addmore="0" aria-label="Bezárás">×</button></header>
+        <div class="zfx-ht"><h3>További apartman ugyanerre az időszakra</h3><p data-noi18n>${esc(zxLong(st.ci))} – ${esc(zxLong(st.co))} · ${esc((window.ZI18N && ZI18N.t(n + " éj")) || n + " éj")}</p></div><button type="button" class="zfx-x" data-addmore="0" aria-label="Bezárás">×</button></header>
       <div class="zfx-list">${others.length ? others.map(card).join("") : `<p class="zfx-opt none">Már minden apartman benne van a foglalásban.</p>`}</div>
       ${st.apts.length > 1 ? `<div class="zfx-guests"><p>Összesen ${cap} férőhely – állítsd be, hányan jöttök:</p>${stepper("adults", st.adults, Math.max(1, st.apts.length), cap - st.children, "Felnőtt", "18 év felett")}${stepper("children", st.children, 0, cap - st.adults, "Gyermek", "18 év alatt")}${adultErr ? `<p class="zfb-selerr">Minden apartmanhoz legalább egy felnőtt vendég kell.</p>` : ""}</div>` : ""}
     </section>`;

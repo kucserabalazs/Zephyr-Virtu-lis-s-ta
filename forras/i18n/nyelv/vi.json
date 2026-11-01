@@ -1453,5 +1453,17 @@
  "mindkét apartman szabad:": "cả hai căn hộ đều trống:",
  "mind a {N} apartman szabad:": "cả {N} căn hộ đều trống:",
  "ugyanúgy {N} éj.": "vẫn {N} đêm.",
- "{#} éj": "{#} đêm"
+ "{#} éj": "{#} đêm",
+ "Keresési sáv: ±{N} nap": "Phạm vi tìm kiếm: ±{N} ngày",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "Trong vòng ±{N} ngày không có khoảng thời gian nào còn trống cùng với căn hộ đã chọn.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "Trong vòng ±{N} ngày không có khoảng thời gian nào còn trống cùng với các căn hộ đã chọn.",
+ "Keresés kiterjesztése ±{N} napra": "Mở rộng tìm kiếm thành ±{N} ngày",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} ngày – bằng số đêm quý khách đặt",
+ "A keresés elérte a foglalható időszak határát.": "Tìm kiếm đã đạt đến giới hạn của thời gian có thể đặt.",
+ "{N} héttel korábbi érkezéssel": "Đến sớm hơn {N} tuần",
+ "{N} héttel későbbi érkezéssel": "Đến muộn hơn {N} tuần",
+ "a kért időszak": "ngày đã yêu cầu",
+ "javasolt időszak": "ngày đề xuất",
+ "Szállásdíj az új időszakra": "Giá lưu trú cho ngày mới",
+ "szabad": "còn trống"
 }

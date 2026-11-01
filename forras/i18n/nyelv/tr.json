@@ -1453,5 +1453,17 @@
  "mindkét apartman szabad:": "her iki daire de müsait:",
  "mind a {N} apartman szabad:": "{N} dairenin hepsi müsait:",
  "ugyanúgy {N} éj.": "yine {N} gece.",
- "{#} éj": "{#} gece"
+ "{#} éj": "{#} gece",
+ "Keresési sáv: ±{N} nap": "Arama aralığı: ±{N} gün",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "±{N} gün içinde seçilen daireyle birlikte müsait olduğu bir dönem yok.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "±{N} gün içinde seçilen dairelerle birlikte müsait olduğu bir dönem yok.",
+ "Keresés kiterjesztése ±{N} napra": "Aramayı ±{N} güne genişlet",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} gün – rezervasyon yaptığınız gece sayısı",
+ "A keresés elérte a foglalható időszak határát.": "Arama, rezervasyon yapılabilir dönemin sınırına ulaştı.",
+ "{N} héttel korábbi érkezéssel": "{N} hafta erken varış",
+ "{N} héttel későbbi érkezéssel": "{N} hafta geç varış",
+ "a kért időszak": "istenen tarihler",
+ "javasolt időszak": "önerilen tarihler",
+ "Szállásdíj az új időszakra": "Yeni tarihler için konaklama ücreti",
+ "szabad": "müsait"
 }

@@ -1455,5 +1455,17 @@
  "ugyanúgy {N} éj.": "toujours {N} nuits.",
  "(1 nappal korábban)": "(1 jour plus tôt)",
  "(1 nappal később)": "(1 jour plus tard)",
- "{#} éj": "{#} nuits"
+ "{#} éj": "{#} nuits",
+ "Keresési sáv: ±{N} nap": "Plage de recherche : ±{N} jours",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmannal együtt szabad lenne.": "Aucune période dans les ±{N} jours où il est libre en même temps que l’appartement choisi.",
+ "±{N} napon belül nincs olyan időszak, amikor a választott apartmanokkal együtt szabad lenne.": "Aucune période dans les ±{N} jours où il est libre en même temps que les appartements choisis.",
+ "Keresés kiterjesztése ±{N} napra": "Étendre la recherche à ±{N} jours",
+ "+{N} nappal bővítve – ennyi éjszakára foglalsz": "+{N} jours – le nombre de nuits que vous réservez",
+ "A keresés elérte a foglalható időszak határát.": "La recherche a atteint la limite de la période réservable.",
+ "{N} héttel korábbi érkezéssel": "Arrivée {N} semaines plus tôt",
+ "{N} héttel későbbi érkezéssel": "Arrivée {N} semaines plus tard",
+ "a kért időszak": "les dates demandées",
+ "javasolt időszak": "dates proposées",
+ "Szállásdíj az új időszakra": "Prix du séjour pour les nouvelles dates",
+ "szabad": "libre"
 }
