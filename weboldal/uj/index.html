@@ -677,6 +677,38 @@ body { background-image: var(--grain); }
   .ev-upd { margin-left: 0; width: 100%; }
   .ev-acts .btn { min-width: 0; }
 }
+/* ---- programajánló: rövid előzetes a főoldalon, a teljes ajánló külön ablakban ---- */
+.ev-teaser { display: grid; gap: 16px; }
+.ev-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.ev-quick button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; background: #fff; border: 1.5px solid var(--line); font: 800 13.5px/1 var(--body); color: var(--sea); transition: border-color .2s, transform .2s; }
+.ev-quick button:hover { border-color: var(--rope); transform: translateY(-1px); }
+.ev-quick button i { font-style: normal; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; display: grid; place-items: center; background: var(--sea); color: #ffd978; font-size: 12px; }
+.ev-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.ev-mini a { all: unset; cursor: pointer; display: grid; grid-template-columns: 62px 1fr; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; background: #fff; box-shadow: 0 2px 0 var(--line), 0 12px 26px rgba(20,32,42,.07); transition: transform .2s, box-shadow .2s; min-width: 0; }
+.ev-mini a:hover { transform: translateY(-3px); box-shadow: 0 2px 0 var(--line), 0 18px 34px rgba(20,32,42,.12); }
+.ev-mini .d { border-radius: 12px; background: linear-gradient(180deg, #164377, var(--sea)); color: #fff; text-align: center; padding: 8px 0; }
+.ev-mini .d span { display: block; font: 800 10.5px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: #ffd978; }
+.ev-mini .d b { display: block; font: 900 28px/1 var(--display); margin-top: 3px; }
+.ev-mini .t { min-width: 0; display: grid; gap: 4px; }
+.ev-mini .t b { font: 800 15.5px/1.2 var(--body); color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ev-mini .t small { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev-open { justify-self: start; }
+.ev-open i { font-style: normal; margin-left: 6px; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,.35); }
+.evp { position: fixed; inset: 0; z-index: 120; display: flex; flex-direction: column; background: var(--sail-2, #f5efe2); background-image: var(--grain); animation: evpIn .35s cubic-bezier(.2,.8,.2,1); }
+.evp[hidden] { display: none; }
+@keyframes evpIn { from { opacity: 0; transform: translateY(24px); } }
+.evp-hd { display: flex; align-items: center; gap: 14px; padding: 12px max(16px, calc((100vw - 1200px) / 2)); padding-top: calc(12px + env(safe-area-inset-top, 0px)); background: linear-gradient(135deg, #0b2f5e, #1b4c86); color: #fff; position: relative; box-shadow: 0 6px 20px rgba(7,29,56,.25); }
+.evp-hd::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 8px; opacity: .45; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8'%3E%3Cpath d='M0 5 q5 -4 10 0 t10 0 t10 0 t10 0 V8 H0z' fill='%23ffd978'/%3E%3C/svg%3E") 0 100% / 40px 8px repeat-x; }
+.evp-hd b { font: 900 24px/1 var(--display); text-transform: uppercase; letter-spacing: .06em; }
+.evp-hd small { display: block; font: 600 12px/1.2 var(--body); opacity: .8; margin-top: 3px; }
+.evp-hd .sp { flex: 1; }
+.evp-x { all: unset; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.14); font: 700 26px/1 sans-serif; transition: background .2s, transform .3s; }
+.evp-x:hover { background: var(--red); transform: rotate(90deg); }
+.evp-back { all: unset; cursor: pointer; padding: 9px 13px; border-radius: 999px; background: rgba(255,255,255,.14); font: 800 13px/1 var(--body); }
+.evp-body { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 18px max(16px, calc((100vw - 1200px) / 2)) calc(40px + env(safe-area-inset-bottom, 0px)); }
+html.evp-lock, html.evp-lock body { overflow: hidden; }
+@media (max-width: 900px) { .ev-mini { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .evp-hd b { font-size: 20px; } .evp-back span { display: none; } .ev-open { justify-self: stretch; } }
 @media (prefers-reduced-motion: reduce) { .fx-in { opacity: 1; transform: none; } .compass-wm, .amen svg, .svc-ico, .tb-360 { animation: none; } }
 :root { --knot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a5 5 0 0 1 5 5c0 2-1.2 3.4-2.6 4.5L12 13l-2.4-1.5C8.2 10.4 7 9 7 7a5 5 0 0 1 5-5zm0 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5 13l7 4 7-4 2 2-9 7-9-7z'/%3E%3C/svg%3E"); }
 </style>
@@ -1169,10 +1201,13 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       <h2>Rendezvények <em>Zamárdiban és környékén</em></h2>
       <p class="lead">Összegyűjtöttük a környék fontosabb programjait dátum szerint. Ahol van rá lehetőség, jegyet is foglalhatsz, vagy további részleteket olvashatsz a rendezvény saját oldalán.</p>
     </div>
-    <div class="ev-bar" id="evBar"></div>
-    <div id="evList" aria-live="polite"></div>
+    <div class="ev-teaser" id="evTeaser"></div>
   </div>
 </section>
+<div class="evp" id="evp" hidden role="dialog" aria-modal="true" aria-label="Programajánló">
+  <header class="evp-hd"><button type="button" class="evp-back" data-evp-close="1">‹ <span>Vissza az oldalra</span></button><div><b>Programajánló</b><small>Zamárdi és a Balaton programjai</small></div><span class="sp"></span><button type="button" class="evp-x" data-evp-close="1" aria-label="Bezárás">×</button></header>
+  <div class="evp-body"><div class="ev-bar" id="evBar"></div><div id="evList" aria-live="polite"></div></div>
+</div>
 
 <div class="rope" aria-hidden="true"></div>
 
@@ -1654,7 +1689,8 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   async function loadEvents() {
     try { if (PREVIEW) throw new Error("preview"); const r = await fetch((window.ZEPHYR_API || "") + "?r=events", { cache: "no-store" }); if (!r.ok) throw new Error(""); const j = await r.json(); EVS = j.events || []; evUpd = j.updated || ""; evDemo = false; }
     catch (e) { EVS = demoEvents(); evDemo = true; }
-    renderEvents();
+    renderEvents(); evTeaser();
+    if (location.hash === "#programajanlo" || location.hash === "#programok") evOpen("");
   }
   const evEnd = (e) => e.to || e.from;
   const evOn = (e, d) => e.from <= d && evEnd(e) >= d;
@@ -1730,6 +1766,22 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     $("evList").innerHTML = h + "</div>" + evMore();
     evLd(list);
   }
+  function evTeaser() {  /* főoldal: csak rövid előzetes – a teljes ajánló külön ablakban nyílik */
+    const T = ymd(new Date()), up = EVS.filter((e) => evEnd(e) >= T), cnt = (w) => { const o = EQ.when, dd = EQ.day; EQ.when = w; EQ.day = ""; const r = evRange(); EQ.when = o; EQ.day = dd; return up.filter((e) => evOverlap(e, r[0], r[1])).length; };
+    if (!up.length) { $("evTeaser").innerHTML = `<div class="ev-empty"><svg><use href="#i-cal"/></svg><b>Hamarosan feltöltjük az idei programokat.</b><span>Addig is nézd meg a helyi látnivalókat lejjebb.</span></div><button type="button" class="owner-link" data-owner="prog">Programok szerkesztése (tulajdonos)</button>`; return; }
+    $("evTeaser").innerHTML = `<div class="ev-quick">${[["today", "Ma"], ["weekend", "Hétvégén"], ["7", "Következő 7 nap"], ["month", "Havi naptár"]].map(([k, n]) => `<button type="button" data-evp="${k}">${n}${k !== "month" && cnt(k) ? `<i>${cnt(k)}</i>` : ""}</button>`).join("")}</div>
+      <div class="ev-mini">${up.slice(0, 3).map((e) => { const d = pd(e.from); return `<a href="#programajanlo" data-evp="" data-evid="${esc(e.id)}"><span class="d"><span>${HU_MS[d.getMonth()]}</span><b>${d.getDate()}</b></span><span class="t"><b>${esc(e.title)}</b><small>${esc([e.time, e.town || e.place].filter(Boolean).join(" · "))}${evDemo ? " · példa" : ""}</small></span></a>`; }).join("")}</div>
+      <button type="button" class="btn btn-red ev-open" data-evp=""><svg><use href="#i-cal"/></svg>Belépés a programajánlóba<i>${up.length}</i></button>`;
+  }
+  function evOpen(when) {
+    Object.assign(EQ, { when: when || "", day: "", mo: 0 }); renderEvents();
+    const p = $("evp"); p.hidden = false; document.documentElement.classList.add("evp-lock"); p.querySelector(".evp-body").scrollTop = 0; p.querySelector(".evp-x").focus();
+    if (location.hash !== "#programajanlo") history.pushState({ evp: 1 }, "", "#programajanlo");
+  }
+  function evClose(fromPop) { const p = $("evp"); if (p.hidden) return; p.hidden = true; document.documentElement.classList.remove("evp-lock"); if (!fromPop && location.hash === "#programajanlo") history.back(); }
+  document.addEventListener("click", (e) => { const o = e.target.closest("[data-evp]"); if (o) { e.preventDefault(); evOpen(o.dataset.evp); return; } if (e.target.closest("[data-evp-close]")) evClose(); });
+  addEventListener("popstate", () => { if (location.hash !== "#programajanlo") evClose(true); else if ($("evp").hidden) evOpen(""); });
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("evp").hidden) evClose(); });
   function evMore() {  /* további megbízható programforrások – csak hivatkozás, tartalmat nem veszünk át */
     return `<div class="ev-more-src"><b>További balatoni programok</b><span>
       <a href="https://www.programturizmus.hu/ajanlat-zamardi-nyari-programok-fesztivalok.html" target="_blank" rel="noopener">Zamárdi – Programturizmus ↗</a>
