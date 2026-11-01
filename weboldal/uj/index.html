@@ -1998,7 +1998,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const base = evFiltered(false).filter(() => true), cnt = {};
     for (let d = 1; d <= days; d++) { const s = ymd(new Date(y, mo, d)); cnt[s] = EVS.filter((e) => evOn(e, s) && (!evCat || e.cat === evCat) && evZoneOk(e) && (!EQ.town || e.town === EQ.town) && (!EQ.free || e.free) && (!EQ.kids || e.kids) && (!EQ.indoor || e.indoor)).length; }
     let h = `<div class="ev-cal"><div class="ev-cal-hd"><button type="button" class="ev-nav" data-mo="-1" ${EQ.mo <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><b>${y}. ${HU_M[mo]}</b><button type="button" class="ev-nav" data-mo="1" ${EQ.mo >= 11 ? "disabled" : ""} aria-label="Következő hónap">›</button></div><div class="ev-cal-g">`;
-    h += ["H", "K", "Sze", "Cs", "P", "Szo", "V"].map((w) => `<span class="w">${w}</span>`).join("") + "<span></span>".repeat(lead);
+    h += ["H", "K", "Sze", "Cs", "P", "Szo", "V"].map((w) => `<span class="w" data-i18n="nap:${w}">${w}</span>`).join("") + "<span></span>".repeat(lead);
     for (let d = 1; d <= days; d++) { const s = ymd(new Date(y, mo, d)), n = cnt[s], past = s < T; h += `<button type="button" class="d${s === T ? " today" : ""}${n ? " has" : ""}${EQ.day === s ? " on" : ""}" data-day="${s}" ${past || !n ? "disabled" : ""} aria-label="${d}. – ${n} program"><b>${d}</b>${n ? `<i>${n > 3 ? "•••" : "•".repeat(n)}</i>` : ""}</button>`; }
     void base;
     return h + `</div><small>A pöttyök a napi programok számát jelzik – koppints egy napra.</small></div>`;
@@ -2442,7 +2442,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   function monthGrid(y, m) {
     const first = new Date(y, m, 1), start = (first.getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
-    let html = `<div class="zfb-month"><h4>${y}. ${HU_M[m]}</h4><div class="zfb-wd">${HU_WD.map((w) => `<span>${w}</span>`).join("")}</div><div class="zfb-days">`;
+    let html = `<div class="zfb-month"><h4>${y}. ${HU_M[m]}</h4><div class="zfb-wd">${HU_WD.map((w) => `<span data-i18n="nap:${w}">${w}</span>`).join("")}</div><div class="zfb-days">`;
     for (let i = 0; i < start; i++) html += `<span class="zfb-d empty"></span>`;
     for (let d = 1; d <= days; d++) {
       const ds = ymd(new Date(y, m, d)), x = st.map[ds], prev = st.map[addD(ds, -1)];
@@ -3020,7 +3020,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const blocking = ["pending", "approved", "paid", "block"];
     let h = `<div class="zad-calnav"><button type="button" class="zad-b" data-month="-1">‹ Előző</button><b>${m.slice(0, 4)}. ${HU_MC[+m.slice(5) - 1]}</b><button type="button" class="zad-b" data-month="1">Következő ›</button><button type="button" class="zad-link" data-month="0">Ma</button></div>`;
     h += `<div class="zad-calwrap"><table class="zad-cal"><thead><tr><th class="ap"></th>`;
-    for (let i = 0; i < dim; i++) { const d = addD(first, i), w = pd(d).getDay(); h += `<th class="${w === 5 || w === 6 ? "we" : ""}${d === t ? " td" : ""}">${i + 1}<small>${WD[w]}</small></th>`; }
+    for (let i = 0; i < dim; i++) { const d = addD(first, i), w = pd(d).getDay(); h += `<th class="${w === 5 || w === 6 ? "we" : ""}${d === t ? " td" : ""}">${i + 1}<small data-i18n="nap:${WD[w]}">${WD[w]}</small></th>`; }
     h += `</tr></thead><tbody>`;
     S.apartments.forEach((a) => {
       h += `<tr><th class="ap" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span>${esc(a.name)}</th>`;
@@ -7998,8 +7998,8 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   const RTL = { ar: 1, ur: 1 };
   const CODES = LANGS.map((l) => l[0]);
   /* mely nyelvekhez van már szótár – a build tölti ki a nyelv/ mappa alapján */
-  const READY = (window.ZEPHYR_I18N_READY || ["hu"]).filter((c) => CODES.includes(c));
-  const BASE = window.ZEPHYR_I18N_BASE || "../nyelv/";
+  const READY = (window.ZEPHYR_I18N_READY || ["hu", "ar", "bn", "cs", "de", "en", "es", "fr", "hi", "hr", "id", "it", "ja", "ko", "nl", "pl", "pt", "ro", "ru", "sk", "tr", "ur", "vi", "zh"]).filter((c) => CODES.includes(c));
+  const BASE = window.ZEPHYR_I18N_BASE || (/(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/i.test(location.hostname) ? "nyelv/" : "../nyelv/");   /* claude.ai bemutató: a szótárak az előnézet mellett */
   const KEY = "zephyr-lang";
   const COLLECT = /(^|[?&])forditas=gyujt/.test(location.search);
   const SKIP = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEXTAREA: 1, CODE: 1, PRE: 1, CANVAS: 1, TEMPLATE: 1 };
@@ -8039,7 +8039,8 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   function doText(n) {
     const rec = TXT.get(n); let src = rec ? rec.src : n.nodeValue;
     if (rec && n.nodeValue !== rec.out) src = n.nodeValue;   /* az oldal közben átírta → új forrásszöveg */
-    const t = lang === "hu" ? null : tr(src); if (lang === "hu") note(norm(src));
+    const ky = n.parentNode && n.parentNode.getAttribute && n.parentNode.getAttribute("data-i18n");   /* rövid, többértelmű feliratok saját kulccsal (pl. nap:H) */
+    const t = lang === "hu" ? null : (ky && dict && dict[ky] != null ? dict[ky] : tr(src)); if (lang === "hu") note(norm(src));
     let out = src;
     if (t != null) { const m = /^(\s*)[\s\S]*?(\s*)$/.exec(src); out = m[1] + t + m[2]; }
     TXT.set(n, { src, out }); if (n.nodeValue !== out) n.nodeValue = out;
@@ -8079,7 +8080,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   async function loadDict(c) {
     if (c === "hu") return null;
     const inl = window.ZEPHYR_I18N_DICTS && window.ZEPHYR_I18N_DICTS[c]; if (inl) return inl;
-    try { const r = await fetch(BASE + c + ".json", { cache: "force-cache" }); if (r.ok) return await r.json(); } catch (e) {}
+    for (const b of [BASE, BASE === "nyelv/" ? "../nyelv/" : "nyelv/"]) { try { const r = await fetch(b + c + ".json", { cache: "force-cache" }); if (r.ok) return await r.json(); } catch (e) {} }
     return null;
   }
   async function setLang(c, remember) {

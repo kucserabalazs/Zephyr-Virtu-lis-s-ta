@@ -1754,7 +1754,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   function monthGrid(y, m) {
     const first = new Date(y, m, 1), start = (first.getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
-    let html = `<div class="zfb-month"><h4>${y}. ${HU_M[m]}</h4><div class="zfb-wd">${HU_WD.map((w) => `<span>${w}</span>`).join("")}</div><div class="zfb-days">`;
+    let html = `<div class="zfb-month"><h4>${y}. ${HU_M[m]}</h4><div class="zfb-wd">${HU_WD.map((w) => `<span data-i18n="nap:${w}">${w}</span>`).join("")}</div><div class="zfb-days">`;
     for (let i = 0; i < start; i++) html += `<span class="zfb-d empty"></span>`;
     for (let d = 1; d <= days; d++) {
       const ds = ymd(new Date(y, m, d)), x = st.map[ds], prev = st.map[addD(ds, -1)];
@@ -2332,7 +2332,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const blocking = ["pending", "approved", "paid", "block"];
     let h = `<div class="zad-calnav"><button type="button" class="zad-b" data-month="-1">‹ Előző</button><b>${m.slice(0, 4)}. ${HU_MC[+m.slice(5) - 1]}</b><button type="button" class="zad-b" data-month="1">Következő ›</button><button type="button" class="zad-link" data-month="0">Ma</button></div>`;
     h += `<div class="zad-calwrap"><table class="zad-cal"><thead><tr><th class="ap"></th>`;
-    for (let i = 0; i < dim; i++) { const d = addD(first, i), w = pd(d).getDay(); h += `<th class="${w === 5 || w === 6 ? "we" : ""}${d === t ? " td" : ""}">${i + 1}<small>${WD[w]}</small></th>`; }
+    for (let i = 0; i < dim; i++) { const d = addD(first, i), w = pd(d).getDay(); h += `<th class="${w === 5 || w === 6 ? "we" : ""}${d === t ? " td" : ""}">${i + 1}<small data-i18n="nap:${WD[w]}">${WD[w]}</small></th>`; }
     h += `</tr></thead><tbody>`;
     S.apartments.forEach((a) => {
       h += `<tr><th class="ap" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span>${esc(a.name)}</th>`;
@@ -11171,8 +11171,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   const RTL = { ar: 1, ur: 1 };
   const CODES = LANGS.map((l) => l[0]);
   /* mely nyelvekhez van már szótár – a build tölti ki a nyelv/ mappa alapján */
-  const READY = (window.ZEPHYR_I18N_READY || ["hu"]).filter((c) => CODES.includes(c));
-  const BASE = window.ZEPHYR_I18N_BASE || "../nyelv/";
+  const READY = (window.ZEPHYR_I18N_READY || ["hu", "ar", "bn", "cs", "de", "en", "es", "fr", "hi", "hr", "id", "it", "ja", "ko", "nl", "pl", "pt", "ro", "ru", "sk", "tr", "ur", "vi", "zh"]).filter((c) => CODES.includes(c));
+  const BASE = window.ZEPHYR_I18N_BASE || (/(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/i.test(location.hostname) ? "nyelv/" : "../nyelv/");   /* claude.ai bemutató: a szótárak az előnézet mellett */
   const KEY = "zephyr-lang";
   const COLLECT = /(^|[?&])forditas=gyujt/.test(location.search);
   const SKIP = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEXTAREA: 1, CODE: 1, PRE: 1, CANVAS: 1, TEMPLATE: 1 };
@@ -11212,7 +11212,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function doText(n) {
     const rec = TXT.get(n); let src = rec ? rec.src : n.nodeValue;
     if (rec && n.nodeValue !== rec.out) src = n.nodeValue;   /* az oldal közben átírta → új forrásszöveg */
-    const t = lang === "hu" ? null : tr(src); if (lang === "hu") note(norm(src));
+    const ky = n.parentNode && n.parentNode.getAttribute && n.parentNode.getAttribute("data-i18n");   /* rövid, többértelmű feliratok saját kulccsal (pl. nap:H) */
+    const t = lang === "hu" ? null : (ky && dict && dict[ky] != null ? dict[ky] : tr(src)); if (lang === "hu") note(norm(src));
     let out = src;
     if (t != null) { const m = /^(\s*)[\s\S]*?(\s*)$/.exec(src); out = m[1] + t + m[2]; }
     TXT.set(n, { src, out }); if (n.nodeValue !== out) n.nodeValue = out;
@@ -11252,7 +11253,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   async function loadDict(c) {
     if (c === "hu") return null;
     const inl = window.ZEPHYR_I18N_DICTS && window.ZEPHYR_I18N_DICTS[c]; if (inl) return inl;
-    try { const r = await fetch(BASE + c + ".json", { cache: "force-cache" }); if (r.ok) return await r.json(); } catch (e) {}
+    for (const b of [BASE, BASE === "nyelv/" ? "../nyelv/" : "nyelv/"]) { try { const r = await fetch(b + c + ".json", { cache: "force-cache" }); if (r.ok) return await r.json(); } catch (e) {} }
     return null;
   }
   async function setLang(c, remember) {

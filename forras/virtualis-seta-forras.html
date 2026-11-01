@@ -1743,7 +1743,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   function monthGrid(y, m) {
     const first = new Date(y, m, 1), start = (first.getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
-    let html = `<div class="zfb-month"><h4>${y}. ${HU_M[m]}</h4><div class="zfb-wd">${HU_WD.map((w) => `<span>${w}</span>`).join("")}</div><div class="zfb-days">`;
+    let html = `<div class="zfb-month"><h4>${y}. ${HU_M[m]}</h4><div class="zfb-wd">${HU_WD.map((w) => `<span data-i18n="nap:${w}">${w}</span>`).join("")}</div><div class="zfb-days">`;
     for (let i = 0; i < start; i++) html += `<span class="zfb-d empty"></span>`;
     for (let d = 1; d <= days; d++) {
       const ds = ymd(new Date(y, m, d)), x = st.map[ds], prev = st.map[addD(ds, -1)];
@@ -2321,7 +2321,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const blocking = ["pending", "approved", "paid", "block"];
     let h = `<div class="zad-calnav"><button type="button" class="zad-b" data-month="-1">‹ Előző</button><b>${m.slice(0, 4)}. ${HU_MC[+m.slice(5) - 1]}</b><button type="button" class="zad-b" data-month="1">Következő ›</button><button type="button" class="zad-link" data-month="0">Ma</button></div>`;
     h += `<div class="zad-calwrap"><table class="zad-cal"><thead><tr><th class="ap"></th>`;
-    for (let i = 0; i < dim; i++) { const d = addD(first, i), w = pd(d).getDay(); h += `<th class="${w === 5 || w === 6 ? "we" : ""}${d === t ? " td" : ""}">${i + 1}<small>${WD[w]}</small></th>`; }
+    for (let i = 0; i < dim; i++) { const d = addD(first, i), w = pd(d).getDay(); h += `<th class="${w === 5 || w === 6 ? "we" : ""}${d === t ? " td" : ""}">${i + 1}<small data-i18n="nap:${WD[w]}">${WD[w]}</small></th>`; }
     h += `</tr></thead><tbody>`;
     S.apartments.forEach((a) => {
       h += `<tr><th class="ap" style="--ac:${a.color}"><span class="zfb-no">${a.no}</span>${esc(a.name)}</th>`;
