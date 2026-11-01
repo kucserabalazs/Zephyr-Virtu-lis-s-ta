@@ -1007,7 +1007,7 @@ body.walk-on .gm-dock { display: none; }
 @keyframes zflBub { 0% { opacity: 0; transform: translateY(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(4px, -40px); } }
 /* a kéz a víz alól jön fel: a doboz a vízfelszínnél levágja a kart, a hullám rátakar */
 .zfl-hand { position: absolute; z-index: 1; left: 50%; top: 0; width: 120px; height: 104px; margin-left: -60px; overflow: hidden; pointer-events: none; }
-.zfl-hand svg { position: absolute; left: 38px; bottom: -37px; width: 66px; height: 124px; transform: translateY(132px); transition: transform 1.8s cubic-bezier(.45,0,.4,1) 0s; }
+.zfl-hand svg { position: absolute; left: 38px; bottom: -27px; width: 66px; height: 124px; transform: translateY(132px); transition: transform 1.8s cubic-bezier(.45,0,.4,1) 0s; }
 .zfl.down .zfl-hand svg { transform: translateY(0); transition: transform 3.4s cubic-bezier(.25,.75,.35,1) 1.4s; }
 .zfl.down .zfl-hand .zh-arm { transform-box: view-box; transform-origin: 27px 112px; animation: zhWave 2.4s ease-in-out 4.9s infinite; }
 @keyframes zhWave { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(8deg); } }
@@ -1015,13 +1015,18 @@ body.walk-on .gm-dock { display: none; }
 .zfl-splash i { position: absolute; left: -14px; top: -4px; width: 28px; height: 8px; border-radius: 50%; border: 2px solid rgba(255,255,255,.9); opacity: 0; }
 .zfl.down .zfl-splash i { animation: zhRip 2.6s ease-out 2s infinite; } .zfl.down .zfl-splash i:nth-child(2) { animation-delay: 2.9s; } .zfl.down .zfl-splash i:nth-child(3) { animation-delay: 3.8s; }
 @keyframes zhRip { 0% { opacity: .95; transform: scale(.5); } 100% { opacity: 0; transform: scale(2.4); } }
+/* vízgallér a kar körül a felszínen + a hínár finoman leng */
+.zfl-collar { position: absolute; left: 50%; bottom: 0; width: 26px; height: 7px; margin-left: -12px; border-radius: 50%; background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.95), rgba(190,230,250,.55) 55%, rgba(255,255,255,0) 72%); opacity: 0; transform: scale(.4); transition: opacity .6s, transform .6s; }
+.zfl.down .zfl-collar { opacity: 1; transform: scale(1); transition: opacity 1s 2.2s, transform 1s 2.2s; }
+.zfl.down .zh-weed { transform-box: fill-box; transform-origin: 30% 0; animation: zhWeed 2.4s ease-in-out 4.9s infinite; }
+@keyframes zhWeed { 0%, 100% { transform: rotate(4deg); } 50% { transform: rotate(-6deg); } }
 /* sorrend: süllyedéskor előbb a hajó merül, aztán jön fel a kéz; felszabaduláskor előbb a kéz húzódik vissza, aztán emelkedik a hajó */
 .zfl .zfl-boat { transition-delay: 1.5s; } .zfl.down .zfl-boat { transition-delay: 0s; }
 .zfl.off { cursor: default; } .zfl.off .zfl-boat { transition-delay: 0s; }
 /* Kadett: saját használatú, nem süllyed el, csak „Privát” jelölést kap */
 .zfl-priv { position: absolute; z-index: 4; right: 6px; top: 6px; transform: rotate(3deg); padding: 2px 8px; border-radius: 6px; background: linear-gradient(#f3e3c0, #e2c992); border: 1.5px solid #8a6630; box-shadow: 0 2px 5px rgba(0,30,60,.25); color: #5a3d14; font: 900 11px/1.2 Manrope, Arial, sans-serif; letter-spacing: .12em; text-transform: uppercase; pointer-events: none; }
 .zfl.off .zfl-st { color: #8a6630; }
-@media (max-width: 760px) { .zfl-hand { width: 100px; height: 84px; margin-left: -50px; } .zfl-hand svg { left: 32px; width: 54px; height: 101px; bottom: -30px; transform: translateY(116px); } .zfl-splash { top: 80px; } .zfl-priv { right: 4px; top: 4px; } .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 100px; } .zfl-wave { top: 80px; } .zfl-bub { top: 92px; } .zfl.down .zfl-boat { transform: translateY(56px) rotate(-16deg) scale(.92); } }
+@media (max-width: 760px) { .zfl-hand { width: 100px; height: 84px; margin-left: -50px; } .zfl-hand svg { left: 32px; width: 54px; height: 101px; bottom: -22px; transform: translateY(116px); } .zfl-splash { top: 80px; } .zfl-collar { width: 22px; height: 6px; margin-left: -10px; } .zfl-priv { right: 4px; top: 4px; } .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 100px; } .zfl-wave { top: 80px; } .zfl-bub { top: 92px; } .zfl.down .zfl-boat { transform: translateY(56px) rotate(-16deg) scale(.92); } }
 @media (prefers-reduced-motion: reduce) { .zfl-bob, .zfl-wave, .zfl-lake::before, .zfl-bub { animation: none !important; } .zfl-boat { transition-duration: .01s; } }
 /* időpont-első foglalás: összegző sáv, nem szabad apartman, legközelebbi szabad időszak */
 .zfb-when { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 12px 16px; margin: 0 0 14px; border-radius: 16px; background: linear-gradient(135deg, #0b2f5e, #164377); color: #fff; box-shadow: 0 8px 20px rgba(11,47,94,.18); }
@@ -1850,37 +1855,54 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       ${no ? `<g transform="translate(18 24)"><circle r="11" fill="#fff" stroke="${c}" stroke-width="2.4"/><text y="5" text-anchor="middle" font-size="14" font-weight="900" font-family="Manrope, sans-serif" fill="${c}">${no}</text></g>` : ""}
       <ellipse cx="82" cy="106" rx="66" ry="4.5" fill="rgba(7,29,56,.2)"/></svg>`;
   }
-  /* elsüllyedt apartman: egyetlen emberi kéz nyúl fel lassan a víz alól, ökölben tartja a zászlórudat, a zászlón „FOGLALT”, és lengeti */
+  /* elsüllyedt apartman: egyetlen emberi kéz nyúl fel lassan a víz alól, ökölben tartja a zászlórudat, a zászlón „FOGLALT”, és lengeti (csuklóján egy kis hínár) */
+  const FLAG_D = ["M31 8 Q50 2 78 9 L78 41 Q52 35 31 40 Z", "M31 8 Q54 14 78 6 L78 38 Q50 46 31 40 Z"];
+  const HEM_D = ["M33 10.6 Q51 5 75.6 11.2 L75.6 38.6 Q52 33 33 37.5", "M33 10.6 Q54 16 75.6 8.4 L75.6 35.8 Q50 43.6 33 37.5"];
+  const anim = (a, dur) => `<animate attributeName="d" values="${a[0]};${a[1]};${a[0]}" dur="${dur}" repeatCount="indefinite" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>`;
   const HAND = `<span class="zfl-hand"><svg viewBox="0 0 80 150" aria-hidden="true"><defs>
-      <linearGradient id="zhSkin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c98a62"/><stop offset=".35" stop-color="#efc29d"/><stop offset=".62" stop-color="#f7d3b3"/><stop offset="1" stop-color="#cf9670"/></linearGradient>
-      <linearGradient id="zhArm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bf8059"/><stop offset=".4" stop-color="#ebbb95"/><stop offset=".7" stop-color="#f2c8a5"/><stop offset="1" stop-color="#c18560"/></linearGradient>
-      <linearGradient id="zhWet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".55" stop-color="#3d8fbf" stop-opacity=".12"/><stop offset="1" stop-color="#1f6f9e" stop-opacity=".5"/></linearGradient>
-      <radialGradient id="zhNail" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff3ee"/><stop offset="1" stop-color="#e9b5a4"/></radialGradient></defs>
+      <linearGradient id="zhSkin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b9774f"/><stop offset=".22" stop-color="#e2ad86"/><stop offset=".55" stop-color="#f8d6b8"/><stop offset=".82" stop-color="#eebf9a"/><stop offset="1" stop-color="#c88b65"/></linearGradient>
+      <linearGradient id="zhSeg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbdcc0"/><stop offset=".55" stop-color="#efc29e"/><stop offset="1" stop-color="#d49a73"/></linearGradient>
+      <linearGradient id="zhArm" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b6754d"/><stop offset=".3" stop-color="#e6b38c"/><stop offset=".62" stop-color="#f4cdac"/><stop offset="1" stop-color="#be7f59"/></linearGradient>
+      <linearGradient id="zhWet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#3d8fbf" stop-opacity=".1"/><stop offset="1" stop-color="#1b6896" stop-opacity=".55"/></linearGradient>
+      <radialGradient id="zhNail" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#fff6f2"/><stop offset=".7" stop-color="#f1c4b6"/><stop offset="1" stop-color="#d99d8c"/></radialGradient>
+      <linearGradient id="zhFlag" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a81c1c"/><stop offset=".18" stop-color="#e03431"/><stop offset=".42" stop-color="#c42424"/><stop offset=".66" stop-color="#e6403b"/><stop offset=".88" stop-color="#c22626"/><stop offset="1" stop-color="#d93330"/></linearGradient>
+      <linearGradient id="zhPole" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a2c15"/><stop offset=".45" stop-color="#9a6a3e"/><stop offset="1" stop-color="#53321a"/></linearGradient>
+      <radialGradient id="zhGold" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff2b8"/><stop offset=".5" stop-color="#e2b54e"/><stop offset="1" stop-color="#8a6326"/></radialGradient></defs>
     <g class="zh-arm">
-      <path d="M27 92 V7" stroke="#5e3b20" stroke-width="2.6" stroke-linecap="round"/><path d="M26.2 92 V8" stroke="#a87a4e" stroke-width=".7" opacity=".7"/>
-      <circle cx="27" cy="5.4" r="2.8" fill="#e6bf62" stroke="#8a6630" stroke-width=".7"/>
-      <path d="M28.4 8 Q48 2 78 9 L78 41 Q50 35 28.4 40 Z" fill="#d62828" stroke="#9e1b1b" stroke-width=".9"><animate attributeName="d" values="M28.4 8 Q48 2 78 9 L78 41 Q50 35 28.4 40 Z;M28.4 8 Q52 14 78 6 L78 38 Q48 46 28.4 40 Z;M28.4 8 Q48 2 78 9 L78 41 Q50 35 28.4 40 Z" dur="1.6s" repeatCount="indefinite"/></path>
-      <g><animateTransform attributeName="transform" type="translate" values="0 0;0 1.6;0 0" dur="1.6s" repeatCount="indefinite"/><text x="52.5" y="27.5" text-anchor="middle" textLength="41" lengthAdjust="spacingAndGlyphs" font-family="Manrope, Arial, sans-serif" font-size="10" font-weight="900" fill="#fff">FOGLALT</text></g>
+      <rect x="25.7" y="7" width="2.6" height="88" rx="1.3" fill="url(#zhPole)"/><path d="M26.6 14 v18 M27.4 40 v22 M26.8 70 v14" stroke="#3c220f" stroke-width=".35" opacity=".6"/>
+      <circle cx="27" cy="5.2" r="3" fill="url(#zhGold)" stroke="#7a5520" stroke-width=".5"/><circle cx="26" cy="4.2" r=".8" fill="#fff" opacity=".8"/>
+      <path fill="url(#zhFlag)" stroke="#8e1717" stroke-width=".8" d="${FLAG_D[0]}">${anim(FLAG_D, "1.8s")}</path>
+      <path fill="none" stroke="#ffd9d4" stroke-width=".55" stroke-dasharray="1.4 1.1" opacity=".75" d="${HEM_D[0]}">${anim(HEM_D, "1.8s")}</path>
+      <rect x="28.2" y="7.2" width="3.4" height="33.6" rx="1.4" fill="#9e1a1a" stroke="#7a1212" stroke-width=".5"/><path d="M28.6 12 h2.6 M28.6 24 h2.6 M28.6 36 h2.6" stroke="#f3d27a" stroke-width="1.1"/>
+      <g><animateTransform attributeName="transform" type="translate" values="0 0;0 1.6;0 0" dur="1.8s" repeatCount="indefinite"/>
+        <text x="55.2" y="28.3" text-anchor="middle" textLength="38" lengthAdjust="spacingAndGlyphs" font-family="Manrope, Arial, sans-serif" font-size="10" font-weight="900" fill="#6e0d0d" opacity=".55">FOGLALT</text>
+        <text x="54.6" y="27.6" text-anchor="middle" textLength="38" lengthAdjust="spacingAndGlyphs" font-family="Manrope, Arial, sans-serif" font-size="10" font-weight="900" fill="#fff">FOGLALT</text></g>
       <g transform="translate(27 80) scale(.8) translate(-27 -80)">
-        <path d="M17.5 78 C17.5 88 19 93 19.5 100 C20 118 18 140 17 172 L41 172 C40 140 38.5 118 38.5 100 C38.5 93 39.5 88 39.5 78 Z" fill="url(#zhArm)"/>
-        <path d="M21 84 Q29 86.5 37 84 M21.5 87.5 Q29 89.5 36.5 87.5" stroke="#b37752" stroke-width=".6" fill="none" opacity=".7"/>
-        <path d="M33.5 96 C34.5 108 34 122 33 140" stroke="#d9a47e" stroke-width="1.4" fill="none" opacity=".6"/><path d="M23 98 C22.5 112 23 128 22 146" stroke="#fff" stroke-width=".9" fill="none" opacity=".25"/>
-        <path d="M17 60 C16 53 20 50 25 50 L35 50 C39 50 41.5 52.5 41.5 56 L41.5 74 C41.5 79.5 37.5 82 33.5 82 L24 82.5 C19.5 82.5 17.5 79 17.5 75 Z" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
-        <rect x="27" y="50.3" width="16.2" height="7.6" rx="3.6" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
-        <rect x="27" y="57.3" width="17" height="7.4" rx="3.6" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
-        <rect x="27" y="64.1" width="16.2" height="6.9" rx="3.4" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
-        <rect x="27" y="70.4" width="13.8" height="6.2" rx="3.1" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
-        <path d="M36 51.5 q1.6 3 0 5.6 M36.8 58.5 q1.6 3 0 5.4 M36 65.2 q1.5 2.8 0 4.9 M34.4 71.4 q1.3 2.5 0 4.3" stroke="#b07550" stroke-width=".55" fill="none"/>
-        <path d="M40.5 52.2 q1.6 1.8 .2 4 M41.4 59 q1.6 1.8 .2 4 M40.6 65.8 q1.4 1.7 .2 3.6 M38.4 71.8 q1.2 1.6 .2 3.2" stroke="#fff" stroke-width=".6" fill="none" opacity=".55"/>
-        <path d="M17 73 C15.8 64.5 19.5 58.3 26.5 55.6 L34.6 53.3 C38.4 52.6 40.2 54.8 39.3 57.4 C38.5 59.6 36 60.3 33.3 60.8 L27.6 62.6 C24.6 64 23.4 67.4 23.6 71.6 Z" fill="url(#zhSkin)" stroke="#a96f4a" stroke-width=".6"/>
-        <path d="M27.8 57.2 q2.6 .6 4.6 2.6" stroke="#b07550" stroke-width=".55" fill="none"/>
-        <ellipse cx="36.6" cy="55.9" rx="2.5" ry="1.7" transform="rotate(-16 36.6 55.9)" fill="url(#zhNail)" stroke="#c98f7c" stroke-width=".4"/>
-        <path d="M18.6 66 Q20 61 24 58.4" stroke="#fff" stroke-width=".9" fill="none" opacity=".45" stroke-linecap="round"/>
-        <path d="M17.5 76 C19 80 22 81.6 25 81.8" stroke="#a96f4a" stroke-width=".55" fill="none" opacity=".7"/>
-        <path d="M17.5 60 C17 120 17 140 17 172 L41 172 C41 140 41.5 120 41.5 56 Z" fill="url(#zhWet)" opacity=".85"/>
-        ${[0, 1, 2].map((k) => `<ellipse cx="${22 + k * 6.5}" cy="${84 + k * 7}" rx=".8" ry="1.2" fill="#fff" opacity=".75"><animate attributeName="cy" values="${84 + k * 7};${112 + k * 4}" dur="${2 + k * .4}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".85;0" dur="${2 + k * .4}s" repeatCount="indefinite"/></ellipse>`).join("")}
+        <path d="M19.5 79 C20.6 83.5 22.6 87 23 92 C23.6 110 22 140 21 172 L37 172 C36 140 34.8 110 35.3 92 C35.7 87 38.6 83.5 40 79 Z" fill="url(#zhArm)" stroke="#a46a46" stroke-width=".5"/>
+        <path d="M23.2 89.5 q-1.8 2.6 -.2 5.4" stroke="#a46a46" stroke-width=".6" fill="none"/><path d="M22.6 90.4 q-.9 1.6 0 3.2" stroke="#fff" stroke-width=".5" fill="none" opacity=".5"/>
+        <path d="M22.6 85.6 Q29 87.6 36.6 85.4 M23 88.2 Q29 89.8 36 88" stroke="#a46a46" stroke-width=".5" fill="none" opacity=".75"/>
+        <path d="M31.2 93 C32.8 104 30.4 116 32.2 132 M31.6 106 q2 3 1.4 7" stroke="#8fa8c4" stroke-width=".75" fill="none" opacity=".55"/>
+        <path d="M27 92 C27.6 106 27 122 26.4 144" stroke="#fff" stroke-width="1" fill="none" opacity=".28"/><path d="M34 96 C34.6 112 34 128 33.4 148" stroke="#9a5f3d" stroke-width=".8" fill="none" opacity=".35"/>
+        ${[[25, 104], [29.5, 112], [24, 121], [32, 127], [27.5, 134], [30, 101]].map(([x, y]) => `<path d="M${x} ${y} l.5 -1.6" stroke="#8c5a3a" stroke-width=".3" opacity=".55"/>`).join("")}
+        <path d="M17 60 C16 53 20 50 25 50 L35 50 C39 50 41.5 52.5 41.5 56 L41.5 74 C41.5 79.5 37.5 82 33.5 82 L24 82.5 C19.5 82.5 17.5 79 17.5 75 Z" fill="url(#zhSkin)" stroke="#a46a46" stroke-width=".55"/>
+        <path d="M18.6 52.8 Q21.6 50.2 25.6 50.4" stroke="#fff" stroke-width="1" fill="none" opacity=".6" stroke-linecap="round"/><circle cx="20.2" cy="56.2" r=".55" fill="#b47a55" opacity=".6"/>
+        ${[[50.3, 16.2, 7.6, 3.6], [57.3, 17, 7.4, 3.6], [64.1, 16.2, 6.9, 3.4], [70.4, 13.8, 6.2, 3.1]].map(([y, w, h, r]) => `<rect x="27" y="${y}" width="${w}" height="${h}" rx="${r}" fill="url(#zhSeg)" stroke="#a46a46" stroke-width=".55"/><path d="M${29 + w * .25} ${y + 1.3} H${25 + w}" stroke="#fff" stroke-width=".65" opacity=".55" stroke-linecap="round"/><path d="M${28.5} ${y + h - .6} H${25.5 + w}" stroke="#b27750" stroke-width=".45" opacity=".55"/><path d="M${20 + w} ${y + 1} q1.7 ${h / 2 - 1} 0 ${h - 2}" stroke="#a96f4a" stroke-width=".5" fill="none"/><path d="M${21.4 + w} ${y + 1.6} q.9 ${h / 2 - 1.6} 0 ${h - 3.2}" stroke="#c98d68" stroke-width=".35" fill="none"/>`).join("")}
+        <path d="M17 73 C15.8 64.5 19.5 58.3 26.5 55.6 L34.6 53.3 C38.4 52.6 40.2 54.8 39.3 57.4 C38.5 59.6 36 60.3 33.3 60.8 L27.6 62.6 C24.6 64 23.4 67.4 23.6 71.6 Z" fill="#7a4628" opacity=".3" transform="translate(.8 1.6)"/>
+        <path d="M17 73 C15.8 64.5 19.5 58.3 26.5 55.6 L34.6 53.3 C38.4 52.6 40.2 54.8 39.3 57.4 C38.5 59.6 36 60.3 33.3 60.8 L27.6 62.6 C24.6 64 23.4 67.4 23.6 71.6 Z" fill="url(#zhSkin)" stroke="#a46a46" stroke-width=".55"/>
+        <path d="M27.6 56.9 q2.4 .7 4.3 2.8 M29.4 56.4 q1.5 .5 2.6 1.7" stroke="#a96f4a" stroke-width=".5" fill="none"/>
+        <ellipse cx="36.6" cy="55.9" rx="2.55" ry="1.75" transform="rotate(-16 36.6 55.9)" fill="url(#zhNail)" stroke="#c48a77" stroke-width=".4"/>
+        <path d="M34.6 56.9 q.4 -1.6 1.6 -2.1" stroke="#fff" stroke-width=".5" fill="none" opacity=".9"/><path d="M38.4 54.6 q.9 .9 .7 2.2" stroke="#fffaf6" stroke-width=".45" fill="none"/><circle cx="36" cy="55.2" r=".45" fill="#fff"/>
+        <path d="M18.4 67 Q19.6 61.2 24 58.4" stroke="#fff" stroke-width="1" fill="none" opacity=".5" stroke-linecap="round"/>
+        <path d="M18.3 74 Q21.6 77.4 26 78.2 M17.6 76.6 C19 80 22 81.6 25 81.8" stroke="#a46a46" stroke-width=".5" fill="none" opacity=".7"/>
+        <path d="M41 58 C41.6 64 41.6 70 40.6 77" stroke="#ffe7d4" stroke-width=".9" fill="none" opacity=".6"/>
+        <path d="M17.5 60 C17 72 19 80 22 90 C23 120 22 150 21 172 L37 172 C36 150 35 120 36 90 C39 82 41.5 74 41.5 56 Z" fill="url(#zhWet)" opacity=".85"/>
+        ${[[21, 63, 1], [33, 52, .8], [38.6, 67, .9], [28.6, 98, 1.1], [24.4, 116, .8]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity=".85"/><circle cx="${x + .25}" cy="${y + .3}" r="${r * .45}" fill="#9fd2ef" opacity=".7"/>`).join("")}
+        <g transform="translate(0 -3)"><g class="zh-weed"><path d="M22.6 93 C26 90 32 90.5 36 93.4 C38 95 38.6 99 37 103 C36 106.5 37.6 110 36.4 114 C35.6 117 36.4 120 35.4 123" stroke="#2f7d3a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <path d="M22.6 93 C26 90 32 90.5 36 93.4 C38 95 38.6 99 37 103 C36 106.5 37.6 110 36.4 114" stroke="#7cc96f" stroke-width=".7" fill="none" opacity=".8"/>
+          <path d="M23 93 C21 97 22.4 101 20.8 105 C19.8 108 21 111 19.8 114" stroke="#3b9145" stroke-width="1.8" fill="none" stroke-linecap="round"/><ellipse cx="37.4" cy="101" rx="1.4" ry="2.6" fill="#4fa457" transform="rotate(18 37.4 101)"/><ellipse cx="20.6" cy="107" rx="1.2" ry="2.3" fill="#58ad5c" transform="rotate(-14 20.6 107)"/></g></g>
+        ${[0, 1, 2, 3].map((k) => `<ellipse cx="${[22, 28.5, 35, 31][k]}" cy="${[84, 91, 98, 76][k]}" rx=".75" ry="1.25" fill="#fff" opacity=".8"><animate attributeName="cy" values="${[84, 91, 98, 76][k]};${[114, 118, 122, 112][k]}" dur="${2 + k * .45}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;.9;0" dur="${2 + k * .45}s" repeatCount="indefinite"/></ellipse>`).join("")}
       </g>
-    </g></svg></span><span class="zfl-splash"><i></i><i></i><i></i></span>`;
+    </g></svg><b class="zfl-collar"></b></span><span class="zfl-splash"><i></i><i></i><i></i></span>`;
   function floatSvg(a) {
     const c = a.color, id = "zg" + (a.id || a.no);
     return `<svg class="zfl-svg" viewBox="0 0 170 104" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="${c}" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
