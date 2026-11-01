@@ -1005,12 +1005,20 @@ body.walk-on .gm-dock { display: none; }
 .zfl-bub.b2 { left: 56%; width: 5px; height: 5px; } .zfl-bub.b3 { left: 38%; width: 4px; height: 4px; }
 .zfl.down .zfl-bub { animation: zflBub 2.6s ease-in infinite; } .zfl.down .zfl-bub.b2 { animation-delay: .9s; } .zfl.down .zfl-bub.b3 { animation-delay: 1.7s; }
 @keyframes zflBub { 0% { opacity: 0; transform: translateY(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(4px, -40px); } }
-.zfl-hand { position: absolute; z-index: 3; right: 6%; top: 6px; width: 64px; height: 100px; pointer-events: none; transform: translateY(90px); opacity: 0; transition: transform .9s cubic-bezier(.3,1.4,.5,1) 0s, opacity .3s; }
-.zfl.down .zfl-hand { transform: translateY(0); opacity: 1; transition-delay: 1.1s, 1.1s; }
-.zfl.down .zfl-hand .zh-flag { transform-box: view-box; transform-origin: 33px 78px; animation: zhWave 2.4s ease-in-out 2s infinite; }
-@keyframes zhWave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(6deg); } }
+/* a kéz a víz alól jön fel: a doboz a vízfelszínnél levágja a kart, a hullám rátakar */
+.zfl-hand { position: absolute; z-index: 1; left: 50%; top: 0; width: 124px; height: 104px; margin-left: -54px; overflow: hidden; pointer-events: none; }
+.zfl-hand svg { position: absolute; left: 20px; bottom: -46px; width: 84px; height: 140px; transform: translateY(150px); transition: transform 1.1s cubic-bezier(.45,0,.35,1) 0s; }
+.zfl.down .zfl-hand svg { transform: translateY(0); transition: transform 1.6s cubic-bezier(.2,.9,.3,1.05) 1.2s; }
+.zfl.down .zfl-hand .zh-arm { transform-box: view-box; transform-origin: 45px 150px; animation: zhWave 1.3s ease-in-out 2.8s infinite; }
+@keyframes zhWave { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(11deg); } }
+.zfl-splash { position: absolute; z-index: 3; left: 50%; top: 92px; width: 1px; height: 1px; margin-left: 4px; pointer-events: none; }
+.zfl-splash i { position: absolute; left: -16px; top: -4px; width: 32px; height: 8px; border-radius: 50%; border: 2px solid rgba(255,255,255,.9); opacity: 0; }
+.zfl.down .zfl-splash i { animation: zhRip 2s ease-out 1.6s infinite; } .zfl.down .zfl-splash i:nth-child(2) { animation-delay: 2.3s; } .zfl.down .zfl-splash i:nth-child(3) { animation-delay: 3s; }
+@keyframes zhRip { 0% { opacity: .95; transform: scale(.5); } 100% { opacity: 0; transform: scale(2.4); } }
+/* sorrend: süllyedéskor előbb a hajó merül, aztán jön fel a kéz; felszabaduláskor előbb a kéz húzódik vissza, aztán emelkedik a hajó */
+.zfl .zfl-boat { transition-delay: .9s; } .zfl.down .zfl-boat { transition-delay: 0s; }
 .zfl.off { cursor: default; } .zfl.off .zfl-boat { transform: translateY(40px) rotate(10deg) scale(.9); opacity: .5; filter: grayscale(1); }
-@media (max-width: 760px) { .zfl-hand { width: 56px; height: 88px; top: 8px; right: 3%; } .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 100px; } .zfl-wave { top: 80px; } .zfl-bub { top: 92px; } .zfl.down .zfl-boat { transform: translateY(56px) rotate(-16deg) scale(.92); } }
+@media (max-width: 760px) { .zfl-hand { width: 100px; height: 84px; margin-left: -20px; } .zfl-hand svg { left: 16px; width: 70px; height: 118px; bottom: -40px; } .zfl-splash { top: 80px; margin-left: 26px; } .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 100px; } .zfl-wave { top: 80px; } .zfl-bub { top: 92px; } .zfl.down .zfl-boat { transform: translateY(56px) rotate(-16deg) scale(.92); } }
 @media (prefers-reduced-motion: reduce) { .zfl-bob, .zfl-wave, .zfl-lake::before, .zfl-bub { animation: none !important; } .zfl-boat { transition-duration: .01s; } }
 /* időpont-első foglalás: összegző sáv, nem szabad apartman, legközelebbi szabad időszak */
 .zfb-when { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 12px 16px; margin: 0 0 14px; border-radius: 16px; background: linear-gradient(135deg, #0b2f5e, #164377); color: #fff; box-shadow: 0 8px 20px rgba(11,47,94,.18); }
@@ -1839,17 +1847,21 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       ${no ? `<g transform="translate(18 24)"><circle r="11" fill="#fff" stroke="${c}" stroke-width="2.4"/><text y="5" text-anchor="middle" font-size="14" font-weight="900" font-family="Manrope, sans-serif" fill="${c}">${no}</text></g>` : ""}
       <ellipse cx="82" cy="106" rx="66" ry="4.5" fill="rgba(7,29,56,.2)"/></svg>`;
   }
-  /* elsüllyedt apartman: kéz nyúl ki a vízből, csíkos matrózingujjal, és a „foglalt” jelzést tartja (nemzetközi tiltó jel: piros kör, fehér sáv) */
-  const HAND = `<svg class="zfl-hand" viewBox="0 0 70 110" aria-hidden="true">
-    <g class="zh-flag"><path d="M33 10 V78" stroke="#6b4426" stroke-width="2.6" stroke-linecap="round"/><circle cx="33" cy="9" r="2.6" fill="#d6b36a"/>
-      <path d="M35 12 Q50 9 66 13 L66 41 Q50 37 35 40 Z" fill="#fff" stroke="#c8cdd2" stroke-width=".8"><animate attributeName="d" values="M35 12 Q50 9 66 13 L66 41 Q50 37 35 40 Z;M35 12 Q50 15 66 11 L66 39 Q50 43 35 40 Z;M35 12 Q50 9 66 13 L66 41 Q50 37 35 40 Z" dur="1.4s" repeatCount="indefinite"/></path>
-      <g><animateTransform attributeName="transform" type="translate" values="0 0;0 1;0 0" dur="1.4s" repeatCount="indefinite"/><circle cx="50.5" cy="26" r="10" fill="#d62828"/><circle cx="50.5" cy="26" r="10" fill="none" stroke="#a51a1a" stroke-width=".8"/><rect x="43.5" y="23.6" width="14" height="4.8" rx="1" fill="#fff"/></g></g>
-    <path d="M22 110 L22 84 Q22 78 26 76 L40 76 Q44 78 44 84 L44 110 Z" fill="#fff"/><path d="M22 88 H44 M22 96 H44 M22 104 H44" stroke="#1f5fa8" stroke-width="3.4"/>
-    <path d="M24 78 Q22 66 26 60 L40 60 Q44 66 42 78 Z" fill="#f2c8a0"/>
-    <path d="M26 62 Q24 52 30 50 L36 50 Q42 52 41 62 Z" fill="#f2c8a0"/>
-    ${[52, 56, 60].map((y) => `<path d="M28 ${y} Q24 ${y + 1} 26 ${y + 3.6} L31 ${y + 3.6}" fill="#efbf94" stroke="#c99470" stroke-width=".6"/>`).join("")}
-    <path d="M38 52 Q44 53 41 59 L36 58" fill="#efbf94" stroke="#c99470" stroke-width=".6"/>
-    <g class="zh-rip" fill="none" stroke="#fff" stroke-width="1.4"><ellipse cx="33" cy="92" rx="14" ry="3"><animate attributeName="rx" values="12;24" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.8s" repeatCount="indefinite"/></ellipse><ellipse cx="33" cy="92" rx="12" ry="2.6"><animate attributeName="rx" values="12;24" dur="1.8s" begin=".9s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.8s" begin=".9s" repeatCount="indefinite"/></ellipse></g></svg>`;
+  /* elsüllyedt apartman: egyetlen emberi kéz nyúl fel a víz alól, a kezében zászló „FOGLALT” felirattal, és lengeti */
+  const HAND = `<span class="zfl-hand"><svg viewBox="0 0 90 150" aria-hidden="true"><defs>
+      <linearGradient id="zhSkin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d9a37a"/><stop offset=".45" stop-color="#f6cfab"/><stop offset="1" stop-color="#c98f66"/></linearGradient>
+      <linearGradient id="zhWet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#2b7aaa" stop-opacity=".45"/></linearGradient></defs>
+    <g class="zh-arm">
+      <path d="M44 120 V6" stroke="#6b4426" stroke-width="3" stroke-linecap="round"/><circle cx="44" cy="5" r="3.2" fill="#e0b85c" stroke="#8a6630" stroke-width=".8"/>
+      <g class="zh-flag"><path d="M46 8 Q62 4 86 9 L86 43 Q64 38 46 42 Z" fill="#d62828" stroke="#9e1b1b" stroke-width="1"><animate attributeName="d" values="M46 8 Q62 4 86 9 L86 43 Q64 38 46 42 Z;M46 8 Q64 13 86 7 L86 41 Q62 47 46 42 Z;M46 8 Q62 4 86 9 L86 43 Q64 38 46 42 Z" dur=".9s" repeatCount="indefinite"/></path>
+        <g><animateTransform attributeName="transform" type="translate" values="0 0;0 1.6;0 0" dur=".9s" repeatCount="indefinite"/><text x="65" y="28" text-anchor="middle" font-family="Manrope, Arial, sans-serif" font-size="8.4" font-weight="900" fill="#fff" letter-spacing=".2">FOGLALT</text><path d="M52 33 H80" stroke="#fff" stroke-width="1" opacity=".6"/></g></g>
+      <path d="M33 150 C33 128 34 112 36 98 Q37 90 37 86 L53 86 Q53 92 54 98 C56 112 57 128 57 150 Z" fill="url(#zhSkin)"/>
+      <path d="M33 150 C33 128 34 112 36 98 Q37 90 37 86 L53 86 Q53 92 54 98 C56 112 57 128 57 150 Z" fill="url(#zhWet)"/>
+      <path d="M36 88 Q35 74 38 68 L52 68 Q55 74 54 88 Z" fill="url(#zhSkin)"/>
+      ${[0, 1, 2, 3].map((k) => `<rect x="${35.5 + (k === 0 || k === 3 ? 1 : 0)}" y="${66 + k * 5.2}" width="${19 - (k === 3 ? 2 : 0)}" height="5.6" rx="2.8" fill="url(#zhSkin)" stroke="#b77d55" stroke-width=".7"/><path d="M${51 - (k === 3 ? 2 : 0)} ${67 + k * 5.2} q2.4 1.8 0 3.6" stroke="#b77d55" stroke-width=".6" fill="none"/>`).join("")}
+      <path d="M37 69 Q40 60 47 58 Q51 57.5 51 61 Q50 63.5 46 64.5 Q42 66 40 70 Z" fill="url(#zhSkin)" stroke="#b77d55" stroke-width=".7"/><path d="M47.5 59.2 q2 .4 2.4 2" stroke="#fff" stroke-width=".7" opacity=".6" fill="none"/>
+      ${[0, 1, 2].map((k) => `<circle cx="${41 + k * 5}" cy="${95 + k * 9}" r=".9" fill="#fff" opacity=".7"><animate attributeName="cy" values="${95 + k * 9};${120 + k * 6}" dur="${1.4 + k * .3}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="${1.4 + k * .3}s" repeatCount="indefinite"/></circle>`).join("")}
+    </g></svg></span><span class="zfl-splash"><i></i><i></i><i></i></span>`;
   function floatSvg(a) {
     const c = a.color, id = "zg" + (a.id || a.no);
     return `<svg class="zfl-svg" viewBox="0 0 170 104" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="${c}" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
