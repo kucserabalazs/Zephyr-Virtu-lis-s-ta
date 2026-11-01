@@ -151,3 +151,4 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Egyszeri migráció: érkezés 14:00 → 15:00 (`mig_ci15`).
 - Kezdőoldal: távolságszűrő a programajánló ablakban, km-jelzés, komp/hajó tájékoztató, „Útvonal autóval/gyalog” + „Biciklivel” gomb.
 - Admin app → Több → Programok: „Programlevél a vendégeknek” kártya (be/ki, napok, km, menetrend-link, próbalevél, következő érkezők állapota); foglalás részleteinél „Programlevél küldése most”.
+- **Nov. 1. 10:50:** `programajanlo-2026-11` beolvasztva a `main`-be, mentési ág: `mentes-2026-11-01-programlevel`. Csomagok: `Zephyr_frissites_csak_kod_2026-11-01_b.zip` (6 fájl → `/web`), `Zephyr_feltoltes_teljes_2026-11-01_b.zip` (teljes, képekkel, Kellékekkel → `/web`), `Zephyr_kod_mentes_2026-11-01_b.zip`.
