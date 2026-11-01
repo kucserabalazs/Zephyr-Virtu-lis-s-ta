@@ -283,6 +283,94 @@ table.pt th input { width: 96px; padding: 7px 8px; border-radius: 9px; border: 1
 .skel { height: 74px; border-radius: 14px; background: linear-gradient(90deg, #ebe6da, #f6f3ec, #ebe6da); background-size: 200% 100%; animation: sk 1.2s infinite; }
 @keyframes sk { to { background-position: -200% 0; } }
 .help { font-size: 12.5px; color: var(--mut); background: #fff; border-radius: 12px; padding: 10px 12px; border: 1px dashed var(--line); }
+
+/* ---------- kidolgozott részletek (2026-11): tengeri hangulat, élő ikonok, finom mozgás ---------- */
+@keyframes zaWv { to { background-position: -40px 100%; } }
+@keyframes zaPop { from { transform: scale(.6); opacity: 0; } }
+@keyframes zaRing { 0%, 70%, 100% { transform: rotate(0); } 74% { transform: rotate(14deg); } 78% { transform: rotate(-12deg); } 82% { transform: rotate(9deg); } 86% { transform: rotate(-6deg); } 90% { transform: rotate(3deg); } }
+@keyframes zaLid { 0%, 80%, 100% { transform: translateY(0); } 86% { transform: translateY(-2px) rotate(-6deg); } 92% { transform: translateY(0); } }
+@keyframes zaPulse { 0% { box-shadow: 0 0 0 0 rgba(47,158,99,.45); } 70%, 100% { box-shadow: 0 0 0 10px rgba(47,158,99,0); } }
+@keyframes zaSheen { 0%, 60% { left: -60%; } 85%, 100% { left: 130%; } }
+@keyframes zaBob { 50% { transform: translateY(-2px) rotate(-4deg); } }
+@keyframes zaSlide { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
+@keyframes zaSpin { to { transform: rotate(360deg); } }
+@keyframes zaGold { 50% { background-position: 0 100%; } }
+@keyframes zaFl { from { transform: skewY(-8deg) scaleX(.9); } to { transform: skewY(6deg); } }
+/* fejléc: aranyhullám az alján, csillogó ADMIN felirat */
+.top { overflow: hidden; }
+.top::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 8px; pointer-events: none; opacity: .45; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8'%3E%3Cpath d='M0 5 q5 -4 10 0 t10 0 t10 0 t10 0 V8 H0z' fill='%23ffd978'/%3E%3C/svg%3E") 0 100% / 40px 8px repeat-x; animation: zaWv 4s linear infinite; }
+.top .tt b { background: linear-gradient(180deg, #fff 0%, #ffe9a8 50%, #fff 100%); background-size: 100% 200%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: zaGold 5s ease-in-out infinite; }
+.top .icon-btn { transition: background .2s, transform .2s; } .top .icon-btn:active svg { animation: zaSpin .6s ease; }
+.demo-pill { box-shadow: 0 0 0 2px rgba(255,217,120,.25); }
+/* bejelentkezés: balatoni jelenet a kártya mögött */
+.login { position: relative; overflow: hidden; }
+.za-scene { position: absolute; inset: auto 0 0 0; height: 46%; pointer-events: none; }
+.za-scene svg { width: 100%; height: 100%; display: block; }
+.za-scene .w1 { animation: zaWvX 9s linear infinite; } .za-scene .w2 { animation: zaWvX 6s linear infinite reverse; }
+.za-scene .sb { animation: zaSail 34s ease-in-out infinite alternate; } .za-scene .gl { animation: zaGull 14s ease-in-out infinite alternate; }
+.za-scene .lh { animation: zaBeam 4s ease-in-out infinite; transform-box: fill-box; transform-origin: 0 50%; }
+@keyframes zaWvX { to { transform: translateX(-120px); } }
+@keyframes zaSail { from { transform: translate(-60px, 0); } to { transform: translate(260px, 3px); } }
+@keyframes zaGull { to { transform: translate(120px, -14px); } }
+@keyframes zaBeam { 0%, 100% { opacity: .15; transform: rotate(-8deg); } 50% { opacity: .55; transform: rotate(8deg); } }
+.login-card { position: relative; z-index: 1; animation: zaPop .5s cubic-bezier(.2,.9,.3,1.2); }
+.login-card img { animation: zaBob 5s ease-in-out infinite; }
+.login-card h1 { position: relative; } .login-card h1::after { content: ""; display: block; width: 60px; height: 2px; margin: 10px auto 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+/* gombok: arany csillanás, finom emelkedés */
+.btn { position: relative; overflow: hidden; transition: transform .15s, box-shadow .2s, filter .2s; }
+.btn.gold::after, .btn.pri::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation: zaSheen 5s ease-in-out infinite; pointer-events: none; }
+.btn:hover { filter: brightness(1.04); }
+.fab { overflow: hidden; transition: transform .25s; } .fab:active { transform: rotate(90deg) scale(.95); }
+.fab::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); animation: zaSheen 4s ease-in-out infinite; }
+/* figyelmeztetések: kuka billen, csengő cseng */
+.alert { position: relative; overflow: hidden; animation: zaPop .35s ease; }
+.alert.waste svg { animation: zaLid 3.2s ease-in-out infinite; transform-origin: 50% 20%; }
+.alert.pend svg { animation: zaRing 2.6s ease-in-out infinite; transform-origin: 50% 10%; }
+.alert.warn svg { animation: zaRing 3.4s ease-in-out infinite; }
+.alert::after { content: ""; position: absolute; right: -18px; bottom: -18px; width: 70px; height: 70px; border-radius: 50%; border: 2px dashed color-mix(in srgb, var(--c, var(--gold)) 30%, transparent); }
+/* napi kimutatás csempéi: ikonok, felső színsáv, felpattanó számok */
+.stat { position: relative; overflow: hidden; padding-top: 16px; }
+.stat::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--sea); }
+.stat.in::before { background: var(--green); } .stat.out::before { background: var(--red); } .stat:last-child::before { background: var(--gold); }
+.stat b { animation: zaPop .5s cubic-bezier(.2,.9,.3,1.4); }
+.stat::after { content: ""; position: absolute; right: 6px; top: 8px; width: 16px; height: 16px; opacity: .22; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b2f5e' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M3 18v-7h18v7M3 14h18M6 11V8h5v3'/%3E%3C/svg%3E"); }
+.stat.in::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f9e63' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='5' r='2.5'/%3E%3Cpath d='M12 7.5V21M7 11h10M4 15q1 6 8 6t8-6'/%3E%3C/svg%3E"); }
+.stat.out::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2v16' stroke='%23e2483d' stroke-width='2'/%3E%3Cpath d='M13 3q7 6 7.5 13H13z' fill='%23e2483d'/%3E%3Cpath d='M3 19h18l-3 3H6z' fill='%23e2483d'/%3E%3C/svg%3E"); }
+.stat:last-child::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a6630' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='9' cy='8' r='3.5'/%3E%3Cpath d='M2 20c0-4 3-6 7-6s7 2 7 6M16 4.5a3.5 3.5 0 0 1 0 7M18 14c2.5.5 4 2.5 4 6'/%3E%3C/svg%3E"); }
+/* szakaszcímek: az ikon finoman mozog, aranyvonal fut utána */
+h3.st svg { animation: zaSlide 2.4s ease-in-out infinite; }
+h3.st::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(201,162,90,.5), transparent); }
+h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; left: 0; bottom: -5px; width: 46px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--gold), transparent); }
+/* vendégkártyák és foglalások: emelkedés, csapatszín-fény, lüktető hívógomb */
+.gcard, .bk, .wkday { transition: transform .18s, box-shadow .2s; }
+.gcard:hover, .bk:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(20,32,42,.1); }
+.gcard { position: relative; overflow: hidden; }
+.gcard::after { content: ""; position: absolute; right: -30px; top: -30px; width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--ac, var(--sea)) 12%, transparent), transparent 70%); pointer-events: none; }
+.call { animation: zaPulse 2.6s ease-out infinite; transition: transform .15s; } .call:hover { transform: scale(1.08); } .call.mail { animation: none; }
+.apt-b { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--ac, var(--sea)) 55%, #fff), var(--ac, var(--sea)) 72%); box-shadow: 0 2px 6px color-mix(in srgb, var(--ac, var(--sea)) 40%, transparent); text-shadow: 0 1px 1px rgba(0,0,0,.25); }
+.tag { box-shadow: inset 0 0 0 1px rgba(0,0,0,.04); }
+.tag.pending::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: zaPulseDot 1.6s ease-in-out infinite; }
+@keyframes zaPulseDot { 50% { opacity: .25; } }
+.swap svg { animation: zaSlide 1.8s ease-in-out infinite; }
+/* szabad apartmanok: kis vitorlás ringatózik a pötty helyén */
+.free span { transition: transform .15s; } .free span:hover { transform: translateY(-2px); }
+.free i { width: 14px; height: 12px; border-radius: 0; background: var(--ac); -webkit-mask: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 12'%3E%3Cpath d='M7 0v8M7.6 .6q4 3.5 4.4 7H7.6zM6.4 2q-2.6 2.6-3 5.6h3zM1 8.4h12l-1.8 2.6H2.8z'/%3E%3C/svg%3E"); mask: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 12'%3E%3Cpath d='M7 0v8M7.6 .6q4 3.5 4.4 7H7.6zM6.4 2q-2.6 2.6-3 5.6h3zM1 8.4h12l-1.8 2.6H2.8z'/%3E%3C/svg%3E"); animation: zaBob 2.6s ease-in-out infinite; }
+/* naptár / foglaltság */
+.occ .c { transition: transform .15s; } .occ .c:hover { transform: scaleY(1.15); }
+.occ .c.b { background: linear-gradient(180deg, color-mix(in srgb, var(--ac) 80%, #fff), var(--ac)); }
+.wkday.today .wkh { background: linear-gradient(90deg, #fff6d8, var(--soft)); }
+.wkday.today .wkh .d { color: var(--red); }
+/* alsó menü: aranyhullám fölötte, aktív ikon felpattan */
+.nav::before { content: ""; position: absolute; left: 0; right: 0; top: -6px; height: 6px; pointer-events: none; opacity: .35; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 6'%3E%3Cpath d='M0 6 V3 q5 -4 10 0 t10 0 t10 0 t10 0 V6z' fill='%230b2f5e'/%3E%3C/svg%3E") 0 0 / 40px 6px repeat-x; animation: zaWv 6s linear infinite; }
+.nav button { position: relative; transition: color .2s, transform .15s; } .nav button:active { transform: scale(.94); }
+.nav button.on svg { animation: zaPop .35s cubic-bezier(.2,.9,.3,1.6); }
+.nav button.on::before { box-shadow: 0 0 8px rgba(201,162,90,.7); }
+.dot { animation: zaPop .4s cubic-bezier(.2,.9,.3,1.6); }
+.chip { transition: background .2s, color .2s, transform .15s; } .chip:active { transform: scale(.96); }
+.seg button { transition: background .2s, color .2s; }
+.search input { transition: box-shadow .2s; } .search input:focus { outline: none; box-shadow: 0 0 0 3px rgba(42,134,173,.25), var(--sh); }
+.card { position: relative; }
+@media (prefers-reduced-motion: reduce) { .top::after, .top .tt b, .za-scene *, .login-card, .login-card img, .btn::after, .fab::after, .alert, .alert svg, .stat b, h3.st svg, .call, .tag.pending::before, .swap svg, .free i, .nav::before, .nav button.on svg, .dot { animation: none !important; } }
 </style>
 </head>
 <body>
@@ -512,7 +600,7 @@ table.pt th input { width: 96px; padding: 7px 8px; border-radius: 9px; border: 1
      Belépés
      ========================================================================== */
   function loginView(err) {
-    A.root.innerHTML = `<div class="login"><div class="login-card">
+    A.root.innerHTML = `<div class="login"><div class="za-scene" aria-hidden="true"><svg viewBox="0 0 400 180" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="zaW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d9cc6"/><stop offset="1" stop-color="#0b2f5e"/></linearGradient></defs><path d="M0 70 Q 70 52 140 60 T 280 55 T 400 62 V80 H0 Z" fill="#8fb3c6" opacity=".55"/><g transform="translate(330 30)"><rect x="-4" y="0" width="8" height="40" fill="#fff"/><rect x="-4" y="8" width="8" height="6" fill="#e2483d"/><rect x="-4" y="24" width="8" height="6" fill="#e2483d"/><rect x="-6" y="-6" width="12" height="7" rx="2" fill="#0b2f5e"/><path class="lh" d="M0 -3 L 70 -16 L 70 10 Z" fill="#ffe9a8"/></g><rect y="74" width="400" height="106" fill="url(#zaW)"/><g fill="none" stroke="#fff" stroke-linecap="round"><path class="w1" opacity=".35" stroke-width="1.6" d="M0 90 q 10 -4 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0" stroke-dasharray="14 18"/><path class="w2" opacity=".25" stroke-width="1.4" d="M-120 116 q 10 -4 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0 t 20 0" stroke-dasharray="20 22"/></g><g class="sb" transform="translate(0 0)"><g transform="translate(60 78)"><path d="M0 0 l30 0 l-5 6 h-20 Z" fill="#fff"/><path d="M14 -2 v-30" stroke="#e8edf2" stroke-width="1.4"/><path d="M15 -31 q 10 13 12 29 h-12 Z" fill="#fff"/><path d="M13 -28 q -9 11 -10 26 h10 Z" fill="#e2483d"/><path d="M14 -32 l6 2 l-6 2 Z" fill="#e2483d"/></g></g><g class="gl" fill="none" stroke="#0b2f5e" stroke-width="1.6" stroke-linecap="round"><path d="M70 30 q 5 -5 10 0 q 5 -5 10 0"/><path d="M100 42 q 4 -4 8 0 q 4 -4 8 0"/></g></svg></div><div class="login-card">
       <img src="${LOGO}" alt="Zephyr Apartman">
       <h1>Admin</h1>
       <form id="lf">
