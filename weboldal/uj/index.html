@@ -471,9 +471,8 @@ body { background-image: var(--grain); }
 .sec-dark .sec-head h2 { text-shadow: 0 2px 18px rgba(0,0,0,.35); }
 .sec-head h2 em { position: relative; display: inline-block; }
 .sec-head h2 em::after { content: ""; position: absolute; left: .08em; right: -.04em; bottom: -.06em; height: .11em; border-radius: 0 60% 40% 0 / 0 100% 100% 0; background: linear-gradient(90deg, currentColor 0%, currentColor 70%, color-mix(in srgb, currentColor 40%, transparent)); opacity: .85; transform: scaleX(0) rotate(-1.8deg); transform-origin: left center; transition: transform 1.2s .15s cubic-bezier(.65,0,.25,1); }
-.sec-head h2 em::before { content: ""; position: absolute; left: .3em; right: .2em; bottom: -.16em; height: .05em; border-radius: 50%; background: currentColor; opacity: .4; transform: scaleX(0) rotate(.8deg); transform-origin: left center; transition: transform 1s .75s cubic-bezier(.65,0,.25,1); }
-.sec-head.ul h2 em::after { transform: scaleX(1) rotate(-1.8deg); } .sec-head.ul h2 em::before { transform: scaleX(1) rotate(.8deg); }
-.no-io .sec-head h2 em::after { transform: scaleX(1) rotate(-1.8deg); } .no-io .sec-head h2 em::before { transform: scaleX(1) rotate(.8deg); }
+.sec-head.ul h2 em::after { transform: scaleX(1) rotate(-1.8deg); }
+.no-io .sec-head h2 em::after { transform: scaleX(1) rotate(-1.8deg); }
 .compass-wm { animation: wmSpin 120s linear infinite; }
 @keyframes wmSpin { to { transform: rotate(360deg); } }
 
