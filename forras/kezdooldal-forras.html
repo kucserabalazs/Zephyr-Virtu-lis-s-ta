@@ -556,6 +556,30 @@ body { background-image: var(--grain); }
 .lb-nav:hover { transform: translateY(-50%) scale(1.08); }
 .lb-th button { transition: opacity .2s, transform .2s; } .lb-th button:hover { opacity: .9; transform: translateY(-2px); }
 
+/* galéria fejléc: kidolgozott „Vissza” nyíl, egy sorban marad telefonon is */
+.lb { grid-template-columns: minmax(0, 1fr); }
+.lb-hd { flex-wrap: nowrap; min-width: 0; background: linear-gradient(180deg, rgba(10,36,66,.95), rgba(5,16,30,.0)); }
+.lb-tt { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+.lb-back { all: unset; cursor: pointer; flex: none; display: inline-flex; align-items: center; gap: 9px; padding: 5px 16px 5px 5px; border-radius: 999px; color: #fff; font: 800 15px/1 var(--body); letter-spacing: .02em;
+  background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.07)); box-shadow: inset 0 0 0 1px rgba(255,217,120,.55), inset 0 1px 0 rgba(255,255,255,.35), 0 6px 18px rgba(0,0,0,.35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: transform .18s, box-shadow .18s, background .18s; }
+.lb-back:hover, .lb-back:focus-visible { transform: translateX(-2px); background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.1)); box-shadow: inset 0 0 0 1.5px #ffd978, 0 8px 22px rgba(0,0,0,.4); }
+.lb-bk-ic { position: relative; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #0b2a4a; background: radial-gradient(circle at 35% 30%, #fff1bf, #ffd978 45%, #e0a52c 100%); box-shadow: inset 0 -2px 0 rgba(138,102,48,.45), inset 0 1px 0 rgba(255,255,255,.8), 0 2px 6px rgba(0,0,0,.35); }
+.lb-bk-ic::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid rgba(255,217,120,.5); animation: lbBkPulse 2.4s ease-out infinite; }
+@keyframes lbBkPulse { 0% { transform: scale(.85); opacity: .9; } 100% { transform: scale(1.25); opacity: 0; } }
+.lb-bk-ic svg { width: 20px; height: 20px; }
+.lb-back:hover .lb-bk-ic svg { animation: lbBkNudge .6s ease; } @keyframes lbBkNudge { 40% { transform: translateX(-3px); } }
+.lb-tour em { display: none; font-style: normal; }
+@media (max-width: 700px) {
+  .lb-hd { gap: 10px; padding: 10px 12px; }
+  .lb-tt { flex-direction: column; align-items: flex-start; gap: 3px; flex: 1 1 0; min-width: 0; }
+  .lb-hd h3 { font-size: 19px; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .lb-hd .cap { font-size: 15px; color: #dce7f1; }
+  .lb-hd .sp, .lb-x, .lb-ap { display: none; }
+  .lb-back { padding: 4px; } .lb-bk-tx { display: none; } .lb-bk-ic { width: 42px; height: 42px; } .lb-bk-ic svg { width: 23px; height: 23px; }
+  .lb .lb-tour { flex: none; padding: 10px 13px; font-size: 14px; gap: 6px; } .lb-hd .lb-tour b { display: none; } .lb-tour em { display: inline; }
+}
+@media (prefers-reduced-motion: reduce) { .lb-bk-ic::after { animation: none; } }
+
 /* finom beúszás görgetéskor (csak ha a böngésző támogatja; szöveg és elrendezés változatlan) */
 .fx-in { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .9s cubic-bezier(.2,.8,.2,1); transition-delay: var(--fd, 0s); }
 .fx-in.in { opacity: 1; transform: none; }
@@ -1054,7 +1078,7 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
 </footer>
 
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Képgaléria">
-  <div class="lb-hd"><h3 id="lbTitle"></h3><span class="cap" id="lbCap"></span><span class="sp"></span><a class="btn btn-gold" id="lbTour" href="#"><svg><use href="#i-360"/></svg><b>Virtuális séta ide</b></a><button type="button" class="lb-x" id="lbX" aria-label="Galéria bezárása">×</button></div>
+  <div class="lb-hd"><button type="button" class="lb-back" id="lbBack" aria-label="Vissza az oldalra"><span class="lb-bk-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5"/><path d="M8.5 12H20" opacity=".55"/></svg></span><span class="lb-bk-tx">Vissza</span></button><div class="lb-tt"><h3 id="lbTitle"></h3><span class="cap" id="lbCap"></span></div><span class="sp"></span><a class="btn btn-gold lb-tour" id="lbTour" href="#"><svg><use href="#i-360"/></svg><b>Virtuális séta ide</b><em>360° séta</em></a><button type="button" class="lb-x" id="lbX" aria-label="Galéria bezárása">×</button></div>
   <div class="lb-stage" id="lbStage"><button type="button" class="lb-nav p" id="lbP" aria-label="Előző kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div id="lbMedia" style="display:contents"></div><button type="button" class="lb-nav n" id="lbN" aria-label="Következő kép"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div>
   <div class="lb-th" id="lbTh"></div>
 </div>
@@ -1279,9 +1303,9 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   const LB = { list: [], i: 0, title: "", tourBase: "" };
   function openLb(title, list, i) {
     LB.list = list; LB.i = i || 0; LB.title = title;
-    $("lbTitle").textContent = title;
+    { const m = /^(.*?)(\s+apartman)$/i.exec(title); $("lbTitle").innerHTML = m ? `${esc(m[1])}<span class="lb-ap">${esc(m[2])}</span>` : esc(title); }
     $("lbTh").innerHTML = list.map((x, k) => `<button type="button" data-k="${k}" aria-label="${esc(x.cap)}"><img src="${esc(x.th || x.poster || x.src)}" alt="" loading="lazy"></button>`).join("");
-    $("lb").hidden = false; document.documentElement.style.overflow = "hidden"; showLb(); $("lbX").focus();
+    $("lb").hidden = false; document.documentElement.style.overflow = "hidden"; showLb(); $("lbBack").focus();
   }
   function showLb() {
     const x = LB.list[LB.i]; if (!x) return;
@@ -1294,7 +1318,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   const stepLb = (d) => { LB.i = (LB.i + d + LB.list.length) % LB.list.length; showLb(); };
   function closeLb() { $("lb").hidden = true; $("lbMedia").innerHTML = ""; document.documentElement.style.overflow = ""; }
-  $("lbX").addEventListener("click", closeLb); $("lbP").addEventListener("click", () => stepLb(-1)); $("lbN").addEventListener("click", () => stepLb(1));
+  $("lbX").addEventListener("click", closeLb); $("lbBack").addEventListener("click", closeLb); $("lbP").addEventListener("click", () => stepLb(-1)); $("lbN").addEventListener("click", () => stepLb(1));
   $("lbTh").addEventListener("click", (e) => { const b = e.target.closest("[data-k]"); if (b) { LB.i = +b.dataset.k; showLb(); } });
   $("lb").addEventListener("click", (e) => { if (e.target === $("lbStage")) closeLb(); });
   document.addEventListener("keydown", (e) => { if ($("lb").hidden) return; if (e.key === "Escape") closeLb(); if (e.key === "ArrowRight") stepLb(1); if (e.key === "ArrowLeft") stepLb(-1); });
