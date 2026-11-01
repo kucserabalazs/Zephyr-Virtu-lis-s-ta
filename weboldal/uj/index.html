@@ -817,7 +817,7 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
 .zfa-back span { font-size: 22px; line-height: .8; color: #ffd978; } .zfa-back:hover { background: #164377; }
 .zfa-ban { position: relative; display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin: 0 0 12px; border-radius: 20px; overflow: hidden; color: #fff; background: linear-gradient(135deg, var(--ac), color-mix(in srgb, var(--ac) 55%, #071d38)); box-shadow: 0 10px 26px color-mix(in srgb, var(--ac) 35%, transparent); }
 .zfa-ban::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16px; opacity: .35; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 16'%3E%3Cpath d='M0 9 q5 -7 10 0 t10 0 t10 0 t10 0 V16 H0Z' fill='%23fff'/%3E%3C/svg%3E") 0 100% / 40px 16px repeat-x; animation: zflWv 4s linear infinite; }
-.zfa-boat { flex: none; width: 112px; height: 70px; animation: zflBob 3.2s ease-in-out infinite; } .zfa-boat svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
+.zfa-boat { flex: none; width: 120px; height: 82px; animation: zflBob 3.2s ease-in-out infinite; } .zfa-boat svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
 .zfa-t { position: relative; z-index: 1; display: grid; gap: 3px; } .zfa-t small { font: 800 12px/1 Manrope, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #ffe7a3; } .zfa-t b { font: 900 26px/1.05 Manrope, sans-serif; } .zfa-t span { font-size: 13.5px; font-weight: 700; opacity: .92; }
 .zfa-sw { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 14px; } .zfa-sw > span { font-size: 13px; font-weight: 800; color: #5d6b78; }
 .zfa-sw button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px 7px 7px; border-radius: 999px; background: #fff; border: 2px solid var(--ac); font: 800 14px/1 Manrope, sans-serif; color: #14202a; }
@@ -833,11 +833,13 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
 .zfl-tip { position: relative; margin: 4px 0 12px; font-size: 13.5px; font-weight: 700; color: #123a5e; }
 .zfl-grid { position: relative; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 10px; }
 .zfl { all: unset; box-sizing: border-box; position: relative; cursor: pointer; display: grid; justify-items: center; padding: 6px 4px 10px; border-radius: 18px; overflow: hidden; -webkit-tap-highlight-color: transparent; }
-.zfl-boat { display: block; width: 100%; height: 96px; position: relative; z-index: 1; transition: transform 1.5s cubic-bezier(.55,0,.3,1), filter 1.2s, opacity 1.2s; transform-origin: 50% 70%; }
+.zfl-svg .rk2 { transform-box: view-box; transform-origin: 80px 92px; animation: zfbRock 3.6s ease-in-out infinite; }
+.zfl-svg .fl { transform-box: fill-box; transform-origin: 0 50%; animation: zfbFl .8s ease-in-out infinite alternate; }
+.zfl-boat { display: block; width: 100%; height: 112px; position: relative; z-index: 1; transition: transform 1.5s cubic-bezier(.55,0,.3,1), filter 1.2s, opacity 1.2s; transform-origin: 50% 70%; }
 .zfl-bob { display: block; height: 100%; animation: zflBob 3.2s ease-in-out infinite; animation-delay: calc(var(--d, 0s) * -1); }
 @keyframes zflBob { 0%, 100% { transform: translateY(0) rotate(-2.5deg); } 50% { transform: translateY(-6px) rotate(2.5deg); } }
 .zfl-svg { width: 100%; height: 100%; filter: drop-shadow(0 6px 6px rgba(7,29,56,.28)); }
-.zfl-wave { position: absolute; left: -10px; right: -10px; top: 70px; height: 40px; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(43,122,170,.85) 0, rgba(43,122,170,.55) 45%, rgba(43,122,170,0) 100%); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M0 8 q10 -8 20 0 t20 0 V40 H0Z'/%3E%3C/svg%3E") 0 0 / 40px 40px repeat-x; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M0 8 q10 -8 20 0 t20 0 V40 H0Z'/%3E%3C/svg%3E") 0 0 / 40px 40px repeat-x; animation: zflMask 3s linear infinite; }
+.zfl-wave { position: absolute; left: -10px; right: -10px; top: 92px; height: 40px; z-index: 2; pointer-events: none; background: linear-gradient(180deg, rgba(43,122,170,.85) 0, rgba(43,122,170,.55) 45%, rgba(43,122,170,0) 100%); -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M0 8 q10 -8 20 0 t20 0 V40 H0Z'/%3E%3C/svg%3E") 0 0 / 40px 40px repeat-x; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M0 8 q10 -8 20 0 t20 0 V40 H0Z'/%3E%3C/svg%3E") 0 0 / 40px 40px repeat-x; animation: zflMask 3s linear infinite; }
 @keyframes zflMask { to { -webkit-mask-position: 40px 0; mask-position: 40px 0; } }
 .zfl-lab { position: relative; z-index: 3; display: grid; justify-items: center; gap: 1px; margin-top: -8px; padding: 6px 10px 7px; border-radius: 14px; background: rgba(255,255,255,.93); box-shadow: 0 4px 12px rgba(7,29,56,.18); min-width: 82%; text-align: center; transition: background .4s, opacity .6s; }
 .zfl-nm { font: 900 16px/1.1 Manrope, sans-serif; color: #14202a; } .zfl-cap { font-size: 12px; font-weight: 700; color: #5d6b78; }
@@ -849,15 +851,15 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
 .zfl.pre .zfl-lab { box-shadow: 0 0 0 2px #ffd978, 0 6px 16px rgba(7,29,56,.25); }
 .zfl:focus-visible .zfl-lab { outline: 3px solid #ffd978; }
 /* elsüllyedve: lebukik a víz alá, buborékok szállnak fel */
-.zfl.down .zfl-boat { transform: translateY(46px) rotate(-14deg) scale(.92); filter: saturate(.35) brightness(.85); opacity: .65; }
+.zfl.down .zfl-boat { transform: translateY(64px) rotate(-16deg) scale(.92); filter: saturate(.35) brightness(.85); opacity: .65; }
 .zfl.down .zfl-lab { background: rgba(255,255,255,.72); }
 .zfl.down .zfl-nm { color: #45525d; } .zfl.down .zfl-st { color: #b3261e; }
-.zfl-bub { position: absolute; z-index: 3; left: 46%; top: 86px; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.85); opacity: 0; pointer-events: none; }
+.zfl-bub { position: absolute; z-index: 3; left: 46%; top: 104px; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.85); opacity: 0; pointer-events: none; }
 .zfl-bub.b2 { left: 56%; width: 5px; height: 5px; } .zfl-bub.b3 { left: 38%; width: 4px; height: 4px; }
 .zfl.down .zfl-bub { animation: zflBub 2.6s ease-in infinite; } .zfl.down .zfl-bub.b2 { animation-delay: .9s; } .zfl.down .zfl-bub.b3 { animation-delay: 1.7s; }
 @keyframes zflBub { 0% { opacity: 0; transform: translateY(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(4px, -40px); } }
 .zfl.off { cursor: default; } .zfl.off .zfl-boat { transform: translateY(40px) rotate(10deg) scale(.9); opacity: .5; filter: grayscale(1); }
-@media (max-width: 760px) { .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 84px; } .zfl-wave { top: 60px; } .zfl-bub { top: 76px; } .zfl.down .zfl-boat { transform: translateY(40px) rotate(-14deg) scale(.92); } }
+@media (max-width: 760px) { .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 100px; } .zfl-wave { top: 80px; } .zfl-bub { top: 92px; } .zfl.down .zfl-boat { transform: translateY(56px) rotate(-16deg) scale(.92); } }
 @media (prefers-reduced-motion: reduce) { .zfl-bob, .zfl-wave, .zfl-lake::before, .zfl-bub { animation: none !important; } .zfl-boat { transition-duration: .01s; } }
 /* időpont-első foglalás: összegző sáv, nem szabad apartman, legközelebbi szabad időszak */
 .zfb-when { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 12px 16px; margin: 0 0 14px; border-radius: 16px; background: linear-gradient(135deg, #0b2f5e, #164377); color: #fff; box-shadow: 0 8px 20px rgba(11,47,94,.18); }
@@ -2362,6 +2364,29 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     if (need() > a.cap && need() <= maxCap()) return { down: true, why: `Legfeljebb ${a.cap} főnek` };
     return { down: false, why: need() > a.cap ? `${a.cap} fő – egy másikkal együtt` : "" };
   }
+  /* a tavon: a névadó hajótípus részletes rajza (korvett, dingi, fregatt, kalózhajó, szkúner, kadett) */
+  function shipArt(id, c, no) {
+    const W = "#fbf7ec", L = "rgba(11,47,94,.35)", WD = "#6b4426";
+    const mast = (x, y0, y1, w) => `<path d="M${x} ${y0} V${y1}" stroke="${WD}" stroke-width="${w || 2.2}" stroke-linecap="round"/>`;
+    const yard = (x, y, w) => `<path d="M${x - w / 2} ${y} H${x + w / 2}" stroke="${WD}" stroke-width="1.4"/>`;
+    /* négyszögvitorla, szélbe domborodva */
+    const sq = (x, y, w, h, col) => `<path d="M${x - w / 2} ${y} Q${x} ${y + 3} ${x + w / 2} ${y} L${x + w / 2 - 1.5} ${y + h} Q${x} ${y + h + 4} ${x - w / 2 + 1.5} ${y + h} Z" fill="${col || W}" stroke="${L}" stroke-width=".9"/>${yard(x, y, w + 4)}`;
+    const mastSq = (x, y0, n, w, h, col) => Array.from({ length: n }, (_, k) => sq(x, y0 + k * (h + 2), w + k * 3, h, col)).join("");
+    const flag = (x, y, col, big) => `<path class="fl" d="M${x} ${y} l${big ? 16 : 11} 3 l-${big ? 16 : 11} 4 Z" fill="${col}"/>`;
+    const pennant = (x, y, col) => `<path class="fl" d="M${x} ${y} l18 2 l-18 2 Z" fill="${col}"/>`;
+    const jib = (x0, y0, x1, y1, x2, y2, col) => `<path d="M${x0} ${y0} L${x1} ${y1} Q${(x1 + x2) / 2 + 3} ${(y1 + y2) / 2} ${x2} ${y2} Z" fill="${col || W}" stroke="${L}" stroke-width=".9"/>`;
+    const ports = (x0, x1, y, n, col) => Array.from({ length: n }, (_, k) => `<rect x="${x0 + k * (x1 - x0) / (n - 1) - 2}" y="${y}" width="4" height="3.2" rx=".6" fill="${col || "#ffd978"}" stroke="#2a1a0a" stroke-width=".5"/>`).join("");
+    const hull = (x0, x1, y, h, col, stripe) => `<path d="M${x0} ${y} L${x1} ${y - 3} Q${x1 - 6} ${y + h} ${x1 - 16} ${y + h} L${x0 + 12} ${y + h} Q${x0 + 2} ${y + h * .7} ${x0} ${y} Z" fill="${col}"/><path d="M${x0 + 3} ${y + 3} L${x1 - 3} ${y}" stroke="${stripe || c}" stroke-width="2.6"/>`;
+    const A = {
+      korvett: `${mast(52, 80, 18)}${mast(78, 80, 12)}${mast(102, 80, 22)}${mastSq(52, 24, 3, 22, 13)}${mastSq(78, 18, 3, 26, 14)}${mastSq(102, 28, 3, 20, 12)}${jib(118, 78, 132, 70, 104, 30)}<path d="M120 76 L140 68" stroke="${WD}" stroke-width="1.6"/>${flag(78, 12, c)}${pennant(52, 18, c)}${hull(26, 140, 80, 16, "#13314f")}${ports(42, 120, 85, 7)}<path d="M30 92 Q80 97 132 91" stroke="#d6b36a" stroke-width="1.2" fill="none"/>`,
+      dingi: `${mast(82, 84, 22, 2)}<path d="M84 24 Q104 48 106 80 L84 80 Z" fill="${W}" stroke="${L}"/><path d="M86 40 Q100 56 102 70 L86 70 Z" fill="${c}" opacity=".9"/><path d="M80 32 Q64 56 62 80 L80 80 Z" fill="${c}" stroke="${L}"/><path d="M78 84 L112 82" stroke="${WD}" stroke-width="1.6"/>${hull(56, 116, 86, 9, W, c)}<circle cx="90" cy="84" r="2.4" fill="#ffd9b8"/><path d="M90 86 v3" stroke="#e2483d" stroke-width="2.4"/>`,
+      fregatt: `${mast(44, 80, 12)}${mast(74, 80, 6)}${mast(102, 80, 14)}${mastSq(44, 18, 3, 24, 14)}${mastSq(74, 12, 4, 28, 13)}${mastSq(102, 20, 3, 22, 13)}${jib(120, 78, 146, 64, 104, 24)}${jib(124, 76, 150, 66, 108, 36)}<path d="M120 76 L152 62" stroke="${WD}" stroke-width="1.8"/>${flag(74, 6, c, 1)}${pennant(44, 12, c)}${pennant(102, 14, c)}${hull(18, 146, 80, 20, "#163a66")}${ports(32, 128, 84, 9)}${ports(36, 124, 91, 8)}<path d="M20 98 Q80 104 136 97" stroke="#d6b36a" stroke-width="1.4" fill="none"/><path d="M24 80 L24 70 L36 70 L36 80" fill="#163a66" stroke="#d6b36a" stroke-width="1"/>`,
+      kaloz: `${mast(60, 82, 16)}${mast(96, 82, 10)}${mastSq(60, 22, 3, 24, 14, "#1b1b1b")}${mastSq(96, 16, 3, 28, 15, "#1b1b1b")}<g transform="translate(96 40)"><circle r="5" fill="#f4f1ea"/><circle cx="-1.8" cy="-.5" r="1.3" fill="#1b1b1b"/><circle cx="1.8" cy="-.5" r="1.3" fill="#1b1b1b"/><path d="M-7 7 L7 11 M-7 11 L7 7" stroke="#f4f1ea" stroke-width="1.8" stroke-linecap="round"/></g>${jib(112, 80, 132, 72, 98, 26, "#2a2a2a")}<path d="M114 78 L136 70" stroke="${WD}" stroke-width="1.6"/><path class="fl" d="M96 10 l16 3 l-16 5 Z" fill="#111"/><circle cx="102" cy="13" r="1.5" fill="#fff"/>${pennant(60, 16, c)}${hull(30, 140, 82, 16, "#4a2f1c", c)}${ports(46, 118, 87, 6, "#e8b04a")}<path d="M34 82 L34 72 L46 72 L46 82" fill="#4a2f1c" stroke="#c99a4a" stroke-width="1"/><circle cx="40" cy="68" r="2.4" fill="#ffd978"><animate attributeName="opacity" values="1;.5;1" dur="1.6s" repeatCount="indefinite"/></circle>`,
+      schooner: `${mast(66, 82, 14)}${mast(98, 82, 8)}<path d="M67 16 L90 22 L92 78 L67 78 Z" fill="${W}" stroke="${L}"/><path d="M99 10 L124 18 L126 78 L99 78 Z" fill="${W}" stroke="${L}"/><path d="M67 30 L92 34 M99 26 L126 30" stroke="${L}"/>${jib(64, 78, 64, 16, 40, 78)}${jib(60, 78, 60, 24, 30, 78, c)}<path d="M62 80 L22 78" stroke="${WD}" stroke-width="1.6"/>${flag(98, 8, c)}${pennant(66, 14, c)}${hull(20, 140, 84, 11, "#f2efe6", c)}<path d="M26 92 Q80 96 130 91" stroke="${c}" stroke-width="1.2" fill="none" opacity=".6"/>`,
+      kadett: `${mast(84, 84, 26, 2)}<path d="M86 28 Q102 52 104 80 L86 80 Z" fill="${c}" stroke="${L}"/><path d="M82 36 Q70 58 68 80 L82 80 Z" fill="${W}" stroke="${L}"/>${hull(62, 114, 86, 8, W, c)}`
+    };
+    return `<svg class="zfl-svg" viewBox="0 0 160 110" aria-hidden="true"><g class="rk2">${A[id] || A.dingi}</g>${no ? `<g transform="translate(18 24)"><circle r="11" fill="#fff" stroke="${c}" stroke-width="2.4"/><text y="5" text-anchor="middle" font-size="14" font-weight="900" font-family="Manrope, sans-serif" fill="${c}">${no}</text></g>` : ""}<ellipse cx="82" cy="104" rx="66" ry="4.5" fill="rgba(7,29,56,.2)"/></svg>`;
+  }
   function floatSvg(a) {
     const c = a.color, id = "zg" + (a.id || a.no);
     return `<svg class="zfl-svg" viewBox="0 0 170 104" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="${c}" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
@@ -2381,11 +2406,11 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const flo = cfg.apartments.map((a, i) => { const s2 = aptState(a), on = st.apts.includes(a.id), prev = (st.prevDown || {})[a.id];
       const price = dated && !s2.down ? `<b>${money(aptTotal(a.id))}</b><small>${n} éj</small>` : `<b>${money(a.price)}-tól</b><small>/ éj</small>`;
       return `<button type="button" class="zfl${prev ? " down" : ""}${on ? " sel" : ""}${st.pre === a.id ? " pre" : ""}" data-float="${a.id}" data-down="${s2.down ? 1 : ""}" style="--ac:${a.color};--d:${(i * .37).toFixed(2)}s" aria-pressed="${on}">
-        ${!s2.down && st.ci && st.co ? `<span class="zfl-pick" data-pick="1" role="checkbox" aria-checked="${on}" aria-label="${esc(a.name)} kijelölése">${on ? "✓" : ""}</span>` : ""}<span class="zfl-boat"><span class="zfl-bob">${floatSvg(a)}</span></span><i class="zfl-bub"></i><i class="zfl-bub b2"></i><i class="zfl-bub b3"></i><span class="zfl-wave"></span>
+        ${!s2.down && st.ci && st.co ? `<span class="zfl-pick" data-pick="1" role="checkbox" aria-checked="${on}" aria-label="${esc(a.name)} kijelölése">${on ? "✓" : ""}</span>` : ""}<span class="zfl-boat"><span class="zfl-bob">${shipArt(a.id, a.color, a.no)}</span></span><i class="zfl-bub"></i><i class="zfl-bub b2"></i><i class="zfl-bub b3"></i><span class="zfl-wave"></span>
         <span class="zfl-lab"><span class="zfl-nm">${esc(a.name)}</span><span class="zfl-cap">legfeljebb ${a.cap} fő</span><span class="zfl-pr">${price}</span><span class="zfl-st">${on ? "✓ Kiválasztva" : s2.down ? esc(s2.why) + " · naptár ›" : dated ? (s2.why ? esc(s2.why) : "Szabad · belépés ›") : "Naptár, belépés ›"}</span></span>
       </button>`; }).join("");
-    const kad = cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfl down off" style="--ac:#f08a24"><span class="zfl-boat"><span class="zfl-bob">${floatSvg({ color: "#f08a24", no: 6 })}</span></span><span class="zfl-wave"></span><span class="zfl-lab"><span class="zfl-nm">Kadett</span><span class="zfl-cap">legfeljebb 4 fő</span><span class="zfl-st">Nem kiadó</span></span></div>`;
-    return `<section class="zfl-lake"><h3 class="zfl-h">Apartmanjaink a tavon</h3><p class="zfl-tip">${dated ? "A felszínen maradtak szabadok erre az időszakra. Koppints egy csónakra, és belépsz az apartmanba; a kis karikával többet is kijelölhetsz egy foglaláshoz." : "Koppints egy csónakra: belépsz az apartmanba, és látod a saját naptárát, szabad napjait."}</p>
+    const kad = cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfl down off" style="--ac:#f08a24"><span class="zfl-boat"><span class="zfl-bob">${shipArt("kadett", "#f08a24", 6)}</span></span><span class="zfl-wave"></span><span class="zfl-lab"><span class="zfl-nm">Kadett</span><span class="zfl-cap">legfeljebb 4 fő</span><span class="zfl-st">Nem kiadó</span></span></div>`;
+    return `<section class="zfl-lake"><h3 class="zfl-h">Apartmanjaink a tavon</h3><p class="zfl-tip">${dated ? "A felszínen maradtak szabadok erre az időszakra. Koppints egy hajóra, és belépsz az apartmanba; a kis karikával többet is kijelölhetsz egy foglaláshoz." : "Koppints egy hajóra: belépsz az apartmanba, és látod a saját naptárát, szabad napjait."}</p>
       <div class="zfl-grid">${flo}${kad}</div></section>
       <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · ${capTotal()} férőhely / ${need()} fő${err ? `<br><small class="zfb-selerr">${esc(err)}</small>` : ""}` : dated ? "Válassz egy vagy több apartmant a tavon" : "Előbb add meg az időpontot"}</span><button type="button" class="zfb-btn" data-next="3" ${!sel.length || err ? "disabled" : ""}>Tovább az adatokhoz ›</button></div>
       <button type="button" class="zfb-apt-link" data-owner="1">Tulajdonosi belépés ›</button>`;
@@ -2413,7 +2438,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     return demoNote() + `<div class="zfb-cal-wrap">
       <div class="zfb-cal">
         <button type="button" class="zfa-back" data-lake="1"><span>‹</span> Vissza a tóhoz – másik apartman</button>
-        <div class="zfa-ban" style="--ac:${a.color}"><div class="zfa-boat">${floatSvg(a)}</div><div class="zfa-t"><small>Most itt vagy:</small><b>${esc(a.name)} apartman</b><span>${a.no}. apartman · legfeljebb ${a.cap} fő · ${money(a.price)}-tól / éj</span></div></div>
+        <div class="zfa-ban" style="--ac:${a.color}"><div class="zfa-boat">${shipArt(a.id, a.color, "")}</div><div class="zfa-t"><small>Most itt vagy:</small><b>${esc(a.name)} apartman</b><span>${a.no}. apartman · legfeljebb ${a.cap} fő · ${money(a.price)}-tól / éj</span></div></div>
         <div class="zfa-sw"><span>Másik apartman:</span>${cfg.apartments.filter((x) => x.id !== a.id).map((x) => `<button type="button" data-goapt="${x.id}" style="--ac:${x.color}"><i>${x.no}</i>${esc(x.name)}</button>`).join("")}</div>
         <div class="zfb-mnav"><button type="button" data-m="-1" ${st.month <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><span>Válaszd ki az érkezés, majd a távozás napját</span><button type="button" data-m="1" ${st.month >= 12 ? "disabled" : ""} aria-label="Következő hónap">›</button></div>
         <div class="zfb-months">${months.join("")}</div>
