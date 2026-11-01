@@ -1005,8 +1005,12 @@ body.walk-on .gm-dock { display: none; }
 .zfl-bub.b2 { left: 56%; width: 5px; height: 5px; } .zfl-bub.b3 { left: 38%; width: 4px; height: 4px; }
 .zfl.down .zfl-bub { animation: zflBub 2.6s ease-in infinite; } .zfl.down .zfl-bub.b2 { animation-delay: .9s; } .zfl.down .zfl-bub.b3 { animation-delay: 1.7s; }
 @keyframes zflBub { 0% { opacity: 0; transform: translateY(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(4px, -40px); } }
+.zfl-hand { position: absolute; z-index: 3; right: 6%; top: 6px; width: 64px; height: 100px; pointer-events: none; transform: translateY(90px); opacity: 0; transition: transform .9s cubic-bezier(.3,1.4,.5,1) 0s, opacity .3s; }
+.zfl.down .zfl-hand { transform: translateY(0); opacity: 1; transition-delay: 1.1s, 1.1s; }
+.zfl.down .zfl-hand .zh-flag { transform-box: view-box; transform-origin: 33px 78px; animation: zhWave 2.4s ease-in-out 2s infinite; }
+@keyframes zhWave { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(6deg); } }
 .zfl.off { cursor: default; } .zfl.off .zfl-boat { transform: translateY(40px) rotate(10deg) scale(.9); opacity: .5; filter: grayscale(1); }
-@media (max-width: 760px) { .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 100px; } .zfl-wave { top: 80px; } .zfl-bub { top: 92px; } .zfl.down .zfl-boat { transform: translateY(56px) rotate(-16deg) scale(.92); } }
+@media (max-width: 760px) { .zfl-hand { width: 56px; height: 88px; top: 8px; right: 3%; } .zfl-grid { grid-template-columns: 1fr 1fr; } .zfl-boat { height: 100px; } .zfl-wave { top: 80px; } .zfl-bub { top: 92px; } .zfl.down .zfl-boat { transform: translateY(56px) rotate(-16deg) scale(.92); } }
 @media (prefers-reduced-motion: reduce) { .zfl-bob, .zfl-wave, .zfl-lake::before, .zfl-bub { animation: none !important; } .zfl-boat { transition-duration: .01s; } }
 /* időpont-első foglalás: összegző sáv, nem szabad apartman, legközelebbi szabad időszak */
 .zfb-when { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 12px 16px; margin: 0 0 14px; border-radius: 16px; background: linear-gradient(135deg, #0b2f5e, #164377); color: #fff; box-shadow: 0 8px 20px rgba(11,47,94,.18); }
@@ -1770,29 +1774,82 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     if (need() > a.cap && need() <= maxCap()) return { down: true, why: `Legfeljebb ${a.cap} főnek` };
     return { down: false, why: need() > a.cap ? `${a.cap} fő – egy másikkal együtt` : "" };
   }
-  /* a tavon: a névadó hajótípus részletes rajza (korvett, dingi, fregatt, kalózhajó, szkúner, kadett) */
+  /* a tavon: a névadó hajótípus részletes rajza – árnyalt, domborodó vitorlák varratokkal, kötélzet, árbockosár, deszkázott törzs rézborítással, tatablakok, hab */
   function shipArt(id, c, no) {
-    const W = "#fbf7ec", L = "rgba(11,47,94,.35)", WD = "#6b4426";
-    const mast = (x, y0, y1, w) => `<path d="M${x} ${y0} V${y1}" stroke="${WD}" stroke-width="${w || 2.2}" stroke-linecap="round"/>`;
-    const yard = (x, y, w) => `<path d="M${x - w / 2} ${y} H${x + w / 2}" stroke="${WD}" stroke-width="1.4"/>`;
-    /* négyszögvitorla, szélbe domborodva */
-    const sq = (x, y, w, h, col) => `<path d="M${x - w / 2} ${y} Q${x} ${y + 3} ${x + w / 2} ${y} L${x + w / 2 - 1.5} ${y + h} Q${x} ${y + h + 4} ${x - w / 2 + 1.5} ${y + h} Z" fill="${col || W}" stroke="${L}" stroke-width=".9"/>${yard(x, y, w + 4)}`;
-    const mastSq = (x, y0, n, w, h, col) => Array.from({ length: n }, (_, k) => sq(x, y0 + k * (h + 2), w + k * 3, h, col)).join("");
-    const flag = (x, y, col, big) => `<path class="fl" d="M${x} ${y} l${big ? 16 : 11} 3 l-${big ? 16 : 11} 4 Z" fill="${col}"/>`;
-    const pennant = (x, y, col) => `<path class="fl" d="M${x} ${y} l18 2 l-18 2 Z" fill="${col}"/>`;
-    const jib = (x0, y0, x1, y1, x2, y2, col) => `<path d="M${x0} ${y0} L${x1} ${y1} Q${(x1 + x2) / 2 + 3} ${(y1 + y2) / 2} ${x2} ${y2} Z" fill="${col || W}" stroke="${L}" stroke-width=".9"/>`;
-    const ports = (x0, x1, y, n, col) => Array.from({ length: n }, (_, k) => `<rect x="${x0 + k * (x1 - x0) / (n - 1) - 2}" y="${y}" width="4" height="3.2" rx=".6" fill="${col || "#ffd978"}" stroke="#2a1a0a" stroke-width=".5"/>`).join("");
-    const hull = (x0, x1, y, h, col, stripe) => `<path d="M${x0} ${y} L${x1} ${y - 3} Q${x1 - 6} ${y + h} ${x1 - 16} ${y + h} L${x0 + 12} ${y + h} Q${x0 + 2} ${y + h * .7} ${x0} ${y} Z" fill="${col}"/><path d="M${x0 + 3} ${y + 3} L${x1 - 3} ${y}" stroke="${stripe || c}" stroke-width="2.6"/>`;
+    const u = "zs" + id + (no || ""), WD = "#5a3a1e", L = "rgba(11,47,94,.28)", R = "rgba(40,28,16,.55)";
+    const S = id === "kaloz" ? `url(#${u}k)` : `url(#${u}s)`;
+    const mast = (x, y0, y1, w) => `<path d="M${x} ${y0} V${y1}" stroke="${WD}" stroke-width="${w || 2.4}" stroke-linecap="round"/><path d="M${x - .5} ${y0} V${y1}" stroke="#8a6238" stroke-width=".7" opacity=".7"/>`;
+    const yard = (x, y, w) => `<path d="M${x - w / 2} ${y} H${x + w / 2}" stroke="${WD}" stroke-width="1.6" stroke-linecap="round"/>`;
+    /* négyszögvitorla: domborodó, árnyalt, függőleges varratok, reffsor */
+    const sq = (x, y, w, h, fill) => { const f = fill || S, x0 = x - w / 2, x1 = x + w / 2;
+      return `<path d="M${x0} ${y} Q${x} ${y + 3.5} ${x1} ${y} L${x1 - 1.8} ${y + h} Q${x} ${y + h + 5} ${x0 + 1.8} ${y + h} Z" fill="${f}" stroke="${L}" stroke-width=".8"/>`
+        + [1, 2, 3].map((k) => `<path d="M${x0 + w * k / 4} ${y + 1.6} Q${x0 + w * k / 4 + .6} ${y + h / 2} ${x0 + w * k / 4} ${y + h + 2.6}" stroke="${L}" stroke-width=".5" fill="none"/>`).join("")
+        + `<path d="M${x0 + 1} ${y + h * .3} Q${x} ${y + h * .3 + 3} ${x1 - 1} ${y + h * .3}" stroke="${L}" stroke-width=".5" fill="none" stroke-dasharray="1 1.6"/>${yard(x, y, w + 5)}`; };
+    const mastSq = (x, y0, n, w, h, fill) => Array.from({ length: n }, (_, k) => sq(x, y0 + k * (h + 2.5), w + k * 3.5, h, fill)).join("");
+    const jib = (x0, y0, x1, y1, x2, y2, fill) => `<path d="M${x0} ${y0} L${x1} ${y1} Q${(x1 + x2) / 2 + 4} ${(y1 + y2) / 2 + 1} ${x2} ${y2} Z" fill="${fill || S}" stroke="${L}" stroke-width=".8"/><path d="M${(x0 + x2) / 2} ${(y0 + y2) / 2} L${x1 - 2} ${y1 - 1}" stroke="${L}" stroke-width=".5"/>`;
+    const gaff = (x, y0, y1, w, fill) => `<path d="M${x + 1} ${y0} L${x + w} ${y0 + 6} Q${x + w + 4} ${(y0 + y1) / 2} ${x + w + 2} ${y1} L${x + 1} ${y1} Z" fill="${fill || S}" stroke="${L}" stroke-width=".8"/>${[.33, .66].map((k) => `<path d="M${x + 1} ${y0 + (y1 - y0) * k} L${x + w + 3} ${y0 + 6 + (y1 - y0 - 6) * k}" stroke="${L}" stroke-width=".5"/>`).join("")}<path d="M${x} ${y0} L${x + w + 1} ${y0 + 6}" stroke="${WD}" stroke-width="1.4"/><path d="M${x} ${y1} L${x + w + 3} ${y1}" stroke="${WD}" stroke-width="1.6"/>`;
+    const nest = (x, y) => `<path d="M${x - 5} ${y} h10 l-1.5 4 h-7 Z" fill="${WD}"/><path d="M${x - 5} ${y} h10" stroke="#8a6238" stroke-width=".8"/>`;
+    const flag = (x, y, col, big) => { const w = big ? 18 : 12; return `<path d="M${x} ${y} L${x + w} ${y + 3} L${x} ${y + 7} Z" fill="${col}"><animate attributeName="d" values="M${x} ${y} L${x + w} ${y + 3} L${x} ${y + 7} Z;M${x} ${y} L${x + w - 2} ${y + 1} L${x} ${y + 7} Z;M${x} ${y} L${x + w} ${y + 4.5} L${x} ${y + 7} Z;M${x} ${y} L${x + w} ${y + 3} L${x} ${y + 7} Z" dur="1.1s" repeatCount="indefinite"/></path>`; };
+    const pennant = (x, y, col) => `<path d="M${x} ${y} L${x + 20} ${y + 2} L${x} ${y + 4} Z" fill="${col}"><animate attributeName="d" values="M${x} ${y} L${x + 20} ${y + 2} L${x} ${y + 4} Z;M${x} ${y} L${x + 18} ${y - 1} L${x} ${y + 4} Z;M${x} ${y} L${x + 20} ${y + 2} L${x} ${y + 4} Z" dur=".9s" repeatCount="indefinite"/></path>`;
+    const shrouds = (x, yTop, xa, xb, yd) => `<path d="M${x} ${yTop} L${xa} ${yd} M${x} ${yTop} L${xb} ${yd}" stroke="${R}" stroke-width=".6"/>${[.55, .7, .85].map((k) => `<path d="M${x + (xa - x) * k} ${yTop + (yd - yTop) * k} L${x + (xb - x) * k} ${yTop + (yd - yTop) * k}" stroke="${R}" stroke-width=".4"/>`).join("")}`;
+    const stay = (x0, y0, x1, y1) => `<path d="M${x0} ${y0} L${x1} ${y1}" stroke="${R}" stroke-width=".6"/>`;
+    const ports = (x0, x1, y, n, lit) => Array.from({ length: n }, (_, k) => { const x = x0 + k * (x1 - x0) / (n - 1); return `<rect x="${x - 2.2}" y="${y}" width="4.4" height="3.4" rx=".7" fill="${lit || "#ffd978"}" stroke="#241608" stroke-width=".6"/><path d="M${x - 2.4} ${y - .6} h4.8" stroke="#241608" stroke-width=".6"/>`; }).join("");
+    /* törzs: árnyalt test, deszkák, korlát, színcsík, rézborítás a vízvonal alatt */
+    const hull = (x0, x1, y, h, col, stripe, sheer) => { const s2 = sheer || 4;
+      const P = `M${x0} ${y - s2} Q${(x0 + x1) / 2} ${y + 1} ${x1} ${y - s2 - 3} Q${x1 - 6} ${y + h} ${x1 - 18} ${y + h} L${x0 + 12} ${y + h} Q${x0 + 2} ${y + h * .65} ${x0} ${y - s2} Z`;
+      return `<path d="${P}" fill="${col}"/><path d="${P}" fill="url(#${u}h)"/>
+        <path d="M${x0 + 10} ${y + h - 3} L${x1 - 16} ${y + h - 3} L${x1 - 18} ${y + h} L${x0 + 12} ${y + h} Z" fill="#b5652b" opacity=".85"/>
+        ${[.32, .52, .72].map((k) => `<path d="M${x0 + 4} ${y - s2 + h * k} Q${(x0 + x1) / 2} ${y + 1 + h * k} ${x1 - 6} ${y - s2 - 3 + h * k}" stroke="rgba(0,0,0,.18)" stroke-width=".6" fill="none"/>`).join("")}
+        <path d="M${x0 + 1} ${y - s2 + 3.2} Q${(x0 + x1) / 2} ${y + 4.2} ${x1 - 1} ${y - s2}" stroke="${stripe || c}" stroke-width="2.8" fill="none"/>
+        <path d="M${x0} ${y - s2} Q${(x0 + x1) / 2} ${y + 1} ${x1} ${y - s2 - 3}" stroke="#e8d3a2" stroke-width="1.3" fill="none"/>`; };
+    const stern = (x, y) => `<path d="M${x} ${y} l0 -11 l13 0 l0 11" fill="#2b1a0c" stroke="#d6b36a" stroke-width="1"/><rect x="${x + 2}" y="${y - 8.5}" width="3.2" height="3.4" fill="#ffd978"/><rect x="${x + 7.6}" y="${y - 8.5}" width="3.2" height="3.4" fill="#ffd978"/>`;
+    const foam = `<g opacity=".9"><path d="M20 101 Q40 96 60 100 T100 99 T144 100" stroke="#fff" stroke-width="1.6" fill="none" stroke-dasharray="4 5"><animate attributeName="stroke-dashoffset" values="0;-18" dur="1.6s" repeatCount="indefinite"/></path><path d="M140 96 q6 -2 10 1" stroke="#fff" stroke-width="2" fill="none"><animate attributeName="opacity" values="1;.3;1" dur="1.2s" repeatCount="indefinite"/></path></g>`;
     const A = {
-      korvett: `${mast(52, 80, 18)}${mast(78, 80, 12)}${mast(102, 80, 22)}${mastSq(52, 24, 3, 22, 13)}${mastSq(78, 18, 3, 26, 14)}${mastSq(102, 28, 3, 20, 12)}${jib(118, 78, 132, 70, 104, 30)}<path d="M120 76 L140 68" stroke="${WD}" stroke-width="1.6"/>${flag(78, 12, c)}${pennant(52, 18, c)}${hull(26, 140, 80, 16, "#13314f")}${ports(42, 120, 85, 7)}<path d="M30 92 Q80 97 132 91" stroke="#d6b36a" stroke-width="1.2" fill="none"/>`,
-      dingi: `${mast(82, 84, 22, 2)}<path d="M84 24 Q104 48 106 80 L84 80 Z" fill="${W}" stroke="${L}"/><path d="M86 40 Q100 56 102 70 L86 70 Z" fill="${c}" opacity=".9"/><path d="M80 32 Q64 56 62 80 L80 80 Z" fill="${c}" stroke="${L}"/><path d="M78 84 L112 82" stroke="${WD}" stroke-width="1.6"/>${hull(56, 116, 86, 9, W, c)}<circle cx="90" cy="84" r="2.4" fill="#ffd9b8"/><path d="M90 86 v3" stroke="#e2483d" stroke-width="2.4"/>`,
-      fregatt: `${mast(44, 80, 12)}${mast(74, 80, 6)}${mast(102, 80, 14)}${mastSq(44, 18, 3, 24, 14)}${mastSq(74, 12, 4, 28, 13)}${mastSq(102, 20, 3, 22, 13)}${jib(120, 78, 146, 64, 104, 24)}${jib(124, 76, 150, 66, 108, 36)}<path d="M120 76 L152 62" stroke="${WD}" stroke-width="1.8"/>${flag(74, 6, c, 1)}${pennant(44, 12, c)}${pennant(102, 14, c)}${hull(18, 146, 80, 20, "#163a66")}${ports(32, 128, 84, 9)}${ports(36, 124, 91, 8)}<path d="M20 98 Q80 104 136 97" stroke="#d6b36a" stroke-width="1.4" fill="none"/><path d="M24 80 L24 70 L36 70 L36 80" fill="#163a66" stroke="#d6b36a" stroke-width="1"/>`,
-      kaloz: `${mast(60, 82, 16)}${mast(96, 82, 10)}${mastSq(60, 22, 3, 24, 14, "#1b1b1b")}${mastSq(96, 16, 3, 28, 15, "#1b1b1b")}<g transform="translate(96 40)"><circle r="5" fill="#f4f1ea"/><circle cx="-1.8" cy="-.5" r="1.3" fill="#1b1b1b"/><circle cx="1.8" cy="-.5" r="1.3" fill="#1b1b1b"/><path d="M-7 7 L7 11 M-7 11 L7 7" stroke="#f4f1ea" stroke-width="1.8" stroke-linecap="round"/></g>${jib(112, 80, 132, 72, 98, 26, "#2a2a2a")}<path d="M114 78 L136 70" stroke="${WD}" stroke-width="1.6"/><path class="fl" d="M96 10 l16 3 l-16 5 Z" fill="#111"/><circle cx="102" cy="13" r="1.5" fill="#fff"/>${pennant(60, 16, c)}${hull(30, 140, 82, 16, "#4a2f1c", c)}${ports(46, 118, 87, 6, "#e8b04a")}<path d="M34 82 L34 72 L46 72 L46 82" fill="#4a2f1c" stroke="#c99a4a" stroke-width="1"/><circle cx="40" cy="68" r="2.4" fill="#ffd978"><animate attributeName="opacity" values="1;.5;1" dur="1.6s" repeatCount="indefinite"/></circle>`,
-      schooner: `${mast(66, 82, 14)}${mast(98, 82, 8)}<path d="M67 16 L90 22 L92 78 L67 78 Z" fill="${W}" stroke="${L}"/><path d="M99 10 L124 18 L126 78 L99 78 Z" fill="${W}" stroke="${L}"/><path d="M67 30 L92 34 M99 26 L126 30" stroke="${L}"/>${jib(64, 78, 64, 16, 40, 78)}${jib(60, 78, 60, 24, 30, 78, c)}<path d="M62 80 L22 78" stroke="${WD}" stroke-width="1.6"/>${flag(98, 8, c)}${pennant(66, 14, c)}${hull(20, 140, 84, 11, "#f2efe6", c)}<path d="M26 92 Q80 96 130 91" stroke="${c}" stroke-width="1.2" fill="none" opacity=".6"/>`,
-      kadett: `${mast(84, 84, 26, 2)}<path d="M86 28 Q102 52 104 80 L86 80 Z" fill="${c}" stroke="${L}"/><path d="M82 36 Q70 58 68 80 L82 80 Z" fill="${W}" stroke="${L}"/>${hull(62, 114, 86, 8, W, c)}`
+      korvett: `${shrouds(52, 20, 40, 64, 80)}${shrouds(78, 14, 66, 90, 80)}${shrouds(102, 24, 92, 114, 80)}${stay(52, 22, 78, 16)}${stay(78, 16, 102, 26)}${stay(102, 26, 140, 68)}
+        ${mast(52, 82, 18)}${mast(78, 82, 10)}${mast(102, 82, 22)}${mastSq(52, 26, 3, 22, 13)}${mastSq(78, 20, 3, 26, 14)}${mastSq(102, 30, 3, 20, 12)}${nest(78, 30)}
+        ${jib(120, 78, 136, 70, 104, 30)}<path d="M120 77 L142 68" stroke="${WD}" stroke-width="1.8"/>${flag(78, 10, c, 1)}${pennant(52, 16, c)}${flag(102, 20, c)}
+        ${hull(24, 142, 84, 16, "#13314f")}${ports(42, 122, 87, 8)}${stern(26, 82)}<path d="M140 76 l6 -3" stroke="#d6b36a" stroke-width="1.6"/>`,
+      dingi: `${stay(84, 22, 112, 84)}${stay(84, 22, 60, 86)}${mast(84, 88, 20, 2.2)}
+        <path d="M86 22 Q108 48 108 82 L86 82 Z" fill="${S}" stroke="${L}" stroke-width=".8"/><path d="M88 42 Q102 58 104 74 L88 74 Z" fill="${c}" opacity=".88"/>${[46, 60, 72].map((y) => `<path d="M86 ${y} L${86 + (y - 20) * .6} ${y + 2}" stroke="${L}" stroke-width=".5"/>`).join("")}
+        <path d="M82 30 Q64 56 60 84 L82 84 Z" fill="${c}" stroke="${L}" stroke-width=".8"/><path d="M80 40 Q70 58 68 78" stroke="rgba(255,255,255,.35)" stroke-width="1.4" fill="none"/>
+        <path d="M80 86 L114 84" stroke="${WD}" stroke-width="1.8"/>${hull(54, 118, 90, 9, "#fbf7ec", c, 2)}
+        <g transform="translate(96 82)"><circle r="2.8" fill="#ffd9b8"/><path d="M-3 -1.5 q3 -3.5 6 0" fill="#e2483d"/><path d="M0 2.6 v5" stroke="#f2b233" stroke-width="3.4"/><path d="M1 4 l6 -3" stroke="#ffd9b8" stroke-width="1.4"/></g>${flag(84, 18, c)}`,
+      fregatt: `${shrouds(44, 14, 32, 58, 80)}${shrouds(74, 8, 60, 88, 80)}${shrouds(102, 16, 92, 114, 80)}${stay(44, 16, 74, 10)}${stay(74, 10, 102, 18)}${stay(102, 18, 152, 62)}${stay(74, 12, 150, 66)}
+        ${mast(44, 82, 14)}${mast(74, 82, 6, 2.8)}${mast(102, 82, 16)}${mastSq(44, 20, 3, 24, 14)}${mastSq(74, 14, 4, 28, 13)}${mastSq(102, 22, 3, 22, 13)}${nest(74, 28)}${nest(44, 34)}
+        ${jib(120, 78, 146, 64, 104, 26)}${jib(124, 76, 150, 66, 108, 38)}<path d="M120 77 L154 61" stroke="${WD}" stroke-width="2"/>${flag(74, 4, c, 1)}${pennant(44, 10, c)}${pennant(102, 12, c)}
+        ${hull(16, 148, 82, 21, "#163a66")}${ports(32, 128, 85, 9)}${ports(36, 124, 92, 8)}${stern(18, 80)}<path d="M146 72 q8 -4 10 2" stroke="#d6b36a" stroke-width="1.8" fill="none"/><circle cx="150" cy="70" r="1.6" fill="#d6b36a"/>`,
+      kaloz: `${shrouds(60, 18, 48, 74, 82)}${shrouds(96, 12, 84, 110, 82)}${stay(60, 20, 96, 14)}${stay(96, 14, 136, 70)}
+        ${mast(60, 84, 16)}${mast(96, 84, 8, 2.8)}${mastSq(60, 24, 3, 24, 14, `url(#${u}k)`)}${mastSq(96, 18, 3, 28, 15, `url(#${u}k)`)}${nest(96, 30)}
+        <g transform="translate(96 44)"><circle r="5.4" fill="#f4f1ea"/><path d="M-3 3.2 h6 v2 h-6 Z" fill="#f4f1ea"/><circle cx="-2" cy="-.6" r="1.5" fill="#141414"/><circle cx="2" cy="-.6" r="1.5" fill="#141414"/><path d="M-.6 1.6 l.6 -1 l.6 1 Z" fill="#141414"/><path d="M-8 8 L8 13 M-8 13 L8 8" stroke="#f4f1ea" stroke-width="2" stroke-linecap="round"/></g>
+        ${jib(112, 80, 134, 72, 98, 28, "#262626")}<path d="M114 79 L138 70" stroke="${WD}" stroke-width="1.8"/>
+        <path d="M96 8 L114 11 L96 17 Z" fill="#111"><animate attributeName="d" values="M96 8 L114 11 L96 17 Z;M96 8 L112 9 L96 17 Z;M96 8 L114 13 L96 17 Z;M96 8 L114 11 L96 17 Z" dur="1s" repeatCount="indefinite"/></path><circle cx="102" cy="12" r="1.6" fill="#fff"/>${pennant(60, 14, c)}
+        ${hull(28, 142, 86, 17, "#4a2f1c", c)}${ports(46, 120, 89, 6, "#e8b04a")}${stern(30, 84)}<circle cx="36" cy="70" r="2.6" fill="#ffd978"><animate attributeName="opacity" values="1;.45;1" dur="1.6s" repeatCount="indefinite"/></circle><circle cx="36" cy="70" r="6" fill="#ffd978" opacity=".18"/>`,
+      schooner: `${shrouds(66, 14, 56, 78, 84)}${shrouds(98, 8, 88, 110, 84)}${stay(66, 16, 22, 78)}${stay(98, 10, 66, 16)}
+        ${mast(66, 84, 12)}${mast(98, 84, 6)}${gaff(66, 18, 78, 24)}${gaff(98, 12, 78, 26)}${jib(64, 78, 64, 18, 40, 78)}${jib(60, 80, 60, 26, 28, 80, `url(#${u}c)`)}
+        <path d="M62 82 L20 80" stroke="${WD}" stroke-width="1.8"/>${flag(98, 6, c)}${pennant(66, 12, c)}
+        ${hull(18, 142, 88, 12, "#f4f1e8", c, 3)}<path d="M28 95 Q80 99 132 94" stroke="${c}" stroke-width="1.1" fill="none" opacity=".55"/>${ports(60, 112, 90, 5, "#9fd0ea")}`,
+      kadett: `${stay(84, 28, 112, 86)}${stay(84, 28, 64, 88)}${mast(84, 88, 26, 2.2)}<path d="M86 28 Q104 54 104 82 L86 82 Z" fill="${c}" stroke="${L}" stroke-width=".8"/><path d="M82 36 Q70 58 66 84 L82 84 Z" fill="${S}" stroke="${L}" stroke-width=".8"/>${hull(60, 116, 90, 8, "#fbf7ec", c, 2)}`
     };
-    return `<svg class="zfl-svg" viewBox="0 0 160 110" aria-hidden="true"><g class="rk2">${A[id] || A.dingi}</g>${no ? `<g transform="translate(18 24)"><circle r="11" fill="#fff" stroke="${c}" stroke-width="2.4"/><text y="5" text-anchor="middle" font-size="14" font-weight="900" font-family="Manrope, sans-serif" fill="${c}">${no}</text></g>` : ""}<ellipse cx="82" cy="104" rx="66" ry="4.5" fill="rgba(7,29,56,.2)"/></svg>`;
+    return `<svg class="zfl-svg" viewBox="0 0 160 112" aria-hidden="true"><defs>
+        <linearGradient id="${u}s" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e7dcc4"/><stop offset=".45" stop-color="#fffdf6"/><stop offset="1" stop-color="#d9ccb0"/></linearGradient>
+        <linearGradient id="${u}k" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0d0d0d"/><stop offset=".5" stop-color="#3a3a3a"/><stop offset="1" stop-color="#111"/></linearGradient>
+        <linearGradient id="${u}c" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${c}"/><stop offset=".6" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="${c}"/></linearGradient>
+        <linearGradient id="${u}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient></defs>
+      <g class="rk2">${A[id] || A.dingi}</g>${foam}
+      ${no ? `<g transform="translate(18 24)"><circle r="11" fill="#fff" stroke="${c}" stroke-width="2.4"/><text y="5" text-anchor="middle" font-size="14" font-weight="900" font-family="Manrope, sans-serif" fill="${c}">${no}</text></g>` : ""}
+      <ellipse cx="82" cy="106" rx="66" ry="4.5" fill="rgba(7,29,56,.2)"/></svg>`;
   }
+  /* elsüllyedt apartman: kéz nyúl ki a vízből, csíkos matrózingujjal, és a „foglalt” jelzést tartja (nemzetközi tiltó jel: piros kör, fehér sáv) */
+  const HAND = `<svg class="zfl-hand" viewBox="0 0 70 110" aria-hidden="true">
+    <g class="zh-flag"><path d="M33 10 V78" stroke="#6b4426" stroke-width="2.6" stroke-linecap="round"/><circle cx="33" cy="9" r="2.6" fill="#d6b36a"/>
+      <path d="M35 12 Q50 9 66 13 L66 41 Q50 37 35 40 Z" fill="#fff" stroke="#c8cdd2" stroke-width=".8"><animate attributeName="d" values="M35 12 Q50 9 66 13 L66 41 Q50 37 35 40 Z;M35 12 Q50 15 66 11 L66 39 Q50 43 35 40 Z;M35 12 Q50 9 66 13 L66 41 Q50 37 35 40 Z" dur="1.4s" repeatCount="indefinite"/></path>
+      <g><animateTransform attributeName="transform" type="translate" values="0 0;0 1;0 0" dur="1.4s" repeatCount="indefinite"/><circle cx="50.5" cy="26" r="10" fill="#d62828"/><circle cx="50.5" cy="26" r="10" fill="none" stroke="#a51a1a" stroke-width=".8"/><rect x="43.5" y="23.6" width="14" height="4.8" rx="1" fill="#fff"/></g></g>
+    <path d="M22 110 L22 84 Q22 78 26 76 L40 76 Q44 78 44 84 L44 110 Z" fill="#fff"/><path d="M22 88 H44 M22 96 H44 M22 104 H44" stroke="#1f5fa8" stroke-width="3.4"/>
+    <path d="M24 78 Q22 66 26 60 L40 60 Q44 66 42 78 Z" fill="#f2c8a0"/>
+    <path d="M26 62 Q24 52 30 50 L36 50 Q42 52 41 62 Z" fill="#f2c8a0"/>
+    ${[52, 56, 60].map((y) => `<path d="M28 ${y} Q24 ${y + 1} 26 ${y + 3.6} L31 ${y + 3.6}" fill="#efbf94" stroke="#c99470" stroke-width=".6"/>`).join("")}
+    <path d="M38 52 Q44 53 41 59 L36 58" fill="#efbf94" stroke="#c99470" stroke-width=".6"/>
+    <g class="zh-rip" fill="none" stroke="#fff" stroke-width="1.4"><ellipse cx="33" cy="92" rx="14" ry="3"><animate attributeName="rx" values="12;24" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.8s" repeatCount="indefinite"/></ellipse><ellipse cx="33" cy="92" rx="12" ry="2.6"><animate attributeName="rx" values="12;24" dur="1.8s" begin=".9s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.8s" begin=".9s" repeatCount="indefinite"/></ellipse></g></svg>`;
   function floatSvg(a) {
     const c = a.color, id = "zg" + (a.id || a.no);
     return `<svg class="zfl-svg" viewBox="0 0 170 104" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".35" stop-color="${c}" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs>
@@ -1812,10 +1869,10 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const flo = cfg.apartments.map((a, i) => { const s2 = aptState(a), on = st.apts.includes(a.id), prev = (st.prevDown || {})[a.id];
       const price = dated && !s2.down ? `<b>${money(aptTotal(a.id))}</b><small>${n} éj</small>` : `<b>${money(a.price)}-tól</b><small>/ éj</small>`;
       return `<button type="button" class="zfl${prev ? " down" : ""}${on ? " sel" : ""}${st.pre === a.id ? " pre" : ""}" data-float="${a.id}" data-down="${s2.down ? 1 : ""}" style="--ac:${a.color};--d:${(i * .37).toFixed(2)}s" aria-pressed="${on}">
-        ${!s2.down && st.ci && st.co ? `<span class="zfl-pick" data-pick="1" role="checkbox" aria-checked="${on}" aria-label="${esc(a.name)} kijelölése">${on ? "✓" : ""}</span>` : ""}<span class="zfl-boat"><span class="zfl-bob">${shipArt(a.id, a.color, a.no)}</span></span><i class="zfl-bub"></i><i class="zfl-bub b2"></i><i class="zfl-bub b3"></i><span class="zfl-wave"></span>
+        ${!s2.down && st.ci && st.co ? `<span class="zfl-pick" data-pick="1" role="checkbox" aria-checked="${on}" aria-label="${esc(a.name)} kijelölése">${on ? "✓" : ""}</span>` : ""}<span class="zfl-boat"><span class="zfl-bob">${shipArt(a.id, a.color, a.no)}</span></span><i class="zfl-bub"></i><i class="zfl-bub b2"></i><i class="zfl-bub b3"></i><span class="zfl-wave"></span>${HAND}
         <span class="zfl-lab"><span class="zfl-nm">${esc(a.name)}</span><span class="zfl-cap">legfeljebb ${a.cap} fő</span><span class="zfl-pr">${price}</span><span class="zfl-st">${on ? "✓ Kiválasztva" : s2.down ? esc(s2.why) + " · naptár ›" : dated ? (s2.why ? esc(s2.why) : "Szabad · belépés ›") : "Naptár, belépés ›"}</span></span>
       </button>`; }).join("");
-    const kad = cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfl down off" style="--ac:#f08a24"><span class="zfl-boat"><span class="zfl-bob">${shipArt("kadett", "#f08a24", 6)}</span></span><span class="zfl-wave"></span><span class="zfl-lab"><span class="zfl-nm">Kadett</span><span class="zfl-cap">legfeljebb 4 fő</span><span class="zfl-st">Nem kiadó</span></span></div>`;
+    const kad = cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfl down off" style="--ac:#f08a24"><span class="zfl-boat"><span class="zfl-bob">${shipArt("kadett", "#f08a24", 6)}</span></span><span class="zfl-wave"></span>${HAND}<span class="zfl-lab"><span class="zfl-nm">Kadett</span><span class="zfl-cap">legfeljebb 4 fő</span><span class="zfl-st">Nem kiadó</span></span></div>`;
     return `<section class="zfl-lake"><h3 class="zfl-h">Apartmanjaink a tavon</h3><p class="zfl-tip">${dated ? "A felszínen maradtak szabadok erre az időszakra. Koppints egy hajóra, és belépsz az apartmanba; a kis karikával többet is kijelölhetsz egy foglaláshoz." : "Koppints egy hajóra: belépsz az apartmanba, és látod a saját naptárát, szabad napjait."}</p>
       <div class="zfl-grid">${flo}${kad}</div></section>
       <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · ${capTotal()} férőhely / ${need()} fő${err ? `<br><small class="zfb-selerr">${esc(err)}</small>` : ""}` : dated ? "Válassz egy vagy több apartmant a tavon" : "Előbb add meg az időpontot"}</span><button type="button" class="zfb-btn" data-next="3" ${!sel.length || err ? "disabled" : ""}>Tovább az adatokhoz ›</button></div>
