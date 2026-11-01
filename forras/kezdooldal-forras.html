@@ -1230,7 +1230,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const PREVIEW = /(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/i.test(location.hostname) || !/^https?:$/.test(location.protocol);
-  const TOUR_PREVIEW = "https://claude.ai/artifact/5JDHAnuPHejorWhWDd2ecr";
+  const TOUR_PREVIEW = "seta.html";   /* claude.ai bemutató: a séta ugyanabban a bemutatóban, külön oldalként (új lap nélkül, telefonon is indul) */
   const tourUrl = (scene) => PREVIEW ? TOUR_PREVIEW + (scene ? "#" + scene : "") : TOUR + "?honnan=kezdolap" + (scene ? "#" + scene : "");
   const HU_M = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
   const HU_MS = ["jan.", "febr.", "márc.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szept.", "okt.", "nov.", "dec."];
@@ -1239,7 +1239,6 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   const ymd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   $("year").textContent = new Date().getFullYear();
   document.querySelectorAll("[data-tour]").forEach((a) => (a.href = tourUrl("")));
-  if (PREVIEW) document.querySelectorAll("[data-tour]").forEach((a) => (a.target = "_blank"));
 
   /* ---------------------------------------------------------------- fejléc */
   const nav = $("nav");
@@ -1321,7 +1320,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
         <div class="apt-meta"><span><svg><use href="#i-users"/></svg>legfeljebb ${a.cap} fő</span><span><svg><use href="#i-pin"/></svg>${esc(a.where)}</span></div>
         <div class="apt-acts">${a.off ? `<span class="btn btn-line btn-sm" style="opacity:.6;cursor:default">Saját használatú – hamarosan</span>` : `
           <button type="button" class="btn btn-line btn-sm" data-gal="${a.id}"><svg><use href="#i-photo"/></svg>Képek</button>
-          <a class="btn btn-sea btn-sm" href="${tourUrl(a.entry)}"${PREVIEW ? ' target="_blank"' : ""}><svg><use href="#i-360"/></svg>Virtuális séta</a>
+          <a class="btn btn-sea btn-sm" href="${tourUrl(a.entry)}"><svg><use href="#i-360"/></svg>Virtuális séta</a>
           <button type="button" class="btn btn-gold btn-sm" data-book="${a.id}"><svg><use href="#i-cal"/></svg>Foglalás</button>`}</div>
       </div>
     </article>`).join("");
@@ -1341,7 +1340,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
         <ul>${s.list.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
         <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
           <button type="button" class="btn btn-gold btn-sm" data-svc="${s.id}" data-i="0"><svg><use href="#i-photo"/></svg>Képek${m.some((x) => x.video) ? " és videó" : ""}</button>
-          <a class="btn btn-ghost btn-sm" href="${tourUrl(s.scene)}"${PREVIEW ? ' target="_blank"' : ""}><svg><use href="#i-360"/></svg>Megnézem a sétában</a>
+          <a class="btn btn-ghost btn-sm" href="${tourUrl(s.scene)}"><svg><use href="#i-360"/></svg>Megnézem a sétában</a>
         </div>
       </div></article>`;
   }).join("");
@@ -1359,7 +1358,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const x = LB.list[LB.i]; if (!x) return;
     $("lbMedia").innerHTML = x.video ? `<video src="${esc(x.video)}" controls autoplay playsinline poster="${esc(x.poster || "")}"></video>` : `<img src="${esc(x.src)}" alt="${esc(LB.title + " – " + x.cap)}">`;
     $("lbCap").textContent = `${x.cap} · ${LB.i + 1} / ${LB.list.length}`; $("lbFsCap").textContent = `${LB.i + 1} / ${LB.list.length}`; fitFull();
-    const t = $("lbTour"); if (x.scene) { t.hidden = false; t.href = tourUrl(x.scene); if (PREVIEW) t.target = "_blank"; t.querySelector("b").textContent = "Virtuális séta ide: " + x.cap; } else t.hidden = true;
+    const t = $("lbTour"); if (x.scene) { t.hidden = false; t.href = tourUrl(x.scene); t.querySelector("b").textContent = "Virtuális séta ide: " + x.cap; } else t.hidden = true;
     $("lbTh").querySelectorAll("button").forEach((b) => b.setAttribute("aria-current", String(+b.dataset.k === LB.i)));
     const c = $("lbTh").querySelector('[aria-current="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
     const nx = LB.list[(LB.i + 1) % LB.list.length]; if (nx && !nx.video) { const im = new Image(); im.src = nx.src; }

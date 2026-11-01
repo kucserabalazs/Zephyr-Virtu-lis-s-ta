@@ -1684,7 +1684,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     if (!el) build();
     reset(null);
     backTo = typeof opts.back === "function" ? opts.back : null; direct = !!opts.direct;
-    const lbl = el.querySelector(".zfb-back span"); if (lbl) { lbl.textContent = opts.backLabel || (/virtualis-seta/.test(location.pathname) ? "Vissza a sétához" : "Vissza az oldalra"); lbl.dataset.orig = lbl.textContent; }
+    const lbl = el.querySelector(".zfb-back span"); if (lbl) { lbl.textContent = opts.backLabel || (/virtualis-seta|seta\.html$/.test(location.pathname) ? "Vissza a sétához" : "Vissza az oldalra"); lbl.dataset.orig = lbl.textContent; }
     if (!histPushed) { try { history.pushState({ zfb: 1 }, "", location.href); histPushed = true; } catch (e) {} }
     el.hidden = false; requestAnimationFrame(() => el.classList.add("on"));
     document.documentElement.classList.add("zfb-lock");
@@ -9091,7 +9091,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   const fromHome = /(^|[?&])honnan=kezdolap/.test(location.search) || (() => { try { const r = new URL(document.referrer); return r.host === location.host && !/\/virtualis-seta\//.test(r.pathname); } catch (e) { return false; } })();
   function cubeFront() { if (cubeSt.rx <= -45) return 5; if (cubeSt.rx >= 45) return 6; return [1, 2, 3, 4][((Math.round(-cubeSt.ry / 90) % 4) + 4) % 4]; }
   function goHome() {
-    if (!/balatoni-udules\.hu$|github\.io$|^localhost$|^127\./.test(location.hostname)) {   /* claude.ai bemutató: a kezdőoldal bemutatója új lapon */
+    if (!/balatoni-udules\.hu$|github\.io$|^localhost$|^127\./.test(location.hostname)) {
+      if (/seta\.html$/.test(location.pathname)) { location.href = "./"; return; }   /* a kezdőoldal bemutatójában külön oldalként fut: vissza a kezdőoldalra */
+      /* claude.ai bemutató: a kezdőoldal bemutatója új lapon */
       const w = window.open(HOME_PREVIEW, "_blank", "noopener"); if (!w) toast("A kezdőlap: " + HOME_PREVIEW, 5000); return; }
     try { const r = document.referrer && new URL(document.referrer); if (r && r.host === location.host && r.href.split("#")[0] === new URL(SITE_HOME, location.href).href && history.length > 1) { history.back(); return; } } catch (e) {}
     location.href = SITE_HOME;
