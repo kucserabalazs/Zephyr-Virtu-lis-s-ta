@@ -6017,7 +6017,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       });
     }
     /* ---------- A tulajdonos hajója: Raptor 27 „Zephyr” – fehér grósz, piros génua; Balázs a kormánynál, középen megáll és integet ---------- */
-    const ZB = { x: Math.random() < .5 ? -.08 : 1.08, dir: 1, v: .011, ph: "sail", t0: 0, wait: 0, tr: [], s: 1.25, lf: 0, wave: 0, stand: 0, said: 0 };
+    const ZB = { x: Math.random() < .5 ? -.08 : 1.08, dir: 1, v: .011, ph: "sail", t0: 0, wait: 0, tr: [], s: 1.25, lf: 0, wave: 0, stand: 0, said: 0, turn: null, lastBuoy: -1, dy: 0, fx: 1, behind: false };
     ZB.dir = ZB.x < 0 ? 1 : -1; ZB.x = ZB.dir > 0 ? (/zephyr/.test(location.hash) ? .44 : .24) : (/zephyr/.test(location.hash) ? .56 : .76);  /* az első megállás már a megnyitás után kb. 20 mp-cel */
     function raptor(x, y, dir, t, o) {
       const lf = o.luff || 0, wv = o.wave || 0, st = o.stand || 0, spd = o.spd == null ? 1 : o.spd, S = Z * .98;
@@ -6028,7 +6028,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         g.strokeStyle = `rgba(255,255,255,${.6 * spd})`; g.lineWidth = .8; g.beginPath(); g.moveTo(bx, y + .8 * S); g.quadraticCurveTo(bx - dir * 6 * S, y - .2 * S, bx - dir * 13 * S, y + 1.4 * S); g.stroke();
         for (let k = 0; k < 4; k++) { const q = (t * 1.4 + k / 4) % 1; g.fillStyle = `rgba(255,255,255,${.75 * (1 - q) * spd})`; g.beginPath(); g.arc(bx + dir * q * 2.6 * S, y + (.8 - Math.sin(q * Math.PI) * 3) * S, .5 * S, 0, Math.PI * 2); g.fill(); } }
       else { g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = .7; g.beginPath(); g.ellipse(x, y + 1.6 * S, (20 + Math.sin(t * 1.5) * 1.2) * S, 1.4 * S, 0, 0, Math.PI * 2); g.stroke(); }
-      g.save(); g.translate(x, y); g.scale(dir * S, S); g.rotate(o.heel || 0);
+      const fx = o.fx == null ? dir : o.fx, ax = Math.max(.3, Math.abs(fx)), sgx = fx < 0 ? -1 : 1;
+      g.save(); g.translate(x, y); if (o.roll) g.rotate(o.roll * (1 - ax)); g.scale(sgx * ax * S, S); g.rotate(o.heel || 0);
+      dir = sgx;  /* a feliratok olvasási iránya a pillanatnyi irányt követi */
       /* ---- hajótest: fehér gelcoat, piros vízvonalcsík és díszcsík, bordó algagátló, hajóablakok, név ---- */
       const hull = new Path2D("M-16 -3.4 L 14.8 -3.9 Q 17.4 -4.1 18.3 -3.7 L 16.6 1.1 Q 12 1.7 6 1.7 L -13.6 1.5 L -16.5 -1 Z");
       g.fillStyle = lg(-4, 1.7, "#ffffff", "#c9d3dc"); g.fill(hull);
@@ -6143,23 +6145,43 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     function zephyrBoat(ts, dt, wy) {  /* a Zephyr vitorlás: végigvitorlázik, középen lelassít, megáll, Balázs feláll és integet, majd továbbmegy */
       const b = ZB;
       if (!reduce) {
-        if (b.ph === "sail") { b.x += b.dir * b.v * dt; if ((b.x - .5) * b.dir > -.035 && (b.x - .5) * b.dir < 0) { b.ph = "slow"; b.t0 = ts; } }
+        if (b.turn) {  /* bója megkerülése: sima ív, a hajó közben elfordul */
+          const T = b.turn;
+          if (BUOYS[T.i] == null) { b.dir = b.fx < 0 ? -1 : 1; b.fx = b.dir; b.turn = null; }
+          else {
+            T.a += dt * (b.v * W * .8 / T.r) * T.sp;
+            const done = Math.abs(T.a - T.a0) >= Math.PI * T.k; if (done) T.a = T.a0 + Math.PI * T.k * T.sp;
+            b.x = (BUOYS[T.i] * W + Math.cos(T.a) * T.r) / W; b.dy = T.dy0 + (Math.sin(T.a) - Math.sin(T.a0)) * T.r * .16;
+            b.fx = -Math.sin(T.a) * T.sp; b.dir = b.fx < 0 ? -1 : 1;
+            if (done) { b.fx = b.dir; b.turn = null; }
+          }
+        }
+        else if (b.ph === "sail" || b.ph === "sail2") {  /* vitorlázás; a bójáknál véletlenszerűen megkerüli őket */
+          const px = b.x; b.x += b.dir * b.v * dt; b.fx = b.dir; b.dy += -b.dy * Math.min(1, dt * .3);
+          BUOYS.forEach((bx, i) => {
+            if (bx == null || b.turn || i === b.lastBuoy || (px - bx) * (b.x - bx) > 0) return;
+            b.lastBuoy = i;
+            if (Math.random() < .5 && Math.abs(bx - .5) > .06) { const side = b.dy > -3 ? 1 : -1, a0 = side * Math.PI / 2; b.turn = { i, a: a0, a0, r: rnd(24, 30), sp: -b.dir * side, k: b.ph === "sail" || Math.random() < .5 ? 2 : 1, dy0: b.dy }; }  /* megállás előtt teljes kört ír le, hogy középre érjen */
+          });
+          if (b.ph === "sail" && !b.turn && (b.x - .5) * b.dir > -.035 && (b.x - .5) * b.dir < 0) { b.ph = "slow"; b.t0 = ts; }
+        }
         else if (b.ph === "slow") { const k = Math.min(1, (ts - b.t0) / 2.2); b.x += b.dir * b.v * (1 - k) * (1 - k) * dt; if (k >= 1) { b.ph = "wave"; b.t0 = ts; } }
         else if (b.ph === "wave") { if (ts - b.t0 > 5.2) { b.ph = "go"; b.t0 = ts; } }
         else if (b.ph === "go") { const k = Math.min(1, (ts - b.t0) / 2.5); b.x += b.dir * b.v * k * k * dt; if (k >= 1) b.ph = "sail2"; }
-        else if (b.ph === "sail2") { b.x += b.dir * b.v * dt; if (b.x > 1.1 || b.x < -.1) { b.ph = "away"; b.t0 = ts; b.wait = rnd(14, 30); b.tr.length = 0; } }
-        else if (b.ph === "away") { if (ts - b.t0 > b.wait) { b.dir = Math.random() < .5 ? -1 : 1; b.x = b.dir > 0 ? -.1 : 1.1; b.ph = "sail"; } }
+        if (b.ph === "sail2" && !b.turn && (b.x > 1.1 || b.x < -.1)) { b.ph = "away"; b.t0 = ts; b.wait = rnd(14, 30); b.tr.length = 0; b.lastBuoy = -1; b.dy = 0; }
+        else if (b.ph === "away") { if (ts - b.t0 > b.wait) { b.dir = Math.random() < .5 ? -1 : 1; b.fx = b.dir; b.x = b.dir > 0 ? -.1 : 1.1; b.ph = "sail"; } }
       } else { b.ph = "wave"; b.x = .5; b.t0 = b.t0 || ts; }
+      if (b.ph === "sail" && !b.turn && (b.x > 1.12 || b.x < -.12)) { b.ph = "away"; b.t0 = ts; b.wait = rnd(8, 16); b.tr.length = 0; b.lastBuoy = -1; b.dy = 0; }
       if (b.ph === "away") return;
       const sk = stormAt(b.x * W), stopped = b.ph === "wave" ? 1 : b.ph === "slow" ? Math.min(1, (ts - b.t0) / 2.2) : b.ph === "go" ? 1 - Math.min(1, (ts - b.t0) / 2.5) : 0;
-      b.lf += (Math.max(stopped * .55, sk * .6) - b.lf) * Math.min(1, dt * 2);
+      b.lf += (Math.max(stopped * .55, sk * .6, b.turn ? .2 + .5 * (1 - Math.abs(b.fx)) : 0) - b.lf) * Math.min(1, dt * 2);
       const wt = b.ph === "wave" ? ts - b.t0 : -1;
       b.stand += ((wt > .4 && wt < 4.8 ? 1 : 0) - b.stand) * Math.min(1, dt * 3);
       b.wave += ((wt > 1.1 && wt < 3.6 ? 1 : 0) - b.wave) * Math.min(1, dt * 4);
-      const y = wy + 2 + Math.sin(ts * 1.8) * (.8 + sk * 1.4), x = b.x * W;
+      const y = wy + 2 + (b.dy || 0) + Math.sin(ts * 1.8) * (.8 + sk * 1.4), x = b.x * W; b.behind = (b.dy || 0) < -3;
       const l = b.tr[b.tr.length - 1]; if (!reduce && (!l || ts - l.t > .06)) b.tr.push({ x, y: y - 1, t: ts }); while (b.tr.length && ts - b.tr[0].t > 3.2) b.tr.shift();
       wake(b, ts);
-      raptor(x, y, b.dir, ts, { luff: b.lf, wave: b.wave, stand: b.stand, spd: 1 - stopped, heel: Math.sin(ts * 1.2) * (.025 + sk * .08) - (1 - stopped) * .03 });
+      raptor(x, y, b.dir, ts, { fx: b.fx, roll: b.turn ? -b.turn.sp * b.dir * .18 : 0, luff: b.lf, wave: b.wave, stand: b.stand, spd: 1 - stopped, heel: Math.sin(ts * 1.2) * (.025 + sk * .08) - (1 - stopped) * .03 });
       if (wt > 1.2 && wt < 4.6) { const a = Math.min(1, (wt - 1.2) * 4) * Math.min(1, (4.6 - wt) * 4); zbBubble(x - b.dir * 54 * Z * .98, y - 40 * Z * .98, a, x - b.dir * 12 * Z * .98); }
     }
     function frame(t) {
@@ -6573,9 +6595,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         } else boat(b.x * W, b.wy + bob, b.s, b.dir, b.sc, heel, { t: ts, ph: b.ph, fx: b.fx, luff: b.lf, spk: b.spk, k: 1 + (b.wy - wy + 1) * .012, trail: !reduce, roll: b.turn ? -b.turn.sp * b.dir * .2 : 0 });
       };
       order.filter((b) => b.wy < wy - 2).forEach(drawBoat);  /* a bója mögött haladók */
+      const zbB = ZB.behind; if (zbB) zephyrBoat(ts, dt, wy);  /* a Zephyr a bója mögött kanyarodik */
       BUOYS.forEach((bx, i) => { if (bx != null) buoy(bx * W, wy - 2, ts, BNUM[i]); });
       order.filter((b) => b.wy >= wy - 2).forEach(drawBoat);
-      zephyrBoat(ts, dt, wy);  /* a tulajdonos hajója legelöl */
+      if (!zbB) zephyrBoat(ts, dt, wy);  /* a tulajdonos hajója legelöl */
       drawGulls(ts, dt, wy);
       fronts.forEach((f) => f()); fronts.length = 0;  /* a hajó előtti rétegek (pl. polipcsápok) */
     }
