@@ -70,6 +70,23 @@ function defaults() {
     );
 }
 
+/* A Szállás.hu és az Airbnb naptárainak exportlinkjei (2026. nov. 1.) – a tulajdonosi felület Beállítások → Naptárszinkron részén módosíthatók.
+   A két portál egymás naptárát is importálja, így minden apartmannál kétirányú a szinkron. */
+function default_ical() {
+    return array(
+        'korvett'  => array('szallas' => 'https://szallas.hu/ical-sync/export/get-calendar?token=19c67fb842ff840c127463c7ed91e4496cc9cb9eb524e7da8038de31d88f0a78',
+                            'airbnb'  => 'https://www.airbnb.hu/calendar/ical/1594258848235738212.ics?t=d437bfed178045f79f8d635de9a83e09'),
+        'dingi'    => array('szallas' => 'https://szallas.hu/ical-sync/export/get-calendar?token=96e065ec3af6f01043b432ae3209d67501d2fd22da7f9839172f298c5e95fd9d',
+                            'airbnb'  => 'https://www.airbnb.hu/calendar/ical/1486079672099298069.ics?t=a3ba0097f370489da1fd4930bd45e127'),
+        'fregatt'  => array('szallas' => 'https://szallas.hu/ical-sync/export/get-calendar?token=cc6242ab3972233cb8bb243c1c08104b5cd39fcc97afb38e8ff1236347d502f1',
+                            'airbnb'  => 'https://www.airbnb.hu/calendar/ical/1595715014963692300.ics?t=d9a07a1d342c43faad4d6497097b58bb'),
+        'kaloz'    => array('szallas' => 'https://szallas.hu/ical-sync/export/get-calendar?token=22936353ad6073e2f00d178e6673aa24469aeea76a254e10ec833c13f233f461',
+                            'airbnb'  => 'https://www.airbnb.hu/calendar/ical/1593554080580747375.ics?t=4c13cbc7331c445a9045e83bf6b21e1d'),
+        'schooner' => array('szallas' => 'https://szallas.hu/ical-sync/export/get-calendar?token=fb909c220a55d128b9cacd4552a66bf2f5b87d524fa1bc77d60390bb97c84147',
+                            'airbnb'  => 'https://www.airbnb.hu/calendar/ical/1597866548803099081.ics?t=2b15b0d43d7144efb6d782fc2c7bca1c'),
+    );
+}
+
 function default_seasons($s) {
     $list = array(array('Előszezon', '05-15', '06-18'), array('Június vége', '06-19', '06-30'), array('Főszezon', '07-01', '08-22'),
         array('Augusztus vége', '08-23', '08-31'), array('Szeptember', '09-01', '09-19'), array('Utószezon', '09-20', '10-15'));
@@ -113,6 +130,11 @@ function db_load() {
     if (empty($db['settings']['mig_ci15'])) {   /* egyszeri: érkezés 15:00-tól (a tulajdonos kérése) */
         if ($db['settings']['checkin'] === '14:00') { $db['settings']['checkin'] = '15:00'; }
         $db['settings']['mig_ci15'] = 1;
+    }
+    if (empty($db['settings']['mig_ical1'])) {   /* egyszeri (2026. nov. 1.): Szállás.hu + Airbnb naptárlinkek apartmanonként, ha még nincs megadva */
+        $ic = is_array($db['settings']['ical']) ? $db['settings']['ical'] : array();
+        foreach (default_ical() as $apt => $feeds) { foreach ($feeds as $src => $url) { if (empty($ic[$apt][$src])) { $ic[$apt][$src] = $url; } } }
+        $db['settings']['ical'] = $ic; $db['settings']['last_sync'] = 0; $db['settings']['mig_ical1'] = 1;
     }
     if (empty($db['settings']['mig_otp'])) {   /* egyszeri: OTP SZÉP szerződésszám beírása, ha még üres */
         if (empty($db['settings']['szep_otp'])) { $db['settings']['szep_otp'] = 'SZK/2022/002754'; }
