@@ -265,6 +265,8 @@ html.intro-on body { overflow: hidden; }
 .sight:hover .sight-img img { transform: scale(1.06); }
 .sight-img .ph { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.85); }
 .sight-img .ph svg { width: 70px; height: 70px; }
+.sight-cr { position: absolute; right: 8px; bottom: 8px; max-width: 60%; padding: 3px 6px; border-radius: 5px; background: rgba(7,29,56,.55); color: rgba(255,255,255,.85); font: 600 9.5px/1.2 var(--body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sights-cr { margin: 14px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-2); opacity: .8; } .sights-cr a { color: inherit; }
 .sight-tag { position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; border-radius: 6px; background: rgba(7,29,56,.82); color: #ffd978; font: 800 11px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; }
 .sight-body { padding: 16px 18px 18px; display: grid; gap: 8px; align-content: start; }
 .sight-body h3 { font: 900 26px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; color: var(--sea); }
@@ -706,6 +708,90 @@ body { background-image: var(--grain); }
 html.evp-lock, html.evp-lock body { overflow: hidden; }
 @media (max-width: 900px) { .ev-mini { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .evp-hd b { font-size: 20px; } .evp-back span { display: none; } .ev-open { justify-self: stretch; } }
+/* ===== programajánló – látvány ===== */
+.evx-art { width: 44px; height: 44px; flex: none; filter: drop-shadow(0 4px 8px rgba(11,47,94,.25)); }
+.evp-hd { min-height: 158px; align-items: flex-start; overflow: hidden; background: #0b2f5e; isolation: isolate; }
+.evp-hd::after { display: none; }
+.evp-hd .evx-scene { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+.evp-hd { min-height: 210px; }
+.evp-hd > .evp-regatta { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 130px; z-index: 0; pointer-events: none; }
+.evp-hd > *:not(.evx-scene):not(.evp-regatta) { position: relative; z-index: 1; }
+.evp-hd b { text-shadow: 0 2px 0 rgba(7,29,56,.55), 0 6px 18px rgba(7,29,56,.45); font-size: 30px; }
+.evp-hd small { text-shadow: 0 1px 6px rgba(7,29,56,.7); font-weight: 700; }
+.evp-x, .evp-back { background: rgba(7,29,56,.45); backdrop-filter: blur(4px); box-shadow: inset 0 0 0 1.5px rgba(255,217,120,.45); }
+.evp-body { background: radial-gradient(1200px 400px at 50% -120px, rgba(43,120,168,.12), transparent 70%), var(--sail-2, #f5efe2); }
+/* szűrők: csoportcímkékkel, kötélkerettel */
+.ev-filters { position: relative; border: none; padding: 16px 16px 14px; background: linear-gradient(#fff, #fffaf0); box-shadow: 0 0 0 1.5px var(--line), 0 12px 30px rgba(20,32,42,.08); }
+.ev-filters::before { content: ""; position: absolute; inset: 5px; border-radius: 14px; border: 2px dashed rgba(201,154,74,.35); pointer-events: none; }
+.ev-lbl { flex: none; display: inline-flex; align-items: center; gap: 6px; min-width: 128px; font: 900 11px/1 var(--body); letter-spacing: .16em; text-transform: uppercase; color: var(--rope-d, #8a6630); }
+.ev-lbl i { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--sea); color: #ffd978; font-style: normal; font-size: 12px; letter-spacing: 0; }
+.ev-filters .chip[aria-pressed="true"] { background: linear-gradient(135deg, #164377, var(--sea)); box-shadow: 0 4px 12px rgba(11,47,94,.3), inset 0 -3px 0 #ffd978; }
+.ev-month { position: relative; padding-left: 48px; }
+.ev-month::before { content: ""; position: absolute; left: 0; top: 50%; width: 38px; height: 38px; margin-top: -19px; border-radius: 50%; background: radial-gradient(circle at 50% 50%, #ffd978 0 4px, transparent 4.5px), conic-gradient(from 0deg, var(--sea) 0 12.5%, #164377 0 25%, var(--sea) 0 37.5%, #164377 0 50%, var(--sea) 0 62.5%, #164377 0 75%, var(--sea) 0 87.5%, #164377 0); box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--rope); animation: evxWheel 18s linear infinite; }
+@keyframes evxWheel { to { transform: rotate(360deg); } }
+.ev-month::after { height: 10px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 10'%3E%3Cpath d='M0 6 q5 -5 10 0 t10 0 t10 0 t10 0' fill='none' stroke='%23c99a4a' stroke-width='2'/%3E%3C/svg%3E") 0 50% / 40px 10px repeat-x; }
+/* programkártya */
+.ev { --cc: #164377; position: relative; grid-template-columns: 112px minmax(0, 1fr) auto; border-radius: 20px; box-shadow: 0 0 0 1.5px rgba(201,154,74,.25), 0 14px 32px rgba(20,32,42,.09); }
+.ev.has-map { grid-template-columns: 112px minmax(0, 1fr) 250px auto; }
+.ev::before { content: ""; position: absolute; left: 112px; right: 0; top: 0; height: 4px; background: linear-gradient(90deg, var(--cc), transparent 80%); opacity: .8; }
+.ev-date { background: linear-gradient(165deg, color-mix(in srgb, var(--cc) 70%, #fff 0%), color-mix(in srgb, var(--cc) 55%, #071d38) ) !important; padding: 16px 8px 18px; overflow: hidden; isolation: isolate; }
+.ev-date::before { content: ""; position: absolute; inset: 0; z-index: -1; background: repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 6px, transparent 6px 14px), radial-gradient(80px 60px at 30% 0%, rgba(255,255,255,.25), transparent 70%); }
+.ev-date span { display: inline-block; justify-self: center; padding: 4px 8px 3px; border-radius: 5px; background: linear-gradient(#ffe7a3, #d9a441); color: #3d2a06; box-shadow: inset 0 -1.5px 0 rgba(0,0,0,.2), 0 2px 4px rgba(0,0,0,.25); letter-spacing: .12em; font-size: 11px; }
+.ev-date b { margin-top: 8px; text-shadow: 0 3px 0 rgba(0,0,0,.18); font-size: 48px; }
+.ev-date small { color: rgba(255,255,255,.88); text-transform: capitalize; font-weight: 800; }
+.ev-date .ev-wave { position: absolute; left: 0; right: 0; bottom: -2px; height: 14px; z-index: -1; opacity: .35; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 14'%3E%3Cpath d='M0 8 q5 -6 10 0 t10 0 t10 0 t10 0 V14 H0Z' fill='%23fff'/%3E%3C/svg%3E") 0 100% / 40px 14px repeat-x; animation: evxWaveX 4s linear infinite; }
+@keyframes evxWaveX { to { background-position: 40px 100%; } }
+.ev-tags { gap: 8px; }
+.ev-tags .evx-art { width: 40px; height: 40px; margin: -4px 4px -4px -2px; transition: transform .35s cubic-bezier(.2,.9,.3,1.4); }
+.ev:hover .ev-tags .evx-art { transform: rotate(-8deg) scale(1.12); }
+.ev-cat { background: color-mix(in srgb, var(--cc) 12%, #fff); color: var(--cc); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc) 30%, transparent); }
+.ev-body h3 { font-size: 22px; letter-spacing: -.005em; }
+.ev-mapc { display: grid; align-content: center; padding: 12px 6px 12px 0; }
+.evx-map { width: 100%; height: auto; border-radius: 14px; background: linear-gradient(#eaf3f8, #dcebf3); box-shadow: inset 0 0 0 1.5px #cfe2ec; }
+.evx-lake2 { fill: none; stroke: #9fd0ea; stroke-width: 3; opacity: .45; transform: translate(0, 2px); }
+.evx-map { background: linear-gradient(#f3f7ec, #e6efdc) !important; box-shadow: inset 0 0 0 1.5px #d6e3c8 !important; }
+.evx-rt { fill: none; stroke: #e2483d; stroke-width: 2.2; stroke-dasharray: 5 4; stroke-linecap: round; animation: evxDash 1.2s linear infinite; }
+.evx-rt.sea { stroke: #fff; stroke-width: 2; }
+@keyframes evxDash { to { stroke-dashoffset: -9; } }
+.evx-lab { font: 800 9px/1 var(--body); fill: #0b2f5e; paint-order: stroke; stroke: #fff; stroke-width: 3px; }
+.ev-acts { padding: 16px 18px 16px 10px; }
+.ev-acts .btn { border-radius: 12px; box-shadow: 0 2px 0 var(--line); }
+.ev-cross { display: flex; gap: 8px; align-items: flex-start; border: 1px dashed rgba(201,154,74,.55); background: linear-gradient(90deg, #fbf4e4, #fff); }
+.ev-km { padding: 3px 8px; border-radius: 99px; background: color-mix(in srgb, var(--cc) 10%, #fff); }
+.ev.top::after { content: "★ Kiemelt"; position: absolute; right: 14px; top: -1px; padding: 5px 10px 4px; border-radius: 0 0 8px 8px; background: linear-gradient(#ffe7a3, #d9a441); color: #3d2a06; font: 900 10.5px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; }
+/* előzetes a főoldalon */
+.ev-teaser { position: relative; padding: 0 0 18px; border-radius: 22px; background: #fff; box-shadow: 0 0 0 1.5px rgba(201,154,74,.3), 0 20px 44px rgba(20,32,42,.1); overflow: hidden; }
+.ev-teaser .evx-band { position: relative; height: 128px; overflow: hidden; }
+.ev-teaser .evx-band .evx-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ev-teaser .evx-band b { position: absolute; left: 20px; bottom: 30px; font: 900 22px/1 var(--display); color: #fff; letter-spacing: .06em; text-transform: uppercase; text-shadow: 0 2px 0 rgba(7,29,56,.55), 0 6px 18px rgba(7,29,56,.45); }
+.ev-teaser .evx-band small { position: absolute; left: 20px; bottom: 12px; color: #fff; font-weight: 700; font-size: 12.5px; text-shadow: 0 1px 6px rgba(7,29,56,.8); }
+.ev-teaser > .ev-quick, .ev-teaser > .ev-mini, .ev-teaser > .ev-open { margin: 0 18px; }
+.ev-quick button { box-shadow: 0 2px 0 var(--line); }
+.ev-quick button::before { content: ""; width: 14px; height: 10px; border-radius: 2px; background: linear-gradient(90deg, #e2483d 0 33%, #fff 0 66%, #3c9a5f 0); box-shadow: 0 0 0 1px rgba(0,0,0,.1); transform-origin: left center; animation: evxFlag 1.4s ease-in-out infinite; }
+.ev-quick button:nth-child(2)::before { background: linear-gradient(#f2b233 0 50%, #0b2f5e 0); } .ev-quick button:nth-child(3)::before { background: linear-gradient(90deg, #0b2f5e 0 50%, #fff 0); } .ev-quick button:nth-child(4)::before { background: repeating-linear-gradient(45deg, #e2483d 0 3px, #fff 3px 6px); }
+@keyframes evxFlag { 50% { transform: skewY(-8deg) scaleX(.9); } }
+.ev-mini a { grid-template-columns: 58px 1fr 40px; border-radius: 16px; box-shadow: 0 0 0 1.5px rgba(201,154,74,.25), 0 10px 22px rgba(20,32,42,.08); position: relative; overflow: hidden; }
+.ev-mini a::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--cc); }
+.ev-mini .d { background: linear-gradient(165deg, var(--cc), color-mix(in srgb, var(--cc) 55%, #071d38)); box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); }
+.ev-mini .evx-art { width: 38px; height: 38px; transition: transform .35s cubic-bezier(.2,.9,.3,1.4); }
+.ev-mini a:hover .evx-art { transform: rotate(-10deg) scale(1.12); }
+.ev-open { position: relative; overflow: hidden; }
+.ev-open::after { content: "⛵"; position: absolute; left: -30px; bottom: 4px; font-size: 18px; transition: left 1.2s ease; }
+.ev-open:hover::after { left: calc(100% + 10px); }
+@media (max-width: 1100px) { .ev.has-map { grid-template-columns: 104px minmax(0, 1fr) 210px; } .ev.has-map .ev-acts { grid-column: 2 / -1; flex-direction: row; flex-wrap: wrap; padding: 0 18px 16px 26px; } }
+@media (max-width: 760px) {
+  .evp-hd { min-height: 132px; } .evp-hd b { font-size: 22px; } .evp-hd > .evp-regatta { height: 54px; }
+  .ev, .ev.has-map, .ev.top { grid-template-columns: 88px minmax(0, 1fr); }
+  .ev::before { left: 88px; }
+  .ev-mapc { grid-column: 1 / -1; padding: 0 14px 12px; justify-items: center; } .evx-map { max-width: 340px; }
+  .ev.has-map .ev-acts { grid-column: 1 / -1; padding: 0 16px 16px; }
+  .ev-date b { font-size: 38px; }
+  .ev-lbl { min-width: 0; }
+  .ev-tags .evx-art { width: 34px; height: 34px; }
+  .ev-teaser .evx-band { height: 108px; }
+  .ev-teaser > .ev-quick, .ev-teaser > .ev-mini, .ev-teaser > .ev-open { margin: 0 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .ev-month::before, .evx-rt, .ev-date .ev-wave, .ev-quick button::before { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .fx-in { opacity: 1; transform: none; } .compass-wm, .amen svg, .svc-ico, .tb-360 { animation: none; } }
 :root { --knot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a5 5 0 0 1 5 5c0 2-1.2 3.4-2.6 4.5L12 13l-2.4-1.5C8.2 10.4 7 9 7 7a5 5 0 0 1 5-5zm0 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5 13l7 4 7-4 2 2-9 7-9-7z'/%3E%3C/svg%3E"); }
 </style>
@@ -850,7 +936,7 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
   </div>
 </section>
 <div class="evp" id="evp" hidden role="dialog" aria-modal="true" aria-label="Programajánló">
-  <header class="evp-hd"><button type="button" class="evp-back" data-evp-close="1">‹ <span>Vissza az oldalra</span></button><div><b>Programajánló</b><small>Zamárdi és a Balaton programjai</small></div><span class="sp"></span><button type="button" class="evp-x" data-evp-close="1" aria-label="Bezárás">×</button></header>
+  <header class="evp-hd"><canvas class="evp-regatta" id="evpRegatta" aria-hidden="true"></canvas><button type="button" class="evp-back" data-evp-close="1">‹ <span>Vissza az oldalra</span></button><div><b>Programajánló</b><small>Zamárdi és a Balaton programjai</small></div><span class="sp"></span><button type="button" class="evp-x" data-evp-close="1" aria-label="Bezárás">×</button></header>
   <div class="evp-body"><div class="ev-bar" id="evBar"></div><div id="evList" aria-live="polite"></div></div>
 </div>
 
@@ -865,6 +951,7 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
       <p class="lead">Fedezd fel Zamárdi látnivalóit, programjait és környékbeli kirándulóhelyeit. Összegyűjtöttünk néhány helyet, amelyet érdemes felkeresned.</p>
     </div>
     <div class="sights" id="sights"></div>
+    <p class="sights-cr" id="sightsCr"></p>
   </div>
 </section>
 
@@ -1034,24 +1121,24 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   };
 
   const SIGHTS = [
-    { t: "Emlékhelyek és emlékművek", tag: "Történelem", img: OLD + "2022/05/Honfoglalasi-emlekmu-407x270-1.jpg", url: OLDSITE + "emlekhelyek-emlekmuvek/",
+    { t: "Emlékhelyek és emlékművek", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Denkmal_Ungarische_Revolution_1848-1849%2C_Kopjafa%2C_2021_Zam%C3%A1rdi.jpg/960px-Denkmal_Ungarische_Revolution_1848-1849%2C_Kopjafa%2C_2021_Zam%C3%A1rdi.jpg", credit: ["Globetrotter19", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Denkmal_Ungarische_Revolution_1848-1849,_Kopjafa,_2021_Zam%C3%A1rdi.jpg"], tag: "Történelem", img: OLD + "2022/05/Honfoglalasi-emlekmu-407x270-1.jpg", url: OLDSITE + "emlekhelyek-emlekmuvek/",
       p: "A Szabadság téren kopjafa és emléktábla őrzi az 1848-as hősök emlékét. Mindkettőt 1998-ban, a szabadságharc 150. évfordulóján állították." },
     { t: "Tájház", tag: "Néprajz", img: OLD + "2022/05/KIM-2013.-augusztus-20.-407x270-1.jpg", url: OLDSITE + "tajhaz/",
       p: "A Fő utca 83. szám alatt álló régi parasztház. Már az 1960-as évek elején felmerült, hogy a községi tanács megvásárolja, és megőrzi az utókornak." },
-    { t: "Kőhegyi kilátó", tag: "Kirándulás", img: OLD + "2022/05/zamardi-kilato-407x270-1.jpg", url: OLDSITE + "kohegyi-kilato/",
+    { t: "Kőhegyi kilátó", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Kil%C3%A1t%C3%B3_-_Zam%C3%A1rdi%2C_K%C5%91_hegy%2C_2015.02.03_%281%29.JPG/960px-Kil%C3%A1t%C3%B3_-_Zam%C3%A1rdi%2C_K%C5%91_hegy%2C_2015.02.03_%281%29.JPG", credit: ["Derzsi Elekes Andor", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Kil%C3%A1t%C3%B3_-_Zam%C3%A1rdi,_K%C5%91_hegy,_2015.02.03_(1).JPG"], tag: "Kirándulás", img: OLD + "2022/05/zamardi-kilato-407x270-1.jpg", url: OLDSITE + "kohegyi-kilato/",
       p: "Sétálj fel a Kőhegy tetejére, és nézd meg a panorámát! A Zamárditól délnyugatra emelkedő magaslat környéke szőlőtermő terület." },
-    { t: "Templom és kápolnák", tag: "Templomok", img: OLD + "2022/05/Orgona-407x270-1.jpg", url: OLDSITE + "templom-es-kapolnak/",
+    { t: "Templom és kápolnák", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Church_of_Zam%C3%A1rdi.JPG/960px-Church_of_Zam%C3%A1rdi.JPG", credit: ["Antissimo", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Church_of_Zam%C3%A1rdi.JPG"], tag: "Templomok", img: OLD + "2022/05/Orgona-407x270-1.jpg", url: OLDSITE + "templom-es-kapolnak/",
       p: "A ma is álló római katolikus plébániatemplom Vajda Sámuel apát nevéhez kötődik. Építése 1771-ben kezdődött." },
-    { t: "Balaton Szíve tér", tag: "Közösség", img: OLD + "2022/05/Balaton-szive-1.jpg", url: OLDSITE + "balaton-szive-ter/",
+    { t: "Balaton Szíve tér", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Herz_des_Plattensees_%28Istv%C3%A1n_F%C3%A1skerti%29%2C_2021_Zam%C3%A1rdi.jpg/960px-Herz_des_Plattensees_%28Istv%C3%A1n_F%C3%A1skerti%29%2C_2021_Zam%C3%A1rdi.jpg", credit: ["Globetrotter19", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Herz_des_Plattensees_(Istv%C3%A1n_F%C3%A1skerti),_2021_Zam%C3%A1rdi.jpg"], tag: "Közösség", img: OLD + "2022/05/Balaton-szive-1.jpg", url: OLDSITE + "balaton-szive-ter/",
       p: "A tér neve a Balatoni Játszadalomra utal. A rendezvényen évente több száz ember alkot szívet a vízben, kézen fogva." },
     { t: "Világháborúk Múzeuma", tag: "Múzeum", img: OLD + "2022/05/013-407x270-1.jpg", url: "https://www.tarrkamilitaria.hu", ext: 1,
       p: "Hadtörténeti gyűjtemény Zamárdi-felsőn, a Siófoki úton.",
       info: ["Nyári nyitvatartás: 10:00–18:00, hétvégén is.", "Más időpontban telefonos egyeztetés szükséges.", "Tarr Péter: 06 30 425 8115 · info@tarrkamilitaria.hu"] },
     { t: "Zamárdi Kalandpark", tag: "Kaland", img: OLD + "2022/05/Te%CC%81rke%CC%81p_u%CC%81j_1000_x_713-1000x650.jpg", url: OLDSITE + "hotel-zante-in-pictures/",
       p: "A kalandpark az autópályától és a Zamárdi-felső vasútállomástól is mintegy száz méterre található." },
-    { t: "Avarkori temető", tag: "Régészet", img: OLD + "2022/05/Avarkori-temeto1-407x270-1.jpg", url: OLDSITE + "avarkori-temeto/",
+    { t: "Avarkori temető", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Man%27s_grave_goods_from_Zam%C3%A1rdi%2C_Hungary_-_1.jpg/960px-Man%27s_grave_goods_from_Zam%C3%A1rdi%2C_Hungary_-_1.jpg", credit: ["James Steakley", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Man%27s_grave_goods_from_Zam%C3%A1rdi,_Hungary_-_1.jpg"], tag: "Régészet", img: OLD + "2022/05/Avarkori-temeto1-407x270-1.jpg", url: OLDSITE + "avarkori-temeto/",
       p: "Az egykori Pannónia keleti részén, a VI. század végén és a VII. század elején kialakult avar kori temető emlékei." },
-    { t: "Szamárkő", tag: "Természet", img: OLD + "2022/05/Ferenczi-Szamarko-fekvo-407x270-1.jpg", url: OLDSITE + "szamarko/",
+    { t: "Szamárkő", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Zamardi%2C_Szam%C3%A1rk%C5%91_%28Donkey_rock%29_-_panoramio.jpg/960px-Zamardi%2C_Szam%C3%A1rk%C5%91_%28Donkey_rock%29_-_panoramio.jpg", credit: ["Emil Kiss", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Zamardi,_Szam%C3%A1rk%C5%91_(Donkey_rock)_-_panoramio.jpg"], tag: "Természet", img: OLD + "2022/05/Ferenczi-Szamarko-fekvo-407x270-1.jpg", url: OLDSITE + "szamarko/",
       p: "A Szamárkövet Zamárdi nyugati végén, a Kiserdő dombjai között találod." }
   ];
 
@@ -1248,11 +1335,12 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   $("sights").innerHTML = SIGHTS.map((s, si) => `
     <a class="sight" href="${esc(s.url)}" target="_blank" rel="noopener">
-      <div class="sight-img"><span class="ph scn">${scene(si)}</span><img src="${esc(s.img)}" alt="${esc(s.t)}" loading="lazy" onerror="this.remove()"><span class="sight-tag">${esc(s.tag)}</span></div>
+      <div class="sight-img"><span class="ph scn">${scene(si)}</span><img src="${esc(s.photo || s.img)}" alt="${esc(s.t)}" loading="lazy" onerror="this.remove()"><span class="sight-tag">${esc(s.tag)}</span>${s.credit ? `<span class="sight-cr">Fotó: ${esc(s.credit[0])} · ${esc(s.credit[1])}</span>` : ""}</div>
       <div class="sight-body"><h3>${esc(s.t)}</h3><p>${esc(s.p)}</p>
         ${s.info ? `<div class="sight-info">${s.info.map((i) => `<span>${esc(i)}</span>`).join("")}</div>` : ""}
         <span class="sight-more">${s.ext ? "A múzeum oldala" : "Bővebben"}<svg><use href="#i-arrow"/></svg></span></div>
     </a>`).join("");
+  $("sightsCr").innerHTML = "Fotók: Wikimedia Commons – " + SIGHTS.filter((s) => s.credit).map((s) => `<a href="${esc(s.credit[2])}" target="_blank" rel="noopener">${esc(s.t)}</a> (${esc(s.credit[0])}, ${esc(s.credit[1])})`).join(" · ") + `. Licenc: <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.hu" target="_blank" rel="noopener">CC BY-SA</a>.`;
 
   /* ---------------------------------------------------------------- segítség */
   const telL = (arr) => (arr || []).map(([n, t]) => `<a class="tel" href="tel:${t}"><svg><use href="#i-phone"/></svg>${esc(n)}</a>`).join("");
@@ -1376,17 +1464,97 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       s.textContent = evDemo ? "" : JSON.stringify(ld);
     } catch (x) { /* nem kritikus */ }
   }
+  /* ================= programajánló – látvány (jelenet, kategória-illusztrációk, mini Balaton-térkép) ================= */
+  const EVCOL = { fesztival: "#e2483d", koncert: "#7a5cc2", sport: "#2a86ad", gasztro: "#9c2f4f", kultura: "#8a6630", csalad: "#3c9a5f", egyeb: "#164377" };
+  const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* kis vitorlás: test, árboc, grósz, génua, zászló – irány: 1 jobbra, -1 balra */
+  function evBoat(x, y, s, dir, gen, dur, dx, hull) {
+    const a = RM ? "" : `<animateTransform attributeName="transform" type="translate" values="0 0;${dx} 0" dur="${dur}s" repeatCount="indefinite"/>`;
+    return `<g>${a}<g transform="translate(${x} ${y}) scale(${s * dir} ${s})">
+      <path d="M-34 0 Q-30 9 -18 10 L22 10 Q32 8 38 -1 Z" fill="${hull || "#fff"}" stroke="#0b2f5e" stroke-width="1.6"/>
+      <path d="M-30 4 L34 3" stroke="#0b2f5e" stroke-width="1" opacity=".35"/>
+      <path d="M-2 -1 L-2 -74" stroke="#0b2f5e" stroke-width="2.2"/>
+      <path d="M-1 -72 Q19 -38 15 -3 L-1 -3 Z" fill="#fbfaf6" stroke="#b9c3cc" stroke-width="1"><animate attributeName="d" values="M-1 -72 Q19 -38 15 -3 L-1 -3 Z;M-1 -72 Q23 -38 16 -3 L-1 -3 Z;M-1 -72 Q19 -38 15 -3 L-1 -3 Z" dur="3.4s" repeatCount="indefinite"/></path>
+      <path d="M-4 -66 Q-28 -30 -31 -2 L-4 -2 Z" fill="${gen}" opacity=".95"><animate attributeName="d" values="M-4 -66 Q-28 -30 -31 -2 L-4 -2 Z;M-4 -66 Q-33 -30 -32 -2 L-4 -2 Z;M-4 -66 Q-28 -30 -31 -2 L-4 -2 Z" dur="2.9s" repeatCount="indefinite"/></path>
+      <path d="M-2 -74 L-14 -78 L-2 -70" fill="#e2483d"><animate attributeName="d" values="M-2 -74 L-14 -78 L-2 -70;M-2 -74 L-15 -73 L-2 -70;M-2 -74 L-14 -78 L-2 -70" dur=".9s" repeatCount="indefinite"/></path>
+      <path d="M-36 12 Q-10 15 30 12" stroke="#fff" stroke-width="1.4" fill="none" opacity=".6"/></g></g>`;
+  }
+  /* fejléc-jelenet: napszak szerinti ég, Tihany és Badacsony sziluett, hullámok, vitorlások, komp, sirályok */
+  function evScene(compact) {
+    const h = new Date().getHours(), night = h < 6 || h >= 20, dusk = !night && (h >= 17 || h < 8);
+    const sky = night ? ["#081a33", "#123563"] : dusk ? ["#25406e", "#f0a35e"] : ["#2f7fc0", "#a9d6f0"];
+    const sun = night ? `<g><circle cx="930" cy="40" r="15" fill="#f6efd6"/><circle cx="936" cy="36" r="13" fill="${sky[0]}" opacity=".0"/><circle cx="930" cy="40" r="34" fill="#f6efd6" opacity=".08"/></g>` + [[120, 30], [260, 18], [420, 44], [610, 22], [760, 50], [1080, 26], [1150, 58], [340, 64]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="1.3" fill="#fff"><animate attributeName="opacity" values="1;.2;1" dur="${2 + i % 3}s" repeatCount="indefinite"/></circle>`).join("")
+      : `<g><circle cx="930" cy="${dusk ? 74 : 38}" r="${dusk ? 26 : 20}" fill="${dusk ? "#ffb35c" : "#fff3c2"}"/><circle cx="930" cy="${dusk ? 74 : 38}" r="${dusk ? 60 : 48}" fill="${dusk ? "#ffb35c" : "#fff3c2"}" opacity=".18">${RM ? "" : `<animate attributeName="r" values="${dusk ? "56;64;56" : "44;52;44"}" dur="6s" repeatCount="indefinite"/>`}</circle></g>`;
+    const cloud = (x, y, s, dur) => `<g opacity="${night ? .22 : .92}">${RM ? "" : `<animateTransform attributeName="transform" type="translate" values="${-x - 220} 0;${1420 - x} 0" dur="${dur}s" begin="-${(dur * (x + 220) / 1640).toFixed(1)}s" repeatCount="indefinite"/>`}<g transform="translate(${x} ${y}) scale(${s})" fill="#fff"><ellipse cx="0" cy="0" rx="46" ry="14"/><ellipse cx="-22" cy="-8" rx="22" ry="14"/><ellipse cx="14" cy="-12" rx="26" ry="17"/><ellipse cx="38" cy="-4" rx="18" ry="11"/></g></g>`;
+    const wave = (y, col, op, dur, amp) => `<path d="M-200 ${y} ${Array.from({ length: 18 }, (_, i) => `q 50 ${-amp} 100 0 t 0 0`).join(" ")} V 170 H -200 Z" fill="${col}" opacity="${op}">${RM ? "" : `<animateTransform attributeName="transform" type="translate" values="0 0;100 0" dur="${dur}s" repeatCount="indefinite"/>`}</path>`;
+    const gull = (x, y, d) => `<g transform="translate(${x} ${y})">${RM ? "" : `<animateTransform attributeName="transform" type="translate" values="${x} ${y};${x + 160} ${y - 14};${x + 320} ${y}" dur="${d}s" repeatCount="indefinite"/>`}<path d="M-9 0 Q-4 -5 0 0 Q4 -5 9 0" fill="none" stroke="${night ? "#c9d8e6" : "#26384a"}" stroke-width="1.6" stroke-linecap="round"><animate attributeName="d" values="M-9 0 Q-4 -5 0 0 Q4 -5 9 0;M-9 -3 Q-4 1 0 0 Q4 1 9 -3;M-9 0 Q-4 -5 0 0 Q4 -5 9 0" dur=".7s" repeatCount="indefinite"/></path></g>`;
+    const shore = night ? "#0d2748" : dusk ? "#5b4f6e" : "#5f8fa6", shore2 = night ? "#12325a" : dusk ? "#73627e" : "#79a6b8";
+    return `<svg class="evx-scene" viewBox="0 0 1200 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs><linearGradient id="evxSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient>
+        <linearGradient id="evxSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${night ? "#163a66" : dusk ? "#3b5b86" : "#2b78a8"}"/><stop offset="1" stop-color="${night ? "#0a2140" : "#0d3f6e"}"/></linearGradient></defs>
+      <rect width="1200" height="170" fill="url(#evxSky)"/>${sun}
+      ${cloud(180, 40, 1, 160)}${cloud(620, 26, .8, 210)}${cloud(1010, 52, .6, 190)}
+      <path d="M0 104 Q60 92 120 98 T240 96 Q300 84 360 94 L420 98 Q470 70 520 64 L560 62 Q600 64 640 86 Q700 96 760 94 T900 100 Q960 92 1020 96 T1200 98 V120 H0 Z" fill="${shore2}"/>
+      <path d="M90 100 L110 86 L170 85 L190 100 Z" fill="${shore}"/>
+      <g fill="${shore}"><path d="M440 104 Q480 80 520 76 Q548 74 572 86 Q600 96 650 104 Z"/><rect x="527" y="56" width="5" height="20"/><rect x="537" y="56" width="5" height="20"/><path d="M526 57 L529.5 49 L533 57 Z M536 57 L539.5 49 L543 57 Z"/><rect x="524" y="70" width="22" height="9"/></g>
+      ${wave(112, "url(#evxSea)", 1, 9, 5)}${wave(124, night ? "#0e2c52" : "#246c9b", .8, 6, 6)}
+      ${compact ? "" : wave(150, night ? "#0b2547" : "#1f6797", .9, 7, 4)}${!compact ? "" : [60, 150, 240, 690, 780, 860, 1040].map((x, i) => `<path d="M${x} 113 l4 -9 l3 9 Z" fill="#fff" opacity="${.55 + (i % 3) * .12}">${RM ? "" : `<animateTransform attributeName="transform" type="translate" values="0 0;${i % 2 ? 14 : -14} 0;0 0" dur="${30 + i * 4}s" repeatCount="indefinite"/>`}</path>`).join("")}
+      ${!compact ? "" : evBoat(1300, 124, .42, -1, "#3d8fe2", 95, -1520) + evBoat(240, 132, .55, 1, "#f2b233", 82, 1100)}
+      ${!compact ? "" : [[380, 136], [820, 132]].map(([x, y], i) => `<g transform="translate(${x} ${y})">${RM ? "" : `<animateTransform attributeName="transform" type="translate" values="${x} ${y};${x} ${y - 2.5};${x} ${y}" dur="${2.4 + i}s" repeatCount="indefinite"/>`}<path d="M-6 0 Q0 -14 6 0 Z" fill="#ff7a1a" stroke="#7a3300" stroke-width="1"/><path d="M-6 0 H6" stroke="#fff" stroke-width="2"/><path d="M0 -12 V-22 L7 -19 L0 -16" fill="#ffd978" stroke="#7a5a1e" stroke-width=".8"/><path d="M-10 3 Q0 6 10 3" stroke="#fff" stroke-width="1.2" fill="none" opacity=".6"/></g>`).join("")}
+      ${!compact ? "" : evBoat(-160, 150, .7, 1, "#e2483d", 60, 1500)}
+      <g style="${compact ? "" : "display:none"}">${RM ? "" : `<animateTransform attributeName="transform" type="translate" values="0 0;0 -26;0 0" dur="40s" repeatCount="indefinite"/>`}<g transform="translate(560 128)"><path d="M-22 0 L22 0 L18 7 L-18 7 Z" fill="#f4f1ea" stroke="#0b2f5e" stroke-width="1.3"/><rect x="-8" y="-8" width="14" height="8" fill="#fff" stroke="#0b2f5e" stroke-width="1.2"/><rect x="-3" y="-14" width="4" height="6" fill="#e2483d"/><path d="M-20 3 H20" stroke="#e2483d" stroke-width="1.6"/></g></g>
+      ${compact ? gull(140, 70, 26) + gull(700, 48, 33) + gull(820, 80, 29) : ""}
+      ${compact ? wave(146, night ? "#081a33" : "#0b2f5e", .95, 5, 7) : ""}
+    </svg>`;
+  }
+  /* kategória-illusztrációk (64×64, mozgó részletekkel) */
+  function evArt(cat) {
+    const c = EVCOL[cat] || EVCOL.egyeb, A = (a) => RM ? "" : a;
+    const art = {
+      fesztival: `<path d="M8 22 Q32 34 56 22" fill="none" stroke="#7a5a1e" stroke-width="1.4"/>${[12, 20, 28, 36, 44, 52].map((x, i) => `<path d="M${x - 3} ${22 + Math.sin(i / 1.6) * 3} l3 7 l3 -7 Z" fill="${["#e2483d", "#f2b233", "#2a86ad", "#3c9a5f", "#7a5cc2", "#e2483d"][i]}">${A(`<animateTransform attributeName="transform" type="rotate" values="-8 ${x} 24;8 ${x} 24;-8 ${x} 24" dur="${1.6 + i * .2}s" repeatCount="indefinite"/>`)}</path>`).join("")}<path d="M14 54 L18 38 H46 L50 54 Z" fill="#0b2f5e"/><rect x="16" y="36" width="32" height="4" rx="1" fill="#f2b233"/><path d="M22 38 L14 12 L28 38 Z" fill="#fff3c2" opacity=".55">${A(`<animateTransform attributeName="transform" type="rotate" values="-14 22 38;14 22 38;-14 22 38" dur="3s" repeatCount="indefinite"/>`)}</path><path d="M42 38 L50 12 L36 38 Z" fill="#fff3c2" opacity=".55">${A(`<animateTransform attributeName="transform" type="rotate" values="14 42 38;-14 42 38;14 42 38" dur="3.4s" repeatCount="indefinite"/>`)}</path><circle cx="25" cy="47" r="2.4" fill="#ffd978"/><circle cx="32" cy="46" r="2.4" fill="#ffd978"/><circle cx="39" cy="47" r="2.4" fill="#ffd978"/>`,
+      koncert: `<path d="M20 50 V18 L46 12 V44" fill="none" stroke="#fff" stroke-width="3.4" stroke-linejoin="round"/><ellipse cx="16" cy="50" rx="6.5" ry="5" fill="#fff"/><ellipse cx="42" cy="44" rx="6.5" ry="5" fill="#fff"/><path d="M20 24 L46 18" stroke="#fff" stroke-width="3.4"/>${[0, 1, 2].map((i) => `<text x="${50 - i * 30}" y="${30}" font-size="11" fill="#ffd978" font-weight="900">♪${A(`<animateTransform attributeName="transform" type="translate" values="0 10;${i % 2 ? -6 : 6} -18" dur="${2.4 + i * .5}s" begin="${i * .7}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;0" dur="${2.4 + i * .5}s" begin="${i * .7}s" repeatCount="indefinite"/>`)}</text>`).join("")}`,
+      sport: `<g>${A(`<animateTransform attributeName="transform" type="translate" values="0 0;0 -2;0 0" dur="1.6s" repeatCount="indefinite"/>`)}<path d="M8 40 Q32 48 56 40 L52 44 Q32 50 12 44 Z" fill="#f2b233" stroke="#7a5a1e" stroke-width="1"/><circle cx="32" cy="22" r="5" fill="#ffd9b8"/><path d="M29 18 Q32 14 36 17" stroke="#e2483d" stroke-width="3" fill="none"/><path d="M32 27 L31 40" stroke="#e2483d" stroke-width="6" stroke-linecap="round"/><g>${A(`<animateTransform attributeName="transform" type="rotate" values="-28 32 32;28 32 32;-28 32 32" dur="1.6s" repeatCount="indefinite"/>`)}<path d="M12 22 L52 42" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M8 19 l7 2 l-2 5 Z M56 45 l-7 -2 l2 -5 Z" fill="#fff"/></g></g><path d="M4 52 q7 -4 14 0 t14 0 t14 0 t14 0" fill="none" stroke="#fff" stroke-width="2" opacity=".7">${A(`<animateTransform attributeName="transform" type="translate" values="0 0;-14 0" dur="1.2s" repeatCount="indefinite"/>`)}</path>`,
+      gasztro: `<path d="M22 12 H42 Q44 30 32 34 Q20 30 22 12 Z" fill="rgba(255,255,255,.25)" stroke="#fff" stroke-width="2"/><path d="M23.5 20 H40.5 Q40 30 32 32.5 Q24 30 23.5 20 Z" fill="#ffd978" opacity=".0"/><path d="M23.4 21 Q32 18 40.6 21 Q40 30 32 32.5 Q24 30 23.4 21 Z" fill="#f4c6d2">${A(`<animate attributeName="d" values="M23.4 21 Q32 18 40.6 21 Q40 30 32 32.5 Q24 30 23.4 21 Z;M23.4 20 Q32 23 40.6 20 Q40 30 32 32.5 Q24 30 23.4 20 Z;M23.4 21 Q32 18 40.6 21 Q40 30 32 32.5 Q24 30 23.4 21 Z" dur="2.2s" repeatCount="indefinite"/>`)}</path><path d="M32 34 V50 M24 52 H40" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>${[[48, 30], [52, 36], [44, 36], [48, 42], [52, 48], [44, 48]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.4" fill="#5b1d33" stroke="#fff" stroke-width=".8"/>`).join("")}<path d="M48 26 Q50 20 55 19" stroke="#3c9a5f" stroke-width="2" fill="none"/>${[0, 1].map((i) => `<circle cx="${28 + i * 6}" cy="28" r="1" fill="#fff">${A(`<animate attributeName="cy" values="30;22" dur="${1.4 + i * .4}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="${1.4 + i * .4}s" repeatCount="indefinite"/>`)}</circle>`).join("")}`,
+      kultura: `<path d="M8 22 L32 10 L56 22 Z" fill="#fff"/><rect x="10" y="22" width="44" height="4" fill="#fff"/>${[14, 24, 34, 44].map((x) => `<rect x="${x}" y="27" width="5" height="20" fill="#fff" opacity=".92"/>`).join("")}<rect x="8" y="47" width="48" height="5" fill="#fff"/><path d="M27 34 q5 5 10 0 q-1 8 -5 8 q-4 0 -5 -8 Z" fill="#ffd978"/><g>${A(`<animateTransform attributeName="transform" type="rotate" values="-6 32 18;6 32 18;-6 32 18" dur="3s" repeatCount="indefinite"/>`)}<circle cx="32" cy="17" r="2.6" fill="#ffd978"/></g>`,
+      csalad: `${[[24, "#e2483d", 0], [38, "#f2b233", .6], [31, "#2a86ad", 1.2]].map(([x, col, b], i) => `<g>${A(`<animateTransform attributeName="transform" type="translate" values="0 0;${i % 2 ? 2 : -2} -4;0 0" dur="${2.6 + i * .4}s" begin="${b}s" repeatCount="indefinite"/>`)}<ellipse cx="${x}" cy="${20 + i * 3}" rx="8" ry="10" fill="${col}"/><path d="M${x - 3} ${14 + i * 3} q2 -3 5 -2" stroke="#fff" stroke-width="1.6" fill="none" opacity=".7"/><path d="M${x} ${30 + i * 3} l-1.5 3 h3 Z" fill="${col}"/><path d="M${x} ${33 + i * 3} Q${x + 3} ${42 + i * 2} 32 54" stroke="#fff" stroke-width="1" fill="none"/></g>`).join("")}<path d="M24 58 Q32 50 40 58" fill="#fff"/>`,
+      egyeb: `<g>${A(`<animateTransform attributeName="transform" type="rotate" values="-10 32 12;10 32 12;-10 32 12" dur="3.2s" repeatCount="indefinite"/>`)}<circle cx="32" cy="14" r="4" fill="none" stroke="#fff" stroke-width="2.6"/><path d="M32 18 V50 M22 28 H42 M14 40 Q16 52 32 52 Q48 52 50 40" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M10 42 l5 -5 l3 6 Z M54 42 l-5 -5 l-3 6 Z" fill="#fff"/></g>`
+    };
+    return `<svg class="evx-art" viewBox="0 0 64 64" style="--cc:${c}" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="${c}"/><circle cx="32" cy="32" r="28.5" fill="none" stroke="#ffd978" stroke-width="1" stroke-dasharray="2 3" opacity=".7"/>${art[cat] || art.egyeb}</svg>`;
+  }
+  /* mini Balaton-térkép: a ház (Zephyr) és a helyszín, útvonal – hajóval/komppal áthajózás */
+  const EVGEO = { "Zamárdi": [46.8853, 17.9539], "Szántód": [46.866, 17.91], "Balatonföldvár": [46.8519, 17.8822], "Kőröshegy": [46.8333, 17.9], "Siófok": [46.9041, 18.058], "Balatonszárszó": [46.829, 17.825], "Balatonszemes": [46.81, 17.77], "Balatonlelle": [46.785, 17.695], "Balatonboglár": [46.775, 17.655], "Fonyód": [46.743, 17.553], "Balatonvilágos": [46.97, 18.165], "Balatonkenese": [47.04, 18.106], "Balatonmáriafürdő": [46.7, 17.39], "Balatonkeresztúr": [46.695, 17.37], "Tihany": [46.914, 17.889], "Balatonfüred": [46.959, 17.889], "Csopak": [46.977, 17.92], "Paloznak": [46.985, 17.94], "Balatonalmádi": [47.03, 18.015], "Révfülöp": [46.826, 17.62], "Badacsony": [46.796, 17.51], "Szigliget": [46.8, 17.433], "Keszthely": [46.768, 17.243], "Hévíz": [46.79, 17.186], "Vonyarcvashegy": [46.76, 17.31] };
+  const LAKE = [[46.768, 17.25], [46.72, 17.33], [46.7, 17.39], [46.745, 17.55], [46.778, 17.65], [46.788, 17.7], [46.812, 17.77], [46.832, 17.83], [46.855, 17.88], [46.868, 17.905], [46.886, 17.955], [46.905, 18.05], [46.965, 18.15], [47.035, 18.12], [47.03, 18.01], [47.0, 17.97], [46.975, 17.92], [46.952, 17.893], [46.935, 17.905], [46.892, 17.895], [46.905, 17.858], [46.918, 17.83], [46.9, 17.77], [46.868, 17.68], [46.826, 17.62], [46.79, 17.51], [46.8, 17.43], [46.762, 17.31]];
+  const PJ = ([la, lo]) => [52 + (lo - 17.2) * 192, 6 + (47.06 - la) * 280];   /* valós arányú vetítés (cos 46,9° ≈ 0,68) */
+  function evMap(e) {
+    const w = e.where, tw = (w && w.town) || e.town, g = EVGEO[tw]; if (!g) return "";
+    const H = PJ(EVGEO["Zamárdi"]), D = PJ(g), zone = (w && w.zone) || (tw === "Zamárdi" ? "gyalog" : "auto"), fx = (n) => n.toFixed(1);
+    const lake = LAKE.map((p, i) => (i ? "L" : "M") + PJ(p).map(fx).join(" ")).join(" ") + "Z";
+    let route = "", extra = "";
+    if (zone === "hajo") {
+      const fe = tw === "Tihany" || tw === "Balatonfüred" || tw === "Csopak" || tw === "Paloznak", A = fe ? PJ([46.868, 17.905]) : PJ([46.905, 18.05]), B = fe ? PJ([46.892, 17.895]) : PJ([46.952, 17.893]);
+      route = `<path d="M${fx(H[0])} ${fx(H[1])} L${fx(A[0])} ${fx(A[1])}" class="evx-rt"/><path id="evxX${e.id}" d="M${fx(A[0])} ${fx(A[1])} Q${fx((A[0] + B[0]) / 2 + 8)} ${fx((A[1] + B[1]) / 2)} ${fx(B[0])} ${fx(B[1])}" class="evx-rt sea"/><path d="M${fx(B[0])} ${fx(B[1])} L${fx(D[0])} ${fx(D[1])}" class="evx-rt"/>`;
+      extra = `<g class="evx-ferry"><path d="M-5 0 H5 L3.5 2.6 H-3.5 Z" fill="#fff" stroke="#0b2f5e" stroke-width=".8"/><path d="M0 0 V-6 L4 -1 Z" fill="#e2483d"/>${RM ? "" : `<animateMotion dur="4s" repeatCount="indefinite" rotate="0"><mpath href="#evxX${e.id}"/></animateMotion>`}</g>`;
+    } else if (zone !== "gyalog" && zone !== "egyeb") {
+      const mx = (H[0] + D[0]) / 2, my = Math.max(H[1], D[1]) + 10;
+      route = `<path d="M${fx(H[0])} ${fx(H[1])} Q${fx(mx)} ${fx(my)} ${fx(D[0])} ${fx(D[1])}" class="evx-rt land"/>`;
+    }
+    const pin = (p, col, lab) => `<g transform="translate(${fx(p[0])} ${fx(p[1])})"><path d="M0 0 C-5 -6 -6 -9 -6 -11 A6 6 0 1 1 6 -11 C6 -9 5 -6 0 0 Z" fill="${col}" stroke="#fff" stroke-width="1.2"/><circle cy="-11" r="2.3" fill="#fff"/>${lab ? `<text y="-19" text-anchor="middle" class="evx-lab">${lab}</text>` : ""}</g>`;
+    const home = `<g transform="translate(${fx(H[0])} ${fx(H[1])})"><circle r="4.5" fill="#ffd978" stroke="#0b2f5e" stroke-width="1.4"/>${RM ? "" : `<circle r="4.5" fill="none" stroke="#ffd978" stroke-width="1.5"><animate attributeName="r" values="4.5;12" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="2s" repeatCount="indefinite"/></circle>`}<text y="15" text-anchor="middle" class="evx-lab">Zephyr</text></g>`;
+    const cmp = `<g transform="translate(282 18)" class="evx-cmp"><circle r="10" fill="#fff" stroke="#c99a4a" stroke-width="1.2"/><path d="M0 -8 L2.4 0 L0 8 L-2.4 0 Z" fill="#0b2f5e"/><path d="M0 -8 L2.4 0 L-2.4 0 Z" fill="#e2483d"/><text y="-12.5" text-anchor="middle" class="evx-lab" style="font-size:7px">É</text></g>`;
+    const hills = `<path d="M0 0 H300 V120 H0 Z" fill="url(#evxL${e.id})"/>`;
+    return `<svg class="evx-map" viewBox="0 0 300 120" aria-label="Térkép: ${esc(tw)}"><defs><pattern id="evxL${e.id}" width="14" height="14" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="#c9dcb5"/><circle cx="10" cy="10" r=".8" fill="#d8e6c6"/></pattern><linearGradient id="evxW${e.id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5aa7d3"/><stop offset="1" stop-color="#2b78a8"/></linearGradient></defs>${hills}<path d="${lake}" fill="url(#evxW${e.id})" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="${lake}" class="evx-lake2"/>${cmp}${route}${extra}${zone === "gyalog" ? "" : pin(D, EVCOL[e.cat] || "#e2483d", esc(tw))}${home}</svg>`;
+  }
   function renderEvents() {
     const cats = [...new Set(EVS.map((e) => e.cat))], towns = [...new Set(EVS.map((e) => e.town).filter(Boolean))].sort((a, b) => a.localeCompare(b, "hu"));
     const W = [["", "Mind"], ["today", "Ma"], ["weekend", "Hétvégén"], ["7", "Következő 7 nap"], ["month", "Havi naptár"]];
     const tog = (k, l, ic) => `<button type="button" class="chip tg" data-tg="${k}" aria-pressed="${EQ[k]}">${ic}${l}</button>`;
     const any = EQ.when || EQ.zone || EQ.town || EQ.free || EQ.kids || EQ.indoor || evCat || EQ.day;
     $("evBar").innerHTML = EVS.length ? `<div class="ev-filters">
-        <div class="ev-row ev-when" role="group" aria-label="Időszak">${W.map(([k, n]) => `<button type="button" class="chip" data-when="${k}" aria-pressed="${EQ.when === k && !EQ.day}">${n}</button>`).join("")}</div>
-        ${EVS.some((e) => e.where) ? `<div class="ev-row ev-zone" role="group" aria-label="Távolság">${EVZ.filter(([k]) => !k || EVS.some((e) => k === "bike" ? +evW(e).bike === 1 : evW(e).zone === k)).map(([k, n]) => `<button type="button" class="chip" data-zone="${k}" aria-pressed="${EQ.zone === k}">${n}</button>`).join("")}</div>` : ""}
-        <div class="ev-row">${towns.length > 1 ? `<label class="ev-town"><svg><use href="#i-pin"/></svg><select id="evTown" aria-label="Település"><option value="">Minden település</option>${towns.map((t) => `<option ${EQ.town === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>` : ""}
+        <div class="ev-row ev-when" role="group" aria-label="Időszak"><span class="ev-lbl"><i>⏱</i>Mikor?</span>${W.map(([k, n]) => `<button type="button" class="chip" data-when="${k}" aria-pressed="${EQ.when === k && !EQ.day}">${n}</button>`).join("")}</div>
+        ${EVS.some((e) => e.where) ? `<div class="ev-row ev-zone" role="group" aria-label="Távolság"><span class="ev-lbl"><i>⚓</i>Milyen messze?</span>${EVZ.filter(([k]) => !k || EVS.some((e) => k === "bike" ? +evW(e).bike === 1 : evW(e).zone === k)).map(([k, n]) => `<button type="button" class="chip" data-zone="${k}" aria-pressed="${EQ.zone === k}">${n}</button>`).join("")}</div>` : ""}
+        <div class="ev-row"><span class="ev-lbl"><i>★</i>Mit keresel?</span>${towns.length > 1 ? `<label class="ev-town"><svg><use href="#i-pin"/></svg><select id="evTown" aria-label="Település"><option value="">Minden település</option>${towns.map((t) => `<option ${EQ.town === t ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></label>` : ""}
           ${[["", "Minden típus"]].concat(cats.map((c) => [c, EVC[c] || "Egyéb"])).map(([k, n]) => `<button type="button" class="chip" data-cat="${k}" aria-pressed="${evCat === k}">${esc(n)}</button>`).join("")}</div>
-        <div class="ev-row">${tog("free", "Ingyenes", "🎟️ ")}${tog("kids", "Gyerekbarát", "🧒 ")}${tog("indoor", "Rossz időben is", "☔ ")}${any ? `<button type="button" class="ev-reset" data-reset="1">Szűrők törlése ✕</button>` : ""}</div>
+        <div class="ev-row"><span class="ev-lbl"><i>✓</i>Extrák</span>${tog("free", "Ingyenes", "🎟️ ")}${tog("kids", "Gyerekbarát", "🧒 ")}${tog("indoor", "Rossz időben is", "☔ ")}${any ? `<button type="button" class="ev-reset" data-reset="1">Szűrők törlése ✕</button>` : ""}</div>
       </div>` + `<button type="button" class="owner-link" data-owner="prog">Programok szerkesztése (tulajdonos)</button>` : `<button type="button" class="owner-link" data-owner="prog">Programok szerkesztése (tulajdonos)</button>`;
     const list = evFiltered(false), r = evRange();
     let h = "";
@@ -1402,14 +1570,16 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       const range = to ? `${HU_MS[d.getMonth()]} ${d.getDate()}. – ${to.getMonth() !== d.getMonth() ? HU_MS[to.getMonth()] + " " : ""}${to.getDate()}.` : HU_WD[d.getDay()];
       const when = evOn(e, T) ? "Ma" : evOn(e, TM) ? "Holnap" : "";
       const long = (e.desc || "").length > 180, open = EQ.open[e.id];
-      h += `<article class="ev${e.top ? " top" : ""}">
+      const map = evMap(e);
+      h += `<article class="ev${e.top ? " top" : ""}${map ? " has-map" : ""}" style="--cc:${EVCOL[e.cat] || EVCOL.egyeb}">
         ${e.img ? `<img class="ev-img" src="${esc(e.img)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
-        <div class="ev-date"><span>${HU_MS[d.getMonth()]}</span><b${to && to.getMonth() === d.getMonth() ? ' style="font-size:25px;letter-spacing:-.02em"' : ""}>${d.getDate()}${to && to.getMonth() === d.getMonth() ? "–" + to.getDate() : ""}</b><small>${esc(range)}</small>${when ? `<em class="ev-when-b">${when}</em>` : ""}</div>
-        <div class="ev-body"><div class="ev-tags"><span class="ev-cat">${esc(EVC[e.cat] || "Egyéb")}${evDemo ? `<span class="demo-tag">példa</span>` : ""}</span>${e.free ? `<span class="ev-b ev-free">Ingyenes</span>` : e.price ? `<span class="ev-b price">${esc(e.price)}</span>` : ""}${e.kids ? `<span class="ev-b">Gyerekbarát</span>` : ""}${e.indoor ? `<span class="ev-b">Rossz időben is</span>` : ""}</div><h3>${esc(e.title)}</h3>
+        <div class="ev-date"><span>${HU_MS[d.getMonth()]}</span><b${to && to.getMonth() === d.getMonth() ? ' style="font-size:25px;letter-spacing:-.02em"' : ""}>${d.getDate()}${to && to.getMonth() === d.getMonth() ? "–" + to.getDate() : ""}</b><small>${esc(range)}</small>${when ? `<em class="ev-when-b">${when}</em>` : ""}<i class="ev-wave"></i></div>
+        <div class="ev-body"><div class="ev-tags">${evArt(e.cat)}<span class="ev-cat">${esc(EVC[e.cat] || "Egyéb")}${evDemo ? `<span class="demo-tag">példa</span>` : ""}</span>${e.free ? `<span class="ev-b ev-free">Ingyenes</span>` : e.price ? `<span class="ev-b price">${esc(e.price)}</span>` : ""}${e.kids ? `<span class="ev-b">Gyerekbarát</span>` : ""}${e.indoor ? `<span class="ev-b">Rossz időben is</span>` : ""}</div><h3>${esc(e.title)}</h3>
           <div class="ev-info">${e.time ? `<span><svg><use href="#i-clock"/></svg>${esc(e.time)}</span>` : ""}${e.place || e.town ? `<span><svg><use href="#i-pin"/></svg>${esc([e.place, e.town && !(e.place || "").includes(e.town) ? e.town : ""].filter(Boolean).join(", "))}</span>` : ""}${evW(e).km ? `<span class="ev-km">${{ gyalog: "🚶", bicikli: "🚲", hajo: "⛴", auto: "🚗" }[evW(e).zone] || ""} kb. ${evW(e).km} km a háztól</span>` : ""}</div>
           ${evW(e).cross ? `<div class="ev-cross">⛴ ${esc(evW(e).cross)}${evW(e).ferry ? ` · <a href="${esc(evW(e).ferry)}" target="_blank" rel="noopener">menetrend ↗</a>` : ""}</div>` : ""}
           ${e.desc ? `<p class="${long && !open ? "clamp" : ""}">${esc(e.desc)}</p>${long ? `<button type="button" class="ev-more" data-open="${esc(e.id)}">${open ? "Kevesebb ▴" : "Tovább ▾"}</button>` : ""}` : ""}
           ${e.src || e.checked ? `<small class="ev-src">${e.src ? `Forrás: ${e.url && e.url !== "#" ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.src)}</a>` : esc(e.src)}` : ""}${e.src && e.checked ? " · " : ""}${e.checked ? `ellenőrizve: ${esc(huDay(e.checked))}` : ""}</small>` : ""}</div>
+        ${map ? `<div class="ev-mapc">${map}</div>` : ""}
         <div class="ev-acts">${e.ticket ? `<a class="btn btn-red btn-sm" href="${esc(e.ticket)}" target="_blank" rel="noopener"><svg><use href="#i-ticket"/></svg>Jegyfoglalás</a>` : ""}${e.url ? `<a class="btn btn-line btn-sm" href="${esc(e.url)}" target="_blank" rel="noopener"><svg><use href="#i-ext"/></svg>Bővebben</a>` : ""}${e.place || e.town ? `<a class="btn btn-line btn-sm" href="${esc(evW(e).map || mapUrl(e))}" target="_blank" rel="noopener"><svg><use href="#i-pin"/></svg>Útvonal${evW(e).map ? (evW(e).zone === "gyalog" ? " gyalog" : " autóval") : ""}</a>` : ""}${evW(e).map_bike ? `<a class="btn btn-line btn-sm" href="${esc(evW(e).map_bike)}" target="_blank" rel="noopener">🚲 Biciklivel</a>` : ""}</div>
       </article>`;
     });
@@ -1419,13 +1589,13 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   function evTeaser() {  /* főoldal: csak rövid előzetes – a teljes ajánló külön ablakban nyílik */
     const T = ymd(new Date()), up = EVS.filter((e) => evEnd(e) >= T), cnt = (w) => { const o = EQ.when, dd = EQ.day; EQ.when = w; EQ.day = ""; const r = evRange(); EQ.when = o; EQ.day = dd; return up.filter((e) => evOverlap(e, r[0], r[1])).length; };
     if (!up.length) { $("evTeaser").innerHTML = `<div class="ev-empty"><svg><use href="#i-cal"/></svg><b>Hamarosan feltöltjük az idei programokat.</b><span>Addig is nézd meg a helyi látnivalókat lejjebb.</span></div><button type="button" class="owner-link" data-owner="prog">Programok szerkesztése (tulajdonos)</button>`; return; }
-    $("evTeaser").innerHTML = `<div class="ev-quick">${[["today", "Ma"], ["weekend", "Hétvégén"], ["7", "Következő 7 nap"], ["month", "Havi naptár"]].map(([k, n]) => `<button type="button" data-evp="${k}">${n}${k !== "month" && cnt(k) ? `<i>${cnt(k)}</i>` : ""}</button>`).join("")}</div>
-      <div class="ev-mini">${up.slice(0, 3).map((e) => { const d = pd(e.from); return `<a href="#programajanlo" data-evp="" data-evid="${esc(e.id)}"><span class="d"><span>${HU_MS[d.getMonth()]}</span><b>${d.getDate()}</b></span><span class="t"><b>${esc(e.title)}</b><small>${esc([e.time, e.town || e.place].filter(Boolean).join(" · "))}${evDemo ? " · példa" : ""}</small></span></a>`; }).join("")}</div>
+    $("evTeaser").innerHTML = `<div class="evx-band">${evScene(true)}<b>Programajánló</b><small>Zamárdi és a Balaton programjai</small></div><div class="ev-quick">${[["today", "Ma"], ["weekend", "Hétvégén"], ["7", "Következő 7 nap"], ["month", "Havi naptár"]].map(([k, n]) => `<button type="button" data-evp="${k}">${n}${k !== "month" && cnt(k) ? `<i>${cnt(k)}</i>` : ""}</button>`).join("")}</div>
+      <div class="ev-mini">${up.slice(0, 3).map((e) => { const d = pd(e.from); return `<a href="#programajanlo" data-evp="" data-evid="${esc(e.id)}" style="--cc:${EVCOL[e.cat] || EVCOL.egyeb}"><span class="d"><span>${HU_MS[d.getMonth()]}</span><b>${d.getDate()}</b></span><span class="t"><b>${esc(e.title)}</b><small>${esc([e.time, e.town || e.place].filter(Boolean).join(" · "))}${evDemo ? " · példa" : ""}</small></span>${evArt(e.cat)}</a>`; }).join("")}</div>
       <button type="button" class="btn btn-red ev-open" data-evp=""><svg><use href="#i-cal"/></svg>Belépés a programajánlóba<i>${up.length}</i></button>`;
   }
   function evOpen(when) {
     Object.assign(EQ, { when: when || "", day: "", mo: 0 }); renderEvents();
-    const p = $("evp"); p.hidden = false; document.documentElement.classList.add("evp-lock"); p.querySelector(".evp-body").scrollTop = 0; p.querySelector(".evp-x").focus();
+    const p = $("evp"); const hd = p.querySelector(".evp-hd"), old = hd.querySelector(".evx-scene"); if (old) old.remove(); hd.insertAdjacentHTML("afterbegin", evScene(false)); p.hidden = false; document.documentElement.classList.add("evp-lock"); p.querySelector(".evp-body").scrollTop = 0; p.querySelector(".evp-x").focus();
     if (location.hash !== "#programajanlo") history.pushState({ evp: 1 }, "", "#programajanlo");
   }
   function evClose(fromPop) { const p = $("evp"); if (p.hidden) return; p.hidden = true; document.documentElement.classList.remove("evp-lock"); if (!fromPop && location.hash === "#programajanlo") history.back(); }

@@ -19,6 +19,12 @@ shim='''<script>
 ''' + reg + '''
 })();
 </script>'''
+# a programajánló fejlécébe egy második verseny (csak akkor fut, ha az ablak nyitva van); a nyitóképi verseny közben szünetel
+STOP='if (document.body.classList.contains("walk-on") || document.hidden)'
+assert reg.count(STOP)==1 and reg.count('$("regatta")')==1
+reg1=reg.replace(STOP,'if (document.body.classList.contains("walk-on") || document.hidden || document.documentElement.classList.contains("evp-lock"))')
+reg2=reg.replace(STOP,'if (document.hidden || c.offsetParent === null)').replace('$("regatta")','$("evpRegatta")')
+shim=shim.replace(reg, reg1) + shim.replace(reg, reg2).replace('vitorlásverseny a kezdőoldalon (', 'vitorlásverseny a programajánló fejlécében (')
 src=open('home/src.html').read()
 assert '<!--ZEPHYR-REGATTA-JS-->' in src
 src=src.replace('<!--ZEPHYR-REGATTA-JS-->', shim)

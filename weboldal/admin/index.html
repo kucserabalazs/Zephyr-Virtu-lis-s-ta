@@ -548,6 +548,7 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
         case "login": return { ok: true, token: "demo" };
         case "bookings": return { today: D.today, bookings: D.bookings.map(eff), settings: D.settings, warnings: D.warnings, initial: false, ical_links: {} };
         case "waste": return wp();
+        case "waste_sync": return { ok: true, message: "Bemutató módban nincs letöltés.", ...wp() };
         case "waste_save": D.waste = b.types.map((t, i) => ({ ...t, id: t.id || "w" + Date.now() + i, dates: t.dates || [], skip: t.skip || [], active: t.active ? 1 : 0 })); return { ok: true, message: "Hulladéknaptár elmentve (bemutató).", ...wp() };
         case "events_all": return { events: D.events };
         case "events_save": D.events = b.events; return { ok: true, message: D.events.length + " program elmentve (bemutató).", events: D.events };
@@ -1034,10 +1035,19 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
       : `<div class="empty">Még nincs megadva szállítási rend. Add hozzá lent a hulladéktípusokat.</div>`;
     if (upAll.length > up.length) h += `<details style="margin-top:8px"><summary class="btn sm line" style="list-style:none;display:inline-flex">További ${upAll.length - up.length} időpont</summary><div class="up" style="margin-top:8px">${upAll.slice(up.length).map((x) => `<div class="u"><span class="d">${pd(x.date).getDate()}</span><span class="w">${esc(wd(x.date))}<br>${esc(huS(x.date))}</span><span class="wtag" style="--wc:${x.color}">${ico("bin")}${esc(x.name)}</span></div>`).join("")}</div></details>`;
 
+    const sy = A.waste.sync || {};
+    h += `<h3 class="st">${ico("sync")}Automatikus naptár – Siókom</h3><div class="card stack">
+      <label class="sw"><input type="checkbox" id="wa_on" ${+A.waste.auto ? "checked" : ""}><span><b>A szállítási napokat a weboldal magától tölti le</b><small>A Siókom hivatalos éves naptárából (Zamárdi, vasúttól a Balaton-partig): vegyes, szelektív, zöldhulladék és lomtalanítás. Évente magától frissül, novembertől a következő évet is behúzza.</small></span></label>
+      ${sy.ok ? `<p class="sm" style="margin:0">✓ Utolsó sikeres frissítés: <b>${esc(huS(sy.ok))}</b> · évek: <b>${esc((sy.years || []).join(", "))}</b></p>` : `<p class="sm" style="margin:0">Még nem volt letöltés – a „Frissítés most” gombbal azonnal elindíthatod.</p>`}
+      ${(sy.log || []).length ? `<div class="mut xs">${sy.log.map(esc).join("<br>")}</div>` : ""}
+      ${sy.error ? `<div class="help">Az utolsó próbálkozás nem sikerült – lehet, hogy a Siókom új néven tette fel az idei naptárat. Másold be ide a PDF linkjét a siokom.hu oldalról ({EV} helyére az évszám kerül).</div>` : ""}
+      <details><summary class="btn sm line" style="list-style:none;display:inline-flex">A naptár linkje</summary><label class="f" style="margin-top:10px"><span>Siókom PDF ({EV} = évszám)</span><input id="wa_src" value="${esc(A.waste.src || "")}"></label></details>
+      <div class="row"><button class="btn pri" id="waSync">${ico("sync")}Frissítés most</button><button class="btn line" id="waSave">${ico("check")}Mentés</button></div>
+    </div>`;
     h += `<h3 class="st">${ico("bin")}Szállítási rend</h3><div class="stack" id="wlist">`;
     WED.forEach((x, i) => {
       h += `<div class="card wt" style="--wc:${x.color}">
-        <div class="hd"><span class="ic">${ico("bin")}</span><div style="flex:1;min-width:0"><b>${esc(x.name || "Új hulladéktípus")}</b><small>${esc(ruleText(x))}</small></div>
+        <div class="hd"><span class="ic">${ico("bin")}</span><div style="flex:1;min-width:0"><b>${esc(x.name || "Új hulladéktípus")}</b>${x.auto ? ` <span class="tag paid">Siókom – automatikus</span>` : ""}<small>${esc(ruleText(x))}</small></div>
           <label class="sw" style="padding:0"><input type="checkbox" data-w="${i}" data-k="active" ${x.active ? "checked" : ""} aria-label="Aktív"></label></div>
         <details style="margin-top:10px"><summary class="btn sm line" style="list-style:none;display:inline-flex">Szerkesztés</summary>
           <div class="stack" style="margin-top:12px">
@@ -1106,6 +1116,8 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
       else if (b.dataset.wcol != null) { WED[+b.dataset.wcol].color = b.dataset.c; viewWaste(m); reopen(+b.dataset.wcol); markDirty(); }
       else if (b.dataset.wrm != null) { if (await confirmSheet("Törlés", `Törlöd: „${esc(WED[+b.dataset.wrm].name)}”? (A mentéssel lesz végleges.)`, "Törlés", "bad")) { WED.splice(+b.dataset.wrm, 1); viewWaste(m); markDirty(); } }
       else if (b.id === "wAdd") { WED.push({ id: "", name: "", kind: "weekly", weekday: 1, nth: 1, start: t, season_from: "", season_to: "", dates: [], skip: [], note: "", color: WCOLORS[WED.length % WCOLORS.length], active: 1 }); viewWaste(m); reopen(WED.length - 1); $$("#wlist details", m)[WED.length - 1].querySelector("input").focus(); }
+      else if (b.id === "waSync") run(async () => { const j = await api("waste_sync", {}); A.waste = j; WED = null; toast(j.message || "Frissítve."); viewWaste(m); });
+      else if (b.id === "waSave") run(async () => { const j = await api("save_settings", { settings: { waste_auto: $("#wa_on", m).checked ? 1 : 0, waste_src: $("#wa_src", m).value.trim() } }); A.data.settings = j.settings; A.waste.auto = j.settings.waste_auto; A.waste.src = j.settings.waste_src; toast("Elmentve."); viewWaste(m); });
       else if (b.id === "wSave") run(async () => { const bad = WED.find((x) => !x.name.trim()); if (bad) throw new Error("Minden hulladéktípusnak adj nevet."); const j = await api("waste_save", { types: WED }); A.waste = j; WED = null; toast(j.message); viewWaste(m); });
       else if (b.id === "rSave") run(async () => { const j = await api("save_settings", { settings: { remind_waste: $("#r_waste", m).checked ? 1 : 0, guest_mode: ($("input[name=gm]:checked", m) || {}).value || "day", remind_hour: +$("#r_hour", m).value, week_day: +$("#r_wd", m).value, remind_email: $("#r_mail", m).value.trim() } }); A.data.settings = j.settings; toast("Emlékeztetők elmentve."); viewWaste(m); });
       else if (b.id === "rTest") run(async () => { const j = await api("remind_test", {}); toast(j.message, !j.ok); });
