@@ -65,6 +65,7 @@ function defaults() {
         /* emlékeztetők (admin app): hulladék előző nap, vendégérkezés egy nappal vagy egy héttel előre */
         'remind_hour' => 18, 'remind_waste' => 1, 'guest_mode' => 'day', 'week_day' => 0, 'remind_email' => '',
         /* vendég-programajánló: érkezés előtt X nappal e-mail az ott-tartózkodás programjairól */
+        'waste_auto' => 1, 'waste_src' => 'https://www.siokom.hu/files/images/járatnaptárak {EV}/8621_zamardi_hulladeknaptar{EV}_vasuttol-eszakra.pdf',
         'guest_ev' => 1, 'guest_ev_days' => 7, 'guest_ev_approved' => 0, 'guest_ev_bike_km' => 25, 'ferry_url' => 'https://bahart.hu/',
     );
 }
@@ -250,14 +251,14 @@ function ical_parse($text) {
     }
     return $ev;
 }
-function http_get($url) {
+function http_get($url, $timeout = 12) {
     if (function_exists('curl_init')) {
         $c = curl_init($url);
-        curl_setopt_array($c, array(CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 4, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_TIMEOUT => 12, CURLOPT_USERAGENT => 'ZephyrFoglalas/1.0'));
+        curl_setopt_array($c, array(CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 4, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_TIMEOUT => $timeout, CURLOPT_USERAGENT => 'ZephyrFoglalas/1.0'));
         $body = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); $err = curl_error($c); curl_close($c);
         return array($code, $body === false ? '' : $body, $err);
     }
-    $ctx = stream_context_create(array('http' => array('timeout' => 12, 'user_agent' => 'ZephyrFoglalas/1.0'), 'ssl' => array('verify_peer' => true)));
+    $ctx = stream_context_create(array('http' => array('timeout' => $timeout, 'user_agent' => 'ZephyrFoglalas/1.0'), 'ssl' => array('verify_peer' => true)));
     $body = @file_get_contents($url, false, $ctx);
     return array($body === false ? 0 : 200, $body === false ? '' : $body, $body === false ? 'letöltési hiba' : '');
 }
@@ -845,10 +846,221 @@ function waste_clean($in) {
             'season_from' => isset($t['season_from']) && preg_match('/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', $t['season_from']) ? $t['season_from'] : '',
             'season_to' => isset($t['season_to']) && preg_match('/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', $t['season_to']) ? $t['season_to'] : '',
             'dates' => array_values(array_unique($dates)), 'skip' => array_values(array_unique($skip)),
-            'note' => clean(isset($t['note']) ? $t['note'] : '', 160), 'color' => $col, 'active' => !isset($t['active']) || $t['active'] ? 1 : 0);
+            'note' => clean(isset($t['note']) ? $t['note'] : '', 160), 'color' => $col, 'active' => !isset($t['active']) || $t['active'] ? 1 : 0,
+            'auto' => isset($t['auto']) && in_array($t['auto'], array('mixed', 'selective', 'green', 'bulky'), true) ? $t['auto'] : '');
     }
     return $o;
 }
+/* ---------------------------------------------------------------- hulladéknaptár: automatikus letöltés a Siókom oldaláról (évente, PDF-ből) */
+/* egyszerű PDF-szövegkiolvasó: oldalanként [oldal, x, y, betűméret, szöveg] – Identity-H/ToUnicode és WinAnsi betűkészletekhez */
+function pdf_objects($raw) {
+    $o = array();
+    if (preg_match_all('/(\d+)\s+0\s+obj\b/', $raw, $m, PREG_OFFSET_CAPTURE)) {
+        foreach ($m[1] as $i => $hit) { $st = $m[0][$i][1] + strlen($m[0][$i][0]); $en = strpos($raw, 'endobj', $st); if ($en === false) { continue; } $o[(int) $hit[0]] = substr($raw, $st, $en - $st); }
+    }
+    return $o;
+}
+function pdf_stream($obj) {
+    $p = strpos($obj, 'stream'); if ($p === false) { return null; }
+    $dict = substr($obj, 0, $p); $s = $p + 6; if ($obj[$s] === "\r") { $s++; } if ($obj[$s] === "\n") { $s++; }
+    $e = strrpos($obj, 'endstream'); $data = substr($obj, $s, ($e === false ? strlen($obj) : $e) - $s);
+    if (preg_match('/\/Length\s+(\d+)(?!\s+0\s+R)/', $dict, $lm) && (int) $lm[1] <= strlen($data)) { $data = substr($data, 0, (int) $lm[1]); }
+    if (strpos($dict, 'ASCII85Decode') !== false) { $data = pdf_a85($data); }
+    if (strpos($dict, 'FlateDecode') !== false) { $d = @gzuncompress($data); if ($d === false) { $d = @gzinflate(substr($data, 2)); } return $d === false ? '' : $d; }
+    return $data;
+}
+function pdf_a85($s) {
+    $s = preg_replace('/\s+/', '', $s); if (substr($s, 0, 2) === '<~') { $s = substr($s, 2); } $e = strpos($s, '~>'); if ($e !== false) { $s = substr($s, 0, $e); }
+    $o = ''; $n = strlen($s); $i = 0;
+    while ($i < $n) {
+        if ($s[$i] === 'z') { $o .= "\0\0\0\0"; $i++; continue; }
+        $ch = substr($s, $i, 5); $i += 5; $pad = 5 - strlen($ch); $ch .= str_repeat('u', $pad); $v = 0;
+        for ($j = 0; $j < 5; $j++) { $v = $v * 85 + (ord($ch[$j]) - 33); }
+        $o .= substr(pack('N', $v), 0, 4 - $pad);
+    }
+    return $o;
+}
+function pdf_cmap($s) {
+    $m = array();
+    foreach (explode('beginbfrange', $s) as $k => $blk) {
+        if (!$k) { continue; } $blk = explode('endbfrange', $blk)[0];
+        preg_match_all('/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*(\[[^\]]*\]|<[0-9A-Fa-f]+>)/', $blk, $r, PREG_SET_ORDER);
+        foreach ($r as $x) {
+            $lo = hexdec($x[1]); $hi = hexdec($x[2]);
+            if ($x[3][0] === '[') { preg_match_all('/<([0-9A-Fa-f]+)>/', $x[3], $arr); foreach ($arr[1] as $j => $u) { $m[$lo + $j] = mb_chr(hexdec(substr($u, 0, 4)), 'UTF-8'); } }
+            else { $b = hexdec(substr($x[3], 1, 4)); for ($c = $lo; $c <= $hi && $c - $lo < 2000; $c++) { $m[$c] = mb_chr($b + $c - $lo, 'UTF-8'); } }
+        }
+    }
+    foreach (explode('beginbfchar', $s) as $k => $blk) {
+        if (!$k) { continue; } $blk = explode('endbfchar', $blk)[0];
+        preg_match_all('/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/', $blk, $r, PREG_SET_ORDER);
+        foreach ($r as $x) { $m[hexdec($x[1])] = mb_chr(hexdec(substr($x[2], 0, 4)), 'UTF-8'); }
+    }
+    return $m;
+}
+function pdf_text_runs($raw) {
+    $objs = pdf_objects($raw); $runs = array(); $page = 0;
+    foreach ($objs as $id => $ob) {
+        if (!preg_match('/\/Type\s*\/Page(?![s\w])/', $ob)) { continue; }
+        $page++;
+        /* betűkészletek: /F1 8 0 R … (a Resources lehet hivatkozás is) */
+        $res = $ob; if (preg_match('/\/Resources\s+(\d+)\s+0\s+R/', $ob, $rm) && isset($objs[(int) $rm[1]])) { $res = $objs[(int) $rm[1]]; }
+        $fonts = array();
+        $fdict = '';
+        if (preg_match('/\/Font\s*<<(.*?)>>/s', $res, $fm)) { $fdict = $fm[1]; }
+        elseif (preg_match('/\/Font\s+(\d+)\s+0\s+R/', $res, $fm) && isset($objs[(int) $fm[1]])) { $fdict = $objs[(int) $fm[1]]; }
+        if ($fdict !== '') { $fm = array(1 => $fdict);
+            preg_match_all('/\/([\w.+-]+)\s+(\d+)\s+0\s+R/', $fm[1], $fl, PREG_SET_ORDER);
+            foreach ($fl as $f) {
+                $fo = isset($objs[(int) $f[2]]) ? $objs[(int) $f[2]] : ''; $map = null;
+                if (preg_match('/\/ToUnicode\s+(\d+)\s+0\s+R/', $fo, $tu) && isset($objs[(int) $tu[1]])) { $map = pdf_cmap((string) pdf_stream($objs[(int) $tu[1]])); }
+                $fonts[$f[1]] = array('map' => $map, 'cid' => strpos($fo, 'Identity-H') !== false);
+            }
+        }
+        $content = '';
+        if (preg_match('/\/Contents\s*\[([^\]]*)\]/', $ob, $cm)) { preg_match_all('/(\d+)\s+0\s+R/', $cm[1], $cl); foreach ($cl[1] as $c) { if (isset($objs[(int) $c])) { $content .= pdf_stream($objs[(int) $c]) . "\n"; } } }
+        elseif (preg_match('/\/Contents\s+(\d+)\s+0\s+R/', $ob, $cm) && isset($objs[(int) $cm[1]])) { $content = (string) pdf_stream($objs[(int) $cm[1]]); }
+        preg_match_all('/\((?:\\\\.|[^\\\\)])*\)|<[0-9A-Fa-f\s]*>|\[|\]|\/[^\s\/\[\]()<>]+|[-+]?\d*\.?\d+(?:[eE]-?\d+)?|[A-Za-z\'"*]+/', $content, $tk);
+        $st = array(); $font = ''; $fs = 0; $tx = 0; $ty = 0; $lx = 0; $ly = 0; $lead = 0;
+        $dec = function ($s) use (&$fonts, &$font) {
+            $f = isset($fonts[$font]) ? $fonts[$font] : array('map' => null, 'cid' => false);
+            if ($s[0] === '<') {
+                $h = preg_replace('/\s+/', '', substr($s, 1, -1)); $o = ''; $w = $f['cid'] ? 4 : 2;
+                for ($i = 0; $i + $w <= strlen($h); $i += $w) { $k = hexdec(substr($h, $i, $w)); $o .= isset($f['map'][$k]) ? $f['map'][$k] : ($w === 2 ? chr($k) : '?'); }
+                return $o;
+            }
+            $b = preg_replace_callback('/\\\\([nrtbf()\\\\]|[0-7]{1,3})/', function ($m) { $c = $m[1]; $t = array('n' => "\n", 'r' => "\r", 't' => "\t", 'b' => "\x08", 'f' => "\x0c"); return isset($t[$c]) ? $t[$c] : (ctype_digit($c) ? chr(octdec($c)) : $c); }, substr($s, 1, -1));
+            if ($f['map']) { $o = ''; for ($i = 0; $i < strlen($b); $i++) { $k = ord($b[$i]); $o .= isset($f['map'][$k]) ? $f['map'][$k] : $b[$i]; } return $o; }
+            return mb_convert_encoding($b, 'UTF-8', 'Windows-1252');
+        };
+        foreach ($tk[0] as $t) {
+            if ($t === '[' || $t === ']' || $t[0] === '/' || $t[0] === '(' || $t[0] === '<' || is_numeric($t)) { $st[] = $t; continue; }
+            $n = function ($i) use ($st) { return isset($st[count($st) - $i]) ? (float) $st[count($st) - $i] : 0; };
+            switch ($t) {
+                case 'Tf': $font = isset($st[count($st) - 2]) ? substr($st[count($st) - 2], 1) : ''; $fs = $n(1); break;
+                case 'Tm': $tx = $lx = $n(2); $ty = $ly = $n(1); $fsz = abs($n(6)) > 0.01 && abs($n(6) - 1) > 0.01 ? $n(6) : 1; if ($fsz !== 1) { $fs = $fs * $fsz; } break;
+                case 'Td': case 'TD': $lx += $n(2); $ly += $n(1); $tx = $lx; $ty = $ly; if ($t === 'TD') { $lead = -$n(1); } break;
+                case 'TL': $lead = $n(1); break;
+                case 'T*': $ly -= $lead; $tx = $lx; $ty = $ly; break;
+                case 'Tj': case "'": case '"': if ($t !== 'Tj') { $ly -= $lead; $tx = $lx; $ty = $ly; } $s = end($st); if ($s !== false && ($s[0] === '(' || $s[0] === '<')) { $runs[] = array($page, (int) round($tx), (int) round($ty), $fs, $dec($s)); } break;
+                case 'TJ': $i = array_search('[', array_reverse($st, true), true); $txt = ''; if ($i !== false) { foreach (array_slice($st, $i + 1) as $p) { if ($p !== ']' && ($p[0] === '(' || $p[0] === '<')) { $txt .= $dec($p); } } } $runs[] = array($page, (int) round($tx), (int) round($ty), $fs, $txt); break;
+            }
+            $st = array();
+        }
+    }
+    return array_values(array_filter($runs, function ($r) { return trim($r[4]) !== ''; }));
+}
+/* a Siókom-naptár értelmezése: év, szelektív és zöldhulladék dátumai a táblázatból, vegyes gyűjtés szabálya, lomtalanítás */
+function waste_parse_siokom($runs) {
+    $HM = array('január', 'február', 'március', 'április', 'május', 'június', 'július', 'augusztus', 'szeptember', 'október', 'november', 'december');
+    $low = function ($s) { return mb_strtolower(trim($s), 'UTF-8'); };
+    $runs = array_values(array_filter($runs, function ($r) { return !preg_match('/Kérjük|akadályozz/u', $r[4]); }));   /* a kihelyezési kérés szövege keveredne a szabállyal */
+    usort($runs, function ($a, $b) { return $a[0] - $b[0] ?: ($b[2] - $a[2] ?: $a[1] - $b[1]); });
+    $all = implode(' ', array_map(function ($r) { return trim($r[4]); }, $runs)); $all = preg_replace('/\s+/u', ' ', $all);
+    if (!preg_match('/(20\d\d)\.?\s*évi\s+hullad/u', $all, $ym)) { return array(false, 'Nem találom az évszámot a naptárban.'); }
+    $Y = (int) $ym[1];
+    $w = function ($r) { $t = trim($r[4]); $f = $r[3] ? $r[3] : 9; $n = preg_match_all('/[,.\s]/u', $t); return ((mb_strlen($t, 'UTF-8') - $n) * 0.55 + $n * 0.25) * $f; };   /* becsült szövegszélesség */
+    $hdr = array(); foreach ($runs as $r) { $i = array_search($low($r[4]), $HM, true); if ($i !== false && !isset($hdr[$i])) { $hdr[$i] = array($r[1] + $w($r) / 2, $r[2], $r[0]); } }
+    if (count($hdr) < 12) { return array(false, 'Nem találom a hónapok fejlécét a naptárban.'); }
+    $row = function ($label) use ($runs, $low, $hdr, $w, $Y) {
+        $lab = null; foreach ($runs as $r) { if ($r[0] === $hdr[0][2] && strpos($low($r[4]), $label) === 0 && $r[2] < $hdr[0][1]) { $lab = $r; break; } }
+        if (!$lab) { return null; }
+        $cells = array(); foreach ($runs as $r) { if ($r[0] === $lab[0] && abs($r[2] - $lab[2]) <= 4 && $r[1] > $lab[1] + 20 && preg_match('/^[\d,.\s]+$/', $r[4])) { $cells[] = $r; } }
+        usort($cells, function ($a, $b) { return $a[1] - $b[1]; });
+        $merged = array(); foreach ($cells as $c) { $k = count($merged) - 1; if ($k >= 0 && substr(rtrim($merged[$k][4]), -1) === ',' && $c[1] - ($merged[$k][1] + $w($merged[$k])) < 8) { $merged[$k][4] .= $c[4]; } else { $merged[] = $c; } }
+        $dates = array();
+        foreach ($merged as $c) {
+            $cx = $c[1] + $w($c) / 2; $best = 0; $bd = 1e9; foreach ($hdr as $mi => $h) { if (abs($h[0] - $cx) < $bd) { $bd = abs($h[0] - $cx); $best = $mi; } }
+            foreach (preg_split('/[,.\s]+/', $c[4], -1, PREG_SPLIT_NO_EMPTY) as $d) { if (checkdate($best + 1, (int) $d, $Y)) { $dates[] = sprintf('%04d-%02d-%02d', $Y, $best + 1, (int) $d); } }
+        }
+        sort($dates); return array_values(array_unique($dates));
+    };
+    $sel = $row('szelektív'); $green = $row('zöldhullad');
+    if (!$sel) { return array(false, 'Nem találom a szelektív sort a naptárban.'); }
+    /* vegyes: „01.01-06.30 és 09.01-12.31 között HÉTFŐ … 07.01-08.31 között CSÜTÖRTÖK és VASÁRNAP” */
+    $mixed = array(); $rule = '';
+    $p = mb_strpos($all, 'Vegyes hulladékgyűjtési nap', 0, 'UTF-8');
+    if ($p !== false) {
+        $t = mb_substr($all, $p, 400, 'UTF-8'); $t = preg_replace('/Kérjük.*?akadályozza!?/u', ' ', $t); $t = preg_replace('/\s*-\s*/u', '-', preg_replace('/(\d)\s*\.\s*(\d)/u', '$1.$2', $t));
+        $t = preg_split('/Szolgáltató|Lomtalan|Hulladékudvar/u', $t)[0]; $rule = trim(preg_replace('/\s+/u', ' ', str_replace('Vegyes hulladékgyűjtési nap:', '', $t)));
+        $WD = array('VASÁRNAP' => 0, 'HÉTFŐ' => 1, 'KEDD' => 2, 'SZERDA' => 3, 'CSÜTÖRTÖK' => 4, 'PÉNTEK' => 5, 'SZOMBAT' => 6);
+        preg_match_all('/(\d{2})\.(\d{2})-(\d{2})\.(\d{2})|között|VASÁRNAP|HÉTFŐ|KEDD|SZERDA|CSÜTÖRTÖK|PÉNTEK|SZOMBAT/u', $t, $tk, PREG_SET_ORDER);
+        $per = array(); $after = false; $days = array();
+        $flush = function () use (&$per, &$days, &$mixed, $Y) {
+            foreach ($per as $pp) { for ($d = sprintf('%04d-%s', $Y, $pp[0]); $d <= sprintf('%04d-%s', $Y, $pp[1]); $d = add_days($d, 1)) { if (in_array(weekday($d), $days, true)) { $mixed[] = $d; } } }
+            $per = array(); $days = array();
+        };
+        foreach ($tk as $x) {
+            if (!empty($x[1])) { if ($after) { $flush(); $after = false; } $per[] = array($x[1] . '-' . $x[2], $x[3] . '-' . $x[4]); }
+            elseif ($x[0] === 'között') { $after = true; }
+            elseif ($after && isset($WD[$x[0]])) { $days[] = $WD[$x[0]]; }
+        }
+        $flush(); sort($mixed); $mixed = array_values(array_unique($mixed));
+    }
+    $lom = array();
+    if (preg_match_all('/(20\d\d)\s*\.\s*(' . implode('|', $HM) . ')\s+(\d{1,2})\b/u', $all, $lm, PREG_SET_ORDER)) {
+        foreach ($lm as $x) { $mi = array_search($x[2], $HM, true) + 1; if (checkdate($mi, (int) $x[3], (int) $x[1])) { $lom[] = sprintf('%04d-%02d-%02d', $x[1], $mi, $x[3]); } }
+        sort($lom); $lom = array_values(array_unique($lom));
+    }
+    return array(true, array('year' => $Y, 'mixed' => $mixed, 'mixed_rule' => $rule, 'selective' => $sel, 'green' => $green ? $green : array(), 'bulky' => $lom));
+}
+function waste_src_url($s, $year) { return str_replace('{EV}', (string) $year, $s['waste_src']); }
+function waste_fetch_year($s, $year) {
+    $u = waste_src_url($s, $year);
+    $u = preg_replace_callback('#[^A-Za-z0-9/:._~%{}-]#u', function ($m) { return rawurlencode($m[0]); }, $u);   /* ékezetes / szóközös útvonal */
+    list($code, $body) = http_get($u, 40);
+    if ($code !== 200 || strncmp($body, '%PDF', 4) !== 0) { return array(false, $year > (int) date('Y') ? $year . ': a Siókom még nem tette közzé – naponta megnézem.' : $year . ': a naptár nem érhető el ezen a linken: ' . $u); }
+    list($ok, $res) = waste_parse_siokom(pdf_text_runs($body));
+    if (!$ok) { return array(false, $year . ': ' . $res); }
+    if ($res['year'] !== (int) $year) { return array(false, $year . ': a letöltött naptár ' . $res['year'] . '-es.'); }
+    return array(true, $res);
+}
+/* az automatikus típusok cseréje (a kézzel felvett típusok maradnak) */
+function waste_apply_auto(&$db, $years) {
+    $def = array('mixed' => array('Vegyes (kommunális) hulladék', '#5b6b7a', 'reggel 5 óráig legyen kint'), 'selective' => array('Szelektív – papír, műanyag, fém', '#f2b233', 'reggel 5 óráig legyen kint'),
+        'green' => array('Zöldhulladék', '#3c9a5f', 'zsákolva, ágak max. 1 m-es kötegben – reggel 5 óráig'), 'bulky' => array('Lomtalanítás', '#8a6630', 'csak ha a hónap 15-éig írásban megrendelted (siokom@siokom.hu)'));
+    $keep = array_values(array_filter(isset($db['waste']) ? $db['waste'] : array(), function ($t) { return empty($t['auto']); }));
+    $old = array(); foreach (isset($db['waste']) ? $db['waste'] : array() as $t) { if (!empty($t['auto'])) { $old[$t['auto']] = $t; } }
+    $auto = array();
+    foreach ($def as $k => $d) {
+        $dates = array(); foreach ($years as $y) { $dates = array_merge($dates, $y[$k]); }
+        if (!$dates) { continue; }
+        $o = isset($old[$k]) ? $old[$k] : array();
+        $auto[] = array('id' => isset($o['id']) ? $o['id'] : bin2hex(random_bytes(5)), 'name' => $d[0], 'kind' => 'dates', 'weekday' => 1, 'nth' => 1, 'start' => today(), 'season_from' => '', 'season_to' => '',
+            'dates' => array_values(array_unique($dates)), 'skip' => isset($o['skip']) ? $o['skip'] : array(), 'note' => $d[2],
+            'color' => isset($o['color']) ? $o['color'] : $d[1], 'active' => isset($o['active']) ? $o['active'] : 1, 'auto' => $k);
+    }
+    $db['waste'] = array_slice(array_merge($auto, $keep), 0, 12);
+}
+function waste_auto_due($db) {
+    $s = $db['settings']; if (empty($s['waste_auto'])) { return false; }
+    $ws = isset($db['waste_sync']) ? $db['waste_sync'] : array();
+    $have = isset($ws['years']) ? $ws['years'] : array(); $Y = (int) date('Y');
+    $need = !in_array($Y, $have, true) || ((int) date('n') >= 11 && !in_array($Y + 1, $have, true));
+    $last = isset($ws['tried']) ? $ws['tried'] : '';
+    return $need ? $last !== today() : ($last === '' || nights($last, today()) >= 30);   /* hiányzó év: naponta próbálja; meglévő: havonta frissít (ha módosítanak) */
+}
+function waste_auto_run(&$db) {
+    $s = $db['settings']; $Y = (int) date('Y'); $got = array(); $log = array();
+    foreach (array($Y, $Y + 1) as $y) {
+        if ($y > $Y && (int) date('n') < 11) { continue; }
+        list($ok, $res) = waste_fetch_year($s, $y);
+        if ($ok) { $got[] = $res; $log[] = $y . ': ' . count($res['mixed']) . ' vegyes, ' . count($res['selective']) . ' szelektív, ' . count($res['green']) . ' zöld, ' . count($res['bulky']) . ' lomtalanítási nap'; }
+        else { $log[] = $res; }
+    }
+    $prev = isset($db['waste_sync']) ? $db['waste_sync'] : array();
+    if ($got) {
+        /* a már letöltött, de most el nem ért év adatai maradnak */
+        $years = array_map(function ($g) { return $g['year']; }, $got);
+        if (!empty($prev['data'])) { foreach ($prev['data'] as $pd) { if (!in_array($pd['year'], $years, true) && $pd['year'] >= $Y) { $got[] = $pd; $years[] = $pd['year']; } } }
+        waste_apply_auto($db, $got);
+        $db['waste_sync'] = array('ok' => today(), 'tried' => today(), 'years' => $years, 'data' => $got, 'log' => $log, 'src' => waste_src_url($s, $Y));
+    } else {
+        $db['waste_sync'] = array_merge($prev, array('tried' => today(), 'log' => $log, 'error' => 1));
+    }
+    return $log;
+}
+
 /* a megadott időszak szállítási napjai: [['date' => …, 'id' => …, 'name' => …, 'note' => …, 'color' => …], …] */
 function waste_dates($types, $from, $to) {
     $o = array();
@@ -970,7 +1182,8 @@ function waste_payload($db) {
     $s = $db['settings']; $t = today();
     return array('today' => $t, 'types' => isset($db['waste']) ? $db['waste'] : array(), 'upcoming' => waste_dates(isset($db['waste']) ? $db['waste'] : array(), $t, add_days($t, 120)),
         'kinds' => waste_kinds(), 'feed' => api_self_url() . '?r=teendok_ical&key=' . $s['ical_key'], 'cron' => api_self_url() . '?r=cron&key=' . $s['ical_key'],
-        'last_sent' => isset($db['remind_sent']) ? $db['remind_sent'] : '');
+        'last_sent' => isset($db['remind_sent']) ? $db['remind_sent'] : '',
+        'sync' => isset($db['waste_sync']) ? array_diff_key($db['waste_sync'], array('data' => 1)) : null, 'auto' => (int) $s['waste_auto'], 'src' => $s['waste_src']);
 }
 
 /* ================================================================ útvonalak */
@@ -1275,6 +1488,8 @@ case 'save_settings':
     if (isset($in['remind_waste'])) { $s['remind_waste'] = $in['remind_waste'] ? 1 : 0; }
     if (isset($in['guest_mode'])) { $s['guest_mode'] = in_array($in['guest_mode'], array('day', 'week', 'off'), true) ? $in['guest_mode'] : 'day'; }
     foreach (array('guest_ev', 'guest_ev_approved') as $k) { if (isset($in[$k])) { $s[$k] = $in[$k] ? 1 : 0; } }
+    if (isset($in['waste_auto'])) { $s['waste_auto'] = $in['waste_auto'] ? 1 : 0; }
+    if (isset($in['waste_src'])) { $v = clean($in['waste_src'], 400); if ($v !== '' && !preg_match('#^https?://#i', $v)) { fail('A hulladéknaptár linkje https://-sel kezdődjön.'); } if ($v !== '') { $s['waste_src'] = $v; } }
     if (isset($in['guest_ev_days'])) { $s['guest_ev_days'] = max(2, min(14, (int) $in['guest_ev_days'])); }
     if (isset($in['guest_ev_bike_km'])) { $s['guest_ev_bike_km'] = max(5, min(60, (int) $in['guest_ev_bike_km'])); }
     if (isset($in['ferry_url'])) { $v = clean($in['ferry_url'], 300); $s['ferry_url'] = preg_match('#^https?://#i', $v) ? $v : 'https://bahart.hu/'; }
@@ -1323,7 +1538,7 @@ case 'sync':
 case 'cron':  /* tárhely ütemezőből: …/api/index.php?r=cron&key=… */
     $db = db_load();
     if (!hash_equals((string) $db['settings']['ical_key'], isset($_GET['key']) ? (string) $_GET['key'] : '')) { fail('Hozzáférés megtagadva.', 403); }
-    $log = sync_all($db); $rm = remind_due($db) ? remind_run($db) : null; $evf = ev_due($db) ? ev_import_all($db) : null; $gev = null; if (guest_ev_due($db)) { $db['guest_ev_day'] = today(); $gev = guest_ev_run($db); } db_save($db); out(array('ok' => true, 'log' => $log, 'remind' => $rm, 'programs' => $evf, 'guest_programs' => $gev));
+    $log = sync_all($db); $rm = remind_due($db) ? remind_run($db) : null; $evf = ev_due($db) ? ev_import_all($db) : null; $wsy = waste_auto_due($db) ? waste_auto_run($db) : null; $gev = null; if (guest_ev_due($db)) { $db['guest_ev_day'] = today(); $gev = guest_ev_run($db); } db_save($db); out(array('ok' => true, 'log' => $log, 'remind' => $rm, 'programs' => $evf, 'guest_programs' => $gev, 'waste' => $wsy));
 
 case 'ical':  /* naptár-kiküldés: Airbnb, Szállás.hu, Google Naptár */
     $db = db_load();
@@ -1341,7 +1556,8 @@ case 'events':
     $db = db_load(); $t = today(); $list = array();
     if (remind_due($db)) { remind_run($db); db_save($db); }   /* a kezdőoldal látogatása is elindítja a napi emlékeztetőt */
     if (ev_due($db)) { ev_import_all($db); db_save($db); }   /* naponta egyszer a forrásokból is frissül */
-    if (guest_ev_due($db)) { $db['guest_ev_day'] = today(); guest_ev_run($db); db_save($db); }   /* érkezés előtti programlevelek (ingyenes, ütemező nélkül is) */
+    if (guest_ev_due($db)) { $db['guest_ev_day'] = today(); guest_ev_run($db); db_save($db); }
+    if (waste_auto_due($db)) { waste_auto_run($db); db_save($db); }   /* hulladéknaptár: évente magától a Siókomtól */   /* érkezés előtti programlevelek (ingyenes, ütemező nélkül is) */
     $seenK = array();
     foreach ((array) (isset($db['events']) ? $db['events'] : array()) as $e) {
         if ((isset($e['to']) && $e['to'] ? $e['to'] : $e['from']) < $t || !empty($e['hidden']) || !empty($e['gone'])) { continue; }
@@ -1441,6 +1657,12 @@ case 'waste_save':
     $db = db_load(); require_admin($db);
     $db['waste'] = waste_clean(isset($P['types']) ? $P['types'] : array()); db_save($db);
     out(array_merge(array('ok' => true, 'message' => 'Hulladéknaptár elmentve.'), waste_payload($db)));
+
+case 'waste_sync':   /* „Frissítés most”: hulladéknaptár letöltése a Siókom oldaláról */
+    if ($method !== 'POST') { fail('POST kell.', 405); }
+    $db = db_load(); require_admin($db);
+    $log = waste_auto_run($db); db_save($db);
+    out(array_merge(array('ok' => empty($db['waste_sync']['error']), 'message' => implode(' · ', $log)), waste_payload($db)));
 
 case 'remind_test':
     if ($method !== 'POST') { fail('POST kell.', 405); }

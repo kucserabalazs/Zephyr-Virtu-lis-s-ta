@@ -265,6 +265,8 @@ html.intro-on body { overflow: hidden; }
 .sight:hover .sight-img img { transform: scale(1.06); }
 .sight-img .ph { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.85); }
 .sight-img .ph svg { width: 70px; height: 70px; }
+.sight-cr { position: absolute; right: 8px; bottom: 8px; max-width: 60%; padding: 3px 6px; border-radius: 5px; background: rgba(7,29,56,.55); color: rgba(255,255,255,.85); font: 600 9.5px/1.2 var(--body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sights-cr { margin: 14px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--ink-2); opacity: .8; } .sights-cr a { color: inherit; }
 .sight-tag { position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; border-radius: 6px; background: rgba(7,29,56,.82); color: #ffd978; font: 800 11px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; }
 .sight-body { padding: 16px 18px 18px; display: grid; gap: 8px; align-content: start; }
 .sight-body h3 { font: 900 26px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; color: var(--sea); }
@@ -865,6 +867,7 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
       <p class="lead">Fedezd fel Zamárdi látnivalóit, programjait és környékbeli kirándulóhelyeit. Összegyűjtöttünk néhány helyet, amelyet érdemes felkeresned.</p>
     </div>
     <div class="sights" id="sights"></div>
+    <p class="sights-cr" id="sightsCr"></p>
   </div>
 </section>
 
@@ -1034,24 +1037,24 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   };
 
   const SIGHTS = [
-    { t: "Emlékhelyek és emlékművek", tag: "Történelem", img: OLD + "2022/05/Honfoglalasi-emlekmu-407x270-1.jpg", url: OLDSITE + "emlekhelyek-emlekmuvek/",
+    { t: "Emlékhelyek és emlékművek", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Denkmal_Ungarische_Revolution_1848-1849%2C_Kopjafa%2C_2021_Zam%C3%A1rdi.jpg/960px-Denkmal_Ungarische_Revolution_1848-1849%2C_Kopjafa%2C_2021_Zam%C3%A1rdi.jpg", credit: ["Globetrotter19", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Denkmal_Ungarische_Revolution_1848-1849,_Kopjafa,_2021_Zam%C3%A1rdi.jpg"], tag: "Történelem", img: OLD + "2022/05/Honfoglalasi-emlekmu-407x270-1.jpg", url: OLDSITE + "emlekhelyek-emlekmuvek/",
       p: "A Szabadság téren kopjafa és emléktábla őrzi az 1848-as hősök emlékét. Mindkettőt 1998-ban, a szabadságharc 150. évfordulóján állították." },
     { t: "Tájház", tag: "Néprajz", img: OLD + "2022/05/KIM-2013.-augusztus-20.-407x270-1.jpg", url: OLDSITE + "tajhaz/",
       p: "A Fő utca 83. szám alatt álló régi parasztház. Már az 1960-as évek elején felmerült, hogy a községi tanács megvásárolja, és megőrzi az utókornak." },
-    { t: "Kőhegyi kilátó", tag: "Kirándulás", img: OLD + "2022/05/zamardi-kilato-407x270-1.jpg", url: OLDSITE + "kohegyi-kilato/",
+    { t: "Kőhegyi kilátó", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Kil%C3%A1t%C3%B3_-_Zam%C3%A1rdi%2C_K%C5%91_hegy%2C_2015.02.03_%281%29.JPG/960px-Kil%C3%A1t%C3%B3_-_Zam%C3%A1rdi%2C_K%C5%91_hegy%2C_2015.02.03_%281%29.JPG", credit: ["Derzsi Elekes Andor", "CC BY-SA 4.0", "https://commons.wikimedia.org/wiki/File:Kil%C3%A1t%C3%B3_-_Zam%C3%A1rdi,_K%C5%91_hegy,_2015.02.03_(1).JPG"], tag: "Kirándulás", img: OLD + "2022/05/zamardi-kilato-407x270-1.jpg", url: OLDSITE + "kohegyi-kilato/",
       p: "Sétálj fel a Kőhegy tetejére, és nézd meg a panorámát! A Zamárditól délnyugatra emelkedő magaslat környéke szőlőtermő terület." },
-    { t: "Templom és kápolnák", tag: "Templomok", img: OLD + "2022/05/Orgona-407x270-1.jpg", url: OLDSITE + "templom-es-kapolnak/",
+    { t: "Templom és kápolnák", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Church_of_Zam%C3%A1rdi.JPG/960px-Church_of_Zam%C3%A1rdi.JPG", credit: ["Antissimo", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Church_of_Zam%C3%A1rdi.JPG"], tag: "Templomok", img: OLD + "2022/05/Orgona-407x270-1.jpg", url: OLDSITE + "templom-es-kapolnak/",
       p: "A ma is álló római katolikus plébániatemplom Vajda Sámuel apát nevéhez kötődik. Építése 1771-ben kezdődött." },
-    { t: "Balaton Szíve tér", tag: "Közösség", img: OLD + "2022/05/Balaton-szive-1.jpg", url: OLDSITE + "balaton-szive-ter/",
+    { t: "Balaton Szíve tér", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Herz_des_Plattensees_%28Istv%C3%A1n_F%C3%A1skerti%29%2C_2021_Zam%C3%A1rdi.jpg/960px-Herz_des_Plattensees_%28Istv%C3%A1n_F%C3%A1skerti%29%2C_2021_Zam%C3%A1rdi.jpg", credit: ["Globetrotter19", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Herz_des_Plattensees_(Istv%C3%A1n_F%C3%A1skerti),_2021_Zam%C3%A1rdi.jpg"], tag: "Közösség", img: OLD + "2022/05/Balaton-szive-1.jpg", url: OLDSITE + "balaton-szive-ter/",
       p: "A tér neve a Balatoni Játszadalomra utal. A rendezvényen évente több száz ember alkot szívet a vízben, kézen fogva." },
     { t: "Világháborúk Múzeuma", tag: "Múzeum", img: OLD + "2022/05/013-407x270-1.jpg", url: "https://www.tarrkamilitaria.hu", ext: 1,
       p: "Hadtörténeti gyűjtemény Zamárdi-felsőn, a Siófoki úton.",
       info: ["Nyári nyitvatartás: 10:00–18:00, hétvégén is.", "Más időpontban telefonos egyeztetés szükséges.", "Tarr Péter: 06 30 425 8115 · info@tarrkamilitaria.hu"] },
     { t: "Zamárdi Kalandpark", tag: "Kaland", img: OLD + "2022/05/Te%CC%81rke%CC%81p_u%CC%81j_1000_x_713-1000x650.jpg", url: OLDSITE + "hotel-zante-in-pictures/",
       p: "A kalandpark az autópályától és a Zamárdi-felső vasútállomástól is mintegy száz méterre található." },
-    { t: "Avarkori temető", tag: "Régészet", img: OLD + "2022/05/Avarkori-temeto1-407x270-1.jpg", url: OLDSITE + "avarkori-temeto/",
+    { t: "Avarkori temető", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Man%27s_grave_goods_from_Zam%C3%A1rdi%2C_Hungary_-_1.jpg/960px-Man%27s_grave_goods_from_Zam%C3%A1rdi%2C_Hungary_-_1.jpg", credit: ["James Steakley", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Man%27s_grave_goods_from_Zam%C3%A1rdi,_Hungary_-_1.jpg"], tag: "Régészet", img: OLD + "2022/05/Avarkori-temeto1-407x270-1.jpg", url: OLDSITE + "avarkori-temeto/",
       p: "Az egykori Pannónia keleti részén, a VI. század végén és a VII. század elején kialakult avar kori temető emlékei." },
-    { t: "Szamárkő", tag: "Természet", img: OLD + "2022/05/Ferenczi-Szamarko-fekvo-407x270-1.jpg", url: OLDSITE + "szamarko/",
+    { t: "Szamárkő", photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Zamardi%2C_Szam%C3%A1rk%C5%91_%28Donkey_rock%29_-_panoramio.jpg/960px-Zamardi%2C_Szam%C3%A1rk%C5%91_%28Donkey_rock%29_-_panoramio.jpg", credit: ["Emil Kiss", "CC BY-SA 3.0", "https://commons.wikimedia.org/wiki/File:Zamardi,_Szam%C3%A1rk%C5%91_(Donkey_rock)_-_panoramio.jpg"], tag: "Természet", img: OLD + "2022/05/Ferenczi-Szamarko-fekvo-407x270-1.jpg", url: OLDSITE + "szamarko/",
       p: "A Szamárkövet Zamárdi nyugati végén, a Kiserdő dombjai között találod." }
   ];
 
@@ -1248,11 +1251,12 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   $("sights").innerHTML = SIGHTS.map((s, si) => `
     <a class="sight" href="${esc(s.url)}" target="_blank" rel="noopener">
-      <div class="sight-img"><span class="ph scn">${scene(si)}</span><img src="${esc(s.img)}" alt="${esc(s.t)}" loading="lazy" onerror="this.remove()"><span class="sight-tag">${esc(s.tag)}</span></div>
+      <div class="sight-img"><span class="ph scn">${scene(si)}</span><img src="${esc(s.photo || s.img)}" alt="${esc(s.t)}" loading="lazy" onerror="this.remove()"><span class="sight-tag">${esc(s.tag)}</span>${s.credit ? `<span class="sight-cr">Fotó: ${esc(s.credit[0])} · ${esc(s.credit[1])}</span>` : ""}</div>
       <div class="sight-body"><h3>${esc(s.t)}</h3><p>${esc(s.p)}</p>
         ${s.info ? `<div class="sight-info">${s.info.map((i) => `<span>${esc(i)}</span>`).join("")}</div>` : ""}
         <span class="sight-more">${s.ext ? "A múzeum oldala" : "Bővebben"}<svg><use href="#i-arrow"/></svg></span></div>
     </a>`).join("");
+  $("sightsCr").innerHTML = "Fotók: Wikimedia Commons – " + SIGHTS.filter((s) => s.credit).map((s) => `<a href="${esc(s.credit[2])}" target="_blank" rel="noopener">${esc(s.t)}</a> (${esc(s.credit[0])}, ${esc(s.credit[1])})`).join(" · ") + `. Licenc: <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.hu" target="_blank" rel="noopener">CC BY-SA</a>.`;
 
   /* ---------------------------------------------------------------- segítség */
   const telL = (arr) => (arr || []).map(([n, t]) => `<a class="tel" href="tel:${t}"><svg><use href="#i-phone"/></svg>${esc(n)}</a>`).join("");
