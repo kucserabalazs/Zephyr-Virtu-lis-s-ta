@@ -1556,7 +1556,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const base = evFiltered(false).filter(() => true), cnt = {};
     for (let d = 1; d <= days; d++) { const s = ymd(new Date(y, mo, d)); cnt[s] = EVS.filter((e) => evOn(e, s) && (!evCat || e.cat === evCat) && evZoneOk(e) && (!EQ.town || e.town === EQ.town) && (!EQ.free || e.free) && (!EQ.kids || e.kids) && (!EQ.indoor || e.indoor)).length; }
     let h = `<div class="ev-cal"><div class="ev-cal-hd"><button type="button" class="ev-nav" data-mo="-1" ${EQ.mo <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><b>${y}. ${HU_M[mo]}</b><button type="button" class="ev-nav" data-mo="1" ${EQ.mo >= 11 ? "disabled" : ""} aria-label="Következő hónap">›</button></div><div class="ev-cal-g">`;
-    h += ["H", "K", "Sze", "Cs", "P", "Szo", "V"].map((w) => `<span class="w">${w}</span>`).join("") + "<span></span>".repeat(lead);
+    h += ["H", "K", "Sze", "Cs", "P", "Szo", "V"].map((w) => `<span class="w" data-i18n="nap:${w}">${w}</span>`).join("") + "<span></span>".repeat(lead);
     for (let d = 1; d <= days; d++) { const s = ymd(new Date(y, mo, d)), n = cnt[s], past = s < T; h += `<button type="button" class="d${s === T ? " today" : ""}${n ? " has" : ""}${EQ.day === s ? " on" : ""}" data-day="${s}" ${past || !n ? "disabled" : ""} aria-label="${d}. – ${n} program"><b>${d}</b>${n ? `<i>${n > 3 ? "•••" : "•".repeat(n)}</i>` : ""}</button>`; }
     void base;
     return h + `</div><small>A pöttyök a napi programok számát jelzik – koppints egy napra.</small></div>`;

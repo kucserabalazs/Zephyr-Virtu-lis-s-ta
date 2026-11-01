@@ -1424,5 +1424,12 @@
  "❚❚ Szünet": "❚❚ Jeda",
  "🎟️ Ingyenes": "🎟️ Gratis",
  "🚗 Autóval": "🚗 Dengan mobil",
- "🧒 Gyerekbarát": "🧒 Ramah anak"
+ "🧒 Gyerekbarát": "🧒 Ramah anak",
+ "nap:H": "Sen",
+ "nap:K": "Sel",
+ "nap:Sze": "Rab",
+ "nap:Cs": "Kam",
+ "nap:P": "Jum",
+ "nap:Szo": "Sab",
+ "nap:V": "Min"
 }

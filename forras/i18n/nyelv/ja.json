@@ -1424,5 +1424,12 @@
  "❚❚ Szünet": "❚❚ 一時停止",
  "🎟️ Ingyenes": "🎟️ 無料",
  "🚗 Autóval": "🚗 車で",
- "🧒 Gyerekbarát": "🧒 子ども歓迎"
+ "🧒 Gyerekbarát": "🧒 子ども歓迎",
+ "nap:H": "月",
+ "nap:K": "火",
+ "nap:Sze": "水",
+ "nap:Cs": "木",
+ "nap:P": "金",
+ "nap:Szo": "土",
+ "nap:V": "日"
 }

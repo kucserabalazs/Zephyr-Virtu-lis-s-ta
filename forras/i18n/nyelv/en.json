@@ -1424,5 +1424,12 @@
  "❚❚ Szünet": "❚❚ Pause",
  "🎟️ Ingyenes": "🎟️ Free",
  "🚗 Autóval": "🚗 By car",
- "🧒 Gyerekbarát": "🧒 Child-friendly"
+ "🧒 Gyerekbarát": "🧒 Child-friendly",
+ "nap:H": "Mo",
+ "nap:K": "Tu",
+ "nap:Sze": "We",
+ "nap:Cs": "Th",
+ "nap:P": "Fr",
+ "nap:Szo": "Sa",
+ "nap:V": "Su"
 }

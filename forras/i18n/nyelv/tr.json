@@ -1424,5 +1424,12 @@
  "❚❚ Szünet": "❚❚ Duraklat",
  "🎟️ Ingyenes": "🎟️ Ücretsiz",
  "🚗 Autóval": "🚗 Arabayla",
- "🧒 Gyerekbarát": "🧒 Çocuk dostu"
+ "🧒 Gyerekbarát": "🧒 Çocuk dostu",
+ "nap:H": "Pzt",
+ "nap:K": "Sal",
+ "nap:Sze": "Çar",
+ "nap:Cs": "Per",
+ "nap:P": "Cum",
+ "nap:Szo": "Cmt",
+ "nap:V": "Paz"
 }

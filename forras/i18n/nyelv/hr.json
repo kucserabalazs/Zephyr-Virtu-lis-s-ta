@@ -1424,5 +1424,12 @@
  "❚❚ Szünet": "❚❚ Pauza",
  "🎟️ Ingyenes": "🎟️ Besplatno",
  "🚗 Autóval": "🚗 Automobilom",
- "🧒 Gyerekbarát": "🧒 Prikladno za djecu"
+ "🧒 Gyerekbarát": "🧒 Prikladno za djecu",
+ "nap:H": "Po",
+ "nap:K": "Ut",
+ "nap:Sze": "Sr",
+ "nap:Cs": "Če",
+ "nap:P": "Pe",
+ "nap:Szo": "Su",
+ "nap:V": "Ne"
 }

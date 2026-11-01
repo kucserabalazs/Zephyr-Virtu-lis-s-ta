@@ -1424,5 +1424,12 @@
  "❚❚ Szünet": "❚❚ 일시 정지",
  "🎟️ Ingyenes": "🎟️ 무료",
  "🚗 Autóval": "🚗 자동차로",
- "🧒 Gyerekbarát": "🧒 아이 친화적"
+ "🧒 Gyerekbarát": "🧒 아이 친화적",
+ "nap:H": "월",
+ "nap:K": "화",
+ "nap:Sze": "수",
+ "nap:Cs": "목",
+ "nap:P": "금",
+ "nap:Szo": "토",
+ "nap:V": "일"
 }

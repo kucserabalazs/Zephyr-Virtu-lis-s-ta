@@ -23,7 +23,7 @@
   const CODES = LANGS.map((l) => l[0]);
   /* mely nyelvekhez van már szótár – a build tölti ki a nyelv/ mappa alapján */
   const READY = (window.ZEPHYR_I18N_READY || /*ZI18N_READY*/["hu"]/*/ZI18N_READY*/).filter((c) => CODES.includes(c));
-  const BASE = window.ZEPHYR_I18N_BASE || "../nyelv/";
+  const BASE = window.ZEPHYR_I18N_BASE || (/(^|\.)(claude\.ai|claudeusercontent\.com|anthropic\.com)$/i.test(location.hostname) ? "nyelv/" : "../nyelv/");   /* claude.ai bemutató: a szótárak az előnézet mellett */
   const KEY = "zephyr-lang";
   const COLLECT = /(^|[?&])forditas=gyujt/.test(location.search);
   const SKIP = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEXTAREA: 1, CODE: 1, PRE: 1, CANVAS: 1, TEMPLATE: 1 };
@@ -63,7 +63,8 @@
   function doText(n) {
     const rec = TXT.get(n); let src = rec ? rec.src : n.nodeValue;
     if (rec && n.nodeValue !== rec.out) src = n.nodeValue;   /* az oldal közben átírta → új forrásszöveg */
-    const t = lang === "hu" ? null : tr(src); if (lang === "hu") note(norm(src));
+    const ky = n.parentNode && n.parentNode.getAttribute && n.parentNode.getAttribute("data-i18n");   /* rövid, többértelmű feliratok saját kulccsal (pl. nap:H) */
+    const t = lang === "hu" ? null : (ky && dict && dict[ky] != null ? dict[ky] : tr(src)); if (lang === "hu") note(norm(src));
     let out = src;
     if (t != null) { const m = /^(\s*)[\s\S]*?(\s*)$/.exec(src); out = m[1] + t + m[2]; }
     TXT.set(n, { src, out }); if (n.nodeValue !== out) n.nodeValue = out;
@@ -103,7 +104,7 @@
   async function loadDict(c) {
     if (c === "hu") return null;
     const inl = window.ZEPHYR_I18N_DICTS && window.ZEPHYR_I18N_DICTS[c]; if (inl) return inl;
-    try { const r = await fetch(BASE + c + ".json", { cache: "force-cache" }); if (r.ok) return await r.json(); } catch (e) {}
+    for (const b of [BASE, BASE === "nyelv/" ? "../nyelv/" : "nyelv/"]) { try { const r = await fetch(b + c + ".json", { cache: "force-cache" }); if (r.ok) return await r.json(); } catch (e) {} }
     return null;
   }
   async function setLang(c, remember) {

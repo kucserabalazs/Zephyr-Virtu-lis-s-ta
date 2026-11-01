@@ -1424,5 +1424,12 @@
  "❚❚ Szünet": "❚❚ Pauza",
  "🎟️ Ingyenes": "🎟️ Zdarma",
  "🚗 Autóval": "🚗 Autem",
- "🧒 Gyerekbarát": "🧒 Vhodné pro děti"
+ "🧒 Gyerekbarát": "🧒 Vhodné pro děti",
+ "nap:H": "Po",
+ "nap:K": "Út",
+ "nap:Sze": "St",
+ "nap:Cs": "Čt",
+ "nap:P": "Pá",
+ "nap:Szo": "So",
+ "nap:V": "Ne"
 }
