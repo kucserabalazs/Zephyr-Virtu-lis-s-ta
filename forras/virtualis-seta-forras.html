@@ -1913,8 +1913,10 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   function loginView() {
     return `<form class="zad-login" data-form="login"><h2 class="zfb-h">Tulajdonosi belépés</h2>
       <p class="zfb-fine" style="margin:0 0 14px">Itt kezelheted a foglalási kéréseket, a zárolásokat és az árakat.</p>
-      <label class="zad-f"><span>Jelszó</span><input type="password" name="password" autocomplete="current-password" required autofocus></label>
-      <button class="zfb-btn" type="submit">Belépés</button></form>`;
+      ${A.otp ? `<p class="zfb-tip" style="margin:0 0 12px"><b>Ellenőrzőkódot küldtünk</b> a(z) ${esc(A.otp.to || "megadott")} címre. Írd be a 6 jegyű kódot (10 percig érvényes).</p>
+      <label class="zad-f"><span>Ellenőrzőkód</span><input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required autofocus style="font-size:24px;letter-spacing:.35em;text-align:center"></label>
+      <button class="zfb-btn" type="submit">Belépés</button> <button class="zfb-chip-more" type="button" data-otp-resend="1">Új kódot kérek</button>` : `<label class="zad-f"><span>Jelszó</span><input type="password" name="password" autocomplete="current-password" required autofocus></label>
+      <button class="zfb-btn" type="submit">Belépés</button>`}</form>`;
   }
 
   const aptOf = (id) => (A.data.settings.apartments.find((a) => a.id === id) || { name: id, color: "#888", no: "?" });
@@ -2176,6 +2178,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   async function onClick(e) {
     const b = e.target.closest("button"); if (!b || b.disabled) return;
+    if (b.dataset.otpResend && A.otp) { try { const r = await call("login", { password: A.otp.pw }); A.otp.to = r.sent_to || A.otp.to; A.err = ""; A.msg = "Új kódot küldtünk."; } catch (x) { A.err = x.message; } render(); return; }
     if (b.dataset.tab) { if (A.tab === "settings") grabSettings(); A.tab = b.dataset.tab; A.err = ""; A.msg = ""; render(); el.querySelector(".zad-body").scrollTop = 0; if (A.tab === "prog" && !A.ev) loadEv(); return; }
     if (b.dataset.reload) { if (A.tab === "prog") { A.ev = null; render(); return loadEv(); } return load(); }
     if (b.dataset.evnew) { A.evEdit = { cat: "egyeb" }; render(); el.querySelector(".zad-body").scrollTop = 0; return; }
@@ -2206,8 +2209,12 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const f = e.target, kind = f.dataset.form, fd = Object.fromEntries(new FormData(f).entries());
     if (kind === "login") {
       A.busy = true; A.err = ""; render();
-      try { const r = await call("login", { password: fd.password }); setTok(r.token); await load(); if (A.tab === "prog") loadEv(); }
-      catch (x) { A.busy = false; A.err = x.message; render(); }
+      try {
+        const r = A.otp ? await call("login", { password: A.otp.pw, code: fd.code }) : await call("login", { password: fd.password });
+        if (r.need_code) { A.otp = { pw: fd.password, to: r.sent_to }; A.busy = false; render(); return; }   /* kétlépcsős védelem: e-mailes kód */
+        A.otp = null; setTok(r.token); await load(); if (A.tab === "prog") loadEv();
+      }
+      catch (x) { A.busy = false; A.err = x.message; if (/lejárt/i.test(x.message)) A.otp = null; render(); }
       return;
     }
     if (kind === "ev") {

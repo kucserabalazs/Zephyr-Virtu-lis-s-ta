@@ -616,10 +616,29 @@ h2.vt { position: relative; } h2.vt::after { content: ""; position: absolute; le
       const pw = e.target.pw.value;
       try {
         const j = await api("login", { password: pw });
+        if (j.need_code) return codeView(pw, j.sent_to);   /* kétlépcsős védelem: e-mailes ellenőrzőkód */
         A.tok = j.token; store.set(TK, j.token); await start();
       } catch (er) { loginView(er.offline ? er.message + " Kipróbálhatod bemutató módban." : er.message); }
     });
     $("#demoBtn").addEventListener("click", async () => { A.demo = true; await start(); });
+  }
+  function codeView(pw, to, err) {  /* 2. lépés: az e-mailben kapott 6 jegyű kód */
+    const card = $(".login-card"); if (!card) return;
+    card.querySelector("form").outerHTML = `<form id="cf">
+        <div class="alert info">${ico("lock")}<div><b>Ellenőrzőkódot küldtünk</b>a(z) ${esc(to || "megadott")} címre. Írd be a 6 jegyű kódot (10 percig érvényes).</div></div>
+        <label class="f"><span>Ellenőrzőkód</span><input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" maxlength="7" required autofocus style="font: 800 26px/1 var(--body); letter-spacing: .35em; text-align: center"></label>
+        <button class="btn pri block" type="submit">${ico("lock")}Belépés</button>
+        <button class="btn line sm block" type="button" id="resend">Új kódot kérek</button>
+        ${err ? `<div class="alert warn">${ico("alert")}<div>${esc(err)}</div></div>` : ""}
+      </form>`;
+    $("#cf").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try { const j = await api("login", { password: pw, code: e.target.code.value }); A.tok = j.token; store.set(TK, j.token); await start(); }
+      catch (er) { codeView(pw, to, er.message); }
+    });
+    $("#resend").addEventListener("click", async () => {
+      try { const j = await api("login", { password: pw }); codeView(pw, j.sent_to || to, j.need_code ? "Új kódot küldtünk." : ""); } catch (er) { codeView(pw, to, er.message); }
+    });
   }
   async function logout(expired) {
     if (!expired && !A.demo) { try { await api("logout", {}); } catch (e) {} }
