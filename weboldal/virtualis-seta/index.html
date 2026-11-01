@@ -1230,6 +1230,72 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 .zfb-done h2 { font: 800 24px/1.25 Manrope, sans-serif; color: var(--navy); margin: 0 0 10px; }
 .zfb-done-sum { text-align: left; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 14px; margin: 16px 0; }
 .zfb-done .zfb-btn { margin-top: 10px; }
+/* ---- foglalási ablak részletei (2026-11): hullámzó fejléc, vitorlás a lépéseknél, hajórajzok a kártyákon, horgony és vitorla a naptárban ---- */
+.zfb-hd { position: relative; overflow: hidden; }
+.zfb-hd::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 10px; pointer-events: none; opacity: .5;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 10'%3E%3Cpath d='M0 6 q5 -4 10 0 t10 0 t10 0 t10 0 V10 H0z' fill='%23f2d27a'/%3E%3C/svg%3E") 0 100% / 40px 10px repeat-x; animation: zfbWv 4s linear infinite; }
+@keyframes zfbWv { to { background-position: -40px 100%; } }
+.zfb-logo b { background-size: 100% 200%; animation: zfbGold 6s ease-in-out infinite; }
+@keyframes zfbGold { 50% { background-position: 0 100%; } }
+.zfb-steps li { position: relative; transition: opacity .3s; }
+.zfb-steps li + li::before { height: 0; border-top: 2px dashed rgba(255,255,255,.45); background: none; }
+.zfb-steps li.done + li::before { border-top-style: solid; border-color: #3fb37f; }
+.zfb-steps li i { transition: background .3s, border-color .3s, transform .3s; }
+.zfb-steps li.on i { transform: scale(1.12); box-shadow: 0 0 0 4px rgba(242,178,51,.25); }
+.zfb-steps li.on::after { content: ""; position: absolute; left: 1px; top: -15px; width: 22px; height: 14px; pointer-events: none; animation: zfbBoat 2.4s ease-in-out infinite;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 14'%3E%3Cpath d='M11 1v9' stroke='%23fff' stroke-width='1'/%3E%3Cpath d='M11.6 1.4q5 4 5.6 8h-5.6z' fill='%23e5262f'/%3E%3Cpath d='M10.4 3q-3 3-3.6 6.4h3.6z' fill='%23fff'/%3E%3Cpath d='M4 10.4h14l-2 2.6H6z' fill='%23f2d27a'/%3E%3C/svg%3E") center / contain no-repeat; }
+@keyframes zfbBoat { 50% { transform: translateY(-2px) rotate(-5deg); } }
+.zfb-x { transition: background .2s, transform .3s; } .zfb-x:hover { transform: rotate(90deg); }
+.zfb-apt { overflow: hidden; padding-bottom: 74px; }
+.zfb-apt::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--ac); opacity: .85; }
+.zfb-apt:not(.zfb-apt-admin) em { white-space: nowrap; font-size: 15px; }
+.zfb-art { position: absolute; right: 6px; bottom: 5px; width: 100px; height: 70px; pointer-events: none; opacity: .9; }
+.zfb-art .rk { transform-box: view-box; transform-origin: 50px 56px; animation: zfbRock 3.4s ease-in-out infinite; }
+.zfb-art .wv { animation: zfbWv2 2.8s linear infinite; }
+.zfb-art .fl { transform-box: fill-box; transform-origin: 0 50%; animation: zfbFl .8s ease-in-out infinite alternate; }
+.zfb-apt:hover .zfb-art .rk, .zfb-apt.sel .zfb-art .rk { animation-duration: 1.8s; }
+.zfb-apt.sel .zfb-art { opacity: 1; filter: drop-shadow(0 3px 4px rgba(11,47,94,.2)); }
+.zfb-apt-admin .zfb-art, .zfb-apt-off .zfb-art { opacity: .45; }
+@keyframes zfbRock { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(1.5px); } }
+@keyframes zfbWv2 { to { transform: translateX(-20px); } }
+@keyframes zfbFl { from { transform: skewY(-8deg) scaleX(.9); } to { transform: skewY(6deg); } }
+.zfb-apt.sel .zfb-check { animation: zfbPop .35s cubic-bezier(.2,.9,.3,1.4); }
+.zfb-no { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--ac) 60%, #fff), var(--ac) 70%); text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.zfb-selbar.on { background: linear-gradient(90deg, rgba(255,255,255,.96), #f3f7fb); }
+.zfb-btn { position: relative; overflow: hidden; }
+.zfb-btn:not(:disabled)::after { content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); animation: zfbSheen 4.5s ease-in-out infinite; }
+@keyframes zfbSheen { 0%, 60% { left: -60%; } 85%, 100% { left: 130%; } }
+.zfb-month h4 { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.zfb-month h4::before, .zfb-month h4::after { content: ""; width: 26px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold)); border-radius: 2px; }
+.zfb-month h4::after { transform: scaleX(-1); }
+.zfb-days .zfb-d:is(:nth-child(7n), :nth-child(7n - 1)):not(.empty):not(.busy):not(.off):not(.in):not(.ci):not(.co) { background-color: #fbfaf4; }
+.zfb-d { transition: transform .15s, border-color .15s, background .2s; }
+.zfb-d.today::after { content: ""; position: absolute; top: 4px; left: 4px; width: 5px; height: 5px; border-radius: 50%; background: #e2483d; }
+.zfb-d.in { background: linear-gradient(180deg, #fff6d8, #ffecb0); }
+.zfb-d.ci, .zfb-d.co { box-shadow: 0 4px 10px rgba(11,47,94,.3); }
+.zfb-d.ci::before, .zfb-d.co::before { content: ""; position: absolute; top: 3px; right: 3px; width: 10px; height: 10px; background: center / contain no-repeat; opacity: .9; }
+.zfb-d.ci::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f2d27a' stroke-width='2.6' stroke-linecap='round'%3E%3Ccircle cx='12' cy='5' r='2.5'/%3E%3Cpath d='M12 7.5V21M7 11h10M4 15q1 6 8 6t8-6'/%3E%3C/svg%3E"); }
+.zfb-d.co::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2v16' stroke='%23f2d27a' stroke-width='2'/%3E%3Cpath d='M13 3q7 6 7.5 13H13z' fill='%23f2d27a'/%3E%3Cpath d='M3 19h18l-3 3H6z' fill='%23f2d27a'/%3E%3C/svg%3E"); }
+.zfb-mnav button { transition: transform .2s, background .2s; } .zfb-mnav button:hover:not(:disabled) { transform: scale(1.08); background: #164377; }
+.zfb-side { background: linear-gradient(180deg, #fff, #fbfaf6); box-shadow: 0 10px 26px rgba(20,32,42,.08); }
+.zfb-dates div { position: relative; padding-left: 34px; }
+.zfb-dates div::before { content: ""; position: absolute; left: 10px; top: 50%; width: 16px; height: 16px; margin-top: -8px; background: center / contain no-repeat; opacity: .7; }
+.zfb-dates div:first-child::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b2f5e' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='12' cy='5' r='2.5'/%3E%3Cpath d='M12 7.5V21M7 11h10M4 15q1 6 8 6t8-6'/%3E%3C/svg%3E"); }
+.zfb-dates div + div::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2v16' stroke='%230b2f5e' stroke-width='2'/%3E%3Cpath d='M13 3q7 6 7.5 13H13z' fill='%23e5262f'/%3E%3Cpath d='M3 19h18l-3 3H6z' fill='%230b2f5e'/%3E%3C/svg%3E"); }
+.zfb-st-c button { transition: background .2s, color .2s, transform .15s; } .zfb-st-c button:hover:not(:disabled) { background: var(--navy); color: #fff; transform: scale(1.06); }
+.zfb-st-c output { animation: zfbPop .3s; }
+.zfb-row.total { border-top: 0; background: linear-gradient(90deg, #0b2f5e, #1b4c86); color: #fff; border-radius: 10px; padding: 10px 12px; }
+.zfb-row.total b { color: #f2d27a; }
+.zfb-f input, .zfb-f textarea { transition: border-color .2s, box-shadow .2s, background .2s; } .zfb-f input:hover, .zfb-f textarea:hover { border-color: #c9d4de; }
+.zfb-f input:valid:not(:placeholder-shown) { background: linear-gradient(90deg, #fff 85%, #eef8f1); }
+.zfb-anchor { width: 220px; height: 120px; border-radius: 18px; background: linear-gradient(180deg, #8fd0f0, #dff2fa 60%, #2a86ad 60%, #0b4f7a); overflow: hidden; position: relative; font-size: 0; }
+.zfb-anchor svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.zfb-anchor .ds { animation: zfbSail 6s ease-in-out infinite alternate; }
+.zfb-anchor .dw { animation: zfbWv2 2.4s linear infinite; }
+.zfb-anchor .dp path { animation: zfbConf 3s ease-in infinite; } .zfb-anchor .dp path:nth-child(2n) { animation-delay: .8s; } .zfb-anchor .dp path:nth-child(3n) { animation-delay: 1.6s; }
+@keyframes zfbSail { from { transform: translate(30px, 0); } to { transform: translate(130px, 2px); } }
+@keyframes zfbConf { 0% { transform: translateY(-20px) rotate(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(70px) rotate(220deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .zfb-hd::after, .zfb-steps li.on::after, .zfb-art *, .zfb-btn::after, .zfb-anchor *, .zfb-logo b { animation: none !important; } }
 /* rövidkód gomb */
 .zf-open-btn { cursor: pointer; padding: 12px 22px; border: 0; border-radius: 999px; background: linear-gradient(180deg, #f7c548, #f2b233); color: #14202a; font: 800 15px/1 Manrope, sans-serif; box-shadow: 0 4px 0 #c98f17; }
 @media (max-width: 760px) {
@@ -1557,13 +1623,13 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const sel = selApts(), cap = capTotal();
     return demoNote() + `<h2 class="zfb-h">Melyik apartmant választod?</h2><p class="zfb-multi-tip">Nagyobb társasággal több apartmant is lefoglalhatsz egy foglalásban, ugyanarra az időszakra.</p><div class="zfb-apts">` + cfg.apartments.map((a) => `
       <button type="button" class="zfb-apt${st.apts.includes(a.id) ? " sel" : ""}" data-apt="${a.id}" aria-pressed="${st.apts.includes(a.id)}" style="--ac:${a.color}">
-        <span class="zfb-no">${a.no}</span><span class="zfb-check" aria-hidden="true"></span><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő</small><em>${money(a.price)}-tól / éj</em><i>${st.apts.includes(a.id) ? "Kiválasztva ✓" : "Kiválasztom ›"}</i>
+        <span class="zfb-no">${a.no}</span><span class="zfb-check" aria-hidden="true"></span><b>${esc(a.name)}</b><small>legfeljebb ${a.cap} fő</small><em>${money(a.price)}-tól / éj</em><i>${st.apts.includes(a.id) ? "Kiválasztva ✓" : "Kiválasztom ›"}</i>${boatArt(a.id, a.color)}
       </button>`).join("") + (cfg.apartments.some((a) => a.id === "kadett") ? "" : `
       <div class="zfb-apt zfb-apt-off" style="--ac:#f08a24" aria-disabled="true" title="A Kadett apartman nem foglalható">
-        <span class="zfb-no">6</span><b>Kadett</b><small>legfeljebb 4 fő</small><em class="zfb-full">Foglalt</em><i>Nem foglalható</i>
+        <span class="zfb-no">6</span><b>Kadett</b><small>legfeljebb 4 fő</small><em class="zfb-full">Foglalt</em><i>Nem foglalható</i>${boatArt("kadett", "#f08a24")}
       </div>`) + `
       <button type="button" class="zfb-apt zfb-apt-admin" data-owner="1" style="--ac:#0b2f5e" title="Tulajdonosi felület – jelszóval">
-        <span class="zfb-no">🔒</span><b>Admin</b><small>tulajdonosi belépés</small><em>Foglalások kezelése</em><i>Belépés jelszóval ›</i>
+        <span class="zfb-no">🔒</span><b>Admin</b><small>tulajdonosi belépés</small><em>Foglalások kezelése</em><i>Belépés jelszóval ›</i>${boatArt("admin", "#0b2f5e")}
       </button></div>
       <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · legfeljebb <b>${cap} fő</b>` : "Válassz egy vagy több apartmant"}</span><button type="button" class="zfb-btn" data-load="1" ${sel.length ? "" : "disabled"}>Tovább a naptárhoz ›</button></div>
       <p class="zfb-fine">Érkezés ${esc(cfg.checkin)} órától, távozás ${esc(cfg.checkout)} óráig · Az árakhoz 18 év felett ${money(cfg.tax)} / fő / éj idegenforgalmi adó adódik.</p>
@@ -1664,10 +1730,27 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       <div class="zfb-dates"><div><small>Érkezés</small><b>${huDate(st.ci, true)}</b><em>${esc(cfg.checkin)}-tól</em></div><div><small>Távozás</small><b>${huDate(st.co, true)}</b><em>${esc(cfg.checkout)}-ig</em></div></div>
       ${breakdown(q)}</aside></div>`;
   }
+  /* apartmanválasztó: minden kártyán a névadó hajótípus rajza, ringatózva */
+  function boatArt(id, c) {
+    const hull = (x0, x1, y, h, col) => `<path d="M${x0} ${y} L${x1} ${y} Q ${x1 - 4} ${y + h} ${x1 - 12} ${y + h} L${x0 + 8} ${y + h} Q ${x0 + 2} ${y + h * .7} ${x0} ${y} Z" fill="${col || "#0b2f5e"}"/>`;
+    const sq = (x, y0, n, w, col) => Array.from({ length: n }, (_, k) => `<path d="M${x - w / 2 + k * 1.5} ${y0 + k * 11} q ${w / 2} ${3} ${w - k * 3} 0 l -1 9 q ${-w / 2 + 1} 3 ${-w + k * 3 + 2} 0 Z" fill="${col || "#f7f2e5"}" stroke="rgba(11,47,94,.35)" stroke-width=".8"/>`).join("");
+    const mast = (x, y0, y1) => `<path d="M${x} ${y0} V${y1}" stroke="#6b4426" stroke-width="1.6"/>`;
+    const flag = (x, y, col) => `<path class="fl" d="M${x} ${y} l9 2.5 l-9 2.5 Z" fill="${col}"/>`;
+    const A = {
+      korvett: `${mast(30, 52, 12)}${mast(50, 52, 8)}${mast(68, 52, 16)}${sq(30, 16, 3, 16)}${sq(50, 12, 3, 18)}${sq(68, 20, 3, 14)}${flag(50, 8, c)}${hull(14, 88, 52, 11)}<path d="M18 56 h64" stroke="${c}" stroke-width="2"/>${[26, 36, 46, 56, 66].map((x) => `<rect x="${x}" y="54" width="3" height="2.4" fill="#f2c21b"/>`).join("")}`,
+      dingi: `${mast(48, 54, 18)}<path d="M50 20 q 16 16 18 32 h-18 Z" fill="${c}"/><path d="M46 26 q -10 12 -12 26 h12 Z" fill="#f7f2e5"/>${hull(30, 72, 54, 7, "#f7f2e5")}<path d="M32 57 h38" stroke="${c}" stroke-width="2"/>`,
+      fregatt: `${mast(24, 50, 10)}${mast(46, 50, 4)}${mast(66, 50, 12)}${sq(24, 12, 3, 18)}${sq(46, 6, 4, 20)}${sq(66, 14, 3, 16)}<path d="M80 50 L96 40" stroke="#6b4426" stroke-width="1.4"/><path d="M78 44 L92 40 L80 50 Z" fill="#f7f2e5"/>${flag(46, 4, c)}${hull(8, 92, 50, 14)}<path d="M12 55 h76 M14 59 h70" stroke="${c}" stroke-width="1.6"/>${[18, 28, 38, 48, 58, 68, 78].map((x) => `<rect x="${x}" y="56.2" width="3" height="2.2" fill="#f2c21b"/>`).join("")}`,
+      kaloz: `${mast(32, 52, 14)}${mast(58, 52, 8)}${sq(32, 18, 3, 18, "#1d1d1d")}${sq(58, 12, 3, 20, "#1d1d1d")}<g transform="translate(58 30)"><circle r="3.2" fill="#fff"/><path d="M-4 5 l8 -2 M-4 3 l8 2" stroke="#fff" stroke-width="1.2"/><circle cx="-1.1" cy="-.4" r=".8" fill="#1d1d1d"/><circle cx="1.1" cy="-.4" r=".8" fill="#1d1d1d"/></g><path class="fl" d="M58 8 l10 2.5 l-10 2.5 Z" fill="#1d1d1d"/>${hull(14, 86, 52, 12, "#5b3a22")}<path d="M18 56 h64" stroke="${c}" stroke-width="2"/>`,
+      schooner: `${mast(36, 52, 10)}${mast(58, 52, 6)}<path d="M37 12 L52 16 L52 48 L37 48 Z" fill="#f7f2e5" stroke="rgba(11,47,94,.3)"/><path d="M59 8 L76 13 L78 48 L59 48 Z" fill="#f7f2e5" stroke="rgba(11,47,94,.3)"/><path d="M35 14 L18 48 L35 48 Z" fill="${c}"/><path d="M80 48 L96 42" stroke="#6b4426" stroke-width="1.4"/>${flag(58, 6, c)}${hull(14, 90, 50, 10, "#f7f2e5")}<path d="M18 54 h68" stroke="${c}" stroke-width="2.4"/>`,
+      kadett: `${mast(46, 54, 22)}<path d="M48 24 q 12 12 14 28 h-14 Z" fill="${c}"/>${hull(34, 66, 54, 6, "#f7f2e5")}<path d="M36 57 h28" stroke="${c}" stroke-width="2"/>`,
+      admin: `<g fill="none" stroke="#0b2f5e" stroke-width="3" stroke-linecap="round"><circle cx="50" cy="14" r="5"/><path d="M50 19 v36 M40 28 h20 M30 42 q 2 14 20 13 q 18 1 20 -13"/></g>`
+    };
+    return `<svg class="zfb-art" viewBox="0 0 100 70" aria-hidden="true"><g class="rk">${A[id] || A.dingi}</g><g class="wv" fill="none" stroke="${c}" stroke-width="1.6" opacity=".55"><path d="M-20 64 q 5 -3 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0"/></g></svg>`;
+  }
   function viewDone() {
     const r = st.result, q = quote(), a = apt();
     return `<div class="zfb-done">
-      <div class="zfb-anchor">⚓</div>
+      <div class="zfb-anchor" aria-hidden="true"><svg viewBox="0 0 220 120"><circle cx="180" cy="26" r="12" fill="#fff3c0"/><circle cx="180" cy="26" r="20" fill="#ffd978" opacity=".35"/><g class="dw" fill="none" stroke="#fff" stroke-width="1.6" opacity=".5"><path d="M-20 80 q 5 -3 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0"/><path d="M-20 96 q 5 -3 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0"/></g><g class="ds"><path d="M24 30v42" stroke="#e8edf2" stroke-width="1.6"/><path d="M25.5 32q14 14 15 38h-15z" fill="#fff"/><path d="M22.5 36q-11 12-12 34h12z" fill="#e5262f"/><path d="M4 72h42l-5 7H10z" fill="#fff"/><path d="M8 75h34" stroke="#e5262f" stroke-width="1.4"/><path d="M24 30l7 2-7 2z" fill="#e5262f"/></g><g class="dp"><path d="M20 0 l4 2 l-4 2 z" fill="#e5262f"/><path d="M37 0 l4 2 l-4 2 z" fill="#f2b233"/><path d="M54 0 l4 2 l-4 2 z" fill="#1f5fa8"/><path d="M71 0 l4 2 l-4 2 z" fill="#3fb37f"/><path d="M88 0 l4 2 l-4 2 z" fill="#e5262f"/><path d="M105 0 l4 2 l-4 2 z" fill="#f2b233"/><path d="M122 0 l4 2 l-4 2 z" fill="#1f5fa8"/><path d="M139 0 l4 2 l-4 2 z" fill="#3fb37f"/><path d="M156 0 l4 2 l-4 2 z" fill="#e5262f"/><path d="M173 0 l4 2 l-4 2 z" fill="#f2b233"/><path d="M190 0 l4 2 l-4 2 z" fill="#1f5fa8"/><path d="M207 0 l4 2 l-4 2 z" fill="#3fb37f"/></g></svg></div>
       <h2>${cfg.demo ? "Így nézne ki a sikeres foglalás" : "Köszönjük! Foglalási kérését megkaptuk."}</h2>
       ${cfg.demo ? `<p class="zfb-demo">Bemutató mód – a kérés nem lett elküldve.</p>` : `<p>Foglalási azonosító: <b>${esc(r.ref)}</b></p>`}
       <p>A kiválasztott napokat ideiglenesen lefoglaltuk. Hamarosan ellenőrizzük, és e-mailben (<b>${esc(st.form.email)}</b>) visszaigazoljuk az előleg átutalásához szükséges adatokkal.</p>
