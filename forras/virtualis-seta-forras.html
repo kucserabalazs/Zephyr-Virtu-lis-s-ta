@@ -1577,11 +1577,16 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     const a = cfg.apartments.find((x) => x.id === apt), out = []; let seed = apt.length * 7919;
     const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
     let busyLeft = 0;
+    /* próbafoglalások a következő ~8 hétre (napok a mai naptól, éjszakák száma): egymásba csúsznak, hogy kipróbálható legyen
+       a süllyedés, a FOGLALT zászló, a több apartmanos foglalás és a ±1 hetes eltolási javaslat */
+    const DEMO = { korvett: [[3, 4], [17, 5], [31, 7], [45, 3]], dingi: [[5, 3], [12, 4], [24, 6], [40, 4]], fregatt: [[8, 5], [20, 3], [38, 6], [50, 2]],
+                   kaloz: [[2, 6], [14, 3], [27, 4], [43, 5]], schooner: [[6, 4], [11, 2], [22, 5], [35, 4], [48, 3]] }[apt] || [];
+    const demoBusy = (i) => DEMO.some(([s0, n]) => i >= s0 && i < s0 + n);
     for (let i = 0; i < 400; i++) {
       const d = addD(cfg.today, i), dt = pd(d), m = dt.getMonth(), wk = dt.getDay() === 5 || dt.getDay() === 6;
       const season = m === 6 || m === 7 ? 1.35 : m === 5 || m === 8 ? 1.1 : 1;
-      if (busyLeft <= 0 && rnd() < .07) busyLeft = 2 + Math.floor(rnd() * 5);
-      out.push({ d, p: Math.round(a.price * season * (wk ? 1.1 : 1) / 500) * 500, free: busyLeft-- <= 0 });
+      if (i >= 60 && busyLeft <= 0 && rnd() < .07) busyLeft = 2 + Math.floor(rnd() * 5);
+      out.push({ d, p: Math.round(a.price * season * (wk ? 1.1 : 1) / 500) * 500, free: !demoBusy(i) && busyLeft-- <= 0 });
     }
     return out;
   }
