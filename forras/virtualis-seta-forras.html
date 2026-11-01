@@ -8960,9 +8960,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         ${device !== "pc" ? sw("btnGyro", ICS.gyro, "Mozgás a telefon forgatásával", "Körbenézés a készülék mozgatásával") : ""}
         ${sw("btnFull", ICS.full, "Teljes képernyő", "Kilépés: Esc billentyű vagy ez a gomb")}
       </section>
+      <section class="set-sec" data-noi18n><h4>Nyelv · Language</h4><div class="set-lang"></div></section>
       <button type="button" class="set-book">Szabad napok, foglalás</button>
     </div>`;
     document.body.appendChild(el);
+    if (window.ZI18N) ZI18N.mountPicker(el.querySelector(".set-lang"), { inline: true });
     const sync = () => {
       el.querySelectorAll(".set-sw").forEach((b) => { const src = $(b.dataset.proxy); let on = src && src.getAttribute("aria-pressed") === "true"; if (b.dataset.proxy === "btnFull") on = !!document.fullscreenElement; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
       el.querySelectorAll(".set-dev").forEach((b) => { const on = b.dataset.dev === deviceChoice; b.classList.toggle("on", on); b.setAttribute("aria-checked", String(on)); });
@@ -11133,4 +11135,4 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   start();
 })();
 </script>
-
+<!--ZEPHYR-I18N-->

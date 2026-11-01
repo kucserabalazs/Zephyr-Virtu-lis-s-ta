@@ -176,3 +176,15 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - Függvények: `loadAll` (minden apartman elérhetősége), `buildMap`, `freeAll`, `aptFree`, `freeApts`, `aptTotal`, `nearest` (legközelebbi azonos hosszú szabad időszak ±21 nap), `selError` (1. lépés), `aptError` (2. lépés).
 - Ha egy apartman oldaláról nyitják (`open({ apt })`), az 1. lépés annak a naptárát mutatja (`st.pre`), a 2. lépésben előre ki van jelölve, de a többi szabad is látszik.
 - A szerveroldali `/book` nem változott.
+
+## 19. Nyelvi alap (i18n) – 2026-11-01, ág: `nyelvi-alap-2026-11`
+- Motor: `forras/i18n/zephyr-i18n.js` (a build beírja a kezdőlapba és a sétába a `<!--ZEPHYR-I18N-->` helyére: `forras/tools/build_i18n.py`).
+- Nyelvfelismerés: `?lang=xx` → kézi választás (localStorage `zephyr-lang`) → böngésző/telefon nyelvei → angol (ha kész) → magyar. Csak kész szótárú nyelvre vált.
+- Szótár = magyar felirat → fordítás: `forras/i18n/nyelv/xx.json` (a build átmásolja: `weboldal/nyelv/`, az oldalak `../nyelv/xx.json`-t töltenek). Számok: `{#}`; „A · B” összetett feliratot részenként is fordít.
+- Kész nyelv = amelyik szótárában van fordítás (a build számolja). A többi a választóban „hamarosan”.
+- 24 nyelv: hu en de fr it es nl pl cs sk ro hr pt ru tr zh ja ko vi id hi bn ur ar; ar/ur jobbról balra (`dir="rtl"`, `html.zi-rtl`).
+- Mesterlista: `forras/i18n/nyelv/hu.json` (gyűjtő bejárással: 630 felirat). Gyűjtő mód: `?forditas=gyujt`, majd `ZI18N.collected()`.
+- Nem fordul automatikusan: vásznon rajzolt szöveg (regatta, játékok), a PHP e-mailek; ezeket a fordítás idején külön kell kezelni.
+- Választó: kezdőlap menüsor (zászló + kód, legördülő), séta: Beállítások panel „Nyelv · Language”.
+- Teendő a végén: teljes feliratgyűjtés (séta összes jelenete, admin nélkül), majd 23 nyelvre fordítás → `xx.json` fájlok.
+- Build: `forras/tools/build.sh` (a /home/claude/build/build.sh erre mutat).
