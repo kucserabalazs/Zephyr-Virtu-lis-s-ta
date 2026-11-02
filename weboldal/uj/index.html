@@ -869,7 +869,7 @@ html.evp-lock, html.evp-lock body { overflow: hidden; }
 :root { --knot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a5 5 0 0 1 5 5c0 2-1.2 3.4-2.6 4.5L12 13l-2.4-1.5C8.2 10.4 7 9 7 7a5 5 0 0 1 5-5zm0 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5 13l7 4 7-4 2 2-9 7-9-7z'/%3E%3C/svg%3E"); }
 
 /* nyitókép: a logó felirata – vitorlások vontatják a helyére (hero-logo.js) */
-.hero h1.hero-logo { width: min(880px, 92vw); aspect-ratio: 1640 / 575; margin: 0 0 6px -1.2%; font-size: 0; line-height: 0; text-shadow: none; }
+.hero h1.hero-logo { width: min(620px, 78vw); aspect-ratio: 1640 / 575; margin: 0 0 6px -1.2%; font-size: 0; line-height: 0; text-shadow: none; }
 .hero-logo-img { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff) drop-shadow(0 6px 16px rgba(0,0,0,.4)); opacity: 0; animation: rise .9s .5s forwards; }
 html.logo-js .hero-logo-img { visibility: hidden; animation: none; }
 .hero-logo-fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
@@ -879,7 +879,7 @@ html.logo-anim.la-place .hero .place { animation: placeRise 1.5s cubic-bezier(.2
 @keyframes placeRise { 0% { opacity: 1; transform: translateY(1em); clip-path: inset(-.4em -3em 1em -.4em); } 70% { transform: translateY(-.08em); clip-path: inset(-.4em -3em -.08em -.4em); } 100% { opacity: 1; transform: none; clip-path: inset(-.4em -3em -.3em -.4em); } }
 html.logo-anim .hero .hello { animation: none; opacity: 0; transform: none; transition: opacity .6s ease; } html.logo-anim.la-hello .hero .hello { opacity: 1; }
 html.logo-anim .hero-cta { animation: none; opacity: 0; } html.logo-anim.la-cta .hero-cta { animation: rise .9s forwards; }
-@media (max-width: 700px) { .hero h1.hero-logo { width: 96vw; margin-left: -2vw; } }
+@media (max-width: 700px) { .hero h1.hero-logo { width: 84vw; margin-left: -1vw; } }
 @media (min-width: 701px) { html.logo-js .hero-in { padding-top: 182px; } }   /* hely a helikopternek a logó fölött */
 </style>
 <style>
@@ -2571,7 +2571,9 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     p0: 9.6,                                                     /* Zamárdi a vízből */
     f0: 10.6, fDur: 3.3,                                         /* repülőgép + molinó */
   };
-  T.END = T.f0 + T.fDur + 1.6;
+  /* lassabb, nyugodtabb tempó (a tulajdonos kérése): minden időtartam 1,8-szoros */
+  Object.keys(T).forEach((k) => (T[k] *= 1.8));
+  T.END = T.f0 + T.fDur + 2.4;
   function boatScale() { return clamp(box.s * 1.05, .38, 1.5); }   /* kisebb hajók: kb. a betűk magassága */
   /* a vízcsík a felirat alatt – „mintha vízen vontatnák” */
   function water(y, x0, x1, a, t, s) {
@@ -2612,7 +2614,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const startX = dir > 0 ? -(wordW + rope + 80 * bs) : W + wordW + rope + 80 * bs;
     let bx, wdx = 0, phase, fx = dir, by = wl, sc = 1, reelK = 0;
     if (lt < arr) {                                                          /* vontatás */
-      const k = easeIO(lt / arr);
+      const k = .5 - .5 * Math.cos(Math.PI * clamp(lt / arr, 0, 1));   /* lágy indulás és megállás */
       bx = startX + (arriveX - startX) * k; phase = "tow";
       wdx = bx - arriveX;                                                    /* a felirat ugyanennyivel van a helyétől */
     } else {

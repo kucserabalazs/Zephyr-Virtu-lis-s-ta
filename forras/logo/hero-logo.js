@@ -238,7 +238,9 @@
     p0: 9.6,                                                     /* Zamárdi a vízből */
     f0: 10.6, fDur: 3.3,                                         /* repülőgép + molinó */
   };
-  T.END = T.f0 + T.fDur + 1.6;
+  /* lassabb, nyugodtabb tempó (a tulajdonos kérése): minden időtartam 1,8-szoros */
+  Object.keys(T).forEach((k) => (T[k] *= 1.8));
+  T.END = T.f0 + T.fDur + 2.4;
   function boatScale() { return clamp(box.s * 1.05, .38, 1.5); }   /* kisebb hajók: kb. a betűk magassága */
   /* a vízcsík a felirat alatt – „mintha vízen vontatnák” */
   function water(y, x0, x1, a, t, s) {
@@ -279,7 +281,7 @@
     const startX = dir > 0 ? -(wordW + rope + 80 * bs) : W + wordW + rope + 80 * bs;
     let bx, wdx = 0, phase, fx = dir, by = wl, sc = 1, reelK = 0;
     if (lt < arr) {                                                          /* vontatás */
-      const k = easeIO(lt / arr);
+      const k = .5 - .5 * Math.cos(Math.PI * clamp(lt / arr, 0, 1));   /* lágy indulás és megállás */
       bx = startX + (arriveX - startX) * k; phase = "tow";
       wdx = bx - arriveX;                                                    /* a felirat ugyanennyivel van a helyétől */
     } else {
