@@ -135,11 +135,11 @@
   }
   function maqHover(info, on) {
     info.hov = on;
-    if (info.label) { info.g.remove(info.label); info.label = null; }
-    if (on) {
+    if (!info.label) {
       info.label = labelSprite([(info.no ? info.no + " · " : "") + info.name, info.lock ? "saját használat – nem foglalható" : (info.where + " · csippents: belépés")], { size: 6.5, fs: 50 });
       info.label.position.set((info.bb[0] + info.bb[2]) / 2, 3.2, (info.bb[1] + info.bb[3]) / 2); info.g.add(info.label);
     }
+    info.label.visible = !!on;
   }
   function maqEnter(info, hit) {
     if (info.lock) return;

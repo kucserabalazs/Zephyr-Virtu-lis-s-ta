@@ -10,7 +10,7 @@
   function faceYaw(target) {
     const rig = T.rig; if (!rig) return;
     const lc = T.cam.components["look-controls"];
-    if (!T.inVR && lc && lc.yawObject) { lc.yawObject.rotation.y = 0; lc.pitchObject.rotation.x = 0; }
+    if (!T.inVR) { if (lc && lc.yawObject) { lc.yawObject.rotation.y = 0; lc.pitchObject.rotation.x = 0; } rig.object3D.rotation.y = target; return; }
     rig.object3D.rotation.y += wrapA(target - T.camYaw());
   }
 
@@ -126,7 +126,8 @@
     const cvs = T.sceneEl.canvas; const r = cvs.getBoundingClientRect();
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     ray2.setFromCamera(ndc, T.camObj());
-    const objs = W.objs.filter((o) => o.parent);
+    const shown = (o) => { for (let q = o; q; q = q.parent) if (q.visible === false && !(q.material && q.material.visible === false && q === o)) return false; return !!o.parent; };
+    const objs = W.objs.filter(shown);
     const hits = ray2.intersectObjects(objs, false);
     return hits[0] || null;
   }
@@ -154,17 +155,18 @@
     T.setBusy(true);
     const root = new THREE.Group(); root.name = "zephyr-world"; T.sceneEl.object3D.add(root); W.root = root;
     T.spots.object3D.visible = false; if (T.sky2) T.sky2.object3D.visible = false;
+    const tok = W.gen = (W.gen || 0) + 1;
+    const safe = (f) => { try { f(); } catch (e) { console.warn("world", e); W.close(); } };
     if (kind === "regatta") {
-      const go = () => {
+      const go = () => safe(() => {
         sky.object3D.visible = true; if (sm) { sm.material.depthTest = false; sm.material.depthWrite = false; sm.renderOrder = -100; sm.material.needsUpdate = true; }
         W.spec = buildRegatta(); finishOpen();
-      };
-      if (T.current !== "steg") { T.setBusy(false); T.go("steg"); setTimeout(() => { T.setBusy(true); T.spots.object3D.visible = false; go(); }, 1400); } else go();
+      });
+      if (T.current !== "steg") { T.setBusy(false); T.go("steg"); setTimeout(() => { if (tok !== W.gen || !W.active) return; T.setBusy(true); T.spots.object3D.visible = false; go(); }, 1400); } else go();
       return;
     }
     sky.object3D.visible = false;
-    W.spec = kind === "sail" ? buildSail() : buildMaquette();
-    finishOpen();
+    safe(() => { W.spec = kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
   };
   function finishOpen() {
     document.body.classList.add("world-on");
@@ -191,18 +193,20 @@
   W.vrChanged = function (on) {
     if (!W.active) return;
     if (W.hud) W.hud.el.style.display = on ? "none" : "";
-    if (on) placePanel();
-    /* a regattánál és a vitorlázásnál a szemmagasság VR-ben más – újraépítjük a helyes magassággal */
-    const k = W.kind; W.close(null, true); W.open(k);
+    /* a szemmagasság VR-ben más – újraépítjük, de csak ha már van fej-póz (különben 0 m-t mérnénk) */
+    const k = W.kind, tok = W.gen; let n = 0;
+    const tryIt = () => { if (tok !== W.gen) return; if (!on || T.headY() > .5 || ++n > 90) { W.close(null, true); W.open(k); } else T.xrRaf(tryIt); };
+    tryIt();
   };
   W.close = function (after, silent) {
     if (!W.active) { if (after) after(); return; }
-    W.active = false;
+    W.active = false; W.gen = (W.gen || 0) + 1;
     audioStop();
     const cvs = T.sceneEl.canvas;
     cvs.removeEventListener("pointermove", on2DMove); cvs.removeEventListener("pointerdown", on2DDown); cvs.removeEventListener("pointerup", on2DUp); cvs.style.cursor = "";
     removeEventListener("keydown", kd); removeEventListener("keyup", ku);
     W.objs.forEach((o) => T.xr.extra.delete(o));
+    if (T.xrForget) T.xrForget(W.objs.concat(W.panel ? [W.panel.m] : []));
     if (W.panel) { T.xr.extra.delete(W.panel.m); if (W.panel.m.parent) W.panel.m.parent.remove(W.panel.m); }
     if (W.root && W.root.parent) W.root.parent.remove(W.root);
     W.root && W.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });

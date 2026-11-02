@@ -64,15 +64,20 @@
   /* felirat-tábla (sprite): mindig felénk néz */
   function labelSprite(lines, opt) {
     opt = opt || {};
-    const fs = opt.fs || 54, pad = 26, w = opt.w || 760;
-    const h = pad * 2 + lines.length * fs * 1.25;
-    const t = canvasTex(w, Math.ceil(h), (g) => {
+    const fs = opt.fs || 54, pad = 26, w = opt.w || 760, n = Math.max(2, lines.length);
+    const h = pad * 2 + n * fs * 1.25;
+    const draw = (g, L) => {
+      g.clearRect(0, 0, w, Math.ceil(h));
       g.fillStyle = opt.bg || "rgba(9,34,70,.9)"; g.beginPath(); g.roundRect ? g.roundRect(4, 4, w - 8, h - 8, 34) : g.rect(4, 4, w - 8, h - 8); g.fill();
       g.lineWidth = 6; g.strokeStyle = opt.edge || "#ffd166"; g.stroke();
-      lines.forEach((ln, i) => { g.fillStyle = i === 0 ? (opt.c0 || "#ffd166") : "#fff"; g.font = `${i === 0 ? 800 : 600} ${i === 0 ? fs : fs * .78}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(ln, w / 2, pad + fs * .62 + i * fs * 1.25); });
-    });
+      L.forEach((ln, i) => { g.fillStyle = i === 0 ? (opt.c0 || "#ffd166") : "#fff"; g.font = `${i === 0 ? 800 : 600} ${i === 0 ? fs : fs * .78}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(ln, w / 2, pad + fs * .62 + i * fs * 1.25); });
+    };
+    const t = canvasTex(w, Math.ceil(h), (g) => draw(g, lines));
     const sp = new THREE.Sprite(basic({ map: t, transparent: true, depthTest: false, depthWrite: false }));
-    sp.renderOrder = 990; const k = opt.size || 1; sp.scale.set(k, k * h / w, 1); return sp;
+    sp.renderOrder = 990; const k = opt.size || 1; sp.scale.set(k, k * h / w, 1);
+    let last = lines.join("|");
+    sp.userData.set = (L) => { const key = L.join("|"); if (key === last) return; last = key; draw(t._canvas.getContext("2d"), L); t.needsUpdate = true; };
+    return sp;
   }
 
   /* ------------------------------------------------------------------ hangok */
@@ -770,10 +775,9 @@
     return { tick: regTick, panel: regPanel, hud: regHud };
   }
   function regLabel(st, on) {
-    if (st.label) { st.g.remove(st.label); st.label = null; }
-    if (!on && !st.pin) return;
-    const rank = REG.rank ? REG.rank.indexOf(st) + 1 : 0;
-    st.label = labelSprite([st.b.name, st.b.num + (rank ? " · " + rank + ". hely" : "")], { size: 9 }); st.label.position.set(0, 16, 0); st.g.add(st.label);
+    const rank = REG.rank ? REG.rank.indexOf(st) + 1 : 0, L = [st.b.name, st.b.num + (rank ? " · " + rank + ". hely" : "")];
+    if (!st.label) { st.label = labelSprite(L, { size: 9 }); st.label.position.set(0, 16, 0); st.g.add(st.label); }
+    st.label.userData.set(L); st.label.visible = !!(on || st.pin);
   }
   function legTarget(st) {
     const m = REG.marks, L = REG.legs[st.leg];
@@ -1194,11 +1198,11 @@
   }
   function maqHover(info, on) {
     info.hov = on;
-    if (info.label) { info.g.remove(info.label); info.label = null; }
-    if (on) {
+    if (!info.label) {
       info.label = labelSprite([(info.no ? info.no + " · " : "") + info.name, info.lock ? "saját használat – nem foglalható" : (info.where + " · csippents: belépés")], { size: 6.5, fs: 50 });
       info.label.position.set((info.bb[0] + info.bb[2]) / 2, 3.2, (info.bb[1] + info.bb[3]) / 2); info.g.add(info.label);
     }
+    info.label.visible = !!on;
   }
   function maqEnter(info, hit) {
     if (info.lock) return;
@@ -1240,7 +1244,7 @@
   function faceYaw(target) {
     const rig = T.rig; if (!rig) return;
     const lc = T.cam.components["look-controls"];
-    if (!T.inVR && lc && lc.yawObject) { lc.yawObject.rotation.y = 0; lc.pitchObject.rotation.x = 0; }
+    if (!T.inVR) { if (lc && lc.yawObject) { lc.yawObject.rotation.y = 0; lc.pitchObject.rotation.x = 0; } rig.object3D.rotation.y = target; return; }
     rig.object3D.rotation.y += wrapA(target - T.camYaw());
   }
 
@@ -1356,7 +1360,8 @@
     const cvs = T.sceneEl.canvas; const r = cvs.getBoundingClientRect();
     ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     ray2.setFromCamera(ndc, T.camObj());
-    const objs = W.objs.filter((o) => o.parent);
+    const shown = (o) => { for (let q = o; q; q = q.parent) if (q.visible === false && !(q.material && q.material.visible === false && q === o)) return false; return !!o.parent; };
+    const objs = W.objs.filter(shown);
     const hits = ray2.intersectObjects(objs, false);
     return hits[0] || null;
   }
@@ -1384,17 +1389,18 @@
     T.setBusy(true);
     const root = new THREE.Group(); root.name = "zephyr-world"; T.sceneEl.object3D.add(root); W.root = root;
     T.spots.object3D.visible = false; if (T.sky2) T.sky2.object3D.visible = false;
+    const tok = W.gen = (W.gen || 0) + 1;
+    const safe = (f) => { try { f(); } catch (e) { console.warn("world", e); W.close(); } };
     if (kind === "regatta") {
-      const go = () => {
+      const go = () => safe(() => {
         sky.object3D.visible = true; if (sm) { sm.material.depthTest = false; sm.material.depthWrite = false; sm.renderOrder = -100; sm.material.needsUpdate = true; }
         W.spec = buildRegatta(); finishOpen();
-      };
-      if (T.current !== "steg") { T.setBusy(false); T.go("steg"); setTimeout(() => { T.setBusy(true); T.spots.object3D.visible = false; go(); }, 1400); } else go();
+      });
+      if (T.current !== "steg") { T.setBusy(false); T.go("steg"); setTimeout(() => { if (tok !== W.gen || !W.active) return; T.setBusy(true); T.spots.object3D.visible = false; go(); }, 1400); } else go();
       return;
     }
     sky.object3D.visible = false;
-    W.spec = kind === "sail" ? buildSail() : buildMaquette();
-    finishOpen();
+    safe(() => { W.spec = kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
   };
   function finishOpen() {
     document.body.classList.add("world-on");
@@ -1421,18 +1427,20 @@
   W.vrChanged = function (on) {
     if (!W.active) return;
     if (W.hud) W.hud.el.style.display = on ? "none" : "";
-    if (on) placePanel();
-    /* a regattánál és a vitorlázásnál a szemmagasság VR-ben más – újraépítjük a helyes magassággal */
-    const k = W.kind; W.close(null, true); W.open(k);
+    /* a szemmagasság VR-ben más – újraépítjük, de csak ha már van fej-póz (különben 0 m-t mérnénk) */
+    const k = W.kind, tok = W.gen; let n = 0;
+    const tryIt = () => { if (tok !== W.gen) return; if (!on || T.headY() > .5 || ++n > 90) { W.close(null, true); W.open(k); } else T.xrRaf(tryIt); };
+    tryIt();
   };
   W.close = function (after, silent) {
     if (!W.active) { if (after) after(); return; }
-    W.active = false;
+    W.active = false; W.gen = (W.gen || 0) + 1;
     audioStop();
     const cvs = T.sceneEl.canvas;
     cvs.removeEventListener("pointermove", on2DMove); cvs.removeEventListener("pointerdown", on2DDown); cvs.removeEventListener("pointerup", on2DUp); cvs.style.cursor = "";
     removeEventListener("keydown", kd); removeEventListener("keyup", ku);
     W.objs.forEach((o) => T.xr.extra.delete(o));
+    if (T.xrForget) T.xrForget(W.objs.concat(W.panel ? [W.panel.m] : []));
     if (W.panel) { T.xr.extra.delete(W.panel.m); if (W.panel.m.parent) W.panel.m.parent.remove(W.panel.m); }
     if (W.root && W.root.parent) W.root.parent.remove(W.root);
     W.root && W.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });

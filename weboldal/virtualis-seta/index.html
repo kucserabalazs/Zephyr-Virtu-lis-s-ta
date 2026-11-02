@@ -5469,7 +5469,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       /* kontroller-modell (a sugarat és a kattintást a saját XR-mutató kezeli – kézzel és kontrollerrel egyformán) */
       const h = document.createElement("a-entity");
       h.setAttribute("laser-controls", `hand: ${hand}`);
-      h.setAttribute("raycaster", "objects: .xr-none; far: 1; showLine: false");
+      h.setAttribute("raycaster", "objects: .xr-none; far: 1; showLine: false; lineOpacity: 0");
+      h.addEventListener("controllerconnected", () => setTimeout(() => { try { h.setAttribute("raycaster", "showLine", false); h.removeAttribute("line"); } catch (e) {} }, 50));
       rig.appendChild(h);
       /* saját kéz megjelenítése (Quest kézkövetés) */
       const hh = document.createElement("a-entity");
@@ -8554,10 +8555,12 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function xrStop() {
     if (XRP.session) { try { XRP.session.removeEventListener("selectstart", XRP.onSS); XRP.session.removeEventListener("selectend", XRP.onSE); } catch (e) {} }
     XRP.on = false; XRP.session = null;
-    Object.keys(XRP.ray).forEach((k) => { const r = XRP.ray[k]; if (r) { r.g.parent && r.g.parent.remove(r.g); } });
-    XRP.ray = {}; XRP.src = {};
+    Object.keys(XRP.drag).forEach((k) => { const d = XRP.drag[k]; if (d && d.h && d.h.up) { try { d.h.up(XRP.src[k], k); } catch (e) {} } });
+    const kill = (o) => { if (!o) return; if (o.parent) o.parent.remove(o); o.traverse((q) => { if (q.geometry) q.geometry.dispose(); if (q.material) { if (q.material.map) q.material.map.dispose(); q.material.dispose(); } }); };
+    Object.keys(XRP.ray).forEach((k) => { const r = XRP.ray[k]; if (r) { kill(r.g); kill(r.cur); } });
+    XRP.ray = {}; XRP.src = {}; XRP.seen = {};
     Object.keys(XRP.hov).forEach((k) => xrSetHover(k, null)); XRP.hov = {}; XRP.press = {}; XRP.drag = {};
-    if (XRP.wrist) { XRP.wrist.parent && XRP.wrist.parent.remove(XRP.wrist); }
+    if (XRP.wrist) { kill(XRP.wrist); XRP.wrist = null; }
   }
   /* egy kéz sugara: vékony fénycsík + célkör a találati ponton */
   function xrRayMesh(key) {
@@ -8573,10 +8576,14 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     g.add(beam); sceneEl.object3D.add(g); sceneEl.object3D.add(cur);
     return (XRP.ray[key] = { g, beam, cur, halo, dotMat, beamMat });
   }
+  /* csak a ténylegesen látható tárgyak (a szülők láthatósága is számít – a Raycaster ezt magától nem nézi) */
+  function isShown(o) { for (let q = o; q; q = q.parent) { if (q.visible === false) return false; } return true; }
+  let _hsCache = null, _hsT = 0;
   function xrTargets() {
+    if (!_hsCache || ++_hsT > 30) { _hsT = 0; _hsCache = Array.from(document.querySelectorAll(".hotspot")); }
     const list = [];
-    document.querySelectorAll(".hotspot").forEach((el) => { if (el.object3D && el.object3D.visible) list.push(el.object3D); });
-    XRP.extra.forEach((o) => { if (o.visible !== false) list.push(o); });
+    _hsCache.forEach((el) => { if (el.object3D && el.isConnected && isShown(el.object3D)) list.push(el.object3D); });
+    XRP.extra.forEach((o) => { if (isShown(o)) list.push(o); });
     if (XRP.wrist && XRP.wrist.visible) list.push(XRP.wrist);
     return list;
   }
@@ -8591,7 +8598,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function xrSameTarget(a, b) { return !!a && !!b && (a.kind === "el" ? a.el === b.el : a.o === b.o); }
   function xrSetHover(key, t, hit) {
     const prev = XRP.hov[key];
-    if (xrSameTarget(prev, t)) { if (t) t.hit = hit; if (t && t.kind === "obj" && t.h.move) t.h.move(hit, key); return; }
+    if (xrSameTarget(prev, t)) { if (prev) { prev.hit = hit; if (prev.kind === "obj" && prev.h.move) prev.h.move(hit, key); } return; }
     if (prev) { if (prev.kind === "el") prev.el.emit("mouseleave"); else if (prev.h.hover) prev.h.hover(false, null, key); }
     XRP.hov[key] = t || null;
     if (t) {
@@ -8644,7 +8651,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (dr && dr.h.drag) dr.h.drag(S0, key);
       _rc.set(o, d); _rc.far = 80;
       let hit = null, tgt = null;
-      const hits = targets.length ? _rc.intersectObjects(targets, true) : [];
+      try { _rc.camera = sceneEl.renderer.xr.getCamera(); } catch (e) {}
+      const tg = key === "left" ? targets.filter((o) => o !== XRP.wrist) : targets;
+      const hits = tg.length ? _rc.intersectObjects(tg, true) : [];
       for (const h of hits) { const t = xrResolve(h); if (t) { hit = h; tgt = t; break; } }
       xrSetHover(key, tgt, hit);
       const len = hit ? hit.distance : (dr ? 1.2 : 3.2);
@@ -8658,13 +8667,15 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (gpd && gpd.buttons) { const pr = [4, 5].some((i) => gpd.buttons[i] && gpd.buttons[i].pressed); if (pr && !XRP.btnPrev[key]) menuButton(); XRP.btnPrev[key] = pr; }
     }
     Object.keys(XRP.ray).forEach((k) => { if (!seen[k]) { XRP.ray[k].g.visible = false; XRP.ray[k].cur.visible = false; xrSetHover(k, null); } });
-    if (anyPointer) removeGaze(); else if (inVR && !gaze) addGaze();
+    if (anyPointer) { XRP.lastPtr = performance.now(); removeGaze(); }
+    else if (inVR && !gaze && performance.now() - (XRP.lastPtr || 0) > 1800) addGaze();
+    XRP.seen = seen;
     xrWrist();
   }
   /* csukló-menü: a bal csukló fölött lebegő „☰ Menü” gomb, mindig a fejed felé fordul – a jobb kezeddel rámutatva, csippentéssel nyílik */
   function menuButton() { if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.togglePanel(); else vrToggle(); }
   function xrWrist() {
-    const L = XRP.src.left || XRP.src.none;
+    const L = (XRP.seen && XRP.seen.left) ? XRP.src.left : (XRP.seen && XRP.seen.none) ? XRP.src.none : null;
     if (!XRP.wrist) {
       const cv = document.createElement("canvas"); cv.width = 320; cv.height = 120; const g = cv.getContext("2d");
       g.fillStyle = "rgba(11,47,94,.94)"; g.beginPath(); g.roundRect ? g.roundRect(6, 6, 308, 108, 44) : g.rect(6, 6, 308, 108); g.fill();
@@ -8701,7 +8712,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
     get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
     ac, outBus, noiseBuf, xr: XRP, camYaw, xrRaf, vrClose, vrEnd: (f) => vrEndSession(f), headY() { try { const xc = sceneEl.renderer.xr.getCamera(), p = new THREE.Vector3(); xc.getWorldPosition(p); return inVR ? p.y : 0; } catch (e) { return 0; } },
-    setBusy(v) { busy = !!v; }
+    setBusy(v) { busy = !!v; },
+    xrForget(objs) { Object.keys(XRP.hov).forEach((k) => { const t = XRP.hov[k]; if (t && t.kind === "obj" && objs.includes(t.o)) XRP.hov[k] = null; });
+      Object.keys(XRP.drag).forEach((k) => { const t = XRP.drag[k]; if (t && objs.includes(t.o)) XRP.drag[k] = null; });
+      Object.keys(XRP.press).forEach((k) => { const t = XRP.press[k]; if (t && t.kind === "obj" && objs.includes(t.o)) XRP.press[k] = null; }); }
   };
   let worldLoading = null;
   function openWorld(kind) {

@@ -61,10 +61,9 @@
     return { tick: regTick, panel: regPanel, hud: regHud };
   }
   function regLabel(st, on) {
-    if (st.label) { st.g.remove(st.label); st.label = null; }
-    if (!on && !st.pin) return;
-    const rank = REG.rank ? REG.rank.indexOf(st) + 1 : 0;
-    st.label = labelSprite([st.b.name, st.b.num + (rank ? " · " + rank + ". hely" : "")], { size: 9 }); st.label.position.set(0, 16, 0); st.g.add(st.label);
+    const rank = REG.rank ? REG.rank.indexOf(st) + 1 : 0, L = [st.b.name, st.b.num + (rank ? " · " + rank + ". hely" : "")];
+    if (!st.label) { st.label = labelSprite(L, { size: 9 }); st.label.position.set(0, 16, 0); st.g.add(st.label); }
+    st.label.userData.set(L); st.label.visible = !!(on || st.pin);
   }
   function legTarget(st) {
     const m = REG.marks, L = REG.legs[st.leg];

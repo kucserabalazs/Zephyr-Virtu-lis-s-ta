@@ -64,15 +64,20 @@
   /* felirat-tábla (sprite): mindig felénk néz */
   function labelSprite(lines, opt) {
     opt = opt || {};
-    const fs = opt.fs || 54, pad = 26, w = opt.w || 760;
-    const h = pad * 2 + lines.length * fs * 1.25;
-    const t = canvasTex(w, Math.ceil(h), (g) => {
+    const fs = opt.fs || 54, pad = 26, w = opt.w || 760, n = Math.max(2, lines.length);
+    const h = pad * 2 + n * fs * 1.25;
+    const draw = (g, L) => {
+      g.clearRect(0, 0, w, Math.ceil(h));
       g.fillStyle = opt.bg || "rgba(9,34,70,.9)"; g.beginPath(); g.roundRect ? g.roundRect(4, 4, w - 8, h - 8, 34) : g.rect(4, 4, w - 8, h - 8); g.fill();
       g.lineWidth = 6; g.strokeStyle = opt.edge || "#ffd166"; g.stroke();
-      lines.forEach((ln, i) => { g.fillStyle = i === 0 ? (opt.c0 || "#ffd166") : "#fff"; g.font = `${i === 0 ? 800 : 600} ${i === 0 ? fs : fs * .78}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(ln, w / 2, pad + fs * .62 + i * fs * 1.25); });
-    });
+      L.forEach((ln, i) => { g.fillStyle = i === 0 ? (opt.c0 || "#ffd166") : "#fff"; g.font = `${i === 0 ? 800 : 600} ${i === 0 ? fs : fs * .78}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(ln, w / 2, pad + fs * .62 + i * fs * 1.25); });
+    };
+    const t = canvasTex(w, Math.ceil(h), (g) => draw(g, lines));
     const sp = new THREE.Sprite(basic({ map: t, transparent: true, depthTest: false, depthWrite: false }));
-    sp.renderOrder = 990; const k = opt.size || 1; sp.scale.set(k, k * h / w, 1); return sp;
+    sp.renderOrder = 990; const k = opt.size || 1; sp.scale.set(k, k * h / w, 1);
+    let last = lines.join("|");
+    sp.userData.set = (L) => { const key = L.join("|"); if (key === last) return; last = key; draw(t._canvas.getContext("2d"), L); t.needsUpdate = true; };
+    return sp;
   }
 
   /* ------------------------------------------------------------------ hangok */
