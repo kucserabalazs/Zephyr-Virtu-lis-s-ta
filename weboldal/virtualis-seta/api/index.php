@@ -99,6 +99,14 @@ function default_seasons($s) {
 }
 function md_in($md, $f, $t) { return $f <= $t ? ($md >= $f && $md <= $t) : ($md >= $f || $md <= $t); }
 function is_ext($b) { return !empty($b['ext_uid']) && !empty($b['source']) && isset(ical_sources()[$b['source']]); }
+/* zárt nap a platformon (pl. családtag vagy nem fizető vendég – a Szállás.hu adminban zárolva): a naptárszinkron név és adatok nélkül hozza.
+   Ez NEM hiba és nem ütközés: a nap foglalt, de nincs hozzá vendégadat, nem kell rendezni. */
+function ext_closed_sum($sum) {
+    $t = mb_strtolower(trim(preg_replace('/\s+/u', ' ', (string) $sum)));
+    $t = preg_replace('/^[\s()–:-]+|[\s()–:-]+$/u', '', preg_replace('/^(airbnb|szállás\.hu|szallas\.hu)\s*[–:-]?\s*/u', '', $t));
+    return $t === '' || (bool) preg_match('/^(not available|unavailable|blocked|closed|close|zárva|zárt( nap| napok)?|lezárva|lezárt|zárolva|zárolt|nem elérhető|nem foglalható|nem kiadható|saját használat|tulajdonosi használat)$/u', $t);
+}
+function is_closed_ext($b) { return is_ext($b) && !empty($b['closed']); }
 
 $ZB_LOCK = null;
 function db_lock() {
@@ -457,11 +465,14 @@ function sync_feed(&$db, $apt, $src, $url) {
                 if ($b['checkin'] !== $e['start'] || $b['checkout'] !== $e['end'] || $b['status'] !== 'block') {
                     $db['bookings'][$i]['checkin'] = $e['start']; $db['bookings'][$i]['checkout'] = $e['end']; $db['bookings'][$i]['status'] = 'block'; $upd++;
                 }
+                $cl = ext_closed_sum($e['summary']) ? 1 : 0;
+                $db['bookings'][$i]['closed'] = $cl; $db['bookings'][$i]['label'] = $names[$src] . ($cl ? ' – zárt nap' : ($e['summary'] ? ' – ' . $e['summary'] : ''));
                 break;
             }
         }
         if ($found) { continue; }
-        foreach ($db['bookings'] as $b) {  /* ütközés: ugyanarra a napra itt is van foglalás */
+        $closed = ext_closed_sum($e['summary']);
+        foreach ($closed ? array() : $db['bookings'] as $b) {  /* ütközés: ugyanarra a napra itt is van foglalás (a platformon zárt nap nem ütközés: azt a tulajdonos maga zárta) */
             if ($b['apt'] === $apt && in_array(eff_status($s, $b), array('pending', 'approved', 'paid'), true) && $b['checkin'] < $e['end'] && $b['checkout'] > $e['start']) {
                 $conf++;
                 send_mail($s, $s['notify_email'], 'FIGYELEM: foglalási ütközés – ' . $b['ref'],
@@ -472,8 +483,8 @@ function sync_feed(&$db, $apt, $src, $url) {
         $nb = array('id' => bin2hex(random_bytes(8)), 'ref' => new_ref('ZX'), 'apt' => $apt, 'checkin' => $e['start'], 'checkout' => $e['end'],
             'adults' => 0, 'children' => 0, 'name' => '', 'phone' => '', 'email' => '', 'birth_place' => '', 'birth_date' => '', 'id_doc' => '', 'note' => '',
             'total' => 0, 'tax' => 0, 'deposit' => 0, 'created' => time(), 'source' => $src, 'ext_uid' => $uid,
-            'label' => $names[$src] . ($e['summary'] ? ' – ' . $e['summary'] : ''), 'admin_note' => '', 'status' => 'block', 'log' => array(), 'ip' => '');
-        set_status($nb, 'block', $names[$src] . ' naptárszinkron', 'szinkron');
+            'label' => $names[$src] . ($closed ? ' – zárt nap' : ($e['summary'] ? ' – ' . $e['summary'] : '')), 'closed' => $closed ? 1 : 0, 'admin_note' => '', 'status' => 'block', 'log' => array(), 'ip' => '');
+        set_status($nb, 'block', $names[$src] . ' naptárszinkron' . ($closed ? ' – zárt nap (név és adatok nélkül, pl. családtag / nem fizető vendég)' : ''), 'szinkron');
         $db['bookings'][] = $nb; $add++;
     }
     foreach ($db['bookings'] as $i => $b) {  /* a külső naptárból eltűnt (lemondott) jövőbeli foglalások */
@@ -500,11 +511,17 @@ function sync_all(&$db) {
 /* saját foglalás, amely platformról érkezett foglalással ütközik → piros jelzés az adminban */
 function mark_conflicts(&$db) {
     $s = $db['settings']; $names = ical_sources(); $ch = false;
+    foreach ($db['bookings'] as $i => $b) {   /* régebben szinkronizált tételek: zárt nap jelölés utólag (címke = csak a platform neve vagy általános „nem elérhető”) */
+        if (is_ext($b) && !isset($b['closed'])) {
+            $sum = isset($b['label']) ? preg_replace('/^' . preg_quote($names[$b['source']], '/') . '\s*(–\s*)?/u', '', $b['label']) : '';
+            $cl = ext_closed_sum($sum) ? 1 : 0; $db['bookings'][$i]['closed'] = $cl; if ($cl) { $db['bookings'][$i]['label'] = $names[$b['source']] . ' – zárt nap'; } $ch = true;
+        }
+    }
     foreach ($db['bookings'] as $i => $b) {
         $c = '';
         if (!is_ext($b) && in_array(eff_status($s, $b), ZB_BLOCKING, true) && $b['checkout'] >= today()) {
             foreach ($db['bookings'] as $x) {
-                if (is_ext($x) && $x['apt'] === $b['apt'] && $x['checkin'] < $b['checkout'] && $x['checkout'] > $b['checkin']) { $c = $names[$x['source']] . ': ' . hu_date($x['checkin']) . ' – ' . hu_date($x['checkout']); break; }
+                if (is_ext($x) && empty($x['closed']) && $x['apt'] === $b['apt'] && $x['checkin'] < $b['checkout'] && $x['checkout'] > $b['checkin']) { $c = $names[$x['source']] . ': ' . hu_date($x['checkin']) . ' – ' . hu_date($x['checkout']); break; }
             }
         }
         $old = isset($b['conflict']) ? $b['conflict'] : '';
@@ -515,7 +532,7 @@ function mark_conflicts(&$db) {
 function ext_conflict($db, $b) {
     $names = ical_sources();
     foreach ($db['bookings'] as $x) {
-        if ($x['id'] !== $b['id'] && is_ext($x) && $x['apt'] === $b['apt'] && $x['checkin'] < $b['checkout'] && $x['checkout'] > $b['checkin']) { return $names[$x['source']] . ' foglalás (' . hu_date($x['checkin']) . ' – ' . hu_date($x['checkout']) . ')'; }
+        if ($x['id'] !== $b['id'] && is_ext($x) && empty($x['closed']) && $x['apt'] === $b['apt'] && $x['checkin'] < $b['checkout'] && $x['checkout'] > $b['checkin']) { return $names[$x['source']] . ' foglalás (' . hu_date($x['checkin']) . ' – ' . hu_date($x['checkout']) . ')'; }
     }
     return '';
 }
@@ -1117,6 +1134,7 @@ function apt_name($s, $id) { $a = apartments($s); return isset($a[$id]) ? $a[$id
 function guest_line($s, $b) {
     $st = eff_status($s, $b);
     $who = $st === 'block' ? ($b['label'] ? $b['label'] : 'Zárolva') . ($b['name'] ? ' – ' . $b['name'] : '') : ($b['name'] ? $b['name'] : 'vendég');
+    if (is_closed_ext($b) && !$b['name']) { $who = 'zárt nap (név nélkül – pl. családtag / nem fizető vendég)'; }
     $src = !empty($b['source']) && isset(ical_sources()[$b['source']]) ? ' [' . ical_sources()[$b['source']] . ']' : '';
     $pp = (int) $b['adults'] + (int) $b['children'];
     return '  • ' . apt_name($s, $b['apt']) . ': ' . $who . $src . ($pp && $st !== 'block' ? ', ' . $pp . ' fő' : '') . ($b['phone'] ? ', tel.: ' . $b['phone'] : '')
@@ -1432,7 +1450,7 @@ case 'manual':
     $apt = isset($P['apt']) ? preg_replace('/[^a-z]/', '', (string) $P['apt']) : '';
     $ci = isset($P['checkin']) ? (string) $P['checkin'] : ''; $co = isset($P['checkout']) ? (string) $P['checkout'] : '';
     if (!isset($aps[$apt]) || !valid_date($ci) || !valid_date($co) || $co <= $ci) { fail('Hibás apartman vagy dátum (a távozás napja legyen az érkezés után).'); }
-    $busy = busy_map($db, $apt, $ci, $co);
+    $busy = array_filter(busy_map($db, $apt, $ci, $co), function ($x) { return !is_closed_ext($x); });   /* a platformon zárt napra rá lehet írni a saját (pl. családi) bejegyzést – az nem ütközés */
     if ($busy) { $f = reset($busy); fail('Ütközik egy meglévő foglalással: ' . $f['ref'] . ' (' . hu_date($f['checkin']) . ' – ' . hu_date($f['checkout']) . ').', 409); }
     $kind = (isset($P['kind']) && $P['kind'] === 'paid') ? 'paid' : 'block';
     $adults = max(1, (int) (isset($P['adults']) ? $P['adults'] : 2));

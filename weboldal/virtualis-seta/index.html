@@ -2607,6 +2607,7 @@ html.zdoc-lock, html.zdoc-lock body { overflow: hidden; }
       <div class="zad-c-dates"><b>${hu(b.checkin)} – ${hu(b.checkout)}</b> <span>${n} éj</span></div>
       <div class="zad-c-who">${esc(b.label || SRCN[b.source])} <small>${esc(b.ref)} · automatikus naptárszinkron</small></div>
       <p class="zad-lock">🔒 A(z) ${SRCN[b.source]} oldaláról érkezett – itt nem módosítható, csak a(z) ${SRCN[b.source]} felületén.</p>
+      ${b.closed ? `<p class="zad-note">Zárt nap a(z) ${SRCN[b.source]} felületén (pl. családtag vagy nem fizető vendég) – név és adatok nélkül jön, ez így rendben van, nem hiba és nem ütközés.</p>` : ""}
       ${b.admin_note ? `<p class="zad-note own"><b>Saját megjegyzés:</b> ${esc(b.admin_note)}</p>` : ""}
       <div class="zad-acts">${btn("note", "Megjegyzés")}${btn("delext", "Törlés…", "del")}</div></article>`;
     }
