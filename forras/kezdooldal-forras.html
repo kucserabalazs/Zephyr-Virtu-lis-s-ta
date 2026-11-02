@@ -444,6 +444,8 @@ body { background-image: var(--grain); }
 .nav-links a:hover::after, .nav-links a:focus-visible::after { transform: scaleX(1); }
 .nav-logo img { transition: transform .4s cubic-bezier(.3,1.6,.5,1); }
 .nav-logo:hover img { transform: rotate(-3deg) scale(1.04); }
+/* a fejléc kis logója széles képernyőn a bal felső sarokba (a menü középen marad) */
+@media (min-width: 1240px) { .nav .wrap { position: static; } .nav-logo { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); } }
 .nav.solid { border-bottom: 1px solid rgba(255,217,120,.18); }
 
 /* nyitókép: finom fénytörés a címen, arany körvonal-csillanás */
