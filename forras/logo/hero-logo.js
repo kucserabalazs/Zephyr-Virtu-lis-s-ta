@@ -27,7 +27,8 @@
     if (hr.width !== W || hr.height !== H || d !== dpr) { dpr = d; W = hr.width; H = hr.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     const s = r.width / LW;
     box = { x: r.left - hr.left, y: r.top - hr.top + (r.height - LH * s) / 2, s };
-    if (done) drawFinal();
+    placeZam();
+    if (done && !sinking) drawFinal();
   }
   /* ------------------------------------------------------------ segédek */
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -885,17 +886,78 @@
     ALL.forEach((n) => drawPiece(n, 0, 0, { layer: "col" }));
   }
   function finish() {
-    if (done) return; done = true; cancelAnimationFrame(raf); parts.length = 0; drawFinal();
+    if (done || sinking) return; done = true; cancelAnimationFrame(raf); parts.length = 0; drawFinal();
     html.classList.add("logo-done", "la-place", "la-hello", "la-cta");
     setTimeout(idle, 9000);
   }
   /* később ritkán újra átfut a fény a feliraton */
   function idle() {
+    if (!done || sinking) return;
     if (document.hidden || !inView) { setTimeout(idle, 4000); return; }
     const s0 = performance.now();
     const step = (now) => { const k = (now - s0) / 1100; drawFinal(); if (k < 1) { glint(k); requestAnimationFrame(step); } else { drawFinal(); setTimeout(idle, 14000); } };
     requestAnimationFrame(step);
   }
+  /* „Zamárdi” helye (a tulajdonos kérése): bal széle a vitorlajel bal sarkánál, és az APARTMAN alatt ugyanakkora távolságra,
+     mint amekkora a ZEPHYR és az APARTMAN között van. A felirat a DOM-ban marad (fordítás, olvasás), csak eltoljuk (translate). */
+  let zTx = 0, zTy = 0, sinking = false;
+  function placeZam() {
+    const el = hero.querySelector(".place"); if (!el || !box.s) return;
+    const r = el.getBoundingClientRect(), hr = hero.getBoundingClientRect(), cs = getComputedStyle(el), fs = parseFloat(cs.fontSize);
+    const node = [...el.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim()); if (!node) return;
+    const rg = document.createRange(); rg.setStart(node, 0); rg.setEnd(node, 1); const bb = rg.getBoundingClientRect();
+    g.save(); g.font = `${cs.fontStyle} ${cs.fontWeight} ${fs}px ${cs.fontFamily}`; const m = g.measureText("Z"); g.restore();
+    const asc = m.fontBoundingBoxAscent || fs * .82, desc = m.fontBoundingBoxDescent || fs * .22, cap = m.actualBoundingBoxAscent || fs * .7;
+    const capTop0 = bb.top - hr.top - zTy + (bb.height - (asc + desc)) / 2 + asc - cap;      /* eltolás nélkül */
+    const left0 = bb.left - hr.left - zTx;
+    const zBot = 416 + OFF.Z, aTop = 425 + OFF.ap_a1, aBot = 498 + OFF.ap_a1;               /* a logó betűinek széle (logó-egységben) */
+    const ty = L2Y(aBot + (aTop - zBot)), tx = L2X(piece.red.x + 4);
+    const nx = Math.round(tx - left0), ny = Math.round(ty - capTop0);
+    if (nx === zTx && ny === zTy) return;
+    zTx = nx; zTy = ny; el.style.translate = `${zTx}px ${zTy}px`;
+    if (zam && !zam.gone) zam = null;   /* a betűk helye változott: újramérjük */
+  }
+  /* a fejléc kis logójára kattintva: a teljes felirat elsüllyed, és a folyamat elölről kezdődik */
+  function sinkAndRestart() {
+    if (sinking) return;
+    if (!started || reduce) return;
+    sinking = true; cancelAnimationFrame(raf);
+    html.classList.add("la-sink");
+    const s0 = performance.now();
+    const rows = [[ZW.concat(MK), 416 + OFF.Z], [AW, 498 + OFF.ap_a1]];
+    const step = (now) => {
+      const k = (now - s0) / 2600; size();
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+      const t = now / 1000;
+      rows.forEach(([ns, baseY], ri) => {
+        const kk = clamp((k - ri * .12) / .85, 0, 1), e = kk * kk * (3 - 2 * kk);
+        const wl = L2Y(baseY) + 4 * box.s, depth = (baseY - 0 + 60) * box.s;
+        water(wl, L2X(-20), L2X(1640), clamp(kk * 4, 0, 1) * clamp((1 - kk) * 3, 0, 1) * .95, t, box.s * 1.4);
+        g.save(); g.beginPath(); g.rect(0, 0, W, wl); g.clip();
+        g.shadowColor = "rgba(0,0,0,.3)"; g.shadowBlur = 14; g.shadowOffsetY = 5;
+        ns.forEach((n, i) => { const wob = Math.sin(t * 7 + i) * 2 * e; drawPiece(n, wob, e * depth, { layer: "out", rot: Math.sin(i * 1.7) * .08 * e }); });
+        g.shadowBlur = 0; ns.forEach((n, i) => { const wob = Math.sin(t * 7 + i) * 2 * e; drawPiece(n, wob, e * depth, { layer: "col", rot: Math.sin(i * 1.7) * .08 * e }); });
+        g.restore();
+        if (kk > .05 && kk < .95 && rand() < .9) foam(L2X(rand() * 1600), wl, 2, 6, (rand() - .5) * 40, -90, .7, 1.8 * box.s * 1.4, "235,245,255");
+      });
+      stepParts(1 / 60);
+      if (k < 1.25) { raf = requestAnimationFrame(step); return; }
+      /* újrakezdés tiszta lappal */
+      parts.length = 0; ripples.length = 0; smoke.length = 0; Object.keys(TOWST).forEach((k2) => delete TOWST[k2]);
+      zam = null; ban = null; t0 = 0; lastT = 0; done = false; sinking = false;
+      html.classList.remove("logo-done", "la-place", "la-hello", "la-cta", "la-sink");
+      html.classList.add("logo-anim");
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(step);
+  }
+  const navLogo = document.querySelector(".nav-logo");
+  if (navLogo) navLogo.addEventListener("click", (e) => {
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) return;
+    e.preventDefault();
+    const go = () => sinkAndRestart();
+    if (scrollY > 40) { scrollTo({ top: 0, behavior: "smooth" }); setTimeout(go, 700); } else go();
+  });
   let inView = true;
   new IntersectionObserver((e) => { inView = e[0].isIntersecting; }).observe(hero);
   function start() {
