@@ -1,6 +1,6 @@
 # Zephyr – éjszakai feladatcsomag („start”)
 
-Ha a tulajdonos egy új munkamenetben azt írja: **start**, ezt a fájlt kell végrehajtani elejétől a végéig, **kérdezés nélkül** (a tulajdonos alszik, nem tud jóváhagyni). Döntési helyzetben a legésszerűbb megoldást választani, és a végén összefoglalni, mi mellett döntöttél. Mindig magyarul. Előbb olvasd el a `FOLYTATAS.md`-t (főleg a 14–15. pontot).
+Ha a tulajdonos egy új munkamenetben azt írja: **start**, ezt a fájlt kell végrehajtani elejétől a végéig, **kérdezés nélkül** (a tulajdonos alszik, nem tud jóváhagyni). Döntési helyzetben a legésszerűbb megoldást választani, és a végén összefoglalni, mi mellett döntöttél. Mindig magyarul. Előbb olvasd el a `FOLYTATAS.md`-t (főleg a 21–22. pontot).
 
 ## Források és célhelyek
 - 360°-os mesterfelvételek (DJI Osmo 360, 15520 × 7760): `/Users/kucserabalazs/Pictures/Zephyr Apartman  Osmo 360 mastercop VR` (két szóköz az „Apartman” után). Apartmanmappák + `Zephyr Apartman Grillterasz` + `Út a privát stéghez` + `összes lakás rajza.pdf`.
@@ -9,7 +9,7 @@ Ha a tulajdonos egy új munkamenetben azt írja: **start**, ezt a fájlt kell v�
 - Ha a munkamenetnek van írási joga a repóhoz: közvetlenül push a `main`-re (kisebb, ellenőrzött commitokban). Ha nincs: a fájlokat a helyi repómásolatba írd (device_commit_files), és a végén írd le, hogy a GitHub Desktoppal kell feltölteni.
 - A gép oldali parancsfuttatás (device_bash) 180 mp-es lépésekben megy: a nagy képfeldolgozást kis adagokra bontva, háttérfolyamat nélkül, újraindítható módon (kész fájlt kihagy).
 
-## 1. lépés – Panorámák cseréje a mesterfelvételekre (a 15. pont terve)
+## 1. lépés – Panorámák cseréje a mesterfelvételekre (a 22. pont terve)
 - Minden meglévő jelenethez (img/*.jpg, kb. 60) keresd meg a hozzá tartozó mesterfelvételt képösszevetéssel (kicsinyített változatok korrelációja + a fájlnevek). Ellenőrizd az irányt (yaw): ha a mester el van forgatva a mostanihoz képest, vízszintes eltolással igazítsd, hogy a nyilak és feliratok a helyükön maradjanak.
 - Kimenet jelenetenként: `id-8k.jpg` (8192×4096, gépre), `id.jpg` (4096×2048, telefonra – a mostani név, hogy minden hivatkozás működjön), `id-t.jpg` (320×160). JPEG ~q82, progresszív.
 - Betöltés: először a 4096-os jelenik meg, gépen a 8192-es a háttérben töltődik és észrevétlenül cserél; a szomszédos jelenetek (ahová nyíl mutat) előtöltése. Telefonon (iPhone) 4096 marad. A WebGL max. textúraméretét ellenőrizni (`gl.getParameter(gl.MAX_TEXTURE_SIZE)`); ha < 8192, 4096 marad.
