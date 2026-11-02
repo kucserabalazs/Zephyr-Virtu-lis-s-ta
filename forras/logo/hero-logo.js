@@ -288,6 +288,13 @@
   }
   /* egy vontatás: a hajó behozza a feliratot, behúzza a kötelet, megfordul, mögötte visszafelé kifut */
   const TOWST = {};
+  /* a kajakos–rendőrös jelenet sávja: az APARTMAN és a Zamárdi alatti üres rész (ott semmi sem takarja) */
+  function laneY() {
+    const el = hero.querySelector(".place"), hr = hero.getBoundingClientRect();
+    const zb = el ? el.getBoundingClientRect().bottom - hr.top : L2Y(600);
+    const he = hero.querySelector(".hello"), ht = he ? he.getBoundingClientRect().top - hr.top : zb + 120;
+    return Math.max(zb + 34, Math.min(zb + 60, ht - 24));
+  }
   function tow(o, t, bs, pcs, back) {
     const { names, gb, dir, base, start, arr, reel, turn, out, look } = o, yo = OFF[names[0]] || 0;
     const lt = t - start; if (lt < 0) return;
@@ -332,10 +339,10 @@
       if (r < reel) { reelK = ease(clamp((r - .4) / (reel - .4), 0, 1)); }
       else if (r < reel + turn) {                                            /* fordulás: oldalt fordul, hátrébb (a felirat mögé) kerül */
         reelK = 1; phase = "turn"; const k = easeIO((r - reel) / turn);
-        fx = dir * Math.cos(k * Math.PI); by = wl - k * 34 * box.s; sc = 1 - .18 * k; bx = arriveX + dir * Math.sin(k * Math.PI) * 18 * bs;
+        fx = dir * Math.cos(k * Math.PI); by = look.kayak ? wl + k * (laneY() - wl) : wl - k * 34 * box.s; sc = look.kayak ? 1 : 1 - .18 * k; bx = arriveX + dir * Math.sin(k * Math.PI) * 18 * bs;
       } else {
         reelK = 1; phase = "back"; const k = Math.min(1, (r - reel - turn) / (look.kayak ? out * 1.9 : out));
-        fx = -dir; by = wl - 34 * box.s; sc = .82;
+        fx = -dir; by = look.kayak ? laneY() : wl - 34 * box.s; sc = look.kayak ? 1 : .82;
         if (look.kayak) {
           /* a kajakosok visszafelé indulnak; középen szembejön a vízirendőrség, megállnak, megfordulnak, és visszafelé menekülnek */
           const meetX = W * .56, c0 = arriveX - dir * kGap * sc / 2;
@@ -400,7 +407,7 @@
     }
     if (look.kayak && phase === "back" && st.kk > .12) {
       /* a vízirendőrség a kajakosok menetirányából, szemből érkezik; középen megáll előttük, majd a menekülők után megy */
-      const k = st.kk, chaseDir = dir, pyy = wl - 30 * box.s, meetX = W * .56, stopX = meetX - dir * 190 * bs;
+      const k = st.kk, chaseDir = dir, pyy = laneY() + 4 * bs, meetX = W * .56, stopX = meetX - dir * 190 * bs;
       const enterX = dir < 0 ? W + 240 * bs : -240 * bs, exitX = dir < 0 ? -300 * bs : W + 300 * bs;
       let pxx, pdir = dir;
       if (k < .42) { const q = 1 - Math.pow(1 - (k - .12) / .3, 2.2); pxx = enterX + (stopX - enterX) * q; }
