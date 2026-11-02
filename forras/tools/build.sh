@@ -4,6 +4,7 @@ R=/home/claude/zephyr-virtu-lis-s-ta
 W=/home/claude/build/w
 rm -rf $W && mkdir -p $W/tour $W/home $W/site/uj
 cat $R/forras/fejlec.txt $R/forras/virtualis-seta-forras.html > $R/weboldal/virtualis-seta/index.html
+cat $R/forras/vilag/*.js > $R/weboldal/virtualis-seta/vilag.js
 python3 $R/forras/tools/build_i18n.py $R/weboldal/virtualis-seta/index.html
 cp $R/weboldal/virtualis-seta/index.html $W/tour/index.html
 cp $R/forras/kezdooldal-forras.html $W/home/src.html

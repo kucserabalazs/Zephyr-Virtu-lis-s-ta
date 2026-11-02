@@ -558,7 +558,18 @@ body.walk-on .walk-bar { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); 
   box-shadow: 0 10px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .vr-btn svg { width: 38px; height: 24px; color: #ffd166; }
 .vr-btn:hover, .vr-btn:focus-visible { background: linear-gradient(180deg, rgba(30,84,150,.95), rgba(12,44,90,.95)); outline: none; transform: translateY(-1px); }
-body.walk-on .vr-btn, body.in-vr .vr-btn { display: none; }
+body.walk-on .vr-btn, body.in-vr .vr-btn, body.world-on .vr-btn { display: none; }
+#btnVR { top: calc(144px + env(safe-area-inset-top, 0px)); }
+.world-pick { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(4,14,28,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 16px; }
+.world-pick .wp-card { position: relative; width: min(560px, 100%); background: linear-gradient(180deg, #123a6b, #0a2347); color: #fff; border: 2px solid rgba(255,209,102,.85); border-radius: 26px; padding: 26px 22px 18px; box-shadow: 0 24px 60px rgba(0,0,0,.45); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.world-pick h2 { margin: 0 0 16px; font-size: 26px; color: #ffd166; letter-spacing: .02em; }
+.world-pick [data-w] { display: block; width: 100%; text-align: left; margin: 0 0 12px; padding: 16px 18px; border-radius: 18px; border: 1.5px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; cursor: pointer; font: inherit; }
+.world-pick [data-w]:hover, .world-pick [data-w]:focus-visible { background: rgba(255,209,102,.18); border-color: #ffd166; outline: none; }
+.world-pick [data-w] b { display: block; font-size: 21px; margin-bottom: 4px; } .world-pick [data-w] span { font-size: 16px; opacity: .85; }
+.world-pick p { margin: 6px 2px 0; font-size: 15px; opacity: .75; }
+.world-pick .wp-x { position: absolute; right: 14px; top: 12px; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); color: #fff; font-size: 20px; cursor: pointer; }
+body.world-on > *:not(#stage):not(#worldHud):not(.zfb):not(#worldPick) { visibility: hidden !important; }
+body.world-on #stage { visibility: visible !important; }
 .a-enter-ar { display: none !important; }
 
 /* ---------- Eszköz mód (PC / Táblagép / Telefon) ---------- */
@@ -5426,7 +5437,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     sceneEl = document.createElement("a-scene");
     sceneEl.setAttribute("renderer", "colorManagement: true; antialias: true");
     sceneEl.setAttribute("xr-mode-ui", "enabled: false; XRMode: vr");   /* saját VR gomb (csak ha a böngésző támogatja) */
-    sceneEl.setAttribute("webxr", "optionalFeatures: local-floor");
+    sceneEl.setAttribute("webxr", "optionalFeatures: local-floor, hand-tracking");
+    regXR(); sceneEl.setAttribute("zephyr-xr", "");
     sceneEl.setAttribute("loading-screen", "enabled: false");
     sceneEl.setAttribute("device-orientation-permission-ui", "enabled: false"); /* az engedélyt a forgatás gomb kéri */
     sceneEl.setAttribute("cursor", "rayOrigin: mouse; fuse: false");
@@ -5454,10 +5466,15 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     cam.appendChild(fade);
     rig.appendChild(cam);
     ["left", "right"].forEach((hand) => {
+      /* kontroller-modell (a sugarat és a kattintást a saját XR-mutató kezeli – kézzel és kontrollerrel egyformán) */
       const h = document.createElement("a-entity");
       h.setAttribute("laser-controls", `hand: ${hand}`);
-      h.setAttribute("raycaster", "objects: .hotspot; far: 50; lineColor: #f4f1e6; lineOpacity: 0.8");
+      h.setAttribute("raycaster", "objects: .xr-none; far: 1; showLine: false");
       rig.appendChild(h);
+      /* saját kéz megjelenítése (Quest kézkövetés) */
+      const hh = document.createElement("a-entity");
+      hh.setAttribute("hand-tracking-controls", `hand: ${hand}; modelStyle: mesh; modelColor: #e9cdb4; modelOpacity: 0.92`);
+      rig.appendChild(hh);
     });
     sceneEl.append(sky, sky2, spots, rig);
     $("stage").appendChild(sceneEl);
@@ -5467,7 +5484,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     return new Promise((res) => sceneEl.hasLoaded ? res() : sceneEl.addEventListener("loaded", res, { once: true })).then(() => {
       const fm = fade.getObject3D("mesh");
       if (fm) { fm.renderOrder = 999; fm.material.depthWrite = false; }
-      vrButton();
+      vrButton(); worldButton();
     });
   }
 
@@ -8141,34 +8158,47 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       document.body.appendChild(b);
     });
   }
+  /* 2D-ben is: „3D világ” gomb és választó (gépen, táblagépen, telefonon) */
+  function worldButton() {
+    if ($("btnWorld")) return;
+    const b = document.createElement("button"); b.type = "button"; b.id = "btnWorld"; b.className = "vr-btn world-btn";
+    b.innerHTML = `<svg viewBox="0 0 48 30" aria-hidden="true"><path d="M24 2v22M24 3l13 19H24M24 7 12 22h12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M4 25c5 3 10 3 15 0s10-3 15 0 8 3 11 1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span>3D</span>`;
+    b.title = "Virtuális világ: regatta, vitorlázás, a ház makettje"; b.setAttribute("aria-label", "Virtuális világ");
+    b.addEventListener("click", () => { if (walking) { stopWalk(); return; } if (!busy) worldChooser(); });
+    document.body.appendChild(b);
+  }
+  function worldChooser() {
+    let d = $("worldPick"); if (d) { d.remove(); return; }
+    d = document.createElement("div"); d.id = "worldPick"; d.className = "world-pick"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Virtuális világ");
+    d.innerHTML = `<div class="wp-card"><button type="button" class="wp-x" aria-label="Bezárás">✕</button><h2>Virtuális világ</h2>
+      <button type="button" data-w="regatta"><b>🏁 Regatta a stégnél</b><span>3D vitorlások versenye a napozóstég előtt</span></button>
+      <button type="button" data-w="sail"><b>⛵ Vitorlázás a Zephyrrel</b><span>Raptor 27, piros génua – Tihany és Badacsony a láthatáron</span></button>
+      <button type="button" data-w="maquette"><b>🏠 A ház makettje</b><span>Mutass egy lakásra, és belépsz a panorámájába</span></button>
+      <p>VR szemüvegben a legszebb (Meta Quest: „VR” gomb). Itt egérrel/ujjal nézel körbe.</p></div>`;
+    d.addEventListener("click", (e) => { const t = e.target.closest("[data-w]"); if (t) { d.remove(); openWorld(t.dataset.w); } else if (e.target === d || e.target.closest(".wp-x")) d.remove(); });
+    document.body.appendChild(d);
+  }
   function vrEnter() {
     inVR = true;
     if (flat) return;
     document.body.classList.add("in-vr");
-    VRS.hands = Array.from(rig.querySelectorAll("[laser-controls]"));
-    /* kontroller nélkül (csak fejjel): nézd a nyilat 1,5 mp-ig; kontrollerrel: sugár + ravasz */
-    if (!VRS.hands.some((h) => h.components["tracked-controls"] && h.components["tracked-controls"].controller)) addGaze();
-    VRS.hands.forEach((h) => {
-      if (h._vrBound) return; h._vrBound = 1;
-      h.addEventListener("controllerconnected", () => { removeGaze(); });
-      ["xbuttondown", "ybuttondown", "abuttondown", "bbuttondown", "menudown"].forEach((ev) => h.addEventListener(ev, () => { if (inVR) vrToggle(); }));
-      /* rámutatáskor finom rezgés (kiemelés mellé) */
-      h.addEventListener("raycaster-intersection", (e) => { if (!inVR) return; const t = e.detail && e.detail.els && e.detail.els[0]; if (t && t !== h._lastHit) { h._lastHit = t; vrHaptic(h, .25, 18); } });
-      h.addEventListener("raycaster-intersection-cleared", () => { h._lastHit = null; });
-      h.setAttribute("raycaster", "objects: .hotspot; far: 50; lineColor: #ffd166; lineOpacity: 0.85");
-    });
-    vrMenuButton(true);
+    VRS.hands = [];
+    xrStart();   /* kéz vagy kontroller: sugár + csippentés/ravasz; ha egyik sincs, fejjel nézés (1,5 mp) */
+    setTimeout(() => { if (inVR && !Object.keys(XRP.src).length) addGaze(); }, 1500);
     vrAudio(true);
     if (current) hiRes(current);
+    if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.vrChanged(true);
   }
   function vrExit() {
     inVR = false;
     document.body.classList.remove("in-vr");
-    removeGaze(); vrClose(); vrMenuButton(false); vrAudio(false);
+    removeGaze(); vrClose(); vrMenuButton(false); vrAudio(false); xrStop();
+    if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.vrChanged(false);
     const c = camObj(); if (c) { c.fov = deviceFov(); c.updateProjectionMatrix(); }
     if (VRS.after) { const f = VRS.after; VRS.after = null; setTimeout(f, 350); }
   }
   function vrHaptic(h, v, ms) {
+    if (!h) { Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, v, ms)); return; }
     try { const tc = h.components["tracked-controls"], src = tc && tc.controller, gp = src && src.gamepad; const a = gp && gp.hapticActuators && gp.hapticActuators[0]; if (a && a.pulse) a.pulse(v, ms); } catch (e) {}
   }
   function vrAfterGo() { if (VRS.panel) xrRaf(() => xrRaf(vrPlace)); vrAudioScene(); }
@@ -8233,15 +8263,15 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
   function vrHoverTick() {
     if (!VRS.panel) return;
-    let hov = -1;
-    VRS.hands.forEach((h) => { const rc = h.components.raycaster; const ix = rc && rc.getIntersection && rc.getIntersection(VRS.panel); if (ix && ix.uv) { const k = vrHit(ix.uv.x * VW, (1 - ix.uv.y) * VH); if (k >= 0) hov = k; } });
-    if (hov !== VRS.hover) { VRS.hover = hov; if (hov >= 0) VRS.hands.forEach((h) => vrHaptic(h, .12, 10)); vrDraw(); }
+    const u = XRP.panelUV && performance.now() - XRP.panelUV.t < 250 ? XRP.panelUV : null;
+    const hov = u ? vrHit(u.x * VW, (1 - u.y) * VH) : -1;
+    if (hov !== VRS.hover) { VRS.hover = hov; vrDraw(); }
   }
   function vrHit(x, y) { for (let i = VRS.btns.length - 1; i >= 0; i--) { const b = VRS.btns[i]; if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h && !b.off) return i; } return -1; }
   function vrClick(x, y) {
     const i = vrHit(x, y); if (i < 0) return;
     const b = VRS.btns[i]; try { sndNav(); } catch (e) {}
-    VRS.hands.forEach((h) => vrHaptic(h, .4, 25));
+    vrHaptic(null, .4, 25);
     b.fn();
   }
   function rr(g, x, y, w, h, r) { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); }
@@ -8262,7 +8292,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (VRS.page !== "main") btn(g, VW - 212, 26, 76, 72, "‹", () => { VRS.page = "main"; vrDraw(); }, { round: 36 });
     g.font = "600 36px system-ui, sans-serif";
     g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 116, VW - 80, 2);
-    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook }[VRS.page] || pMain)(g);
+    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld }[VRS.page] || pMain)(g);
     if (VRS.tex) VRS.tex.needsUpdate = true;
   }
   function btn(g, x, y, w, h, label, fn, o) {
@@ -8283,16 +8313,35 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function txt(g, s, x, y, o) { o = o || {}; g.fillStyle = o.c || "#fff"; g.font = `${o.w || 600} ${o.fs || 34}px system-ui, sans-serif`; g.textAlign = o.a || "left"; g.textBaseline = "middle"; g.fillText(s, x, y); }
 
   function pMain(g) {
-    const W3 = (VW - 80 - 2 * 30) / 3, H2 = 200, y0 = 150;
-    btn(g, 40, y0, W3, H2, "🧭\nHelyszínek", () => { VRS.list = { g: (SCENES[current] || {}).g || "haz", off: 0 }; VRS.page = "places"; vrDraw(); });
-    btn(g, 40 + W3 + 30, y0, W3, H2, "🗺\nHázvázlat", () => { VRS.page = "map"; vrDraw(); });
-    btn(g, 40 + 2 * (W3 + 30), y0, W3, H2, "🛏\nApartmanok", () => { VRS.page = "apts"; vrDraw(); });
-    btn(g, 40, y0 + H2 + 30, W3 * 2 + 30, H2, "📅  Foglalás itt, VR-ben", () => { vrBookInit(); VRS.page = "book"; vrDraw(); }, { on: 1 });
-    btn(g, 40 + 2 * (W3 + 30), y0 + H2 + 30, W3, H2, "Foglalás\n2D ablakban", () => vrEndSession(() => window.ZephyrBooking && ZephyrBooking.open({ apt: ["korvett", "dingi", "fregatt", "kaloz", "schooner"].includes((SCENES[current] || {}).g) ? SCENES[current].g : "" })));
+    const W3 = (VW - 80 - 2 * 26) / 3, H1 = 150, y0 = 140, gp = 20, X = (i) => 40 + i * (W3 + 26);
+    btn(g, X(0), y0, W3, H1, "🧭\nHelyszínek", () => { VRS.list = { g: (SCENES[current] || {}).g || "haz", off: 0 }; VRS.page = "places"; vrDraw(); });
+    btn(g, X(1), y0, W3, H1, "🗺\nHázvázlat", () => { VRS.page = "map"; vrDraw(); });
+    btn(g, X(2), y0, W3, H1, "🛏\nApartmanok", () => { VRS.page = "apts"; vrDraw(); });
+    const y1 = y0 + H1 + gp;
+    btn(g, X(0), y1, W3 * 2 + 26, H1, "⛵  Virtuális világ", () => { VRS.page = "world"; vrDraw(); }, { on: 1, sub: "regatta a stégnél · vitorlázás a Zephyrrel · a ház makettje" });
     const mOn = typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused;
-    btn(g, 40, y0 + 2 * (H2 + 30), W3, 150, mOn ? "♫ Zene: be" : "♫ Zene: ki", () => { try { toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); });
-    btn(g, 40 + W3 + 30, y0 + 2 * (H2 + 30), W3, 150, "⟲ Vissza", () => { try { const b = typeof goBack === "function" ? goBack : null; if (b) b(); } catch (e) {} }, { off: typeof goBack !== "function" });
-    btn(g, 40 + 2 * (W3 + 30), y0 + 2 * (H2 + 30), W3, 150, "Kilépés\na VR-ből", () => vrEndSession());
+    btn(g, X(2), y1, W3, H1, mOn ? "♫ Zene: be" : "♫ Zene: ki", () => { try { toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); });
+    const y2 = y1 + H1 + gp;
+    btn(g, X(0), y2, W3 * 2 + 26, H1, "📅  Foglalás itt, VR-ben", () => { vrBookInit(); VRS.page = "book"; vrDraw(); });
+    btn(g, X(2), y2, W3, H1, "Foglalás\n2D ablakban", () => vrEndSession(() => window.ZephyrBooking && ZephyrBooking.open({ apt: ["korvett", "dingi", "fregatt", "kaloz", "schooner"].includes((SCENES[current] || {}).g) ? SCENES[current].g : "" })));
+    const y3 = y2 + H1 + gp, H3 = VH - 40 - y3;
+    btn(g, X(0), y3, W3, H3, "⟲ Vissza", () => { try { if (typeof goBack === "function") goBack(); } catch (e) {} }, { off: typeof goBack !== "function" });
+    btn(g, X(1), y3, W3, H3, "☰ a bal csuklódon", () => {}, { off: 1, fs: 30 });
+    btn(g, X(2), y3, W3, H3, "Kilépés a VR-ből", () => vrEndSession(), { fs: 34 });
+  }
+  function pWorld(g) {
+    const items = [["regatta", "🏁  Regatta a stégnél", "A napozóstégen állsz: 3D vitorlások versenyeznek a Balatonon, bóják, rendezőhajó, rajtjelek."],
+                   ["sail", "⛵  Vitorlázás a Zephyrrel", "A Raptor 27 kormányánál: piros génua, Tihany és Badacsony a láthatáron. Fogd meg a kormányrudat!"],
+                   ["maquette", "🏠  A ház makettje", "Az egész ház asztalnyi méretben, alaprajzok szerint. Mutass egy lakásra, és belépsz a panorámájába."]];
+    items.forEach(([k, t, d], i) => {
+      const y = 140 + i * 228;
+      btn(g, 40, y, VW - 80, 208, "", () => { vrClose(); openWorld(k); });
+      txt(g, t, 80, y + 66, { fs: 44, w: 800 });
+      g.save(); g.font = "500 30px system-ui, sans-serif"; g.fillStyle = "rgba(255,255,255,.82)";
+      const words = d.split(" "); let line = "", yy = y + 128;
+      words.forEach((w) => { if (g.measureText(line + w).width > VW - 200) { g.fillText(line, 80, yy); line = ""; yy += 38; } line += w + " "; });
+      g.fillText(line, 80, yy); g.restore();
+    });
   }
   function pPlaces(g) {
     const tabs = GROUPS.filter((q) => !q.hidden && !q.lock);
@@ -8486,6 +8535,181 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const ry = rig.object3D.rotation.y + .6, d = 3;
       VRS.mPan.positionX.value = -Math.sin(ry) * d; VRS.mPan.positionY.value = 1.2; VRS.mPan.positionZ.value = -Math.cos(ry) * d;
     } catch (e) {}
+  }
+
+  /* ---------- Kézkövetés és kontroller egységesen (WebXR input source-ok): sugár, rámutatás, csippentés = kattintás ----------
+     Meta Quest 2-n kontroller nélkül, saját kézzel: mutass a kezeddel, a csippentés (hüvelyk + mutatóujj) a kattintás.
+     Kontrollerrel ugyanez a ravasszal; joystick sehol sem kell. */
+  const XRP = { on: false, session: null, src: {}, ray: {}, hov: {}, press: {}, drag: {}, extra: new Set(), btnPrev: {}, wrist: null, panelUV: null };
+  let _rc = null;
+  function xrStart() {
+    let s = null; try { s = sceneEl.renderer.xr.getSession(); } catch (e) {}
+    if (!s || XRP.on) return;
+    XRP.on = true; XRP.session = s;
+    XRP.onSS = (e) => xrSelect(e.inputSource, true);
+    XRP.onSE = (e) => xrSelect(e.inputSource, false);
+    s.addEventListener("selectstart", XRP.onSS); s.addEventListener("selectend", XRP.onSE);
+    if (!_rc) { _rc = new THREE.Raycaster(); _v1 = new THREE.Vector3(); _v2 = new THREE.Vector3(); _m1 = new THREE.Matrix4(); }
+  }
+  function xrStop() {
+    if (XRP.session) { try { XRP.session.removeEventListener("selectstart", XRP.onSS); XRP.session.removeEventListener("selectend", XRP.onSE); } catch (e) {} }
+    XRP.on = false; XRP.session = null;
+    Object.keys(XRP.ray).forEach((k) => { const r = XRP.ray[k]; if (r) { r.g.parent && r.g.parent.remove(r.g); } });
+    XRP.ray = {}; XRP.src = {};
+    Object.keys(XRP.hov).forEach((k) => xrSetHover(k, null)); XRP.hov = {}; XRP.press = {}; XRP.drag = {};
+    if (XRP.wrist) { XRP.wrist.parent && XRP.wrist.parent.remove(XRP.wrist); }
+  }
+  /* egy kéz sugara: vékony fénycsík + célkör a találati ponton */
+  function xrRayMesh(key) {
+    if (XRP.ray[key]) return XRP.ray[key];
+    const g = new THREE.Group(); g.renderOrder = 1000;
+    const beamGeo = new THREE.CylinderGeometry(.0016, .0028, 1, 8, 1, true); beamGeo.translate(0, .5, 0); beamGeo.rotateX(-Math.PI / 2);
+    const beamMat = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .55, depthWrite: false });
+    const beam = new THREE.Mesh(beamGeo, beamMat); beam.renderOrder = 1000;
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .95, depthTest: false, depthWrite: false });
+    const dot = new THREE.Mesh(new THREE.RingGeometry(.006, .011, 24), dotMat); dot.renderOrder = 1001;
+    const halo = new THREE.Mesh(new THREE.RingGeometry(.013, .017, 32), new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .8, depthTest: false, depthWrite: false })); halo.renderOrder = 1001;
+    const cur = new THREE.Group(); cur.add(dot, halo);
+    g.add(beam); sceneEl.object3D.add(g); sceneEl.object3D.add(cur);
+    return (XRP.ray[key] = { g, beam, cur, halo, dotMat, beamMat });
+  }
+  function xrTargets() {
+    const list = [];
+    document.querySelectorAll(".hotspot").forEach((el) => { if (el.object3D && el.object3D.visible) list.push(el.object3D); });
+    XRP.extra.forEach((o) => { if (o.visible !== false) list.push(o); });
+    if (XRP.wrist && XRP.wrist.visible) list.push(XRP.wrist);
+    return list;
+  }
+  function xrResolve(hit) {
+    /* a találatból: A-Frame entitás (.hotspot) vagy saját 3D-s kezelő (userData.xr) */
+    for (let o = hit.object; o; o = o.parent) {
+      if (o.userData && o.userData.xr) return { kind: "obj", o, h: o.userData.xr };
+      if (o.el && o.el.classList && o.el.classList.contains("hotspot")) return { kind: "el", el: o.el };
+    }
+    return null;
+  }
+  function xrSameTarget(a, b) { return !!a && !!b && (a.kind === "el" ? a.el === b.el : a.o === b.o); }
+  function xrSetHover(key, t, hit) {
+    const prev = XRP.hov[key];
+    if (xrSameTarget(prev, t)) { if (t) t.hit = hit; if (t && t.kind === "obj" && t.h.move) t.h.move(hit, key); return; }
+    if (prev) { if (prev.kind === "el") prev.el.emit("mouseleave"); else if (prev.h.hover) prev.h.hover(false, null, key); }
+    XRP.hov[key] = t || null;
+    if (t) {
+      t.hit = hit;
+      if (t.kind === "el") t.el.emit("mouseenter"); else if (t.h.hover) t.h.hover(true, hit, key);
+      const s = XRP.src[key] && XRP.src[key].src; xrPulse(s, .25, 16);
+    }
+  }
+  function xrPulse(src, v, ms) { try { const a = src && src.gamepad && src.gamepad.hapticActuators && src.gamepad.hapticActuators[0]; if (a && a.pulse) a.pulse(v, ms); } catch (e) {} }
+  function xrSelect(src, down) {
+    const key = src.handedness || "none", t = XRP.hov[key];
+    if (down) {
+      XRP.press[key] = t || null;
+      if (t && t.kind === "obj" && t.h.down) { XRP.drag[key] = t; t.h.down(t.hit, XRP.src[key], key); }
+      const r = XRP.ray[key]; if (r) r.halo.scale.setScalar(.6);
+      return;
+    }
+    const r = XRP.ray[key]; if (r) r.halo.scale.setScalar(1);
+    const d = XRP.drag[key]; XRP.drag[key] = null;
+    if (d && d.h.up) d.h.up(XRP.src[key], key);
+    const p = XRP.press[key]; XRP.press[key] = null;
+    if (!p || !xrSameTarget(p, t)) return;
+    xrPulse(src, .45, 22);
+    if (t.kind === "el") t.el.emit("click", { intersection: t.hit, cursorEl: null });
+    else if (t.h.click) t.h.click(t.hit, XRP.src[key], key);
+  }
+  let _v1 = null, _v2 = null, _m1 = null;
+  function xrTick() {
+    if (!XRP.on) xrStart();
+    if (!XRP.on) return;
+    const r = sceneEl.renderer, frame = r.xr.getFrame && r.xr.getFrame(), ref = r.xr.getReferenceSpace && r.xr.getReferenceSpace();
+    if (!frame || !ref) return;
+    const c = camObj(); const parent = c && c.parent; if (!parent) return;
+    parent.updateMatrixWorld(true);
+    const seen = {}, targets = xrTargets();
+    let anyPointer = false;
+    for (const src of XRP.session.inputSources) {
+      if (src.targetRayMode !== "tracked-pointer") continue;
+      const key = src.handedness || "none"; seen[key] = 1; anyPointer = true;
+      const pose = frame.getPose(src.targetRaySpace, ref);
+      const R = xrRayMesh(key);
+      if (!pose) { R.g.visible = false; R.cur.visible = false; continue; }
+      const m = new THREE.Matrix4().fromArray(pose.transform.matrix).premultiply(parent.matrixWorld);
+      const o = new THREE.Vector3().setFromMatrixPosition(m), d = new THREE.Vector3(0, 0, -1).transformDirection(m);
+      const S0 = XRP.src[key] || (XRP.src[key] = {});
+      S0.src = src; S0.o = o; S0.d = d; S0.hand = !!src.hand;
+      if (src.gripSpace) { const gp = frame.getPose(src.gripSpace, ref); S0.grip = gp ? new THREE.Matrix4().fromArray(gp.transform.matrix).premultiply(parent.matrixWorld) : null; }
+      /* húzás közben (pl. kormányrúd, makett forgatása) a fogott tárgy kapja a mozgást */
+      const dr = XRP.drag[key];
+      if (dr && dr.h.drag) dr.h.drag(S0, key);
+      _rc.set(o, d); _rc.far = 80;
+      let hit = null, tgt = null;
+      const hits = targets.length ? _rc.intersectObjects(targets, true) : [];
+      for (const h of hits) { const t = xrResolve(h); if (t) { hit = h; tgt = t; break; } }
+      xrSetHover(key, tgt, hit);
+      const len = hit ? hit.distance : (dr ? 1.2 : 3.2);
+      R.g.visible = true; R.g.position.copy(o); R.g.quaternion.setFromUnitVectors(_v1.set(0, 0, -1), d); R.beam.scale.set(1, 1, len);
+      R.beamMat.opacity = tgt ? .8 : .42; R.beamMat.color.setHex(tgt ? 0xffd166 : 0xf4f1e6);
+      if (hit) { R.cur.visible = true; R.cur.position.copy(hit.point).addScaledVector(d, -.01); R.cur.lookAt(o); const k = Math.max(.6, Math.min(6, hit.distance)); R.cur.scale.setScalar(k * .9); }
+      else R.cur.visible = false;
+      if (tgt && tgt.kind === "el" && VRS.panel && tgt.el === VRS.panel && hit.uv) XRP.panelUV = { x: hit.uv.x, y: hit.uv.y, t: performance.now() };
+      /* kontroller A/B/X/Y gombja: menü (kézkövetésnél a csukló-gomb) */
+      const gpd = src.gamepad;
+      if (gpd && gpd.buttons) { const pr = [4, 5].some((i) => gpd.buttons[i] && gpd.buttons[i].pressed); if (pr && !XRP.btnPrev[key]) menuButton(); XRP.btnPrev[key] = pr; }
+    }
+    Object.keys(XRP.ray).forEach((k) => { if (!seen[k]) { XRP.ray[k].g.visible = false; XRP.ray[k].cur.visible = false; xrSetHover(k, null); } });
+    if (anyPointer) removeGaze(); else if (inVR && !gaze) addGaze();
+    xrWrist();
+  }
+  /* csukló-menü: a bal csukló fölött lebegő „☰ Menü” gomb, mindig a fejed felé fordul – a jobb kezeddel rámutatva, csippentéssel nyílik */
+  function menuButton() { if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.togglePanel(); else vrToggle(); }
+  function xrWrist() {
+    const L = XRP.src.left || XRP.src.none;
+    if (!XRP.wrist) {
+      const cv = document.createElement("canvas"); cv.width = 320; cv.height = 120; const g = cv.getContext("2d");
+      g.fillStyle = "rgba(11,47,94,.94)"; g.beginPath(); g.roundRect ? g.roundRect(6, 6, 308, 108, 44) : g.rect(6, 6, 308, 108); g.fill();
+      g.lineWidth = 7; g.strokeStyle = "#ffd166"; g.stroke();
+      g.fillStyle = "#fff"; g.font = "800 58px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("☰ Menü", 160, 64);
+      const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(.11, .041), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthTest: false }));
+      m.renderOrder = 999;
+      m.userData.xr = { click: () => menuButton(), hover: (on) => m.scale.setScalar(on ? 1.18 : 1) };
+      sceneEl.object3D.add(m); XRP.wrist = m;
+    }
+    const w = XRP.wrist;
+    if (!L || !L.grip || !inVR) { w.visible = false; return; }
+    w.visible = true;
+    _v1.setFromMatrixPosition(L.grip);
+    _v2.set(0, L.hand ? .065 : .08, L.hand ? .03 : .02).applyMatrix4(_m1.extractRotation(L.grip));
+    w.position.copy(_v1).add(_v2);
+    const xc = sceneEl.renderer.xr.getCamera(); xc.getWorldPosition(_v2); w.lookAt(_v2);
+  }
+  /* minden képkockában (VR-ben is) – A-Frame komponens a jeleneten */
+  function regXR() {
+    if (!window.AFRAME || AFRAME.components["zephyr-xr"]) return;
+    AFRAME.registerComponent("zephyr-xr", {
+      tick: function (t, dt) {
+        try { if (inVR) xrTick(); } catch (e) { if (!XRP.err) { XRP.err = 1; console.warn("xr", e); } }
+        try { if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.tick(Math.min(.1, (dt || 16) / 1000)); } catch (e) { if (!XRP.werr) { XRP.werr = 1; console.warn("world", e); } }
+      }
+    });
+  }
+
+  /* ---------- Híd a „Virtuális világ” modulhoz (vilag.js – csak megnyitáskor töltődik be) ---------- */
+  window.ZephyrTour = {
+    get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
+    get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
+    get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
+    ac, outBus, noiseBuf, xr: XRP, camYaw, xrRaf, vrClose, vrEnd: (f) => vrEndSession(f), headY() { try { const xc = sceneEl.renderer.xr.getCamera(), p = new THREE.Vector3(); xc.getWorldPosition(p); return inVR ? p.y : 0; } catch (e) { return 0; } },
+    setBusy(v) { busy = !!v; }
+  };
+  let worldLoading = null;
+  function openWorld(kind) {
+    vrClose();
+    const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
+    if (window.ZephyrWorld) return run();
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "1"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
   /* ---------- Szerkesztő ---------- */
