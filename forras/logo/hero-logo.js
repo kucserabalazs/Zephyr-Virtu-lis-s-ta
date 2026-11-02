@@ -772,7 +772,7 @@
       const hs = clamp(box.s * 1.75, .55, 2.1), L0 = 60 * hs, hook = 21 * hs;
       const P1 = T.hIn, P2 = P1 + T.hHov, P3 = P2 + T.hDesc, P4 = P3 + T.hAdj, P5 = P4 + T.hSet, P6 = P5 + T.hRel;
       const hoverX = hang.x, hoverY = hang.y - L0 - hook;                    /* ebben a magasságban a jel épp a helyén van */
-      let hx, hy, tilt = 0, lineLen = L0, attached = true, swing = 0, extraRot = 0, wash = 0;
+      let hx, hy, tilt = 0, lineLen = L0, attached = true, swing = 0, extraRot = 0, wash = 0, hdir = -1;
       if (ht < P1) {                                                        /* beérkezés jobbról felülről, előredőlve; a jel lemarad, leng */
         const k = .5 - .5 * Math.cos(Math.PI * ht / P1);
         hx = W + 160 * hs + (hoverX + 30 * hs - W - 160 * hs) * k; hy = -80 * hs + (hoverY - 46 * hs + 80 * hs) * k;
@@ -798,11 +798,13 @@
       } else if (ht < P6) {                                                 /* kioldás, a horog felcsévélődik, a gép kicsit emelkedik */
         const r = ht - P5, k = ease(r / T.hRel);
         hx = hoverX; hy = hoverY + 6 * hs - 16 * hs * k; attached = false; lineLen = L0 * (1 - .8 * k); wash = 1 - k;
-      } else {                                                              /* távozás balra fel, előredőlve */
-        const k = Math.min(1, (ht - P6) / T.hOut), kk = Math.pow(k, 1.5);
-        hx = hoverX + (-200 * hs - hoverX) * kk; hy = hoverY - 10 * hs - (hoverY + 140 * hs) * kk; tilt = -.24 * Math.min(1, k * 2.5); attached = false; lineLen = L0 * .2;
+      } else {                                                              /* távozás JOBBRA (a tulajdonos kérése, hogy tovább lehessen nézni): helyben megfordul, majd előredőlve elrepül */
+        const k = Math.min(1, (ht - P6) / T.hOut), turnK = easeIO(clamp(k / .3, 0, 1)), kk = Math.pow(clamp((k - .2) / .8, 0, 1), 1.5);
+        hdir = -Math.cos(Math.PI * turnK);                                     /* -1 → +1: a gép az orrával jobbra fordul */
+        hx = hoverX + (W + 240 * hs - hoverX) * kk; hy = hoverY - 10 * hs - 8 * hs * turnK + 46 * hs * kk;   /* a menüsor alatt, enyhén ereszkedve repül ki jobbra */
+        tilt = -.24 * clamp((k - .25) * 3, 0, 1); attached = false; lineLen = L0 * .2;
       }
-      const hookX = hx + Math.sin(tilt) * hook, hookY = hy + hook;
+      const hookX = hx - hdir * Math.sin(tilt) * hook, hookY = hy + hook;
       let slack = 0;
       if (attached) {
         markDx = hookX + Math.sin(swing) * lineLen - hang.x; markDy = hookY + Math.cos(swing) * lineLen - hang.y; markRot = -swing * .9 + extraRot;
@@ -810,7 +812,7 @@
       }
       markA = 1;
       const endX = attached ? hang.x + markDx : hookX + Math.sin(tilt) * lineLen * .2, endY = attached ? hang.y + markDy : hookY + lineLen;
-      if (hx > -260 * hs && hy > -200 * hs) {
+      if (hx > -260 * hs && hx < W + 260 * hs && hy > -200 * hs) {
         if (wash > .2 && rand() < .7 * wash) foam(hang.x + (rand() - .5) * 220 * hs, L2Y(GM.y1 + OFF.red) - 6, 1, 4, (rand() - .5) * 260, -30, .55, 1.3 * hs, "235,242,250");
         front.push(() => {
           /* emelőkötél: feszes, letételkor belóg; a végén horog és kötélszem */
@@ -818,7 +820,7 @@
           g.beginPath(); g.moveTo(hookX, hookY); g.quadraticCurveTo((hookX + endX) / 2 + slack * .8, (hookY + endY) / 2 + slack * .3, endX, endY); g.stroke();
           g.fillStyle = "#e0b84a"; g.beginPath(); g.arc(endX, endY - 2 * hs, Math.max(2, 2.6 * hs), 0, 7); g.fill();
           g.strokeStyle = "#5d6773"; g.lineWidth = Math.max(1, 1.2 * hs); g.beginPath(); g.arc(endX, endY + 1.5 * hs, 2.6 * hs, -.3, Math.PI + .3, false); g.stroke();
-          heli(hx, hy, hs, t, -1, tilt);
+          heli(hx, hy, hs, t, Math.abs(hdir) < .08 ? (hdir < 0 ? -.08 : .08) : hdir, tilt);
         });
       }
     }
