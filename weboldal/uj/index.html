@@ -880,6 +880,18 @@ html.logo-js .hero-logo-img { visibility: hidden; animation: none; }
 html.logo-anim .hero .place { animation: none; opacity: 0; transform: none; transition: opacity .45s ease; } html.logo-anim.la-place .hero .place { opacity: 1; }
 @keyframes placeRise { 0% { opacity: 1; transform: translateY(1em); clip-path: inset(-.4em -3em 1em -.4em); } 70% { transform: translateY(-.08em); clip-path: inset(-.4em -3em -.08em -.4em); } 100% { opacity: 1; transform: none; clip-path: inset(-.4em -3em -.3em -.4em); } }
 html.logo-anim .hero .hello { animation: none; opacity: 0; transform: none; transition: opacity .6s ease; } html.logo-anim.la-hello .hero .hello { opacity: 1; }
+/* „Isten hozott!” nemzeti színekben: a fehér felirat fölé balról jobbra rásimul a piros–fehér–zöld változat */
+.hero .hello { position: relative; }
+.hero .hello::after { content: attr(data-text); position: absolute; left: 0; top: 0; white-space: nowrap; pointer-events: none;
+  background: linear-gradient(180deg, #ef4655 0%, #ce2939 40%, #a81d2c 55.5%, #ffffff 56%, #f3f1ea 68.5%, #5b8c66 69%, #477050 80%, #2f5236 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+  filter: drop-shadow(0 0 1px rgba(255,255,255,.9)) drop-shadow(0 0 1.5px rgba(212,169,60,.95)) drop-shadow(0 4px 14px rgba(0,0,0,.55));
+  clip-path: inset(-20% 100% -20% 0); transition: clip-path 2.2s cubic-bezier(.45,.05,.25,1); }
+html.la-tricolor .hero .hello::after { clip-path: inset(-20% -5% -20% 0); }
+.hero .hello::before { content: ""; position: absolute; top: -10%; bottom: -10%; left: 0; width: 18%; pointer-events: none; z-index: 1; opacity: 0;
+  background: linear-gradient(100deg, rgba(255,255,255,0), rgba(255,245,210,.65), rgba(255,255,255,0)); mix-blend-mode: screen; }
+html.la-tricolor .hero .hello::before { animation: tricolorGlint 2.2s cubic-bezier(.45,.05,.25,1) forwards; }
+@keyframes tricolorGlint { 0% { left: -18%; opacity: 1; } 90% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
 html.logo-js .hero-cta { animation: none; opacity: 1; transform: none; margin-top: 44px; }   /* a négy gomb az animáció alatt is végig látható (a tulajdonos kérése) */
 @media (max-width: 700px) { .hero h1.hero-logo { width: 84vw; margin-left: -1vw; } }
 @media (min-width: 701px) { html.logo-js .hero-in { padding-top: 182px; } }   /* hely a helikopternek a logó fölött */
@@ -3384,6 +3396,9 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   function finish() {
     if (done || sinking) return; done = true; cancelAnimationFrame(raf); parts.length = 0; drawFinal();
     html.classList.add("logo-done", "la-place", "la-hello", "la-cta");
+    /* végül az „Isten hozott!” nemzeti színeket ölt: piros–fehér–zöld (fentről lefelé), balról jobbra áthúzó fénnyel */
+    const he = hero.querySelector(".hello");
+    if (he) { he.dataset.text = he.textContent.trim(); setTimeout(() => { if (done && !sinking) html.classList.add("la-tricolor"); }, reduce ? 0 : 700); }
     setTimeout(idle, 9000);
   }
   /* később ritkán újra átfut a fény a feliraton */
@@ -3417,7 +3432,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   function sinkAndRestart() {
     if (sinking) return;
     if (!started || reduce) return;
-    sinking = true; cancelAnimationFrame(raf);
+    sinking = true; cancelAnimationFrame(raf); html.classList.remove("la-tricolor");
     html.classList.add("la-sink");
     const s0 = performance.now();
     const rows = [[ZW.concat(MK), 416 + OFF.Z], [AW, 498 + OFF.ap_a1]];
@@ -3441,7 +3456,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       /* újrakezdés tiszta lappal */
       parts.length = 0; ripples.length = 0; smoke.length = 0; Object.keys(TOWST).forEach((k2) => delete TOWST[k2]);
       zam = null; ban = null; t0 = 0; lastT = 0; done = false; sinking = false;
-      html.classList.remove("logo-done", "la-place", "la-hello", "la-cta", "la-sink");
+      html.classList.remove("logo-done", "la-place", "la-hello", "la-cta", "la-sink", "la-tricolor");
       html.classList.add("logo-anim");
       raf = requestAnimationFrame(frame);
     };

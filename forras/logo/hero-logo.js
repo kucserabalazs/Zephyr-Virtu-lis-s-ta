@@ -1046,6 +1046,9 @@
   function finish() {
     if (done || sinking) return; done = true; cancelAnimationFrame(raf); parts.length = 0; drawFinal();
     html.classList.add("logo-done", "la-place", "la-hello", "la-cta");
+    /* végül az „Isten hozott!” nemzeti színeket ölt: piros–fehér–zöld (fentről lefelé), balról jobbra áthúzó fénnyel */
+    const he = hero.querySelector(".hello");
+    if (he) { he.dataset.text = he.textContent.trim(); setTimeout(() => { if (done && !sinking) html.classList.add("la-tricolor"); }, reduce ? 0 : 700); }
     setTimeout(idle, 9000);
   }
   /* később ritkán újra átfut a fény a feliraton */
@@ -1079,7 +1082,7 @@
   function sinkAndRestart() {
     if (sinking) return;
     if (!started || reduce) return;
-    sinking = true; cancelAnimationFrame(raf);
+    sinking = true; cancelAnimationFrame(raf); html.classList.remove("la-tricolor");
     html.classList.add("la-sink");
     const s0 = performance.now();
     const rows = [[ZW.concat(MK), 416 + OFF.Z], [AW, 498 + OFF.ap_a1]];
@@ -1103,7 +1106,7 @@
       /* újrakezdés tiszta lappal */
       parts.length = 0; ripples.length = 0; smoke.length = 0; Object.keys(TOWST).forEach((k2) => delete TOWST[k2]);
       zam = null; ban = null; t0 = 0; lastT = 0; done = false; sinking = false;
-      html.classList.remove("logo-done", "la-place", "la-hello", "la-cta", "la-sink");
+      html.classList.remove("logo-done", "la-place", "la-hello", "la-cta", "la-sink", "la-tricolor");
       html.classList.add("logo-anim");
       raf = requestAnimationFrame(frame);
     };
