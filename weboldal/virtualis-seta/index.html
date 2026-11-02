@@ -7299,7 +7299,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function imageFromBlob(url) {
     return fetch(url).then((r) => { if (!r.ok) throw new Error(r.status); return r.blob(); }).then((b) => new Promise((res, rej) => {
       const u = URL.createObjectURL(b), i = new Image();
-      i.onload = () => res(i); i.onerror = rej; i.src = u;
+      i.onload = () => { res(i); setTimeout(() => URL.revokeObjectURL(u), 0); }; i.onerror = () => { URL.revokeObjectURL(u); rej(); }; i.src = u;
     }));
   }
   function imageDirect(url) {
@@ -7344,7 +7344,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   const ease = (k) => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
   function animate(ms, fn) {
     const t0 = performance.now();
-    return new Promise((res) => { (function step(t) { const k = Math.min(1, (t - t0) / ms); fn(ease(k)); if (k < 1 && walking && !walking.stop) requestAnimationFrame(step); else res(); })(t0); });
+    return new Promise((res) => { (function step() { const k = Math.min(1, (performance.now() - t0) / ms); fn(ease(k)); if (k < 1 && walking && !walking.stop) xrRaf(step); else res(); })(); });
   }
   async function turnTo(x, ms) {
     if (x == null) return;
@@ -7826,7 +7826,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       await portalFx(1050, true);
       if (flat) goFlat(to, look); else await go(to, false, look);
       await portalFx(750, false);
-    } finally { walking = null; walkBar(false); const c = $("portalFx"); if (c) c.style.opacity = 0; setTimeout(navMark, 0); }
+    } finally { walking = null; walkBar(false); const c = $("portalFx"); if (c) c.style.opacity = 0; setTimeout(navMark, 0); setTimeout(() => current && hiRes(current), 400); }
   }
 
   async function walk(w) {
@@ -7883,7 +7883,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       flatZoom(false);
       supFx(false); sndLap(false); sndWind(false); bikeFx(false); sndGravel(false); sndSteps(false);
       if (!flat && cam) cam.setAttribute("camera", "fov", deviceFov());
-      walking = null; walkBar(false); setTimeout(navMark, 0);
+      walking = null; walkBar(false); setTimeout(navMark, 0); setTimeout(() => current && hiRes(current), 400);
     }
   }
   document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") stopWalk(); });
@@ -7971,7 +7971,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     m2.material.map = tex; m2.material.opacity = 0; m2.material.needsUpdate = true; sky2.object3D.rotation.y = C - T; sky2.object3D.visible = true; m2.visible = true;
     spots.object3D.visible = false;
     const dur = (walking && walking.xf) || 520;
-    await new Promise((res) => { const t0 = performance.now(); (function st(t) { const k = Math.min(1, (t - t0) / dur); m2.material.opacity = k * k * (3 - 2 * k); k < 1 ? requestAnimationFrame(st) : res(); })(t0); });
+    await new Promise((res) => { const t0 = performance.now(); (function st() { const k = Math.min(1, (performance.now() - t0) / dur); m2.material.opacity = k * k * (3 - 2 * k); k < 1 ? xrRaf(st) : res(); })(); });
     const old = skyTex;
     mesh.material.map = tex; mesh.material.color.set(0xffffff); mesh.material.needsUpdate = true; skyTex = tex;
     if (lc && lc.yawObject) lc.yawObject.rotation.y = 0;
@@ -8007,15 +8007,16 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     return HI_OK;
   }
   function hiRes(id) {
-    if (!HI8K.has(hiKey(id)) || (SCENES[id] && SCENES[id].priv) || EDIT || flat || !hiAllowed()) return;
+    if (!HI8K.has(hiKey(id)) || (SCENES[id] && SCENES[id].priv) || EDIT || flat || walking || !hiAllowed() || (inVR && !vr8k())) return;
     if (hiFor === hiKey(id) && hiTex) { applyHi(id, hiTex); return; }
     const job = ++hiJob;
     const run = async () => {
+      /* ne séta / áttűnés közben (akadna) – a letöltés is csak utána indul */
+      while ((busy || walking) && job === hiJob && current === id) await sleep(250);
+      if (job !== hiJob || current !== id || walking) return;
       let img = null;
       try { img = await imageFromBlob(hiUrl(id)); if (img.decode) await img.decode(); } catch (e) { return; }
-      if (job !== hiJob || current !== id) return;
-      /* ne séta / áttűnés közben töltsük fel (akadna) */
-      while ((busy || walking) && job === hiJob && current === id) await sleep(250);
+      while (busy && job === hiJob && current === id) await sleep(150);
       if (job !== hiJob || current !== id) return;
       const t = new THREE.Texture(img);
       t.colorSpace = THREE.SRGBColorSpace; t.generateMipmaps = false; t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
@@ -8030,8 +8031,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
   function applyHi(id, t) {
     const mesh = sky && sky.getObject3D("mesh"); if (!mesh || current !== id) return;
-    if (skyTex !== t) { if (hiLow && hiLow !== skyTex) hiLow.dispose(); hiLow = skyTex; }   /* a 4096-os megmarad a kocka tükröződéséhez */
+    const old = skyTex;
     mesh.material.map = t; mesh.material.needsUpdate = true; skyTex = t;
+    if (old && old !== t) setTimeout(() => { try { if (old !== skyTex) old.dispose(); } catch (e) {} }, 120);   /* a kocka tükröződése saját másolatot használ */
   }
   /* a szomszédos jelenetek (ahová nyíl mutat) 8K képe alacsony prioritással a böngésző gyorsítótárába */
   const hiWarm = {};
@@ -8063,7 +8065,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
   const wrapPi = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
   /* VR-ben (immersive munkamenet alatt) a window.requestAnimationFrame szünetel – ott a munkamenet saját időzítője fut */
-  function xrRaf(cb) { try { const s = inVR && sceneEl && sceneEl.renderer && sceneEl.renderer.xr.getSession(); if (s) return s.requestAnimationFrame(() => cb(performance.now())); } catch (e) {} return requestAnimationFrame(cb); }
+  function xrRaf(cb) {
+    let done = false; const run = () => { if (done) return; done = true; cb(performance.now()); };
+    try { const s = inVR && sceneEl && sceneEl.renderer && sceneEl.renderer.xr.getSession(); if (s) { s.requestAnimationFrame(run); setTimeout(run, 60); return; } } catch (e) {}
+    requestAnimationFrame(run); setTimeout(run, 120);   /* ha VR-be lépés/kilépés közben a window-időzítő szünetel */
+  }
   function tween(ms, fn) { return new Promise((res) => { const t0 = performance.now(); (function st() { const k = Math.min(1, (performance.now() - t0) / ms); fn(k); k < 1 ? xrRaf(st) : res(); })(); }); }
   const smooth = (k) => k * k * (3 - 2 * k);
   async function softTo(id, sc, lookX) {
@@ -8103,7 +8109,6 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const old = skyTex;
     mesh.material.map = tex; mesh.material.color.set(0xffffff); mesh.material.needsUpdate = true; skyTex = tex;
     rig.object3D.rotation.y += T - C;
-    if (!inVR && lc && lc.yawObject) lc.yawObject.rotation.y = 0;
     sky2.object3D.visible = false; m2.material.map = null; m2.material.opacity = 0; m2.material.needsUpdate = true;
     if (old && old !== tex) old.dispose();
     if (cvs) cvs.style.filter = "";
@@ -8121,6 +8126,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
 
   /* ---------- VR mód (WebXR – Meta Quest 2 böngészője) ---------- */
   let VRS = { ok: false, panel: null, page: "main", hover: -1, btns: [], tex: null, cvs: null, menuBtn: null, timer: 0, book: null, list: { g: null, off: 0 }, hands: [], audio: null };
+  /* VR-ben a 8K kép kapcsolható (ha a feltöltése akadást okozna a szemüvegben): alapból bekapcsolva */
+  function vr8k(v) { try { if (v != null) localStorage.setItem("zephyr-vr8k", v ? "1" : "0"); return localStorage.getItem("zephyr-vr8k") !== "0"; } catch (e) { return v != null ? !!v : true; } }
   function vrSupported() {
     try { return navigator.xr && navigator.xr.isSessionSupported ? navigator.xr.isSessionSupported("immersive-vr").catch(() => false) : Promise.resolve(false); } catch (e) { return Promise.resolve(false); }
   }
@@ -8130,7 +8137,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const b = document.createElement("button"); b.type = "button"; b.id = "btnVR"; b.className = "vr-btn";
       b.innerHTML = `<svg viewBox="0 0 48 30" aria-hidden="true"><path d="M6 4h36a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H31l-4-6h-6l-4 6H6a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="14" cy="15" r="4" fill="currentColor"/><circle cx="34" cy="15" r="4" fill="currentColor"/></svg><span>VR</span>`;
       b.title = "Belépés VR szemüvegben (Meta Quest)"; b.setAttribute("aria-label", "Belépés VR módba");
-      b.addEventListener("click", () => { try { stopWalk(); sceneEl && sceneEl.enterVR(); } catch (e) {} });
+      b.addEventListener("click", () => { if (walking) { stopWalk(); return; } if (busy) return; try { sceneEl && sceneEl.enterVR(); } catch (e) {} });
       document.body.appendChild(b);
     });
   }
@@ -8164,7 +8171,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function vrHaptic(h, v, ms) {
     try { const tc = h.components["tracked-controls"], src = tc && tc.controller, gp = src && src.gamepad; const a = gp && gp.hapticActuators && gp.hapticActuators[0]; if (a && a.pulse) a.pulse(v, ms); } catch (e) {}
   }
-  function vrAfterGo() { if (VRS.panel) vrPlace(); vrAudioScene(); }
+  function vrAfterGo() { if (VRS.panel) xrRaf(() => xrRaf(vrPlace)); vrAudioScene(); }
   function vrEndSession(after) {
     VRS.after = after || null;
     try { const s = sceneEl.renderer.xr.getSession(); if (s) { s.end(); return; } } catch (e) {}
@@ -8173,7 +8180,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
 
   /* --- lebegő „☰ Menü” gomb a bal kéz fölött (a jobb sugárral kattintható), és az X/Y/A/B gombok --- */
   function vrMenuButton(on) {
-    if (!on) { if (VRS.menuBtn) { VRS.menuBtn.remove(); VRS.menuBtn = null; } return; }
+    if (!on) { if (VRS.menuBtn) { try { VRS.menuBtn._tex.dispose(); } catch (e) {} VRS.menuBtn.remove(); VRS.menuBtn = null; } return; }
     if (VRS.menuBtn) return;
     const left = VRS.hands.find((h) => /left/.test(h.getAttribute("laser-controls").hand || "")) || VRS.hands[0];
     const cv = document.createElement("canvas"); cv.width = 256; cv.height = 96;
@@ -8191,7 +8198,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     e.addEventListener("click", () => vrToggle());
     e.addEventListener("mouseenter", () => e.object3D.scale.setScalar(1.15));
     e.addEventListener("mouseleave", () => e.object3D.scale.setScalar(1));
-    (left || rig).appendChild(e); VRS.menuBtn = e;
+    e._tex = t; (left || rig).appendChild(e); VRS.menuBtn = e;
   }
 
   /* --- a panel: egy vászon-textúrás lap, a gombokat a sugár találati pontja (uv) alapján azonosítjuk --- */
@@ -8206,7 +8213,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       e.classList.add("hotspot");
       e.setAttribute("geometry", `primitive: plane; width: 1.12; height: ${1.12 * VH / VW}`);
       e.setAttribute("material", "shader: flat; transparent: true; side: double; depthTest: false");
-      e.addEventListener("loaded", () => { const m = e.getObject3D("mesh"); if (m) { m.material.map = t; m.material.needsUpdate = true; m.renderOrder = 998; } });
+      e.addEventListener("loaded", () => { const m = e.getObject3D("mesh"); if (m) { m.material.map = t; m.material.needsUpdate = true; m.renderOrder = 998; } vrPlace(); });
       e.addEventListener("click", (ev) => { const ix = ev.detail && ev.detail.intersection; if (ix && ix.uv) vrClick(ix.uv.x * VW, (1 - ix.uv.y) * VH); });
       rig.appendChild(e); VRS.panel = e;
       vrPlace();
@@ -8249,9 +8256,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     g.fillText("ZEPHYR", 50, 62);
     g.fillStyle = "#fff"; g.font = "600 36px system-ui, sans-serif";
     const sc = SCENES[current] || {}, grp = GROUPS.find((q) => q.id === sc.g);
-    g.fillText(((grp ? grp.name + " · " : "") + (sc.n || "")).slice(0, 44), 250, 62);
+    { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 680) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 250, 62); }
     btn(g, VW - 120, 26, 76, 72, "✕", () => vrClose(), { round: 36 });
+    btn(g, VW - 330, 26, 106, 72, vr8k() ? "8K" : "4K", () => { vr8k(!vr8k()); if (vr8k()) hiRes(current); else hiDrop(); vrDraw(); }, { round: 36, fs: 30, on: vr8k() });
     if (VRS.page !== "main") btn(g, VW - 212, 26, 76, 72, "‹", () => { VRS.page = "main"; vrDraw(); }, { round: 36 });
+    g.font = "600 36px system-ui, sans-serif";
     g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 116, VW - 80, 2);
     ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook }[VRS.page] || pMain)(g);
     if (VRS.tex) VRS.tex.needsUpdate = true;
@@ -8429,6 +8438,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (!on) {
       if (VRS.audio) { const w = VRS.audio; try { w.g.gain.setTargetAtTime(0, a.currentTime, .3); } catch (e) {} setTimeout(() => { try { w.n.stop(); w.lfo.stop(); } catch (e) {} }, 1200); VRS.audio = null; }
       if (VRS.mPan) { try { VRS.mPan.positionX.value = 0; VRS.mPan.positionY.value = 0; VRS.mPan.positionZ.value = -1; } catch (e) {} }
+      try { const L = a.listener; if (L.forwardX) { L.forwardX.value = 0; L.forwardY.value = 0; L.forwardZ.value = -1; L.upX.value = 0; L.upY.value = 1; L.upZ.value = 0; } else L.setOrientation(0, 0, -1, 0, 1, 0); } catch (e) {}
       return;
     }
     try {
