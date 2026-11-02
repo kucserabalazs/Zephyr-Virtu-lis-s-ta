@@ -255,8 +255,8 @@
     p0: 12.6,                                                    /* Zamárdi a vízből */
     f0: 15.0, fDur: 3.3,                                         /* repülőgép + molinó */
   };
-  /* lassabb, nyugodtabb tempó (a tulajdonos kérése): minden időtartam 1,8-szoros */
-  Object.keys(T).forEach((k) => (T[k] *= 1.8));
+  /* ünnepélyes tempó (a tulajdonos kérése: az egész kb. 1 perc): minden időtartam 3-szoros */
+  Object.keys(T).forEach((k) => (T[k] *= 3.0));
   T.END = T.f0 + T.fDur + 2.4;
   function boatScale() { return clamp(box.s * 1.3, .44, 1.8); }    /* a hajók valamivel nagyobbak a betűknél */
   /* a vízcsík a felirat alatt – „mintha vízen vontatnák” */
@@ -286,6 +286,7 @@
     g.restore();
   }
   /* egy vontatás: a hajó behozza a feliratot, behúzza a kötelet, megfordul, mögötte visszafelé kifut */
+  const TOWST = {};
   function tow(o, t, bs, pcs, back) {
     const { names, gb, dir, base, start, arr, reel, turn, out, look } = o, yo = OFF[names[0]] || 0;
     const lt = t - start; if (lt < 0) return;
@@ -293,52 +294,90 @@
     const wl = L2Y(base) + 1.5 * bs;
     /* a felirat elülső vége (a hajó felőli széle) a végső helyén */
     const frontX = dir > 0 ? L2X(gb.x1) - 6 * box.s : L2X(gb.x0) + 6 * box.s;
-    let arriveX = frontX + dir * (rope + 46 * bs);                           /* a hajó itt áll meg (keskeny kijelzőn a képen belül) */
+    const KS = 1.6, KG = 225;   /* kajak méretaránya és a két kajak közti távolság (középtől középig, hajóegységben) */
+    let arriveX = frontX + dir * (rope + (look.kayak ? 40 * bs * KS + KG * bs : 46 * bs));                           /* a hajó itt áll meg (keskeny kijelzőn a képen belül) */
     arriveX = dir > 0 ? Math.min(arriveX, W - 40 * bs) : Math.max(arriveX, 40 * bs);
     const startX = dir > 0 ? -(wordW + rope + 80 * bs) : W + wordW + rope + 80 * bs;
     let bx, wdx = 0, phase, fx = dir, by = wl, sc = 1, reelK = 0;
-    if (lt < arr) {                                                          /* vontatás */
-      const k = .5 - .5 * Math.cos(Math.PI * clamp(lt / arr, 0, 1));   /* lágy indulás és megállás */
-      bx = startX + (arriveX - startX) * k; phase = "tow";
-      wdx = bx - arriveX;                                                    /* a felirat ugyanennyivel van a helyétől */
-    } else {
-      const r = lt - arr;
-      bx = arriveX; phase = "stop";
-      /* a felirat a lendülettől kicsit túlfut, aztán megáll */
-      wdx = dir * 7 * box.s * Math.exp(-4 * r) * Math.sin(r * 7);
-      if (r < reel) { reelK = ease(r / reel); }
-      else if (r < reel + turn) {                                            /* fordulás: a hajó oldalt fordul, hátrébb (a felirat mögé) kerül */
+    /* életszerű vontatás: a kötél csak húzni tud. Induláskor laza (a hajó előbb elindul, a kötél megfeszül, a felirat megrándul),
+       útközben feszes, a hajó lassításakor a felirat a lendületével utoléri – a kötél belóg –, majd a víz fékezi és megáll a helyén. */
+    const stern = look.kayak ? 40 : 46, Ld = rope + stern * bs, kGap = KG * bs;   /* kajakok közti kötél */
+    const st = TOWST[names[0]] || (TOWST[names[0]] = { xw: null, vw: 0, xr: null, vr: 0, last: lt, jerk: 0 });   /* a vontatás állapota képkockáról képkockára megmarad */
+    const dtS = clamp(lt - st.last, 0, .05); st.last = lt;
+    const Bx = (tau) => startX + (arriveX - startX) * (.5 - .5 * Math.cos(Math.PI * clamp(tau / arr, 0, 1)));
+    const boatX = Bx(lt), boatV = (Bx(lt) - Bx(lt - .02)) / .02;
+    /* lánc: (elülső hajó/kajak) → [hátsó kajak] → felirat */
+    const follow = (lead, leadV, x, v, L, slack0) => {
+      if (x == null) return [lead - dir * L * slack0, 0];
+      let nx = x + v * dtS, nv = v * Math.exp(-.9 * dtS);                     /* sodródás, a víz fékez */
+      if (dir * (lead - nx) > L) { nx = lead - dir * L; if (dir * (leadV - nv) > 20) st.jerk = 1; nv = leadV; }   /* a kötél megfeszül: húz */
+      return [nx, nv];
+    };
+    let lead = boatX, leadV = boatV;
+    if (lt < arr) {   /* csak amíg a vontatás tart: utána a kötél már nem húz */
+      if (look.kayak) { [st.xr, st.vr] = follow(lead, leadV, st.xr, st.vr, kGap, .8); lead = st.xr; leadV = st.vr; }
+      [st.xw, st.vw] = follow(lead - dir * stern * bs * (look.kayak ? KS : 1), leadV, st.xw, st.vw, rope, .72);
+    } else if (look.kayak && st.xr != null) {   /* a hátsó kajak kisiklik, megáll a vezető kajak mögött */
+      const rest = arriveX - dir * kGap; st.vr *= Math.exp(-1.5 * dtS); st.xr += st.vr * dtS; st.xr += (rest - st.xr) * Math.min(1, dtS * 1.5);
+    }
+    st.jerk *= Math.exp(-6 * dtS);
+    const target = frontX;
+    if (lt >= arr) { const r = lt - arr; st.xw += (target - st.xw) * Math.min(1, dtS * (1.2 + r)); st.vw *= Math.exp(-2 * dtS); }   /* a felirat beáll a helyére */
+    wdx = st.xw - target;
+    if (lt < arr + .6 || Math.abs(wdx) > 1) phase = lt < arr ? "tow" : "stop";
+    bx = boatX; if (lt >= arr) bx = arriveX;
+    if (lt >= arr) {
+      const r = lt - arr; phase = "stop";
+      if (r < reel) { reelK = ease(clamp((r - .4) / (reel - .4), 0, 1)); }
+      else if (r < reel + turn) {                                            /* fordulás: oldalt fordul, hátrébb (a felirat mögé) kerül */
         reelK = 1; phase = "turn"; const k = easeIO((r - reel) / turn);
         fx = dir * Math.cos(k * Math.PI); by = wl - k * 34 * box.s; sc = 1 - .18 * k; bx = arriveX + dir * Math.sin(k * Math.PI) * 18 * bs;
       } else {
-        reelK = 1; phase = "back"; const k = Math.min(1, (r - reel - turn) / (look.kayak ? out * .75 : out));   /* a kajakosok menekülnek: gyorsabban */
+        reelK = 1; phase = "back"; const k = Math.min(1, (r - reel - turn) / (look.kayak ? out * .8 : out));
         fx = -dir; by = wl - 34 * box.s; sc = .82;
-        const endX = dir > 0 ? -120 * bs : W + 120 * bs;
-        bx = arriveX + (endX - arriveX) * Math.pow(k, 1.35);
+        const endX = dir > 0 ? -160 * bs : W + 160 * bs;
+        bx = arriveX + (endX - arriveX) * (k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
         if (k >= 1) bx = null;
       }
     }
     const wordIn = 1;
     /* víz a felirat alatt: a vontatás alatt a felirattal együtt mozog, utána lassan elcsendesedik */
-    const wa = phase === "tow" ? .9 : phase === "stop" ? .9 : phase === "turn" ? .8 : Math.max(0, .8 - (lt - arr - reel - turn) * .5);
-    const wx0 = Math.min(L2X(gb.x0) + wdx, bx != null ? bx - 60 * bs : 1e9), wx1 = Math.max(L2X(gb.x1) + wdx, bx != null ? bx + 60 * bs : -1e9);
+    const wa = phase === "tow" || phase === "stop" ? .9 : phase === "turn" ? .8 : Math.max(0, .8 - (lt - arr - reel - turn) * .4);
+    const wx0 = Math.min(L2X(gb.x0) + wdx, bx != null ? bx - 80 * bs : 1e9, look.kayak && st.xr != null && phase === "tow" ? st.xr - 60 * bs : 1e9);
+    const wx1 = Math.max(L2X(gb.x1) + wdx, bx != null ? bx + 80 * bs : -1e9, look.kayak && st.xr != null && phase === "tow" ? st.xr + 60 * bs : -1e9);
     back.push(() => water(wl + 2 * bs, phase === "back" ? L2X(gb.x0) : wx0, phase === "back" ? L2X(gb.x1) : wx1, wa, t, bs));
+    const moving = Math.abs(st.vw) > 15;
+    if (moving && rand() < .8) foam(target + wdx, wl, 1, 6 * bs, dir * 25, -35, .55, 1.2 * bs);         /* hab a felirat orránál */
+    if (moving && rand() < .5) foam(L2X(dir > 0 ? gb.x0 : gb.x1) + wdx, wl, 1, 4 * bs, -dir * 15, -15, .7, 1 * bs);   /* és a sodrában */
+    const rope2 = (sx, sy, ex, ey, L, k) => {                                  /* kötél: a valós hosszból számolt belógással */
+      const d = Math.hypot(ex - sx, ey - sy), sag = Math.sqrt(Math.max(0, L * L - d * d)) * .55 + 2 * bs;
+      g.save(); g.lineCap = "round";
+      g.strokeStyle = "rgba(232,200,130,.95)"; g.lineWidth = Math.max(1.6, 2 * bs); g.shadowColor = "rgba(0,0,0,.35)"; g.shadowBlur = 2;
+      g.beginPath(); g.moveTo(sx, sy); g.quadraticCurveTo((sx + ex) / 2, Math.max(sy, ey) + sag, ex, ey); g.stroke();
+      g.shadowBlur = 0; g.strokeStyle = "rgba(120,84,36,.75)"; g.lineWidth = Math.max(.8, bs); g.setLineDash([2.2 * bs, 2.2 * bs]); g.stroke(); g.setLineDash([]);
+      if (k) { g.fillStyle = "#c9a25a"; g.beginPath(); g.arc(ex, ey, Math.max(2, 2.4 * bs), 0, 7); g.fill(); }
+      /* ahol a kötél a vízbe ér, ott fodroz */
+      if (sag > 10 * bs && rand() < .3) foam((sx + ex) / 2, wl, 1, 6 * bs, 0, -10, .4, .9 * bs);
+      g.restore();
+    };
     if (bx != null) {
-      if (phase === "tow") { if (rand() < .7) foam(bx + dir * 48 * bs * sc, by - 2 * bs, 1, 5 * bs, dir * 50, -30, .55, 1.3 * bs); if (rand() < .6) foam(frontX + wdx, wl, 1, 6 * bs, dir * 20, -30, .5, 1.1 * bs); }
+      if (phase === "tow" && rand() < .7) foam(bx + dir * 48 * bs * sc, by - 2 * bs, 1, 5 * bs, dir * 50, -30, .55, 1.3 * bs);
       back.push(() => {
-        if (phase !== "back") wake(bx - dir * 30 * bs, by, 110 * bs, phase === "turn" ? dir : dir, phase === "tow" ? 1 : .5, bs);
+        if (phase !== "back") wake(bx - dir * 30 * bs, by, 110 * bs, dir, phase === "tow" ? 1 : .4, bs);
         else wake(bx + dir * 30 * bs * sc, by, 90 * bs * sc, -dir, .7, bs * sc);
-        if (look.kayak) kayaks(bx, by, bs * sc, fx, t, phase, dir); else sailBoat(Object.assign({ x: bx, y: by, s: bs * sc, dir: fx >= 0 ? 1 : -1, fx }, look), t);
-        /* kötél: a hajó farától a felirat elejéig; behúzáskor a vége a hajóhoz fut, belóg */
+        if (look.kayak) {
+          /* két kajak szépen egymás mögött; a hátsó a vontatásnál kötélen követi az elsőt, utána mögötte evez */
+          const ks = bs * sc * KS, fast = phase === "back";
+          const xr = phase === "tow" || phase === "stop" ? st.xr : bx - fx * kGap * sc * (phase === "turn" ? Math.abs(fx) : 1);
+          kayak(xr, by + .5 * bs, ks, phase === "turn" ? fx : (phase === "back" ? -dir : dir), t, "#f2b233", "#e2483d", 1.3, fast);
+          kayak(bx, by, ks, fx, t, "#e85d2a", "#f2b233", 0, fast);
+          if (phase === "tow" || phase === "stop") rope2(bx - dir * stern * ks, wl - 3 * bs, st.xr + dir * 50 * ks, wl - 3 * bs, kGap - (stern + 50) * ks + 8 * bs, false);
+        } else sailBoat(Object.assign({ x: bx, y: by, s: bs * sc, dir: fx >= 0 ? 1 : -1, fx }, look), t);
+        /* vontatókötél a felirathoz; behúzáskor a vége a hajóhoz fut */
         if (reelK < 1) {
-          const sx = bx - dir * (look.kayak ? 40 : 46) * bs, sy = wl - (look.kayak ? 3 : 7) * bs, ex0 = frontX + wdx, ey0 = L2Y((gb.y0 + gb.y1) / 2 + 30 + yo);
-          const ex = ex0 + (sx - ex0) * reelK, ey = ey0 + (sy - ey0) * reelK, sag = phase === "tow" ? 4 * bs : (4 + 16 * Math.sin(reelK * Math.PI)) * bs;
-          g.save(); g.lineCap = "round";
-          g.strokeStyle = "rgba(232,200,130,.95)"; g.lineWidth = Math.max(1.6, 2 * bs); g.shadowColor = "rgba(0,0,0,.35)"; g.shadowBlur = 2;
-          g.beginPath(); g.moveTo(sx, sy); g.quadraticCurveTo((sx + ex) / 2, Math.max(sy, ey) + sag, ex, ey); g.stroke();
-          g.shadowBlur = 0; g.strokeStyle = "rgba(120,84,36,.75)"; g.lineWidth = Math.max(.8, bs); g.setLineDash([2.2 * bs, 2.2 * bs]); g.stroke(); g.setLineDash([]);
-          if (reelK === 0) { g.fillStyle = "#c9a25a"; g.beginPath(); g.arc(ex, ey, Math.max(2, 2.4 * bs), 0, 7); g.fill(); }   /* kötélszem a feliraton */
-          g.restore();
+          const sxx = (look.kayak ? st.xr - dir * stern * bs * KS : bx - dir * stern * bs), sy = wl - (look.kayak ? 3 : 7) * bs;
+          const ex0 = target + wdx, ey0 = L2Y((gb.y0 + gb.y1) / 2 + 30 + yo) + st.jerk * 3 * bs;
+          rope2(sxx, sy, ex0 + (sxx - ex0) * reelK, ey0 + (sy - ey0) * reelK, rope * (1 - reelK * .9), reelK === 0);
         }
       });
     }
@@ -349,7 +388,7 @@
       if (chaseDir > 0 ? pxx < W + 220 * bs : pxx > -220 * bs) back.push(() => { wake(pxx - chaseDir * 50 * bs, pyy, 200 * bs, chaseDir, .9, bs * 1.3); police(pxx, pyy, bs * 1.45, chaseDir, t); });
       if (rand() < .6) foam(pxx + chaseDir * 40 * bs, pyy - 1 * bs, 1, 5 * bs, chaseDir * 80, -50, .5, 1.5 * bs);
     }
-    names.forEach((n) => pcs.push([n, wdx, Math.sin(t * 3 + base) * 1.2 * bs * (phase === "tow" ? 1 : 0), { alpha: wordIn }]));
+    names.forEach((n) => pcs.push([n, wdx, (Math.sin(t * 3 + base) * 1.2 * (Math.abs(st.vw) > 15 ? 1 : 0) - st.jerk * 3) * bs, { alpha: wordIn, rot: -dir * st.jerk * .015 }]));
   }
   /* ------------------------------------------------------------ két kajakos (oldalnézet, 100 egység hosszú kajak, vízvonal y=0) */
   function kayak(x, y, s, fx, t, col, deck, ph, fast) {
@@ -631,7 +670,7 @@
       const ch = txt[i]; if (!ch.trim()) continue;
       const r = document.createRange(); r.setStart(node, i); r.setEnd(node, i + 1); const bb = r.getBoundingClientRect();
       const up = cs.textTransform === "uppercase" ? ch.toLocaleUpperCase("hu") : ch;
-      L.push({ ch: up, x: bb.left - hr.left, base: bb.top - hr.top + (bb.height - (asc + desc)) / 2 + asc, w: g.measureText(up).width, seed: i * 1.7, splashed: false });
+      L.push({ t: up, x: bb.left - hr.left, base: bb.top - hr.top + (bb.height - (asc + desc)) / 2 + asc, w: g.measureText(up).width, seed: i * 1.7, splashed: false });
     }
     if (!L.length) return null;
     const pad = Math.ceil(fs * .25);
@@ -640,7 +679,7 @@
     return { el, font, fs, asc, desc, pad, L, color: cs.color, wy, x0: L[0].x - fs * .5, x1: L[L.length - 1].x + L[L.length - 1].w + fs * .5, sc: clamp(fs / 24, .6, 1.8) };
   }
   function zamFrame(z, pt, t, back, front) {
-    const ST = .26, D = 1.8, n = z.L.length, endT = (n - 1) * ST + D + 1.3;
+    const ST = .42, D = 2.6, n = z.L.length, endT = (n - 1) * ST + D + 1.8;
     const handoff = pt > endT, fadeK = clamp((pt - endT) / .45, 0, 1);
     if (handoff && !html.classList.contains("la-place")) html.classList.add("la-place");
     /* a víz: beúszik, a végén elcsendesedik */
@@ -667,7 +706,7 @@
       if (wet > 0 && wet < .95 && rand() < .35 * wet) foam(l.x + rand() * l.w, l.base + dy - rand() * z.asc * .2, 1, 1, (rand() - .5) * 8, 10, .6, (.6 + rand() * .7) * z.sc, "225,242,255");
       front.push(() => {
         const o = l.c.getContext("2d"); o.setTransform(dpr, 0, 0, dpr, 0, 0); o.clearRect(0, 0, l.cw, l.ch);
-        o.font = z.font; o.textBaseline = "alphabetic"; o.fillStyle = z.color; o.fillText(l.ch, z.pad, z.pad + z.asc);
+        o.font = z.font; o.textBaseline = "alphabetic"; o.fillStyle = z.color; o.fillText(l.t, z.pad, z.pad + z.asc);
         if (wet > 0) {
           o.globalCompositeOperation = "source-atop";
           const level = z.pad + (z.asc + z.desc) * (1 - wet);               /* a vízfilm felső széle lefelé húzódik */
