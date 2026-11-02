@@ -258,3 +258,14 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - **Távozási nap = szabad nap** (éjszaka-alapú számítás mindenhol: szerver, foglalási ablak, VR-ajánlat, admin): a naptárban a távozási nap sarkában jelölés („távozási nap – 15:00-tól szabad”). Ha minden apartman foglalt egy napon, a kezdő naptárban „foglalt”.
 - **Zárt nap a Szállás.hu-n** (családtag / nem fizető vendég, név nélkül jön a naptárszinkronban): nem hiba, nem ütközés, nincs riasztó e-mail; címke „Szállás.hu – zárt nap”, a napi levélben érthető sor, és rá lehet írni kézi bejegyzést (pl. a nevet).
 - **Nyitókép:** a „Zephyr Apartman” felirat a logó formájában; a ZEPHYR betűit egyenként vitorlások vontatják a helyükre (kötél, nyomhullám, csobbanás), felhúzzák a logó két vitorláját, a spinnakeres zászlóshajó nyomában bukkan fel az APARTMAN és a hullám, végül fény fut végig. Forrás: `forras/logo/` (darabolás: `parts.py` → `uj/img/zephyr-logo-parts.png`). Koppintásra a végére ugrik; nyugodt mozgás beállításnál azonnal kész.
+
+
+## 22. Nyitókép – végleges (2026. nov. 2. 13:57, a tulajdonos jóváhagyta: „ez így jó”)
+Kb. 1 perces jelenetsor a kezdőlap nyitóképén (forrás: `forras/logo/hero-logo.js`, a build a `forras/kezdooldal-forras.html`-be illeszti; darabok: `uj/img/zephyr-logo-parts.png`):
+1. A ZEPHYR feliratot a tulajdonos hajója (Raptor 27, piros génua) vontatja be vízen, élethű kötélfizikával; behúzza a kötelet, megfordul, a felirat mögött távozik.
+2. Az APARTMAN-t két kajakos húzza be egymás mögött; jobbra indulnak vissza, középen szembejön a vízirendőrség (villogó kék fény, megafon: „Állj! Vízirendőrség!” / „Azonnal hagyják el a vizet!”), a kajakosok megijednek, megfordulnak, a rendőrség hátulról kísérve kizavarja őket balra – mindez az APARTMAN/Zamárdi alatti üres sávban.
+3. Helikopter a jobb alsó sarokból, kötélen hozza a vitorlajelet, körülményesen leteszi, jobbra távozik.
+4. „Zamárdi” betűnként emelkedik ki a vízből (a vitorlajel bal sarkához igazítva, a ZEPHYR–APARTMAN távolsággal).
+5. Piros műrepülő magyar zászlót húz (piros–fehér–zöld, selyemfény, arany rojt); az „Isten hozott!” lefolyik a zászlóról és a helyén marad, a tiszta zászló továbbrepül.
+6. Végül az „Isten hozott!” nemzeti színeket ölt (piros fent, fehér, zöld lent – kevesebb piros, több zöld).
+- A gombok végig láthatók; koppintásra a végére ugrik; a fejléc kis logójára kattintva minden elsüllyed és újraindul. Logó feljebb, ZEPHYR feljebb / APARTMAN lejjebb, fejléclogó a bal felső sarokban.
