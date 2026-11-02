@@ -1539,5 +1539,16 @@
  "Tető fel": "Załóż dach",
  "Tető le": "Zdejmij dach",
  "Körbenézés: húzd a képet": "Rozglądanie: przeciągnij obraz",
- "a makett lassan forog": "makieta powoli się obraca"
+ "a makett lassan forog": "makieta powoli się obraca",
+ "Vissza a foglaláshoz": "Powrót do rezerwacji",
+ "Kicsinyítés": "Pomniejsz",
+ "Nagyítás": "Powiększ",
+ "Dokumentum": "Dokument",
+ "A Zephyr Apartmanház házirendje": "Regulamin Zephyr Apartmanház",
+ "‹ Vissza": "‹ Wstecz",
+ "Vissza az apartmanválasztóhoz": "Powrót do wyboru apartamentu",
+ "távozási nap – {#}:{#}-tól szabad": "dzień wyjazdu – wolne od {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "Dzień wyjazdu: ponownie do rezerwacji od {#}:{#}",
+ "A dokumentum itt nem jeleníthető meg.": "Nie można tu wyświetlić dokumentu.",
+ "Megnyitás új lapon": "Otwórz w nowej karcie"
 }

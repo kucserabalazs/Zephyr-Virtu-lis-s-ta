@@ -1537,5 +1537,16 @@
  "Tető fel": "지붕 씌우기",
  "Tető le": "지붕 벗기기",
  "Körbenézés: húzd a képet": "둘러보기: 화면 끌기",
- "a makett lassan forog": "모형이 천천히 회전합니다"
+ "a makett lassan forog": "모형이 천천히 회전합니다",
+ "Vissza a foglaláshoz": "예약으로 돌아가기",
+ "Kicsinyítés": "축소",
+ "Nagyítás": "확대",
+ "Dokumentum": "문서",
+ "A Zephyr Apartmanház házirendje": "Zephyr 아파트먼트 하우스 이용 규칙",
+ "‹ Vissza": "‹ 뒤로",
+ "Vissza az apartmanválasztóhoz": "아파트 선택으로 돌아가기",
+ "távozási nap – {#}:{#}-tól szabad": "체크아웃 날 – {#}:{#}부터 예약 가능",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "체크아웃 날: {#}:{#}부터 다시 예약 가능",
+ "A dokumentum itt nem jeleníthető meg.": "여기에서는 문서를 표시할 수 없습니다.",
+ "Megnyitás új lapon": "새 탭에서 열기"
 }

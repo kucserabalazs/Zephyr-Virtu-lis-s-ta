@@ -757,6 +757,8 @@ body.world-on #stage { visibility: visible !important; }
 .bk-cv-apt { margin-top: 18px; font: 800 22px/1 Manrope, sans-serif; padding: 10px 22px; border: 2px solid #d9b25a; border-radius: 999px; }
 .bk-cv-l { font: 600 14px/1.3 Manrope, sans-serif; opacity: .85; }
 .bk-ribbon { position: absolute; right: 70px; bottom: -26px; width: 18px; height: 60px; background: #c62828; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); }
+.bk-ret { all: unset; cursor: pointer; position: absolute; top: -14px; left: -14px; z-index: 8; height: 40px; padding: 0 16px; border-radius: 20px; background: #f2b233; color: #14202a; font: 800 15px/40px Manrope, sans-serif; box-shadow: 0 0 0 3px #fff, 0 4px 12px rgba(0,0,0,.4); }
+.bk-ret:focus-visible { outline: 2px solid #0b2f5e; outline-offset: 3px; }
 .bk-close { all: unset; cursor: pointer; position: absolute; top: -14px; right: -14px; z-index: 8; width: 40px; height: 40px; border-radius: 50%; background: #e2483d; color: #fff; font: 800 26px/40px Manrope, sans-serif; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,.4); border: 3px solid #fff; }
 .bk-nav { position: absolute; left: 50%; bottom: 20px; transform: translateX(-30%); z-index: 5; display: flex; align-items: center; gap: 12px; background: #0b2f5e; color: #fff; border-radius: 999px; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
 .bk-nav button { all: unset; cursor: pointer; width: 34px; height: 34px; border-radius: 50%; background: #f2b233; color: #14202a; font: 900 22px/32px Manrope, sans-serif; text-align: center; }
@@ -792,7 +794,7 @@ body.world-on #stage { visibility: visible !important; }
   .bk-tab { writing-mode: horizontal-tb; border-radius: 10px; padding: 8px 10px; transform: none; white-space: nowrap; font-size: 11px; }
   .bk-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
   .bk-hd-t b { font-size: 20px; } .bk-hd-a { display: none; }
-  .bk-close { top: 4px; right: 4px; }
+  .bk-close { top: 4px; right: 4px; } .bk-ret { top: 4px; left: 4px; }
 }
 
 /* ---- Eszközjegyzék 2.0: „kapitányi napló” megjelenés (felülírja a fentieket; a működés változatlan) ---- */
@@ -1263,6 +1265,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 .zfb-d.off { background: #f3f1ec; color: #b7bcc0; border-color: transparent; cursor: default; }
 .zfb-d.busy { background: repeating-linear-gradient(135deg, #f6e1df 0 5px, #fbeeed 5px 10px); color: #c0605a; border-color: #f2d4d1; cursor: not-allowed; }
 .zfb-d.busy b { text-decoration: line-through; }
+.zfb-d.outday:not(.ci):not(.co):not(.in) { background: linear-gradient(135deg, #f6e1df 0 34%, #fff 34%); }   /* távozási nap: a bal felső sarok az előző vendégé (10:00-ig), a nap többi része szabad */
 .zfb-d.today b { color: #e2483d; }
 .zfb-d.in { background: #fff1c9; border-color: #f7dc8d; border-radius: 4px; }
 .zfb-d.ci, .zfb-d.co { background: var(--navy); color: #fff; border-color: var(--navy); }
@@ -1273,7 +1276,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 .zfb-d:disabled { cursor: default; }
 .zfb-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: #66727b; font-weight: 600; }
 .zfb-legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 5px; }
-.zfb-legend .lf { background: #fff; border: 1.5px solid #e3ecdf; } .zfb-legend .lb { background: repeating-linear-gradient(135deg, #f6e1df 0 3px, #fbeeed 3px 6px); } .zfb-legend .ls { background: var(--navy); }
+.zfb-legend .lf { background: #fff; border: 1.5px solid #e3ecdf; } .zfb-legend .lb { background: repeating-linear-gradient(135deg, #f6e1df 0 3px, #fbeeed 3px 6px); border: 1.5px solid #ecc4c0; } .zfb-legend .ls { background: var(--navy); } .zfb-legend .lo { background: linear-gradient(135deg, #f6e1df 0 34%, #fff 34%); border: 1.5px solid #e3ecdf; }
 /* oldalsáv: dátumok, vendégek, kimutatás */
 .zfb-side { position: sticky; top: 0; background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .zfb-dates { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; }
@@ -1503,6 +1506,27 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   .zfb-apts { grid-template-columns: 1fr 1fr; gap: 10px; } .zfb-apt { padding: 14px 12px 66px; } .zfb-art { width: 88px; height: 62px; right: 4px; bottom: 6px; }   /* a hajó a szöveg alatt marad, nem takar */
   .zfb-actions .zfb-btn { flex: 1; }
 }
+/* Zephyr – dokumentumnéző (házirend, adatkezelési tájékoztató): az oldalon belül nyílik, a „Vissza” oda visz, ahonnan megnyitottad (pl. a félbehagyott foglaláshoz) */
+.zdoc { position: fixed; inset: 0; z-index: 2147483200; display: flex; flex-direction: column; background: rgba(6, 20, 40, .94); font-family: Manrope, "Segoe UI", system-ui, sans-serif; color: #fff; opacity: 0; transition: opacity .22s; }
+.zdoc.on { opacity: 1; }
+.zdoc[hidden] { display: none; }
+.zdoc-hd { flex: none; display: flex; align-items: center; gap: 10px; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); background: #0b2f5e; box-shadow: 0 2px 14px rgba(0,0,0,.35); }
+.zdoc-back { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px 0 12px; border: 0; border-radius: 22px; background: #f2b233; color: #14202a; font: 800 15px/1 inherit; font-family: inherit; cursor: pointer; }
+.zdoc-back:hover, .zdoc-back:focus-visible { background: #ffc94f; outline: 2px solid #fff; outline-offset: 2px; }
+.zdoc-back b { font-size: 22px; line-height: 0; margin-top: -2px; }
+.zdoc-t { flex: 1; min-width: 0; font-weight: 800; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zdoc-tools { flex: none; display: flex; gap: 6px; }
+.zdoc-tools button, .zdoc-tools a { display: inline-grid; place-items: center; min-width: 44px; height: 44px; padding: 0 10px; border: 1px solid rgba(255,255,255,.35); border-radius: 22px; background: transparent; color: #fff; font: 700 14px/1 inherit; font-family: inherit; text-decoration: none; cursor: pointer; }
+.zdoc-tools button:hover, .zdoc-tools a:hover { background: rgba(255,255,255,.14); }
+.zdoc-body { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 16px 12px max(90px, calc(env(safe-area-inset-bottom) + 90px)); }
+.zdoc-pages { margin: 0 auto; display: flex; flex-direction: column; gap: 14px; width: min(100%, 860px); transition: width .2s; }
+.zdoc-pages img { display: block; width: 100%; height: auto; background: #fff; border-radius: 4px; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
+.zdoc-msg { margin: 40px auto; max-width: 520px; text-align: center; line-height: 1.5; }
+.zdoc-msg a { color: #f2b233; font-weight: 800; }
+.zdoc-foot { position: absolute; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; min-height: 50px; padding: 0 24px; border: 0; border-radius: 26px; background: #f2b233; color: #14202a; font: 800 16px/1 inherit; font-family: inherit; box-shadow: 0 6px 22px rgba(0,0,0,.5); cursor: pointer; white-space: nowrap; }
+.zdoc-foot:hover, .zdoc-foot:focus-visible { background: #ffc94f; }
+@media (max-width: 560px) { .zdoc-t { font-size: 14px; } .zdoc-back span { display: none; } .zdoc-back { padding: 0 14px; } .zdoc-tools a { display: none; } }
+html.zdoc-lock, html.zdoc-lock body { overflow: hidden; }
 </style>
 
 <div id="stage"></div>
@@ -1625,6 +1649,80 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
 (function () {
   "use strict";
   if (window.ZephyrBooking) return;
+
+  /* ---------- dokumentumnéző (házirend, adatkezelési tájékoztató) ----------
+     Az oldalon belül, a foglalás fölött nyílik: a „Vissza” gomb, az Esc és a telefon vissza-mozdulata is csak a dokumentumot zárja be,
+     a félbehagyott foglalás (kitöltött adatok, kiválasztott napok) változatlanul ott marad alatta. Az oldalak előre elkészített képek
+     (<pdf neve>/1.webp …, <pdf neve>/index.json); ha nincsenek, a PDF beágyazva nyílik, mellette „Megnyitás új lapon”. */
+  if (!window.ZephyrDoc) window.ZephyrDoc = (function () {
+    let dv = null, back = null, pushed = false, ignore = false, zoom = 1, lastFocus = null;
+    const isOpen = () => !!(dv && !dv.hidden);
+    const e2 = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    function build() {
+      dv = document.createElement("div"); dv.className = "zdoc"; dv.hidden = true; dv.setAttribute("role", "dialog"); dv.setAttribute("aria-modal", "true");
+      dv.innerHTML = `<header class="zdoc-hd"><button type="button" class="zdoc-back"><b>‹</b> <span>Vissza</span></button><div class="zdoc-t"></div><div class="zdoc-tools"><button type="button" data-z="-1" aria-label="Kicsinyítés">−</button><button type="button" data-z="1" aria-label="Nagyítás">+</button><a class="zdoc-dl" target="_blank" rel="noopener">PDF</a></div></header><div class="zdoc-body" tabindex="-1"><div class="zdoc-pages"></div></div><button type="button" class="zdoc-foot"><b>‹</b> <span>Vissza</span></button>`;
+      document.body.appendChild(dv);
+      dv.querySelector(".zdoc-back").addEventListener("click", () => close());
+      dv.querySelector(".zdoc-foot").addEventListener("click", () => close());
+      dv.querySelectorAll("[data-z]").forEach((b) => b.addEventListener("click", () => setZoom(zoom + (+b.dataset.z) * 0.5)));
+      dv.querySelector(".zdoc-pages").addEventListener("dblclick", () => setZoom(zoom > 1 ? 1 : 2));
+      ["pointerdown", "pointermove", "pointerup", "touchstart", "touchmove", "wheel"].forEach((t) => dv.addEventListener(t, (e) => e.stopPropagation(), { passive: true }));
+    }
+    function setZoom(z) { zoom = Math.max(1, Math.min(3, z)); dv.querySelector(".zdoc-pages").style.width = zoom === 1 ? "" : `${Math.round(Math.min(860, innerWidth - 24) * zoom)}px`; }
+    function abs(u) { try { return new URL(u, location.href).href; } catch (e) { return u; } }
+    async function open(url, title, opts) {
+      opts = opts || {};
+      if (!dv) build();
+      back = typeof opts.back === "function" ? opts.back : null;
+      const label = opts.backLabel || (window.ZephyrBooking && ZephyrBooking.isOpen && ZephyrBooking.isOpen() ? "Vissza a foglaláshoz" : "Vissza");
+      dv.querySelectorAll(".zdoc-back span, .zdoc-foot span").forEach((s) => (s.textContent = label));
+      dv.querySelector(".zdoc-back").setAttribute("aria-label", label);
+      dv.querySelector(".zdoc-t").textContent = title || "Dokumentum";
+      dv.setAttribute("aria-label", title || "Dokumentum");
+      const href = abs(url); dv.querySelector(".zdoc-dl").href = href;
+      const pages = dv.querySelector(".zdoc-pages"); pages.innerHTML = `<div class="zdoc-msg">Betöltés…</div>`; setZoom(1);
+      lastFocus = document.activeElement;
+      if (!pushed) { try { history.pushState({ zdoc: 1 }, "", location.href); pushed = true; } catch (e) {} }
+      dv.hidden = false; requestAnimationFrame(() => dv.classList.add("on"));
+      document.documentElement.classList.add("zdoc-lock");
+      dv.querySelector(".zdoc-body").scrollTop = 0;
+      setTimeout(() => { try { dv.querySelector(".zdoc-back").focus({ preventScroll: true }); } catch (e) {} }, 60);
+      const base = href.replace(/\.pdf(?:[?#].*)?$/i, "");
+      let n = 0;
+      if (base !== href) { try { const r = await fetch(base + "/index.json", { cache: "no-cache" }); if (r.ok) n = +((await r.json()).pages) || 0; } catch (e) {} }
+      if (!isOpen()) return;
+      if (n > 0) {
+        let h = ""; for (let i = 1; i <= n; i++) h += `<img src="${e2(base + "/" + i + ".webp")}" alt="${e2((title || "") + " – " + i + ". oldal")}" loading="${i <= 2 ? "eager" : "lazy"}" width="1240" height="1754">`;
+        pages.innerHTML = h;
+      } else {
+        pages.innerHTML = `<iframe src="${e2(href)}" title="${e2(title || "")}" style="width:100%;height:calc(100vh - 190px);border:0;border-radius:4px;background:#fff"></iframe><div class="zdoc-msg"><span>A dokumentum itt nem jeleníthető meg.</span> <a href="${e2(href)}" target="_blank" rel="noopener">Megnyitás új lapon</a></div>`;
+      }
+    }
+    function close(fromPop) {
+      if (!isOpen()) return;
+      dv.classList.remove("on"); document.documentElement.classList.remove("zdoc-lock");
+      setTimeout(() => { if (!dv.classList.contains("on")) dv.hidden = true; }, 230);
+      if (pushed) { pushed = false; if (!fromPop) { try { if (history.state && history.state.zdoc) { ignore = true; history.back(); } } catch (e) {} } }
+      window.__zdocPop = Date.now();
+      try { if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true }); } catch (e) {}
+      const b = back; back = null; if (b) setTimeout(() => { try { b(); } catch (e) {} }, 240);
+    }
+    window.addEventListener("popstate", () => {
+      if (ignore) { ignore = false; window.__zdocPop = Date.now(); return; }
+      if (isOpen()) { pushed = false; close(true); }
+    });
+    /* Esc: csak a dokumentum záródjon be, a foglalás maradjon nyitva */
+    document.addEventListener("keydown", (e) => { if (isOpen() && e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); close(); } }, true);
+    /* bárhol az oldalon: a data-doc jelölésű linkek (pl. a lábléc házirend-linkje) is itt nyílnak */
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest && e.target.closest("a[data-doc]");
+      if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button > 0) return;
+      e.preventDefault(); e.stopPropagation(); open(a.getAttribute("href"), a.dataset.doc || a.textContent.trim());
+    }, true);
+    /* a böngésző vissza-gombjának kezelői ezzel ellenőrzik, hogy a lépést már a dokumentumnéző kezelte-e */
+    const busy = () => isOpen() || Date.now() - (window.__zdocPop || 0) < 450;
+    return { open, close, isOpen, busy };
+  })();
   const HU_M = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
   const HU_WD = ["H", "K", "Sze", "Cs", "P", "Szo", "V"];
   const money = (n) => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " Ft";
@@ -1674,6 +1772,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
        a süllyedés, a FOGLALT zászló, a több apartmanos foglalás és a ±1 hetes eltolási javaslat */
     const DEMO = { korvett: [[3, 4], [17, 5], [31, 7], [45, 3]], dingi: [[5, 3], [12, 4], [24, 6], [40, 4]], fregatt: [[8, 5], [20, 3], [38, 6], [50, 2]],
                    kaloz: [[2, 6], [14, 3], [27, 4], [43, 5]], schooner: [[6, 4], [11, 2], [22, 5], [35, 4], [48, 3]] }[apt] || [];
+    DEMO.push([33, 2]);   /* egy hétvége, amikor mind az öt apartman foglalt: a kezdő naptárban „foglalt”-ként látszik */
     const demoBusy = (i) => DEMO.some(([s0, n]) => i >= s0 && i < s0 + n);
     for (let i = 0; i < 400; i++) {
       const d = addD(cfg.today, i), dt = pd(d), m = dt.getMonth(), wk = dt.getDay() === 5 || dt.getDay() === 6;
@@ -1708,6 +1807,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   const isOpen = () => !!(el && !el.hidden && el.classList.contains("on"));
   window.addEventListener("popstate", () => {
     if (ignorePop) { ignorePop = false; window.__zbPop = Date.now(); return; }
+    if (ZephyrDoc.busy()) { window.__zbPop = Date.now(); return; }   /* a vissza-lépés a dokumentumnézőt zárta be – a foglalás nyitva marad */
     if (isOpen()) { histPushed = false; window.__zbPop = Date.now(); close(); }
   });
   let direct = false;   /* a galériából közvetlenül az apartmanba nyitva: a fejléc Vissza gombja oda visz vissza */
@@ -1722,7 +1822,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     document.documentElement.classList.add("zfb-lock");
     if (!cfg) {
       paint(`<div class="zfb-loading"><i></i><span>Betöltés…</span></div>`);
-      try { cfg = await api("/config"); } catch (e) { cfg = demoConfig(); }
+      try { cfg = await api("/config"); if (!cfg || !Array.isArray(cfg.apartments)) throw 0; } catch (e) { cfg = demoConfig(); }
     }
     el.querySelector(".zfb-ntak").innerHTML = `<span>Zephyr Apartmanház · ${esc(cfg.address || "")}</span>` + (cfg.ntak ? `<span>NTAK regisztrációs szám: <b>${esc(cfg.ntak)}</b></span>` : "");
     const pre = opts.apt && cfg.apartments.find((a) => a.id === opts.apt);
@@ -1742,7 +1842,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   /* VR-es ajánlatkérés: a megadott időszakra minden apartman szabad-e, és mennyibe kerül (a felület megnyitása nélkül) */
   let qMaps = null, qAt = 0;
   async function vrQuote(q) {
-    if (!cfg) { try { cfg = await api("/config"); } catch (e) { cfg = demoConfig(); } }
+    if (!cfg) { try { cfg = await api("/config"); if (!cfg || !Array.isArray(cfg.apartments)) throw 0; } catch (e) { cfg = demoConfig(); } }
     if (!qMaps || Date.now() - qAt > 120000) {
       const to = addD(cfg.today, Math.min(420, (cfg.horizon_days || 400) + 1)), ids = cfg.apartments.map((a) => a.id);
       const res = await Promise.all(ids.map((id) => cfg.demo ? Promise.resolve({ days: demoDays(cfg, id) }) : api("/availability?apt=" + id + "&from=" + cfg.today + "&to=" + to)));
@@ -1985,13 +2085,14 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
       let cls = "zfb-d", dis = false;
       if (past || !x) { cls += " off"; dis = !(coOk); }
       else if (!free) { cls += " busy"; dis = !coOk; if (prev && prev.free && !(st.ci && !st.co)) cls += " half"; }
+      else if (prev && !prev.free && prev.d >= cfg.today && !(st.ci && !st.co)) cls += " outday";   /* távozási nap: délelőtt még az előző vendég, 14:00-tól újra szabad */
       if (st.ci === ds) cls += " ci"; if (st.co === ds) cls += " co";
       if (st.ci && st.co && ds > st.ci && ds < st.co) cls += " in";
       if (st.ci && !st.co && ds > st.ci) cls += coOk ? " can" : " cant";
       if (ds === cfg.today) cls += " today";
       if (st.ci && !st.co && ds > st.ci && !coOk) dis = !free;
       const price = x && free ? `<small>${Math.round(x.p / 1000)}e</small>` : "";
-      html += `<button type="button" class="${cls}" data-day="${ds}"${dis ? " disabled" : ""} aria-label="${huDate(ds)}${free ? ", szabad, " + money(x.p) : ", foglalt"}"><b>${d}</b>${price}</button>`;
+      html += `<button type="button" class="${cls}" data-day="${ds}"${dis ? " disabled" : ""}${/ outday/.test(cls) ? ` title="Távozási nap: ${esc(cfg.checkin || "14:00")}-tól újra foglalható"` : ""} aria-label="${huDate(ds)}${free ? ", szabad" + (/ outday/.test(cls) ? " (távozási nap, " + (cfg.checkin || "14:00") + "-tól)" : "") + ", " + money(x.p) : ", foglalt"}"><b>${d}</b>${price}</button>`;
     }
     return html + `</div></div>`;
   }
@@ -2219,7 +2320,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
         <p class="zfb-multi-tip">${pa ? `A(z) <b>${esc(pa.name)}</b> apartman szabad napjait látod. <button type="button" class="zfb-link" data-allapt="1">összes apartman naptára</button>` : "Add meg a szabadságod napjait és a létszámot – lent a tavon csak azok az apartmanok maradnak a víz felszínén, amelyek akkor szabadok és elfértek bennük."}</p>
         <div class="zfb-mnav"><button type="button" data-m="-1" ${st.month <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><span>Válaszd ki az érkezés, majd a távozás napját</span><button type="button" data-m="1" ${st.month >= maxMonth ? "disabled" : ""} aria-label="Következő hónap">›</button></div>
         <div class="zfb-months">${months.join("")}</div>
-        <div class="zfb-legend"><span><i class="lf"></i>${pa ? "szabad (ár / éj, ezer Ft)" : "van szabad apartman (legkedvezőbb ár / éj, ezer Ft)"}</span><span><i class="lb"></i>${pa ? "foglalt" : "minden apartman foglalt"}</span><span><i class="ls"></i>kiválasztva</span></div>
+        <div class="zfb-legend"><span><i class="lf"></i>${pa ? "szabad (ár / éj, ezer Ft)" : "van szabad apartman (legkedvezőbb ár / éj, ezer Ft)"}</span><span><i class="lb"></i>${pa ? "foglalt" : "minden apartman foglalt"}</span><span><i class="lo"></i>távozási nap – ${esc(cfg.checkin || "14:00")}-tól szabad</span><span><i class="ls"></i>kiválasztva</span></div>
       </div>
       <aside class="zfb-side">
         <div class="zfb-dates"><div><small>Érkezés</small><b>${st.ci ? huDate(st.ci) : "–"}</b><em>${esc(cfg.checkin)}-tól</em></div><div><small>Távozás</small><b>${st.co ? huDate(st.co) : "–"}</b><em>${esc(cfg.checkout)}-ig</em></div></div>
@@ -2235,8 +2336,8 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
   }
   function viewForm() {
     const a = apt(), q = quote();
-    const rules = cfg.rules_url ? `<a href="${esc(cfg.rules_url)}" target="_blank" rel="noopener">házirendet</a>` : "házirendet";
-    const priv = cfg.privacy_url ? `<a href="${esc(cfg.privacy_url)}" target="_blank" rel="noopener">adatkezelési tájékoztatót</a>` : "adatkezelési tájékoztatót";
+    const rules = cfg.rules_url ? `<a href="${esc(cfg.rules_url)}" target="_blank" rel="noopener" data-doc="A Zephyr Apartmanház házirendje">házirendet</a>` : "házirendet";
+    const priv = cfg.privacy_url ? `<a href="${esc(cfg.privacy_url)}" target="_blank" rel="noopener" data-doc="Adatkezelési tájékoztató">adatkezelési tájékoztatót</a>` : "adatkezelési tájékoztatót";
     return demoNote() + `<div class="zfb-cal-wrap"><form class="zfb-form" novalidate>
       <h2 class="zfb-h">A foglaló adatai</h2>
       ${st.addOpen ? addPanel() : `<button type="button" class="zfx-open" data-addmore="1"><span class="zfx-plus">+</span><span><b>További apartman foglalása erre az időszakra</b><small>Nagyobb társasággal több apartmant is foglalhattok egyszerre</small></span></button>`}
@@ -2372,7 +2473,7 @@ html.zfb-lock, html.zfb-lock body { overflow: hidden; }
     st.loading = false; render();
   }
 
-  window.ZephyrBooking = { open, close, apiUrl, quote: vrQuote, reset: () => { cfg = null; qMaps = null; } };
+  window.ZephyrBooking = { open, close, isOpen, apiUrl, quote: vrQuote, reset: () => { cfg = null; qMaps = null; } };
 })();
 /* Zephyr Apartmanház – tulajdonosi felület (jelszóval védett admin a foglalási ablakban)
    Megnyitás: a foglalási ablak „Tulajdonosi belépés” gombja, vagy a link végére írt #foglalas-admin */
@@ -5244,8 +5345,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     try { IT[id].f(g, 0, false); } catch (e) { console.warn(id, e); }
     return c;
   }
-  function openBinder(gid) {
+  let bkBack = null;   /* ahonnan a mappát megnyitották (pl. az apartmanválasztó): bezáráskor oda térünk vissza */
+  function openBinder(gid, back) {
     if (bkEl) return;
+    bkBack = typeof back === "function" ? back : null;
     const gr = GROUPS.find((q) => q.id === gid) || { name: "Zephyr", no: "" };
     const pages = (BIG_APT[gid] ? ["konyha", "eszkoz", "furdo", "halo", "nappali", "terasz", "info"] : ["konyha", "eszkoz", "nappali", "furdo", "info"]);
     bkState = { gid, gr, pages, i: 0, stage: null };
@@ -5256,15 +5359,16 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         <div class="bk-sheet"><div class="bk-page"></div></div>
         <nav class="bk-tabs"></nav>
         <div class="bk-cover"><div class="bk-cv-in"><div class="bk-cv-emb"></div><div class="bk-cv-t">ZEPHYR</div><div class="bk-cv-s">Apartmanház · Zamárdi</div><div class="bk-cv-apt">${gr.no ? gr.no + " · " : ""}${gr.name}</div><div class="bk-cv-l">Eszközjegyzék és tudnivalók</div></div><i class="bk-ribbon"></i><i class="bk-corner tr"></i><i class="bk-corner br"></i><b class="bk-seal">Z</b></div>
-        <button type="button" class="bk-close" aria-label="Bezárás">×</button>
+        <button type="button" class="bk-close" aria-label="Bezárás">×</button>${bkBack ? `<button type="button" class="bk-ret" aria-label="Vissza az apartmanválasztóhoz">‹ Vissza</button>` : ""}
         <div class="bk-nav"><button type="button" class="bk-prev" aria-label="Előző oldal">‹</button><span class="bk-pn"></span><button type="button" class="bk-next" aria-label="Következő oldal">›</button></div>
       </div>`;
     document.body.appendChild(bkEl);
     const emb = bkEl.querySelector(".bk-cv-emb"); emb.appendChild(anchorEmblem(150));
     const tabs = bkEl.querySelector(".bk-tabs");
     pages.forEach((p, i) => { const b = document.createElement("button"); b.type = "button"; b.className = "bk-tab"; b.style.setProperty("--tc", BPAGES[p].c); b.textContent = BPAGES[p].t; b.addEventListener("click", () => bkGo(i)); tabs.appendChild(b); });
-    bkEl.querySelector(".bk-close").addEventListener("click", closeBinder);
-    bkEl.querySelector(".bk-back").addEventListener("click", closeBinder);
+    bkEl.querySelector(".bk-close").addEventListener("click", () => closeBinder(true));   /* × : teljes bezárás; „‹ Vissza”, Esc, háttér: vissza az előzőhöz */
+    bkEl.querySelector(".bk-back").addEventListener("click", () => closeBinder());
+    if (bkBack) bkEl.querySelector(".bk-ret").addEventListener("click", () => closeBinder());
     bkEl.querySelector(".bk-prev").addEventListener("click", () => bkGo(bkState.i - 1));
     bkEl.querySelector(".bk-next").addEventListener("click", () => bkGo(bkState.i + 1));
     bkEl.addEventListener("keydown", (e) => { if (e.key === "Escape") closeBinder(); if (e.key === "ArrowRight") bkGo(bkState.i + 1); if (e.key === "ArrowLeft") bkGo(bkState.i - 1); });
@@ -5273,8 +5377,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     bkEl.tabIndex = -1; bkEl.focus();
     sfx("whoosh");
   }
-  function closeBinder() {
+  function closeBinder(noret) {
     if (!bkEl) return; stopStage(); const el = bkEl; bkEl = null;
+    const b = bkBack; bkBack = null; if (b && noret !== true) setTimeout(() => { try { b(); } catch (e) {} }, 650);
     el.classList.remove("open"); setTimeout(() => el.classList.remove("on"), 350); setTimeout(() => el.remove(), 900);
   }
   function bkGo(i) {
@@ -9964,14 +10069,14 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     el.tabIndex = -1; el.focus();
   }
   /* Inventory: az aktuális apartman eszközjegyzéke; ha nem apartmanban vagyunk, választó */
-  function openInventory() {
+  function openInventory(pick) {
     const g = SCENES[current] && SCENES[current].g, apts = GROUPS.filter((x) => x.no && !x.lock);
-    if (apts.some((a) => a.id === g)) { openBinder(g); return; }
+    if (!pick && apts.some((a) => a.id === g)) { openBinder(g); return; }
     let el = $("invPick"); if (el) { el.remove(); return; }
     el = document.createElement("div"); el.id = "invPick"; el.className = "inv-pick"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Melyik apartman eszközkészletét nézed?");
     el.innerHTML = `<div class="inv-card"><h3>Inventory · eszközkészlet</h3><p>Melyik apartmanét nézed meg?</p><div class="inv-list">${apts.map((a) => `<button type="button" data-inv="${a.id}"><b>${a.no}</b>${a.name}</button>`).join("")}</div><button type="button" class="inv-x" aria-label="Bezárás">×</button></div>`;
     document.body.appendChild(el);
-    el.addEventListener("click", (e) => { const b = e.target.closest("[data-inv]"); if (b) { el.remove(); openBinder(b.dataset.inv); return; } if (e.target === el || e.target.closest(".inv-x")) el.remove(); });
+    el.addEventListener("click", (e) => { const b = e.target.closest("[data-inv]"); if (b) { el.remove(); openBinder(b.dataset.inv, () => openInventory(true)); return; } if (e.target === el || e.target.closest(".inv-x")) el.remove(); });
   }
   function wireCube() {
     const stage = $("cubeStage"), cube = $("cube");
@@ -10081,6 +10186,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       window.addEventListener("popstate", () => {
         const now = Date.now();
         if (now - (window.__zbPop || 0) < 400) return;   /* a foglalási ablak kezelte */
+        if (window.ZephyrDoc && ZephyrDoc.busy()) return;   /* a dokumentumnéző kezelte */
         const ov = gmEl && !gmEl.hidden ? () => gmClose() : bkEl ? () => closeBinder() : $("setPanel") ? () => $("setPanel").remove() : $("invPick") ? () => $("invPick").remove() : null;
         if (ov) { ov(); try { history.pushState({ zephyrGuard: 1 }, "", location.href); } catch (e) {} return; }
         if (now - lastPop < 2500) { history.back(); return; }

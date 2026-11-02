@@ -1537,5 +1537,16 @@
  "Tető fel": "ছাদ লাগান",
  "Tető le": "ছাদ সরান",
  "Körbenézés: húzd a képet": "চারপাশ দেখুন: ছবি টানুন",
- "a makett lassan forog": "মডেলটি ধীরে ঘোরে"
+ "a makett lassan forog": "মডেলটি ধীরে ঘোরে",
+ "Vissza a foglaláshoz": "বুকিংয়ে ফিরে যান",
+ "Kicsinyítés": "ছোট করুন",
+ "Nagyítás": "বড় করুন",
+ "Dokumentum": "নথি",
+ "A Zephyr Apartmanház házirendje": "Zephyr অ্যাপার্টমেন্ট হাউসের নিয়মাবলি",
+ "‹ Vissza": "‹ ফিরে যান",
+ "Vissza az apartmanválasztóhoz": "অ্যাপার্টমেন্ট বাছাইয়ে ফিরে যান",
+ "távozási nap – {#}:{#}-tól szabad": "প্রস্থানের দিন – {#}:{#} থেকে খালি",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "প্রস্থানের দিন: {#}:{#} থেকে আবার বুক করা যায়",
+ "A dokumentum itt nem jeleníthető meg.": "নথিটি এখানে দেখানো যাচ্ছে না।",
+ "Megnyitás új lapon": "নতুন ট্যাবে খুলুন"
 }

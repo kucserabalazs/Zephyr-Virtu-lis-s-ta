@@ -1537,5 +1537,16 @@
  "Tető fel": "加上屋顶",
  "Tető le": "移除屋顶",
  "Körbenézés: húzd a képet": "环顾：拖动画面",
- "a makett lassan forog": "模型缓缓旋转"
+ "a makett lassan forog": "模型缓缓旋转",
+ "Vissza a foglaláshoz": "返回预订",
+ "Kicsinyítés": "缩小",
+ "Nagyítás": "放大",
+ "Dokumentum": "文件",
+ "A Zephyr Apartmanház házirendje": "Zephyr 公寓楼住宿守则",
+ "‹ Vissza": "‹ 返回",
+ "Vissza az apartmanválasztóhoz": "返回公寓选择",
+ "távozási nap – {#}:{#}-tól szabad": "退房日 – {#}:{#} 起可入住",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "退房日：{#}:{#} 起可再次预订",
+ "A dokumentum itt nem jeleníthető meg.": "此处无法显示该文件。",
+ "Megnyitás új lapon": "在新标签页中打开"
 }

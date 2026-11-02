@@ -1537,5 +1537,16 @@
  "Tető fel": "تركيب السقف",
  "Tető le": "إزالة السقف",
  "Körbenézés: húzd a képet": "انظر حولك: اسحب الصورة",
- "a makett lassan forog": "يدور المجسم ببطء"
+ "a makett lassan forog": "يدور المجسم ببطء",
+ "Vissza a foglaláshoz": "العودة إلى الحجز",
+ "Kicsinyítés": "تصغير",
+ "Nagyítás": "تكبير",
+ "Dokumentum": "مستند",
+ "A Zephyr Apartmanház házirendje": "قواعد السكن في Zephyr Apartmanház",
+ "‹ Vissza": "‹ رجوع",
+ "Vissza az apartmanválasztóhoz": "العودة إلى اختيار الشقة",
+ "távozási nap – {#}:{#}-tól szabad": "يوم المغادرة – متاح من {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "يوم المغادرة: متاح للحجز مجددًا من {#}:{#}",
+ "A dokumentum itt nem jeleníthető meg.": "لا يمكن عرض المستند هنا.",
+ "Megnyitás új lapon": "فتح في علامة تبويب جديدة"
 }

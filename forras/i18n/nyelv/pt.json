@@ -1539,5 +1539,16 @@
  "Tető fel": "Pôr o telhado",
  "Tető le": "Tirar o telhado",
  "Körbenézés: húzd a képet": "Olhar à volta: arraste a imagem",
- "a makett lassan forog": "a maquete roda devagar"
+ "a makett lassan forog": "a maquete roda devagar",
+ "Vissza a foglaláshoz": "Voltar à reserva",
+ "Kicsinyítés": "Reduzir",
+ "Nagyítás": "Ampliar",
+ "Dokumentum": "Documento",
+ "A Zephyr Apartmanház házirendje": "Regulamento da Zephyr Apartmanház",
+ "‹ Vissza": "‹ Voltar",
+ "Vissza az apartmanválasztóhoz": "Voltar à escolha do apartamento",
+ "távozási nap – {#}:{#}-tól szabad": "dia de saída – livre a partir das {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "Dia de saída: reservável de novo a partir das {#}:{#}",
+ "A dokumentum itt nem jeleníthető meg.": "Não é possível mostrar o documento aqui.",
+ "Megnyitás új lapon": "Abrir num novo separador"
 }

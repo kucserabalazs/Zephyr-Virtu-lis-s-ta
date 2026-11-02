@@ -1539,5 +1539,16 @@
  "Tető fel": "Stavi krov",
  "Tető le": "Skini krov",
  "Körbenézés: húzd a képet": "Razgledavanje: povuci sliku",
- "a makett lassan forog": "maketa se polako okreće"
+ "a makett lassan forog": "maketa se polako okreće",
+ "Vissza a foglaláshoz": "Natrag na rezervaciju",
+ "Kicsinyítés": "Smanji",
+ "Nagyítás": "Povećaj",
+ "Dokumentum": "Dokument",
+ "A Zephyr Apartmanház házirendje": "Kućni red Zephyr Apartmanház",
+ "‹ Vissza": "‹ Natrag",
+ "Vissza az apartmanválasztóhoz": "Natrag na odabir apartmana",
+ "távozási nap – {#}:{#}-tól szabad": "dan odlaska – slobodno od {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "Dan odlaska: ponovno slobodno za rezervaciju od {#}:{#}",
+ "A dokumentum itt nem jeleníthető meg.": "Dokument se ovdje ne može prikazati.",
+ "Megnyitás új lapon": "Otvori u novoj kartici"
 }
