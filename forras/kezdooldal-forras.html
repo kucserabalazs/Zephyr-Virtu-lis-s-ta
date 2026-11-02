@@ -2136,7 +2136,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
           let cx;
           if (k < .4) { const q = easeIO(k / .4); cx = c0 + (meetX - c0) * q; }
           else if (k < .56) { const q = easeIO((k - .4) / .16); cx = meetX - dir * 6 * bs * Math.sin(q * Math.PI); fx = -dir * Math.cos(q * Math.PI); }
-          else { const q = (k - .56) / .44; cx = meetX + (dir > 0 ? W + 220 * bs - meetX : -220 * bs - meetX) * q * q * (1.4 - .4 * q); fx = dir; }
+          else { const q = (k - .56) / .44; cx = meetX + (dir > 0 ? W + 800 * bs - meetX : -800 * bs - meetX) * q * q * (1.4 - .4 * q);   /* messzire kifutnak, a rendőr mögöttük szintén kimegy */ fx = dir; }
           st.kc = cx; st.kk = k; bx = cx; if (k >= 1) bx = null;
         } else {
         const endX = dir > 0 ? -160 * bs : W + 160 * bs;
@@ -2174,9 +2174,11 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
           /* két kajak szépen egymás mögött; a hátsó a vontatásnál kötélen követi az elsőt, utána mögötte evez */
           const ks = bs * sc * KS, fast = phase === "back";
           if (phase === "back") {   /* két kajak egymás mögött; a menetirány szerinti első vezet */
-            const sgn = fx >= 0 ? 1 : -1, half = kGap * sc / 2, flee = st.kk > .56;
-            kayak(bx - sgn * half, by + .5 * bs, ks, fx, t, "#f2b233", "#e2483d", 1.3, flee);
-            kayak(bx + sgn * half, by, ks, fx, t, "#e85d2a", "#f2b233", 0, flee);
+            const sgn = fx >= 0 ? 1 : -1, half = kGap * sc / 2, flee = st.kk > .56, mood = st.kk > .38 && st.kk < .56 ? 1 : flee ? 2 : 0;
+            /* a kajakok saját nyomvonala; menekülésnél erősebb */
+            [bx - sgn * half, bx + sgn * half].forEach((xx) => { if (mood !== 1) wake(xx - sgn * 30 * ks, by + 1, (flee ? 120 : 70) * ks, sgn, flee ? .8 : .45, ks * .7); });
+            kayak(bx - sgn * half, by + .5 * bs, ks, fx, t, "#f2b233", "#e2483d", 1.3, flee, mood);
+            kayak(bx + sgn * half, by, ks, fx, t, "#e85d2a", "#f2b233", 0, flee, mood);
           } else {
           const xr = phase === "tow" || phase === "stop" ? st.xr : bx - fx * kGap * sc * (phase === "turn" ? Math.abs(fx) : 1);
           kayak(xr, by + .5 * bs, ks, phase === "turn" ? fx : dir, t, "#f2b233", "#e2483d", 1.3, fast);
@@ -2199,17 +2201,21 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       let pxx, pdir = dir;
       if (k < .42) { const q = 1 - Math.pow(1 - (k - .12) / .3, 2.2); pxx = enterX + (stopX - enterX) * q; }
       else if (k < .6) pxx = stopX + dir * 4 * bs * Math.sin((k - .42) * 30) * (.6 - k);
-      else { const q = ease(clamp((k - .6) / .1, 0, 1)), follow = st.kc - dir * 300 * bs; pxx = stopX + (follow - stopX) * q; pdir = -dir; }   /* végig szorosan mögöttük kíséri őket */
+      else { const q = ease(clamp((k - .6) / .1, 0, 1)), follow = st.kc - dir * 300 * bs; pxx = stopX + (follow - stopX) * q ; pdir = -dir; }   /* végig mögöttük, velük együtt hagyja el a képet */   /* végig szorosan mögöttük kíséri őket */
       const facing = k < .6 ? dir : -dir;   /* odafelé szembe, utána a menekülők után */
       const pd = dir;   /* szembejön, majd ugyanarra üldözi őket: végig ebbe az irányba halad */
       const say = k < .3 ? null : k < .62 ? 0 : 1;   /* megafon: a találkozáskor és a kísérés alatt */
-      back.push(() => { if (!(k > .42 && k < .6)) wake(pxx - pd * 50 * bs, pyy, 200 * bs, pd, .9, bs * 1.3); police(pxx, pyy, bs * 1.45, pd, t, say); });
+      if (k < 1 && pxx > -320 * bs && pxx < W + 320 * bs) back.push(() => { if (!(k > .42 && k < .6)) wake(pxx - pd * 50 * bs, pyy, 200 * bs, pd, .9, bs * 1.3); police(pxx, pyy, bs * 1.45, pd, t, say);
+        /* a villogó kék fény tükröződése a vízen */
+        if (Math.floor(t * 6) % 2) { g.save(); g.translate(pxx, pyy + 6 * bs); g.scale(1, .3); const rg = g.createRadialGradient(0, 0, 0, 0, 0, 70 * bs); rg.addColorStop(0, "rgba(80,190,255,.32)"); rg.addColorStop(1, "rgba(80,190,255,0)"); g.fillStyle = rg; g.beginPath(); g.arc(0, 0, 70 * bs, 0, 7); g.fill(); g.restore(); }
+      });
       if (!(k > .42 && k < .6) && rand() < .6) foam(pxx + pd * 40 * bs, pyy - 1 * bs, 1, 5 * bs, pd * 80, -50, .5, 1.5 * bs);
     }
     names.forEach((n) => pcs.push([n, wdx, (Math.sin(t * 3 + base) * 1.2 * (Math.abs(st.vw) > 15 ? 1 : 0) - st.jerk * 3) * bs, { alpha: wordIn, rot: -dir * st.jerk * .015 }]));
   }
   /* ------------------------------------------------------------ két kajakos (oldalnézet, 100 egység hosszú kajak, vízvonal y=0) */
-  function kayak(x, y, s, fx, t, col, deck, ph, fast) {
+  function kayak(x, y, s, fx, t, col, deck, ph, fast, mood) {
+    fx = (fx < 0 ? -1 : 1) * Math.max(.35, Math.abs(fx));   /* fordulásnál se lapuljon el teljesen */
     g.save(); g.translate(x, y + Math.sin(t * 3 + ph) * .8 * s); g.scale(fx * s, s); g.rotate(Math.sin(t * 2.4 + ph) * .015);
     g.lineJoin = "round"; g.lineCap = "round";
     /* tükörkép */
@@ -2229,10 +2235,14 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     g.save(); g.translate(-4, -7); g.rotate(-.12 + sw * .08);
     g.fillStyle = deck; g.beginPath(); g.ellipse(0, -5, 3.2, 5.2, 0, 0, 7); g.fill();          /* mellény */
     g.fillStyle = "rgba(255,255,255,.55)"; g.fillRect(-2.6, -6, 5.2, .7);                     /* fényvisszaverő csík */
+    const look = mood === 2 ? -1 : 1;   /* menekülés közben hátranéz a rendőrre */
     g.fillStyle = "#e9b48c"; g.beginPath(); g.arc(.4, -12.3, 2.5, 0, 7); g.fill();          /* fej */
-    g.fillStyle = "#f4f6f8"; g.beginPath(); g.arc(.4, -13.1, 2.6, Math.PI, 0); g.fill(); g.fillRect(.4, -13.4, 4, .9);   /* baseballsapka */
-    /* kettős lapátú evező: a tengely a vállnál forog, a lapátok felváltva merülnek */
-    const a = sw * .95;
+    g.fillStyle = "#1d2a3a"; g.beginPath(); g.arc(.4 + look * 1.3, -12.6, .45, 0, 7); g.fill();   /* szem */
+    if (mood) { g.strokeStyle = "#8a4a2a"; g.lineWidth = .4; g.beginPath(); g.arc(.4 + look * 1.1, -11.2, .7, 0, 7); g.stroke(); }   /* tátott száj */
+    g.fillStyle = "#f4f6f8"; g.beginPath(); g.arc(.4, -13.1, 2.6, Math.PI, 0); g.fill(); g.fillRect(.4, -13.4, look * 4, .9);   /* baseballsapka */
+    /* kettős lapátú evező: a tengely a vállnál forog, a lapátok felváltva merülnek; ijedtében a feje fölé emeli */
+    const a = mood === 1 ? -1.35 + Math.sin(t * 9 + ph) * .12 : sw * .95;
+    if (mood === 1) g.translate(0, -3);
     g.save(); g.translate(0, -7.5); g.rotate(a);
     g.strokeStyle = "#e9b48c"; g.lineWidth = 1.3; line(0, 0, -4, 1.4); line(0, 0, 4, -1.4);   /* karok */
     g.strokeStyle = "#2b2b2b"; g.lineWidth = .9; line(-21, 0, 21, 0);
@@ -2240,8 +2250,12 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     g.restore();
     g.restore();
     g.restore();
+    /* ijedtség: felkiáltójel a fej fölött */
+    if (mood === 1) { const bob = Math.abs(Math.sin(t * 6 + ph)) * 2 * s; g.save(); g.fillStyle = "#e2483d"; g.font = `900 ${Math.max(12, 10 * s)}px Manrope, sans-serif`; g.textAlign = "center"; g.fillText("!", x - fx * 4 * s, y - 30 * s - bob); g.restore(); }
+    /* menekülés: verejtékcseppek */
+    if (mood === 2 && rand() < .08) foam(x - fx * 4 * s, y - 20 * s, 1, 2 * s, -fx * 20, -30, .5, .9 * s, "190,225,255");
     /* ahol a lapát vízbe ér: fröccs */
-    if (Math.abs(sw) > .93 && rand() < .5) { const side = sw > 0 ? 1 : -1; foam(x + fx * s * (-4 + side * 22 * Math.cos(.95)), y, 3, 4 * s, -fx * 40, -60, .45, 1.1 * s, "240,248,255"); }
+    if (mood !== 1 && Math.abs(sw) > (fast ? .85 : .93) && rand() < .5) { const side = sw > 0 ? 1 : -1; foam(x + fx * s * (-4 + side * 22 * Math.cos(.95)), y, 3, 4 * s, -fx * 40, -60, .45, 1.1 * s, "240,248,255"); }
   }
   function kayaks(x, y, s, fx, t, phase, dir) {
     const ks = s * 1.25, fast = phase === "back";
@@ -2622,9 +2636,9 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       const P1 = T.hIn, P2 = P1 + T.hHov, P3 = P2 + T.hDesc, P4 = P3 + T.hAdj, P5 = P4 + T.hSet, P6 = P5 + T.hRel;
       const hoverX = hang.x, hoverY = hang.y - L0 - hook;                    /* ebben a magasságban a jel épp a helyén van */
       let hx, hy, tilt = 0, lineLen = L0, attached = true, swing = 0, extraRot = 0, wash = 0, hdir = -1;
-      if (ht < P1) {                                                        /* beérkezés jobbról felülről, előredőlve; a jel lemarad, leng */
+      if (ht < P1) {                                                        /* beérkezés a jobb alsó sarokból, emelkedve, előredőlve; a jel lemarad, leng */
         const k = .5 - .5 * Math.cos(Math.PI * ht / P1);
-        hx = W + 160 * hs + (hoverX + 30 * hs - W - 160 * hs) * k; hy = -80 * hs + (hoverY - 46 * hs + 80 * hs) * k;
+        hx = W + 160 * hs + (hoverX + 30 * hs - W - 160 * hs) * k; hy = H + 90 * hs + (hoverY - 46 * hs - H - 90 * hs) * (1 - Math.pow(1 - k, 1.6));   /* a jobb alsó sarokból emelkedik fel */
         tilt = -.2 * Math.sin(Math.PI * k);
         swing = .3 * Math.sin(Math.PI * k) + .06 * Math.sin(ht * 2.6);
       } else if (ht < P2) {                                                 /* fékez (orr fel), lebeg magasan; a lengés lecseng */
