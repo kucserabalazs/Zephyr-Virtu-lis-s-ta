@@ -1539,5 +1539,16 @@
  "Tető fel": "Dak erop",
  "Tető le": "Dak eraf",
  "Körbenézés: húzd a képet": "Rondkijken: sleep de afbeelding",
- "a makett lassan forog": "de maquette draait langzaam"
+ "a makett lassan forog": "de maquette draait langzaam",
+ "Vissza a foglaláshoz": "Terug naar de boeking",
+ "Kicsinyítés": "Uitzoomen",
+ "Nagyítás": "Inzoomen",
+ "Dokumentum": "Document",
+ "A Zephyr Apartmanház házirendje": "Huisregels van Zephyr Apartmanház",
+ "‹ Vissza": "‹ Terug",
+ "Vissza az apartmanválasztóhoz": "Terug naar de appartementkeuze",
+ "távozási nap – {#}:{#}-tól szabad": "vertrekdag – vrij vanaf {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "Vertrekdag: vanaf {#}:{#} weer te boeken",
+ "A dokumentum itt nem jeleníthető meg.": "Het document kan hier niet worden getoond.",
+ "Megnyitás új lapon": "Openen in nieuw tabblad"
 }

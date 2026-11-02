@@ -1537,5 +1537,16 @@
  "Tető fel": "Lắp mái",
  "Tető le": "Gỡ mái",
  "Körbenézés: húzd a képet": "Nhìn quanh: kéo hình",
- "a makett lassan forog": "mô hình xoay chậm"
+ "a makett lassan forog": "mô hình xoay chậm",
+ "Vissza a foglaláshoz": "Quay lại đặt phòng",
+ "Kicsinyítés": "Thu nhỏ",
+ "Nagyítás": "Phóng to",
+ "Dokumentum": "Tài liệu",
+ "A Zephyr Apartmanház házirendje": "Nội quy của Zephyr Apartmanház",
+ "‹ Vissza": "‹ Quay lại",
+ "Vissza az apartmanválasztóhoz": "Quay lại chọn căn hộ",
+ "távozási nap – {#}:{#}-tól szabad": "ngày trả phòng – trống từ {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "Ngày trả phòng: có thể đặt lại từ {#}:{#}",
+ "A dokumentum itt nem jeleníthető meg.": "Không thể hiển thị tài liệu tại đây.",
+ "Megnyitás új lapon": "Mở trong thẻ mới"
 }

@@ -1539,5 +1539,16 @@
  "Tető fel": "Nasadiť strechu",
  "Tető le": "Zložiť strechu",
  "Körbenézés: húzd a képet": "Rozhliadanie: potiahni obrázok",
- "a makett lassan forog": "model sa pomaly otáča"
+ "a makett lassan forog": "model sa pomaly otáča",
+ "Vissza a foglaláshoz": "Späť k rezervácii",
+ "Kicsinyítés": "Zmenšiť",
+ "Nagyítás": "Zväčšiť",
+ "Dokumentum": "Dokument",
+ "A Zephyr Apartmanház házirendje": "Domový poriadok Zephyr Apartmanház",
+ "‹ Vissza": "‹ Späť",
+ "Vissza az apartmanválasztóhoz": "Späť na výber apartmánu",
+ "távozási nap – {#}:{#}-tól szabad": "deň odchodu – voľné od {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "Deň odchodu: opäť rezervovateľné od {#}:{#}",
+ "A dokumentum itt nem jeleníthető meg.": "Dokument tu nemožno zobraziť.",
+ "Megnyitás új lapon": "Otvoriť na novej karte"
 }

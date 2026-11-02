@@ -1539,5 +1539,16 @@
  "Tető fel": "Roof on",
  "Tető le": "Roof off",
  "Körbenézés: húzd a képet": "Look around: drag the picture",
- "a makett lassan forog": "the model turns slowly"
+ "a makett lassan forog": "the model turns slowly",
+ "Vissza a foglaláshoz": "Back to the booking",
+ "Kicsinyítés": "Zoom out",
+ "Nagyítás": "Zoom in",
+ "Dokumentum": "Document",
+ "A Zephyr Apartmanház házirendje": "House rules of Zephyr Apartment House",
+ "‹ Vissza": "‹ Back",
+ "Vissza az apartmanválasztóhoz": "Back to the apartment list",
+ "távozási nap – {#}:{#}-tól szabad": "departure day – free from {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "Departure day: bookable again from {#}:{#}",
+ "A dokumentum itt nem jeleníthető meg.": "The document can't be shown here.",
+ "Megnyitás új lapon": "Open in a new tab"
 }

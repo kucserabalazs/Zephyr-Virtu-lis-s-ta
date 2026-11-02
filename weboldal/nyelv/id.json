@@ -1537,5 +1537,16 @@
  "Tető fel": "Pasang atap",
  "Tető le": "Lepas atap",
  "Körbenézés: húzd a képet": "Lihat sekeliling: seret gambar",
- "a makett lassan forog": "maket berputar perlahan"
+ "a makett lassan forog": "maket berputar perlahan",
+ "Vissza a foglaláshoz": "Kembali ke pemesanan",
+ "Kicsinyítés": "Perkecil",
+ "Nagyítás": "Perbesar",
+ "Dokumentum": "Dokumen",
+ "A Zephyr Apartmanház házirendje": "Tata tertib Zephyr Apartmanház",
+ "‹ Vissza": "‹ Kembali",
+ "Vissza az apartmanválasztóhoz": "Kembali ke pilihan apartemen",
+ "távozási nap – {#}:{#}-tól szabad": "hari check-out – kosong mulai {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "Hari check-out: bisa dipesan lagi mulai {#}:{#}",
+ "A dokumentum itt nem jeleníthető meg.": "Dokumen tidak dapat ditampilkan di sini.",
+ "Megnyitás új lapon": "Buka di tab baru"
 }

@@ -1539,5 +1539,16 @@
  "Tető fel": "Pune acoperișul",
  "Tető le": "Scoate acoperișul",
  "Körbenézés: húzd a képet": "Privire în jur: trage imaginea",
- "a makett lassan forog": "macheta se rotește încet"
+ "a makett lassan forog": "macheta se rotește încet",
+ "Vissza a foglaláshoz": "Înapoi la rezervare",
+ "Kicsinyítés": "Micșorează",
+ "Nagyítás": "Mărește",
+ "Dokumentum": "Document",
+ "A Zephyr Apartmanház házirendje": "Regulamentul Zephyr Apartmanház",
+ "‹ Vissza": "‹ Înapoi",
+ "Vissza az apartmanválasztóhoz": "Înapoi la alegerea apartamentului",
+ "távozási nap – {#}:{#}-tól szabad": "zi de plecare – liber de la {#}:{#}",
+ "Távozási nap: {#}:{#}-tól újra foglalható": "Zi de plecare: din nou rezervabil de la {#}:{#}",
+ "A dokumentum itt nem jeleníthető meg.": "Documentul nu poate fi afișat aici.",
+ "Megnyitás új lapon": "Deschide într-o filă nouă"
 }
