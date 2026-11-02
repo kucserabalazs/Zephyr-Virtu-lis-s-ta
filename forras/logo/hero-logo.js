@@ -1076,6 +1076,9 @@
     const nx = Math.round(tx - left0), ny = Math.round(ty - capTop0);
     if (nx === zTx && ny === zTy) return;
     zTx = nx; zTy = ny; el.style.translate = `${zTx}px ${zTy}px`;
+    /* telefonon az „Isten hozott!” és a gombok is felzárkóznak (különben nagy üres sáv maradna a Zamárdi alatt) */
+    const mob = innerWidth <= 700, he = hero.querySelector(".hello"), ct = hero.querySelector(".hero-cta");
+    [he, ct].forEach((x) => { if (x) x.style.translate = mob ? `0 ${Math.round(zTy * .8)}px` : ""; });
     if (zam && !zam.gone) zam = null;   /* a betűk helye változott: újramérjük */
   }
   /* a fejléc kis logójára kattintva: a teljes felirat elsüllyed, és a folyamat elölről kezdődik */

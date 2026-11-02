@@ -896,7 +896,7 @@ html.logo-js .hero-cta { animation: none; opacity: 1; transform: none; margin-to
 @media (max-width: 700px) { .hero h1.hero-logo { width: 84vw; margin-left: -1vw; } }
 @media (min-width: 701px) { html.logo-js .hero-in { padding-top: 182px; } }   /* hely a helikopternek a logó fölött */
 html.logo-js .hero h1.hero-logo { translate: 0 -46px; }   /* a logó és a Zamárdi feljebb; az „Isten hozott!” a helyén marad */
-@media (max-width: 700px) { html.logo-js .hero h1.hero-logo { translate: 0 -70px; } }
+@media (max-width: 700px) { html.logo-js .hero h1.hero-logo { translate: 0 0; width: 76vw; margin: 0 0 4px 0; } html.logo-js .hero-in { padding-top: 132px; } .hero-scene .sc-txt { display: none; } .hero .place { font-size: 19px; } .hero .hello { margin-top: 14px; } }   /* telefon: a logó a fejléc alatt, a jelenet-felirat nem takarja */
 html.logo-anim.la-sink .hero .place, html.logo-anim.la-sink .hero .hello { transition: transform 2.2s cubic-bezier(.5,0,.8,.4), opacity 1.8s ease-in; transform: translateY(70px); opacity: 0; animation: none; }
 </style>
 <style>
@@ -3426,6 +3426,9 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const nx = Math.round(tx - left0), ny = Math.round(ty - capTop0);
     if (nx === zTx && ny === zTy) return;
     zTx = nx; zTy = ny; el.style.translate = `${zTx}px ${zTy}px`;
+    /* telefonon az „Isten hozott!” és a gombok is felzárkóznak (különben nagy üres sáv maradna a Zamárdi alatt) */
+    const mob = innerWidth <= 700, he = hero.querySelector(".hello"), ct = hero.querySelector(".hero-cta");
+    [he, ct].forEach((x) => { if (x) x.style.translate = mob ? `0 ${Math.round(zTy * .8)}px` : ""; });
     if (zam && !zam.gone) zam = null;   /* a betűk helye változott: újramérjük */
   }
   /* a fejléc kis logójára kattintva: a teljes felirat elsüllyed, és a folyamat elölről kezdődik */
