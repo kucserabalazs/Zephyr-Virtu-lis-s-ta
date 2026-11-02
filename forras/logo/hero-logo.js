@@ -755,7 +755,7 @@
     });
     return { el, w, h, pad, band, cloth, navy: txt(NAVY), white: txt("#ffffff", true), tx: left - pad, ty: base - tyText };
   }
-  function drawBanner(x, y, wave, clothA, whiteK, t) {
+  function drawBanner(x, y, wave, clothA, whiteK, t, noText) {
     const b = ban, N = 90, sw = b.w / N;
     /* árnyék a molinó alatt */
     if (clothA > 0 && wave > .5) { g.save(); g.globalAlpha = .18 * clothA; g.fillStyle = "#000"; g.filter = "blur(8px)"; g.fillRect(x + 8, y + b.h * .3 + 14, b.w, b.h * .7); g.restore(); }
@@ -766,6 +766,7 @@
       const sh = wave > .5 ? slope * .16 * Math.min(1, amp / 4) : 0;   /* gyűrődés: a lejtők sötétebbek / világosabbak */
       const sx = i * sw * dpr, ssw = Math.ceil(sw * dpr) + 1;
       if (clothA > 0) { g.globalAlpha = clothA; g.drawImage(b.cloth, sx, 0, ssw, b.cloth.height, x + i * sw, y + dy, sw + .6, b.h); if (sh) { g.fillStyle = sh > 0 ? `rgba(0,0,0,${sh})` : `rgba(255,255,255,${-sh * 1.3})`; g.fillRect(x + i * sw, y + dy, sw + .6, b.h); } }
+      if (noText) continue;
       g.globalAlpha = 1 - whiteK; g.drawImage(b.navy, sx, 0, ssw, b.navy.height, x + i * sw, y + dy, sw + .6, b.h);
       if (whiteK > 0) { g.globalAlpha = whiteK; g.drawImage(b.white, sx, 0, ssw, b.white.height, x + i * sw, y + dy, sw + .6, b.h); }
     }
@@ -794,6 +795,19 @@
       const kg = g.createRadialGradient(x - 1.5, y - 11, .5, x, y - 10, 4.5); kg.addColorStop(0, "#fff4c2"); kg.addColorStop(1, "#a8801f"); g.fillStyle = kg; g.beginPath(); g.arc(x, y - 10, 4.5, 0, 7); g.fill();
       g.restore();
     }
+  }
+  /* a zászlóról lefolyó felirat: a helyén marad, a lobogás hulláma rajta lassan lecsendesedik, cseppek peregnek le róla */
+  function drawFlagText(t, r, whiteK) {
+    const b = ban, N = 90, sw = b.w / N, x = b.tx, y = b.ty;
+    for (let i = 0; i < N; i++) {
+      const u = i / N, ph = i * .42 - t * 10, settle = Math.exp(-r * 2.2 - u * .5), dy = Math.sin(ph) * 5 * (.2 + u * 1.2) * settle + Math.max(0, 1 - r * 3) * 2;
+      const sx = i * sw * dpr, ssw = Math.ceil(sw * dpr) + 1;
+      g.globalAlpha = 1 - whiteK; g.drawImage(b.navy, sx, 0, ssw, b.navy.height, x + i * sw, y + dy, sw + .6, b.h);
+      if (whiteK > 0) { g.globalAlpha = whiteK; g.drawImage(b.white, sx, 0, ssw, b.white.height, x + i * sw, y + dy, sw + .6, b.h); }
+    }
+    g.globalAlpha = 1;
+    /* fényvillanás végig a feliraton, amikor elválik a zászlótól */
+    if (r < .9) { const gx = x + b.w * (r / .9); const lg = g.createLinearGradient(gx - 40, 0, gx + 40, 0); lg.addColorStop(0, "rgba(255,240,200,0)"); lg.addColorStop(.5, "rgba(255,240,200,.35)"); lg.addColorStop(1, "rgba(255,240,200,0)"); g.fillStyle = lg; g.fillRect(gx - 40, y + b.h * .25, 80, b.h * .5); }
   }
   /* ------------------------------------------------------------ „Zamárdi”: a DOM-felirat betűi pontosan a helyükön, vásznon */
   let zam = null;
@@ -978,19 +992,22 @@
         const ps = clamp(box.s * 1.7, .55, 2), ropeL = 60 * ps, v = (W + ban.w + ropeL + 260 * ps) / T.fDur;
         const relAt = (W + 90 * ps + 58 * ps + ropeL - ban.tx) / v - .45;             /* elengedés kicsit a cél előtt */
         const px = W + 90 * ps - v * ft, py = ban.ty + ban.h * .45 + Math.sin(ft * 2) * 3 * ps;
-        let bx, by = ban.ty, wave = 5 * ps, clothA = 1, whiteK = 0, rope = true;
-        if (ft < relAt) { bx = px + 58 * ps + ropeL; by = ban.ty + Math.sin(ft * 2 - .6) * 3 * ps; }
-        else {
-          const r = ft - relAt, d = v * .45;                                   /* lendületből, lassulva áll be */
-          bx = ban.tx + d * Math.exp(-r * 2.4);
-          wave = 5 * ps * Math.exp(-r * 1.5) + 1.6 * ps * clamp(1 - (r - 3.2) / 1.2, 0, 1); rope = r < .35;   /* a szélben a megállás után is finoman lobog */
-          clothA = clamp(1 - (r - 3.2) / 1.2, 0, 1); whiteK = clamp((r - 3.2) / 1.2, 0, 1);   /* a zászló kisimulva ~3 mp-ig lobog a helyén, aztán átadja a feliratot */
-          if (r > 4.3 && !html.classList.contains("la-hello")) html.classList.add("la-hello");
-          if (r > 4.5) { ban.gone = true; if (!html.classList.contains("la-cta")) html.classList.add("la-cta"); }
-        }
+        /* a zászló végig a repülő után marad; amikor a felirata a helyére ér, az írás „lefolyik” róla és ott marad,
+           a tiszta zászló pedig a repülővel tovább repül */
+        const bx = px + 58 * ps + ropeL, by = ban.ty + Math.sin(ft * 2 - .6) * 3 * ps, wave = 5 * ps;
+        const detAt = (W + 90 * ps + 58 * ps + ropeL - ban.tx) / v, r = ft - detAt, detached = r >= 0;
+        const whiteK = clamp((r - 1.6) / 1.2, 0, 1);
+        if (detached && !ban.splashed) { ban.splashed = true; for (let k = 0; k < 40; k++) foam(ban.tx + Math.random() * ban.w, ban.ty + ban.h * (.3 + Math.random() * .4), 1, 4, (Math.random() - .5) * 40, 20, 1, 1.4 * ps, "255,236,180"); }
+        if (detached && r < 1.4 && rand() < .5) foam(ban.tx + rand() * ban.w, ban.ty + ban.h * .62, 1, 3, 0, 40, .7, 1.1 * ps, "225,240,255");
+        if (r > 2.7 && !html.classList.contains("la-hello")) html.classList.add("la-hello");
+        const textGone = r > 2.9, flagGone = bx + ban.w < -40;
+        if (textGone && flagGone) { ban.gone = true; if (!html.classList.contains("la-cta")) html.classList.add("la-cta"); }
         if (!ban.gone) front.push(() => {
-          if (rope) { g.strokeStyle = "rgba(60,60,60,.85)"; g.lineWidth = Math.max(1, 1.2 * ps); g.beginPath(); g.moveTo(px + 58 * ps, py - 1 * ps); g.quadraticCurveTo((px + 58 * ps + bx - 26) / 2, Math.max(py, by + ban.h / 2) + 8 * ps, bx - 26, by + ban.h / 2); g.stroke(); }
-          drawBanner(bx, by, wave, clothA, whiteK, t);
+          if (!flagGone) {
+            g.strokeStyle = "rgba(60,60,60,.85)"; g.lineWidth = Math.max(1, 1.2 * ps); g.beginPath(); g.moveTo(px + 58 * ps, py - 1 * ps); g.quadraticCurveTo((px + 58 * ps + bx - 26) / 2, Math.max(py, by + ban.h / 2) + 8 * ps, bx - 26, by + ban.h / 2); g.stroke();
+            drawBanner(bx, by, wave, 1, 0, t, detached);
+          }
+          if (detached && !textGone) drawFlagText(t, r, whiteK);
         });
         if (px > -160 * ps) front.push(() => plane(px, py, ps, t, -1));
       }
