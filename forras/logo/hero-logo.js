@@ -334,11 +334,21 @@
         reelK = 1; phase = "turn"; const k = easeIO((r - reel) / turn);
         fx = dir * Math.cos(k * Math.PI); by = wl - k * 34 * box.s; sc = 1 - .18 * k; bx = arriveX + dir * Math.sin(k * Math.PI) * 18 * bs;
       } else {
-        reelK = 1; phase = "back"; const k = Math.min(1, (r - reel - turn) / (look.kayak ? out * .8 : out));
+        reelK = 1; phase = "back"; const k = Math.min(1, (r - reel - turn) / (look.kayak ? out * 1.9 : out));
         fx = -dir; by = wl - 34 * box.s; sc = .82;
+        if (look.kayak) {
+          /* a kajakosok visszafelé indulnak; középen szembejön a vízirendőrség, megállnak, megfordulnak, és visszafelé menekülnek */
+          const meetX = W * .56, c0 = arriveX - dir * kGap * sc / 2;
+          let cx;
+          if (k < .4) { const q = easeIO(k / .4); cx = c0 + (meetX - c0) * q; }
+          else if (k < .56) { const q = easeIO((k - .4) / .16); cx = meetX - dir * 6 * bs * Math.sin(q * Math.PI); fx = -dir * Math.cos(q * Math.PI); }
+          else { const q = (k - .56) / .44; cx = meetX + (dir > 0 ? W + 220 * bs - meetX : -220 * bs - meetX) * q * q * (1.4 - .4 * q); fx = dir; }
+          st.kc = cx; st.kk = k; bx = cx; if (k >= 1) bx = null;
+        } else {
         const endX = dir > 0 ? -160 * bs : W + 160 * bs;
         bx = arriveX + (endX - arriveX) * (k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2);
         if (k >= 1) bx = null;
+        }
       }
     }
     const wordIn = 1;
@@ -369,9 +379,15 @@
         if (look.kayak) {
           /* két kajak szépen egymás mögött; a hátsó a vontatásnál kötélen követi az elsőt, utána mögötte evez */
           const ks = bs * sc * KS, fast = phase === "back";
+          if (phase === "back") {   /* két kajak egymás mögött; a menetirány szerinti első vezet */
+            const sgn = fx >= 0 ? 1 : -1, half = kGap * sc / 2, flee = st.kk > .56;
+            kayak(bx - sgn * half, by + .5 * bs, ks, fx, t, "#f2b233", "#e2483d", 1.3, flee);
+            kayak(bx + sgn * half, by, ks, fx, t, "#e85d2a", "#f2b233", 0, flee);
+          } else {
           const xr = phase === "tow" || phase === "stop" ? st.xr : bx - fx * kGap * sc * (phase === "turn" ? Math.abs(fx) : 1);
-          kayak(xr, by + .5 * bs, ks, phase === "turn" ? fx : (phase === "back" ? -dir : dir), t, "#f2b233", "#e2483d", 1.3, fast);
+          kayak(xr, by + .5 * bs, ks, phase === "turn" ? fx : dir, t, "#f2b233", "#e2483d", 1.3, fast);
           kayak(bx, by, ks, fx, t, "#e85d2a", "#f2b233", 0, fast);
+          }
           if (phase === "tow" || phase === "stop") rope2(bx - dir * stern * ks, wl - 3 * bs, st.xr + dir * 50 * ks, wl - 3 * bs, kGap - (stern + 50) * ks + 8 * bs, false);
         } else sailBoat(Object.assign({ x: bx, y: by, s: bs * sc, dir: fx >= 0 ? 1 : -1, fx }, look), t);
         /* vontatókötél a felirathoz; behúzáskor a vége a hajóhoz fut */
@@ -382,12 +398,18 @@
         }
       });
     }
-    if (look.kayak && lt > arr + reel - .3) {
-      const pr = lt - arr - reel + .3, chaseDir = -dir, pyy = wl - 30 * box.s, pv = (W + 360 * bs) / (out * .75 + turn + .6);
-      let pxx = (chaseDir > 0 ? -150 * bs : W + 150 * bs) + chaseDir * pv * pr;
-      if (bx != null && phase !== "back") pxx = chaseDir > 0 ? Math.min(pxx, bx - 150 * bs) : Math.max(pxx, bx + 150 * bs);
-      if (chaseDir > 0 ? pxx < W + 220 * bs : pxx > -220 * bs) back.push(() => { wake(pxx - chaseDir * 50 * bs, pyy, 200 * bs, chaseDir, .9, bs * 1.3); police(pxx, pyy, bs * 1.45, chaseDir, t); });
-      if (rand() < .6) foam(pxx + chaseDir * 40 * bs, pyy - 1 * bs, 1, 5 * bs, chaseDir * 80, -50, .5, 1.5 * bs);
+    if (look.kayak && phase === "back" && st.kk > .12) {
+      /* a vízirendőrség a kajakosok menetirányából, szemből érkezik; középen megáll előttük, majd a menekülők után megy */
+      const k = st.kk, chaseDir = dir, pyy = wl - 30 * box.s, meetX = W * .56, stopX = meetX - dir * 190 * bs;
+      const enterX = dir < 0 ? W + 240 * bs : -240 * bs, exitX = dir < 0 ? -300 * bs : W + 300 * bs;
+      let pxx, pdir = dir;
+      if (k < .42) { const q = 1 - Math.pow(1 - (k - .12) / .3, 2.2); pxx = enterX + (stopX - enterX) * q; }
+      else if (k < .6) pxx = stopX + dir * 4 * bs * Math.sin((k - .42) * 30) * (.6 - k);
+      else { const q = (k - .6) / .4; pxx = stopX + (exitX - stopX) * q * q * (1.3 - .3 * q); pdir = -dir; }
+      const facing = k < .6 ? dir : -dir;   /* odafelé szembe, utána a menekülők után */
+      const pd = dir;   /* szembejön, majd ugyanarra üldözi őket: végig ebbe az irányba halad */
+      back.push(() => { if (!(k > .42 && k < .6)) wake(pxx - pd * 50 * bs, pyy, 200 * bs, pd, .9, bs * 1.3); police(pxx, pyy, bs * 1.45, pd, t); });
+      if (!(k > .42 && k < .6) && rand() < .6) foam(pxx + pd * 40 * bs, pyy - 1 * bs, 1, 5 * bs, pd * 80, -50, .5, 1.5 * bs);
     }
     names.forEach((n) => pcs.push([n, wdx, (Math.sin(t * 3 + base) * 1.2 * (Math.abs(st.vw) > 15 ? 1 : 0) - st.jerk * 3) * bs, { alpha: wordIn, rot: -dir * st.jerk * .015 }]));
   }
