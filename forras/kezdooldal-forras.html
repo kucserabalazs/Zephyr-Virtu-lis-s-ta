@@ -2194,15 +2194,16 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     }
     if (look.kayak && phase === "back" && st.kk > .12) {
       /* a vízirendőrség a kajakosok menetirányából, szemből érkezik; középen megáll előttük, majd a menekülők után megy */
-      const k = st.kk, chaseDir = dir, pyy = laneY() + 4 * bs, meetX = W * .56, stopX = meetX - dir * 190 * bs;
+      const k = st.kk, chaseDir = dir, pyy = laneY() + 4 * bs, meetX = W * .56, stopX = meetX - dir * 330 * bs;
       const enterX = dir < 0 ? W + 240 * bs : -240 * bs, exitX = dir < 0 ? -300 * bs : W + 300 * bs;
       let pxx, pdir = dir;
       if (k < .42) { const q = 1 - Math.pow(1 - (k - .12) / .3, 2.2); pxx = enterX + (stopX - enterX) * q; }
       else if (k < .6) pxx = stopX + dir * 4 * bs * Math.sin((k - .42) * 30) * (.6 - k);
-      else { const q = (k - .6) / .4; pxx = stopX + (exitX - stopX) * q * q * (1.3 - .3 * q); pdir = -dir; }
+      else { const q = ease(clamp((k - .6) / .1, 0, 1)), follow = st.kc - dir * 300 * bs; pxx = stopX + (follow - stopX) * q; pdir = -dir; }   /* végig szorosan mögöttük kíséri őket */
       const facing = k < .6 ? dir : -dir;   /* odafelé szembe, utána a menekülők után */
       const pd = dir;   /* szembejön, majd ugyanarra üldözi őket: végig ebbe az irányba halad */
-      back.push(() => { if (!(k > .42 && k < .6)) wake(pxx - pd * 50 * bs, pyy, 200 * bs, pd, .9, bs * 1.3); police(pxx, pyy, bs * 1.45, pd, t); });
+      const say = k < .3 ? null : k < .62 ? 0 : 1;   /* megafon: a találkozáskor és a kísérés alatt */
+      back.push(() => { if (!(k > .42 && k < .6)) wake(pxx - pd * 50 * bs, pyy, 200 * bs, pd, .9, bs * 1.3); police(pxx, pyy, bs * 1.45, pd, t, say); });
       if (!(k > .42 && k < .6) && rand() < .6) foam(pxx + pd * 40 * bs, pyy - 1 * bs, 1, 5 * bs, pd * 80, -50, .5, 1.5 * bs);
     }
     names.forEach((n) => pcs.push([n, wdx, (Math.sin(t * 3 + base) * 1.2 * (Math.abs(st.vw) > 15 ? 1 : 0) - st.jerk * 3) * bs, { alpha: wordIn, rot: -dir * st.jerk * .015 }]));
@@ -2248,7 +2249,8 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     kayak(x, y, ks, fx, t, "#e85d2a", "#f2b233", 0, fast);                                  /* elülső: narancs */
   }
   /* ------------------------------------------------------------ vízirendőrség motorcsónakja (oldalnézet, 100 egység) */
-  function police(x, y, s, dir, t) {
+  const MEGA = { hu: ["Állj! Vízirendőrség!", "Azonnal hagyják el a vizet!"], en: ["Stop! Water police!", "Leave the water immediately!"], de: ["Halt! Wasserpolizei!", "Verlassen Sie sofort das Wasser!"] };
+  function police(x, y, s, dir, t, say) {
     g.save(); g.translate(x, y + Math.sin(t * 5) * .8 * s); g.scale(dir * s, s); g.rotate(-.05 + Math.sin(t * 6) * .012);   /* siklás: orr fel */
     g.lineJoin = "round"; g.lineCap = "round";
     /* hajótest: fehér, kék-sárga csíkkal */
@@ -2276,11 +2278,42 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       g.fillStyle = v ? "#4fc3ff" : "#1a3f8a"; g.fillRect(lx - 2.5, -28.6, 5, 2.2);
       if (v) { const gl = g.createRadialGradient(lx, -27.5, 0, lx, -27.5, 16); gl.addColorStop(0, "rgba(80,190,255,.85)"); gl.addColorStop(1, "rgba(80,190,255,0)"); g.fillStyle = gl; g.beginPath(); g.arc(lx, -27.5, 16, 0, 7); g.fill(); }
     });
+    /* rendőr a tatnál, megafonnal; a hang ívei előre szállnak */
+    if (say != null) {
+      g.save(); g.translate(-33, -12.5);
+      g.fillStyle = "#1f2d44"; g.fillRect(-1.6, -9, 3.4, 9);                                   /* egyenruha */
+      g.fillStyle = "#f2c200"; g.fillRect(-1.6, -7.6, 3.4, 1.1);                               /* láthatósági csík */
+      g.fillStyle = "#e9b48c"; g.beginPath(); g.arc(0, -11.4, 2.2, 0, 7); g.fill();          /* fej */
+      g.fillStyle = "#1f2d44"; g.beginPath(); g.arc(0, -12.2, 2.4, Math.PI, 0); g.fill(); g.fillRect(0, -12.6, 3.4, .8);   /* sapka */
+      const lift = Math.sin(t * 5) * .06;
+      g.rotate(-.18 + lift);
+      g.strokeStyle = "#1f2d44"; g.lineWidth = 1.3; line(.5, -7.5, 4.5, -9.5);               /* kar */
+      g.fillStyle = "#f4f6f8"; g.beginPath(); g.moveTo(4, -10.6); g.lineTo(10.5, -12.8); g.lineTo(10.5, -6.4); g.lineTo(4, -8.6); g.closePath(); g.fill();   /* megafon tölcsér */
+      g.strokeStyle = "#c22a21"; g.lineWidth = .7; g.beginPath(); g.moveTo(10.5, -12.8); g.lineTo(10.5, -6.4); g.stroke();
+      g.fillStyle = "#3b4654"; g.fillRect(2.6, -10.4, 1.6, 2);
+      for (let q = 0; q < 3; q++) { const ph = (t * 1.6 + q / 3) % 1; g.strokeStyle = `rgba(255,255,255,${.8 * (1 - ph)})`; g.lineWidth = .8; g.beginPath(); g.arc(10.5, -9.6, 3 + ph * 14, -.7, .7); g.stroke(); }
+      g.restore();
+    }
     /* antenna, zászló, motor */
     g.strokeStyle = "#3b4654"; g.lineWidth = .5; line(-16, -25, -19, -36);
     [["#ce2939", 0], ["#ffffff", 1.4], ["#477050", 2.8]].forEach(([c, k]) => { g.fillStyle = c; g.fillRect(-56 + Math.sin(t * 9) * .4, -19 + k, 6, 1.4); }); g.strokeStyle = "#596370"; g.lineWidth = .5; line(-50, -12, -50, -19.5);
     g.fillStyle = "#2d3846"; g.beginPath(); g.moveTo(-48, -14); g.lineTo(-55, -14); g.lineTo(-56, -6); g.lineTo(-53, 1); g.lineTo(-50, 1); g.lineTo(-49, -8); g.closePath(); g.fill();
     g.restore();
+    /* szövegbuborék a megafonból (képernyő-koordinátában, nem tükrözve) */
+    if (say != null) {
+      const L = MEGA[(document.documentElement.lang || "hu").slice(0, 2)] || MEGA.en;
+      const txt = L[say];
+      const fs = Math.max(14, 9.5 * s), bx0 = x + dir * 10 * s, by0 = y - 44 * s;
+      g.save(); g.font = `800 ${fs}px Manrope, "Segoe UI", sans-serif`; const tw = g.measureText(txt).width, pw = tw + fs * 1.2, ph = fs * 1.9;
+      const left = dir < 0 ? bx0 - pw + 10 * s : bx0 - 10 * s, top = by0 - ph;
+      const pop = .92 + .08 * Math.abs(Math.sin(t * 3));
+      g.translate(bx0, by0); g.scale(pop, pop); g.translate(-bx0, -by0);
+      g.fillStyle = "rgba(255,255,255,.96)"; g.strokeStyle = "#1f4fa0"; g.lineWidth = 2;
+      g.beginPath(); g.roundRect ? g.roundRect(left, top, pw, ph, ph / 2) : g.rect(left, top, pw, ph); g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(bx0 - dir * 4 * s, top + ph - 1); g.lineTo(bx0 + dir * 2 * s, by0 + 8 * s); g.lineTo(bx0 + dir * 9 * s, top + ph - 1); g.closePath(); g.fill();
+      g.fillStyle = "#1f4fa0"; g.textBaseline = "middle"; g.fillText(txt, left + fs * .6, top + ph / 2 + 1);
+      g.restore();
+    }
   }
   /* ------------------------------------------------------------ helikopter (oldalnézet, 100 egység; dir=-1: balra néz) */
   function heli(x, y, s, t, dir, tilt) {
