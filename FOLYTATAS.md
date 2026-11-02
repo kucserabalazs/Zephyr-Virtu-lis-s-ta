@@ -206,3 +206,23 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - A saját foglalási rendszer (`api/index.php`) mindkét portál naptárát importálja: `default_ical()` + egyszeri `mig_ical1` migráció tölti be az első indításkor (ha egy link még üres). A linkek a tulajdonosi felület Beállítások → Naptárszinkron részén módosíthatók. Helyben, minta-iCal-lal tesztelve (blokkok bekerülnek, szabad napok lezárulnak).
 - **Még hátra van (amikor a PHP élesben fut az ELIN.hu-n):** a saját oldal exportlinkjeit (Beállítások → Naptárszinkron, `?r=ical&key=…&apt=…`) be kell kötni a Szállás.hu-ba (Naptár importálása) és az Airbnb-be (Másik naptár bekötése), hogy a saját oldalon érkező foglalások is lezárják a portálokat.
 - Airbnb-árazás nov. 1-től: alapár = Szállás.hu-ár / 0,9 (Dingi 35 556, Kalóz 38 889, Fregatt 64 444, Korvett/Schooner 62 222 Ft); foglalási hossz: 2 éj −5%, 3 éj −10% (= Szállás.hu-ár), 4+ éj −15%; heti −19%, havi −28% (Dingi −37%); min. 1 éj, minden kérést a tulajdonos hagy jóvá; előre foglalás: 3 nap (júl. 15. – okt. 15. aznapi – ütemezett emlékeztetők: 2027. júl. 14. és okt. 16.).
+
+## 14. Állás 2026. nov. 1. este – mesterfotók (innen folytatjuk)
+- **Kész:** az apartmanok galériái (Korvett, Dingi, Fregatt, Kalóz, Schooner, Kadett) és a szolgáltatások egy része a 20 MP-es mesterfotókból készült (forrás: „Névtelen” külső meghajtó, `ZEPHIR KÉPEK TELJES`). Méretek: `id-xl.jpg` 2560 px (nagyítás), `id.jpg` 1280 px (kártya), `id-k.jpg` 480×320 (bélyegkép). A `G(id, cap, scene)` harmadik paramétere a 360°-os séta jelenete (Kadettnél üres). Szolgáltatásoknál `SX(...)` = mesterfotó. Commitok: 1a7e8a0, b4df6ba.
+- A tömörített képek a tulajdonos gépén is megvannak: `Downloads/BALATONI_UDULES.hu/_kepek_uj` (a `_kepvalogatas` segédmappa törölhető).
+- A repó helyi másolata a tulajdonos Mac-jén: `Dokumentumok/GitHub/Zephyr-Virtu-lis-s-ta` – a GitHub Desktoppal tölti fel (Commit to main → Push origin), mert a Claude-munkamenetnek nincs írási joga a repóhoz.
+
+### Függőben
+1. A meghajtó gyökerében lévő IMG_0479–0576 fotókat a **Kadetthez** soroltuk – a tulajdonosnak meg kell erősítenie.
+2. **Dingi előtér**: még a régi 360°-os kivágás – ha a Kalóz előtere hasonló, azzal cserélhető (a Dingi fürdője már a Kalóz fürdőjének mesterfotója, a tulajdonos szerint egyformák).
+3. Az új képaláírások csak magyarul vannak – a 23 nyelvre fordítani kell (`forras/i18n`).
+4. Nincs mesterfotó: 360°-os séta panorámái, grill/kerti konyha, kapu, utca. A téli és vitorlásos fotók (meghajtó gyökere) még nincsenek felhasználva.
+5. Naptár-export a saját oldalról a Szállás.hu-ba és az Airbnb-be – amikor a PHP élesben fut az ELIN.hu-n.
+6. Ütemezett emlékeztetők: 2027. júl. 14. (Airbnb: aznapi foglalás be) és 2027. okt. 16. (vissza 3 napra).
+
+## 15. Következő feladat (döntés 2026. nov. 2.): a 360°-os séta panorámáinak cseréje a mesterfelvételekre
+- Forrás a tulajdonos Mac-jén: `/Users/kucserabalazs/Pictures/Zephyr Apartman  Osmo 360 mastercop VR` (DJI Osmo 360, **15520 × 7760** equirect.; apartmanonkénti mappák: Korvett 9, Dingi 9 + lépcsőház, Fregatt 13, Kalóz 8, Schooner 11; **Zephyr Apartman Grillterasz** 4, **Út a privát stéghez** 8; `összes lakás rajza.pdf`; a `virtualis-seta-3` egy régi sétaváltozat, a `…utas0tás.rtfd` mappa a képek másolatát tartalmazza).
+- **Elfogadott terv („első ötlet”):** gépre **8192 × 4096**, telefonra a mostani **4096 × 2048** panoráma (egyetlen textúra, A-Frame marad; eszköz szerint választ). Minden jelenethez megkeresni a hozzá tartozó mesterfelvételt (képösszevetéssel), ellenőrizni, hogy az irány (yaw) egyezik-e, hogy a nyilak/feliratok a helyükön maradjanak. A grillterasz és a stéghez vezető út új jeleneteket kaphat.
+- Későbbi lehetőség: csempés, többszintes panoráma a teljes 15520-as felbontással (jelenetenként 15–30 MB, összesen 1–2 GB – csak az ELIN.hu-ra; a tárhely mérete még ismeretlen, admin.elin.hu-n nézhető meg).
+- **A tulajdonos kiemelte: a virtuális séta élménye is szempont.** Tehát: a séta maradjon gördülékeny – először a 4096-os kép jelenjen meg azonnal, és gépen a 8192-es a háttérben töltődjön be és cserélje le észrevétlenül; a szomszédos jelenetek (ahová a nyilak mutatnak) előre töltődjenek; telefonon (iPhone) 4096 marad; az áttűnések, nyilak, mozgásérzékelő ne lassuljon. Tesztelni gépen és telefonméretben is.
+- **A teljes éjszakai feladatcsomag (panorámacsere, utómunka, lágy átmenet, VR mód, kis virtuális világ) részletesen: `FELADAT_START.md`. A tulajdonos egy új munkamenetben „start” szóval indítja.**
