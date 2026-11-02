@@ -2407,6 +2407,34 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     /* apartmanról (kártya, galéria, séta) nyitva is az új menet indul: előbb az időpont – az apartman szabad napjait mutatja,
        egy koppintással az összes apartman naptára; a régi, apartmanonkénti naptár csak a tavon az apartmanra koppintva nyílik */
     if (pre) { direct = false; st.pre = pre.id; buildMap(); fixSel(); render(); }
+    /* a VR-ben összeállított foglalás (időpont, létszám, apartmanok) – innen már csak a név, e-mail és a többi adat kell */
+    if (opts.ci && opts.co && st.maps && Object.keys(st.maps).length) {
+      st.ci = opts.ci; st.co = opts.co; st.adults = Math.max(1, +opts.adults || 2); st.children = Math.max(0, +opts.children || 0);
+      const m0 = pd(cfg.today), m1 = pd(opts.ci); st.month = Math.max(0, (m1.getFullYear() - m0.getFullYear()) * 12 + m1.getMonth() - m0.getMonth());
+      st.apts = (opts.apts || []).filter(aptFree); sortApts();
+      if (st.apts.length && capTotal() >= st.adults + st.children) { st.back = 1; st.step = 3; }
+      render();
+    }
+  }
+  /* VR-es ajánlatkérés: a megadott időszakra minden apartman szabad-e, és mennyibe kerül (a felület megnyitása nélkül) */
+  let qMaps = null, qAt = 0;
+  async function vrQuote(q) {
+    if (!cfg) { try { cfg = await api("/config"); } catch (e) { cfg = demoConfig(); } }
+    if (!qMaps || Date.now() - qAt > 120000) {
+      const to = addD(cfg.today, Math.min(420, (cfg.horizon_days || 400) + 1)), ids = cfg.apartments.map((a) => a.id);
+      const res = await Promise.all(ids.map((id) => cfg.demo ? Promise.resolve({ days: demoDays(cfg, id) }) : api("/availability?apt=" + id + "&from=" + cfg.today + "&to=" + to)));
+      qMaps = {}; ids.forEach((id, k) => { const m = {}; res[k].days.forEach((d) => (m[d.d] = d)); qMaps[id] = m; }); qAt = Date.now();
+    }
+    const n = diff(q.ci, q.co), minN = cfg.min_nights || 1, lead = addD(cfg.today, cfg.lead_days || 0);
+    if (q.ci < lead) return { err: "Ilyen korán már nem foglalható – válassz későbbi érkezést." };
+    if (n < minN) return { err: `Legalább ${minN} éjszakára foglalható.` };
+    if (cfg.max_nights && n > cfg.max_nights) return { err: `Legfeljebb ${cfg.max_nights} éjszakára foglalható.` };
+    const apts = cfg.apartments.map((a) => {
+      const m = qMaps[a.id] || {}; let free = true, total = 0;
+      for (let d = q.ci; d < q.co; d = addD(d, 1)) { if (!m[d] || !m[d].free) { free = false; break; } total += m[d].p || 0; }
+      return { id: a.id, name: a.name, no: a.no, cap: a.cap, free, total };
+    });
+    return { demo: !!cfg.demo, apts };
   }
   function close(mode) {
     if (!el || el.hidden) return; el.classList.remove("on"); document.documentElement.classList.remove("zfb-lock");
@@ -3021,7 +3049,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     st.loading = false; render();
   }
 
-  window.ZephyrBooking = { open, close, apiUrl, reset: () => { cfg = null; } };
+  window.ZephyrBooking = { open, close, apiUrl, quote: vrQuote, reset: () => { cfg = null; qMaps = null; } };
 })();
 /* Zephyr Apartmanház – tulajdonosi felület (jelszóval védett admin a foglalási ablakban)
    Megnyitás: a foglalási ablak „Tulajdonosi belépés” gombja, vagy a link végére írt #foglalas-admin */
