@@ -880,7 +880,7 @@ html.logo-js .hero-logo-img { visibility: hidden; animation: none; }
 html.logo-anim .hero .place { animation: none; opacity: 0; transform: none; transition: opacity .45s ease; } html.logo-anim.la-place .hero .place { opacity: 1; }
 @keyframes placeRise { 0% { opacity: 1; transform: translateY(1em); clip-path: inset(-.4em -3em 1em -.4em); } 70% { transform: translateY(-.08em); clip-path: inset(-.4em -3em -.08em -.4em); } 100% { opacity: 1; transform: none; clip-path: inset(-.4em -3em -.3em -.4em); } }
 html.logo-anim .hero .hello { animation: none; opacity: 0; transform: none; transition: opacity .6s ease; } html.logo-anim.la-hello .hero .hello { opacity: 1; }
-html.logo-js .hero-cta { animation: none; opacity: 1; transform: none; }   /* a négy gomb az animáció alatt is végig látható (a tulajdonos kérése) */
+html.logo-js .hero-cta { animation: none; opacity: 1; transform: none; margin-top: 44px; }   /* a négy gomb az animáció alatt is végig látható (a tulajdonos kérése) */
 @media (max-width: 700px) { .hero h1.hero-logo { width: 84vw; margin-left: -1vw; } }
 @media (min-width: 701px) { html.logo-js .hero-in { padding-top: 182px; } }   /* hely a helikopternek a logó fölött */
 html.logo-js .hero h1.hero-logo { translate: 0 -46px; }   /* a logó és a Zamárdi feljebb; az „Isten hozott!” a helyén marad */
@@ -3042,41 +3042,59 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   /* ------------------------------------------------------------ molinó: a szöveg előre megrajzolva, hullámzó szeletekben */
   let ban = null;
   function makeBanner() {
+    /* a vendéglátó ország tisztelgése: valódi magyar zászló (piros–fehér–zöld, egyenlő sávok) selyemfényű anyagból,
+       arany rojttal, varrott sávhatárokkal, megerősített rúdszéllel; a felirat pontosan a zászló közepén */
     const el = hero.querySelector(".hello"); if (!el) return null;
-    const cs = getComputedStyle(el), r = el.getBoundingClientRect(), hr = hero.getBoundingClientRect();
-    const fs = parseFloat(cs.fontSize), text = el.textContent.trim();
+    const cs = getComputedStyle(el), hr = hero.getBoundingClientRect(), fs = parseFloat(cs.fontSize), text = el.textContent.trim();
+    const node = [...el.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim()) || el.firstChild;
     const font = `${cs.fontStyle} ${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
-    const m = g.measureText ? (g.font = font, g.measureText(text)) : { width: r.width };
-    const pad = fs * .45, w = Math.ceil(m.width + pad * 2), h = Math.ceil(fs * 1.3);
+    g.save(); g.font = font; const m = g.measureText(text); g.restore();
+    const fa = m.fontBoundingBoxAscent || fs * .9, fd = m.fontBoundingBoxDescent || fs * .25, aa = m.actualBoundingBoxAscent || fs * .75, ad = m.actualBoundingBoxDescent || fs * .15;
+    let left, base;
+    try { const rg = document.createRange(); rg.selectNodeContents(node); const bb = rg.getBoundingClientRect(); left = bb.left - hr.left; base = bb.top - hr.top + (bb.height - (fa + fd)) / 2 + fa; }
+    catch (e) { const r = el.getBoundingClientRect(); left = r.left - hr.left; base = r.top - hr.top + fa; }
+    const pad = fs * .55, w = Math.ceil(m.width + pad * 2), h = Math.ceil(fs * 1.72), band = h / 3;
+    const tyText = h / 2 + (aa - ad) / 2;                       /* a felirat optikai közepe = a zászló közepe */
     const mk = (draw) => { const c = document.createElement("canvas"); c.width = Math.ceil(w * dpr); c.height = Math.ceil(h * dpr); const o = c.getContext("2d"); o.scale(dpr, dpr); draw(o); return c; };
-    /* molinó a magyar zászló színeivel: piros felső és zöld alsó szegély, fehér mező; szövetminta, varrás, megerősített szélek, fémkarikák */
-    const HR = "#ce2939", HG = "#477050", band = Math.max(5, h * .11);
     const cloth = mk((o) => {
-      const cg = o.createLinearGradient(0, 0, 0, h); cg.addColorStop(0, "#ffffff"); cg.addColorStop(.5, "#fbfbf7"); cg.addColorStop(1, "#ecefe8"); o.fillStyle = cg; o.fillRect(0, 0, w, h);
-      /* szövetszálak (vászon textúra) */
-      o.globalAlpha = .07; o.strokeStyle = "#5a6470"; o.lineWidth = .5;
-      for (let x = 0; x < w; x += 2.2) { o.beginPath(); o.moveTo(x, 0); o.lineTo(x, h); o.stroke(); }
-      for (let y = 0; y < h; y += 2.2) { o.beginPath(); o.moveTo(0, y); o.lineTo(w, y); o.stroke(); }
+      const stripe = (y0, c0, c1, c2) => { const gr = o.createLinearGradient(0, y0, 0, y0 + band); gr.addColorStop(0, c0); gr.addColorStop(.5, c1); gr.addColorStop(1, c2); o.fillStyle = gr; o.fillRect(0, y0, w, band + .5); };
+      stripe(0, "#d93644", "#cd2a3e", "#b52233");               /* piros */
+      stripe(band, "#ffffff", "#fbfaf6", "#efede6");            /* fehér */
+      stripe(band * 2, "#4e7d58", "#436f4d", "#365c3f");        /* zöld */
+      /* selyemfény: ferde, lágy csillanás */
+      const sh = o.createLinearGradient(0, 0, w, h); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.35, "rgba(255,255,255,.16)"); sh.addColorStop(.45, "rgba(255,255,255,0)"); sh.addColorStop(.7, "rgba(255,255,255,.1)"); sh.addColorStop(1, "rgba(255,255,255,0)");
+      o.fillStyle = sh; o.fillRect(0, 0, w, h);
+      /* szövésminta */
+      o.globalAlpha = .06; o.strokeStyle = "#20262c"; o.lineWidth = .45;
+      for (let x = 0; x < w; x += 1.8) { o.beginPath(); o.moveTo(x, 0); o.lineTo(x, h); o.stroke(); }
+      for (let y = 0; y < h; y += 1.8) { o.beginPath(); o.moveTo(0, y); o.lineTo(w, y); o.stroke(); }
       o.globalAlpha = 1;
-      /* piros és zöld csík, enyhe fényes-árnyékos domborulattal */
-      const rb = o.createLinearGradient(0, 0, 0, band); rb.addColorStop(0, "#e0414f"); rb.addColorStop(1, "#b11f2c"); o.fillStyle = rb; o.fillRect(0, 0, w, band);
-      const gb = o.createLinearGradient(0, h - band, 0, h); gb.addColorStop(0, "#558560"); gb.addColorStop(1, "#365c3e"); o.fillStyle = gb; o.fillRect(0, h - band, w, band);
-      /* szegélyvarrás szaggatott vonallal */
-      o.setLineDash([4, 3]); o.lineWidth = 1; o.strokeStyle = "rgba(255,255,255,.75)";
-      o.beginPath(); o.moveTo(3, band * .5); o.lineTo(w - 3, band * .5); o.moveTo(3, h - band * .5); o.lineTo(w - 3, h - band * .5); o.stroke();
-      o.strokeStyle = "rgba(0,0,0,.18)"; o.beginPath(); o.moveTo(3, band + 3); o.lineTo(w - 3, band + 3); o.moveTo(3, h - band - 3); o.lineTo(w - 3, h - band - 3); o.stroke(); o.setLineDash([]);
-      /* megerősített végek (dupla anyag) */
-      o.fillStyle = "rgba(0,0,0,.06)"; o.fillRect(0, 0, 9, h); o.fillRect(w - 9, 0, 9, h);
-      /* fémkarikák a sarkokban és a széleken */
-      const grom = (gx, gy) => { const r = Math.max(2.2, band * .28); const mg = o.createRadialGradient(gx - r * .3, gy - r * .3, .5, gx, gy, r); mg.addColorStop(0, "#ffffff"); mg.addColorStop(.6, "#b8bec6"); mg.addColorStop(1, "#6d7680"); o.fillStyle = mg; o.beginPath(); o.arc(gx, gy, r, 0, 7); o.fill(); o.fillStyle = "rgba(20,25,30,.75)"; o.beginPath(); o.arc(gx, gy, r * .45, 0, 7); o.fill(); };
-      [band * .5, h - band * .5].forEach((gy) => { grom(5, gy); grom(w - 5, gy); });
-      for (let gx = w / 4; gx < w - 10; gx += w / 4) { grom(gx, band * .5); grom(gx, h - band * .5); }
+      /* varrott sávhatárok: árnyék + szaggatott öltés */
+      [band, band * 2].forEach((y) => {
+        o.fillStyle = "rgba(0,0,0,.12)"; o.fillRect(0, y - .5, w, 1.6);
+        o.setLineDash([3.2, 2.4]); o.lineWidth = .8; o.strokeStyle = "rgba(255,255,255,.55)"; o.beginPath(); o.moveTo(10, y - 2.6); o.lineTo(w - 4, y - 2.6); o.stroke();
+        o.strokeStyle = "rgba(60,60,60,.25)"; o.beginPath(); o.moveTo(10, y + 3); o.lineTo(w - 4, y + 3); o.stroke(); o.setLineDash([]);
+      });
+      /* szegélyvarrás körben */
+      o.setLineDash([3.2, 2.4]); o.lineWidth = .8; o.strokeStyle = "rgba(255,240,200,.5)"; o.strokeRect(3, 3, w - 6, h - 6); o.setLineDash([]);
+      /* megerősített rúdszél (dupla anyag, fehér pánt) fémkarikákkal */
+      const ps = o.createLinearGradient(0, 0, 14, 0); ps.addColorStop(0, "#f4f1e8"); ps.addColorStop(1, "#d9d4c6"); o.fillStyle = ps; o.fillRect(0, 0, 14, h);
+      o.strokeStyle = "rgba(0,0,0,.18)"; o.lineWidth = 1; o.beginPath(); o.moveTo(14, 0); o.lineTo(14, h); o.stroke();
+      [h * .1, h * .5, h * .9].forEach((gy) => { const r = 3.4; const mg = o.createRadialGradient(6, gy - 1, .5, 7, gy, r); mg.addColorStop(0, "#fff8dc"); mg.addColorStop(.6, "#d4a93c"); mg.addColorStop(1, "#8a6a1e"); o.fillStyle = mg; o.beginPath(); o.arc(7, gy, r, 0, 7); o.fill(); o.fillStyle = "rgba(20,20,20,.7)"; o.beginPath(); o.arc(7, gy, 1.5, 0, 7); o.fill(); });
     });
-    const txt = (col, sh) => mk((o) => { o.font = font; o.textBaseline = "middle"; o.fillStyle = col; if (sh) { o.shadowColor = "rgba(0,0,0,.5)"; o.shadowBlur = 18; o.shadowOffsetY = 4; } o.fillText(text, pad, h / 2 + fs * .04); });
-    return { el, w, h, pad, band, cloth, navy: txt(NAVY), white: txt("#ffffff", true), tx: r.left - hr.left - pad, ty: r.top - hr.top + (r.height - h) / 2 };
+    /* felirat: sötétkék, fehér és arany kontúrral, hogy mindhárom sávon olvasható legyen */
+    const txt = (col, sh) => mk((o) => {
+      o.font = font; o.textBaseline = "alphabetic"; o.lineJoin = "round";
+      if (sh) { o.shadowColor = "rgba(0,0,0,.5)"; o.shadowBlur = 18; o.shadowOffsetY = 4; o.fillStyle = col; o.fillText(text, pad, tyText); return; }
+      o.shadowColor = "rgba(0,0,0,.35)"; o.shadowBlur = 6; o.shadowOffsetY = 2;
+      o.strokeStyle = "#d4a93c"; o.lineWidth = Math.max(4, fs * .085); o.strokeText(text, pad, tyText);
+      o.shadowColor = "transparent"; o.strokeStyle = "#ffffff"; o.lineWidth = Math.max(2, fs * .045); o.strokeText(text, pad, tyText);
+      const tg = o.createLinearGradient(0, tyText - aa, 0, tyText + ad); tg.addColorStop(0, "#1b4a85"); tg.addColorStop(1, NAVY); o.fillStyle = tg; o.fillText(text, pad, tyText);
+    });
+    return { el, w, h, pad, band, cloth, navy: txt(NAVY), white: txt("#ffffff", true), tx: left - pad, ty: base - tyText };
   }
   function drawBanner(x, y, wave, clothA, whiteK, t) {
-    const b = ban, N = 60, sw = b.w / N;
+    const b = ban, N = 90, sw = b.w / N;
     /* árnyék a molinó alatt */
     if (clothA > 0 && wave > .5) { g.save(); g.globalAlpha = .18 * clothA; g.fillStyle = "#000"; g.filter = "blur(8px)"; g.fillRect(x + 8, y + b.h * .3 + 14, b.w, b.h * .7); g.restore(); }
     for (let i = 0; i < N; i++) {
@@ -3089,6 +3107,19 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       g.globalAlpha = 1 - whiteK; g.drawImage(b.navy, sx, 0, ssw, b.navy.height, x + i * sw, y + dy, sw + .6, b.h);
       if (whiteK > 0) { g.globalAlpha = whiteK; g.drawImage(b.white, sx, 0, ssw, b.white.height, x + i * sw, y + dy, sw + .6, b.h); }
     }
+    /* arany rojt a zászló lobogó végén és alján */
+    if (clothA > 0) {
+      g.save(); g.globalAlpha = clothA; g.lineCap = "round";
+      const fl = Math.max(5, b.h * .07), cg = (i) => (i % 3 ? "#d4a93c" : "#f2d27a");
+      for (let i = 0; i < N; i += 1) {
+        const u = i / N, ph = i * .42 - t * 10, amp = wave * (.2 + u * 1.2), dy = Math.sin(ph) * amp, xx = x + i * sw + sw / 2;
+        for (let q = 0; q < 2; q++) { const fx = xx + q * sw / 2, sway = Math.sin(t * 8 + i + q) * 1.5 * Math.min(1, wave); g.strokeStyle = cg(i * 2 + q); g.lineWidth = 1.1; g.beginPath(); g.moveTo(fx, y + dy + b.h); g.lineTo(fx + sway - wave * .6, y + dy + b.h + fl); g.stroke(); }
+      }
+      const ex = x + b.w, edy = Math.sin((N - 1) * .42 - t * 10) * wave * 1.4;
+      for (let yy = 0; yy <= b.h; yy += 3) { const sway = Math.sin(t * 9 + yy * .3) * 2 * Math.min(1, wave); g.strokeStyle = cg(Math.round(yy / 3)); g.lineWidth = 1.1; g.beginPath(); g.moveTo(ex, y + edy + yy); g.lineTo(ex + fl + sway, y + edy + yy + 1); g.stroke(); }
+      g.strokeStyle = "#b8862b"; g.lineWidth = 2; g.beginPath(); g.moveTo(ex, y + edy); g.lineTo(ex, y + edy + b.h); g.stroke();   /* rojtszegély zsinór */
+      g.restore();
+    }
     g.globalAlpha = 1;
     /* elöl fa tartórúd fémvégekkel, a rúdtól kantárkötelek futnak össze a vontatókötél szeméhez; hátul súlyozott rúd */
     if (clothA > 0) {
@@ -3097,9 +3128,8 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       g.strokeStyle = pg; g.lineWidth = 4; g.beginPath(); g.moveTo(x, y - 6); g.lineTo(x, y + b.h + 6); g.stroke();
       g.fillStyle = "#9aa3ad"; g.fillRect(x - 2.5, y - 8, 5, 3); g.fillRect(x - 2.5, y + b.h + 5, 5, 3);
       if (wave > .5) { g.strokeStyle = "rgba(60,60,60,.85)"; g.lineWidth = 1; const kx = x - 26, ky = y + b.h / 2; [y - 5, y + b.h * .5, y + b.h + 5].forEach((yy) => { g.beginPath(); g.moveTo(x, yy); g.lineTo(kx, ky); g.stroke(); }); g.fillStyle = "#c9a25a"; g.beginPath(); g.arc(kx, ky, 2.4, 0, 7); g.fill(); }
-      const ex = x + b.w, edy = Math.sin((N - 1) * .42 - t * 10) * wave * 1.4;
-      g.strokeStyle = "#3b4654"; g.lineWidth = 3; g.beginPath(); g.moveTo(ex, y + edy - 3); g.lineTo(ex, y + edy + b.h + 3); g.stroke();
-      g.fillStyle = "#2d3846"; g.beginPath(); g.arc(ex, y + edy + b.h + 5, 3, 0, 7); g.fill();
+      /* a rúd tetején aranygomb */
+      const kg = g.createRadialGradient(x - 1.5, y - 11, .5, x, y - 10, 4.5); kg.addColorStop(0, "#fff4c2"); kg.addColorStop(1, "#a8801f"); g.fillStyle = kg; g.beginPath(); g.arc(x, y - 10, 4.5, 0, 7); g.fill();
       g.restore();
     }
   }
@@ -3291,10 +3321,10 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
         else {
           const r = ft - relAt, d = v * .45;                                   /* lendületből, lassulva áll be */
           bx = ban.tx + d * Math.exp(-r * 2.4);
-          wave = 5 * ps * Math.exp(-r * 1.5); rope = r < .35;
-          clothA = clamp(1 - (r - .9) / .9, 0, 1); whiteK = clamp((r - .9) / .9, 0, 1);
-          if (r > 2.0 && !html.classList.contains("la-hello")) html.classList.add("la-hello");
-          if (r > 2.6) { ban.gone = true; if (!html.classList.contains("la-cta")) html.classList.add("la-cta"); }
+          wave = 5 * ps * Math.exp(-r * 1.5) + 1.6 * ps * clamp(1 - (r - 3.2) / 1.2, 0, 1); rope = r < .35;   /* a szélben a megállás után is finoman lobog */
+          clothA = clamp(1 - (r - 3.2) / 1.2, 0, 1); whiteK = clamp((r - 3.2) / 1.2, 0, 1);   /* a zászló kisimulva ~3 mp-ig lobog a helyén, aztán átadja a feliratot */
+          if (r > 4.3 && !html.classList.contains("la-hello")) html.classList.add("la-hello");
+          if (r > 4.5) { ban.gone = true; if (!html.classList.contains("la-cta")) html.classList.add("la-cta"); }
         }
         if (!ban.gone) front.push(() => {
           if (rope) { g.strokeStyle = "rgba(60,60,60,.85)"; g.lineWidth = Math.max(1, 1.2 * ps); g.beginPath(); g.moveTo(px + 58 * ps, py - 1 * ps); g.quadraticCurveTo((px + 58 * ps + bx - 26) / 2, Math.max(py, by + ban.h / 2) + 8 * ps, bx - 26, by + ban.h / 2); g.stroke(); }
