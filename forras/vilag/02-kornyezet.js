@@ -69,7 +69,7 @@
   function makeWater(parent, opt) {
     opt = opt || {};
     /* poláris háló: középen sűrű (a hajó körül), kifelé ritkul – 1,6 km sugárig */
-    const RINGS = opt.rings || 110, SEG = opt.seg || 150, R0 = .6, RMAX = opt.rmax || 1600;
+    const RINGS = Math.max(opt.rings || 0, 140), SEG = Math.max(opt.seg || 0, 240), R0 = .5, RMAX = opt.rmax || 1600;
     const pos = [], idx = [];
     for (let i = 0; i <= RINGS; i++) { const r = i === 0 ? 0 : R0 * Math.pow(RMAX / R0, (i - 1) / (RINGS - 1)); for (let j = 0; j < SEG; j++) { const a = j / SEG * TAU; pos.push(Math.cos(a) * r, 0, Math.sin(a) * r); } }
     for (let i = 0; i < RINGS; i++) for (let j = 0; j < SEG; j++) { const a = i * SEG + j, b = i * SEG + (j + 1) % SEG, c = (i + 1) * SEG + j, d = (i + 1) * SEG + (j + 1) % SEG; idx.push(a, c, b, b, c, d); }
@@ -83,7 +83,7 @@
         uSunC: { value: new THREE.Color(1, .95, .82) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 } },
       vertexShader: `
         uniform float uT, uWind; uniform vec2 uOff; uniform vec4 uW[5];
-        varying vec3 vP; varying vec3 vN; varying float vDist;
+        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
         void main(){
           vec3 p = position; vec2 w = p.xz + uOff; float fadeD = 1. - smoothstep(60., 420., length(p.xz));
           vec3 disp = vec3(0.); vec3 n = vec3(0.,1.,0.);
@@ -94,42 +94,59 @@
             n.x -= D.x * k * A * cos(f); n.z -= D.y * k * A * cos(f); n.y -= Q * k * A * sin(f);
           }
           p += disp; vec4 wp = modelMatrix * vec4(p, 1.); vP = vec3(w.x + disp.x, p.y, w.y + disp.z); vN = normalize(n);
-          vDist = length(p.xz);
+          vDist = length(p.xz); vW = w;
           gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust;
-        varying vec3 vP; varying vec3 vN; varying float vDist;
+        uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5];
+        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-        float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
+        float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*f*(f*(f*6.-15.)+10.); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
         void main(){
           vec2 wd = vec2(cos(uWind), sin(uWind));
-          /* apró fodrok (2 réteg, a szél irányában vándorol) – a távolban elhalványul */
-          float fa = 1. - smoothstep(30., 260., vDist);
-          vec2 q1 = vP.xz * 1.9 - wd * uT * 1.3, q2 = vP.xz * 4.7 + vec2(-wd.y, wd.x) * uT * .9;
-          float e = .06;
-          vec2 g1 = vec2(vn(q1 + vec2(e,0)) - vn(q1 - vec2(e,0)), vn(q1 + vec2(0,e)) - vn(q1 - vec2(0,e))) / (2.*e);
-          vec2 g2 = vec2(vn(q2 + vec2(e,0)) - vn(q2 - vec2(e,0)), vn(q2 + vec2(0,e)) - vn(q2 - vec2(0,e))) / (2.*e);
-          /* széllökés-foltok: sötétebb, fodrosabb sávok vándorolnak a vízen */
-          float gust = smoothstep(.45, .8, vn(vP.xz * .012 - wd * uT * .05 + uGust * 3.));
-          vec3 n = normalize(vN + vec3(g1.x * .07 + g2.x * .035, 0., g1.y * .07 + g2.y * .035) * fa * (1. + gust * .9));
-          /* nézési irány a fragmenshez (világkoordináta) */
+          float fadeD = 1. - smoothstep(60., 420., vDist), fa = 1. - smoothstep(25., 240., vDist), fb = 1. - smoothstep(8., 70., vDist);
+          /* a nagy (Gerstner) hullámok normálisa PIXELENKÉNT számolva – így sima, nem lapos-sokszöges (nem „kockás”) */
+          vec3 n = vec3(0., 1., 0.); float crest = 0.;
+          for (int i = 0; i < 5; i++){
+            float dir = uWind + uW[i].x, k = uW[i].y, A = uW[i].z * fadeD, Q = uW[i].w, c = sqrt(9.81 / k);
+            vec2 D = vec2(cos(dir), sin(dir)); float f = k * dot(D, vW) - k * c * uT;
+            n.x -= D.x * k * A * cos(f); n.z -= D.y * k * A * cos(f); n.y -= Q * k * A * sin(f); crest += A * k * max(0., sin(f));
+          }
+          /* fodrok: 10 apró, különböző irányú és hosszúságú hullám (analitikus – nincs rácsminta) + egy finomabb réteg közelre */
+          vec2 g = vec2(0.);
+          for (int i = 0; i < 7; i++){ float fi = float(i); float ang = uWind + (fi - 3.) * .45 + sin(fi * 12.9898) * .25; vec2 D = vec2(cos(ang), sin(ang));
+            float k = 2.4 + fi * 1.55 + sin(fi * 7.3) * .4, w = sqrt(9.81 * k), a = .02 / (1. + fi * .32);
+            float ph = k * dot(D, vW) - w * uT + fi * 1.913; g += D * (k * a * cos(ph)); }
+          vec2 g3 = vec2(0.);
+          for (int i = 0; i < 4; i++){ float fi = float(i); float ang = uWind + 1.9 * sin(fi * 2.3 + 1.); vec2 D = vec2(cos(ang), sin(ang)); float k = 14. + fi * 6.5, w = sqrt(9.81 * k), a = .006 / (1. + fi * .4);
+            float ph = k * dot(D, vW) - w * uT + fi * 2.7; g3 += D * (k * a * cos(ph)); }
+          float gust = smoothstep(.45, .8, vn(vW * .012 - wd * uT * .05 + uGust * 3.));
+          n = normalize(n + vec3(-(g.x * fa + g3.x * fb) * (1. + gust * .8), 0., -(g.y * fa + g3.y * fb) * (1. + gust * .8)));
           vec3 P = vec3(vP.x, vP.y, vP.z);
           vec3 view = normalize(uCam - P);
-          float fres = .02 + .98 * pow(1. - max(dot(n, view), 0.), 5.);
+          float ndv = max(dot(n, view), 0.);
+          float fres = .02 + .98 * pow(1. - ndv, 5.);
           vec3 refl = reflect(-view, n); float el = clamp(refl.y, 0., 1.);
           vec3 sky = mix(uSkyH, uSkyZ, pow(el, .45));
-          vec3 base = mix(uShallow, uDeep, clamp(.5 + n.x * 2.5, 0., 1.)) * (1. - gust * .18) * uLight;
-          vec3 col = mix(base, sky, fres * .7);
-          float sp = pow(max(dot(refl, uSun), 0.), 380.) * 7. + pow(max(dot(refl, uSun), 0.), 40.) * .25;
+          /* mélységérzet: a hullám hátán világosabb, a völgyben sötétebb; a napfény átsüt a taraj vékony részén (zöldes) */
+          vec3 base = mix(uDeep, uShallow, clamp(.35 + crest * 1.6 + n.x * .8, 0., 1.)) * (1. - gust * .16) * uLight;
+          float sss = pow(max(dot(view, -uSun), 0.), 4.) * clamp(crest * 3., 0., 1.);
+          base += vec3(.05, .16, .12) * sss * uLight;
+          vec3 col = mix(base, sky, fres * .75);
+          float rs = max(dot(refl, uSun), 0.);
+          float sp = pow(rs, 520.) * 9. + pow(rs, 90.) * .55 + pow(rs, 18.) * .06;
           col += uSunC * sp * uSpec * (1. - gust * .3);
-          /* hullámtaraj: halvány fehér hab a meredek részeken */
-          col = mix(col, vec3(.92,.95,.95) * uLight, smoothstep(.72, .95, 1. - n.y) * .45 * fa);
-          /* pára a horizont felé */
+          /* hab: a meredek tarajokon és a szél irányában húzódó csíkokban (a közelben részletesebb) */
+          float steep = smoothstep(.10, .26, crest);
+          float streak = smoothstep(.62, .9, vn(vec2(dot(vW, wd) * .35, dot(vW, vec2(-wd.y, wd.x)) * 2.2) - vec2(uT * .25, 0.)));
+          float foam = clamp(steep * (.35 + .65 * streak) * fa + gust * steep * .2, 0., 1.);
+          col = mix(col, vec3(.93, .96, .97) * uLight, foam * .55);
           float hz = smoothstep(250., 1550., vDist);
           col = mix(col, uHaze, hz * .85);
           gl_FragColor = vec4(col, 1.);
           #include <colorspace_fragment>
+
+
         }`
     });
     W.disposables.push(mat);

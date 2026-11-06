@@ -190,7 +190,7 @@
   function makeWater(parent, opt) {
     opt = opt || {};
     /* poláris háló: középen sűrű (a hajó körül), kifelé ritkul – 1,6 km sugárig */
-    const RINGS = opt.rings || 110, SEG = opt.seg || 150, R0 = .6, RMAX = opt.rmax || 1600;
+    const RINGS = Math.max(opt.rings || 0, 140), SEG = Math.max(opt.seg || 0, 240), R0 = .5, RMAX = opt.rmax || 1600;
     const pos = [], idx = [];
     for (let i = 0; i <= RINGS; i++) { const r = i === 0 ? 0 : R0 * Math.pow(RMAX / R0, (i - 1) / (RINGS - 1)); for (let j = 0; j < SEG; j++) { const a = j / SEG * TAU; pos.push(Math.cos(a) * r, 0, Math.sin(a) * r); } }
     for (let i = 0; i < RINGS; i++) for (let j = 0; j < SEG; j++) { const a = i * SEG + j, b = i * SEG + (j + 1) % SEG, c = (i + 1) * SEG + j, d = (i + 1) * SEG + (j + 1) % SEG; idx.push(a, c, b, b, c, d); }
@@ -204,7 +204,7 @@
         uSunC: { value: new THREE.Color(1, .95, .82) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 } },
       vertexShader: `
         uniform float uT, uWind; uniform vec2 uOff; uniform vec4 uW[5];
-        varying vec3 vP; varying vec3 vN; varying float vDist;
+        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
         void main(){
           vec3 p = position; vec2 w = p.xz + uOff; float fadeD = 1. - smoothstep(60., 420., length(p.xz));
           vec3 disp = vec3(0.); vec3 n = vec3(0.,1.,0.);
@@ -215,42 +215,59 @@
             n.x -= D.x * k * A * cos(f); n.z -= D.y * k * A * cos(f); n.y -= Q * k * A * sin(f);
           }
           p += disp; vec4 wp = modelMatrix * vec4(p, 1.); vP = vec3(w.x + disp.x, p.y, w.y + disp.z); vN = normalize(n);
-          vDist = length(p.xz);
+          vDist = length(p.xz); vW = w;
           gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust;
-        varying vec3 vP; varying vec3 vN; varying float vDist;
+        uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5];
+        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-        float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
+        float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*f*(f*(f*6.-15.)+10.); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
         void main(){
           vec2 wd = vec2(cos(uWind), sin(uWind));
-          /* apró fodrok (2 réteg, a szél irányában vándorol) – a távolban elhalványul */
-          float fa = 1. - smoothstep(30., 260., vDist);
-          vec2 q1 = vP.xz * 1.9 - wd * uT * 1.3, q2 = vP.xz * 4.7 + vec2(-wd.y, wd.x) * uT * .9;
-          float e = .06;
-          vec2 g1 = vec2(vn(q1 + vec2(e,0)) - vn(q1 - vec2(e,0)), vn(q1 + vec2(0,e)) - vn(q1 - vec2(0,e))) / (2.*e);
-          vec2 g2 = vec2(vn(q2 + vec2(e,0)) - vn(q2 - vec2(e,0)), vn(q2 + vec2(0,e)) - vn(q2 - vec2(0,e))) / (2.*e);
-          /* széllökés-foltok: sötétebb, fodrosabb sávok vándorolnak a vízen */
-          float gust = smoothstep(.45, .8, vn(vP.xz * .012 - wd * uT * .05 + uGust * 3.));
-          vec3 n = normalize(vN + vec3(g1.x * .07 + g2.x * .035, 0., g1.y * .07 + g2.y * .035) * fa * (1. + gust * .9));
-          /* nézési irány a fragmenshez (világkoordináta) */
+          float fadeD = 1. - smoothstep(60., 420., vDist), fa = 1. - smoothstep(25., 240., vDist), fb = 1. - smoothstep(8., 70., vDist);
+          /* a nagy (Gerstner) hullámok normálisa PIXELENKÉNT számolva – így sima, nem lapos-sokszöges (nem „kockás”) */
+          vec3 n = vec3(0., 1., 0.); float crest = 0.;
+          for (int i = 0; i < 5; i++){
+            float dir = uWind + uW[i].x, k = uW[i].y, A = uW[i].z * fadeD, Q = uW[i].w, c = sqrt(9.81 / k);
+            vec2 D = vec2(cos(dir), sin(dir)); float f = k * dot(D, vW) - k * c * uT;
+            n.x -= D.x * k * A * cos(f); n.z -= D.y * k * A * cos(f); n.y -= Q * k * A * sin(f); crest += A * k * max(0., sin(f));
+          }
+          /* fodrok: 10 apró, különböző irányú és hosszúságú hullám (analitikus – nincs rácsminta) + egy finomabb réteg közelre */
+          vec2 g = vec2(0.);
+          for (int i = 0; i < 7; i++){ float fi = float(i); float ang = uWind + (fi - 3.) * .45 + sin(fi * 12.9898) * .25; vec2 D = vec2(cos(ang), sin(ang));
+            float k = 2.4 + fi * 1.55 + sin(fi * 7.3) * .4, w = sqrt(9.81 * k), a = .02 / (1. + fi * .32);
+            float ph = k * dot(D, vW) - w * uT + fi * 1.913; g += D * (k * a * cos(ph)); }
+          vec2 g3 = vec2(0.);
+          for (int i = 0; i < 4; i++){ float fi = float(i); float ang = uWind + 1.9 * sin(fi * 2.3 + 1.); vec2 D = vec2(cos(ang), sin(ang)); float k = 14. + fi * 6.5, w = sqrt(9.81 * k), a = .006 / (1. + fi * .4);
+            float ph = k * dot(D, vW) - w * uT + fi * 2.7; g3 += D * (k * a * cos(ph)); }
+          float gust = smoothstep(.45, .8, vn(vW * .012 - wd * uT * .05 + uGust * 3.));
+          n = normalize(n + vec3(-(g.x * fa + g3.x * fb) * (1. + gust * .8), 0., -(g.y * fa + g3.y * fb) * (1. + gust * .8)));
           vec3 P = vec3(vP.x, vP.y, vP.z);
           vec3 view = normalize(uCam - P);
-          float fres = .02 + .98 * pow(1. - max(dot(n, view), 0.), 5.);
+          float ndv = max(dot(n, view), 0.);
+          float fres = .02 + .98 * pow(1. - ndv, 5.);
           vec3 refl = reflect(-view, n); float el = clamp(refl.y, 0., 1.);
           vec3 sky = mix(uSkyH, uSkyZ, pow(el, .45));
-          vec3 base = mix(uShallow, uDeep, clamp(.5 + n.x * 2.5, 0., 1.)) * (1. - gust * .18) * uLight;
-          vec3 col = mix(base, sky, fres * .7);
-          float sp = pow(max(dot(refl, uSun), 0.), 380.) * 7. + pow(max(dot(refl, uSun), 0.), 40.) * .25;
+          /* mélységérzet: a hullám hátán világosabb, a völgyben sötétebb; a napfény átsüt a taraj vékony részén (zöldes) */
+          vec3 base = mix(uDeep, uShallow, clamp(.35 + crest * 1.6 + n.x * .8, 0., 1.)) * (1. - gust * .16) * uLight;
+          float sss = pow(max(dot(view, -uSun), 0.), 4.) * clamp(crest * 3., 0., 1.);
+          base += vec3(.05, .16, .12) * sss * uLight;
+          vec3 col = mix(base, sky, fres * .75);
+          float rs = max(dot(refl, uSun), 0.);
+          float sp = pow(rs, 520.) * 9. + pow(rs, 90.) * .55 + pow(rs, 18.) * .06;
           col += uSunC * sp * uSpec * (1. - gust * .3);
-          /* hullámtaraj: halvány fehér hab a meredek részeken */
-          col = mix(col, vec3(.92,.95,.95) * uLight, smoothstep(.72, .95, 1. - n.y) * .45 * fa);
-          /* pára a horizont felé */
+          /* hab: a meredek tarajokon és a szél irányában húzódó csíkokban (a közelben részletesebb) */
+          float steep = smoothstep(.10, .26, crest);
+          float streak = smoothstep(.62, .9, vn(vec2(dot(vW, wd) * .35, dot(vW, vec2(-wd.y, wd.x)) * 2.2) - vec2(uT * .25, 0.)));
+          float foam = clamp(steep * (.35 + .65 * streak) * fa + gust * steep * .2, 0., 1.);
+          col = mix(col, vec3(.93, .96, .97) * uLight, foam * .55);
           float hz = smoothstep(250., 1550., vDist);
           col = mix(col, uHaze, hz * .85);
           gl_FragColor = vec4(col, 1.);
           #include <colorspace_fragment>
+
+
         }`
     });
     W.disposables.push(mat);
@@ -1408,6 +1425,10 @@
     w.spin.add(H); H.position.set(-Math.sin(b) * w.WR, Math.cos(b) * w.WR, 0); H.rotation.set(0, 0, b);
   }
   const WA_MAX = 1.25 * Math.PI;
+  /* oldalerő-tényező a látszólagos szélszög szerint (0–1): kileng (≤18°) → 0, éles szél 30–55° → 1, félszél 90° → 0,8, bővszél 130° → 0,3, hátszél → ~0,08 */
+  function heelCs(awa) { if (awa < 18) return 0; if (awa < 30) return (awa - 18) / 12; if (awa < 55) return 1; if (awa < 90) return 1 - (awa - 55) / 35 * .2; if (awa < 130) return .8 - (awa - 90) / 40 * .5; return Math.max(.06, .3 - (awa - 130) / 50 * .24); }
+  const HEEL_KR = 205;   /* felállító nyomaték (normált) – kb. 18° dőlés cirkálásban ~22 csomós látszólagos szélben */
+  function heelEq(awa, aws) { const F = aws * aws * heelCs(awa); let th = .2; for (let i = 0; i < 4; i++) th = Math.asin(clamp(F * Math.pow(Math.cos(th), 1.3) / HEEL_KR, 0, .9)); return th; }
   const VR_SPD = 1.95;   /* sebesség-szorzó: a 15 m-es versenyjacht 9–16 csomóval száguld (élmény), a pályák rövidebbek lesznek */   /* ütközéstől ütközésig ~2,5 fordulat (mint egy nagy jachton) */
   /* --------------------------------------------------------------- képkocka */
   function vrTick(dt) {
@@ -1449,7 +1470,8 @@
     S.wf = C.wf + Math.sin(S.t / 47 + C.lvl) * 7 * D2R + Math.sin(S.t / 13) * 2 * D2R;
     const twa = Math.abs(wrapA(S.wf - S.b)) * R2D;
     S.spinOn = S.spinOn ? twa > 98 : twa > 108; const spin = S.spinOn && S.st === "race";   /* hátszélben (és széles hátszélben) felhúzzák a spinakkert */
-    const vt = polar(twa, spin) * KN * VR_SPD * (S.st === "pre" ? .7 : 1) * (S.tws / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
+    S.gk = 1 + .13 * Math.sin(S.t * .31 + C.lvl) * Math.sin(S.t * .173 + 1) + .05 * Math.sin(S.t * 1.07);   /* széllökések: ±15% */
+    const vt = polar(twa, spin) * KN * VR_SPD * (S.heelPen || 1) * (S.st === "pre" ? .7 : 1) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
     /* gyorsabban gyorsul (a nagy vitorlafelület húz), a kormány fékez egy kicsit, ha nagyon el van tekerve */
     S.v += (vt - S.v) * Math.min(1, dt / (vt > S.v ? 2.8 : 5)); S.v *= 1 - Math.abs(S.del) * .16 * dt;
     /* fordulás: sebességfüggő, de lassan is kormányozható; kis tehetetlenséggel (nem ugrik, de jól reagál) */
@@ -1457,16 +1479,28 @@
     S.b = (S.b + S.yr * dt + TAU) % TAU;
     const [fx, fz] = vfwd(S.b); S.x += fx * S.v * dt; S.z += fz * S.v * dt;
     /* látszólagos szél, vitorlák, dőlés */
-    const wfv = vfwd(S.wf), tw = [wfv[0] * S.tws, wfv[1] * S.tws], aw = [tw[0] + fx * S.v, tw[1] + fz * S.v], aws = Math.hypot(aw[0], aw[1]);
+    const wfv = vfwd(S.wf), tw = [wfv[0] * S.tws * S.gk, wfv[1] * S.tws * S.gk], aw = [tw[0] + fx * S.v, tw[1] + fz * S.v], aws = Math.hypot(aw[0], aw[1]);
     const awa = Math.acos(clamp((aw[0] * fx + aw[1] * fz) / (aws || 1), -1, 1)) * R2D;
     const port = [fz, -fx], side = (wfv[0] * port[0] + wfv[1] * port[1]) > 0 ? -1 : 1;
     if (side !== S.lastSide) { if (S.lastSide) { S.tackT = 3.4; flap(.16); setTimeout(winch, 1500); setTimeout(winch, 2300); } S.lastSide = side; }
     S.tackT = Math.max(0, S.tackT - dt);
     const BS = S.boat.userData.S; BS.side = side; BS.boom = clamp((awa - 22) * .72, 5, 80) * D2R * side; BS.jib = clamp((awa - 22) * .5, 7, 50) * D2R;
     BS.luff = Math.max(clamp(1 - (awa - 16) / 16, 0, 1), S.tackT > 1.4 ? .7 : 0); BS.spin += ((spin ? 1 : 0) - BS.spin) * Math.min(1, dt * .4);
-    const heelT = clamp(Math.sin(clamp(awa, 0, 180) * D2R) ** 1.5 * (aws / (14 * KN)) ** 2 * 16, 0, 18) * D2R * (1 - BS.luff * .7) * (1 - BS.spin * .5);
-    S.heel += (heelT - S.heel) * Math.min(1, dt * .7);
-    BS.heel = -side * S.heel * .45;   /* a saját hajó dőlése visszafogott – ne émelyítsen */
+    /* DŐLÉS – fizikai modell (kutatás alapján): a dőlő nyomaték ∝ látszólagos szélsebesség² × oldalerő-tényező(látszólagos szélszög) × cos^1,3(dőlés),
+       a felállító nyomaték ∝ sin(dőlés). Az oldalerő éles szélben (cirkálás, 25–55°) a legnagyobb, félszélben kisebb (több hajtás, kevesebb dőlés),
+       hátszélben szinte nulla (ott a spinakker inkább ringat). Felfelé fordulva nő a látszólagos szél és a dőlés, leesve csökken.
+       Mozgásegyenlet csillapított lengéssel (~4,5 s sajátperiódus) – a széllökésre túllendül, majd beáll. */
+    { /* a dőléshez a „valódi” (gyorsítás nélküli) hajósebességből számolt látszólagos szél kell – különben a VR-gyorsítás miatt a szél túl előre fordulna */
+      const vR = S.v / VR_SPD, awH = [tw[0] + fx * vR, tw[1] + fz * vR], awsH = Math.hypot(awH[0], awH[1]), awaH = Math.acos(clamp((awH[0] * fx + awH[1] * fz) / (awsH || 1), -1, 1)) * R2D;
+      const luffH = Math.max(clamp(1 - (awaH - 14) / 12, 0, 1), S.tackT > 1.4 ? .7 : 0);
+      const F = (awsH * awsH) * heelCs(awaH) * (1 - luffH * .85) * (1 - BS.spin * .75 * clamp((awaH - 75) / 55, 0, 1)) * (1 + BS.spin * .5 * clamp(1 - (awaH - 75) / 45, 0, 1)), th = S.heel || 0, w0 = 1.4, zeta = .38;
+      let M = (F * Math.pow(Math.cos(th), 1.3) - HEEL_KR * Math.sin(th)) / HEEL_KR;
+      if (BS.spin > .5) M += Math.sin(.065) * Math.sin(W.t * 1.25) * clamp(aws / 9, 0, 1.4) * BS.spin;   /* spinakker alatt hátszélben ringatózás (oldalra-oldalra) */
+      S.heelV = (S.heelV || 0) + (M * w0 * w0 - 2 * zeta * w0 * (S.heelV || 0)) * dt; S.heel = clamp(th + S.heelV * dt, -.2, .62);
+      S.heelPen = S.heel > 22 * D2R ? 1 - (S.heel - 22 * D2R) / (30 * D2R) * .3 : 1;   /* túl nagy dőlésnél a hajó nem gyorsul tovább (kevésbé hatékony) */
+      /* luvgierigkeit: dőlésben a hajó a szél felé „húz” – a kormánnyal kell ellentartani */
+      S.yr += Math.sign(wrapA(S.wf - S.b)) * Math.max(0, S.heel) * .1 * Math.min(1, S.v / 5) * dt * 3; }
+    BS.heel = -side * S.heel * .78;   /* látványban kicsit visszafogva (a kormányos helye le van horgonyozva) */
     /* mozgás a hullámokon: a lassú hajót dobálja a víz (jobban ring), a száguldó hajó kisimul – csak néha ugrik meg egy-egy hullámon */
     const hb = waveAt(S.x + fx * 6, S.z + fz * 6, W.t), hs2 = waveAt(S.x - fx * 6, S.z - fz * 6, W.t);
     const rockK = clamp(1.25 - S.v / 8, .28, 1.25);
@@ -1588,7 +1622,8 @@
     const OS = r.g.userData.S, wfv = vfwd(S.wf), yaw = r.g.rotation.y, Xv = [Math.cos(yaw), -Math.sin(yaw)];
     OS.side = (wfv[0] * Xv[0] + wfv[1] * Xv[1]) > 0 ? -1 : 1; OS.boom = clamp((twa - 28) * .78, 7, 82) * D2R * OS.side; OS.jib = clamp((twa - 28) * .55, 8, 52) * D2R; OS.luff = clamp(1 - (twa - 18) / 18, 0, 1);
     OS.spin += ((spin ? 1 : 0) - OS.spin) * Math.min(1, dt * .35);
-    OS.heel = -OS.side * clamp(Math.sin(twa * D2R) ** 1.4 * 18, 0, 22) * D2R * (1 - OS.spin * .6); OS.pitch = Math.sin(W.t * 1.2 + r.ph) * .025;
+    { const tw2 = [wfv[0] * S.tws * (S.gk || 1), wfv[1] * S.tws * (S.gk || 1)], aw2 = [tw2[0] + f[0] * r.v / VR_SPD, tw2[1] + f[1] * r.v / VR_SPD], aws2 = Math.hypot(aw2[0], aw2[1]), awa2 = Math.acos(clamp((aw2[0] * f[0] + aw2[1] * f[1]) / (aws2 || 1), -1, 1)) * R2D;
+      r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 : 0); } OS.pitch = Math.sin(W.t * 1.2 + r.ph) * .025;
     const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.g.userData.update(dt);   /* minden képkockán, távol is (ne „ugráljon” a vitorla) */
     r.wk.push(r.x, r.z, r.g.rotation.y, r.v, dt, .05);
     /* névtábla a hajó fölött (helyezéssel), 25–220 m között látszik */
