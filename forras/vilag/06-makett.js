@@ -168,13 +168,13 @@
         const bg = g.createLinearGradient(0, 0, 0, CH); bg.addColorStop(0, "rgba(16,56,104,.95)"); bg.addColorStop(1, "rgba(7,28,58,.95)");
         g.fillStyle = bg; g.beginPath(); g.roundRect ? g.roundRect(6, 6, CW - 12, CH - 12, 46) : g.rect(6, 6, CW - 12, CH - 12); g.fill(); g.lineWidth = 7; g.strokeStyle = "#ffd166"; g.stroke();
         g.fillStyle = "#ffd166"; g.font = "800 58px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Így irányítod a kezeddel", CW / 2, 70);
-        [["🖐", "Bal tenyér felfelé", "előjön a csuklómenü"], ["🤏🤏", "Két kézzel csippents", "és húzd szét: nagyobb lesz"], ["👉", "Mutass és csippents", "egy lakásra, a padlóra, egy halra"]].forEach(([ic, a1, a2], i) => {
+        [["🖐", "Bal tenyér fel", "előjön a csuklómenü"], ["🤏🤏", "Két kéz csippent", "széthúzva nő a ház"], ["👉", "Mutass, csippents", "lakásra, padlóra, halra"]].forEach(([ic, a1, a2], i) => {
           const x = 200 + i * 400; g.fillStyle = "rgba(255,255,255,.1)"; g.beginPath(); g.roundRect ? g.roundRect(x - 180, 130, 360, 330, 30) : g.rect(x - 180, 130, 360, 330); g.fill();
           g.font = "100px system-ui, sans-serif"; g.fillStyle = "#fff"; g.fillText(ic, x, 240); g.font = "800 36px system-ui, sans-serif"; g.fillText(a1, x, 360); g.font = "600 30px system-ui, sans-serif"; g.fillStyle = "#cfe3f5"; g.fillText(a2, x, 410); });
         g.fillStyle = "#fff"; g.font = "600 30px system-ui, sans-serif"; g.fillText("Csippents erre a táblára, és eltűnik", CW / 2, 510);
       });
       const hc = mesh(new THREE.PlaneGeometry(.9, .9 * CH / CW), basic({ map: tx, transparent: true, depthTest: false, depthWrite: false }), root); hc.renderOrder = 997;
-      placeFacing(hc, 1.0, -.05, 0); MAQ.help = hc; MAQ.helpT = 25;
+      placeFacing(hc, 1.0, .12, 0); MAQ.help = hc; MAQ.helpT = 25;
       hc.userData.xr = { click: () => { hc.visible = false; T.xr.extra.delete(hc); } }; T.xr.extra.add(hc); W.objs.push(hc);
     }
     W.maq = { MAQ, ENV, UW, goLife, goTable, goDive, goSurface, setPreset, stepScale, nudgeHour, toggleSights };   /* tesztekhez */
