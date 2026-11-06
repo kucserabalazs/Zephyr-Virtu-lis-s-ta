@@ -13723,7 +13723,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     function step(dt) {
       S.t += dt;
       if (S.anim) { S.anim.t += dt; if (S.anim.t >= S.anim.dur) { const [x, y] = sqXY(S.anim.m.t); S.ripples.push({ x, y, t: 0, k: S.anim.m.p.toLowerCase() === "n" ? 1.6 : 1 }); S.anim = null; maybeAI(); } }
-      S.sink.forEach((q) => { q.t += dt; if (q.t > 0 && !q.rip) { q.rip = 1; const [x, y] = sqXY(q.sq); S.ripples.push({ x, y, t: 0, k: 1.8 }); gmSnd.splash(.25); } }); S.sink = S.sink.filter((q) => q.t < 1.6);
+      S.sink.forEach((q) => { q.t += dt; if (q.t > 0 && !q.rip) { q.rip = 1; const [x, y] = sqXY(q.sq); S.ripples.push({ x, y, t: 0, k: 1.8 }); gmSnd.splash(.25);
+        S.drops = S.drops || []; for (let k = 0; k < 16; k++) { const a = Math.random() * TAU, v = (.6 + Math.random()) * L.sq * 1.6; S.drops.push({ x, y, vx: Math.cos(a) * v * .6, vy: -Math.abs(Math.sin(a)) * v - L.sq, t: 0, r: L.sq * (.02 + Math.random() * .025) }); } } }); S.sink = S.sink.filter((q) => q.t < 1.6);
+      (S.drops || []).forEach((d) => { d.t += dt; d.x += d.vx * dt; d.y += d.vy * dt; d.vy += L.sq * 9 * dt; }); if (S.drops) S.drops = S.drops.filter((d) => d.t < .9);
       S.ripples.forEach((r) => { r.t += dt; }); S.ripples = S.ripples.filter((r) => r.t < 1.4);
       S.conf.forEach((c) => { c.x += c.vx * dt; c.y += c.vy * dt; c.r += c.vr * dt; }); S.conf = S.conf.filter((c) => c.y < 1.2);
     }
@@ -13749,6 +13751,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (S.sel >= 0) { const [x, y] = sqXY(S.sel); g.strokeStyle = "#ffd166"; g.lineWidth = Math.max(2, sq * .06); g.strokeRect(x - sq / 2 + 2, y - sq / 2 + 2, sq - 4, sq - 4); }
       S.moves.forEach((m) => { const [x, y] = sqXY(m.t); const cap = m.c !== "."; g.strokeStyle = cap ? "rgba(255,90,80,.95)" : "rgba(255,255,255,.85)"; g.lineWidth = Math.max(2, sq * .055);
         g.beginPath(); g.arc(x, y, sq * (cap ? .42 : .17 + .02 * Math.sin(S.t * 5)), 0, TAU); g.stroke(); if (!cap) { g.fillStyle = "rgba(255,255,255,.25)"; g.fill(); } });
+      /* fröccsenő vízcseppek ütéskor */
+      (S.drops || []).forEach((d) => { g.fillStyle = `rgba(235,250,255,${Math.max(0, 1 - d.t / .9)})`; g.beginPath(); g.arc(d.x, d.y, d.r, 0, TAU); g.fill(); });
       /* hullámgyűrűk */
       S.ripples.forEach((r) => { const k = r.t / 1.4; g.strokeStyle = `rgba(255,255,255,${(1 - k) * .8})`; g.lineWidth = Math.max(1, sq * .04 * (1 - k)); g.beginPath(); g.ellipse(r.x, r.y + sq * .06, sq * (.2 + k * .6) * r.k, sq * (.08 + k * .25) * r.k, 0, 0, TAU); g.stroke(); });
       /* a bábuk soronként felülről lefelé (az elöl lévők takarják a hátsókat); a mozgó hajó külön */
