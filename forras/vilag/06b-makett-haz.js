@@ -226,6 +226,8 @@
     cyl("#7f868c|m", -.6, 0, Z_END + 2.2, .05, Y1 + 1.0);
     { const pts = []; for (let k = 0; k <= 40; k++) { const a = k / 40 * 14 * .45; pts.push(new THREE.Vector3(-.6 + Math.cos(a) * .78, .2 * (k / 40 * 14 + 1) + .9, Z_END + 2.2 + Math.sin(a) * .78)); }
       add("steel", new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, .02, 6)); }
+    /* lábazat: sötétebb, kissé kiugró sáv a ház alján (fröccsenő víz ellen) */
+    [[-.02, -.02, OUT_W + .02, .02], [-.02, Z_END - .02, OUT_W + .02, Z_END + .02], [-.02, -.02, .02, Z_END + .02], [OUT_W - .02, -.02, OUT_W + .02, Z_END + .02]].forEach(([x0, z0, x1, z1]) => box("#8d8781", x0, 0, z0, x1, .14, z1, 0));
     /* esőcsatorna-lefolyók a sarkokon */
     [[-.06, -.06], [OUT_W + .06, -.06], [-.06, Z_END + .06], [OUT_W + .06, Z_END + .06]].forEach(([x, z]) => cyl("#8a9096|m", x, 0, z, .05, 2 * FLOOR_H + .4));
     /* lapos tető attikával, fedkővel, szellőzőkkel – mennyezetként is (életnagyságban) */

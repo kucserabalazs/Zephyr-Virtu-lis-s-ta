@@ -320,8 +320,8 @@
     MAQ.sights = !MAQ.sights;
     if (!MAQ.sightL) {
       MAQ.sightL = SIGHTS.map(([b, e, n, l1, l2]) => {
-        const sp = labelSprite([n, l1], { size: 26, fs: 52, w: 980 }); const R = 480, a = b * D2R; sp.position.set(Math.sin(a) * R, WATER_Y + Math.tan(e * D2R) * R + 18, -Math.cos(a) * R); ENV.env.add(sp);
-        const pin = mesh(new THREE.CylinderGeometry(.6, .6, 16, 6), basic({ color: "#ffd166", transparent: true, opacity: .8 }), ENV.env); pin.position.copy(sp.position); pin.position.y -= 14;
+        const sp = labelSprite([n, l1], { size: 46, fs: 52, w: 980 }); const R = 330, a = b * D2R; sp.position.set(Math.sin(a) * R, WATER_Y + Math.tan(e * D2R) * R + 16, -Math.cos(a) * R); ENV.env.add(sp);
+        const pin = mesh(new THREE.CylinderGeometry(.5, .5, 12, 6), basic({ color: "#ffd166", transparent: true, opacity: .8 }), ENV.env); pin.position.copy(sp.position); pin.position.y -= 10;
         sp.userData.xr = { hover: (on) => sp.scale.multiplyScalar(on ? 1.12 : 1 / 1.12), click: () => { sp.userData.set([n, l2.length > 52 ? l2.slice(0, 52) + "…" : l2]); setTimeout(() => sp.userData.set([n, l1]), 6000); } };
         T.xr.extra.add(sp); W.objs.push(sp); return [sp, pin];
       });
