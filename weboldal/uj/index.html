@@ -3730,14 +3730,16 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     if (v("phone").replace(/\D/g, "").length < 8) return { err: "Kérjük, adj meg érvényes telefonszámot.", field: "phone" };
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v("email"))) return { err: "Kérjük, adj meg érvényes e-mail címet.", field: "email" };
     if (v("birth_place").length < 2) return { err: "Kérjük, add meg a születési helyed.", field: "birth_place" };
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(v("birth_date")) || isNaN(pd(v("birth_date"))) || v("birth_date") > addD(cfg.today, -18 * 365)) return { err: "Kérjük, add meg a születési időd ÉÉÉÉ-HH-NN alakban (a foglalónak nagykorúnak kell lennie).", field: "birth_date" };
+    const bd = v("birth_date"), bdOk = /^\d{4}-\d{2}-\d{2}$/.test(bd) && ymd(pd(bd)) === bd && bd > "1900-01-01";
+    if (!bdOk) return { err: "Ez nem valós dátum – a születési időt ÉÉÉÉ-HH-NN alakban add meg (pl. 1985-03-12).", field: "birth_date" };
+    if (bd > addD(cfg.today, -18 * 365)) return { err: "Kérjük, add meg a születési időd ÉÉÉÉ-HH-NN alakban (a foglalónak nagykorúnak kell lennie).", field: "birth_date" };
     if (!/^[A-Za-z0-9-]{5,20}$/.test(v("id_doc").replace(/\s/g, ""))) return { err: "Kérjük, add meg a személyi igazolványod vagy útleveled számát.", field: "id_doc" };
     if ((q.apts || []).length > (q.adults || 0)) return { err: "Minden apartmanhoz legalább egy felnőtt vendég kell.", field: null };
     if (!F.accept) return { err: "A foglaláshoz el kell fogadnod a házirendet és az adatkezelési tájékoztatót.", field: "accept" };
     return null;
   }
   async function vrSubmit(q, F) {
-    await vrReady();
+    try { await vrReady(); } catch (e) { return { err: "A foglalási rendszer most nem érhető el – próbáld újra.", field: null }; }
     const bad = vrCheck(F, q); if (bad) return bad;
     /* foglalás előtt friss szabad-napok: ha közben valaki lefoglalta, szólunk */
     try { await vrReady(true); } catch (e) {}
