@@ -549,6 +549,19 @@ body.walk-on .walk-bar { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); 
 .vr-btn:hover, .vr-btn:focus-visible { background: linear-gradient(180deg, rgba(30,84,150,.95), rgba(12,44,90,.95)); outline: none; transform: translateY(-1px); }
 body.walk-on .vr-btn, body.in-vr .vr-btn, body.world-on .vr-btn { display: none; }
 #btnVR { top: calc(144px + env(safe-area-inset-top, 0px)); }
+.sun-btn { top: calc(144px + env(safe-area-inset-top, 0px)); } body.has-vr .sun-btn { top: calc(204px + env(safe-area-inset-top, 0px)); }
+.sun-panel { position: fixed; z-index: 45; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(206px + env(safe-area-inset-top, 0px)); width: min(340px, calc(100vw - 32px)); background: linear-gradient(180deg, rgba(18,58,107,.96), rgba(10,35,71,.96)); color: #fff; border: 2px solid rgba(255,209,102,.85); border-radius: 22px; padding: 18px 18px 14px; box-shadow: 0 18px 44px rgba(0,0,0,.4); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+body.has-vr .sun-panel { top: calc(266px + env(safe-area-inset-top, 0px)); }
+.sun-panel h3 { margin: 0 34px 12px 0; color: #ffd166; font-size: 21px; }
+.sun-panel label { display: block; margin: 0 0 12px; font-weight: 600; }
+.sun-panel input[type=date] { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 18px; padding: 8px 10px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; color-scheme: dark; }
+.sun-panel input[type=range] { display: block; width: 100%; margin-top: 6px; accent-color: #ffd166; }
+.sun-panel .sp-q { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.sun-panel .sp-q button { flex: 1 0 auto; padding: 8px 6px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.sun-panel .sp-i { margin: 4px 0 6px; font-size: 17px; font-weight: 600; }
+.sun-panel .sp-n { margin: 0; font-size: 13px; opacity: .65; }
+.sun-panel .sp-x { position: absolute; right: 10px; top: 10px; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); color: #fff; font-size: 18px; cursor: pointer; }
+body.walk-on .sun-panel, body.in-vr .sun-panel, body.world-on .sun-panel { display: none; }
 .world-pick { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(4,14,28,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 16px; }
 .world-pick .wp-card { position: relative; width: min(560px, 100%); background: linear-gradient(180deg, #123a6b, #0a2347); color: #fff; border: 2px solid rgba(255,209,102,.85); border-radius: 26px; padding: 26px 22px 18px; box-shadow: 0 24px 60px rgba(0,0,0,.45); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
 .world-pick h2 { margin: 0 0 16px; font-size: 26px; color: #ffd166; letter-spacing: .02em; }
@@ -5708,7 +5721,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     return new Promise((res) => sceneEl.hasLoaded ? res() : sceneEl.addEventListener("loaded", res, { once: true })).then(() => {
       const fm = fade.getObject3D("mesh");
       if (fm) { fm.renderOrder = 999; fm.material.depthWrite = false; }
-      vrButton(); worldButton();
+      vrButton(); worldButton(); sunButton();
     });
   }
 
@@ -8375,6 +8388,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function vrButton() {
     vrSupported().then((ok) => {
       VRS.ok = !!ok; if (!ok || $("btnVR")) return;
+      document.body.classList.add("has-vr");
       const b = document.createElement("button"); b.type = "button"; b.id = "btnVR"; b.className = "vr-btn";
       b.innerHTML = `<svg viewBox="0 0 48 30" aria-hidden="true"><path d="M6 4h36a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H31l-4-6h-6l-4 6H6a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="14" cy="15" r="4" fill="currentColor"/><circle cx="34" cy="15" r="4" fill="currentColor"/></svg><span>VR</span>`;
       b.title = "Belépés VR szemüvegben (Meta Quest)"; b.setAttribute("aria-label", "Belépés VR módba");
@@ -8526,7 +8540,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     g.font = "600 36px system-ui, sans-serif";
     g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 116, VW - 80, 2);
     if (VRS.page !== "book") { try { bkKeyboard(false); } catch (e) {} }
-    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld, help: pHelp }[VRS.page] || pMain)(g);
+    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld, help: pHelp, sun: pSun }[VRS.page] || pMain)(g);
     if (VRS.tex) VRS.tex.needsUpdate = true;
   }
   function btn(g, x, y, w, h, label, fn, o) {
@@ -8559,10 +8573,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const bkGo = VRS.book && VRS.book.step !== "date" && VRS.book.step !== "done";
     btn(g, X(0), y2, W3 * 2 + 26, H1, bkGo ? "📅  Foglalás folytatása" : "📅  Foglalás itt, VR-ben", () => { if (VRS.book && (VRS.book.step === "done" || (!VRS.book.ready && !VRS.book.loading))) VRS.book = null; vrBookInit(); VRS.page = "book"; vrDraw(); vrPlace(); }, { on: 1, sub: bkGo ? "ott folytatod, ahol abbahagytad" : "időpont · apartman · adatok – kilépés nélkül" });
     btn(g, X(2), y2, W3, H1, "Foglalás\n2D ablakban", () => vrEndSession(() => window.ZephyrBooking && ZephyrBooking.open({ apt: ["korvett", "dingi", "fregatt", "kaloz", "schooner"].includes((SCENES[current] || {}).g) ? SCENES[current].g : "" })));
-    const y3 = y2 + H1 + gp, H3 = VH - 40 - y3;
-    btn(g, X(0), y3, W3, H3, "⟲ Vissza", () => { try { if (typeof goBack === "function") goBack(); } catch (e) {} }, { off: typeof goBack !== "function" });
-    btn(g, X(1), y3, W3, H3, "❔ Súgó", () => { VRS.page = "help"; vrDraw(); }, { fs: 34 });
-    btn(g, X(2), y3, W3, H3, "Kilépés a VR-ből", () => vrEndSession(), { fs: 34 });
+    const y3 = y2 + H1 + gp, H3 = VH - 40 - y3, W4 = (VW - 80 - 3 * 20) / 4, X4 = (i) => 40 + i * (W4 + 20);
+    btn(g, X4(0), y3, W4, H3, "⟲ Vissza", () => { try { if (typeof goBack === "function") goBack(); } catch (e) {} }, { off: typeof goBack !== "function", fs: 34 });
+    btn(g, X4(1), y3, W4, H3, "☀ Napállás", () => { sunSet(true); VRS.page = "sun"; vrDraw(); }, { fs: 34, on: SUN.on });
+    btn(g, X4(2), y3, W4, H3, "❔ Súgó", () => { VRS.page = "help"; vrDraw(); }, { fs: 34 });
+    btn(g, X4(3), y3, W4, H3, "Kilépés\na VR-ből", () => vrEndSession(), { fs: 30 });
   }
   /* rövid súgó: első VR-belépéskor magától, utána a menüből – nagy betűkkel, hogyan irányítasz kézzel és kontrollerrel */
   function pHelp(g) {
@@ -8580,6 +8595,23 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       txt(g, d, 170, y + 68, { fs: 24, w: 500, c: "rgba(255,255,255,.8)" });
     });
     btn(g, VW / 2 - 220, VH - 112, 440, 88, "Értem, mehet!", () => { try { localStorage.setItem("zephyr-vr-help", "1"); } catch (e) {} vrClose(); }, { on: 1, fs: 36 });
+  }
+  /* napállás a VR-ben: nap és óra választása, az égen (vagy a falon át) ☀ jel mutatja az irányt */
+  function pSun(g) {
+    if (!SUN.ymd) SUN.ymd = sunDefaultDay();
+    const I = sunInfo(), D = vPd(SUN.ymd);
+    txt(g, "☀ Merről süt a nap?", 60, 166, { fs: 42, w: 800, c: "#ffd166" });
+    const row = (y, label, val, a, b, c2, d2) => { txt(g, label, 60, y + 44, { fs: 30, w: 600, c: "rgba(255,255,255,.8)" }); btn(g, 250, y, 110, 88, a[0], a[1], { fs: 30 }); btn(g, 372, y, 90, 88, b[0], b[1], { fs: 44 }); txt(g, val, 700, y + 44, { a: "center", fs: 38, w: 800 }); btn(g, 940, y, 90, 88, c2[0], c2[1], { fs: 44 }); btn(g, 1042, y, 110, 88, d2[0], d2[1], { fs: 30 }); };
+    const day = (n) => () => { sunSet(true, vAdd(SUN.ymd, n)); vrDraw(); }, hr = (n) => () => { sunSet(true, null, SUN.h + n); vrDraw(); };
+    row(200, "Nap", D.getFullYear() + ". " + HU_MON[D.getMonth()] + " " + D.getDate() + ".", ["−1 hó", day(-30)], ["−", day(-1)], ["+", day(1)], ["+1 hó", day(30)]);
+    row(302, "Időpont", hhmm(SUN.h), ["−1 ó", hr(-1)], ["−", hr(-.25)], ["+", hr(.25)], ["+1 ó", hr(1)]);
+    [8, 11, 15, 18, 20].forEach((h, i) => btn(g, 250 + i * 182, 404, 170, 70, h + ":00", () => { sunSet(true, null, h); vrDraw(); }, { on: Math.abs(SUN.h - h) < .01, fs: 30 }));
+    rr(g, 40, 494, VW - 80, 190, 22); g.fillStyle = "rgba(255,255,255,.07)"; g.fill();
+    txt(g, I.ok ? I.line : "Ezen a helyen az iránytű nem számolható – lépj egy másik képre.", 70, 540, { fs: 30, w: 700 });
+    txt(g, `Napkelte ${hhmm(I.t.rise)} · napnyugta ${hhmm(I.t.set)} · érkezés 15:00-tól`, 70, 590, { fs: 28, w: 600, c: "rgba(255,255,255,.85)" });
+    txt(g, "Nézz körül: a ☀ jel mutatja a nap irányát – a falon át is, így látod, melyik ablakon süt be.", 70, 640, { fs: 24, w: 500, c: "rgba(255,255,255,.7)" });
+    btn(g, 40, VH - 130, 380, 92, SUN.on ? "☀ jel: be" : "☀ jel: ki", () => { sunSet(!SUN.on); vrDraw(); }, { on: SUN.on, fs: 32 });
+    btn(g, 440, VH - 130, VW - 480, 92, VRS.book && VRS.book.ci ? "‹ Vissza a foglaláshoz" : "Kész", () => { if (VRS.book && VRS.book.ci) { VRS.page = "book"; vrDraw(); vrPlace(); } else vrClose(); }, { on: 1, fs: 32 });
   }
   function pWorld(g) {
     const items = [["regatta", "🏁  Regatta a stégnél", "A napozóstégen állsz: 3D vitorlások versenyeznek a Balatonon, bóják, rendezőhajó, rajtjelek."],
@@ -9018,7 +9050,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
 
   /* --- Térhang VR-ben: a séta zenéje és a víz hangja a térben (HRTF), a víz a Balaton irányából --- */
   /* A panoráma iránya a házvázlathoz képest a nyilakból számolható: a nyíl iránya a képen ↔ a célpont iránya a vázlaton. */
-  const PLAN_LAKE = { strand: [1, 0] };   /* a stégtérkép elforgatott: ott a Balaton jobbra (+x); a ház vázlatán a Balaton az utca felé (+y) */
+  /* Tájolás (Google légifelvétel, 2026. nov. 6.): a ház egy téglatest; az utcafront – és mögötte a Balaton – kb. 345° (ÉÉNy) felé néz,
+     a hátsó teraszok kb. 165° (DDK) felé. Minden alaprajz +y tengelyének iránytű-iránya (fok, É = 0°, K = 90°); a +x mindig ennél 90°-kal kevesebb.
+     ház és kert: +y = az utca/Balaton · stég: +x = a Balaton · Korvett, Fregatt, Schooner, Kadett: −y = az utca · Dingi, Kalóz: +x = az utca */
+  const LAKE_BEARING = 345;
+  const PLAN_BEARING_Y = { haz: 345, strand: 75, korvett: 165, fregatt: 165, schooner: 165, kadett: 165, dingi: 75, kaloz: 75 };
   function sceneNorth(id) {
     const sc = SCENES[id]; if (!sc || !sc.m) return null;
     let sx = 0, sy = 0, n = 0;
@@ -9031,12 +9067,105 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     });
     return n ? Math.atan2(sy, sx) : null;
   }
-  function lakeYaw(id) {
-    const sc = SCENES[id]; if (!sc) return null;
-    const off = sceneNorth(id) ?? sceneNorth((GROUPS.find((q) => q.id === sc.g) || {}).back) ;
-    if (off == null) return null;
-    const v = PLAN_LAKE[sc.g === "strand" ? "strand" : "haz"] || [0, 1];
-    return off + Math.atan2(v[0], v[1]);
+  /* egy iránytű-irány (fok) világ-szöge az adott panorámán (a nyilakból számolt tájolással); ha nem számolható: null */
+  function bearingYaw(id, B) {
+    const sc = SCENES[id]; if (!sc || PLAN_BEARING_Y[sc.g] == null) return null;
+    const off = sceneNorth(id); if (off == null) return null;
+    return off + (PLAN_BEARING_Y[sc.g] - B) * Math.PI / 180;
+  }
+  function lakeYaw(id) { return bearingYaw(id, LAKE_BEARING); }
+
+  /* ---------- Napállás: merről süt a nap a választott napon és órában (Zamárdi, 46,889° É, 17,963° K) ---------- */
+  const SUN = { on: false, ymd: null, h: 15, scene: null, g: null };
+  function sunPos(ymd, hour) {
+    const R = Math.PI / 180, lat = 46.8894, lon = 17.963;
+    const [y, m, d] = ymd.split("-").map(Number);
+    const lastSun = (mm) => { const t = new Date(Date.UTC(y, mm, 0)); return t.getUTCDate() - t.getUTCDay(); };
+    const tz = (m > 3 && m < 10) || (m === 3 && d >= lastSun(3)) || (m === 10 && d < lastSun(10)) ? 2 : 1;   /* nyári / téli idő */
+    const n = (Date.UTC(y, m - 1, d) + (hour - tz) * 3600e3) / 864e5 + 2440587.5 - 2451545;
+    const L = (280.46 + .9856474 * n) % 360, g = ((357.528 + .9856003 * n) % 360) * R;
+    const lam = (L + 1.915 * Math.sin(g) + .02 * Math.sin(2 * g)) * R, eps = (23.439 - 4e-7 * n) * R;
+    const ra = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam)), dec = Math.asin(Math.sin(eps) * Math.sin(lam));
+    const H = ((280.46061837 + 360.98564736629 * n) % 360 + lon) * R - ra, la = lat * R;
+    const el = Math.asin(Math.sin(la) * Math.sin(dec) + Math.cos(la) * Math.cos(dec) * Math.cos(H));
+    const az = Math.atan2(-Math.sin(H), Math.tan(dec) * Math.cos(la) - Math.sin(la) * Math.cos(H));
+    return { az: (az / R + 360) % 360, el: el / R };
+  }
+  function sunTimes(ymd) {
+    let rise = null, set = null, prev = sunPos(ymd, 3).el;
+    for (let h = 3 + 1 / 60; h <= 23; h += 1 / 60) { const e = sunPos(ymd, h).el; if (prev < -.833 && e >= -.833 && rise == null) rise = h; if (prev >= -.833 && e < -.833) set = h; prev = e; }
+    return { rise, set };
+  }
+  const hhmm = (h) => h == null ? "–" : `${Math.floor(h)}:${String(Math.round((h % 1) * 60) % 60).padStart(2, "0")}`;
+  const compass = (a) => ["észak", "északkelet", "kelet", "délkelet", "dél", "délnyugat", "nyugat", "északnyugat"][Math.round(a / 45) % 8];
+  function sunDefaultDay() {
+    /* a foglalás érkezési napja, ha van; különben ma (szezonban), télen a szezonnyitás (júl. 15.) */
+    if (VRS.book && VRS.book.ci) return VRS.book.ci;
+    const t = new Date(), y = t.getFullYear(), m = t.getMonth() + 1, ymd = vYmd(t);
+    if (m >= 5 && m <= 9) return ymd;
+    return (m > 9 ? y + 1 : y) + "-07-15";
+  }
+  function sunCanvas(label, below) {
+    const cv = document.createElement("canvas"); cv.width = 512; cv.height = 512; const g = cv.getContext("2d");
+    const gr = g.createRadialGradient(256, 200, 10, 256, 200, 190); gr.addColorStop(0, below ? "rgba(255,190,120,.7)" : "rgba(255,255,235,1)"); gr.addColorStop(.18, below ? "rgba(255,150,80,.55)" : "rgba(255,236,150,.95)"); gr.addColorStop(.42, below ? "rgba(255,120,60,.18)" : "rgba(255,200,80,.35)"); gr.addColorStop(1, "rgba(255,180,60,0)");
+    g.fillStyle = gr; g.fillRect(0, 0, 512, 400);
+    g.font = "800 64px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.lineWidth = 12; g.strokeStyle = "rgba(11,47,94,.85)"; g.strokeText(label, 256, 450); g.fillStyle = "#ffe08a"; g.fillText(label, 256, 450);
+    return cv;
+  }
+  function sunPlace() {
+    if (!SUN.g) return;
+    const yaw = current ? bearingYaw(current, 0) : null;   /* az észak világ-szöge ezen a panorámán */
+    if (!SUN.on || yaw == null) { SUN.g.visible = false; SUN.scene = current; return; }
+    const p = sunPos(SUN.ymd, SUN.h), below = p.el < 0, el = Math.max(p.el, 1.5) * Math.PI / 180;
+    const a = yaw - p.az * Math.PI / 180, r = 60;
+    SUN.g.position.set(-Math.sin(a) * Math.cos(el) * r, Math.sin(el) * r, -Math.cos(a) * Math.cos(el) * r);
+    SUN.g.lookAt(0, 0, 0);
+    const lab = (below ? "☾ " : "☀ ") + hhmm(SUN.h) + (below ? " – lenyugodott" : "");
+    if (SUN.lab !== lab) { SUN.lab = lab; const t = new THREE.CanvasTexture(sunCanvas(lab, below)); t.colorSpace = THREE.SRGBColorSpace; if (SUN.m.material.map) SUN.m.material.map.dispose(); SUN.m.material.map = t; SUN.m.material.needsUpdate = true; }
+    SUN.g.visible = true; SUN.scene = current;
+  }
+  function sunSet(on, ymd, h) {
+    if (!sceneEl || !THREE) return;
+    if (!SUN.g) {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshBasicMaterial({ transparent: true, depthTest: false, depthWrite: false }));
+      m.renderOrder = 5; const g = new THREE.Group(); g.add(m); sceneEl.object3D.add(g); SUN.g = g; SUN.m = m;
+    }
+    SUN.on = !!on; if (ymd) SUN.ymd = ymd; if (h != null) SUN.h = Math.max(0, Math.min(23.99, h));
+    if (!SUN.ymd) SUN.ymd = sunDefaultDay();
+    sunPlace(); try { sunPanel2D(true); } catch (e) {}
+  }
+  function sunInfo() {
+    const p = sunPos(SUN.ymd, SUN.h), t = sunTimes(SUN.ymd), ok = current && bearingYaw(current, 0) != null;
+    return { p, t, ok, line: p.el < 0 ? `Ekkor a nap már nincs fenn (napkelte ${hhmm(t.rise)}, napnyugta ${hhmm(t.set)}).` : `A nap ${compass(p.az)} felől süt (${Math.round(p.az)}°), ${Math.round(p.el)}° magasan.` };
+  }
+  /* 2D-ben: kis „☀” gomb a VR/3D gombok alatt, és egy egyszerű panel dátummal és órával */
+  function sunButton() {
+    if ($("btnSun")) return;
+    const b = document.createElement("button"); b.type = "button"; b.id = "btnSun"; b.className = "vr-btn sun-btn";
+    b.innerHTML = `<span style="font-size:24px;line-height:1">☀</span><span>Nap</span>`; b.title = "Napállás: merről süt a nap a választott napon és órában"; b.setAttribute("aria-label", "Napállás");
+    b.addEventListener("click", () => { if (walking) return; const on = !$("sunPanel"); if (on) { sunSet(true); sunPanel2D(true, true); } else { sunPanel2D(false); sunSet(false); } });
+    document.body.appendChild(b);
+  }
+  function sunPanel2D(on, create) {
+    let d = $("sunPanel");
+    if (!on) { if (d) d.remove(); return; }
+    if (!d && !create) return;
+    if (!d) {
+      d = document.createElement("div"); d.id = "sunPanel"; d.className = "sun-panel"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Napállás");
+      d.innerHTML = `<button type="button" class="sp-x" aria-label="Bezárás">✕</button><h3>☀ Merről süt a nap?</h3>
+        <label>Nap <input type="date" class="sp-d"></label><label>Óra: <b class="sp-hv"></b><input type="range" class="sp-h" min="4" max="22" step="0.25"></label>
+        <div class="sp-q">${[8, 11, 15, 18, 20].map((h) => `<button type="button" data-h="${h}">${h}:00</button>`).join("")}</div><p class="sp-i"></p><p class="sp-n">Az iránytű a Google légifelvétel alapján, a ház tájolásából számolva.</p>`;
+      document.body.appendChild(d);
+      d.querySelector(".sp-x").addEventListener("click", () => { sunPanel2D(false); sunSet(false); });
+      d.querySelector(".sp-d").addEventListener("change", (e) => { if (e.target.value) sunSet(true, e.target.value); });
+      d.querySelector(".sp-h").addEventListener("input", (e) => sunSet(true, null, +e.target.value));
+      d.querySelector(".sp-q").addEventListener("click", (e) => { const q = e.target.closest("[data-h]"); if (q) sunSet(true, null, +q.dataset.h); });
+      ["pointerdown", "touchstart", "wheel"].forEach((t) => d.addEventListener(t, (e) => e.stopPropagation(), { passive: true }));
+    }
+    const I = sunInfo();
+    d.querySelector(".sp-d").value = SUN.ymd; d.querySelector(".sp-h").value = SUN.h; d.querySelector(".sp-hv").textContent = hhmm(SUN.h);
+    d.querySelector(".sp-i").textContent = I.ok ? I.line + ` Napkelte ${hhmm(I.t.rise)}, napnyugta ${hhmm(I.t.set)}.` : "Ezen a helyen az iránytű nem számolható – lépj egy másik képre.";
   }
   function waterLevel(id) {
     const sc = SCENES[id] || {};
@@ -9404,6 +9533,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     AFRAME.registerComponent("zephyr-xr", {
       tick: function (t, dt) {
         try { if (inVR) xrTick(); } catch (e) { if (!XRP.err) { XRP.err = 1; console.warn("xr", e); } }
+        try { if (SUN.on && SUN.scene !== current) { sunPlace(); sunPanel2D(true); } } catch (e) {}
         try { if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.tick(Math.min(.1, (dt || 16) / 1000)); } catch (e) { if (!XRP.werr) { XRP.werr = 1; console.warn("world", e); } }
       }
     });
