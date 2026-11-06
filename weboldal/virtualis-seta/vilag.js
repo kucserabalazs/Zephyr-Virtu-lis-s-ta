@@ -73,7 +73,8 @@
       L.forEach((ln, i) => { g.fillStyle = i === 0 ? (opt.c0 || "#ffd166") : "#fff"; g.font = `${i === 0 ? 800 : 600} ${i === 0 ? fs : fs * .78}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(ln, w / 2, pad + fs * .62 + i * fs * 1.25); });
     };
     const t = canvasTex(w, Math.ceil(h), (g) => draw(g, lines));
-    const sp = new THREE.Sprite(basic({ map: t, transparent: true, depthTest: false, depthWrite: false }));
+    const sm = new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false }); W.disposables.push(sm);
+    const sp = new THREE.Sprite(sm);   /* SpriteMaterial: mindig a néző felé fordul (a MeshBasicMaterial-lal csak egy irányból látszott – a hajóra tett táblák egyáltalán nem) */
     sp.renderOrder = 990; const k = opt.size || 1; sp.scale.set(k, k * h / w, 1);
     let last = lines.join("|");
     sp.userData.set = (L) => { const key = L.join("|"); if (key === last) return; last = key; draw(t._canvas.getContext("2d"), L); t.needsUpdate = true; };
@@ -1258,7 +1259,7 @@
   /* --------------------------------------------------------------- felépítés */
   function buildVRace() {
     const root = W.root;
-    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, lblAr: 0 });   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
+    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0 });   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
     makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
@@ -1309,6 +1310,9 @@
     /* a kerekek fogása sugárral (csippentés / ravasz) */
     CK2.wheels.forEach((w) => { w.hit.userData.xr = { hover: (on) => { VRR.wHover = on; }, down: (h, src, key) => vrGrab(w, src, key, true), drag: (src) => vrDrag(w, src), up: () => { VRR.grab = null; } }; T.xr.extra.add(w.hit); W.objs.push(w.hit); });
     /* első alkalommal: felirat a jobb oldali kerék fölött – amíg meg nem fogod */
+    /* üzenettábla a kerék előtt (VR-ben a panel nélkül is látszik): bójakerülés, rossz oldal, korai rajt, koccanás, befutó */
+    { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.msgL = labelSprite(["", ""], { size: 2.0, fs: 50, w: 1150 }); CK2.G.add(VRR.msgL);
+      VRR.msgL.position.set(w0.ped.position.x * .6, CK2.deckY + 1.75, w0.ped.position.z + 2.2); VRR.msgL.visible = false; }
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Fogd meg a kormányt!", "csippents a peremére és forgasd"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
     SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
@@ -1375,7 +1379,9 @@
     S.del = S.wa / WA_MAX * .55;
     S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; const want = S.grab && S.grab.w === w ? .55 : (VRR.wHover ? .25 : 0) + (!S.everGrab && S.st === "pre" && w.sd < 0 ? .25 + .25 * Math.sin(W.t * 4) : 0); w.gripM.emissiveIntensity += (want - w.gripM.emissiveIntensity) * Math.min(1, dt * 8); });
     if (S.grab) S.everGrab = true;
-    if (S.helpL) { S.helpL.visible = !S.everGrab && S.st !== "done"; }   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
+    if (S.helpL) { S.helpL.visible = T.inVR && !S.everGrab && S.st !== "done"; }   /* (2D-ben billentyű/gomb kormányoz – ott nem kell) */
+    if (S.msgL) { const on = S.msgT > 0 && !!S.msg && !(S.st === "pre" && S.t < -38); S.msgL.visible = on;
+      if (on) { const m = S.msg; let k = m.indexOf(" – "), L; if (k > 0) L = [m.slice(0, k), m.slice(k + 3)]; else if ((k = m.indexOf("! ")) > 0) L = [m.slice(0, k + 1), m.slice(k + 2)]; else L = [m, ""]; S.msgL.userData.set(L); } }   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
     /* fizika (a vitorlázás modellje, a nagyobb hajóhoz igazítva) */
     /* a szél lassan leng (±7°) – mint a Balatonon; a pálya ugyanaz marad */
     S.wf = C.wf + Math.sin(S.t / 47 + C.lvl) * 7 * D2R + Math.sin(S.t / 13) * 2 * D2R;

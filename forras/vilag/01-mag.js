@@ -73,7 +73,8 @@
       L.forEach((ln, i) => { g.fillStyle = i === 0 ? (opt.c0 || "#ffd166") : "#fff"; g.font = `${i === 0 ? 800 : 600} ${i === 0 ? fs : fs * .78}px system-ui, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(ln, w / 2, pad + fs * .62 + i * fs * 1.25); });
     };
     const t = canvasTex(w, Math.ceil(h), (g) => draw(g, lines));
-    const sp = new THREE.Sprite(basic({ map: t, transparent: true, depthTest: false, depthWrite: false }));
+    const sm = new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false }); W.disposables.push(sm);
+    const sp = new THREE.Sprite(sm);   /* SpriteMaterial: mindig a néző felé fordul (a MeshBasicMaterial-lal csak egy irányból látszott – a hajóra tett táblák egyáltalán nem) */
     sp.renderOrder = 990; const k = opt.size || 1; sp.scale.set(k, k * h / w, 1);
     let last = lines.join("|");
     sp.userData.set = (L) => { const key = L.join("|"); if (key === last) return; last = key; draw(t._canvas.getContext("2d"), L); t.needsUpdate = true; };
