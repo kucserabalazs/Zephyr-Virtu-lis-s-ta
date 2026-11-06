@@ -2233,7 +2233,7 @@
       /* a Korvett/Dingi ajtaja előtt lábtörlők */
       box("#3a3a3a", 1.0, .03, Z_HALL + .05, 1.8, .045, Z_HALL + .55, 0); }
     /* emelet: sötét acél galéria a lépcső tetején (északi sáv), a légtér fölött korlát; keleten a Kalóz terasza nagy szürke lapokkal, üvegkorláttal */
-    box("#3b3f45|m", WALL, -.2, Z_HALL, OUT_W - WALL, .03, VOID[1], 1);
+    box("#3b3f45|m", WALL, -.215, Z_HALL, OUT_W - WALL, .03, VOID[1], 1);   /* (alja kicsit a födém alatt – ne villódzzon) */
     box("hallTile", VOID[2], 0, VOID[1], OUT_W - WALL, .03, Z_B - PART, 1);
     { const post = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(2, Math.round(L / .12));
         for (let k = 0; k <= n; k++) { const u = k / n; box("#9aa1a8|m", x0 + (x1 - x0) * u - .008, .03, z0 + (z1 - z0) * u - .008, x0 + (x1 - x0) * u + .008, 1.0, z0 + (z1 - z0) * u + .008, 1); }
@@ -2242,6 +2242,9 @@
     railing(box, OUT_W - .05, Z_HALL, OUT_W, Z_B - PART, 1);
     box("#3b3f45|m", OUT_W - WALL, -.2, Z_HALL, OUT_W, .03, Z_B - PART, 1);
     tsetHall(add, box, 4.7, Z_B - PART - 1.2, 1);
+    /* a Kalóz teraszán a közös nagy hűtő és két ágyneműs szekrény a fal mellett (a tulajdonos alaprajza szerint) */
+    box("#f4f4f4", OUT_W - WALL - .75, .03, Z_B - PART - .75, OUT_W - WALL - .05, 1.85, Z_B - PART - .05, 1); box("#c9c9c9", OUT_W - WALL - .76, 1.2, Z_B - PART - .76, OUT_W - WALL - .04, 1.21, Z_B - PART - .04, 1); box("steel", OUT_W - WALL - .78, 1.3, Z_B - PART - .55, OUT_W - WALL - .76, 1.6, Z_B - PART - .52, 1);
+    box("#a8998a", VOID[2] + .1, .03, Z_B - PART - .65, VOID[2] + .9, 1.9, Z_B - PART - .05, 1);
     /* fali lámpák a bejárónál, házjel */
     [[OUT_W + .04, 1.9, Z_HALL + .4], [OUT_W + .04, 1.9, Z_B - .6]].forEach(([x, y, z]) => { box("frame", x - .04, y - .12, z - .06, x + .04, y + .12, z + .06, 0); box("bulb", x + .02, y - .08, z - .04, x + .06, y + .08, z + .04, 0); });
     /* elöl: Korvett terasza és a Fregatt erkélye üvegkorláttal */
@@ -2402,8 +2405,12 @@
   function furnishDetailed(add, lv, U, Pl, id) {
     const accent = { korvett: "#c0504a", dingi: "#3f9b72", fregatt: "#3d7fc2", kaloz: "#8a64c8", schooner: "#2a9aa6", kadett: "#c99a3a" }[id] || "#888";
     const B = (mk, x0, y0, z0, x1, y1, z1) => add(mk, new THREE.BoxGeometry(Math.max(.005, x1 - x0), Math.max(.005, y1 - y0), Math.max(.005, z1 - z0)), M4((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), lv);
+    /* a lakás szobáinak befoglaló téglalapja (alaprajz-koordinátában): a rajta kívül eső „bútorok” (a Dingi/Kalóz alaprajzán a lépcsőház tárgyai)
+       itt nem kellenek – a lépcsőházat (asztal, mentőmellény-tartó, porszívó, közös hűtő) a ház modellje külön, a fotók szerint rajzolja */
+    const RB = (Pl.rooms || []).reduce((b, r) => [Math.min(b[0], r[1]), Math.min(b[1], r[2]), Math.max(b[2], r[1] + r[3]), Math.max(b[3], r[2] + r[4])], [1e9, 1e9, -1e9, -1e9]);
     (Pl.furn || []).forEach((f) => {
       const [type, x, y, w0, d0, , rot] = f; if (["door", "window", "area", "lane", "stairs"].includes(type) || !(w0 > .05 && d0 > .05)) return;
+      if (RB[0] < 1e8 && (x + w0 / 2 < RB[0] - .1 || x + w0 / 2 > RB[2] + .1 || y + d0 / 2 < RB[1] - .1 || y + d0 / 2 > RB[3] + .1)) return;
       const sw = Math.abs(rot || 0) % 180 === 90, w = sw ? d0 : w0, d = sw ? w0 : d0, cx = x + w0 / 2, cy = y + d0 / 2;
       const [x0, z0, x1, z1] = mapRect(U, cx - w / 2, cy - d / 2, w, d), mx = (x0 + x1) / 2, mz = (z0 + z1) / 2, W2 = x1 - x0, D2 = z1 - z0, long = W2 > D2;
       const lab = String(f[5] || "");
