@@ -9744,7 +9744,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const cosG = hd.dot(to); gazeOk = dist < .85 && cosG > (P.open ? Math.cos(60 * Math.PI / 180) : Math.cos(38 * Math.PI / 180));
       /* nyitáskor: a csukló felemelve (nem a makett felé nyúlsz), az alkar nagyjából vízszintes, és a bal kéz nem csippent */
       if (!P.open) { const raised = (L.palmC || L.wristJ).y > _wv3.y - .5 && dist < .7, flat = !L.handDir || Math.abs(L.handDir.y) < .65; gazeOk = gazeOk && raised && flat && !(XRP.pinch && XRP.pinch.left); } }
-    { const Rt = XRP.src.right; if (P.open && Rt && Rt.hand && Rt.tip && P.panel.visible) { P.panel.updateMatrixWorld(); nearR = Rt.tip.distanceTo(P.panel.getWorldPosition(_wv2)) < .26 * (WSTY.size[WS.size] || 1) + .08; } }
+    { const Rt = XRP.src.right; if (P.open && Rt && Rt.hand && Rt.tip && P.panel.visible) { P.panel.updateMatrixWorld(); const lq = P.panel.worldToLocal(_wv2.copy(Rt.tip)); nearR = Math.abs(lq.x) < WP.W / 2 + .04 && Math.abs(lq.y) < WP.H / 2 + .04 && lq.z > -.04 && lq.z < .1; } }   /* csak ha a mutatóujj tényleg a menü előtt van */
     let faceUp = false;
     if (L && L.hand) { const sc = L.faceScore || 0; faceUp = P.open ? sc > .28 : sc > .5; }
     const now = performance.now();
@@ -13758,10 +13758,14 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       /* leütött hajók a tábla két oldalán */
       const capRow = (list, y) => { const s2 = Math.min(sq * .55, (L.bw - 20) / Math.max(8, list.length)); list.slice().sort((a, b) => VAL[b.toLowerCase()] - VAL[a.toLowerCase()]).forEach((p, k) => drawPiece(g, p, L.bx + 10 + s2 * .5 + k * s2 * .9, y, s2, t, { icon: 1 })); };
       capRow(S.flip ? S.capB : S.capW, L.by - sq * .32); capRow(S.flip ? S.capW : S.capB, L.by + L.bw + sq * .45);
+      /* anyagi előny a leütött hajók mellett (+3 = egy huszárnyi előny) */
+      { const sum = (l) => l.reduce((t2, p) => t2 + VAL[p.toLowerCase()], 0), d = (sum(S.capB) - sum(S.capW)) / 100;   /* világos előnye: amit sötéttől levett, mínusz amit elvesztett */
+        if (Math.abs(d) >= 1) { const topIsW = !S.flip, wy = topIsW ? L.by + L.bw + sq * .45 : L.by - sq * .32, by3 = topIsW ? L.by - sq * .32 : L.by + L.bw + sq * .45;
+          g.fillStyle = "#ffd166"; g.font = `800 ${Math.max(13, sq * .3)}px ${SANS}`; g.textAlign = "right"; g.textBaseline = "middle"; g.fillText("+" + Math.round(Math.abs(d)), L.bx + L.bw - 8, d > 0 ? wy : by3); } }
       /* állapotsor */
       const sy = L.by - (L.ph ? 30 : 34) - sq * .1; g.font = `800 ${L.ph ? 16 : 19}px ${SANS}`; const tw = Math.min(W - 20, g.measureText(S.msg).width + 40);
       g.fillStyle = "rgba(7,29,56,.82)"; g.beginPath(); g.roundRect ? g.roundRect(W / 2 - tw / 2, sy - 18, tw, 34, 17) : g.rect(W / 2 - tw / 2, sy - 18, tw, 34); g.fill();
-      g.fillStyle = /SAKK|matt|GYŐZ/.test(S.msg) ? "#ffd166" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(S.msg, W / 2, sy);
+      g.fillStyle = /SAKK|matt|GYŐZ/.test(S.msg) ? "#ffd166" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(S.thinking ? S.msg.replace(/…$/, "") + ".".repeat(1 + Math.floor(S.t * 3) % 3) : S.msg, W / 2, sy);
       /* gombok */
       S.btn = []; const by2 = H - (L.ph ? 118 : 70), labels = [["new", "Új játék"], ["undo", "↶ Vissza"], ["hint", "💡 Ötlet"], ["lvl", "Szint: " + ["Könnyű", "Közepes", "Nehéz"][S.lvl]], ["col", S.two ? "2 játékos" : "Szín: " + (S.human === "w" ? "világos" : "sötét")], ["flip", "⇅ Forgat"]];
       const perRow = L.ph ? 3 : 6, bw = Math.min(170, (W - 20 - (perRow - 1) * 8) / perRow), bh = L.ph ? 44 : 46;
