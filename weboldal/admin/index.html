@@ -1389,7 +1389,7 @@ h3.st::after { height: 8px; background: url("data:image/svg+xml,%3Csvg xmlns='ht
     h += sec("sync", "Naptárszinkron", "Szállás.hu, Airbnb, Google Naptár", `
       <p class="mut sm" style="margin:0"><b>Behozott naptárak</b> – a platformok iCal exportlinkje. A foglalásaik itt zárolják a napokat.</p>
       ${aps.filter((a) => +a.active).map((a) => `<div class="card" style="box-shadow:none;background:var(--soft)"><div class="row" style="margin-bottom:8px">${aptB(a.id)}<b>${esc(a.name)}</b></div><div class="stack">
-        ${[["szallas", "Szállás.hu"], ["airbnb", "Airbnb"], ["egyeb", "Egyéb"]].map(([k, l]) => `<label class="f"><span>${l} naptár linkje</span><input data-ical="${a.id}" data-src="${k}" value="${esc(((s.ical || {})[a.id] || {})[k] || "")}" placeholder="https://…"></label>`).join("")}</div>
+        ${[["szallas", "Szállás.hu"], ["airbnb", "Airbnb"], ["egyeb", "Egyéb"]].map(([k, l]) => `<label class="f"><span>${l} naptár linkje${((s.ical || {})[a.id] || {})[k] ? ` <button type="button" class="btn sm line" data-raw="${a.id}|${k}" style="margin-left:6px;padding:2px 8px">nyers .ics</button>` : ""}</span><input data-ical="${a.id}" data-src="${k}" value="${esc(((s.ical || {})[a.id] || {})[k] || "")}" placeholder="https://…"></label>`).join("")}</div>
         ${links[a.id] ? `<p class="mut xs" style="margin:10px 0 6px"><b>Kiküldés</b> – ezt add meg a platformnál:</p>
         <div class="stack"><div class="copy"><input readonly value="${esc(links[a.id].szallas)}" id="lk_${a.id}_sz"><button class="btn sm line" data-copy="lk_${a.id}_sz">Szállás.hu</button></div>
         <div class="copy"><input readonly value="${esc(links[a.id].airbnb)}" id="lk_${a.id}_ab"><button class="btn sm line" data-copy="lk_${a.id}_ab">Airbnb</button></div></div>` : ""}</div>`).join("")}
@@ -1426,6 +1426,11 @@ h3.st::after { height: 8px; background: url("data:image/svg+xml,%3Csvg xmlns='ht
         const j = await api("save_settings", { settings: out }); SED = null; await loadAll(); toast(j.message); keepOpen(() => viewSettings(m));
       });
       else if (b.id === "testMail") run(async () => { const j = await api("test_mail", {}); toast(j.message, !j.ok); });
+      else if (b.dataset.raw) { const w = window.open("", "_blank"); run(async () => {   /* a legutóbb letöltött nyers naptár – ha valami „furcsa”, először ezt kell megnézni */
+        const [ap, src] = b.dataset.raw.split("|"); const res = await fetch(API + "ical_raw&apt=" + ap + "&src=" + src, { headers: { "X-Zephyr-Token": A.tok }, cache: "no-store" });
+        const txt = await res.text(); if (!res.ok) { let m2 = txt; try { m2 = JSON.parse(txt).message; } catch (e) {} if (w) w.close(); toast(m2); return; }
+        if (w) { w.document.title = ap + " – " + src + " (nyers .ics)"; const pre = w.document.createElement("pre"); pre.style.cssText = "white-space:pre-wrap;font:13px/1.45 ui-monospace,Menlo,monospace;padding:12px"; pre.textContent = txt; w.document.body.appendChild(pre); } else toast("A felugró ablakot a böngésző letiltotta.");
+      }); }
       else if (b.id === "syncNow") run(async () => { const j = await api("sync", {}); toast(j.message); await loadAll(); SED = null; keepOpen(() => viewSettings(m)); });
       else if (b.id === "pwSave") run(async () => { const j = await api("password", { old: $("#pw0", m).value, new: $("#pw1", m).value }); A.data.initial = false; toast(j.message); $("#pw0", m).value = $("#pw1", m).value = ""; });
       else if (b.id === "logout") logout();

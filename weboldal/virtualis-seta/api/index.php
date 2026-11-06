@@ -171,7 +171,7 @@ function db_save($db) {
 }
 
 /* ---------------------------------------------------------------- dátumok */
-function today() { return date('Y-m-d'); }
+function today() { return !empty($GLOBALS['ZB_TODAY']) ? $GLOBALS['ZB_TODAY'] : date('Y-m-d'); }   /* (a tesztek felülírhatják) */
 function add_days($ymd, $n) { $d = new DateTime($ymd . ' 12:00'); $d->modify(($n >= 0 ? '+' : '') . (int) $n . ' day'); return $d->format('Y-m-d'); }
 function nights($a, $b) { return (int) round((strtotime($b . ' 12:00') - strtotime($a . ' 12:00')) / 86400); }
 function valid_date($s) {
@@ -256,15 +256,30 @@ function clean_ml($v, $max = 1000) { $v = trim(preg_replace('/[\x00-\x09\x0B-\x1
 
 /* ---------------------------------------------------------------- iCal naptárszinkron (Airbnb, Szállás.hu, Google Naptár) */
 function ical_sources() { return array('airbnb' => 'Airbnb', 'szallas' => 'Szállás.hu', 'egyeb' => 'Egyéb naptár'); }
-function ical_date($v) { return preg_match('/^(\d{4})(\d{2})(\d{2})/', trim($v), $m) ? "$m[1]-$m[2]-$m[3]" : ''; }
+/* Dátum az iCal-ból (2026-11-06, a tulajdonos 10 pontos ellenőrzőlistája szerint):
+   – egész napos (VALUE=DATE vagy 8 jegyű) dátum: SOHA nem alakítjuk időponttá / időzónává (különben a „ma” elcsúszhat);
+   – időponttal (DATE-TIME): ha „Z” (UTC) vagy TZID van, a magyar helyi idő szerinti napot vesszük. */
+function ical_date($v, $params = '') {
+    $v = trim($v);
+    if (!preg_match('/^(\d{4})(\d{2})(\d{2})(T(\d{2})(\d{2})(\d{2})?(Z)?)?/', $v, $m)) { return ''; }
+    if (empty($m[4]) || stripos($params, 'VALUE=DATE') !== false && stripos($params, 'DATE-TIME') === false) { return "$m[1]-$m[2]-$m[3]"; }
+    try {
+        $tz = !empty($m[8]) ? new DateTimeZone('UTC') : (preg_match('/TZID=([^;:]+)/i', $params, $t) ? new DateTimeZone(trim($t[1], '"')) : new DateTimeZone('Europe/Budapest'));
+    } catch (Exception $e) { $tz = new DateTimeZone('Europe/Budapest'); }
+    $d = new DateTime("$m[1]-$m[2]-$m[3] $m[5]:$m[6]:" . (isset($m[7]) && $m[7] !== '' ? $m[7] : '00'), $tz);
+    $d->setTimezone(new DateTimeZone('Europe/Budapest'));
+    return $d->format('Y-m-d');
+}
+function ical_unesc($v) { return str_replace(array('\\n', '\\N', '\\,', '\;', '\\\\'), array(' ', ' ', ',', ';', '\\'), $v); }
 function ical_parse($text) {
     $text = preg_replace("/\r?\n[ \t]/", '', str_replace("\r\n", "\n", (string) $text));
     $ev = array(); $cur = null;
     foreach (explode("\n", $text) as $ln) {
         $ln = rtrim($ln);
-        if ($ln === 'BEGIN:VEVENT') { $cur = array('uid' => '', 'start' => '', 'end' => '', 'summary' => '', 'status' => ''); continue; }
+        if ($ln === 'BEGIN:VEVENT') { $cur = array('uid' => '', 'start' => '', 'end' => '', 'summary' => '', 'desc' => '', 'status' => '', 'allday' => true); continue; }
         if ($ln === 'END:VEVENT') {
             if ($cur && $cur['start']) {
+                /* DTEND az egész napos eseménynél NEM része a foglalásnak: az a távozás napja (váltásnap = szabad) */
                 if (!$cur['end'] || $cur['end'] <= $cur['start']) { $cur['end'] = add_days($cur['start'], 1); }
                 if (!$cur['uid']) { $cur['uid'] = md5($cur['start'] . $cur['end'] . $cur['summary']); }
                 if (strtoupper($cur['status']) !== 'CANCELLED') { $ev[] = $cur; }
@@ -272,19 +287,39 @@ function ical_parse($text) {
             $cur = null; continue;
         }
         if ($cur === null || ($p = strpos($ln, ':')) === false) { continue; }
-        $name = strtoupper(strtok(substr($ln, 0, $p), ';')); $val = substr($ln, $p + 1);
+        $head = substr($ln, 0, $p); $val = substr($ln, $p + 1);
+        $name = strtoupper(strtok($head, ';')); $params = (string) substr($head, strlen(strtok($head, ';')));
         if ($name === 'UID') { $cur['uid'] = substr($val, 0, 200); }
-        elseif ($name === 'DTSTART') { $cur['start'] = ical_date($val); }
-        elseif ($name === 'DTEND') { $cur['end'] = ical_date($val); }
-        elseif ($name === 'SUMMARY') { $cur['summary'] = mb_substr(str_replace(array('\\,', '\;', '\\n'), array(',', ';', ' '), $val), 0, 120); }
+        elseif ($name === 'DTSTART') { $cur['start'] = ical_date($val, $params); if (strpos($val, 'T') !== false) { $cur['allday'] = false; } }
+        elseif ($name === 'DTEND') { $cur['end'] = ical_date($val, $params); }
+        elseif ($name === 'SUMMARY') { $cur['summary'] = mb_substr(ical_unesc($val), 0, 120); }
+        elseif ($name === 'DESCRIPTION') { $cur['desc'] = mb_substr(ical_unesc($val), 0, 400); }
         elseif ($name === 'STATUS') { $cur['status'] = $val; }
     }
     return $ev;
 }
+/* MI A VALÓDI FOGLALÁS ÉS MI CSAK BLOKK? – platformonként KÜLÖN szabály (egy platform szabályát nem általánosítjuk).
+   Visszaad: array('reserved'|'block', indoklás). A „block” is lezárja a napot, csak nem vendég (zárt nap, átszinkronizált tétel). */
+function ical_classify($src, $e) {
+    $sum = mb_strtolower(trim(preg_replace('/\s+/u', ' ', (string) $e['summary']))); $desc = mb_strtolower((string) $e['desc']);
+    if ($src === 'airbnb') {
+        /* Airbnb: a valódi foglalás „Reserved” (a leírásban „Reservation URL” / foglalási kód); a „Airbnb (Not available)” a
+           kézzel zárolt nap VAGY egy másik naptárból (pl. Szállás.hu) behúzott foglalás tükre – az nem Airbnb-vendég. */
+        if ($sum === 'reserved' || strpos($desc, 'reservation url') !== false || strpos($desc, '/hosting/reservations/') !== false) { return array('reserved', 'Airbnb: Reserved'); }
+        if (preg_match('/not available|unavailable|blocked/u', $sum)) { return array('block', 'Airbnb: Not available (zárolt nap vagy behúzott naptár)'); }
+        return array('reserved', 'Airbnb: ismeretlen felirat – biztonság kedvéért foglalásnak vesszük');
+    }
+    if ($src === 'szallas') {
+        /* Szállás.hu: a tulajdonosi adminban zárolt nap (családtag, nem fizető vendég) név nélkül, üres vagy „Zárva/Not available” felirattal jön. */
+        if (ext_closed_sum($e['summary'])) { return array('block', 'Szállás.hu: zárt nap (név nélkül)'); }
+        return array('reserved', 'Szállás.hu: foglalás');
+    }
+    return array('block', 'Egyéb naptár: zárolt időszak');   /* pl. saját Google Naptár – nem vendégfoglalás */
+}
 function http_get($url, $timeout = 12) {
     if (function_exists('curl_init')) {
         $c = curl_init($url);
-        curl_setopt_array($c, array(CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 4, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_TIMEOUT => $timeout, CURLOPT_USERAGENT => 'ZephyrFoglalas/1.0'));
+        curl_setopt_array($c, array(CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_MAXREDIRS => 4, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_TIMEOUT => $timeout, CURLOPT_USERAGENT => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 ZephyrFoglalas/1.1', CURLOPT_HTTPHEADER => array('Accept: text/calendar, text/plain, */*')));
         $body = curl_exec($c); $code = (int) curl_getinfo($c, CURLINFO_HTTP_CODE); $err = curl_error($c); curl_close($c);
         return array($code, $body === false ? '' : $body, $err);
     }
@@ -451,29 +486,48 @@ function ev_import_all(&$db) {
     return $feeds;
 }
 function ev_due($db) { return !empty($db['settings']['ev_feeds']) && (empty($db['ev_sync']) || substr($db['ev_sync'], 0, 10) !== today()); }
-function sync_feed(&$db, $apt, $src, $url) {
-    list($code, $body, $err) = http_get($url);
-    if ($code !== 200 || strpos($body, 'BEGIN:VCALENDAR') === false) { return array('ok' => false, 'msg' => $err ? $err : 'Hibás válasz (HTTP ' . $code . ')'); }
-    $s = $db['settings']; $names = ical_sources(); $today = today(); $seen = array(); $add = 0; $upd = 0; $del = 0; $conf = 0;
-    foreach (ical_parse($body) as $e) {
+/* A legutóbb letöltött nyers .ics megőrzése (ha az oldal „furcsát” mutat, előbb ezt kell megnézni – a hiba gyakran a feldolgozásban van) */
+function ical_raw_path($apt, $src) { return ZB_DATA_DIR . '/ical-raw-' . preg_replace('/[^a-z]/', '', $apt) . '-' . preg_replace('/[^a-z]/', '', $src) . '.php'; }
+function sync_feed(&$db, $apt, $src, $url, $mock = null) {   /* $mock: tesztekhez kész .ics szöveg (nincs letöltés) */
+    if ($mock !== null) { list($code, $body, $err) = array(200, $mock, ''); } else { list($code, $body, $err) = http_get($url); }
+    if ($mock === null && ($code !== 200 || strpos($body, 'BEGIN:VCALENDAR') === false)) {   /* egy újrapróbálás (az Airbnb néha elutasítja a szerveroldali kérést) */
+        usleep(800000); list($code, $body, $err) = http_get($url, 15);
+    }
+    if ($code !== 200 || strpos($body, 'BEGIN:VCALENDAR') === false) {
+        return array('ok' => false, 'msg' => ($err ? $err : 'Hibás válasz (HTTP ' . $code . ')') . ($src === 'airbnb' && in_array($code, array(403, 429), true) ? ' – az Airbnb elutasította a szerver kérését; a meglévő adatok megmaradtak' : ' – a meglévő adatok megmaradtak'));
+    }
+    if ($mock === null) @file_put_contents(ical_raw_path($apt, $src), "<?php http_response_code(404); exit; ?>\n" . date('Y-m-d H:i:s') . "\n" . $body);
+    $s = $db['settings']; $names = ical_sources(); $today = today(); $seen = array(); $add = 0; $upd = 0; $del = 0; $conf = 0; $keep = 0;
+    $events = ical_parse($body);
+    /* üresen visszajövő naptár, miközben nálunk még vannak jövőbeli tételei: inkább platformhiba – nem törlünk semmit */
+    $had = 0; foreach ($db['bookings'] as $b) { if (isset($b['source'], $b['ext_uid']) && $b['source'] === $src && $b['apt'] === $apt && $b['checkin'] > $today) { $had++; } }
+    $fut = 0; foreach ($events as $e) { if ($e['end'] > $today) { $fut++; } }
+    $suspicious = $fut === 0 && $had >= 2;
+    foreach ($events as $e) {
         if ($e['end'] < $today) { continue; }
         $uid = $src . ':' . $e['uid']; $seen[$uid] = 1; $found = false;
         if (in_array($uid, (array) $s['ext_ignored'], true)) { continue; }   /* tulajdonos törölte, ne jöjjön vissza */
+        list($kind, $why) = ical_classify($src, $e); $closed = $kind === 'block' ? 1 : 0;
+        $label = $names[$src] . ($closed ? ' – zárt nap' : ($e['summary'] ? ' – ' . $e['summary'] : ''));
         foreach ($db['bookings'] as $i => $b) {
             if (isset($b['ext_uid']) && $b['ext_uid'] === $uid && $b['apt'] === $apt) {
-                $found = true;
-                if ($b['checkin'] !== $e['start'] || $b['checkout'] !== $e['end'] || $b['status'] !== 'block') {
-                    $db['bookings'][$i]['checkin'] = $e['start']; $db['bookings'][$i]['checkout'] = $e['end']; $db['bookings'][$i]['status'] = 'block'; $upd++;
+                $found = true; $ci = $e['start'];
+                /* „zsugorodó” foglalás: sok platform idővel elhagyja a már elmúlt napokat → a kezdés későbbre ugrik.
+                   Ha az új kezdés legfeljebb ma van és később, mint amit eddig láttunk, az a levágás: megtartjuk a korábbit.
+                   Ha a jövőben változik, az valódi módosítás – azt átvesszük (így nem ragad be elavult dátum). */
+                if ($b['checkin'] < $ci && $ci <= $today && $b['checkin'] < $today) { $ci = $b['checkin']; $db['bookings'][$i]['feed_start'] = $e['start']; }
+                else { unset($db['bookings'][$i]['feed_start']); }
+                if ($b['checkin'] !== $ci || $b['checkout'] !== $e['end'] || $b['status'] !== 'block') {
+                    $db['bookings'][$i]['checkin'] = $ci; $db['bookings'][$i]['checkout'] = $e['end']; $db['bookings'][$i]['status'] = 'block'; $upd++;
                 }
-                $cl = ext_closed_sum($e['summary']) ? 1 : 0;
-                $db['bookings'][$i]['closed'] = $cl; $db['bookings'][$i]['label'] = $names[$src] . ($cl ? ' – zárt nap' : ($e['summary'] ? ' – ' . $e['summary'] : ''));
+                $db['bookings'][$i]['closed'] = $closed; $db['bookings'][$i]['kind'] = $kind; $db['bookings'][$i]['why'] = $why; $db['bookings'][$i]['label'] = $label;
+                unset($db['bookings'][$i]['feed_gone']);
                 break;
             }
         }
         if ($found) { continue; }
-        $closed = ext_closed_sum($e['summary']);
-        foreach ($closed ? array() : $db['bookings'] as $b) {  /* ütközés: ugyanarra a napra itt is van foglalás (a platformon zárt nap nem ütközés: azt a tulajdonos maga zárta) */
-            if ($b['apt'] === $apt && in_array(eff_status($s, $b), array('pending', 'approved', 'paid'), true) && $b['checkin'] < $e['end'] && $b['checkout'] > $e['start']) {
+        foreach ($closed ? array() : $db['bookings'] as $b) {  /* ütközés saját foglalással (a platformon zárt nap nem ütközés: azt a tulajdonos maga zárta) */
+            if ($b['apt'] === $apt && !is_ext($b) && in_array(eff_status($s, $b), array('pending', 'approved', 'paid'), true) && $b['checkin'] < $e['end'] && $b['checkout'] > $e['start']) {
                 $conf++;
                 send_mail($s, $s['notify_email'], 'FIGYELEM: foglalási ütközés – ' . $b['ref'],
                     'A(z) ' . $names[$src] . ' naptárában új foglalás jelent meg (' . hu_date($e['start']) . ' – ' . hu_date($e['end']) . "), amely ütközik ezzel a foglalással:\n\n" . summary($s, $b)
@@ -483,18 +537,58 @@ function sync_feed(&$db, $apt, $src, $url) {
         $nb = array('id' => bin2hex(random_bytes(8)), 'ref' => new_ref('ZX'), 'apt' => $apt, 'checkin' => $e['start'], 'checkout' => $e['end'],
             'adults' => 0, 'children' => 0, 'name' => '', 'phone' => '', 'email' => '', 'birth_place' => '', 'birth_date' => '', 'id_doc' => '', 'note' => '',
             'total' => 0, 'tax' => 0, 'deposit' => 0, 'created' => time(), 'source' => $src, 'ext_uid' => $uid,
-            'label' => $names[$src] . ($closed ? ' – zárt nap' : ($e['summary'] ? ' – ' . $e['summary'] : '')), 'closed' => $closed ? 1 : 0, 'admin_note' => '', 'status' => 'block', 'log' => array(), 'ip' => '');
-        set_status($nb, 'block', $names[$src] . ' naptárszinkron' . ($closed ? ' – zárt nap (név és adatok nélkül, pl. családtag / nem fizető vendég)' : ''), 'szinkron');
+            'label' => $label, 'closed' => $closed, 'kind' => $kind, 'why' => $why, 'admin_note' => '', 'status' => 'block', 'log' => array(), 'ip' => '');
+        set_status($nb, 'block', $names[$src] . ' naptárszinkron – ' . $why, 'szinkron');
         $db['bookings'][] = $nb; $add++;
     }
-    foreach ($db['bookings'] as $i => $b) {  /* a külső naptárból eltűnt (lemondott) jövőbeli foglalások */
-        if (isset($b['source'], $b['ext_uid']) && $b['source'] === $src && $b['apt'] === $apt && $b['checkout'] >= $today && !isset($seen[$b['ext_uid']])) { unset($db['bookings'][$i]); $del++; }
+    if (!$suspicious) {
+        foreach ($db['bookings'] as $i => $b) {
+            if (!isset($b['source'], $b['ext_uid']) || $b['source'] !== $src || $b['apt'] !== $apt || isset($seen[$b['ext_uid']])) { continue; }
+            if ($b['checkout'] < $today) { continue; }   /* a múlt marad (napló, vendégnévsor) */
+            if ($b['checkin'] <= $today) {
+                /* már elkezdődött (bent van vagy ma megy el), de eltűnt a feedből: NEM töröljük – a platform gyakran
+                   a távozás napján / a tartózkodás alatt már nem küldi. Jelöljük, és a távozás után magától múlttá válik. */
+                if (empty($b['feed_gone'])) { $db['bookings'][$i]['feed_gone'] = $today; $db['bookings'][$i]['log'][] = array('t' => time(), 's' => 'block', 'u' => 'szinkron', 'x' => 'eltűnt a ' . $names[$src] . ' naptárából (folyamatban lévő tartózkodás – megtartva)'); }
+                $keep++; continue;
+            }
+            /* jövőbeli, eltűnt → lemondták: töröljük, de a lomtárba tesszük (gyors visszaállítás) */
+            $b['removed_at'] = date('Y-m-d H:i'); $db['ext_removed'][] = $b; unset($db['bookings'][$i]); $del++;
+        }
+        if (!empty($db['ext_removed'])) { $db['ext_removed'] = array_slice(array_values($db['ext_removed']), -200); }
     }
     $db['bookings'] = array_values($db['bookings']);
-    return array('ok' => true, 'msg' => "+$add új · $upd módosult · $del törölve" . ($conf ? " · $conf ÜTKÖZÉS!" : ''));
+    return array('ok' => true, 'msg' => "+$add új · $upd módosult · $del törölve" . ($keep ? " · $keep folyamatban lévő megtartva" : '') . ($conf ? " · $conf ÜTKÖZÉS!" : '') . ($suspicious ? ' · FIGYELEM: üres naptár jött, semmit nem töröltem' : ''));
+}
+/* Platformok közötti átfedés: ugyanaz az apartman a Szállás.hu-n és az Airbnb-n is szerepel, így egy foglalás kétszer látszik.
+   Szabály: ha az egyik oldalon valódi foglalás, a másikon csak blokk („Not available” / zárt nap) – az DUPLIKÁCIÓ (a blokk a foglalás tükre).
+   Ha MINDKÉT oldalon valódi foglalás van ugyanarra a napra – az VALÓDI ÜTKÖZÉS (kettős foglalás) → riasztás.
+   Elsőbbség (melyik adata az erősebb): Szállás.hu > Airbnb > egyéb naptár. */
+function ext_overlaps(&$db) {
+    $s = $db['settings']; $names = ical_sources(); $prio = array('szallas' => 0, 'airbnb' => 1, 'egyeb' => 2); $today = today(); $mails = array();
+    $ix = array(); foreach ($db['bookings'] as $i => $b) { if (is_ext($b) && $b['checkout'] >= $today) { $ix[] = $i; } unset($db['bookings'][$i]['dup_of'], $db['bookings'][$i]['xconflict']); }
+    foreach ($ix as $a) { foreach ($ix as $c) {
+        if ($a >= $c) { continue; } $A = $db['bookings'][$a]; $C = $db['bookings'][$c];
+        if ($A['apt'] !== $C['apt'] || $A['source'] === $C['source'] || !($A['checkin'] < $C['checkout'] && $A['checkout'] > $C['checkin'])) { continue; }
+        $ra = empty($A['closed']); $rc = empty($C['closed']);
+        if ($ra && $rc) {
+            $txt = $names[$A['source']] . ' ' . hu_date($A['checkin']) . '–' . hu_date($A['checkout']) . ' ↔ ' . $names[$C['source']] . ' ' . hu_date($C['checkin']) . '–' . hu_date($C['checkout']);
+            $db['bookings'][$a]['xconflict'] = $txt; $db['bookings'][$c]['xconflict'] = $txt;
+            $key = 'x:' . $A['ext_uid'] . '|' . $C['ext_uid'];
+            if (empty($db['xconf_mailed'][$key])) { $db['xconf_mailed'][$key] = time(); $mails[] = $txt . ' (' . (isset(apartments($s)[$A['apt']]) ? apartments($s)[$A['apt']]['name'] : $A['apt']) . ')'; }
+        } else {
+            /* a blokk a másik foglalás tükre → duplikáció, a listákban egyszer jelenik meg (az erősebb platform szerint) */
+            if (!$ra && $rc) { $db['bookings'][$a]['dup_of'] = $C['source']; }
+            elseif ($ra && !$rc) { $db['bookings'][$c]['dup_of'] = $A['source']; }
+            else { $w = (isset($prio[$A['source']]) ? $prio[$A['source']] : 9) <= (isset($prio[$C['source']]) ? $prio[$C['source']] : 9) ? $c : $a; $db['bookings'][$w]['dup_of'] = $db['bookings'][$w === $a ? $c : $a]['source']; }
+        }
+    } }
+    if ($mails) { send_mail($s, $s['notify_email'], 'FIGYELEM: kettős foglalás két platformon', "Ugyanarra a napra két platformon is valódi foglalás érkezett:\n\n- " . implode("\n- ", $mails) . "\n\nKérlek, ellenőrizd a platformokon (a nyers naptárat az admin Naptárszinkron részén is megnézheted).\n"); }
 }
 function sync_all(&$db) {
     $log = array();
+    /* biztonsági pillanatkép minden szinkron előtt (gyors visszaállítás) – az utolsó 10 marad */
+    @copy(ZB_DB, ZB_DATA_DIR . '/presync-' . date('Ymd-His') . '.php');
+    $old = (array) glob(ZB_DATA_DIR . '/presync-*.php'); sort($old); while (count($old) > 10) { @unlink(array_shift($old)); }
     foreach (apartments($db['settings']) as $apt => $a) {
         $feeds = isset($db['settings']['ical'][$apt]) && is_array($db['settings']['ical'][$apt]) ? $db['settings']['ical'][$apt] : array();
         uksort($feeds, function ($a, $b) { $o = array('szallas' => 0, 'airbnb' => 1, 'egyeb' => 2); return (isset($o[$a]) ? $o[$a] : 9) - (isset($o[$b]) ? $o[$b] : 9); });   /* a Szállás.hu az elsődleges */
@@ -504,6 +598,7 @@ function sync_all(&$db) {
             $log[$apt . '|' . $src] = array('t' => date('Y-m-d H:i'), 'ok' => $r['ok'], 'msg' => $r['msg']);
         }
     }
+    ext_overlaps($db);
     $db['settings']['sync_log'] = $log; $db['settings']['last_sync'] = time();
     mark_conflicts($db);
     return $log;
@@ -562,6 +657,7 @@ function ical_export($db, $apt, $for, $detail) {
         $st = eff_status($s, $b);
         if (!in_array($st, ZB_BLOCKING, true)) { continue; }
         if ($for && isset($b['source']) && $b['source'] === $for) { continue; }   /* a platform saját foglalását nem küldjük vissza */
+        if ($for && !empty($b['dup_of']) && $b['dup_of'] === $for) { continue; }   /* a platform saját foglalásának tükrét (pl. az Airbnb „Not available” blokkját) sem küldjük vissza neki – különben önmagával ütközne */
         if ($detail) {
             $an = isset($aps[$b['apt']]) ? $aps[$b['apt']]['name'] : $b['apt'];
             $who = $st === 'block' ? ($b['label'] ? $b['label'] : 'Zárolva') . ($b['name'] ? ' – ' . $b['name'] : '') : $b['name'] . ($st === 'pending' ? ' (jóváhagyásra vár)' : ($st === 'approved' ? ' (előlegre vár)' : ''));
@@ -579,6 +675,7 @@ function ical_export($db, $apt, $for, $detail) {
 
 /* ---------------------------------------------------------------- e-mail */
 function send_mail($s, $to, $subject, $body) {
+    if (defined('ZB_TEST')) { $GLOBALS['ZB_MAILS'][] = $subject; return true; }
     if (!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)) { return false; }
     $host = isset($_SERVER['HTTP_HOST']) ? preg_replace('/[^a-z0-9.-]/i', '', $_SERVER['HTTP_HOST']) : 'balatoni-udules.hu';
     $host = preg_replace('/^www\./', '', $host);
@@ -1227,6 +1324,7 @@ function waste_payload($db) {
 }
 
 /* ================================================================ útvonalak */
+if (defined('ZB_TEST')) { return; }   /* tesztek: csak a függvények kellenek (api/teszt/ical-teszt.php) */
 $r = isset($_GET['r']) ? preg_replace('/[^a-z_]/', '', $_GET['r']) : '';
 $method = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
 $P = body();
@@ -1389,7 +1487,9 @@ case 'bookings':
     if (!$s['bank_account'] && !$s['bank_iban']) { $warn[] = 'Add meg a bankszámlaszámot (és külföldi utaláshoz az IBAN-t) a Beállításokban – a jóváhagyó e-mail ezt küldi el a vendégnek.'; }
     foreach ($db['bookings'] as $b) { if (!empty($b['conflict']) && in_array(eff_status($s, $b), ZB_BLOCKING, true)) { $warn[] = 'ÜTKÖZÉS: ' . $b['ref'] . ' (' . ($b['name'] ? $b['name'] : $b['label']) . ') ütközik ezzel: ' . $b['conflict'] . ' – a platformról jött foglalás az elsődleges, rendezd a saját foglalást.'; } }
     if (empty($s['prices_checked'])) { $warn[] = 'Ellenőrizd az árakat a Beállításokban (a mostaniak csak minták), majd jelöld be, hogy rendben vannak.'; }
-    foreach ((array) $s['sync_log'] as $k => $l) { if (empty($l['ok'])) { $warn[] = 'Naptárszinkron hiba (' . $k . '): ' . $l['msg']; } }
+    foreach ((array) $s['sync_log'] as $k => $l) { if (empty($l['ok'])) { $warn[] = 'Naptárszinkron hiba (' . $k . '): ' . $l['msg']; } elseif (strpos((string) $l['msg'], 'üres naptár') !== false) { $warn[] = 'Naptárszinkron (' . $k . '): ' . $l['msg']; } }
+    $xs = array(); foreach ($db['bookings'] as $b) { if (!empty($b['xconflict']) && !isset($xs[$b['xconflict']])) { $xs[$b['xconflict']] = 1; $warn[] = 'KETTŐS FOGLALÁS két platformon: ' . $b['xconflict'] . ' – nézd meg a platformokon (Beállítások → Naptárszinkron → nyers .ics).'; } }
+    foreach ($db['bookings'] as $b) { if (!empty($b['feed_gone']) && $b['checkout'] > today()) { $warn[] = 'Eltűnt a platform naptárából, de folyamatban lévő tartózkodás, ezért megtartottam: ' . $b['label'] . ' (' . hu_date($b['checkin']) . ' – ' . hu_date($b['checkout']) . ').'; } }
     out(array('today' => today(), 'bookings' => $list, 'settings' => $s, 'warnings' => $warn, 'initial' => $db['pass'] === ZB_INITIAL_HASH, 'ical_links' => ical_links($s)));
 
 case 'action':
@@ -1574,6 +1674,18 @@ case 'sync':
     $log = sync_all($db); db_save($db);
     $bad = array_filter($log, function ($l) { return empty($l['ok']); });
     out(array('ok' => true, 'message' => $log ? count($log) . ' naptár frissítve' . ($bad ? ', ' . count($bad) . ' hibás link' : '') . '.' : 'Nincs megadva külső naptárlink.', 'log' => $log));
+
+case 'ical_raw':   /* tulajdonos: a legutóbb letöltött NYERS .ics megtekintése (apartman + platform) – hibakereséshez */
+    $db = db_load(); require_admin($db);
+    $apt = isset($_GET['apt']) ? preg_replace('/[^a-z]/', '', $_GET['apt']) : ''; $src = isset($_GET['src']) ? preg_replace('/[^a-z]/', '', $_GET['src']) : '';
+    $f = ical_raw_path($apt, $src); if (!$apt || !$src || !is_file($f)) { fail('Ehhez a naptárhoz még nincs letöltött nyers adat – futtass egy szinkront.', 404); }
+    $raw = file_get_contents($f); $p = strpos($raw, "\n"); $raw = $p === false ? '' : substr($raw, $p + 1);
+    header('Content-Type: text/plain; charset=utf-8'); echo $raw; exit;
+case 'ext_restore':   /* tulajdonos: a szinkron által törölt (lemondottnak vélt) külső foglalás visszaállítása a lomtárból */
+    if ($method !== 'POST') { fail('POST kell.', 405); }
+    $db = db_load(); require_admin($db); $id = isset($P['id']) ? (string) $P['id'] : '';
+    foreach ((array) (isset($db['ext_removed']) ? $db['ext_removed'] : array()) as $k => $b) { if ($b['id'] === $id) { unset($b['removed_at']); $db['bookings'][] = $b; unset($db['ext_removed'][$k]); $db['ext_removed'] = array_values($db['ext_removed']); db_save($db); out(array('ok' => true, 'message' => 'Visszaállítva.')); } }
+    fail('Nincs ilyen törölt tétel.', 404);
 
 case 'cron':  /* tárhely ütemezőből: …/api/index.php?r=cron&key=… */
     $db = db_load();
