@@ -25,7 +25,7 @@
   const SCALE_TXT = (s) => s >= .99 ? "életnagyság" : "1:" + Math.round(1 / s);
   const TABLE_Y = .78, USER_Z = 1.3, TABLE_R = .82;
   const EYE2D = 1.6;
-  const _q = new THREE.Vector3(), _q2 = new THREE.Vector3(), _q3 = new THREE.Vector3();
+  const _q = new THREE.Vector3(), _q2 = new THREE.Vector3(), _q3 = new THREE.Vector3(), _q4 = new THREE.Vector3();
 
   /* a fej helye és iránya a világban: az A-Frame kamerája (VR-ben a three.js ide másolja a fej pózát a rig-en belül) – így a rig mozgatása/forgatása után is pontos */
   function headWorld(v) { v = v || new THREE.Vector3(); try { T.camObj().updateWorldMatrix(true, false); T.camObj().getWorldPosition(v); } catch (e) { v.set(0, 1.6, 0); } return v; }
@@ -381,6 +381,23 @@
         else if (want >= 1 / 8.2 && !MAQ.fading) { MAQ.two = null; goLife(); }
         else setScale(want, false); }
     } else MAQ.two = null;
+    /* KÉZZEL FORGATÁS (2026. nov. 6.): nyúlj a makett fölé (vagy a talapzat széléhez), csippents, és húzd körbe a kezed – a makett vele fordul,
+       mint egy forgótányér; elengedve kicsit tovább pörög és lelassul. Két kézzel továbbra is nagyítás. */
+    if (T.inVR && !life && !MAQ.two) {
+      const cw = MAQ.holder.getWorldPosition(_q4), Rw = Math.max(.25, MAQ.R * MAQ.s * 1.15);
+      ["right", "left"].forEach((h) => {
+        const S0 = X.src && X.src[h]; if (!S0) return; const p = S0.tip || S0.o; if (!p) return;
+        const dx = p.x - cw.x, dz = p.z - cw.z, r = Math.hypot(dx, dz), ang = Math.atan2(dx, dz);
+        const G = MAQ.grab;
+        if (pl[h] && !G && !MAQ.drag && r < Rw && r > .03 && p.y > cw.y - .25 && p.y < cw.y + Math.max(.45, MAQ.R * MAQ.s * .6)) { MAQ.grab = { h, a0: ang, r0: MAQ.turn.rotation.y, last: ang, v: 0 }; MAQ.auto = false; MAQ.spinV = 0; try { flap(.02); } catch (e) {} }
+        else if (G && G.h === h) {
+          if (!pl[h]) { MAQ.spinV = clamp(G.v, -4, 4); MAQ.grab = null; return; }
+          const d = wrapA(ang - G.last); G.last = ang; G.v = G.v * .7 + (d / Math.max(dt, 1e-3)) * .3;
+          MAQ.turn.rotation.y = G.r0 + wrapA(ang - G.a0) * 1.0 + (G.acc || 0); if (Math.abs(wrapA(ang - G.a0)) > 2.6) { G.acc = (G.acc || 0) + wrapA(ang - G.a0); G.a0 = ang; }
+        }
+      });
+    } else if (MAQ.grab) MAQ.grab = null;
+    if (!MAQ.grab && Math.abs(MAQ.spinV || 0) > .01) { MAQ.turn.rotation.y += MAQ.spinV * dt; MAQ.spinV *= Math.pow(.15, dt); }
     if (MAQ.help && MAQ.help.visible) { MAQ.helpT -= dt; if (MAQ.helpT < 0) { MAQ.help.visible = false; T.xr.extra.delete(MAQ.help); } }
     /* láthatóságok */
     const H = MAQ.H;

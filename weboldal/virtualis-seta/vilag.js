@@ -1091,7 +1091,7 @@
   const SCALE_TXT = (s) => s >= .99 ? "életnagyság" : "1:" + Math.round(1 / s);
   const TABLE_Y = .78, USER_Z = 1.3, TABLE_R = .82;
   const EYE2D = 1.6;
-  const _q = new THREE.Vector3(), _q2 = new THREE.Vector3(), _q3 = new THREE.Vector3();
+  const _q = new THREE.Vector3(), _q2 = new THREE.Vector3(), _q3 = new THREE.Vector3(), _q4 = new THREE.Vector3();
 
   /* a fej helye és iránya a világban: az A-Frame kamerája (VR-ben a three.js ide másolja a fej pózát a rig-en belül) – így a rig mozgatása/forgatása után is pontos */
   function headWorld(v) { v = v || new THREE.Vector3(); try { T.camObj().updateWorldMatrix(true, false); T.camObj().getWorldPosition(v); } catch (e) { v.set(0, 1.6, 0); } return v; }
@@ -1447,6 +1447,23 @@
         else if (want >= 1 / 8.2 && !MAQ.fading) { MAQ.two = null; goLife(); }
         else setScale(want, false); }
     } else MAQ.two = null;
+    /* KÉZZEL FORGATÁS (2026. nov. 6.): nyúlj a makett fölé (vagy a talapzat széléhez), csippents, és húzd körbe a kezed – a makett vele fordul,
+       mint egy forgótányér; elengedve kicsit tovább pörög és lelassul. Két kézzel továbbra is nagyítás. */
+    if (T.inVR && !life && !MAQ.two) {
+      const cw = MAQ.holder.getWorldPosition(_q4), Rw = Math.max(.25, MAQ.R * MAQ.s * 1.15);
+      ["right", "left"].forEach((h) => {
+        const S0 = X.src && X.src[h]; if (!S0) return; const p = S0.tip || S0.o; if (!p) return;
+        const dx = p.x - cw.x, dz = p.z - cw.z, r = Math.hypot(dx, dz), ang = Math.atan2(dx, dz);
+        const G = MAQ.grab;
+        if (pl[h] && !G && !MAQ.drag && r < Rw && r > .03 && p.y > cw.y - .25 && p.y < cw.y + Math.max(.45, MAQ.R * MAQ.s * .6)) { MAQ.grab = { h, a0: ang, r0: MAQ.turn.rotation.y, last: ang, v: 0 }; MAQ.auto = false; MAQ.spinV = 0; try { flap(.02); } catch (e) {} }
+        else if (G && G.h === h) {
+          if (!pl[h]) { MAQ.spinV = clamp(G.v, -4, 4); MAQ.grab = null; return; }
+          const d = wrapA(ang - G.last); G.last = ang; G.v = G.v * .7 + (d / Math.max(dt, 1e-3)) * .3;
+          MAQ.turn.rotation.y = G.r0 + wrapA(ang - G.a0) * 1.0 + (G.acc || 0); if (Math.abs(wrapA(ang - G.a0)) > 2.6) { G.acc = (G.acc || 0) + wrapA(ang - G.a0); G.a0 = ang; }
+        }
+      });
+    } else if (MAQ.grab) MAQ.grab = null;
+    if (!MAQ.grab && Math.abs(MAQ.spinV || 0) > .01) { MAQ.turn.rotation.y += MAQ.spinV * dt; MAQ.spinV *= Math.pow(.15, dt); }
     if (MAQ.help && MAQ.help.visible) { MAQ.helpT -= dt; if (MAQ.helpT < 0) { MAQ.help.visible = false; T.xr.extra.delete(MAQ.help); } }
     /* láthatóságok */
     const H = MAQ.H;
@@ -1677,13 +1694,16 @@
     [[6.0, 38.2, 2.0], [10.0, 38.4, 1.6], [11.8, 24.0, 1.3], [-1.6, -6.1, 1.4], [11.2, -3.4, 1.3]].forEach(([x, z, r]) => tree(add, x, z, r));
     flowers(add, -.2, 22.6, 1.4, 25, 70); flowers(add, 4.8, 38.6, 8.6, 39.6, 70);
     /* kerti lámpák (bollardok) */
-    for (let z = 23.5; z < SZ1 - 2; z += 4) { cyl("frame", 6.6, .04, z, .06, .7, -1); cyl("bulb", 6.6, .7, z, .07, .1, -1); }
+    for (let z = 23.5; z < SZ1 - 2; z += 4) { cyl("frame", 7.25, .04, z, .06, .7, -1); cyl("bulb", 7.25, .7, z, .07, .1, -1); }
     garland(add, [[7.85, 2.15, 25.75], [12.4, 2.3, 25.9], [12.4, 2.3, 32.0], [7.85, 2.15, 32.0]], .25, -1, "all");   /* fényfüzér a pihenő fölött */
 
     /* ------------------------------------------------ az épület */
     const Y1 = FLOOR_H;
     /* födémek (alul vakolt mennyezet) */
-    [0, 1].forEach((lv) => box("plasterIn", 0, -.2, 0, OUT_W, 0, Z_END, lv));
+    /* a középső lépcsőház két szint magas (a fotók szerint): az emeleti födémben a lépcső fölött és mellette nagy nyílás van */
+    const VOID = [WALL, Z_HALL + 1.2, 3.4, Z_B - PART];   /* x0, z0, x1, z1 – a légtér az emeleten */
+    box("plasterIn", 0, -.2, 0, OUT_W, 0, Z_END, 0);
+    box("plasterIn", 0, -.2, 0, OUT_W, 0, VOID[1], 1); box("plasterIn", 0, -.2, VOID[3], OUT_W, 0, Z_END, 1); box("plasterIn", VOID[2], -.2, VOID[1], OUT_W, 0, VOID[3], 1); box("plasterIn", 0, -.2, VOID[1], WALL, 0, VOID[3], 1);
     /* nyílások a külső falakon: az alaprajzok ablakaiból és ajtóiból */
     const open = { W: [[], []], E: [[], []], N: [[], []], S: [[], []] };   /* N = utcai homlokzat (z = 0), S = hátsó (z = Z_END) */
     Object.keys(UNITS).forEach((id) => {
@@ -1733,6 +1753,7 @@
       /* oldalfalak: a fedett bejáró szakaszán (Z_HALL…Z_B) a földszinten nyitott (kapualj), az emeleten a folyosó */
       [["W", open.W[lv]], ["E", open.E[lv]]].forEach(([s, L]) => {
         if (lv === 0) { wallRun(lv, s, 0, Z_HALL, Hh, vis, L); wallRun(lv, s, Z_B - PART, Z_END, Hh, vis, L); if (s === "W") box("#e2dccf", -.05, 0, Z_HALL, WALL, Hh, Z_B - PART, lv, vis); }   /* a lépcsőháznál a szomszéd fala látszik (ott nincs külön Zephyr-fal) */
+        else if (s === "E") { wallRun(lv, s, 0, Z_HALL, Hh, vis, L); wallRun(lv, s, Z_B - PART, Z_END, Hh, vis, L); }   /* emeleten a Kalóz terasza keletre nyitott (üvegkorlát) */
         else wallRun(lv, s, 0, Z_END, Hh, vis, L);
       });
     }));
@@ -1782,15 +1803,38 @@
     });
     /* fedett bejáró a lépcsővel (földszint), emeleti folyosó/terasz */
     box("hallTile", WALL, 0, Z_HALL, OUT_W - WALL, .03, Z_B - PART, 0);   /* nagy szürke lapok (a fotó szerint) */
-    /* a lépcső a fotó szerint: szürke fém lépcsőfokok nyitott homlokkal, oldalt fém korlát */
-    { const n = 15, zt = Z_B - PART, dz = .26;
-      for (let k = 0; k < n; k++) box("#8f969c|m", WALL + .02, .19 * (k + 1) - .05, zt - .3 - k * dz, WALL + 1.0, .19 * (k + 1), zt - k * dz, 0);
-      const zb = zt - n * dz, a0 = new THREE.Vector3(WALL + 1.02, 0, zt), a1 = new THREE.Vector3(WALL + 1.02, .19 * n, zb);
-      const [g1, m1] = rodGeom(a0, a1, .035, 6); add("#8f969c|m", g1, m1, 0);
-      const [g2, m2] = rodGeom(a0.clone().setY(.95), a1.clone().setY(.19 * n + .95), .022, 6); add("steel", g2, m2, 0);
-      for (let k = 0; k <= n; k += 2) { const z = zt - k * dz, y = .19 * k; box("steel", WALL + 1.01, y, z - .01, WALL + 1.03, y + .95, z + .01, 0); } }
-    box("terrace", WALL + 1.1, 0, Z_HALL, OUT_W - WALL, .04, Z_B - PART, 1);
-    box("rail", WALL + 1.1, .04, Z_HALL + .02, OUT_W - WALL, 1.04, Z_HALL + .05, 1); box("steel", WALL + 1.1, 1.04, Z_HALL + .01, OUT_W - WALL, 1.08, Z_HALL + .06, 1);
+    /* a lépcső a fotók szerint: a nyugati (szomszéd felőli) falra szerelt, szürke fém lépcső nyitott fokokkal. Lent a Dingi teraszánál (déli vég) indul,
+       északra emelkedik, és a mentőmellény-tartó FÖLÖTT ér fel az emeleti acél galériára – onnan nyílik a Kalóz terasza (és a Fregatt bejárata). */
+    { const n = 14, zt = Z_B - PART - .05, dz = .2, rise = FLOOR_H / n, x0 = WALL + .03, x1 = WALL + 1.0;
+      for (let k = 0; k < n; k++) { const y = rise * (k + 1), z1 = zt - k * dz; box("#3b3f45|m", x0, y - .045, z1 - dz - .04, x1, y, z1, 0); box("#8f969c|m", x0, y - .06, z1 - dz - .04, x1, y - .045, z1 - dz + .0, 0); }
+      const zb = zt - n * dz;
+      /* tartó: a falra szerelt kengyelek + a belső oldalon egy acél pofa */
+      { const [g, m] = rodGeom(new THREE.Vector3(x1 + .02, 0, zt), new THREE.Vector3(x1 + .02, FLOOR_H - .06, zb), .05, 4); add("#8f969c|m", g, m, 0); }
+      for (let k = 1; k < n; k += 3) box("#8f969c|m", WALL, rise * k - .12, zt - k * dz - .1, x0, rise * k - .02, zt - k * dz, 0);
+      /* korlát a belső oldalon (függőleges pálcák, felül kapaszkodó) */
+      { const a0 = new THREE.Vector3(x1 + .02, .95, zt), a1 = new THREE.Vector3(x1 + .02, FLOOR_H + .95, zb); const [g, m] = rodGeom(a0, a1, .022, 6); add("steel", g, m, 0);
+        for (let k = 0; k <= n; k++) { const z = zt - k * dz, y = rise * k; box("#9aa1a8|m", x1 + .01, y, z - .008, x1 + .03, y + .95, z + .008, 0); } }
+      /* mentőmellény-tartó a lépcső felső vége alatt (ÉNY-sarok), mellette úszógumik, horgonyos dísz a falon */
+      { const cx = WALL + .55, cz = Z_HALL + .55; box("#2b2f36|m", cx - .5, 1.32, cz - .03, cx + .5, 1.35, cz + .03, 0); [-.5, .5].forEach((d) => box("#2b2f36|m", cx + d - .02, 0, cz - .25, cx + d + .02, 1.35, cz - .21, 0));
+        for (let k = 0; k < 9; k++) { const c = ["#ff6a1a", "#ff7f2a", "#1f5fa8", "#ff6a1a", "#e5262f", "#ff8a3a", "#1f3a6a", "#ff6a1a", "#ffb11a"][k];
+          box(c, cx - .46 + k * .1, .72, cz - .1, cx - .38 + k * .1, 1.28, cz + .1, 0); box("#1c1f24", cx - .44 + k * .1, .5, cz - .06, cx - .4 + k * .1, .72, cz + .06, 0); }
+        ball("#ffd21f", cx - .25, .14, cz + .15, .14, 0, "all", 1, .7, 1); ball("#ffd21f", cx + .2, .12, cz + .2, .12, 0, "all", 1, .7, 1); }
+      /* a Dingi teraszának bútorai: kő asztallap, négy fekete szék párnával; faliszekrény; sárga porszívó a lépcső alján */
+      tsetHall(add, box, 4.0, (Z_HALL + Z_B - PART) / 2 + .6);
+      box("#a26a3a", 2.2, 0, Z_HALL + .02, 3.0, 1.0, Z_HALL + .45, 0); box("#8a5a30", 2.18, 1.0, Z_HALL, 3.02, 1.03, Z_HALL + .47, 0);
+      box("#ffd21f", WALL + .4, 0, zt + .05, WALL + .75, .45, zt + .4, 0); cyl("#2b2f36", WALL + .57, .45, zt + .22, .05, .3, 0);
+      /* a Korvett/Dingi ajtaja előtt lábtörlők */
+      box("#3a3a3a", 1.0, .03, Z_HALL + .05, 1.8, .045, Z_HALL + .55, 0); }
+    /* emelet: sötét acél galéria a lépcső tetején (északi sáv), a légtér fölött korlát; keleten a Kalóz terasza nagy szürke lapokkal, üvegkorláttal */
+    box("#3b3f45|m", WALL, -.2, Z_HALL, OUT_W - WALL, .03, VOID[1], 1);
+    box("hallTile", VOID[2], 0, VOID[1], OUT_W - WALL, .03, Z_B - PART, 1);
+    { const post = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(2, Math.round(L / .12));
+        for (let k = 0; k <= n; k++) { const u = k / n; box("#9aa1a8|m", x0 + (x1 - x0) * u - .008, .03, z0 + (z1 - z0) * u - .008, x0 + (x1 - x0) * u + .008, 1.0, z0 + (z1 - z0) * u + .008, 1); }
+        const [g, m] = rodGeom(new THREE.Vector3(x0, 1.0, z0), new THREE.Vector3(x1, 1.0, z1), .022, 6); add("steel", g, m, 1); };
+      post(WALL + 1.05, VOID[1], VOID[2], VOID[1]); post(VOID[2], VOID[1], VOID[2], Z_B - PART); }
+    railing(box, OUT_W - .05, Z_HALL, OUT_W, Z_B - PART, 1);
+    box("#3b3f45|m", OUT_W - WALL, -.2, Z_HALL, OUT_W, .03, Z_B - PART, 1);
+    tsetHall(add, box, 4.7, Z_B - PART - 1.2, 1);
     /* fali lámpák a bejárónál, házjel */
     [[OUT_W + .04, 1.9, Z_HALL + .4], [OUT_W + .04, 1.9, Z_B - .6]].forEach(([x, y, z]) => { box("frame", x - .04, y - .12, z - .06, x + .04, y + .12, z + .06, 0); box("bulb", x + .02, y - .08, z - .04, x + .06, y + .08, z + .04, 0); });
     /* elöl: Korvett terasza és a Fregatt erkélye üvegkorláttal */
@@ -1809,27 +1853,67 @@
     const tset = (cx, cz, lv, n) => { box("#9aa0a6", cx - .35, .72, cz - .35, cx + .35, .75, cz + .35, lv); box("#2b2f36|m", cx - .02, 0, cz - .02, cx + .02, .72, cz + .02, lv);
       [[-.65, 0, Math.PI / 2], [.65, 0, -Math.PI / 2], [0, -.65, 0]].slice(0, n).forEach(([dx, dz, r]) => chair(add, cx + dx, cz + dz, r, lv, "#2b2f36")); };
     tset(4.4, -.75, 0, 3); tset(1.6, -.75, 1, 2);
-    /* hátul: a Schooner terasza, a Kadett emeleti fa terasza oszlopokon, csigalépcsővel */
-    box("terrace", 0, -.04, Z_END, OUT_W, .02, Z_END + 2.9, 0);
-    box("terrace", 0, -.2, Z_END, OUT_W, 0, Z_END + 3.3, 1);
-    [[.1, Z_END + 3.1], [OUT_W - .3, Z_END + 3.1]].forEach(([x, z]) => box("#e9e6dc", x, 0, z, x + .2, Y1 - .2, z + .2));
-    railing(box, 0, Z_END + 3.25, OUT_W, Z_END + 3.3, 1); railing(box, OUT_W - .05, Z_END, OUT_W, Z_END + 3.3, 1);
-    /* hátsó, egyenes fémlépcső a Kadett teraszára a ház keleti oldalán (a parkoló felől, a fotó szerint) */
-    { const n = 15, x0 = OUT_W + .12, x1 = OUT_W + 1.0, zb = Z_END - 3.4, zt = Z_END + .2, dz = (zt - zb) / n;
-      for (let k = 0; k < n; k++) box("#8f969c|m", x0, (k + 1) * Y1 / n - .04, zb + k * dz, x1, (k + 1) * Y1 / n, zb + (k + 1) * dz + .02);
-      [x0 - .02, x1].forEach((x) => { const [g1, m1] = rodGeom(new THREE.Vector3(x + .01, 0, zb), new THREE.Vector3(x + .01, Y1, zt), .03, 6); add("#e9ecef|m", g1, m1); const [g2, m2] = rodGeom(new THREE.Vector3(x + .01, .95, zb), new THREE.Vector3(x + .01, Y1 + .95, zt), .02, 6); add("steel", g2, m2);
-        for (let k = 0; k <= n; k += 3) box("steel", x - .005, k * Y1 / n, zb + k * dz - .01, x + .025, k * Y1 / n + .95, zb + k * dz + .01); });
-      box("#8f969c|m", x0, Y1 - .05, zt, x1, Y1, Z_END + 1.4); }
+    /* hátul (a tulajdonos leírása szerint):
+       • földszint: a Schooner TELJESEN ZÁRT terasza (üvegfalas télikert), ugyanakkora, mint fölötte a Kadett terasza – ott kezdődik, ahol a parkoló autók állnak;
+       • emelet: a Kadett fa terasza a Schooner terasza fölött;
+       • a parkoló felőli hátsó sarkon L-alakú fémlépcső: a kertből észak felé indul a ház keleti oldala mentén, a pihenőn BALRA fordul, és a Kadett teraszára fut be;
+       • a Kadett teraszának bal hátsó sarkában (a ház felé nézve), a falhoz építve csigalépcső visz fel a tetőteraszra. */
+    const TD = 3.3;   /* a hátsó teraszok mélysége */
+    box("greyTile", 0, -.04, Z_END, OUT_W, .025, Z_END + TD, 0);
+    box("terrace", 0, -.2, Z_END, OUT_W, 0, Z_END + TD, 1); box("plasterIn", 0, -.24, Z_END, OUT_W, -.2, Z_END + TD, 1);
+    /* a Schooner zárt teraszának üvegfalai (keret + üveg), a nyugati oldalon tömör fal, középen tolóajtó a kertre */
+    { const h = Y1 - .24, glassRun = (axis, c, a0, a1) => { const n = Math.max(1, Math.round((a1 - a0) / 1.1));
+        for (let k = 0; k <= n; k++) { const v = a0 + (a1 - a0) * k / n; if (axis === "x") box("frame", v - .03, 0, c - .04, v + .03, h, c + .04, 0); else box("frame", c - .04, 0, v - .03, c + .04, h, v + .03, 0); }
+        if (axis === "x") { box("glass", a0, .03, c - .01, a1, h, c + .01, 0); box("frame", a0, h - .06, c - .05, a1, h, c + .05, 0); box("frame", a0, 0, c - .05, a1, .08, c + .05, 0); }
+        else { box("glass", c - .01, .03, a0, c + .01, h, a1, 0); box("frame", c - .05, h - .06, a0, c + .05, h, a1, 0); box("frame", c - .05, 0, a0, c + .05, .08, a1, 0); } };
+      glassRun("x", Z_END + TD - .05, .05, OUT_W - .05); glassRun("z", OUT_W - .05, Z_END, Z_END + TD);
+      box("plaster", 0, 0, Z_END, WALL, h, Z_END + TD, 0); }
+    /* a zárt terasz bútorai: kanapé, dohányzóasztal, étkezőasztal székekkel */
+    box("#5b6470", 3.4, .05, Z_END + 2.4, 5.4, .45, Z_END + 3.1, 0); box("#5b6470", 3.4, .45, Z_END + 2.9, 5.4, .85, Z_END + 3.1, 0); box("#c9cdc8", 3.9, .05, Z_END + 1.4, 4.9, .4, Z_END + 2.0, 0);
+    tsetHall(add, box, 1.6, Z_END + 1.7);
+    /* a Kadett terasza: korlát körben; a keleti oldalon a lépcső befutója, a nyugati sarokban a csigalépcső nyílása */
+    const LST = [Z_END + 1.45, Z_END + 2.55];   /* a lépcső befutójának z-tartománya a keleti peremen */
+    railing(box, 0, Z_END + TD - .05, OUT_W, Z_END + TD, 1);
+    railing(box, OUT_W - .05, Z_END, OUT_W, LST[0], 1); railing(box, OUT_W - .05, LST[1], OUT_W, Z_END + TD, 1);
+    railing(box, 0, Z_END + 1.75, .05, Z_END + TD, 1);
+    tset(3.6, Z_END + 1.9, 1, 3);
+    box("#5a3d24", 4.9, 0, Z_END + 2.8, 5.6, .42, Z_END + 3.2, 1);   /* virágláda */
+    add("foliage", leafGeom([[5.25, .7, Z_END + 3.0, .32, 5, .7]], "#4f8a3c", .1), M4(0, Y1, 0));
+    /* L-lépcső: 1. kar a kertből észak felé (x OUT_W+.15…+1.05), pihenő, 2. kar balra (nyugatra) a teraszra */
+    { const sx0 = OUT_W + .15, sx1 = OUT_W + 1.05, n1 = 12, n2 = 3, rise = Y1 / (n1 + n2), dz = .27, zTop1 = LST[1], zBot = zTop1 + n1 * dz;
+      const stepMk = "#3b3f45|m", frameMk = "#8f969c|m";
+      for (let k = 0; k < n1; k++) { const y = rise * (k + 1), z1 = zBot - k * dz; box(stepMk, sx0, y - .045, z1 - dz - .03, sx1, y, z1, -1); }
+      /* pihenő a 12. fok magasságában, a teraszperem mellett */
+      const yL = rise * n1; box(stepMk, sx0, yL - .05, LST[0], sx1 + .05, yL, LST[1], -1);
+      /* 2. kar: nyugat felé (a ház felé) – három fok a pihenőtől a terasz szintjéig (a pihenő és a terasz között) */
+      for (let k = 0; k < n2; k++) { const y = yL + rise * (k + 1), xa = sx1 - (k + 1) * .3; box(stepMk, xa, y - .045, LST[0], xa + .3, y, LST[1], -1); }
+      /* oszlopok, pofák, korlát */
+      [[sx1, LST[0]], [sx1, LST[1]], [sx0, LST[0]]].forEach(([x, z]) => box(frameMk, x - .04, 0, z - .04, x + .04, yL, z + .04, -1));
+      [sx0 - .02, sx1 + .02].forEach((x) => { const [g1, m1] = rodGeom(new THREE.Vector3(x, 0, zBot), new THREE.Vector3(x, yL - .02, zTop1), .045, 4); add(frameMk, g1, m1);
+        const [g2, m2] = rodGeom(new THREE.Vector3(x, .95, zBot), new THREE.Vector3(x, yL + .95, zTop1), .02, 6); add("steel", g2, m2);
+        for (let k = 0; k <= n1; k += 2) { const z = zBot - k * dz, y = rise * k; box("#9aa1a8|m", x - .008, y, z - .008, x + .008, y + .95, z + .008); } });
+      { const [g, m] = rodGeom(new THREE.Vector3(sx1 + .03, yL + .95, LST[1]), new THREE.Vector3(sx1 + .03, yL + .95, LST[0]), .02, 6); add("steel", g, m);
+        const [g2, m2] = rodGeom(new THREE.Vector3(sx1 + .03, yL + .95, LST[0] - .02), new THREE.Vector3(OUT_W, Y1 + .95, LST[0] - .02), .02, 6); add("steel", g2, m2); } }
+    /* csigalépcső a Kadett teraszáról a tetőteraszra: a bal hátsó sarokban (nyugati sarok a ház falánál), középoszlop, ék alakú fokok */
+    const SP = { x: .95, z: Z_END + .9, r: .82 };
+    { const y0 = Y1, y1 = 2 * FLOOR_H + .25, n = 18, rise = (y1 - y0) / n, step = (TAU * 1.0) / n, A0 = Math.PI - (n - .5) * step;   /* a legfelső fok a ház (észak) felé néz, onnan lépsz a tetőre */
+      cyl("#8f969c|m", SP.x, y0, SP.z, .06, y1 - y0 + 1.0, 1 - 1, "all", 10);
+      for (let k = 0; k < n; k++) { const a = A0 + k * step, y = y0 + rise * (k + 1) - Y1;
+        const g = new THREE.CylinderGeometry(SP.r, SP.r, .045, 6, 1, false, a, step * 1.08); add("#3b3f45|m", g, M4(SP.x, y + Y1 - .022, SP.z), -1);
+        const ex = SP.x + Math.sin(a + step / 2) * SP.r, ez = SP.z + Math.cos(a + step / 2) * SP.r; box("#9aa1a8|m", ex - .01, y + Y1, ez - .01, ex + .01, y + Y1 + .95, ez + .01, -1); }
+      /* csavarvonalas kapaszkodó */
+      { const pts = []; for (let k = 0; k <= n * 2; k++) { const a = A0 + (k / 2 + .5) * step; pts.push(new THREE.Vector3(SP.x + Math.sin(a) * SP.r, y0 + rise * (k / 2 + 1) + .95, SP.z + Math.cos(a) * SP.r)); }
+        add("steel", new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 4, .02, 6, false), new THREE.Matrix4()); } }
     /* esőcsatorna-lefolyók a sarkokon */
     [[-.06, -.06], [OUT_W + .06, -.06], [-.06, Z_END + .06], [OUT_W + .06, Z_END + .06]].forEach(([x, z]) => cyl("#8a9096|m", x, 0, z, .05, 2 * FLOOR_H + .4));
     /* lapos tető attikával, fedkővel, szellőzőkkel – mennyezetként is (életnagyságban) */
     const roofY = 2 * FLOOR_H;
     box("roof", 0, roofY, -1.45, OUT_W, roofY + .25, Z_END, 2, "roof");
     box("plasterIn", 0, roofY - .02, 0, OUT_W, roofY, Z_END, 2, "roof");
-    [[0, -1.45, OUT_W, -1.3], [0, Z_END - .15, OUT_W, Z_END], [0, -1.45, .15, Z_END], [OUT_W - .15, -1.45, OUT_W, Z_END]].forEach(([x0, z0, x1, z1]) => { box("plaster", x0, roofY + .25, z0, x1, roofY + .7, z1, 2, "roof"); box("#8a8d90|m", x0 - .02, roofY + .7, z0 - .02, x1 + .02, roofY + .74, z1 + .02, 2, "roof"); });
+    [[0, -1.45, OUT_W, -1.3], [1.85, Z_END - .15, OUT_W, Z_END], [0, -1.45, .15, Z_END], [OUT_W - .15, -1.45, OUT_W, Z_END]].forEach(([x0, z0, x1, z1]) => { box("plaster", x0, roofY + .25, z0, x1, roofY + .7, z1, 2, "roof"); box("#8a8d90|m", x0 - .02, roofY + .7, z0 - .02, x1 + .02, roofY + .74, z1 + .02, 2, "roof"); });
     [[2, 5], [4, 12], [2.5, 19]].forEach(([x, z]) => cyl("#a9adb0|m", x, roofY + .25, z, .12, .45, 2, "roof"));
     /* tetőkorlát (vékony fém, a fotók szerint a lapos tető peremén) */
-    { const yb = roofY + .74, ys = yb + .95; [[0, -1.3, OUT_W, -1.3], [0, Z_END - .08, OUT_W, Z_END - .08], [.08, -1.3, .08, Z_END - .08], [OUT_W - .08, -1.3, OUT_W - .08, Z_END - .08]].forEach(([x0, z0, x1, z1]) => {
+    { const yb = roofY + .74, ys = yb + .95; [[0, -1.3, OUT_W, -1.3], [1.85, Z_END - .08, OUT_W, Z_END - .08], [.08, -1.3, .08, Z_END - .08], [OUT_W - .08, -1.3, OUT_W - .08, Z_END - .08]].forEach(([x0, z0, x1, z1]) => {
         const [g1, m1] = rodGeom(new THREE.Vector3(x0, ys, z0), new THREE.Vector3(x1, ys, z1), .022, 6); add("steel", g1, m1, 2, "roof");
         const [g2, m2] = rodGeom(new THREE.Vector3(x0, yb + .45, z0), new THREE.Vector3(x1, yb + .45, z1), .012, 4); add("steel", g2, m2, 2, "roof");
         const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / 1.5)); for (let k = 0; k <= n; k++) { const u = k / n; cyl("steel", x0 + (x1 - x0) * u, yb, z0 + (z1 - z0) * u, .02, .95, 2, "roof", 6); } }); }
@@ -1858,6 +1942,10 @@
     return H;
   }
   /* --- segédek a házhoz --- */
+  function tsetHall(add, box, cx, cz, lv) { lv = lv || 0;
+    box("#d8d6d0", cx - .42, .72, cz - .42, cx + .42, .76, cz + .42, lv); box("#2b2f36|m", cx - .03, 0, cz - .03, cx + .03, .72, cz + .03, lv);
+    [[-.72, 0, Math.PI / 2], [.72, 0, -Math.PI / 2], [0, -.72, 0], [0, .72, Math.PI]].forEach(([dx, dz, r]) => { chair(add, cx + dx, cz + dz, r, lv, "#2b2f36"); box("#c9cdc8", cx + dx - .2, .46, cz + dz - .2, cx + dx + .2, .5, cz + dz + .2, lv); });
+  }
   function railing(box, x0, z0, x1, z1, lv) {
     box("rail", x0, .02, z0, x1, 1.02, z1, lv);
     const long = (x1 - x0) > (z1 - z0);
@@ -3019,6 +3107,32 @@
         fragmentShader: `uniform vec3 uC; uniform float uA, uR; void main(){ float d = length(gl_PointCoord - .5) * 2.; float a = uR > .5 ? smoothstep(1., .7, d) * (smoothstep(.4, .8, d) + .25) : smoothstep(1., 0., d); gl_FragColor = vec4(uC, a * uA); }` });
       W.disposables.push(ge, m); const P = new THREE.Points(ge, m); P.frustumCulled = false; g.add(P); return m; };
     UW.bub = mkPts(70, .03, "#ffffff", .7); UW.dust = mkPts(400, .012, "#d8efe0", .5);
+    /* mocsári teknősök (a Balaton-felvidék védett őshonos teknőse) – a Quest Home vízalatti teknőse nyomán: lassan, evezve úsznak el melletted */
+    UW.turtles = [];
+    const shellTex = canvasTex(256, 256, (gg, w, h) => { gg.fillStyle = "#2b3122"; gg.fillRect(0, 0, w, h);
+      gg.strokeStyle = "rgba(15,18,10,.9)"; gg.lineWidth = 5; for (let i = 0; i < 5; i++) { gg.beginPath(); gg.moveTo(i * 64, 0); gg.lineTo(i * 64 + 20, h); gg.stroke(); } for (let j = 1; j < 4; j++) { gg.beginPath(); gg.moveTo(0, j * 64); gg.lineTo(w, j * 64 + 10); gg.stroke(); }
+      for (let k = 0; k < 420; k++) { gg.fillStyle = `hsla(${rr(45, 55)},${rr(70, 95)}%,${rr(50, 65)}%,${rr(.5, .95)})`; gg.beginPath(); gg.arc(rand() * w, rand() * h, rr(1, 2.6), 0, TAU); gg.fill(); } });
+    const skinTex = canvasTex(128, 128, (gg, w, h) => { gg.fillStyle = "#2a3020"; gg.fillRect(0, 0, w, h); for (let k = 0; k < 260; k++) { gg.fillStyle = `hsla(50,90%,${rr(52, 66)}%,${rr(.6, 1)})`; gg.beginPath(); gg.arc(rand() * w, rand() * h, rr(.8, 2), 0, TAU); gg.fill(); } });
+    const shM = std({ map: shellTex, roughness: .45, metalness: .05 }), skM = std({ map: skinTex, roughness: .6 }), plM = std({ color: "#c9b56a", roughness: .7 });
+    W.disposables.push(shM, skM, plM);
+    for (let k = 0; k < 3; k++) {
+      const tg = new THREE.Group(), sc = rr(.85, 1.15);
+      const shell = mesh(new THREE.SphereGeometry(.13, 20, 12, 0, TAU, 0, Math.PI / 2), shM, tg); shell.scale.set(1, .42, 1.25);
+      const plastron = mesh(new THREE.CircleGeometry(.13, 20), plM, tg); plastron.rotation.x = Math.PI / 2; plastron.scale.set(1, 1.22, 1);
+      const rim = mesh(new THREE.TorusGeometry(.13, .012, 6, 24), shM, tg); rim.rotation.x = Math.PI / 2; rim.scale.set(1, 1.25, 1);
+      const neck = mesh(new THREE.CylinderGeometry(.025, .032, .07, 8), skM, tg); neck.rotation.x = Math.PI / 2 - .2; neck.position.set(0, .01, -.18);
+      const head = mesh(new THREE.SphereGeometry(.035, 12, 8), skM, tg); head.scale.set(.85, .7, 1.25); head.position.set(0, .02, -.235);
+      [-1, 1].forEach((sd) => { const eye = mesh(new THREE.SphereGeometry(.007, 6, 4), std({ color: "#c98a1a", roughness: .2 }), tg); eye.position.set(sd * .022, .032, -.25); });
+      const legs = [];
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const pv = new THREE.Group(); pv.position.set(sx * .1, -.005, sz * .1); tg.add(pv);
+        const lg = mesh(new THREE.BoxGeometry(.075, .014, .04), skM, pv); lg.position.x = sx * .04; legs.push({ pv, sx, sz }); });
+      const tail = mesh(new THREE.ConeGeometry(.012, .06, 6), skM, tg); tail.rotation.x = Math.PI / 2; tail.position.set(0, 0, .19);
+      tg.scale.setScalar(sc); g.add(tg);
+      tg.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+      const hitM = mesh(new THREE.SphereGeometry(.22, 8, 6), basic({ visible: false }), tg); hitM.userData.xr = { hover: (on, hit) => { if (on) fishTip({ n: "Mocsári teknős", d: "Védett, őshonos – a Balaton-felvidék nádasaiban él, akár 60 évig" }, hit); else showTip(null); } };
+      T.xr.extra.add(hitM); W.objs.push(hitM);
+      UW.turtles.push({ g: tg, legs, ph: rand() * 9, a: rand() * TAU, R: rr(2.2, 4.5), cx: rr(-3, 3), cz: UW_Z + rr(-3, 3), y: UW_BOT + rr(.8, 2.2), sp: rr(.07, .11) * (k % 2 ? 1 : -1) });
+    }
     return UW;
   }
   function fishTip(F, hit) {
@@ -3065,6 +3179,13 @@
       /* a rámutatáshoz a befoglaló gömb kövesse a halakat (a küsz minden képkockában, a többi ritkábban) */
       if (o.key === "kusz" || ((UW.bsT = (UW.bsT || 0) + 1) % 10 === 0)) o.im.computeBoundingSphere();
     });
+    /* teknősök: lassú körök, evező lábak, a fej enyhén biccen */
+    (UW.turtles || []).forEach((q) => { q.a += q.sp * dt / q.R * 3;
+      const x = q.cx + Math.sin(q.a) * q.R, z = q.cz + Math.cos(q.a) * q.R, y = q.y + Math.sin(t * .3 + q.ph) * .35;
+      const dx = Math.cos(q.a) * Math.sign(q.sp), dz = -Math.sin(q.a) * Math.sign(q.sp);
+      q.g.position.set(x, y, z); q.g.rotation.set(Math.sin(t * .3 + q.ph) * .12, Math.atan2(-dx, -dz), Math.sin(t * .5 + q.ph) * .08);
+      const st = Math.sin(t * 2.2 + q.ph);
+      q.legs.forEach((L) => { L.pv.rotation.y = L.sx * (L.sz < 0 ? st * .7 : -st * .4); L.pv.rotation.z = L.sx * (L.sz < 0 ? .25 + st * .2 : .1); }); });
     /* időnként buborék-csobbanás hang */
     UW.snd = (UW.snd || 3) - dt; if (UW.snd < 0) { UW.snd = rr(2, 6); try { bubbleSnd(); } catch (e) {} }
   }

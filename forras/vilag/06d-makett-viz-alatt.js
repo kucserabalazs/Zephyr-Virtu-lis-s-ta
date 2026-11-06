@@ -184,6 +184,32 @@
         fragmentShader: `uniform vec3 uC; uniform float uA, uR; void main(){ float d = length(gl_PointCoord - .5) * 2.; float a = uR > .5 ? smoothstep(1., .7, d) * (smoothstep(.4, .8, d) + .25) : smoothstep(1., 0., d); gl_FragColor = vec4(uC, a * uA); }` });
       W.disposables.push(ge, m); const P = new THREE.Points(ge, m); P.frustumCulled = false; g.add(P); return m; };
     UW.bub = mkPts(70, .03, "#ffffff", .7); UW.dust = mkPts(400, .012, "#d8efe0", .5);
+    /* mocsári teknősök (a Balaton-felvidék védett őshonos teknőse) – a Quest Home vízalatti teknőse nyomán: lassan, evezve úsznak el melletted */
+    UW.turtles = [];
+    const shellTex = canvasTex(256, 256, (gg, w, h) => { gg.fillStyle = "#2b3122"; gg.fillRect(0, 0, w, h);
+      gg.strokeStyle = "rgba(15,18,10,.9)"; gg.lineWidth = 5; for (let i = 0; i < 5; i++) { gg.beginPath(); gg.moveTo(i * 64, 0); gg.lineTo(i * 64 + 20, h); gg.stroke(); } for (let j = 1; j < 4; j++) { gg.beginPath(); gg.moveTo(0, j * 64); gg.lineTo(w, j * 64 + 10); gg.stroke(); }
+      for (let k = 0; k < 420; k++) { gg.fillStyle = `hsla(${rr(45, 55)},${rr(70, 95)}%,${rr(50, 65)}%,${rr(.5, .95)})`; gg.beginPath(); gg.arc(rand() * w, rand() * h, rr(1, 2.6), 0, TAU); gg.fill(); } });
+    const skinTex = canvasTex(128, 128, (gg, w, h) => { gg.fillStyle = "#2a3020"; gg.fillRect(0, 0, w, h); for (let k = 0; k < 260; k++) { gg.fillStyle = `hsla(50,90%,${rr(52, 66)}%,${rr(.6, 1)})`; gg.beginPath(); gg.arc(rand() * w, rand() * h, rr(.8, 2), 0, TAU); gg.fill(); } });
+    const shM = std({ map: shellTex, roughness: .45, metalness: .05 }), skM = std({ map: skinTex, roughness: .6 }), plM = std({ color: "#c9b56a", roughness: .7 });
+    W.disposables.push(shM, skM, plM);
+    for (let k = 0; k < 3; k++) {
+      const tg = new THREE.Group(), sc = rr(.85, 1.15);
+      const shell = mesh(new THREE.SphereGeometry(.13, 20, 12, 0, TAU, 0, Math.PI / 2), shM, tg); shell.scale.set(1, .42, 1.25);
+      const plastron = mesh(new THREE.CircleGeometry(.13, 20), plM, tg); plastron.rotation.x = Math.PI / 2; plastron.scale.set(1, 1.22, 1);
+      const rim = mesh(new THREE.TorusGeometry(.13, .012, 6, 24), shM, tg); rim.rotation.x = Math.PI / 2; rim.scale.set(1, 1.25, 1);
+      const neck = mesh(new THREE.CylinderGeometry(.025, .032, .07, 8), skM, tg); neck.rotation.x = Math.PI / 2 - .2; neck.position.set(0, .01, -.18);
+      const head = mesh(new THREE.SphereGeometry(.035, 12, 8), skM, tg); head.scale.set(.85, .7, 1.25); head.position.set(0, .02, -.235);
+      [-1, 1].forEach((sd) => { const eye = mesh(new THREE.SphereGeometry(.007, 6, 4), std({ color: "#c98a1a", roughness: .2 }), tg); eye.position.set(sd * .022, .032, -.25); });
+      const legs = [];
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => { const pv = new THREE.Group(); pv.position.set(sx * .1, -.005, sz * .1); tg.add(pv);
+        const lg = mesh(new THREE.BoxGeometry(.075, .014, .04), skM, pv); lg.position.x = sx * .04; legs.push({ pv, sx, sz }); });
+      const tail = mesh(new THREE.ConeGeometry(.012, .06, 6), skM, tg); tail.rotation.x = Math.PI / 2; tail.position.set(0, 0, .19);
+      tg.scale.setScalar(sc); g.add(tg);
+      tg.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+      const hitM = mesh(new THREE.SphereGeometry(.22, 8, 6), basic({ visible: false }), tg); hitM.userData.xr = { hover: (on, hit) => { if (on) fishTip({ n: "Mocsári teknős", d: "Védett, őshonos – a Balaton-felvidék nádasaiban él, akár 60 évig" }, hit); else showTip(null); } };
+      T.xr.extra.add(hitM); W.objs.push(hitM);
+      UW.turtles.push({ g: tg, legs, ph: rand() * 9, a: rand() * TAU, R: rr(2.2, 4.5), cx: rr(-3, 3), cz: UW_Z + rr(-3, 3), y: UW_BOT + rr(.8, 2.2), sp: rr(.07, .11) * (k % 2 ? 1 : -1) });
+    }
     return UW;
   }
   function fishTip(F, hit) {
@@ -230,6 +256,13 @@
       /* a rámutatáshoz a befoglaló gömb kövesse a halakat (a küsz minden képkockában, a többi ritkábban) */
       if (o.key === "kusz" || ((UW.bsT = (UW.bsT || 0) + 1) % 10 === 0)) o.im.computeBoundingSphere();
     });
+    /* teknősök: lassú körök, evező lábak, a fej enyhén biccen */
+    (UW.turtles || []).forEach((q) => { q.a += q.sp * dt / q.R * 3;
+      const x = q.cx + Math.sin(q.a) * q.R, z = q.cz + Math.cos(q.a) * q.R, y = q.y + Math.sin(t * .3 + q.ph) * .35;
+      const dx = Math.cos(q.a) * Math.sign(q.sp), dz = -Math.sin(q.a) * Math.sign(q.sp);
+      q.g.position.set(x, y, z); q.g.rotation.set(Math.sin(t * .3 + q.ph) * .12, Math.atan2(-dx, -dz), Math.sin(t * .5 + q.ph) * .08);
+      const st = Math.sin(t * 2.2 + q.ph);
+      q.legs.forEach((L) => { L.pv.rotation.y = L.sx * (L.sz < 0 ? st * .7 : -st * .4); L.pv.rotation.z = L.sx * (L.sz < 0 ? .25 + st * .2 : .1); }); });
     /* időnként buborék-csobbanás hang */
     UW.snd = (UW.snd || 3) - dt; if (UW.snd < 0) { UW.snd = rr(2, 6); try { bubbleSnd(); } catch (e) {} }
   }
