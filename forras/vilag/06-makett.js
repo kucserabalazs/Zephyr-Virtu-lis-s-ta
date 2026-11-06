@@ -432,21 +432,25 @@
   function wristRedraw() { try { const P = T.xr && T.xr.wristP; if (P && P.m.visible) P.draw(); } catch (e) {} }
 
   /* ---------- csuklómenü (bal tenyér felfelé) – a makett minden beállítása ---------- */
+  /* a csuklóóra menüje – szerteágazó: a tömb harmadik eleme függvény (gomb) vagy újabb lista (almenü) */
   function maqWrist() {
     const life = MAQ.mode === "life", turnA = Math.PI / 4;
     const turn = (a) => { try { T.vrPanel.turn(a); } catch (e) {} };
-    const sun3 = [["◂☀", "Korábban", () => nudgeHour(-.5)], ["◐", PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", "Később", () => nudgeHour(.5)]];
-    const turn3 = [["↺", "Balra", () => turn(turnA)], ["↻", "Jobbra", () => turn(-turnA)], ["‹", "A sétához", () => W.close()]];
-    if (MAQ.dive) return [["🌊", "Fel a stégre", () => goSurface()], ["🐟", "Halak neve", () => showTip(null)], ["▣", "Makett", () => goSurface()]].concat(sun3, turn3);
+    const sunMenu = ["☀", "Napszak", [["◂☀", "Fél órával korábban", () => nudgeHour(-.5)], ["☀▸", "Fél órával később", () => nudgeHour(.5)]]
+      .concat(PRESETS.map(([n], i) => [["🌅", "🌄", "🌞", "🌤", "🌇", "🌆", "🌃", "🌙"][i], n, () => setPreset(i), MAQ.preset === i]))];
+    const turnMenu = ["🧭", "Forgás", [["↺", "Balra 45°", () => turn(turnA)], ["↻", "Jobbra 45°", () => turn(-turnA)], ["⤾", "Megfordulok", () => turn(Math.PI)]]];
+    const back = ["‹", "A sétához", () => W.close()];
+    if (MAQ.dive) return [["🌊", "Fel a stégre", () => goSurface()], sunMenu, ["▣", "Makett", () => goSurface()], turnMenu, back];
     if (life) return [
-      MAQ.level ? ["⬇", "Földszint", () => goLevel(0)] : ["⬆", "Emelet", () => goLevel(1)], ["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▣", "Makett", () => goTable()],
-      ...sun3,
-      ["📅", "Foglalás", () => W.close(() => { try { T.book(null); } catch (e) {} })], ["🐟", "Merülés", () => goDive()], ["🔭", MAQ.sights ? "Feliratok ki" : "Látnivalók", () => toggleSights()],
-      ...turn3];
+      ["🏢", "Szintek", [["⬆", "Emelet", () => goLevel(1), MAQ.level === 1], ["⬇", "Földszint", () => goLevel(0), MAQ.level === 0], ["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }]]],
+      ["▣", "Vissza a maketthez", () => goTable()], sunMenu,
+      ["📅", "Foglalás", () => W.close(() => { try { T.book(null); } catch (e) {} })], ["🐟", "Merülés", () => goDive()],
+      ["🔭", MAQ.sights ? "Feliratok ki" : "Látnivalók", () => toggleSights()], turnMenu, back];
     return [
-      ["＋", "Nagyobb", () => stepScale(1)], ["－", "Kisebb", () => stepScale(-1)], ["🚶", "Életnagyság", () => goLife()],
-      ["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▤", MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }], ["🐟", "Merülés", () => goDive()],
-      ...sun3, ...turn3];
+      ["🔍", "Méret", [["＋", "Nagyobb", () => stepScale(1)], ["－", "Kisebb", () => stepScale(-1)], ["🚶", "Életnagyság", () => goLife()], ["🧭", "Valódi irány", () => { MAQ.auto = false; MAQ.turn.rotation.y = 0; }]].concat(
+        SCALES.slice(0, -1).map((v) => ["▫", SCALE_TXT(v), () => setScale(v, true), Math.abs(MAQ.sT - v) < 1e-4]))],
+      ["🏠", "Nézet", [["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▤", MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }], ["🔭", MAQ.sights ? "Feliratok ki" : "Látnivalók", () => toggleSights()]]],
+      ["🚶", "Életnagyság", () => goLife()], sunMenu, ["🐟", "Merülés", () => goDive()], turnMenu, ["☰", "Nagy panel", () => W.togglePanel()], back];
   }
   /* ---------- nagy lebegő panel (VR) ---------- */
   function maqPanel(P) {
