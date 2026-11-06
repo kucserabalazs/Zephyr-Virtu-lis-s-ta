@@ -13740,6 +13740,15 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     function draw(g, W, H, t) {
       layout(W, H);
       lakeBg(g, W, H, t, false);
+      /* élet a ponton körül: két tőkés réce úszik el a ponton előtt, nyomukban kis hullám */
+      [[0, 1], [1, .82]].forEach(([k, sc]) => { const span = W + 120, x = ((t * (18 + k * 6) + k * 260) % span) - 60, y = L.by + L.bw + 16 + k * 10, s2 = Math.max(8, L.sq * .22) * sc;
+        if (y > H - (L.ph ? 130 : 80)) return; g.save(); g.translate(x, y);
+        g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = 1; g.beginPath(); g.moveTo(-s2 * 3, s2 * .35); g.lineTo(-s2 * .8, s2 * .3); g.stroke();
+        g.fillStyle = k ? "#8a6a4a" : "#6b5a48"; g.beginPath(); g.ellipse(0, 0, s2, s2 * .45, 0, 0, TAU); g.fill();
+        g.fillStyle = k ? "#7a5a3a" : "#1f6b3a"; g.beginPath(); g.arc(s2 * .8, -s2 * .45, s2 * .32, 0, TAU); g.fill();
+        g.fillStyle = "#f2b233"; g.beginPath(); g.moveTo(s2 * 1.08, -s2 * .45); g.lineTo(s2 * 1.4, -s2 * .38); g.lineTo(s2 * 1.08, -s2 * .32); g.fill();
+        if (!k) { g.fillStyle = "#fff"; g.fillRect(s2 * .55, -s2 * .2, s2 * .3, s2 * .06); }
+        g.restore(); });
       drawPontoon(g, t); drawWater(g, t);
       const { sq } = L;
       /* utolsó lépés, kijelölés, ötlet, sakk */
