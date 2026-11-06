@@ -247,6 +247,14 @@
     box("terrace", 0, -.06, -1.45, OUT_W, 0, 0, 0);
     box("terrace", 0, -.18, -1.45, OUT_W, 0, 0, 1); box("plaster", 0, -.24, -1.45, OUT_W, -.18, 0, 1);
     railing(box, 0, -1.45, OUT_W, -1.4, 1); railing(box, 0, -1.45, .05, 0, 1); railing(box, OUT_W - .05, -1.45, OUT_W, 0, 1);
+    /* a Korvett hálószobájában nagy, keretezett Balaton-térkép lóg (a fotó szerint) – a nappali felőli falon */
+    { const kp = planOf("korvett"), hr = (kp.rooms || []).find((r) => /háló/i.test(r[0]));
+      if (hr) { const q = mapRect(UNITS.korvett, hr[1], hr[2], hr[3], hr[4]); const x = q[2] - .06, z = q[1] + 1.25;   /* az ajtó (a fal közepén túl) mellett, előtte */
+        const map = canvasTex(1024, 300, (g, w, h) => { g.fillStyle = "#e8e2c8"; g.fillRect(0, 0, w, h); for (let k = 0; k < 900; k++) { g.fillStyle = `hsla(${rr(70, 110)},${rr(25, 45)}%,${rr(45, 65)}%,.5)`; g.fillRect(rand() * w, rand() * h, rr(4, 14), rr(4, 10)); }
+          g.fillStyle = "#6fb7d0"; g.beginPath(); g.moveTo(40, 210); g.bezierCurveTo(160, 230, 300, 205, 420, 170); g.lineTo(470, 150); g.lineTo(500, 165); g.bezierCurveTo(620, 130, 760, 90, 980, 40); g.lineTo(990, 70); g.bezierCurveTo(800, 140, 640, 190, 505, 205); g.lineTo(470, 190); g.bezierCurveTo(330, 245, 180, 265, 50, 245); g.closePath(); g.fill();
+          g.fillStyle = "#1f3a6a"; g.font = "800 46px Georgia, serif"; g.fillText("BALATON", 60, 60); g.fillStyle = "#c62828"; g.beginPath(); g.arc(560, 190, 8, 0, TAU); g.fill(); g.fillStyle = "#222"; g.font = "600 22px Georgia, serif"; g.fillText("Zamárdi", 575, 215); });
+        const mm = mesh(new THREE.PlaneGeometry(1.9, .56), std({ map, roughness: .6 }), H.lv[0]); mm.position.set(x, 1.65, z); mm.rotation.y = -Math.PI / 2;
+        box("#3a2a1e", x + .005, 1.35, z - 1.0, x + .025, 1.95, z + 1.0, 0); } }
     /* teraszbútor a fotók szerint: a Korvett teraszán kis asztal fekete székekkel, a Fregatt erkélyén asztal két székkel */
     const tset = (cx, cz, lv, n) => { box("#9aa0a6", cx - .35, .72, cz - .35, cx + .35, .75, cz + .35, lv); box("#2b2f36|m", cx - .02, 0, cz - .02, cx + .02, .72, cz + .02, lv);
       [[-.65, 0, Math.PI / 2], [.65, 0, -Math.PI / 2], [0, -.65, 0]].slice(0, n).forEach(([dx, dz, r]) => chair(add, cx + dx, cz + dz, r, lv, "#2b2f36")); };
