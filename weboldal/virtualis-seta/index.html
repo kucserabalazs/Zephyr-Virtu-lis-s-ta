@@ -13655,7 +13655,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     }
     function sailTri(g, x0, yb, h, w, col, col2, lean) { const gr = g.createLinearGradient(x0, yb - h, x0 + w, yb); gr.addColorStop(0, col); gr.addColorStop(1, col2); g.fillStyle = gr; g.beginPath(); g.moveTo(x0, yb); g.quadraticCurveTo(x0 + w * .55 + (lean || 0), yb - h * .45, x0 + (lean || 0) * .3, yb - h); g.lineTo(x0 + w, yb); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.18)"; g.lineWidth = .8; g.stroke(); }
     function drawPiece(g, p, x, y, s, t, opt) {
-      opt = opt || {}; const w = isW(p), C = COL[w ? "w" : "b"], tp = p.toLowerCase(), dir = w ? -1 : 1, bob = Math.sin(t * 1.8 + x * .05 + y * .03) * s * .02;
+      opt = opt || {}; const w = isW(p), C = COL[w ? "w" : "b"], tp = p.toLowerCase(), dir = (w ? -1 : 1) * (S.flip && !opt.icon ? -1 : 1), bob = Math.sin(t * 1.8 + x * .05 + y * .03) * s * .02;
       g.save(); g.translate(x, y + bob); if (opt.rot) g.rotate(opt.rot); if (opt.sc) g.scale(opt.sc, opt.sc); if (opt.alpha != null) g.globalAlpha = opt.alpha;
       /* árnyék és vízgyűrű */
       if (!opt.icon) { g.fillStyle = "rgba(8,30,40,.28)"; g.beginPath(); g.ellipse(s * .04, s * .1, s * .36, s * .17, 0, 0, TAU); g.fill(); g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = Math.max(1, s * .02); g.beginPath(); g.ellipse(0, s * .06, s * (.34 + .03 * Math.sin(t * 2 + x)), s * .14, 0, 0, TAU); g.stroke(); }
