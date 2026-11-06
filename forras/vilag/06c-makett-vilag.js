@@ -146,7 +146,7 @@
           float ca = 0.;
           if (el > 0.) {
             float u = atan(d.x, -d.z) / 6.2831853 + .5 + uT * .0005, v = 1. - clamp(el / .62, 0., 1.);
-            vec4 c = texture2D(uClouds, vec2(u, clamp(v, .02, .98))); ca = c.a * smoothstep(0., .05, el) * .9 * (1. - uNight * .78);
+            vec4 c = texture2D(uClouds, vec2(u, clamp(v, .02, .98))); ca = c.a * smoothstep(0., .05, el) * smoothstep(.97, .55, el) * .9 * (1. - uNight * .78);
             vec3 lit = mix(uHor * .9 + .05, vec3(1.), .25 + .6 * uDay) * (.25 + .75 * max(uDay, .12));
             vec3 cc = mix(lit * .62, lit, c.r) + uGlow * (pow(s, 3.) * .9 + .25) * (1. - uDay * .55) * c.r;
             cc = mix(cc, vec3(.05,.07,.12), uNight * .75);
@@ -762,7 +762,7 @@
     /* víz */
     const wu = ENV.water.userData.mat.uniforms; wu.uSun.value.copy(p.el > -2 ? sdC : md); wu.uSkyH.value.copy(s.hor); wu.uSkyZ.value.copy(s.zen.clone().lerp(s.hor, .25));
     wu.uHaze.value.copy(s.hor).lerp(s.zen, .08); wu.uSunC.value.copy(p.el > -2 ? s.glow.clone().multiplyScalar(1.1) : new THREE.Color(.55, .6, .75)); wu.uSpec.value = p.el > -2 ? 1 : .35;
-    const lt = .25 + .75 * day; wu.uLight.value = lt;
+    const lt = .06 + .94 * day; wu.uLight.value = lt;
     /* a Balaton tejes-türkiz vize; aranyórában a lemenő nap színét veszi fel */
     wu.uDeep.value.set("#1f6763").lerp(s.hor, gold * .3); wu.uShallow.value.set("#5aa597").lerp(s.hor, gold * .35);
     wu.uSkyZ.value.copy(s.zen).lerp(s.hor, .35 + gold * .3);
@@ -782,8 +782,9 @@
     L.amb.intensity = .04 + .05 * night;
     const evening = clamp(1 - day * 1.25, 0, 1); ENV.evening = evening;
     L.lamp.intensity = evening * 2.2;
-    /* a környezeti tükröződés (üveg, fém, víz nélkül) a napszak színeivel */
+    /* a környezeti tükröződés (üveg, fém, víz nélkül) a napszak színeivel – este és éjjel gyengébben */
     envPMREM(s, day, force);
+    try { T.sceneEl.object3D.environmentIntensity = .18 + .82 * day; } catch (e) {}
   }
   let _pmT = 0;
   function envPMREM(s, day, force) {
