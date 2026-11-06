@@ -8447,7 +8447,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     g.fillText("ZEPHYR", 50, 62);
     g.fillStyle = "#fff"; g.font = "600 36px system-ui, sans-serif";
     const sc = SCENES[current] || {}, grp = GROUPS.find((q) => q.id === sc.g);
-    { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 680) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 250, 62); }
+    { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 680) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 250, 56); }
+    /* hitelességi pecsét: a vendég tudja, hogy valódi fényképet lát, nem látványtervet */
+    txt(g, "✓ Valódi 360°-os fénykép a szobáról – nem látványterv", 250, 99, { fs: 21, w: 600, c: "rgba(191,240,213,.85)" });
     btn(g, VW - 120, 26, 76, 72, "✕", () => vrClose(), { round: 36 });
     btn(g, VW - 330, 26, 106, 72, vr8k() ? "8K" : "4K", () => { vr8k(!vr8k()); if (vr8k()) hiRes(current); else hiDrop(); vrDraw(); }, { round: 36, fs: 30, on: vr8k() });
     if (VRS.page !== "main") btn(g, VW - 212, 26, 76, 72, "‹", () => { VRS.page = "main"; vrDraw(); }, { round: 36 });
@@ -8541,7 +8543,18 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.fillStyle = out ? "rgba(120,170,120,.18)" : "rgba(244,241,230,.13)"; g.fillRect(X(r[1]), Y(r[2]), r[3] * sc, r[4] * sc);
       g.strokeStyle = "rgba(244,241,230,.55)"; g.lineWidth = out ? 2 : 4; g.strokeRect(X(r[1]), Y(r[2]), r[3] * sc, r[4] * sc);
       txt(g, r[0], X(r[1]) + 12, Y(r[2]) + 24, { fs: 24, w: 500, c: "rgba(244,241,230,.6)" });
+      /* méretek az alaprajz szerint: szélesség × hossz és alapterület – hogy a vendég tudja, mekkora a szoba */
+      if (!out && r[3] * sc > 150 && r[4] * sc > 74) {
+        const m = (v) => v.toFixed(1).replace(".", ",");
+        txt(g, `${m(r[3])} × ${m(r[4])} m · ${Math.round(r[3] * r[4])} m²`, X(r[1]) + 12, Y(r[2]) + 52, { fs: 22, w: 700, c: "rgba(255,209,102,.85)" });
+      }
     });
+    if (plan && plan.furn) {
+      /* fekhelyek valós mérete (az alaprajz bútorai közül) */
+      const beds = []; plan.furn.forEach((f) => { if (f[0] === "bed" || f[0] === "sofa") { const a = Math.round(Math.min(f[3], f[4]) * 100), b = Math.round(Math.max(f[3], f[4]) * 100); beds.push(`${f[5] || (f[0] === "bed" ? "ágy" : "kanapé")} ${a}×${b} cm`); } });
+      const lg = (beds.length ? "Fekhelyek: " + beds.join(" · ") + "   ·   " : "") + "Méretek az alaprajz szerint, tájékoztató jellegűek";
+      txt(g, lg, VW / 2, VH - 52, { a: "center", fs: 22, w: 600, c: "rgba(255,255,255,.72)" });
+    }
     g.strokeStyle = "rgba(255,209,102,.35)"; g.lineWidth = 3;
     all.forEach((k) => (SCENES[k].l || []).concat(SCENES[k].wl || []).forEach((l) => { if (!all.includes(l[0])) return; const a = P(k), b = P(l[0]); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); }));
     all.forEach((k) => {
@@ -8712,7 +8725,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const ok = B.sel.length && cap >= need && B.sel.length <= B.adults;
     const lab = !B.sel.length ? "Válassz apartmant" : cap < need ? `Kevés a hely: ${cap} / ${need} fő – válassz még egyet` : B.sel.length > B.adults ? "Minden apartmanba kell egy felnőtt" : `Tovább: adataid ›  (${vMoney(pr ? pr.total : 0)})`;
     btn(g, 290, yb, VW - 330, 92, lab, () => { B.step = "data"; B.err = ""; vrDraw(); vrPlace(); }, { on: !!ok, off: !ok, fs: 32 });
-    txt(g, "Tipp: a „👁 Megnézem” átvisz az apartmanba – a ☰ Menüből a foglalás ott folytatódik, ahol abbahagytad.", VW / 2, yb - 26, { a: "center", fs: 22, w: 500, c: "rgba(255,255,255,.62)" });
+    txt(g, "A képek valódi 360°-os fotók. „👁 Megnézem”: körülnézel benne – a ☰ Menüből a foglalás ott folytatódik, ahol abbahagytad.", VW / 2, yb - 26, { a: "center", fs: 22, w: 500, c: "rgba(255,255,255,.62)" });
   }
 
   /* 3. lépés – adatok + billentyűzet */
