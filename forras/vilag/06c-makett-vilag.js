@@ -438,10 +438,10 @@
     mesh(beach, std({ map: txSand(), roughness: 1 }), g).receiveShadow = true;
     /* a ház utcája (Gáspár András utca) – hosszan, járdával; a makett életnagyságban ide kerül */
     const SZ = LIFE_POS.z - 6.8;
-    const asph = txNoise("asph", "#3c4046", .25, 5000, 3); asph.repeat.set(1, 1);
+    const asph = txNoise("roadEnv", "#b5ad9f", .16, 5000, 3); asph.repeat.set(1, 1);   /* világos, kopott aszfalt (mint a valóságban) */
     const road = new THREE.PlaneGeometry(L, 4.8); road.rotateX(-Math.PI / 2); { const p = road.attributes.position, uv = road.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 4, p.getZ(i) / 4); }
     const rd = mesh(road, std({ map: asph, roughness: .95 }), g); rd.position.set(0, .03, SZ); rd.receiveShadow = true;
-    const swalk = txNoise("pave", "#b9b2a4", .2, 2600, 6);
+    const swalk = txNoise("gravelEnv", "#d6d0c3", .25, 6000, 3);
     [-1, 1].forEach((s) => { const sw = new THREE.PlaneGeometry(L, 1.7); sw.rotateX(-Math.PI / 2); { const p = sw.attributes.position, uv = sw.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 2, p.getZ(i) / 2); }
       const m = mesh(sw, std({ map: swalk, roughness: .9 }), g); m.position.set(0, .08, SZ + s * 3.25); m.receiveShadow = true; });
     /* sétány a pallótól az utcáig */

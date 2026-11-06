@@ -1557,6 +1557,11 @@
       case "grass": m = std({ map: tile(txGrass(), 3), roughness: .95 }); break;
       case "asph": m = std({ map: tile(txNoise("asph", "#3c4046", .25, 5000, 3), 4), roughness: .95 }); break;
       case "pave": m = std({ map: tile(canvasTex(256, 256, (g, w, h) => { noiseFill(g, w, h, "#b9b2a4", .14, 2000, 4); g.strokeStyle = "rgba(70,64,56,.45)"; g.lineWidth = 2; for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(0, i * 64); g.lineTo(w, i * 64); g.stroke(); } for (let j = 0; j < 4; j++) for (let i = 0; i <= 2; i++) { const x = i * 128 + (j % 2) * 64; g.beginPath(); g.moveTo(x, j * 64); g.lineTo(x, j * 64 + 64); g.stroke(); } }), 1.2), roughness: .85 }); break;
+      case "hallTile": m = std({ map: tile(canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#77797a"; g.fillRect(0, 0, w, h); for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) { g.fillStyle = `hsl(200,3%,${rr(55, 62)}%)`; g.fillRect(i * 128 + 2, j * 128 + 2, 124, 124); } }), 1.2), roughness: .6 }); break;
+      case "road": m = std({ map: tile(canvasTex(256, 256, (g, w, h) => { noiseFill(g, w, h, "#b7afa1", .16, 5000, 3); g.strokeStyle = "rgba(70,62,52,.35)"; g.lineWidth = 1.2; for (let k = 0; k < 14; k++) { g.beginPath(); let x = rand() * w, y = rand() * h; g.moveTo(x, y); for (let j = 0; j < 6; j++) { x += rr(-18, 18); y += rr(-18, 18); g.lineTo(x, y); } g.stroke(); } }), 3), roughness: .95 }); break;
+      case "brick": m = std({ map: tile(canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#8f877c"; g.fillRect(0, 0, w, h); for (let j = 0; j < 8; j++) for (let i = -1; i < 4; i++) { const x = i * 64 + (j % 2) * 32, y = j * 32; g.fillStyle = `hsl(30,${rr(6, 14)}%,${rr(58, 70)}%)`; g.fillRect(x + 2, y + 2, 60, 28); } }), .8), roughness: .85 }); break;
+      case "grid": m = std({ map: tile(canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#cfcac0"; g.fillRect(0, 0, w, h); for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) { g.fillStyle = `hsl(${rr(80, 105)},${rr(30, 45)}%,${rr(28, 40)}%)`; g.beginPath(); g.arc(i * 64 + 32, j * 64 + 32, 19, 0, TAU); g.fill(); } g.strokeStyle = "rgba(90,85,78,.4)"; g.lineWidth = 2; g.strokeRect(1, 1, 254, 254); g.beginPath(); g.moveTo(128, 0); g.lineTo(128, 256); g.moveTo(0, 128); g.lineTo(256, 128); g.stroke(); }), 1.2), roughness: .9 }); break;
+      case "rattan": m = std({ map: tile(canvasTex(128, 128, (g, w, h) => { g.fillStyle = "#6e5236"; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 3) { g.fillStyle = `hsl(30,${rr(30, 45)}%,${rr(28, 44)}%)`; g.fillRect(x, 0, 2, h); } }), .3), roughness: .9 }); break;
       case "gravel": m = std({ map: tile(txNoise("gravel", "#a8a196", .35, 9000, 3), 1.5), roughness: 1 }); break;
       case "roof": m = std({ map: tile(txNoise("roof", "#b9bab6", .2, 6000, 3), 2), roughness: .95 }); break;
       case "hedge": m = windify(std({ map: tile(canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#2f5a2a"; g.fillRect(0, 0, w, h); for (let i = 0; i < 2600; i++) { g.fillStyle = `hsl(${rr(95, 120)},${rr(35, 55)}%,${rr(16, 38)}%)`; g.beginPath(); g.ellipse(rand() * w, rand() * h, rr(2, 5), rr(1, 3), rand() * 3, 0, TAU); g.fill(); } }), 1), roughness: .95 }), .0012, 1.3, "hedge"); break;
@@ -1603,53 +1608,60 @@
 
     /* ------------------------------------------------ a telek: utca, járda, kerítés, előkert, parkoló, kert */
     const SX0 = -3, SX1 = 13.5, SZ0 = -10, SZ1 = 40; H.site = { SX0, SX1, SZ0, SZ1 };
-    box("asph", SX0, 0, -9.2, SX1, .05, -4.4);
-    for (let x = SX0 + .6; x < SX1; x += 3.2) box("#ece8da", x, .05, -6.88, x + 1.6, .056, -6.72);
-    box("#9a958c", SX0, 0, -4.48, SX1, .14, -4.36);                       /* szegélykő */
-    box("pave", SX0, 0, -4.4, SX1, .12, -2.7);
+    /* utca (a valódi fotók szerint): világos, kopott aszfalt felfestés nélkül, előtte fehér zúzottkő sáv */
+    box("road", SX0, 0, -9.2, SX1, .05, -4.4);
+    box("gravel", SX0, 0, -4.4, SX1, .07, -2.7);
     box("#8d9583", SX0, -.06, -2.7, SX1, -.005, SZ1);   /* telek alap (a ház padlója alatt) */
+    box("brick", 6.3, 0, -4.4, 12.6, .08, -2.7);          /* térkő a kapu előtt */
     box("grass", -.4, .04, -2.5, 6.3, .07, -.05);
-    box("pave", 1.4, .04, -2.7, 2.6, .08, -.05);
-    /* utcai kerítés: antracit lécek, oszlopok, kapu; postaláda, házszám */
-    [[-.4, 1.2], [2.8, 6.3]].forEach(([a, b]) => { for (let y = .1; y < 1.3; y += .16) box("frame", a, .04 + y, -2.6, b, .04 + y + .1, -2.54); for (let x = a; x <= b + .01; x += 1.5) box("frame", x - .04, .04, -2.62, x + .04, 1.42, -2.52); });
-    box("frame", 1.22, .04, -2.66, 1.32, 1.6, -2.46); box("frame", 2.68, .04, -2.66, 2.78, 1.6, -2.46);
-    for (let x = 1.36; x < 2.66; x += .11) box("frame", x, .12, -2.58, x + .05, 1.3, -2.55);   /* kapu */
-    box("#c9a24a|m", 2.85, 1.0, -2.68, 3.2, 1.25, -2.62);                                         /* postaláda */
-    /* előkert: gömbcserjék, virágágyás */
-    [[.3, -1.8], [5.6, -1.9], [4.4, -.6], [-.1, -.7]].forEach(([x, z]) => add("foliage", leafGeom([[x, .4, z, .45, 7, .8]], "#3f7a34", .1)));
-    flowers(add, -.3, -2.3, 1.2, -1.2, 40); flowers(add, 3, -2.3, 6.1, -1.5, 60);
-    /* parkoló: térkő, felfestés, autók */
-    box("pave", 6.3, .04, -2.7, 12.6, .065, 22.3);
-    for (let z = 1; z < 21; z += 2.6) box("#f2efe6", 6.6, .065, z, 12.3, .068, z + .08);
-    [["#c62828", 9.4, 2.3], ["#e9ecef", 9.4, 7.5], ["#1f5fa8", 9.4, 12.7], ["#4a5058", 9.4, 17.9]].forEach(([c, x, z], i) => car(add, c, x, z + 1.3, i % 2 ? 0 : Math.PI));
-    box("hedge", 12.6, .04, -2.7, 13.0, 1.75, SZ1);
-    /* hátsó kert */
+    /* utcai kerítés: alacsony lábazat, sötét fém pálcák; a parkoló előtt toló kapu, mellette kiskapu; postaláda, házszám */
+    const bars = (x0, x1, z, h, gap) => { box("#8d8a84", x0, 0, z - .1, x1, .32, z + .1); for (let x = x0 + .05; x < x1 - .02; x += gap) box("frame", x, .32, z - .015, x + .025, .32 + h, z + .015); box("frame", x0, .32 + h, z - .025, x1, .36 + h, z + .025); box("frame", x0, .5, z - .02, x1, .53, z + .02); };
+    bars(-.4, 6.1, -2.6, 1.2, .12);
+    box("frame", 6.1, 0, -2.7, 6.3, 1.7, -2.5); box("frame", 12.6, 0, -2.7, 12.8, 1.7, -2.5);
+    for (let x = 6.4; x < 12.5; x += .13) box("frame", x, .08, -2.63, x + .03, 1.5, -2.57);   /* toló kapu */
+    box("frame", 6.35, 1.48, -2.65, 12.55, 1.55, -2.55); box("frame", 6.35, .08, -2.65, 12.55, .15, -2.55);
+    box("#3a3f45|m", 5.5, .9, -2.72, 5.85, 1.2, -2.62);                                            /* postaláda */
+    /* előkert: cserjék, virágok */
+    [[.3, -1.8], [5.4, -1.9], [-.1, -.7]].forEach(([x, z]) => add("foliage", leafGeom([[x, .45, z, .5, 7, .9]], "#5f9a3a", .1)));
+    flowers(add, -.3, -2.3, 1.2, -1.2, 40); flowers(add, 3, -2.3, 5.2, -1.5, 50);
+    /* behajtó és parkoló: térkő a ház mellett, hátul fűrácskő (lyukas betonelemek) */
+    box("brick", 6.3, .04, -2.7, 9.0, .065, 22.3);
+    box("grid", 9.0, .04, 10, 12.6, .062, 22.3); box("brick", 9.0, .04, -2.7, 12.6, .065, 10);
+    [["#e9ecef", 10.8, 13.5], ["#4a5058", 10.8, 18.7]].forEach(([c, x, z], i) => car(add, c, x, z, i % 2 ? 0 : Math.PI));
+    box("hedge", 12.6, .04, -2.7, 13.0, 1.75, 22.3);
+    /* hátsó kert: műfű, betonozott pihenő; a keleti telekhatáron zöld belátásgátló kerítés, nyugaton tujasor */
     box("grass", -.4, .04, 22.3, 12.6, .07, SZ1);
-    for (let z = 23; z < SZ1 - 2; z += .9) box("stone", 6.85, .05, z, 7.55, .085, z + .55);         /* lépőkövek */
-    box("hedge", -.6, .04, 22.3, -.4, 1.5, SZ1); box("hedge", -.6, .04, SZ1 - .25, 12.9, 1.5, SZ1);
-    /* pergola kerti konyhával, asztallal, fényfüzérrel */
-    box("terrace", 8.4, .04, 27, 12.2, .12, 31);
-    [[8.5, 27.1], [12.0, 27.1], [8.5, 30.8], [12.0, 30.8]].forEach(([x, z]) => box("#efece4", x, .12, z, x + .12, 2.42, z + .12));
-    box("#efece4", 8.4, 2.42, 27, 12.2, 2.52, 27.12); box("#efece4", 8.4, 2.42, 30.88, 12.2, 2.52, 31);
-    for (let k = 0; k < 13; k++) box("#efece4", 8.4 + k * .3, 2.52, 27, 8.46 + k * .3, 2.6, 31);
-    add("foliage2", leafGeom([[9.2, 2.6, 27.2, .5, 6, .5], [10.6, 2.62, 27.1, .5, 6, .5], [11.8, 2.6, 30.8, .5, 6, .5], [8.8, 2.6, 30.9, .45, 5, .5], [12.1, 1.6, 27.1, .35, 5, 2.2]], "#5a9440"));   /* futónövény */
-    box("#d8d4cc", 8.6, .12, 27.2, 10.8, .98, 27.8); box("#3b3b3b", 8.55, .98, 27.15, 10.85, 1.03, 27.85); box("#2b2f36|m", 10.9, .12, 27.2, 11.8, 1.1, 27.8);
-    box("#9c6b3f", 9.2, .8, 28.6, 11.4, .86, 29.6); [[9.3, 28.7], [11.2, 28.7], [9.3, 29.4], [11.2, 29.4]].forEach(([x, z]) => box("#7a5a3a", x, .12, z, x + .08, .8, z + .08));
-    [[9.5, 28.25], [10.6, 28.25], [9.5, 29.95], [10.6, 29.95]].forEach(([x, z], i) => chair(add, x, z, i < 2 ? 0 : Math.PI, -1, "#7a5a3a", .12));
-    garland(add, [[8.5, 2.4, 27.1], [12.1, 2.4, 27.1], [12.1, 2.4, 30.9], [8.5, 2.4, 30.9], [8.5, 2.4, 27.1]], .22, -1, "all");
-    /* napozóágyak párnával, napernyő */
-    [[2.2, 30], [3.6, 30]].forEach(([x, z]) => { box("#f2efe6", x, .12, z, x + .7, .32, z + 1.9); box("#e8f0f4", x + .05, .32, z + .5, x + .65, .4, z + 1.85); add("#e8f0f4", new THREE.BoxGeometry(.6, .08, .55), M4(x + .35, .5, z + .28, 0, -.7)); });
-    cyl("#c9cdd2|m", 3.15, .04, 29.5, .03, 2.3, -1); add("#e85a3a", new THREE.ConeGeometry(1.3, .4, 8, 1, true), M4(3.15, 2.35, 29.5)); add("#f4f1e8", new THREE.ConeGeometry(1.31, .41, 8, 1, true), M4(3.15, 2.36, 29.5, Math.PI / 8));
+    box("#7f9a86", 12.6, .04, 22.3, 12.75, 2.0, SZ1);
+    for (let z = 23; z < SZ1 - .5; z += 1.15) add("foliage", leafGeom([[-.9, 1.6, z, .55, 6, 3.2]], "#2f5a2c", .1));
+    box("hedge", -.6, .04, SZ1 - .25, 12.9, 1.6, SZ1);
+    box("#bdb7ad", 7.4, .04, 25.8, 12.5, .1, 32.2);
+    /* fehér kerti pavilonok (gazebo): a kerti konyha fölött és két ülőhely */
+    const gazebo = (cx, cz, w) => { const h = w / 2; [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { box("#c9cdd2|m", cx + a * h - .03, .1, cz + b * h - .03, cx + a * h + .03, 2.2, cz + b * h + .03); for (let y = .5; y < 2.1; y += .4) box("#c9cdd2|m", cx + a * h - .04, y, cz + b * h - .04, cx + a * h + .04, y + .03, cz + b * h + .04); });
+      add("#f4f3ee", new THREE.ConeGeometry(w * .74, .75, 4, 1, true), M4(cx, 2.55, cz, Math.PI / 4)); add("#e9e7df", new THREE.ConeGeometry(w * .73, .74, 4, 1, true), M4(cx, 2.54, cz, Math.PI / 4));
+      [[0, -h], [0, h]].forEach(([dx, dz]) => box("#f4f3ee", cx - h, 2.0, cz + dz - .01, cx + h, 2.2, cz + dz + .01)); [[-h, 0], [h, 0]].forEach(([dx]) => box("#f4f3ee", cx + dx - .01, 2.0, cz - h, cx + dx + .01, 2.2, cz + h)); };
+    const tableSet = (cx, cz) => { box("#9aa0a6", cx - .45, .74, cz - .45, cx + .45, .78, cz + .45); box("#2b2f36|m", cx - .03, .1, cz - .03, cx + .03, .74, cz + .03);
+      [[0, -.75, 0], [0, .75, Math.PI], [-.75, 0, Math.PI / 2], [.75, 0, -Math.PI / 2]].forEach(([dx, dz, r]) => chair(add, cx + dx, cz + dz, r, -1, "#2b2f36", .07)); };
+    gazebo(9.3, 27.2, 3); gazebo(3.2, 27.6, 2.8); gazebo(3.2, 33.6, 2.8);
+    tableSet(3.2, 27.6); tableSet(3.2, 33.6);
+    /* kerti konyha: nádfonatos pult, világos munkalap, mosogató */
+    box("rattan", 8.0, .1, 26.2, 10.6, 1.0, 26.8); box("#d9d4c8", 7.95, 1.0, 26.15, 10.65, 1.05, 26.85); box("steel", 9.6, 1.05, 26.3, 10.1, 1.06, 26.7);
+    box("#2b2f36|m", 7.6, .1, 26.4, 7.9, 1.6, 26.7);   /* hűtő / grill */
+    /* kő tűzrakó asztal kőpadokkal, napozószékek */
+    box("#cfcabe", 8.8, .1, 29.0, 9.8, .55, 29.8); box("#3a3a3a", 9.0, .55, 29.2, 9.6, .56, 29.6);
+    box("#cfcabe", 8.5, .1, 30.4, 10.1, .45, 30.75); box("#cfcabe", 10.4, .1, 29.0, 10.75, .45, 30.0);
+    [[11.4, 28.0], [11.4, 29.3]].forEach(([x, z]) => { add("#2b2f36", new THREE.BoxGeometry(.6, .04, 1.1), M4(x, .55, z, 0, -.35)); add("#2b2f36", new THREE.BoxGeometry(.6, .04, .6), M4(x, .78, z - .7, 0, -1.0));
+      [[-.28], [.28]].forEach(([dx]) => add("#1c1f24|m", new THREE.BoxGeometry(.03, .6, 1.4), M4(x + dx, .45, z - .1, 0, .4))); });
     /* SUP-tartó, kerékpárok, tároló */
     box("#7a5a3a", 11.1, .04, 32.8, 11.2, 1.3, 33.0); box("#7a5a3a", 12.4, .04, 32.8, 12.5, 1.3, 33.0);
     for (let k = 0; k < 4; k++) add(["#ffd166", "#1f5fa8", "#e5262f", "#3fb37f"][k], new THREE.BoxGeometry(1.5, .1, .7), M4(11.8, .45 + k * .26, 33.3 + k * .02));
     for (let k = 0; k < 4; k++) bike(add, 11.6, 36 + k * .55, ["#2b2f36", "#c62828", "#1f5fa8", "#e9ecef"][k]);
     box("#8c939b", 9.4, .04, 34.6, 11.2, 2.1, 37.2); box("#6d737a", 9.3, 2.1, 34.5, 11.3, 2.18, 37.3); box("#5a3d24", 10.0, .04, 34.58, 10.6, 1.9, 34.6);
     /* fák a kertben */
-    [[1.5, 26, 2.2], [4.5, 35.5, 2.8], [10.0, 38.2, 1.6], [11.6, 24.5, 1.4], [0.8, 38, 2.0], [-1.6, -6.1, 1.4], [11.2, -3.4, 1.3]].forEach(([x, z, r]) => tree(add, x, z, r));
+    [[6.0, 38.2, 2.0], [10.0, 38.4, 1.6], [11.8, 24.0, 1.3], [-1.6, -6.1, 1.4], [11.2, -3.4, 1.3]].forEach(([x, z, r]) => tree(add, x, z, r));
     flowers(add, -.2, 22.6, 1.4, 25, 70); flowers(add, 4.8, 38.6, 8.6, 39.6, 70);
     /* kerti lámpák (bollardok) */
     for (let z = 23.5; z < SZ1 - 2; z += 4) { cyl("frame", 6.6, .04, z, .06, .7, -1); cyl("bulb", 6.6, .7, z, .07, .1, -1); }
+    garland(add, [[7.85, 2.15, 25.75], [12.4, 2.3, 25.9], [12.4, 2.3, 32.0], [7.85, 2.15, 32.0]], .25, -1, "all");   /* fényfüzér a pihenő fölött */
 
     /* ------------------------------------------------ az épület */
     const Y1 = FLOOR_H;
@@ -1751,7 +1763,7 @@
       Object.keys(T.SCENES || {}).forEach((sid) => { const S = T.SCENES[sid]; if (!S || S.g !== id || !S.m) return; const p = U.map(S.m[0], S.m[1]); if (p[0] < WALL || p[0] > OUT_W - WALL) return; H.spots.push({ id: sid, apt: id, lv, x: p[0], z: p[1], n: S.n }); });
     });
     /* fedett bejáró a lépcsővel (földszint), emeleti folyosó/terasz */
-    box("stone", WALL, 0, Z_HALL, OUT_W - WALL, .03, Z_B - PART, 0);
+    box("hallTile", WALL, 0, Z_HALL, OUT_W - WALL, .03, Z_B - PART, 0);   /* nagy szürke lapok (a fotó szerint) */
     for (let k = 0; k < 15; k++) box("#d7d3cb", WALL, 0, Z_B - PART - .3 - k * .26, WALL + 1.0, .19 * (k + 1), Z_B - PART - k * .26, 0);
     box("steel", WALL + 1.0, .9, Z_HALL + .2, WALL + 1.04, .94, Z_B - PART - .2, 0);   /* kapaszkodó */
     box("terrace", WALL + 1.1, 0, Z_HALL, OUT_W - WALL, .04, Z_B - PART, 1);
@@ -1767,12 +1779,12 @@
     box("terrace", 0, -.2, Z_END, OUT_W, 0, Z_END + 3.3, 1);
     [[.1, Z_END + 3.1], [OUT_W - .3, Z_END + 3.1]].forEach(([x, z]) => box("#e9e6dc", x, 0, z, x + .2, Y1 - .2, z + .2));
     railing(box, 0, Z_END + 3.25, OUT_W, Z_END + 3.3, 1); railing(box, OUT_W - .05, Z_END, OUT_W, Z_END + 3.3, 1);
-    for (let k = 0; k < 14; k++) { const a = k * .45; add("#8f969c|m", new THREE.BoxGeometry(.75, .05, .22), M4(-.6 + Math.cos(a) * .4, .2 * (k + 1), Z_END + 2.2 + Math.sin(a) * .4, -a)); }
-    cyl("#7f868c|m", -.6, 0, Z_END + 2.2, .05, Y1 + 1.0);
-    { const pts = []; for (let k = 0; k <= 40; k++) { const a = k / 40 * 14 * .45; pts.push(new THREE.Vector3(-.6 + Math.cos(a) * .78, .2 * (k / 40 * 14 + 1) + .9, Z_END + 2.2 + Math.sin(a) * .78)); }
-      add("steel", new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, .02, 6)); }
-    /* lábazat: sötétebb, kissé kiugró sáv a ház alján (fröccsenő víz ellen) */
-    [[-.02, -.02, OUT_W + .02, .02], [-.02, Z_END - .02, OUT_W + .02, Z_END + .02], [-.02, -.02, .02, Z_END + .02], [OUT_W - .02, -.02, OUT_W + .02, Z_END + .02]].forEach(([x0, z0, x1, z1]) => box("#8d8781", x0, 0, z0, x1, .14, z1, 0));
+    /* hátsó, egyenes fémlépcső a Kadett teraszára a ház keleti oldalán (a parkoló felől, a fotó szerint) */
+    { const n = 15, x0 = OUT_W + .12, x1 = OUT_W + 1.0, zb = Z_END - 3.4, zt = Z_END + .2, dz = (zt - zb) / n;
+      for (let k = 0; k < n; k++) box("#8f969c|m", x0, (k + 1) * Y1 / n - .04, zb + k * dz, x1, (k + 1) * Y1 / n, zb + (k + 1) * dz + .02);
+      [x0 - .02, x1].forEach((x) => { const [g1, m1] = rodGeom(new THREE.Vector3(x + .01, 0, zb), new THREE.Vector3(x + .01, Y1, zt), .03, 6); add("#e9ecef|m", g1, m1); const [g2, m2] = rodGeom(new THREE.Vector3(x + .01, .95, zb), new THREE.Vector3(x + .01, Y1 + .95, zt), .02, 6); add("steel", g2, m2);
+        for (let k = 0; k <= n; k += 3) box("steel", x - .005, k * Y1 / n, zb + k * dz - .01, x + .025, k * Y1 / n + .95, zb + k * dz + .01); });
+      box("#8f969c|m", x0, Y1 - .05, zt, x1, Y1, Z_END + 1.4); }
     /* esőcsatorna-lefolyók a sarkokon */
     [[-.06, -.06], [OUT_W + .06, -.06], [-.06, Z_END + .06], [OUT_W + .06, Z_END + .06]].forEach(([x, z]) => cyl("#8a9096|m", x, 0, z, .05, 2 * FLOOR_H + .4));
     /* lapos tető attikával, fedkővel, szellőzőkkel – mennyezetként is (életnagyságban) */
@@ -1781,10 +1793,21 @@
     box("plasterIn", 0, roofY - .02, 0, OUT_W, roofY, Z_END, 2, "roof");
     [[0, -1.45, OUT_W, -1.3], [0, Z_END - .15, OUT_W, Z_END], [0, -1.45, .15, Z_END], [OUT_W - .15, -1.45, OUT_W, Z_END]].forEach(([x0, z0, x1, z1]) => { box("plaster", x0, roofY + .25, z0, x1, roofY + .7, z1, 2, "roof"); box("#8a8d90|m", x0 - .02, roofY + .7, z0 - .02, x1 + .02, roofY + .74, z1 + .02, 2, "roof"); });
     [[2, 5], [4, 12], [2.5, 19]].forEach(([x, z]) => cyl("#a9adb0|m", x, roofY + .25, z, .12, .45, 2, "roof"));
-    /* a homlokzati névtábla (ZEPHYR) a bejáró fölött – arany betűk */
-    const sign = canvasTex(1024, 192, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "#d4af5a"; g.font = "700 150px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ZEPHYR", w / 2, h / 2 + 8); });
-    const sg = mesh(new THREE.PlaneGeometry(2.4, .45), std({ map: sign, transparent: true, roughness: .3, metalness: .7, emissive: new THREE.Color("#ffcf7a"), emissiveMap: sign, emissiveIntensity: 0 }), H.lv[0]);
-    sg.position.set(OUT_W + .03, 2.45, (Z_HALL + Z_B) / 2); sg.rotation.y = Math.PI / 2; H.sign = sg;
+    /* tetőkorlát (vékony fém, a fotók szerint a lapos tető peremén) */
+    { const yb = roofY + .74, ys = yb + .95; [[0, -1.3, OUT_W, -1.3], [0, Z_END - .08, OUT_W, Z_END - .08], [.08, -1.3, .08, Z_END - .08], [OUT_W - .08, -1.3, OUT_W - .08, Z_END - .08]].forEach(([x0, z0, x1, z1]) => {
+        const [g1, m1] = rodGeom(new THREE.Vector3(x0, ys, z0), new THREE.Vector3(x1, ys, z1), .022, 6); add("steel", g1, m1, 2, "roof");
+        const [g2, m2] = rodGeom(new THREE.Vector3(x0, yb + .45, z0), new THREE.Vector3(x1, yb + .45, z1), .012, 4); add("steel", g2, m2, 2, "roof");
+        const L = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.round(L / 1.5)); for (let k = 0; k <= n; k++) { const u = k / n; cyl("steel", x0 + (x1 - x0) * u, yb, z0 + (z1 - z0) * u, .02, .95, 2, "roof", 6); } }); }
+    /* ívelt előtető a Fregatt erkélye fölött (a fotón jellegzetes, kifelé lehajló ív) */
+    { const R = 2.0, top = roofY + .25, n = 12; for (let k = 0; k < n; k++) { const a0 = k / n * 1.05, a1 = (k + 1) / n * 1.05;
+        const z0 = -Math.sin(a0) * R, y0 = top - (1 - Math.cos(a0)) * R, z1 = -Math.sin(a1) * R, y1 = top - (1 - Math.cos(a1)) * R;
+        const L = Math.hypot(z1 - z0, y1 - y0); add("#eceae4", new THREE.BoxGeometry(OUT_W + .1, .06, L), M4(OUT_W / 2, (y0 + y1) / 2, (z0 + z1) / 2, 0, Math.atan2(y0 - y1, z0 - z1) * -1 + 0), 2, "roof"); } }
+    /* ZEPHYR felirat függőlegesen a homlokzat keleti sarkán (sötét tábla), alatta a házszám */
+    const sign = canvasTex(160, 1024, (g, w, h) => { g.fillStyle = "#3d4248"; g.fillRect(0, 0, w, h); g.fillStyle = "#eef0f2"; g.font = "700 118px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; "ZEPHYR".split("").forEach((c, i) => g.fillText(c, w / 2, 110 + i * 150)); });
+    const sg = mesh(new THREE.PlaneGeometry(.34, 2.2), std({ map: sign, roughness: .5, emissive: new THREE.Color("#ffffff"), emissiveMap: sign, emissiveIntensity: 0 }), H.lv[1]);
+    sg.position.set(OUT_W - .32, 1.3, -.035); sg.rotation.y = Math.PI; H.sign = sg;
+    const no = canvasTex(128, 96, (g, w, h) => { g.fillStyle = "#e9ecef"; g.fillRect(0, 0, w, h); g.strokeStyle = "#3d4248"; g.lineWidth = 6; g.strokeRect(3, 3, w - 6, h - 6); g.fillStyle = "#1f3a6a"; g.font = "800 62px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("58", w / 2, h / 2 + 3); });
+    const nm = mesh(new THREE.PlaneGeometry(.22, .165), std({ map: no, roughness: .5 }), H.lv[1]); nm.position.set(OUT_W - .32, .02, -.035); nm.rotation.y = Math.PI;
 
     /* ------------------------------------------------ kirajzolás: összevonás anyagonként, láthatósági csoportonként */
     Object.values(reg).forEach((r) => {
@@ -2356,10 +2379,10 @@
     mesh(beach, std({ map: txSand(), roughness: 1 }), g).receiveShadow = true;
     /* a ház utcája (Gáspár András utca) – hosszan, járdával; a makett életnagyságban ide kerül */
     const SZ = LIFE_POS.z - 6.8;
-    const asph = txNoise("asph", "#3c4046", .25, 5000, 3); asph.repeat.set(1, 1);
+    const asph = txNoise("roadEnv", "#b5ad9f", .16, 5000, 3); asph.repeat.set(1, 1);   /* világos, kopott aszfalt (mint a valóságban) */
     const road = new THREE.PlaneGeometry(L, 4.8); road.rotateX(-Math.PI / 2); { const p = road.attributes.position, uv = road.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 4, p.getZ(i) / 4); }
     const rd = mesh(road, std({ map: asph, roughness: .95 }), g); rd.position.set(0, .03, SZ); rd.receiveShadow = true;
-    const swalk = txNoise("pave", "#b9b2a4", .2, 2600, 6);
+    const swalk = txNoise("gravelEnv", "#d6d0c3", .25, 6000, 3);
     [-1, 1].forEach((s) => { const sw = new THREE.PlaneGeometry(L, 1.7); sw.rotateX(-Math.PI / 2); { const p = sw.attributes.position, uv = sw.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 2, p.getZ(i) / 2); }
       const m = mesh(sw, std({ map: swalk, roughness: .9 }), g); m.position.set(0, .08, SZ + s * 3.25); m.receiveShadow = true; });
     /* sétány a pallótól az utcáig */
