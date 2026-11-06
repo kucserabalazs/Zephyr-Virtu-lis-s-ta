@@ -9257,6 +9257,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (XRP.session) { try { XRP.session.removeEventListener("selectstart", XRP.onSS); XRP.session.removeEventListener("selectend", XRP.onSE); } catch (e) {} }
     XRP.on = false; XRP.session = null;
     Object.keys(XRP.drag).forEach((k) => { const d = XRP.drag[k]; if (d && d.h && d.h.up) { try { d.h.up(XRP.src[k], k); } catch (e) {} } });
+    XRP.pinch = {};
     const kill = (o) => { if (!o) return; if (o.parent) o.parent.remove(o); o.traverse((q) => { if (q.geometry) q.geometry.dispose(); if (q.material) { if (q.material.map) q.material.map.dispose(); q.material.dispose(); } }); };
     Object.keys(XRP.ray).forEach((k) => { const r = XRP.ray[k]; if (r) { kill(r.g); kill(r.cur); } });
     XRP.ray = {}; XRP.src = {}; XRP.seen = {};
@@ -9627,7 +9628,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "1c5f37434b"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "5bbe89cdbe"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 

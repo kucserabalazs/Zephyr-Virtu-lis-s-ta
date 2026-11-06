@@ -9246,6 +9246,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (XRP.session) { try { XRP.session.removeEventListener("selectstart", XRP.onSS); XRP.session.removeEventListener("selectend", XRP.onSE); } catch (e) {} }
     XRP.on = false; XRP.session = null;
     Object.keys(XRP.drag).forEach((k) => { const d = XRP.drag[k]; if (d && d.h && d.h.up) { try { d.h.up(XRP.src[k], k); } catch (e) {} } });
+    XRP.pinch = {};
     const kill = (o) => { if (!o) return; if (o.parent) o.parent.remove(o); o.traverse((q) => { if (q.geometry) q.geometry.dispose(); if (q.material) { if (q.material.map) q.material.map.dispose(); q.material.dispose(); } }); };
     Object.keys(XRP.ray).forEach((k) => { const r = XRP.ray[k]; if (r) { kill(r.g); kill(r.cur); } });
     XRP.ray = {}; XRP.src = {}; XRP.seen = {};

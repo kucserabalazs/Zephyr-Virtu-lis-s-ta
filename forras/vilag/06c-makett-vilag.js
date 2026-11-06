@@ -750,7 +750,7 @@
     return ENV;
   }
   /* napszak beállítása: dátum + óra → minden szín, fény, éjszakai fények */
-  function envSetTime(ymd, hour) {
+  function envSetTime(ymd, hour, force) {
     let p = { az: 230, el: 30 }; try { if (T.sunPos) p = T.sunPos(ymd, hour); } catch (e) {}
     ENV.sunInfo = p;
     const s = skyAt(p.el), day = smooth(clamp((p.el + 4) / 12, 0, 1)), night = 1 - smooth(clamp((p.el + 9) / 8, 0, 1)), gold = smooth(clamp((p.el + 2) / 5, 0, 1)) * (1 - smooth(clamp((p.el - 8) / 14, 0, 1)));
@@ -783,11 +783,11 @@
     const evening = clamp(1 - day * 1.25, 0, 1); ENV.evening = evening;
     L.lamp.intensity = evening * 2.2;
     /* a környezeti tükröződés (üveg, fém, víz nélkül) a napszak színeivel */
-    envPMREM(s, day);
+    envPMREM(s, day, force);
   }
   let _pmT = 0;
-  function envPMREM(s, day) {
-    const now = performance.now(); if (now - _pmT < 600 && ENV.envMap) return; _pmT = now;
+  function envPMREM(s, day, force) {
+    const now = performance.now(); if (!force && now - _pmT < 600 && ENV.envMap) return; _pmT = now;
     try {
       const r = T.sceneEl.renderer; const cv = document.createElement("canvas"); cv.width = 128; cv.height = 64; const g = cv.getContext("2d");
       const gr = g.createLinearGradient(0, 0, 0, 64); const hx = (c) => "#" + c.clone().convertLinearToSRGB().getHexString();

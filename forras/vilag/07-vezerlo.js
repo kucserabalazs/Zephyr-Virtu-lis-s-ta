@@ -157,7 +157,8 @@
   W.open = function (kind) {
     if (W.active) W.close(null, true);
     const sky = T.sky, sm = sky && sky.getObject3D("mesh");
-    saved = { rigY: T.rig.object3D.rotation.y, skyVis: sky.object3D.visible, spotsVis: T.spots.object3D.visible, clip: T.sceneEl.renderer.localClippingEnabled, scene: T.current,
+    const lc0 = T.cam.components["look-controls"];
+    saved = { rigY: T.rig.object3D.rotation.y, pitch: lc0 && lc0.pitchObject ? lc0.pitchObject.rotation.x : 0, yaw: lc0 && lc0.yawObject ? lc0.yawObject.rotation.y : 0, skyVis: sky.object3D.visible, spotsVis: T.spots.object3D.visible, clip: T.sceneEl.renderer.localClippingEnabled, scene: T.current,
       skyDepth: sm ? sm.material.depthTest : true, skyOrder: sm ? sm.renderOrder : 0 };
     W.kind = kind; W.active = true; W.t = 0; W.upd = []; W.objs = []; W.disposables = [];
     T.setBusy(true);
@@ -220,7 +221,7 @@
     if (W.root && W.root.parent) W.root.parent.remove(W.root);
     W.root && W.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     W.disposables.forEach((d) => { try { d.dispose(); } catch (e) {} });
-    Object.keys(TEXC).forEach((k) => delete TEXC[k]);
+    Object.keys(TEXC).forEach((k) => delete TEXC[k]); Object.keys(TX).forEach((k) => delete TX[k]); Object.keys(HX).forEach((k) => delete HX[k]);
     W.disposables = []; W.objs = []; W.root = null; W.panel = null; W.spec = null;
     if (W.hud) { W.hud.el.remove(); W.hud = null; }
     document.body.classList.remove("world-on");
@@ -229,7 +230,7 @@
       sky.object3D.visible = true; T.spots.object3D.visible = true;
       if (sm) { sm.material.depthTest = saved.skyDepth; sm.material.depthWrite = true; sm.renderOrder = saved.skyOrder; sm.material.needsUpdate = true; }
       T.sceneEl.renderer.localClippingEnabled = saved.clip;
-      if (!T.inVR) T.rig.object3D.rotation.y = saved.rigY;
+      if (!T.inVR) { T.rig.object3D.rotation.y = saved.rigY; const lc1 = T.cam.components["look-controls"]; if (lc1 && lc1.pitchObject) { lc1.pitchObject.rotation.x = saved.pitch; lc1.yawObject.rotation.y = saved.yaw; } }
     }
     T.setBusy(false);
     if (after) setTimeout(after, 50);

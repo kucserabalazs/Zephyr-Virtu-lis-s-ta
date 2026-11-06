@@ -1101,7 +1101,17 @@
   function buildMaquette() {
     const root = W.root;
     const rig = T.rig.object3D;
+    Object.keys(MAQ).forEach((k) => delete MAQ[k]);   /* tiszta lap minden megnyitáskor */
     MAQ.rig0 = { p: rig.position.clone(), ry: rig.rotation.y };
+    { const r0 = T.sceneEl.renderer; MAQ.shadowWas = r0.shadowMap.enabled; MAQ.shadowType = r0.shadowMap.type; MAQ.shadowAuto = r0.shadowMap.autoUpdate; MAQ.envWas = T.sceneEl.object3D.environment || null; }
+    /* a bezárás-kezelő legelöl: ha a felépítés közben hiba lenne, akkor is minden visszaáll */
+    W.onClose = () => {
+      try { const rr2 = T.sceneEl.renderer; rr2.shadowMap.enabled = MAQ.shadowWas; rr2.shadowMap.type = MAQ.shadowType; rr2.shadowMap.autoUpdate = MAQ.shadowAuto !== false; T.sceneEl.object3D.environment = MAQ.envWas; } catch (e) {}
+      try { const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p); if (T.inVR) rg.rotation.y = MAQ.rig0.ry; } catch (e) {}
+      try { showTip(null); } catch (e) {}
+      try { uwDispose(); } catch (e) {} try { envDispose(); } catch (e) {}
+      Object.keys(MAQ).forEach((k) => delete MAQ[k]);
+    };
     const floorY = T.inVR ? rig.position.y : rig.position.y - EYE2D;
     /* ---------- a helyszín ---------- */
     buildMagicWorld(root, floorY);
@@ -1191,10 +1201,9 @@
     T.xr.extra.add(ENV.telHit); W.objs.push(ENV.telHit);
 
     /* ---------- fény, árnyék ---------- */
-    const r = T.sceneEl.renderer; MAQ.shadowWas = r.shadowMap.enabled; r.shadowMap.enabled = true; r.shadowMap.type = T.inVR ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
+    const r = T.sceneEl.renderer; r.shadowMap.enabled = true; r.shadowMap.type = T.inVR ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
     /* az árnyéktérkép csak akkor számolódik újra, ha valami változott (nap, méret, forgatás, tető…) – Quest 2-n ez sokat számít */
-    MAQ.shadowAuto = r.shadowMap.autoUpdate; r.shadowMap.autoUpdate = false; r.shadowMap.needsUpdate = true; MAQ.shSig = "";
-    MAQ.envWas = T.sceneEl.object3D.environment || null;
+    r.shadowMap.autoUpdate = false; r.shadowMap.needsUpdate = true; MAQ.shSig = "";
     const sun = ENV.lights.sun; sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -.0005; sun.shadow.normalBias = .02;
 
     /* ---------- áttűnés (életnagyságba lépéskor) ---------- */
@@ -1212,11 +1221,22 @@
     applyPlacement(true);
     if (!T.inVR) { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.62; }
     audioStart({ water: .03, wind: .012 });
-    W.onClose = () => {
-      try { const rr2 = T.sceneEl.renderer; rr2.shadowMap.enabled = MAQ.shadowWas; rr2.shadowMap.autoUpdate = MAQ.shadowAuto !== false; T.sceneEl.object3D.environment = MAQ.envWas; } catch (e) {}
-      try { const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p); if (T.inVR) rg.rotation.y = MAQ.rig0.ry; } catch (e) {}
-      showTip(null); uwDispose(); envDispose(); MAQ.card = null; MAQ.sightL = null;
-    };
+    /* VR-ben az első alkalommal: rövid kézmozdulat-súgó (csippentésre vagy 25 mp után eltűnik) */
+    if (T.inVR) {
+      const CW = 1200, CH = 560;
+      const tx = canvasTex(CW, CH, (g) => {
+        const bg = g.createLinearGradient(0, 0, 0, CH); bg.addColorStop(0, "rgba(16,56,104,.95)"); bg.addColorStop(1, "rgba(7,28,58,.95)");
+        g.fillStyle = bg; g.beginPath(); g.roundRect ? g.roundRect(6, 6, CW - 12, CH - 12, 46) : g.rect(6, 6, CW - 12, CH - 12); g.fill(); g.lineWidth = 7; g.strokeStyle = "#ffd166"; g.stroke();
+        g.fillStyle = "#ffd166"; g.font = "800 58px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Így irányítod a kezeddel", CW / 2, 70);
+        [["🖐", "Bal tenyér felfelé", "előjön a csuklómenü"], ["🤏🤏", "Két kézzel csippents", "és húzd szét: nagyobb lesz"], ["👉", "Mutass és csippents", "egy lakásra, a padlóra, egy halra"]].forEach(([ic, a1, a2], i) => {
+          const x = 200 + i * 400; g.fillStyle = "rgba(255,255,255,.1)"; g.beginPath(); g.roundRect ? g.roundRect(x - 180, 130, 360, 330, 30) : g.rect(x - 180, 130, 360, 330); g.fill();
+          g.font = "100px system-ui, sans-serif"; g.fillStyle = "#fff"; g.fillText(ic, x, 240); g.font = "800 36px system-ui, sans-serif"; g.fillText(a1, x, 360); g.font = "600 30px system-ui, sans-serif"; g.fillStyle = "#cfe3f5"; g.fillText(a2, x, 410); });
+        g.fillStyle = "#fff"; g.font = "600 30px system-ui, sans-serif"; g.fillText("Csippents erre a táblára, és eltűnik", CW / 2, 510);
+      });
+      const hc = mesh(new THREE.PlaneGeometry(.9, .9 * CH / CW), basic({ map: tx, transparent: true, depthTest: false, depthWrite: false }), root); hc.renderOrder = 997;
+      placeFacing(hc, 1.0, -.05, 0); MAQ.help = hc; MAQ.helpT = 25;
+      hc.userData.xr = { click: () => { hc.visible = false; T.xr.extra.delete(hc); } }; T.xr.extra.add(hc); W.objs.push(hc);
+    }
     W.maq = { MAQ, ENV, UW, goLife, goTable, goDive, goSurface, setPreset, stepScale, nudgeHour, toggleSights };   /* tesztekhez */
     return { tick: maqTick, panel: maqPanel, hud: maqHud, wrist: maqWrist };
   }
@@ -1413,6 +1433,7 @@
         else if (want >= 1 / 8.2 && !MAQ.fading) { MAQ.two = null; goLife(); }
         else setScale(want, false); }
     } else MAQ.two = null;
+    if (MAQ.help && MAQ.help.visible) { MAQ.helpT -= dt; if (MAQ.helpT < 0) { MAQ.help.visible = false; T.xr.extra.delete(MAQ.help); } }
     /* láthatóságok */
     const H = MAQ.H;
     MAQ.H.roof.visible = MAQ.roofOn && MAQ.upper;
@@ -1438,7 +1459,7 @@
     if (life) MAQ.orbs.forEach((o, i) => { const k = (o.scale.x > .5 ? .55 : .42) * (1 + Math.sin(W.t * 2.2 + i) * .06); o.scale.set(k, k, 1); });
     if (!T.inVR && !life && !MAQ.drag && MAQ.auto !== false) MAQ.turn.rotation.y += dt * .04;
     /* napszak: az óra simán halad a cél felé */
-    if (Math.abs(MAQ.hour - MAQ.hourT) > 1e-3) { MAQ.hour += (MAQ.hourT - MAQ.hour) * Math.min(1, dt * 2.2); if (Math.abs(MAQ.hour - MAQ.hourT) < .004) MAQ.hour = MAQ.hourT; MAQ.envT = (MAQ.envT || 0) + dt; if (MAQ.envT > .06) { MAQ.envT = 0; envSetTime(MAQ.day, MAQ.hour); } }
+    if (Math.abs(MAQ.hour - MAQ.hourT) > 1e-3) { MAQ.hour += (MAQ.hourT - MAQ.hour) * Math.min(1, dt * 2.2); if (Math.abs(MAQ.hour - MAQ.hourT) < .004) { MAQ.hour = MAQ.hourT; envSetTime(MAQ.day, MAQ.hour, true); } MAQ.envT = (MAQ.envT || 0) + dt; if (MAQ.envT > .06) { MAQ.envT = 0; envSetTime(MAQ.day, MAQ.hour); } }
     /* nap (árnyékvető fény) a modell fölött */
     const sun = ENV.lights.sun, tg = sun.target; MAQ.holder.getWorldPosition(tg.position);
     if (life) { const hw = headWorld(_q); tg.position.lerp(hw, .0).setY(tg.position.y); }
@@ -2633,7 +2654,7 @@
     return ENV;
   }
   /* napszak beállítása: dátum + óra → minden szín, fény, éjszakai fények */
-  function envSetTime(ymd, hour) {
+  function envSetTime(ymd, hour, force) {
     let p = { az: 230, el: 30 }; try { if (T.sunPos) p = T.sunPos(ymd, hour); } catch (e) {}
     ENV.sunInfo = p;
     const s = skyAt(p.el), day = smooth(clamp((p.el + 4) / 12, 0, 1)), night = 1 - smooth(clamp((p.el + 9) / 8, 0, 1)), gold = smooth(clamp((p.el + 2) / 5, 0, 1)) * (1 - smooth(clamp((p.el - 8) / 14, 0, 1)));
@@ -2666,11 +2687,11 @@
     const evening = clamp(1 - day * 1.25, 0, 1); ENV.evening = evening;
     L.lamp.intensity = evening * 2.2;
     /* a környezeti tükröződés (üveg, fém, víz nélkül) a napszak színeivel */
-    envPMREM(s, day);
+    envPMREM(s, day, force);
   }
   let _pmT = 0;
-  function envPMREM(s, day) {
-    const now = performance.now(); if (now - _pmT < 600 && ENV.envMap) return; _pmT = now;
+  function envPMREM(s, day, force) {
+    const now = performance.now(); if (!force && now - _pmT < 600 && ENV.envMap) return; _pmT = now;
     try {
       const r = T.sceneEl.renderer; const cv = document.createElement("canvas"); cv.width = 128; cv.height = 64; const g = cv.getContext("2d");
       const gr = g.createLinearGradient(0, 0, 0, 64); const hx = (c) => "#" + c.clone().convertLinearToSRGB().getHexString();
@@ -2912,7 +2933,8 @@
         _m4.compose(f.p, _qq, _one); o.im.setMatrixAt(i, _m4);
       });
       o.im.instanceMatrix.needsUpdate = true;
-      if (o.key === "kusz") o.im.computeBoundingSphere();
+      /* a rámutatáshoz a befoglaló gömb kövesse a halakat (a küsz minden képkockában, a többi ritkábban) */
+      if (o.key === "kusz" || ((UW.bsT = (UW.bsT || 0) + 1) % 10 === 0)) o.im.computeBoundingSphere();
     });
     /* időnként buborék-csobbanás hang */
     UW.snd = (UW.snd || 3) - dt; if (UW.snd < 0) { UW.snd = rr(2, 6); try { bubbleSnd(); } catch (e) {} }
@@ -2924,7 +2946,7 @@
   }
   /* be- és kimerülés (áttűnéssel) */
   function goDive() {
-    if (MAQ.fading) return;
+    if (MAQ.fading || MAQ.dive) return;
     fadeThen(() => {
       if (MAQ.mode === "life") { MAQ.mode = "table"; MAQ.s = MAQ.sT = 1 / 40; MAQ.roofOn = false; applyPlacement(true); lifeTargets(false); }
       if (!UW.g) buildUnderwater(ENV.site);
@@ -3113,7 +3135,8 @@
   W.open = function (kind) {
     if (W.active) W.close(null, true);
     const sky = T.sky, sm = sky && sky.getObject3D("mesh");
-    saved = { rigY: T.rig.object3D.rotation.y, skyVis: sky.object3D.visible, spotsVis: T.spots.object3D.visible, clip: T.sceneEl.renderer.localClippingEnabled, scene: T.current,
+    const lc0 = T.cam.components["look-controls"];
+    saved = { rigY: T.rig.object3D.rotation.y, pitch: lc0 && lc0.pitchObject ? lc0.pitchObject.rotation.x : 0, yaw: lc0 && lc0.yawObject ? lc0.yawObject.rotation.y : 0, skyVis: sky.object3D.visible, spotsVis: T.spots.object3D.visible, clip: T.sceneEl.renderer.localClippingEnabled, scene: T.current,
       skyDepth: sm ? sm.material.depthTest : true, skyOrder: sm ? sm.renderOrder : 0 };
     W.kind = kind; W.active = true; W.t = 0; W.upd = []; W.objs = []; W.disposables = [];
     T.setBusy(true);
@@ -3176,7 +3199,7 @@
     if (W.root && W.root.parent) W.root.parent.remove(W.root);
     W.root && W.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     W.disposables.forEach((d) => { try { d.dispose(); } catch (e) {} });
-    Object.keys(TEXC).forEach((k) => delete TEXC[k]);
+    Object.keys(TEXC).forEach((k) => delete TEXC[k]); Object.keys(TX).forEach((k) => delete TX[k]); Object.keys(HX).forEach((k) => delete HX[k]);
     W.disposables = []; W.objs = []; W.root = null; W.panel = null; W.spec = null;
     if (W.hud) { W.hud.el.remove(); W.hud = null; }
     document.body.classList.remove("world-on");
@@ -3185,7 +3208,7 @@
       sky.object3D.visible = true; T.spots.object3D.visible = true;
       if (sm) { sm.material.depthTest = saved.skyDepth; sm.material.depthWrite = true; sm.renderOrder = saved.skyOrder; sm.material.needsUpdate = true; }
       T.sceneEl.renderer.localClippingEnabled = saved.clip;
-      if (!T.inVR) T.rig.object3D.rotation.y = saved.rigY;
+      if (!T.inVR) { T.rig.object3D.rotation.y = saved.rigY; const lc1 = T.cam.components["look-controls"]; if (lc1 && lc1.pitchObject) { lc1.pitchObject.rotation.x = saved.pitch; lc1.yawObject.rotation.y = saved.yaw; } }
     }
     T.setBusy(false);
     if (after) setTimeout(after, 50);

@@ -214,7 +214,8 @@
         _m4.compose(f.p, _qq, _one); o.im.setMatrixAt(i, _m4);
       });
       o.im.instanceMatrix.needsUpdate = true;
-      if (o.key === "kusz") o.im.computeBoundingSphere();
+      /* a rámutatáshoz a befoglaló gömb kövesse a halakat (a küsz minden képkockában, a többi ritkábban) */
+      if (o.key === "kusz" || ((UW.bsT = (UW.bsT || 0) + 1) % 10 === 0)) o.im.computeBoundingSphere();
     });
     /* időnként buborék-csobbanás hang */
     UW.snd = (UW.snd || 3) - dt; if (UW.snd < 0) { UW.snd = rr(2, 6); try { bubbleSnd(); } catch (e) {} }
@@ -226,7 +227,7 @@
   }
   /* be- és kimerülés (áttűnéssel) */
   function goDive() {
-    if (MAQ.fading) return;
+    if (MAQ.fading || MAQ.dive) return;
     fadeThen(() => {
       if (MAQ.mode === "life") { MAQ.mode = "table"; MAQ.s = MAQ.sT = 1 / 40; MAQ.roofOn = false; applyPlacement(true); lifeTargets(false); }
       if (!UW.g) buildUnderwater(ENV.site);
