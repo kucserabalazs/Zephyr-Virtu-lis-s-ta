@@ -224,7 +224,8 @@
     mesh(mergeGeoms(parts), wire, body);
     /* bum (forog az árbóc körül) */
     const boomG = new THREE.Group(); boomG.position.set(0, mastBase + .92, mastZ); body.add(boomG);
-    const bg = new THREE.BoxGeometry(.08, .13, 3.45); bg.translate(0, 0, -3.45 / 2); mesh(bg, alu, boomG);
+    const bg = new THREE.CylinderGeometry(.045, .05, 3.45, 14); bg.rotateX(Math.PI / 2); bg.scale(1, 1.5, 1); bg.translate(0, 0, -3.45 / 2); mesh(bg, alu, boomG);   /* lekerekített, ovális keresztmetszetű bum */
+    { const cap = new THREE.SphereGeometry(.05, 10, 8); cap.scale(1, 1.5, 1); cap.translate(0, 0, -3.45); mesh(cap, alu, boomG); }
     if (o.detail) { const vang = rodBetween(new THREE.Vector3(0, -.85, -.05), new THREE.Vector3(0, -.05, -.85), .01, dark, boomG); }
     /* vitorlák */
     const mainMat = std({ map: sailTex(o), side: THREE.DoubleSide, roughness: .85 });
