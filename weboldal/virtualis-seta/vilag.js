@@ -1491,7 +1491,7 @@
      • Helyszín (2026. nov. 6-tól): regatta-bója a Balaton közepén, körülötte életnagyságú verseny és jelenetek (06d); a part ~260 m-re (06c) – valódi napállás szerinti égbolt, a túlpart nevezetességeivel, élővilággal.
      • A ház (06b): csak a Zephyr épülete (egy téglatest, 6,0 × 22,2 m), a hivatalos tervrajz szerint, valódi ablaknyílásokkal, berendezve.
      • Méretek: 1:100 · 1:60 · 1:40 az asztalon → 1:20 · 1:10 a stég padlóján → 1:1 ÉLETNAGYSÁG (a ház a parton áll, besétálhatsz).
-       Kézzel: két kézzel csippents és húzd szét / össze (mint egy fotót a telefonon). A csuklómenüben (bal tenyér felfelé) minden beállítás.
+       Kézzel: két kézzel csippents és húzd szét / össze (mint egy fotót a telefonon); egy kézzel a makett fölött csippentve körbeforgatod. A csuklómenüben (nézz a bal csuklódra) minden beállítás.
      • Életnagyságban: csippents a földre / padlóra → odalépsz; ⬆/⬇ az emeletre; a lakásokban fénylő 📷 gömbök → a valódi 360°-os fotó.
      • Kiválasztott lakás: „Belépés” (a valódi fotókba) vagy „Foglalás” (térbeli foglalópanel, a lakás előre kijelölve). */
   const MAQ = {};
@@ -1658,7 +1658,7 @@
         const bg = g.createLinearGradient(0, 0, 0, CH); bg.addColorStop(0, "rgba(16,56,104,.95)"); bg.addColorStop(1, "rgba(7,28,58,.95)");
         g.fillStyle = bg; g.beginPath(); g.roundRect ? g.roundRect(6, 6, CW - 12, CH - 12, 46) : g.rect(6, 6, CW - 12, CH - 12); g.fill(); g.lineWidth = 7; g.strokeStyle = "#ffd166"; g.stroke();
         g.fillStyle = "#ffd166"; g.font = "800 58px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Így irányítod a kezeddel", CW / 2, 70);
-        [["🖐", "Bal tenyér fel", "előjön a csuklómenü"], ["🤏🤏", "Két kéz csippent", "széthúzva nő a ház"], ["👉", "Mutass, csippents", "lakásra, padlóra, halra"]].forEach(([ic, a1, a2], i) => {
+        [["⌚", "Nézz az órádra", "a bal csuklón: csuklómenü"], ["🤏", "Csippents a makett fölött", "és húzd körbe: forog"], ["🤏🤏", "Két kéz csippent", "széthúzva nő a ház"]].forEach(([ic, a1, a2], i) => {
           const x = 200 + i * 400; g.fillStyle = "rgba(255,255,255,.1)"; g.beginPath(); g.roundRect ? g.roundRect(x - 180, 130, 360, 330, 30) : g.rect(x - 180, 130, 360, 330); g.fill();
           g.font = "100px system-ui, sans-serif"; g.fillStyle = "#fff"; g.fillText(ic, x, 240); g.font = "800 36px system-ui, sans-serif"; g.fillText(a1, x, 360); g.font = "600 30px system-ui, sans-serif"; g.fillStyle = "#cfe3f5"; g.fillText(a2, x, 410); });
         g.fillStyle = "#fff"; g.font = "600 30px system-ui, sans-serif"; g.fillText("Csippents erre a táblára, és eltűnik", CW / 2, 510);

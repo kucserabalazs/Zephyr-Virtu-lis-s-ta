@@ -8434,7 +8434,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     xrStart();   /* kéz vagy kontroller: sugár + csippentés/ravasz; ha egyik sincs, fejjel nézés (1,5 mp) */
     setTimeout(() => { if (inVR && !Object.keys(XRP.src).length) addGaze(); }, 1500);
     /* első alkalommal rövid súgó: hogyan mutass, csippents, fordulj */
-    let seen = false; try { seen = localStorage.getItem("zephyr-vr-help") === "1"; } catch (e) {}
+    let seen = false; try { seen = localStorage.getItem("zephyr-vr-help2") === "1"; } catch (e) {}
     if (!seen) setTimeout(() => { if (inVR && !VRS.panel && !(window.ZephyrWorld && ZephyrWorld.active)) vrOpen("help"); }, 1200);
     vrAudio(true);
     if (current) hiRes(current);
@@ -8592,11 +8592,12 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   /* rövid súgó: első VR-belépéskor magától, utána a menüből – nagy betűkkel, hogyan irányítasz kézzel és kontrollerrel */
   function pHelp(g) {
     txt(g, "Így irányítasz", 60, 168, { fs: 44, w: 800, c: "#ffd166" });
-    const R = [["✊", "Mozgás: ököl + hüvelykujj-koppintás", "megjelenik az ív · célozz és koppints újra: odaugrasz · nyitott kéz: vége"],
-               ["↔", "Fordulás és lépés: hüvelykujj-húzás", "öklöt tartva húzd a hüvelykujjad: ← → fordulás · ↑ előre · ↓ vissza (kontroller: bot)"],
+    /* 2026. nov. 6. (3. kör): a kéz fölötti „ököl + hüvelykujj” mozgás kikerült – a súgó az új, egyszerű kezelést mutatja */
+    const R = [["⌚", "Csuklómenü: nézz az órádra", "fordítsd magad felé a bal csuklód és nézz rá – azonnal kinyílik; visszafordítva bezárul"],
+               ["☝", "A gombokat ujjal nyomd", "a jobb mutatóujjaddal, mint egy érintőképernyőt (vagy mutass rá és csippents)"],
                ["👉", "Mutass + csippents = kattintás", "nyitott kézből sugár indul; hüvelyk- és mutatóujj összeér (kontroller: ravasz)"],
-               ["🖐", "Csuklómenü", "fordítsd fel a bal csuklód: kinyílik a kezelő térképpel (vagy nézz le: ☰)"],
-               ["➜", "Vagy: piros nyíl", "mutass egy piros nyílra és csippents · a térképen egy pontra bökve is odalépsz"]];
+               ["➜", "Lépés: piros nyíl", "mutass egy piros nyílra és csippents · a csuklómenü térképén egy pontra bökve is odalépsz"],
+               ["↺", "Fordulás", "a látótered alján a ↺ ↻ gombbal, a csuklómenü „Mozgás” gombjaival, vagy egyszerűen fordulj meg"]];
     R.forEach(([ic, t, d], i) => {
       const y = 214 + i * 104;
       rr(g, 40, y, VW - 80, 92, 20); g.fillStyle = "rgba(255,255,255,.08)"; g.fill();
@@ -8604,7 +8605,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       txt(g, t, 170, y + 30, { fs: 34, w: 800 });
       txt(g, d, 170, y + 68, { fs: 24, w: 500, c: "rgba(255,255,255,.8)" });
     });
-    btn(g, VW / 2 - 220, VH - 112, 440, 88, "Értem, mehet!", () => { try { localStorage.setItem("zephyr-vr-help", "1"); } catch (e) {} vrClose(); }, { on: 1, fs: 36 });
+    btn(g, VW / 2 - 220, VH - 112, 440, 88, "Értem, mehet!", () => { try { localStorage.setItem("zephyr-vr-help2", "1"); } catch (e) {} vrClose(); }, { on: 1, fs: 36 });
   }
   /* napállás a VR-ben: nap és óra választása, az égen (vagy a falon át) ☀ jel mutatja az irányt */
   function pSun(g) {
@@ -10167,7 +10168,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "6d30086526"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "f1b151bb5d"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
