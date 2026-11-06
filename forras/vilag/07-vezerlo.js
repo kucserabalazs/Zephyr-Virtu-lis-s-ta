@@ -91,6 +91,8 @@
       #worldHud .wh-b{pointer-events:auto;font:800 18px/1 inherit;min-width:64px;padding:14px 18px;border-radius:16px;border:1.5px solid rgba(255,255,255,.35);background:rgba(7,28,58,.82);color:#fff;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
       #worldHud .wh-b:active,#worldHud .wh-b.on{background:#ffd166;color:#0b2f5e;border-color:#ffd166}
       #worldHud .wh-steer .wh-b{min-width:110px;padding:20px 22px;font-size:26px}
+      #worldHud .wh-steer .wh-b.wh-x{min-width:0;padding:14px 16px;font-size:16px}
+      @media (max-width:600px){#worldHud .wh-steer .wh-b{min-width:64px;padding:14px 14px;font-size:20px}#worldHud .wh-steer .wh-b.wh-x{font-size:14px;padding:12px 10px}}
       #worldHud .wh-hint{font:600 15px/1.4 inherit;background:rgba(7,28,58,.7);padding:8px 14px;border-radius:12px;text-align:center}
       @media (max-width:600px){#worldHud .wh-t{font-size:19px}#worldHud .wh-s{font-size:16px}}
     </style><div class="wh-top"><button type="button" class="wh-back">‹ Vissza a sétához</button><div class="wh-card"><div class="wh-t"></div><div class="wh-s"></div><ul class="wh-list"></ul></div></div>
@@ -110,16 +112,17 @@
             const box = el.querySelector(".wh-btns"); box.className = "wh-btns"; box.innerHTML = "";
             list.forEach(([lbl, fn]) => { const b = document.createElement("button"); b.type = "button"; b.className = "wh-b"; b.textContent = lbl; b.addEventListener("click", () => { fn(); H.draw(); }); box.appendChild(b); });
           },
-          steer() {
-            if (lastBtns === "steer") return; lastBtns = "steer";
+          steer(extra, onCenter) {   /* extra: további gombok a kormány mellé ([felirat, függvény]); onCenter: az „egyenesbe” saját kezelője */
+            const key = "steer|" + (extra || []).map((x) => x[0]).join("|"); if (lastBtns === key) return; lastBtns = key;
             const box = el.querySelector(".wh-btns"); box.className = "wh-btns wh-steer"; box.innerHTML = "";
             [["◀", "L"], ["egyenesbe", "C"], ["▶", "R"]].forEach(([lbl, k]) => {
               const b = document.createElement("button"); b.type = "button"; b.className = "wh-b"; b.textContent = lbl;
-              if (k === "C") b.addEventListener("click", () => { SAIL.del = 0; });
+              if (k === "C") b.addEventListener("click", () => { if (onCenter) onCenter(); else SAIL.del = 0; });
               else { const on = (v) => (e) => { e.preventDefault(); SAIL.keys[k] = v; b.classList.toggle("on", v); };
                 b.addEventListener("pointerdown", on(true)); ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => b.addEventListener(ev, on(false))); }
               box.appendChild(b);
             });
+            (extra || []).forEach(([lbl, fn]) => { const b = document.createElement("button"); b.type = "button"; b.className = "wh-b wh-x"; b.textContent = lbl; b.addEventListener("click", () => { fn(); lastBtns = ""; H.draw(); }); box.appendChild(b); });
           }
         };
         if (W.spec && W.spec.hud) W.spec.hud(api);
