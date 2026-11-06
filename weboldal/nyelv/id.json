@@ -1746,5 +1746,7 @@
  "{#}. pálya: Tihanyi kör": "Lintasan {#}: Putaran Tihany",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "START! Putaran Tihany – menuju pelampung {#}.",
  "{#}. pálya: Nagy ív": "Lintasan {#}: Lengkung lebar",
- "RAJT! Nagy ív – irány az {#}. bója.": "START! Lengkung lebar – menuju pelampung {#}."
+ "RAJT! Nagy ív – irány az {#}. bója.": "START! Lengkung lebar – menuju pelampung {#}.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Start terlalu cepat! Putar balik dan lewati garis start lagi.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Start bersih – menuju pelampung {#}"
 }

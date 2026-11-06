@@ -1748,5 +1748,7 @@
  "{#}. pálya: Tihanyi kör": "Traseul {#}: Turul Tihany",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "START! Turul Tihany – spre geamandura {#}.",
  "{#}. pálya: Nagy ív": "Traseul {#}: Arc mare",
- "RAJT! Nagy ív – irány az {#}. bója.": "START! Arc mare – spre geamandura {#}."
+ "RAJT! Nagy ív – irány az {#}. bója.": "START! Arc mare – spre geamandura {#}.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Start prematur! Întoarce-te și trece din nou linia de start.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Start corect – spre geamandura {#}"
 }

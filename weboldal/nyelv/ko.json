@@ -1746,5 +1746,7 @@
  "{#}. pálya: Tihanyi kör": "{#}번 코스: 티허니 코스",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "출발! 티허니 코스 – {#}번 부표로.",
  "{#}. pálya: Nagy ív": "{#}번 코스: 큰 원호",
- "RAJT! Nagy ív – irány az {#}. bója.": "출발! 큰 원호 – {#}번 부표로."
+ "RAJT! Nagy ív – irány az {#}. bója.": "출발! 큰 원호 – {#}번 부표로.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "부정 출발! 돌아가서 출발선을 다시 통과하세요.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ 정상 출발 – {#}번 부표로"
 }

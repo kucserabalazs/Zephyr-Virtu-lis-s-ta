@@ -1748,5 +1748,7 @@
  "{#}. pálya: Tihanyi kör": "Trať {#}: Okruh Tihany",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "ŠTART! Okruh Tihany – na {#}. bóju.",
  "{#}. pálya: Nagy ív": "Trať {#}: Veľký oblúk",
- "RAJT! Nagy ív – irány az {#}. bója.": "ŠTART! Veľký oblúk – na {#}. bóju."
+ "RAJT! Nagy ív – irány az {#}. bója.": "ŠTART! Veľký oblúk – na {#}. bóju.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Predčasný štart! Otoč sa a prejdi štartovú čiaru znova.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Čistý štart – na {#}. bóju"
 }

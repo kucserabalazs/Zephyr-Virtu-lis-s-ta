@@ -1748,5 +1748,7 @@
  "{#}. pálya: Tihanyi kör": "Kurs {#}: Tihany-Runde",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "START! Tihany-Runde – auf zur Tonne {#}.",
  "{#}. pálya: Nagy ív": "Kurs {#}: Großer Bogen",
- "RAJT! Nagy ív – irány az {#}. bója.": "START! Großer Bogen – auf zur Tonne {#}."
+ "RAJT! Nagy ív – irány az {#}. bója.": "START! Großer Bogen – auf zur Tonne {#}.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Frühstart! Kehr um und überquere die Startlinie erneut.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Sauberer Start – auf zur Tonne {#}"
 }

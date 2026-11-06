@@ -1748,5 +1748,7 @@
  "{#}. pálya: Tihanyi kör": "Trasa {#}: Pętla wokół Tihany",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "START! Pętla wokół Tihany – płyń do boi {#}.",
  "{#}. pálya: Nagy ív": "Trasa {#}: Duży łuk",
- "RAJT! Nagy ív – irány az {#}. bója.": "START! Duży łuk – płyń do boi {#}."
+ "RAJT! Nagy ív – irány az {#}. bója.": "START! Duży łuk – płyń do boi {#}.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Falstart! Zawróć i przetnij linię startu jeszcze raz.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Czysty start – płyń do boi {#}"
 }

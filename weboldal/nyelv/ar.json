@@ -1746,5 +1746,7 @@
  "{#}. pálya: Tihanyi kör": "المسار {#}: جولة تيهاني",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "انطلق! جولة تيهاني – نحو العوامة {#}.",
  "{#}. pálya: Nagy ív": "المسار {#}: قوس كبير",
- "RAJT! Nagy ív – irány az {#}. bója.": "انطلق! قوس كبير – نحو العوامة {#}."
+ "RAJT! Nagy ív – irány az {#}. bója.": "انطلق! قوس كبير – نحو العوامة {#}.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "انطلاق مبكر! استدر واعبر خط الانطلاق من جديد.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ انطلاق صحيح – نحو العوامة {#}"
 }

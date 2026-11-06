@@ -1746,5 +1746,7 @@
  "{#}. pálya: Tihanyi kör": "{#}. parkur: Tihany turu",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "START! Tihany turu – {#}. şamandıraya.",
  "{#}. pálya: Nagy ív": "{#}. parkur: Büyük yay",
- "RAJT! Nagy ív – irány az {#}. bója.": "START! Büyük yay – {#}. şamandıraya."
+ "RAJT! Nagy ív – irány az {#}. bója.": "START! Büyük yay – {#}. şamandıraya.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Erken start! Geri dön ve start çizgisini yeniden geç.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Temiz start – {#}. şamandıraya"
 }

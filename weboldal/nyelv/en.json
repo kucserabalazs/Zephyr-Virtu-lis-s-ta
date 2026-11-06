@@ -1748,5 +1748,7 @@
  "{#}. pálya: Tihanyi kör": "Course {#}: Tihany loop",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "START! Tihany loop – head for buoy {#}.",
  "{#}. pálya: Nagy ív": "Course {#}: Wide arc",
- "RAJT! Nagy ív – irány az {#}. bója.": "START! Wide arc – head for buoy {#}."
+ "RAJT! Nagy ív – irány az {#}. bója.": "START! Wide arc – head for buoy {#}.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Early start! Turn back and cross the start line again.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Clean start – head for buoy {#}"
 }

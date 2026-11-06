@@ -1728,5 +1728,7 @@
  "{#}. pálya: Tihanyi kör": "{#}. pálya: Tihanyi kör",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "RAJT! Tihanyi kör – irány az {#}. bója.",
  "{#}. pálya: Nagy ív": "{#}. pálya: Nagy ív",
- "RAJT! Nagy ív – irány az {#}. bója.": "RAJT! Nagy ív – irány az {#}. bója."
+ "RAJT! Nagy ív – irány az {#}. bója.": "RAJT! Nagy ív – irány az {#}. bója.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Szabályos rajt – irány az {#}. bója"
 }

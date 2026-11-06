@@ -1746,5 +1746,7 @@
  "{#}. pálya: Tihanyi kör": "কোর্স {#}: তিহানি চক্কর",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "শুরু! তিহানি চক্কর – বয়া {#}-এর দিকে।",
  "{#}. pálya: Nagy ív": "কোর্স {#}: বড় বাঁক",
- "RAJT! Nagy ív – irány az {#}. bója.": "শুরু! বড় বাঁক – বয়া {#}-এর দিকে।"
+ "RAJT! Nagy ív – irány az {#}. bója.": "শুরু! বড় বাঁক – বয়া {#}-এর দিকে।",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "আগাম শুরু! ফিরে গিয়ে আবার শুরুর রেখা পার হন।",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ সঠিক শুরু – বয়া {#}-এর দিকে"
 }

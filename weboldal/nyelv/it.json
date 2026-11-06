@@ -1748,5 +1748,7 @@
  "{#}. pálya: Tihanyi kör": "Percorso {#}: Giro di Tihany",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "VIA! Giro di Tihany – verso la boa {#}.",
  "{#}. pálya: Nagy ív": "Percorso {#}: Grande arco",
- "RAJT! Nagy ív – irány az {#}. bója.": "VIA! Grande arco – verso la boa {#}."
+ "RAJT! Nagy ív – irány az {#}. bója.": "VIA! Grande arco – verso la boa {#}.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Partenza anticipata! Torna indietro e riattraversa la linea di partenza.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Partenza regolare – verso la boa {#}"
 }

@@ -1748,5 +1748,7 @@
  "{#}. pálya: Tihanyi kör": "Parcours {#} : Tour de Tihany",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "DÉPART ! Tour de Tihany – cap sur la bouée {#}.",
  "{#}. pálya: Nagy ív": "Parcours {#} : Grand arc",
- "RAJT! Nagy ív – irány az {#}. bója.": "DÉPART ! Grand arc – cap sur la bouée {#}."
+ "RAJT! Nagy ív – irány az {#}. bója.": "DÉPART ! Grand arc – cap sur la bouée {#}.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Départ anticipé ! Faites demi-tour et recoupez la ligne de départ.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Départ régulier – cap sur la bouée {#}"
 }

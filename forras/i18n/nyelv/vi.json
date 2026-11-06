@@ -1746,5 +1746,7 @@
  "{#}. pálya: Tihanyi kör": "Đường đua {#}: Vòng Tihany",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "XUẤT PHÁT! Vòng Tihany – tới phao {#}.",
  "{#}. pálya: Nagy ív": "Đường đua {#}: Vòng cung lớn",
- "RAJT! Nagy ív – irány az {#}. bója.": "XUẤT PHÁT! Vòng cung lớn – tới phao {#}."
+ "RAJT! Nagy ív – irány az {#}. bója.": "XUẤT PHÁT! Vòng cung lớn – tới phao {#}.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Xuất phát sớm! Quay lại và vượt vạch xuất phát lần nữa.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Xuất phát hợp lệ – tới phao {#}"
 }

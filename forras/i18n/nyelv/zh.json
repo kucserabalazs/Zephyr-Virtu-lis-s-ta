@@ -1746,5 +1746,7 @@
  "{#}. pálya: Tihanyi kör": "第 {#} 赛道：Tihany 环线",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "起航！Tihany 环线——前往第 {#} 浮标。",
  "{#}. pálya: Nagy ív": "第 {#} 赛道：大弧线",
- "RAJT! Nagy ív – irány az {#}. bója.": "起航！大弧线——前往第 {#} 浮标。"
+ "RAJT! Nagy ív – irány az {#}. bója.": "起航！大弧线——前往第 {#} 浮标。",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "抢航！请掉头，重新越过起航线。",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ 起航正常——前往第 {#} 浮标"
 }

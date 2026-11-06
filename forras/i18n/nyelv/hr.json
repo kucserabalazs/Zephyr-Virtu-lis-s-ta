@@ -1748,5 +1748,7 @@
  "{#}. pálya: Tihanyi kör": "Staza {#}: Krug oko Tihanyja",
  "RAJT! Tihanyi kör – irány az {#}. bója.": "START! Krug oko Tihanyja – prema {#}. plutači.",
  "{#}. pálya: Nagy ív": "Staza {#}: Veliki luk",
- "RAJT! Nagy ív – irány az {#}. bója.": "START! Veliki luk – prema {#}. plutači."
+ "RAJT! Nagy ív – irány az {#}. bója.": "START! Veliki luk – prema {#}. plutači.",
+ "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Prerani start! Okreni se i ponovo prijeđi startnu liniju.",
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Čist start – prema {#}. plutači"
 }
