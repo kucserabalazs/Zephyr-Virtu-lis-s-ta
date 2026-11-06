@@ -1151,7 +1151,8 @@
       const wheel = new THREE.Group(); ped.add(wheel); wheel.position.set(0, .8, -.42);
       const spin = new THREE.Group(); wheel.add(spin);
       mesh(new THREE.TorusGeometry(WR, .028, 12, 72), carbon, spin);
-      const grip = mesh(new THREE.TorusGeometry(WR, .034, 10, 72, TAU * .999), leather, spin); grip.scale.set(1, 1, .85);
+      const gripM = std({ color: "#5a3a24", roughness: .7, emissive: new THREE.Color("#ffd166"), emissiveIntensity: 0 });
+      const grip = mesh(new THREE.TorusGeometry(WR, .034, 10, 72, TAU * .999), gripM, spin); grip.scale.set(1, 1, .85);
       /* varrás-mintázat a bőrön: vékony világos gyűrű */
       mesh(new THREE.TorusGeometry(WR + .031, .004, 4, 96), std({ color: "#e8d9b8", roughness: .6 }), spin);
       for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; const sp = mesh(new THREE.BoxGeometry(.03, WR - .07, .022), carbon, spin); sp.position.set(Math.sin(a) * (WR - .07) / 2, Math.cos(a) * (WR - .07) / 2, 0); sp.rotation.z = -a; }
@@ -1163,7 +1164,7 @@
       const hit = mesh(new THREE.TorusGeometry(WR, .14, 6, 32), basic({ visible: false }), wheel);
       /* lábtámasz: döntött tíkblokk a kerék mellett (a kormányos lába ide támaszkodik dőlésben) */
       const fb = mesh(new THREE.BoxGeometry(.5, .1, .16), teak, G); fb.position.set(x + sd * .55, deckY + .05, z - 1.0); fb.rotation.x = -.35;
-      wheels.push({ sd, ped, wheel, spin, hit });
+      wheels.push({ sd, ped, wheel, spin, hit, gripM });
     });
     /* utazósín (traveller) a kerekek előtt, keresztben; rajta a kocsi, a főszkóta felfut a bumra */
     const tz = hs.z + 2.25, trav = mesh(new THREE.BoxGeometry(2 * (sh(.2).hb - .5), .06, .12), grey, G); trav.position.set(0, sh(.2).y + .05, tz);
@@ -1243,6 +1244,8 @@
     VRR.lights = addLights(SUN.clone());
     /* a kerekek fogása sugárral (csippentés / ravasz) */
     CK2.wheels.forEach((w) => { w.hit.userData.xr = { hover: (on) => { VRR.wHover = on; }, down: (h, src, key) => vrGrab(w, src, key, true), drag: (src) => vrDrag(w, src), up: () => { VRR.grab = null; } }; T.xr.extra.add(w.hit); W.objs.push(w.hit); });
+    /* első alkalommal: felirat a jobb oldali kerék fölött – amíg meg nem fogod */
+    { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Fogd meg a kormányt!", "csippents a peremére és forgasd"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
     SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
     vrSetup(VRR.lvl || 1);
@@ -1304,7 +1307,9 @@
     const k = SAIL.keys; if (k.L || k.R) S.wa = clamp(S.wa + ((k.R ? 1 : 0) - (k.L ? 1 : 0)) * dt * 2.4, -WA_MAX, WA_MAX);
     else if (!S.grab) S.wa *= Math.pow(.7, dt);   /* elengedve a kerék lassan visszatér (a legénység segít) */
     S.del = S.wa / WA_MAX * .55;
-    S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; });   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
+    S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; const want = S.grab && S.grab.w === w ? .55 : (VRR.wHover ? .25 : 0) + (!S.everGrab && S.st === "pre" && w.sd < 0 ? .25 + .25 * Math.sin(W.t * 4) : 0); w.gripM.emissiveIntensity += (want - w.gripM.emissiveIntensity) * Math.min(1, dt * 8); });
+    if (S.grab) S.everGrab = true;
+    if (S.helpL) { S.helpL.visible = !S.everGrab && S.st !== "done"; }   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
     /* fizika (a vitorlázás modellje, a nagyobb hajóhoz igazítva) */
     /* a szél lassan leng (±7°) – mint a Balatonon; a pálya ugyanaz marad */
     S.wf = C.wf + Math.sin(S.t / 47 + C.lvl) * 7 * D2R + Math.sin(S.t / 13) * 2 * D2R;
