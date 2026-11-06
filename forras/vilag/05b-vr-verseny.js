@@ -61,7 +61,7 @@
       const pad = mesh(new THREE.BoxGeometry(2.6, .01, 3.6), ns, G); pad.position.set(0, cy2, .5);
       [-1, 1].forEach((sd) => { const hatch = mesh(new THREE.BoxGeometry(.55, .04, .55), gl2, G); hatch.position.set(sd * .55, cy2 + .02, 1.6); const hr = mesh(new THREE.BoxGeometry(.05, .06, 2.4), teak, G); hr.position.set(sd * 1.1, cy2 + .04, .3); }); }
     /* a két kerék: talapzat (karbon oszlop), tetején iránytű-búra és műszer; a kerék karbon, bőrrel bevont peremmel, 6 küllővel */
-    const WR = .62, wheels = [];
+    const WR = .46, wheels = [];   /* kisebb, kézre eső kerék (a tulajdonos kérése) – átmérő ~92 cm */
     const instT = canvasTex(512, 512, (gg) => { gg.fillStyle = "#06090d"; gg.fillRect(0, 0, 512, 512); });
     [-1, 1].forEach((sd) => {
       const x = sd * (hs.hb - .78), z = hs.z + .55;
@@ -95,7 +95,7 @@
       const hit = mesh(new THREE.TorusGeometry(WR, .14, 6, 32), basic({ visible: false }), wheel);
       /* lábtámasz: döntött tíkblokk a kerék mellett (a kormányos lába ide támaszkodik dőlésben) */
       const fb = mesh(new THREE.BoxGeometry(.5, .1, .16), teak, G); fb.position.set(x + sd * .55, deckY + .05, z - 1.0); fb.rotation.x = -.35;
-      wheels.push({ sd, ped, wheel, spin, hit, gripM });
+      wheels.push({ sd, ped, wheel, spin, hit, gripM, WR });
     });
     /* utazósín (traveller) a kerekek előtt, keresztben; rajta a kocsi, a főszkóta felfut a bumra */
     const tz = hs.z + 2.25, trav = mesh(new THREE.BoxGeometry(2 * (sh(.2).hb - .5), .06, .12), grey, G); trav.position.set(0, sh(.2).y + .05, tz);
@@ -227,7 +227,7 @@
     /* üzenettábla a kerék előtt (VR-ben a panel nélkül is látszik): bójakerülés, rossz oldal, korai rajt, koccanás, befutó */
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.msgL = labelSprite(["", ""], { size: 2.0, fs: 50, w: 1150 }); CK2.G.add(VRR.msgL);
       VRR.msgL.position.set(w0.ped.position.x * .6, CK2.deckY + 1.75, w0.ped.position.z + 2.2); VRR.msgL.visible = false; }
-    { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Fogd meg a kormányt!", "csippents a peremére és forgasd"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
+    { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Markold meg a kormányt!", "zárd a kezed a peremén és forgasd – meglökve kipörög"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
     SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
     vrSetup(VRR.lvl || 1);
@@ -274,21 +274,63 @@
     const p = new THREE.Ray(src.o, src.d).intersectPlane(pl, new THREE.Vector3()); if (!p) return;
     const a = wheelAngleOf(w, p); VRR.wa = clamp(VRR.wa + wrapA(a - G.a), -WA_MAX, WA_MAX); G.a = a;
   }
+  function vrRelease() {
+    const S = VRR, G = S.grab; if (!G) return;
+    if (G.hist && G.hist.length >= 2) { const a0 = G.hist[0], a1 = G.hist[G.hist.length - 1], dtt = Math.max(.02, a1[0] - a0[0]); S.wv = clamp((a1[1] - a0[1]) / dtt, -18, 18); if (Math.abs(S.wv) < 1.2) S.wv = 0; }
+    S.lastRel = { n: G.hist ? G.hist.length : -1, wv: S.wv, h: G.hist && G.hist.map((q) => q[0].toFixed(2) + ":" + q[1].toFixed(2)).join(" ") };
+    S.grab = null; vrGripHand(null, G.key);
+  }
+  /* a kerékre markoló kéz (bőrszín, mint a követett kéz): tenyér, négy ujj a peremet körülfogva, hüvelykujj, csukló */
+  function vrGripHand(w, key, b) {
+    const S = VRR; S.gh = S.gh || {};
+    let H = S.gh[key];
+    if (!H) {
+      H = new THREE.Group(); const skin = std({ color: "#e9cdb4", roughness: .62 }), nail = std({ color: "#f3dfd2", roughness: .4 }), sleeve = std({ color: "#1b2a3c", roughness: .8 });
+      const mir = key === "left" ? -1 : 1;
+      const palm = mesh(new THREE.SphereGeometry(1, 16, 12), skin, H); palm.scale.set(.047, .054, .02); palm.position.set(0, -.014, -.048); palm.rotation.x = -.25;
+      [-.033, -.011, .011, .033].forEach((x, i) => { const L = [.95, 1, .97, .85][i];
+        const fin = mesh(new THREE.TorusGeometry(.043 * L, .0105, 6, 12, Math.PI * 1.15), skin, H); fin.rotation.set(0, Math.PI / 2, 0); fin.rotation.order = "YXZ"; fin.rotation.x = -Math.PI * .62; fin.position.set(x * mir, .004, -.006);
+        const tip = mesh(new THREE.SphereGeometry(.0108, 8, 6), nail, fin); tip.position.set(Math.cos(Math.PI * 1.15) * .043 * L, Math.sin(Math.PI * 1.15) * .043 * L, 0); });
+      const th = mesh(new THREE.CapsuleGeometry(.012, .045, 4, 8), skin, H); th.rotation.z = Math.PI / 2 * .8 * mir; th.position.set(-.045 * mir, -.03, -.035);
+      const wr = mesh(new THREE.CylinderGeometry(.026, .03, .09, 12), skin, H); wr.rotation.x = Math.PI / 2 - .5; wr.position.set(0, -.045, -.105);
+      const cuff = mesh(new THREE.CylinderGeometry(.034, .036, .05, 14), sleeve, H); cuff.rotation.x = Math.PI / 2 - .5; cuff.position.set(0, -.07, -.155);
+      H.scale.setScalar(1.05); S.gh[key] = H;
+    }
+    /* a valódi (követett) kéz eltűnik, amíg a markoló kéz a keréken van */
+    try { document.querySelectorAll("[hand-tracking-controls]").forEach((el) => { const d = el.components["hand-tracking-controls"]; if (d && d.data && d.data.hand === key) el.object3D.visible = !w; }); } catch (e) {}
+    if (!w) { if (H.parent) H.parent.remove(H); return; }
+    w.spin.add(H); H.position.set(-Math.sin(b) * w.WR, Math.cos(b) * w.WR, 0); H.rotation.set(0, 0, b);
+  }
   const WA_MAX = 1.25 * Math.PI;   /* ütközéstől ütközésig ~2,5 fordulat (mint egy nagy jachton) */
   /* --------------------------------------------------------------- képkocka */
   function vrTick(dt) {
     const S = VRR, C = S.C;
     if (S.ensign) { const pa = S.ensign.geometry.attributes.position, b0 = S.ensign.userData.base, t = W.t; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 9 - t * 7) * .05 * x / .6; } pa.needsUpdate = true; }
-    /* közvetlen kézi fogás: csippentés a kerék pereme mellett (a kéz a kerék síkjában, a peremtől 18 cm-en belül) */
-    const X = T.xr, pl = (X && X.pinch) || {};
+    /* KÉZI FOGÁS – MARKOLÁS (nem csippentés): ha a tenyered a perem mellett van és ökölbe zárod, a kezed „ráfog” a kerékre
+       (a peremen megjelenik a markoló kéz), amíg zárva tartod, a kerék a kezeddel együtt fordul. Ha lendületből elengeded,
+       a kerék magától tovább pörög a végállásig (és ott kicsit visszapattan), mint egy igazi hajókormány. */
+    const X = T.xr;
+    const curlN = (s0) => { const j = s0.jp, c = s0.palmC; if (!j || !c) return 0; const d = (t) => (t ? t.distanceTo(c) : 1); return [j.it, j.mt, j.rt, j.pt].filter((t) => d(t) < .088).length; };
+    const squeeze = (s0) => { try { const b = s0.src && s0.src.gamepad && s0.src.gamepad.buttons; return !!(b && b[1] && b[1].pressed); } catch (e) { return false; } };
     if (T.inVR && X && X.src) {
-      ["right", "left"].forEach((h) => { const s0 = X.src[h]; if (!s0 || !s0.tip) return;
-        if (S.grab && S.grab.key === h && !S.grab.ray) { if (!pl[h]) { S.grab = null; return; } const a = wheelAngleOf(S.grab.w, s0.tip); S.wa = clamp(S.wa + wrapA(a - S.grab.a), -WA_MAX, WA_MAX); S.grab.a = a; return; }
-        if (!S.grab && pl[h]) S.ck.wheels.forEach((w) => { const lp = w.wheel.worldToLocal(_wv.copy(s0.tip)); const r = Math.hypot(lp.x, lp.y); if (Math.abs(lp.z) < .2 && r > .3 && r < .95) { S.grab = { w, a: Math.atan2(-lp.x, lp.y), key: h, ray: false }; try { flap(.02); } catch (e) {} } });
+      ["right", "left"].forEach((h) => { const s0 = X.src[h]; if (!s0) return; const pt = s0.palmC || s0.tip; if (!pt) return;
+        const n = s0.hand ? curlN(s0) : (squeeze(s0) ? 4 : 0);
+        if (S.grab && S.grab.key === h && !S.grab.ray) {
+          if (n <= 1) { vrRelease(); return; }
+          const a = wheelAngleOf(S.grab.w, pt), da = wrapA(a - S.grab.a); S.wa = clamp(S.wa + da, -WA_MAX, WA_MAX); S.grab.a = a;
+          S.grab.hist.push([W.t, S.wa]); while (S.grab.hist.length > 2 && W.t - S.grab.hist[0][0] > .22) S.grab.hist.shift(); return; }
+        if (!S.grab && n >= 3 && !(S.lastFist && S.lastFist[h] >= 3)) S.ck.wheels.forEach((w) => { if (S.grab) return; const lp = w.wheel.worldToLocal(_wv.copy(pt)); const r = Math.hypot(lp.x, lp.y);
+          if (Math.abs(lp.z) < .17 && r > w.WR - .17 && r < w.WR + .16) { const a = Math.atan2(-lp.x, lp.y); S.grab = { w, a, key: h, ray: false, hist: [[W.t, S.wa]] }; S.wv = 0; vrGripHand(w, h, a - S.wa); try { flap(.02); X.pulse && X.pulse(h, .5, 30); } catch (e) {} } });
+        (S.lastFist || (S.lastFist = {}))[h] = n;
       });
     }
-    const k = SAIL.keys; if (k.L || k.R) S.wa = clamp(S.wa + ((k.R ? 1 : 0) - (k.L ? 1 : 0)) * dt * 2.4, -WA_MAX, WA_MAX);
-    else if (!S.grab) S.wa *= Math.pow(.7, dt);   /* elengedve a kerék lassan visszatér (a legénység segít) */
+    const k = SAIL.keys; if (k.L || k.R) { S.wa = clamp(S.wa + ((k.R ? 1 : 0) - (k.L ? 1 : 0)) * dt * 2.4, -WA_MAX, WA_MAX); S.wv = 0; }
+    else if (!S.grab) {
+      if (Math.abs(S.wv || 0) > .15) {   /* szabadon pörgő kerék: súrlódással lassul, a végálláson megakad és kicsit visszapattan */
+        S.wa += S.wv * dt; S.wv *= Math.pow(.42, dt);
+        if (S.wa > WA_MAX) { S.wa = WA_MAX; S.wv = -Math.abs(S.wv) * .22; try { winch(); } catch (e) {} } else if (S.wa < -WA_MAX) { S.wa = -WA_MAX; S.wv = Math.abs(S.wv) * .22; try { winch(); } catch (e) {} }
+      } else { S.wv = 0; S.wa *= Math.pow(.8, dt); }   /* elengedve lassan középre áll (a kormánylapát visszahúzza) */
+    }
     S.del = S.wa / WA_MAX * .55;
     S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; const want = S.grab && S.grab.w === w ? .55 : (VRR.wHover ? .25 : 0) + (!S.everGrab && S.st === "pre" && w.sd < 0 ? .25 + .25 * Math.sin(W.t * 4) : 0); w.gripM.emissiveIntensity += (want - w.gripM.emissiveIntensity) * Math.min(1, dt * 8); });
     if (S.grab) S.everGrab = true;
