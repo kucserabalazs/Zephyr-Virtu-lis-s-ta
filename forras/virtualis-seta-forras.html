@@ -9770,14 +9770,16 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (base) {
         /* a nagy menü a csukló fölött, a fejed felé – mindegy, hogy a tenyered vagy a kézhátad néz feléd */
         const toH = _wv4.copy(_wv3).sub(base).normalize(), side = L.hand && L.faceSide < 0 ? -1 : 1;
-        const target = _wv2.copy(L.hand && L.palmC ? L.palmC : base).addScaledVector(nrm, side * (.06 + .04 * sz)).addScaledVector(toH, .13).addScaledVector(_wup, .07);
+        /* a csukló fölött és kicsit mögötte (a fejtől távolabb), hogy kényelmes távolságban (~45–50 cm) legyen, ne a szemed előtt */
+        const away = _wv4.copy(base).sub(_wv3); away.y = 0; if (away.lengthSq() < 1e-6) away.set(0, 0, -1); away.normalize();
+        const target = _wv2.copy(L.hand && L.palmC ? L.palmC : base).addScaledVector(nrm, side * .04).addScaledVector(away, .12).addScaledVector(_wup, .17);
         P.panel.position.copy(base).lerp(target, e);
         _wm.lookAt(_wv3, P.panel.position, _wup); _wq.setFromRotationMatrix(_wm); _wq2.copy(P.small.quaternion); P.panel.quaternion.copy(_wq2).slerp(_wq, e);
       }
       if (P.hold && P.t >= 1) P.held = true;
     }
     if (!P.hold) P.held = false;
-    P.panel.scale.setScalar((.13 + .87 * e) * sz * 1.35);   /* nagy menü: ~40 × 27 cm, ujjal kényelmesen nyomható */
+    P.panel.scale.setScalar((.13 + .87 * e) * sz * 1.15);   /* nagy menü: ~35 × 23 cm, ~45–50 cm-re a szemtől – ujjal kényelmesen nyomható */
     P.panel.visible = P.t > .02; P.m.visible = P.t > .8;
     P.backPlate.material.opacity = .82 * wEase((P.t - .2) / .4); P.frame.material.opacity = wEase((P.t - .1) / .4);
     /* a fejléc lehajlik, a térkép kinyílik balra, a csempék egymás után beröpülnek a helyükre */
