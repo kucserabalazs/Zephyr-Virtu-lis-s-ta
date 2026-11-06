@@ -9251,8 +9251,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     Object.keys(XRP.ray).forEach((k) => { const r = XRP.ray[k]; if (r) { kill(r.g); kill(r.cur); } });
     XRP.ray = {}; XRP.src = {}; XRP.seen = {};
     Object.keys(XRP.hov).forEach((k) => xrSetHover(k, null)); XRP.hov = {}; XRP.press = {}; XRP.drag = {};
-    if (XRP.wrist) { kill(XRP.wrist); XRP.wrist = null; }
-    if (XRP.wristP) { kill(XRP.wristP.m); XRP.wristP = null; }
+    if (XRP.wristP) { kill(XRP.wristP.g); XRP.wristP = null; XRP.wrist = null; }
     if (XRP.bar) { XRP.bar.items.forEach((m) => { XRP.extra.delete(m); (m.userData.tex || []).forEach((t) => t.dispose()); }); kill(XRP.bar.g); XRP.bar = null; }
     XRP.spin = {}; XRP.stick = {};
   }
@@ -9378,89 +9377,185 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
   /* csukló-menü: a bal csukló fölött lebegő „☰ Menü” gomb, mindig a fejed felé fordul – a jobb kezeddel rámutatva, csippentéssel nyílik */
   function menuButton() { if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.togglePanel(); else vrToggle(); }
-  function xrWrist() {
-    const L = (XRP.seen && XRP.seen.left) ? XRP.src.left : (XRP.seen && XRP.seen.none) ? XRP.src.none : null;
-    if (!XRP.wrist) {
-      const cv = document.createElement("canvas"); cv.width = 320; cv.height = 120; const g = cv.getContext("2d");
-      g.fillStyle = "rgba(11,47,94,.94)"; g.beginPath(); g.roundRect ? g.roundRect(6, 6, 308, 108, 44) : g.rect(6, 6, 308, 108); g.fill();
-      g.lineWidth = 7; g.strokeStyle = "#ffd166"; g.stroke();
-      g.fillStyle = "#fff"; g.font = "800 58px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("☰ Menü", 160, 64);
-      const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(.11, .041), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthTest: false }));
-      m.renderOrder = 999;
-      m.userData.xr = { click: () => menuButton(), hover: (on) => m.scale.setScalar(on ? 1.18 : 1) };
-      sceneEl.object3D.add(m); XRP.wrist = m;
-    }
-    const w = XRP.wrist;
-    if (!L || !inVR) { w.visible = false; return; }
-    const xc = sceneEl.renderer.xr.getCamera();
-    if (L.hand) {
-      /* kézkövetésnél: ha a bal csuklódat felfelé / magad felé fordítod, a tenyered fölött előugrik a kezelőfelület (csuklómenü) –
-         a jobb kezeddel csippentve nyomod a gombjait. Leengedve eltűnik. */
-      w.visible = false;
-      const P = xrWristPanel();
-      if (!L.palmUp || !L.palmC) { if (P.m.visible) { P.m.visible = false; P.t = 0; } return; }
-      if (!P.m.visible) { P.m.visible = true; P.t = 0; P.draw(); try { xrPulse(L.src, .2, 18); } catch (e) {} }
-      P.t = Math.min(1, P.t + .12);   /* rövid „kinyílás” */
-      xc.getWorldPosition(_v2);
-      P.m.position.copy(L.palmC).addScaledVector(L.palmN, .1 + .02 * P.t);
-      P.m.lookAt(_v2); P.m.scale.setScalar(.55 + .45 * P.t);
-      return;
-    }
-    if (XRP.wristP) XRP.wristP.m.visible = false;
-    if (!L.grip) { w.visible = false; return; }
-    w.visible = true; w.scale.setScalar(1);
-    _v1.setFromMatrixPosition(L.grip);
-    _v2.set(0, .08, .02).applyMatrix4(_m1.extractRotation(L.grip));
-    w.position.copy(_v1).add(_v2);
-    xc.getWorldPosition(_v2); w.lookAt(_v2);
+  /* ===================================================================================================
+     CSUKLÓÓRA-MENÜ (2026. nov. 6.) – a bal csuklón egy kis arany óra; ha a tenyered felfelé / magad felé fordítod,
+     az óra felemelkedik, megnő, és a számlapja szirmokként szétnyílik: körben 12 nagy gomb, középen az óra
+     (valódi idő, dátum, hol vagy), a lünettán iránytű (merre van észak és a Balaton). A jobb kezeddel mutatsz és csippentesz.
+     Kontrollerrel: az óra a bal kontrolleren ül, rámutatva + ravasz nyitja, a közepére kattintva csukódik.
+     Ugyanez a menü működik a sétában (a házban) és a 3D-világokban (makett, merülés) – mindig a helyzethez illő gombokkal. */
+  const WR = { RT: .145, R0: .047, RI: .052, RO: .128, PX: 1024 };
+  function watchItems() {
+    const world = !!(window.ZephyrWorld && ZephyrWorld.active);
+    if (world && ZephyrWorld.spec && ZephyrWorld.spec.wrist) { try { return ZephyrWorld.spec.wrist(); } catch (e) {} }
+    if (world) return [["☰", "Panel", () => ZephyrWorld.togglePanel()], ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)], ["🏠", "Makett", () => openWorld("maquette")],
+      ["⛵", "Vitorlázás", () => openWorld("sail")], ["‹", "A sétához", () => ZephyrWorld.close()], ["❔", "Súgó", () => { ZephyrWorld.close(() => vrOpen("help")); }], ["✕", "Kilépés", () => vrEndSession()]];
+    const pg = (p, f) => () => { if (f) f(); vrOpen(p); VRS.page = p; vrDraw(); vrPlace(); };
+    return [["☰", "Menü", () => vrToggle()], ["⬆", "Előre", () => vrStepForward()], ["↶", "Vissza", () => { try { goBack(); } catch (e) {} }],
+      ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)], ["🗺", "Alaprajz", pg("map")],
+      ["📅", "Foglalás", pg("book", () => vrBookInit())], ["☀", "Napállás", pg("sun", () => sunSet(true))], ["🏠", "Makett", () => openWorld("maquette")],
+      ["⛵", "Vitorlázás", () => openWorld("sail")], ["❔", "Súgó", pg("help")], ["✕", "Kilépés", () => vrEndSession()]];
   }
-
-  /* ---------- Csuklómenü: kis kezelőfelület a bal tenyér fölött (2 × 3 nagy gomb) ---------- */
-  function xrWristPanel() {
+  function watchContext() {
+    const W = window.ZephyrWorld;
+    if (W && W.active) { const M = W.maq && W.maq.MAQ; if (W.kind === "maquette" && M) return M.dive ? "Merülés a Balatonba" : M.mode === "life" ? "A ház életnagyságban" : "A ház makettje"; return W.kind === "sail" ? "Vitorlázás" : W.kind === "regatta" ? "Regatta" : "3D világ"; }
+    const sc = SCENES[current]; const g = sc && GROUPS.find((q) => q.id === sc.g); return sc ? ((g && g.no ? g.name + " · " : "") + sc.n) : "Zephyr";
+  }
+  function watchNorthYaw() {
+    try { const W = window.ZephyrWorld; if (W && W.active) { const E = W.maq && W.maq.ENV; return E && E.env ? E.env.rotation.y : null; } const y = bearingYaw(current, 0); return y == null ? null : y; } catch (e) { return null; }
+  }
+  function xrWatch() {
     if (XRP.wristP) return XRP.wristP;
-    const CW = 720, CH = 480, cv = document.createElement("canvas"); cv.width = CW; cv.height = CH;
-    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(.21, .21 * CH / CW), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false }));
-    m.renderOrder = 999; m.visible = false;
-    const P = { m, t: 0, hov: -1, btns: [] };
-    const items = () => {
-      const world = !!(window.ZephyrWorld && ZephyrWorld.active);
-      if (world && ZephyrWorld.spec && ZephyrWorld.spec.wrist) { try { return ZephyrWorld.spec.wrist(); } catch (e) {} }
-      if (world) return [["☰", "Panel", () => ZephyrWorld.togglePanel()], ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)],
-        ["‹", "A sétához", () => ZephyrWorld.close()], ["❔", "Súgó", () => { ZephyrWorld.close(() => vrOpen("help")); }], ["✕", "Kilépés", () => vrEndSession()]];
-      return [["☰", "Menü", () => vrToggle()], ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)],
-        ["📅", "Foglalás", () => { vrBookInit(); vrOpen("book"); VRS.page = "book"; vrDraw(); vrPlace(); }], ["☀", "Napállás", () => { sunSet(true); vrOpen("sun"); VRS.page = "sun"; vrDraw(); }], ["⛵", "3D világ", () => { vrOpen("world"); VRS.page = "world"; vrDraw(); }]];
+    const P = { t: 0, open: false, pinned: false, hov: -2, items: [], petals: [], key: "" };
+    const G = new THREE.Group(); G.visible = false; G.renderOrder = 999; sceneEl.object3D.add(G); P.g = G;
+    const dial = new THREE.Group(); G.add(dial); P.dial = dial;   /* a számlap a saját síkjában (XY, normálisa +z) */
+    const basicT = (map, extra) => new THREE.MeshBasicMaterial(Object.assign({ map, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide }, extra || {}));
+    /* --- szirmok: közös vászon a teljes számlapra, minden szirom ennek a saját darabját mutatja --- */
+    const cv = document.createElement("canvas"); cv.width = cv.height = WR.PX; const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; P.cv = cv; P.tex = tex;
+    const petalMat = basicT(tex); P.petalMat = petalMat;
+    /* --- a középső óralap (saját vászon, másodpercenként frissül) --- */
+    const hc = document.createElement("canvas"); hc.width = hc.height = 512; const htex = new THREE.CanvasTexture(hc); htex.colorSpace = THREE.SRGBColorSpace; P.hc = hc; P.htex = htex;
+    const hub = new THREE.Mesh(new THREE.CircleGeometry(WR.R0, 64), basicT(htex)); hub.renderOrder = 1002; dial.add(hub); P.hub = hub;
+    /* --- arany lünetta (két gyűrű) és iránytű-tű --- */
+    const gold = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: .75, roughness: .28, emissive: 0x3a2a08, depthTest: false, depthWrite: false, transparent: true });
+    const bez = new THREE.Mesh(new THREE.TorusGeometry(WR.RO + .006, .0045, 10, 96), gold); bez.renderOrder = 1001; dial.add(bez);
+    const bez2 = new THREE.Mesh(new THREE.TorusGeometry(WR.R0 + .002, .0025, 8, 64), gold); bez2.renderOrder = 1003; dial.add(bez2);
+    const ringCv = document.createElement("canvas"); ringCv.width = ringCv.height = 512; { const g = ringCv.getContext("2d"); g.translate(256, 256);
+      for (let k = 0; k < 60; k++) { g.save(); g.rotate(k / 60 * Math.PI * 2); g.fillStyle = k % 5 ? "rgba(255,240,200,.7)" : "#ffd166"; g.fillRect(-1.5, -250, 3, k % 5 ? 10 : 18); g.restore(); } }
+    const ringTex = new THREE.CanvasTexture(ringCv); ringTex.colorSpace = THREE.SRGBColorSpace;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(WR.RO + .002, WR.RT, 96), basicT(ringTex)); ring.renderOrder = 1000; dial.add(ring);
+    /* a gyűrű UV-ja a teljes négyzetre (sík vetítés), hogy a rovátkák körben üljenek */
+    { const p = ring.geometry.attributes.position, uv = ring.geometry.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / (2 * WR.RT) + .5, p.getY(i) / (2 * WR.RT) + .5); }
+    const back = new THREE.Mesh(new THREE.CircleGeometry(WR.RT, 96), new THREE.MeshBasicMaterial({ color: 0x06142a, transparent: true, opacity: .55, depthTest: false, depthWrite: false })); back.position.z = -.002; back.renderOrder = 998; dial.add(back); P.back = back;
+    const needle = new THREE.Group(); dial.add(needle); P.needle = needle;
+    { const sh = new THREE.Shape(); sh.moveTo(0, WR.RT - .001); sh.lineTo(-.007, WR.RO + .008); sh.lineTo(.007, WR.RO + .008); sh.closePath();
+      const n = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshBasicMaterial({ color: 0xe5262f, depthTest: false, depthWrite: false, transparent: true })); n.renderOrder = 1004; n.position.z = .001; needle.add(n);
+      const lc = document.createElement("canvas"); lc.width = 128; lc.height = 64; const g = lc.getContext("2d"); g.fillStyle = "#fff"; g.font = "800 46px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("É", 64, 34);
+      const lt = new THREE.CanvasTexture(lc); lt.colorSpace = THREE.SRGBColorSpace; const lab = new THREE.Mesh(new THREE.PlaneGeometry(.024, .012), basicT(lt)); lab.renderOrder = 1005; lab.position.set(0, WR.RO + .02, .002); needle.add(lab); }
+    /* --- a csuklón ülő kis óra (csukott állapot): tok, szíj, korona --- */
+    const small = new THREE.Group(); G.add(small); P.small = small;
+    const steel = new THREE.MeshStandardMaterial({ color: 0x2b2f36, metalness: .3, roughness: .6, depthTest: true });
+    const strap = new THREE.Mesh(new THREE.TorusGeometry(.036, .007, 8, 40), steel); strap.scale.set(1, .8, 1.9); small.add(strap); P.strap = strap;
+    const caseM = new THREE.Mesh(new THREE.CylinderGeometry(.021, .021, .008, 40), gold); caseM.rotation.x = Math.PI / 2; small.add(caseM); caseM.renderOrder = 1000;
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(.003, .003, .006, 12), gold); crown.rotation.z = Math.PI / 2; crown.position.x = .024; small.add(crown);
+    const face = new THREE.Mesh(new THREE.CircleGeometry(.018, 40), basicT(htex)); face.position.z = .0045; face.renderOrder = 1003; small.add(face);
+    /* --- találati korong (láthatatlan) a csippentéshez + a kis óra találati gombja (kontrollerhez) --- */
+    const hit = new THREE.Mesh(new THREE.CircleGeometry(WR.RT, 48), new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide })); dial.add(hit); P.m = hit; hit.visible = false;
+    const sHit = new THREE.Mesh(new THREE.SphereGeometry(.035, 12, 8), new THREE.MeshBasicMaterial({ visible: false })); small.add(sHit); XRP.wrist = sHit; sHit.visible = false;
+    sHit.userData.xr = { click: () => { P.pinned = true; try { sndNav(); } catch (e) {} }, hover: (on) => small.scale.setScalar(on ? 1.15 : 1) };
+    /* --- szirmok felépítése (az elemek számához) --- */
+    P.build = () => {
+      const it = watchItems(); P.items = it; P.labels = it.map((q) => q[1]).join("|"); const N = it.length, key = String(N);
+      if (key === P.key) return; P.key = key;
+      P.petals.forEach((q) => { dial.remove(q.pivot); q.mesh.geometry.dispose(); }); P.petals = [];
+      const da = Math.PI * 2 / N;
+      it.forEach((_, i) => {
+        const a0 = -i * da, gap = .012;   /* felülről (12 óra) indul, az óramutató járása szerint */
+        const geo = new THREE.RingGeometry(WR.RI, WR.RO, 18, 2, Math.PI / 2 + a0 - da + gap, da - 2 * gap);
+        /* UV a teljes számlap-vászonra (végleges, kinyílt helyzetben számolva) */
+        const p = geo.attributes.position, uv = geo.attributes.uv; for (let k = 0; k < p.count; k++) uv.setXY(k, p.getX(k) / (2 * WR.RT) + .5, p.getY(k) / (2 * WR.RT) + .5);
+        /* a szirom a belső peremén „csuklózik”: a forgatócsoport a szirom középirányába néz */
+        const mid = Math.PI / 2 + a0 - da / 2, hx = Math.cos(mid) * WR.RI, hy = Math.sin(mid) * WR.RI;
+        geo.translate(-hx, -hy, 0);
+        const pivot = new THREE.Group(); pivot.position.set(hx, hy, 0); dial.add(pivot);
+        const mesh = new THREE.Mesh(geo, petalMat); mesh.renderOrder = 1001; pivot.add(mesh);
+        P.petals.push({ pivot, mesh, mid, axis: new THREE.Vector3(-Math.sin(mid), Math.cos(mid), 0) });
+      });
     };
     P.draw = () => {
-      /* a sorok száma a gombok számától függ (a 3D-világokban akár 4 × 3 gomb) – a vászon és a tábla magassága ehhez igazodik */
-      const it = items(), rows = Math.max(2, Math.ceil(it.length / 3)), bh = rows > 2 ? 150 : 212, ch = 40 + rows * bh + (rows - 1) * 16;
-      if (cv.height !== ch) { cv.height = ch; P.ch = ch; t.dispose(); m.geometry.dispose(); m.geometry = new THREE.PlaneGeometry(.21, .21 * ch / CW); }
-      const CH = ch;
-      const g = cv.getContext("2d"); g.clearRect(0, 0, CW, CH); P.btns = [];
-      g.fillStyle = "rgba(9,34,70,.95)"; g.beginPath(); g.roundRect ? g.roundRect(6, 6, CW - 12, CH - 12, 46) : g.rect(6, 6, CW - 12, CH - 12); g.fill(); g.lineWidth = 7; g.strokeStyle = "#ffd166"; g.stroke();
-      const bw = (CW - 40 - 2 * 16) / 3;
-      it.forEach(([ic, lab, fn], i) => {
-        const x = 20 + (i % 3) * (bw + 16), y = 20 + Math.floor(i / 3) * (bh + 16), hv = i === P.hov;
-        P.btns.push({ x, y, w: bw, h: bh, fn });
-        g.fillStyle = hv ? "#ffd166" : "rgba(255,255,255,.12)"; g.beginPath(); g.roundRect ? g.roundRect(x, y, bw, bh, 30) : g.rect(x, y, bw, bh); g.fill();
-        g.lineWidth = 3; g.strokeStyle = "rgba(255,255,255,.35)"; g.stroke();
+      P.build();
+      const g = cv.getContext("2d"), S = WR.PX, C = S / 2, k = C / WR.RT; g.clearRect(0, 0, S, S);
+      const N = P.items.length, da = Math.PI * 2 / N;
+      P.items.forEach(([ic, lab, , on], i) => {
+        const a0 = -Math.PI / 2 + i * da, a1 = a0 + da, gap = .012, hv = i === P.hov;
+        g.beginPath(); g.arc(C, C, WR.RO * k, a0 + gap, a1 - gap); g.arc(C, C, WR.RI * k, a1 - gap, a0 + gap, true); g.closePath();
+        const gr = g.createRadialGradient(C, C, WR.RI * k, C, C, WR.RO * k);
+        if (hv) { gr.addColorStop(0, "#fff0b8"); gr.addColorStop(1, "#f2b93b"); } else if (on) { gr.addColorStop(0, "#2a7a5a"); gr.addColorStop(1, "#1a5a42"); } else { gr.addColorStop(0, "rgba(28,74,132,.97)"); gr.addColorStop(1, "rgba(9,34,70,.97)"); }
+        g.fillStyle = gr; g.fill(); g.lineWidth = hv ? 6 : 3; g.strokeStyle = hv ? "#ffffff" : "rgba(255,209,102,.85)"; g.stroke();
+        /* fényes él a szirom külső peremén (üveghatás) */
+        g.beginPath(); g.arc(C, C, WR.RO * k - 6, a0 + gap + .02, a1 - gap - .02); g.lineWidth = 4; g.strokeStyle = hv ? "rgba(255,255,255,.8)" : "rgba(255,255,255,.22)"; g.stroke();
+        const am = (a0 + a1) / 2, rm = (WR.RI + WR.RO) / 2 * k, x = C + Math.cos(am) * rm, y = C + Math.sin(am) * rm;
         g.fillStyle = hv ? "#0b2f5e" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
-        g.font = `800 ${rows > 2 ? 66 : 92}px system-ui, sans-serif`; g.fillText(ic, x + bw / 2, y + bh * .4);
-        g.font = `700 ${rows > 2 ? (lab.length > 11 ? 28 : 33) : 36}px system-ui, sans-serif`; g.fillText(lab, x + bw / 2, y + bh * .8);
+        g.font = `800 ${N > 9 ? 62 : 72}px system-ui, sans-serif`; g.fillText(ic, x, y - 22);
+        g.font = `700 ${lab.length > 10 ? 25 : 30}px system-ui, sans-serif`; g.fillText(lab, x, y + 34);
       });
-      t.needsUpdate = true;
+      tex.needsUpdate = true;
     };
-    const at = (hit) => { if (!hit || !hit.uv) return -1; const x = hit.uv.x * CW, y = (1 - hit.uv.y) * (P.ch || CH); return P.btns.findIndex((b) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h); };
-    m.userData.xr = {
-      hover: (on, hit) => { const i = on ? at(hit) : -1; if (i !== P.hov) { P.hov = i; P.draw(); } },
-      move: (hit) => { const i = at(hit); if (i !== P.hov) { P.hov = i; P.draw(); } },
-      click: (hit) => { const i = at(hit); if (i >= 0) { const b = P.btns[i]; try { sndNav(); } catch (e) {} b.fn(); P.draw(); } }
+    P.drawHub = () => {
+      const g = hc.getContext("2d"), S = 512, C = 256; g.clearRect(0, 0, S, S);
+      const gr = g.createRadialGradient(C, C - 60, 20, C, C, 256); gr.addColorStop(0, "#1d4f8f"); gr.addColorStop(1, "#071a36"); g.fillStyle = gr; g.beginPath(); g.arc(C, C, 254, 0, Math.PI * 2); g.fill();
+      for (let i = 0; i < 60; i++) { g.save(); g.translate(C, C); g.rotate(i / 60 * Math.PI * 2); g.fillStyle = i % 5 ? "rgba(255,255,255,.45)" : "#ffd166"; g.fillRect(-2, -244, 4, i % 5 ? 12 : 24); g.restore(); }
+      g.fillStyle = "#ffd166"; g.font = "800 40px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      [["12", 0], ["3", 1], ["6", 2], ["9", 3]].forEach(([s, q]) => { const a = q * Math.PI / 2 - Math.PI / 2; g.fillText(s, C + Math.cos(a) * 192, C + Math.sin(a) * 192); });
+      const d = new Date(), mon = ["jan.", "febr.", "márc.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szept.", "okt.", "nov.", "dec."][d.getMonth()];
+      g.fillStyle = "#fff"; g.font = "700 30px system-ui, sans-serif"; g.fillText("ZEPHYR", C, C - 92);
+      g.fillStyle = "rgba(255,255,255,.85)"; g.font = "600 24px system-ui, sans-serif";
+      const ctx = watchContext(); g.fillText(ctx.length > 24 ? ctx.slice(0, 23) + "…" : ctx, C, C + 78);
+      g.fillStyle = "#ffd166"; g.font = "700 26px system-ui, sans-serif"; g.fillText(`${mon} ${d.getDate()}.`, C, C + 116);
+      if (P.hov === -1) { g.fillStyle = "#fff"; g.font = "700 26px system-ui, sans-serif"; g.fillText("csippents: bezár", C, C - 52); }
+      const hand = (ang, len, w, col) => { g.save(); g.translate(C, C); g.rotate(ang); g.fillStyle = col; g.beginPath(); g.moveTo(-w, 16); g.lineTo(-w * .4, -len); g.lineTo(w * .4, -len); g.lineTo(w, 16); g.closePath(); g.fill(); g.restore(); };
+      const h = d.getHours() % 12 + d.getMinutes() / 60, m = d.getMinutes() + d.getSeconds() / 60, s = d.getSeconds();
+      hand(h / 12 * Math.PI * 2, 120, 9, "#f4f1e6"); hand(m / 60 * Math.PI * 2, 176, 6, "#f4f1e6"); hand(s / 60 * Math.PI * 2, 196, 2, "#e5262f");
+      g.fillStyle = "#ffd166"; g.beginPath(); g.arc(C, C, 12, 0, Math.PI * 2); g.fill();
+      htex.needsUpdate = true;
     };
-    sceneEl.object3D.add(m); XRP.wristP = P;
-    return P;
+    const at = (hit) => {
+      if (!hit || !hit.uv) return -2; const x = (hit.uv.x - .5) * 2 * WR.RT, y = (hit.uv.y - .5) * 2 * WR.RT, r = Math.hypot(x, y);
+      if (r < WR.R0 + .004) return -1; if (r > WR.RO + .004 || r < WR.RI - .004) return -2;
+      let a = Math.atan2(x, y); if (a < 0) a += Math.PI * 2; return Math.floor(a / (Math.PI * 2 / P.items.length)) % P.items.length;
+    };
+    const setHov = (i) => { if (i !== P.hov) { const wasHub = P.hov === -1 || i === -1; P.hov = i; P.draw(); if (wasHub) P.drawHub(); } };
+    hit.userData.xr = {
+      hover: (on, h) => setHov(on ? at(h) : -2), move: (h) => setHov(at(h)),
+      click: (h) => { if (P.t < .8) return; const i = at(h); try { sndNav(); } catch (e) {}
+        if (i === -1) { P.pinned = false; P.closeReq = true; return; }
+        if (i >= 0 && P.items[i]) { P.items[i][2](); P.draw(); P.drawHub(); } }
+    };
+    P.draw(); P.drawHub(); P.hubT = 0;
+    XRP.wristP = P; return P;
   }
-
+  let _wq, _wq2, _wm, _wv, _wv2, _wv3, _wup;   /* a THREE csak később töltődik be – első használatkor jönnek létre */
+  const wEase = (k) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
+  function xrWrist() {
+    if (!_wq) { _wq = new THREE.Quaternion(); _wq2 = new THREE.Quaternion(); _wm = new THREE.Matrix4(); _wv = new THREE.Vector3(); _wv2 = new THREE.Vector3(); _wv3 = new THREE.Vector3(); _wup = new THREE.Vector3(0, 1, 0); }
+    const L = (XRP.seen && XRP.seen.left) ? XRP.src.left : (XRP.seen && XRP.seen.none) ? XRP.src.none : null;
+    const P = xrWatch();
+    if (!L || !inVR) { P.g.visible = false; P.m.visible = false; XRP.wrist.visible = false; P.t = 0; P.open = false; return; }
+    const xc = sceneEl.renderer.xr.getCamera(); xc.getWorldPosition(_wv3);   /* fej */
+    /* a kis óra helye és iránya: kézkövetésnél a csukló belső oldalán, kontrollernél a markolat fölött */
+    let base = null, nrm = null, axis = null;
+    if (L.hand && L.wristJ && L.palmN) { nrm = L.palmN; axis = L.handDir || _wup; base = _wv.copy(L.wristJ).addScaledVector(nrm, .028).addScaledVector(axis, -.02); }
+    else if (L.grip) { _wv.setFromMatrixPosition(L.grip); _wm.extractRotation(L.grip); nrm = new THREE.Vector3(0, 1, 0).applyMatrix4(_wm).normalize(); axis = new THREE.Vector3(0, 0, -1).applyMatrix4(_wm).normalize(); base = _wv.addScaledVector(nrm, .045); }
+    if (!base) { P.g.visible = false; P.m.visible = false; XRP.wrist.visible = false; return; }
+    P.g.visible = true;
+    /* nyitás: kézkövetésnél a felfordított tenyér, kontrollernél a kis órára kattintás */
+    const want = P.closeReq ? false : L.hand ? !!L.palmUp : P.pinned;
+    if (P.closeReq && !(L.hand && L.palmUp)) P.closeReq = false;
+    if (want && !P.open) { P.open = true; P.draw(); P.drawHub(); try { xrPulse(L.src, .25, 20); sndNav(); } catch (e) {} }
+    if (!want && P.open) P.open = false;
+    P.t = Math.max(0, Math.min(1, P.t + (P.open ? .055 : -.09)));
+    /* a kis óra a csuklón (csukott állapotban és nyitás elején látszik) */
+    _wm.lookAt(_wv2.set(0, 0, 0), nrm.clone().multiplyScalar(-1), axis); P.small.quaternion.setFromRotationMatrix(_wm);
+    P.small.position.copy(base); P.small.visible = P.t < .35; P.small.scale.setScalar(P.small.scale.x || 1);
+    XRP.wrist.visible = !L.hand && P.t < .05;
+    /* a nagy számlap: a csuklóról felemelkedik a tenyér elé, megnő, és a fej felé fordul */
+    const e = wEase(P.t / .55);
+    const target = _wv2.copy(L.hand && L.palmC ? L.palmC : base).addScaledVector(nrm, .13).addScaledVector(_wv3.clone().sub(base).normalize(), .03);
+    P.dial.position.copy(base).lerp(target, e);
+    _wm.lookAt(_wv3, P.dial.position, _wup); _wq.setFromRotationMatrix(_wm); _wq2.copy(P.small.quaternion);
+    P.dial.quaternion.copy(_wq2).slerp(_wq, e);
+    P.dial.scale.setScalar(.16 + .84 * e);
+    P.dial.visible = P.t > .02; P.m.visible = P.t > .8;
+    P.back.material.opacity = .55 * wEase((P.t - .3) / .5);
+    /* szirmok: egymás után, legyezőszerűen kihajlanak (mint egy kinyíló virág / szétnyíló óralap) */
+    P.petals.forEach((q, i) => { const k = wEase((P.t - .32 - i * .035) / .35); q.pivot.quaternion.setFromAxisAngle(q.axis, (1 - k) * 1.65); q.pivot.scale.setScalar(.3 + .7 * k); q.mesh.visible = k > .01; });
+    /* iránytű-tű: merre van észak a fejedhez képest (a számlap teteje = előre) */
+    const ny = watchNorthYaw(); P.needle.visible = ny != null && P.t > .6;
+    if (ny != null) { _wv.set(0, 0, -1).applyQuaternion(xc.quaternion); const hy = Math.atan2(-_wv.x, -_wv.z); P.needle.rotation.z = ny - hy; }
+    /* az óralap másodpercenként */
+    P.hubT = (P.hubT || 0) + 1; if (P.hubT > 30 && P.t > 0) { P.hubT = 0; P.drawHub(); if (P.open) { const k2 = watchItems().map((q) => q[1]).join("|"); if (k2 !== P.labels) P.draw(); } }
+  }
+  /* régi név (a világ-modul ezt hívja újrarajzoláshoz) */
+  function xrWristPanel() { return xrWatch(); }
   /* ---------- Forgás és lépés VR-ben (2026. nov. 6.) ----------
      Kontrollerrel: a bot jobbra/balra = 45°-os fordulás (gyomorkímélő ugrás), előre = a nyílra lép, amerre nézel, hátra = vissza.
      Kézzel, kontroller nélkül: (1) a látótered alján lebegő ↺ / ↻ gomb – csippents rá; (2) üres helyre csippents, és húzd oldalra a kezed:
@@ -9537,7 +9632,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const h = headPos(new THREE.Vector3()), toHead = h.clone().sub(c).normalize();
       const f = n.dot(toHead), up = n.y;
       const score = Math.max(f, up * .9);
-      S0.palmC = c; S0.palmN = n; S0.palmScore = score;
+      S0.palmC = c; S0.palmN = n; S0.palmScore = score; S0.wristJ = w; S0.handDir = (mid || i).clone().sub(w).normalize();
       S0.palmUp = S0.palmUp ? score > .35 : score > .6;
     } catch (e) { S0.palmUp = false; }
   }
