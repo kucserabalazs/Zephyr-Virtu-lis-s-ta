@@ -491,5 +491,5 @@
       ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🎬 Jelenet", () => bjNext()]]);
     else H.buttons([["＋ Nagyobb", () => stepScale(1)], ["－ Kisebb", () => stepScale(-1)], ["🚶 Életnagyság", () => goLife()], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], [MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }],
       ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], ["⟲", () => { MAQ.auto = false; MAQ.turn.rotation.y -= .4; }], ["⟳", () => { MAQ.auto = false; MAQ.turn.rotation.y += .4; }], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🎬 Jelenet", () => bjNext()]]);
-    H.hint(`${dayHu(MAQ.day)} ${hhmm(MAQ.hour)} · ${PRESETS[MAQ.preset][0]} – ${sunLine()}${MAQ.dates && !life ? " · zöld = szabad, piros = foglalt" : ""}${BJ.cur ? " · 🎬 " + BJ.cur.name : ""}`);
+    H.hint(`${dayHu(MAQ.day)} ${hhmm(MAQ.hour)} · ${PRESETS[MAQ.preset][0]} · ${sunLine()}${MAQ.dates && !life ? " · zöld = szabad, piros = foglalt" : ""}${BJ.cur ? " · 🎬 " + BJ.cur.name : ""}`);
   }
