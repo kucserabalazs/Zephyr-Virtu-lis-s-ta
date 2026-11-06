@@ -8538,7 +8538,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const title = String(label || (SCENES[to] && SCENES[to].n) || "Tovább").replace(/\n/g, " · ");
       const lt = vrnLabelTex(title, "csippents – odaugrasz", vrnIcon(link));
       const lblM = new THREE.SpriteMaterial({ map: lt.t, transparent: true, depthWrite: false, depthTest: false, opacity: .92 }); mats.push(lblM);
-      const lbl = new THREE.Sprite(lblM); const lw = .62 * k; lbl.scale.set(lw * 2, lw * 2 * lt.ar, 1); lbl.position.y = floor ? 1.55 * k : R * 1.5 + .2; lbl.renderOrder = 990; m.add(lbl);
+      const lbl = new THREE.Sprite(lblM); const lw = (floor ? .66 : .8) * k; lbl.scale.set(lw * 2, lw * 2 * lt.ar, 1); lbl.position.y = floor ? 1.55 * k : R * 1.5 + .2; lbl.renderOrder = 990; m.add(lbl);
       /* láthatatlan, bőkezű célterület: gyűrű + oszlop + tábla egyben */
       const hitM = new THREE.MeshBasicMaterial({ visible: false }); const hit = add(new THREE.CylinderGeometry(R * 1.35, R * 1.35, floor ? 1.9 * k : R * 3.4, 12), hitM); hit.position.y = floor ? .95 * k : 0;
       const mk = { link, to, m, ring, chev, beam, lbl, lw, k, floor, hot: 0, t0: Math.random() * 6, hit, base: lt.ar,
