@@ -1554,7 +1554,6 @@
  "⛵ Vitorlásverseny – a kormánynál": "⛵ Régate – à la barre",
  "A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél": "À la barre du Zephyr de 15 mètres : départ, passage des bouées, trois adversaires, nouveau parcours et nouveau vent à chaque course",
  "🏠 A ház makettje a regatta-bóján": "🏠 La maquette de la maison sur la bouée de régate",
- "A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig": "Au milieu du lac Balaton, entouré d’une régate et de scènes (Titanic, monstre marin…) · agrandissable jusqu’à taille réelle",
  "Vitorlás sakk": "Échecs à voile",
  "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!": "Les échecs sur le lac Balaton : barque, navire à tête de cheval, voilier de course, phare, goélette et trois-mâts – contre l’ordinateur ou à deux !",
  "Virtuális világ: vitorlásverseny, a ház makettje": "Monde virtuel : régate, maquette de la maison",
@@ -1821,5 +1820,6 @@
  "Futó (versenyjacht) – {#} lehetséges lépés": "Fou (yacht de course) – {#} coups possibles",
  "Futó (versenyjacht) – nem léphet": "Fou (yacht de course) – ne peut pas bouger",
  "Vezér (fregatt) – {#} lehetséges lépés": "Dame (frégate) – {#} coups possibles",
- "Vezér (fregatt) – nem léphet": "Dame (frégate) – ne peut pas bouger"
+ "Vezér (fregatt) – nem léphet": "Dame (frégate) – ne peut pas bouger",
+ "A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig": "Au milieu du lac Balaton, entouré d’une régate et de scènes (monstre marin…) · agrandissable jusqu’à taille réelle"
 }

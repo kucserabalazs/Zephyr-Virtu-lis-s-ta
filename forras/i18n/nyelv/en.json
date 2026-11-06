@@ -1554,7 +1554,6 @@
  "⛵ Vitorlásverseny – a kormánynál": "⛵ Sailing race – at the helm",
  "A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél": "At the wheel of the 15-metre Zephyr: start, rounding the marks, three rivals, a new course and wind every race",
  "🏠 A ház makettje a regatta-bóján": "🏠 The house model on the regatta buoy",
- "A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig": "In the middle of Lake Balaton, with a race and scenes all around you (Titanic, sea monster…) · can be enlarged to life size",
  "Vitorlás sakk": "Sailboat chess",
  "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!": "Chess on Lake Balaton: rowing boat, horse-head ship, racing yacht, lighthouse, schooner and three-master – against the computer or with a friend!",
  "Virtuális világ: vitorlásverseny, a ház makettje": "Virtual world: sailing race, model of the house",
@@ -1821,5 +1820,6 @@
  "Futó (versenyjacht) – {#} lehetséges lépés": "Bishop (racing yacht) – {#} possible moves",
  "Futó (versenyjacht) – nem léphet": "Bishop (racing yacht) – cannot move",
  "Vezér (fregatt) – {#} lehetséges lépés": "Queen (frigate) – {#} possible moves",
- "Vezér (fregatt) – nem léphet": "Queen (frigate) – cannot move"
+ "Vezér (fregatt) – nem léphet": "Queen (frigate) – cannot move",
+ "A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig": "In the middle of Lake Balaton, with a race and scenes all around you (sea monster…) · can be enlarged to life size"
 }

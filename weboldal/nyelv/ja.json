@@ -1552,7 +1552,6 @@
  "⛵ Vitorlásverseny – a kormánynál": "⛵ ヨットレース――舵を握って",
  "A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél": "全長15mの「ゼファー」の舵輪で：スタート、ブイ回航、3隻のライバル、レースごとに新しいコースと風",
  "🏠 A ház makettje a regatta-bóján": "🏠 レース用ブイの上の家の模型",
- "A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig": "バラトン湖の真ん中で、周りではレースや様々な場面（タイタニック、海の怪物…）· 実物大まで拡大可能",
  "Vitorlás sakk": "ヨットチェス",
  "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!": "バラトン湖のチェス：手漕ぎボート、馬頭の船、レーシングヨット、灯台、スクーナー、三本マストの帆船――コンピューター相手でも二人でも！",
  "Virtuális világ: vitorlásverseny, a ház makettje": "バーチャルワールド：ヨットレース、家の模型",
@@ -1819,5 +1818,6 @@
  "Futó (versenyjacht) – {#} lehetséges lépés": "ビショップ（レーシングヨット） – {#} 通りの手",
  "Futó (versenyjacht) – nem léphet": "ビショップ（レーシングヨット） – 動けません",
  "Vezér (fregatt) – {#} lehetséges lépés": "クイーン（フリゲート） – {#} 通りの手",
- "Vezér (fregatt) – nem léphet": "クイーン（フリゲート） – 動けません"
+ "Vezér (fregatt) – nem léphet": "クイーン（フリゲート） – 動けません",
+ "A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig": "バラトン湖の真ん中で、周りではレースや様々な場面（海の怪物…）· 実物大まで拡大可能"
 }

@@ -1554,7 +1554,6 @@
  "⛵ Vitorlásverseny – a kormánynál": "⛵ Regată cu velier – la cârmă",
  "A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél": "La timona lui Zephyr de 15 metri: start, ocolirea geamandurilor, trei rivali, la fiecare cursă traseu și vânt nou",
  "🏠 A ház makettje a regatta-bóján": "🏠 Macheta casei pe geamandura de regată",
- "A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig": "În mijlocul lacului Balaton, cu regată și scene în jurul tău (Titanic, monstru marin…) · se poate mări la mărime naturală",
  "Vitorlás sakk": "Șah cu veliere",
  "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!": "Șah pe lacul Balaton: barcă cu vâsle, navă cu cap de cal, iaht de curse, far, goeletă și navă cu trei catarge – contra computerului sau în doi!",
  "Virtuális világ: vitorlásverseny, a ház makettje": "Lume virtuală: regată, macheta casei",
@@ -1821,5 +1820,6 @@
  "Futó (versenyjacht) – {#} lehetséges lépés": "Nebun (iaht de curse) – {#} mutări posibile",
  "Futó (versenyjacht) – nem léphet": "Nebun (iaht de curse) – nu se poate muta",
  "Vezér (fregatt) – {#} lehetséges lépés": "Regină (fregată) – {#} mutări posibile",
- "Vezér (fregatt) – nem léphet": "Regină (fregată) – nu se poate muta"
+ "Vezér (fregatt) – nem léphet": "Regină (fregată) – nu se poate muta",
+ "A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig": "În mijlocul lacului Balaton, cu regată și scene în jurul tău (monstru marin…) · se poate mări la mărime naturală"
 }

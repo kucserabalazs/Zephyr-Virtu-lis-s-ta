@@ -1552,7 +1552,6 @@
  "⛵ Vitorlásverseny – a kormánynál": "⛵ Yelken yarışı – dümende",
  "A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél": "15 metrelik Zephyr’in dümeninde: start, şamandıraları dönme, üç rakip, her yarışta yeni parkur ve rüzgâr",
  "🏠 A ház makettje a regatta-bóján": "🏠 Regata şamandırasında evin maketi",
- "A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig": "Balaton Gölü’nün ortasında, çevrende yarış ve sahneler (Titanik, deniz canavarı…) · gerçek boyuta kadar büyütülebilir",
  "Vitorlás sakk": "Yelkenli satranç",
  "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!": "Balaton Gölü’nde satranç: kayık, at başlı gemi, yarış yatı, deniz feneri, uskuna ve üç direkli – bilgisayara karşı ya da iki kişi!",
  "Virtuális világ: vitorlásverseny, a ház makettje": "Sanal dünya: yelken yarışı, evin maketi",
@@ -1819,5 +1818,6 @@
  "Futó (versenyjacht) – {#} lehetséges lépés": "Fil (yarış yatı) – {#} olası hamle",
  "Futó (versenyjacht) – nem léphet": "Fil (yarış yatı) – hareket edemez",
  "Vezér (fregatt) – {#} lehetséges lépés": "Vezir (firkateyn) – {#} olası hamle",
- "Vezér (fregatt) – nem léphet": "Vezir (firkateyn) – hareket edemez"
+ "Vezér (fregatt) – nem léphet": "Vezir (firkateyn) – hareket edemez",
+ "A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig": "Balaton Gölü’nün ortasında, çevrende yarış ve sahneler (deniz canavarı…) · gerçek boyuta kadar büyütülebilir"
 }

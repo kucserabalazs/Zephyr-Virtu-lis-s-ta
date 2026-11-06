@@ -4898,7 +4898,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const DEMO = /mentes/.test(location.hash + location.search), DEMO_M = /szorny|polip/.test(location.hash + location.search), DEMO_B = /boja/.test(location.hash + location.search), DEMO_S = /tengeralattjaro/.test(location.hash + location.search), DEMO_G = /gozos/.test(location.hash + location.search), DEMO_K = /kajak/.test(location.hash + location.search), DEMO_V = /vihar/.test(location.hash + location.search), DEMO_T = /titanic/.test(location.hash + location.search);  /* bemutató: #mentes a cím végén -> azonnal helikopteres mentés */
     const FORCE = (location.hash.match(/regatta=(\w+)/) || [])[1];  /* fejlesztői bemutató: #regatta=plane stb. */
     let extras = [], extra = null, recent = [], nextExtra = performance.now() + (FORCE || DEMO || DEMO_M || DEMO_B || DEMO_S || DEMO_G || DEMO_K || DEMO_V || DEMO_T ? 1500 : rnd(20000, 45000));
-    const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, titanic: .9, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
+    const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
     const Z = 1.45;  /* járművek nagyítása */
     let storm = null, stormNow = null;  /* viharfelhő állapota: minden szereplő más-más módon reagál rá */
     const stormAt = (px) => storm ? storm.k * Math.max(0, 1 - Math.abs(px - storm.x) / (storm.w * 1.3)) : 0, stormG = () => storm ? storm.k : 0;
@@ -6451,7 +6451,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const DEMO = /mentes/.test(location.hash + location.search), DEMO_M = /szorny|polip/.test(location.hash + location.search), DEMO_B = /boja/.test(location.hash + location.search), DEMO_S = /tengeralattjaro/.test(location.hash + location.search), DEMO_G = /gozos/.test(location.hash + location.search), DEMO_K = /kajak/.test(location.hash + location.search), DEMO_V = /vihar/.test(location.hash + location.search), DEMO_T = /titanic/.test(location.hash + location.search);  /* bemutató: #mentes a cím végén -> azonnal helikopteres mentés */
     const FORCE = (location.hash.match(/regatta=(\w+)/) || [])[1];  /* fejlesztői bemutató: #regatta=plane stb. */
     let extras = [], extra = null, recent = [], nextExtra = performance.now() + (FORCE || DEMO || DEMO_M || DEMO_B || DEMO_S || DEMO_G || DEMO_K || DEMO_V || DEMO_T ? 1500 : rnd(20000, 45000));
-    const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, titanic: .9, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
+    const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
     const Z = 1.45;  /* járművek nagyítása */
     let storm = null, stormNow = null;  /* viharfelhő állapota: minden szereplő más-más módon reagál rá */
     const stormAt = (px) => storm ? storm.k * Math.max(0, 1 - Math.abs(px - storm.x) / (storm.w * 1.3)) : 0, stormG = () => storm ? storm.k : 0;
@@ -8004,7 +8004,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const DEMO = /mentes/.test(location.hash + location.search), DEMO_M = /szorny|polip/.test(location.hash + location.search), DEMO_B = /boja/.test(location.hash + location.search), DEMO_S = /tengeralattjaro/.test(location.hash + location.search), DEMO_G = /gozos/.test(location.hash + location.search), DEMO_K = /kajak/.test(location.hash + location.search), DEMO_V = /vihar/.test(location.hash + location.search), DEMO_T = /titanic/.test(location.hash + location.search);  /* bemutató: #mentes a cím végén -> azonnal helikopteres mentés */
     const FORCE = (location.hash.match(/regatta=(\w+)/) || [])[1];  /* fejlesztői bemutató: #regatta=plane stb. */
     let extras = [], extra = null, recent = [], nextExtra = performance.now() + (FORCE || DEMO || DEMO_M || DEMO_B || DEMO_S || DEMO_G || DEMO_K || DEMO_V || DEMO_T ? 1500 : rnd(20000, 45000));
-    const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, titanic: .9, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
+    const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
     const Z = 1.45;  /* járművek nagyítása */
     let storm = null, stormNow = null;  /* viharfelhő állapota: minden szereplő más-más módon reagál rá */
     const stormAt = (px) => storm ? storm.k * Math.max(0, 1 - Math.abs(px - storm.x) / (storm.w * 1.3)) : 0, stormG = () => storm ? storm.k : 0;

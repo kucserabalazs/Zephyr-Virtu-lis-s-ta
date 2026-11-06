@@ -1552,7 +1552,6 @@
  "⛵ Vitorlásverseny – a kormánynál": "⛵ 帆船赛——掌舵",
  "A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél": "在15米长的“Zephyr”号舵轮前：起航、绕标、三名对手，每场比赛都有新航线和新风向",
  "🏠 A ház makettje a regatta-bóján": "🏠 赛艇浮标上的房屋模型",
- "A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig": "在巴拉顿湖中央，四周是比赛和各种场景（泰坦尼克号、海怪……）· 可放大到真实尺寸",
  "Vitorlás sakk": "帆船象棋",
  "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!": "巴拉顿湖上的国际象棋：划艇、马头船、竞赛帆船、灯塔、纵帆船和三桅帆船——与电脑对战或两人对弈！",
  "Virtuális világ: vitorlásverseny, a ház makettje": "虚拟世界：帆船赛、房屋模型",
@@ -1819,5 +1818,6 @@
  "Futó (versenyjacht) – {#} lehetséges lépés": "象（竞赛帆船） – {#} 种走法",
  "Futó (versenyjacht) – nem léphet": "象（竞赛帆船） – 无法移动",
  "Vezér (fregatt) – {#} lehetséges lépés": "后（护卫舰） – {#} 种走法",
- "Vezér (fregatt) – nem léphet": "后（护卫舰） – 无法移动"
+ "Vezér (fregatt) – nem léphet": "后（护卫舰） – 无法移动",
+ "A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig": "在巴拉顿湖中央，四周是比赛和各种场景（海怪……）· 可放大到真实尺寸"
 }

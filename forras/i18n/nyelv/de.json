@@ -1554,7 +1554,6 @@
  "⛵ Vitorlásverseny – a kormánynál": "⛵ Segelregatta – am Steuer",
  "A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél": "Am Steuerrad der 15 Meter langen Zephyr: Start, Bojen runden, drei Gegner, bei jedem Rennen neuer Kurs und neuer Wind",
  "🏠 A ház makettje a regatta-bóján": "🏠 Das Hausmodell auf der Regattaboje",
- "A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig": "Mitten auf dem Balaton, um dich herum Regatta und Szenen (Titanic, Seeungeheuer…) · bis zur Lebensgröße vergrößerbar",
  "Vitorlás sakk": "Segelboot-Schach",
  "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!": "Schach auf dem Balaton: Ruderboot, Schiff mit Pferdekopf, Rennjacht, Leuchtturm, Schoner und Dreimaster – gegen den Computer oder zu zweit!",
  "Virtuális világ: vitorlásverseny, a ház makettje": "Virtuelle Welt: Segelregatta, Hausmodell",
@@ -1821,5 +1820,6 @@
  "Futó (versenyjacht) – {#} lehetséges lépés": "Läufer (Rennyacht) – {#} mögliche Züge",
  "Futó (versenyjacht) – nem léphet": "Läufer (Rennyacht) – kann nicht ziehen",
  "Vezér (fregatt) – {#} lehetséges lépés": "Dame (Fregatte) – {#} mögliche Züge",
- "Vezér (fregatt) – nem léphet": "Dame (Fregatte) – kann nicht ziehen"
+ "Vezér (fregatt) – nem léphet": "Dame (Fregatte) – kann nicht ziehen",
+ "A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig": "Mitten auf dem Balaton, um dich herum Regatta und Szenen (Seeungeheuer…) · bis zur Lebensgröße vergrößerbar"
 }

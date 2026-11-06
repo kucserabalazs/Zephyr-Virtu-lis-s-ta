@@ -105,10 +105,12 @@
         void main(){
           vec2 wd = vec2(cos(uWind), sin(uWind));
           float fadeD = 1. - smoothstep(60., 420., vDist), fa = 1. - smoothstep(25., 240., vDist), fb = 1. - smoothstep(8., 70., vDist);
+          /* élsimítás: egy pixel hány métert fed – a pixelnél rövidebb hullámok simán elhalványulnak (nincs moiré, nincs „kockásodás”) */
+          float px = length(fwidth(vW)) + 1e-4;
           /* a nagy (Gerstner) hullámok normálisa PIXELENKÉNT számolva – így sima, nem lapos-sokszöges (nem „kockás”) */
           vec3 n = vec3(0., 1., 0.); float crest = 0.;
           for (int i = 0; i < 5; i++){
-            float dir = uWind + uW[i].x, k = uW[i].y, A = uW[i].z * fadeD, Q = uW[i].w, c = sqrt(9.81 / k);
+            float dir = uWind + uW[i].x, k = uW[i].y, A = uW[i].z * fadeD * clamp(1.6 - k * px, 0., 1.), Q = uW[i].w, c = sqrt(9.81 / k);
             vec2 D = vec2(cos(dir), sin(dir)); float f = k * dot(D, vW) - k * c * uT;
             n.x -= D.x * k * A * cos(f); n.z -= D.y * k * A * cos(f); n.y -= Q * k * A * sin(f); crest += A * k * max(0., sin(f));
           }
@@ -116,10 +118,10 @@
           vec2 g = vec2(0.);
           for (int i = 0; i < 7; i++){ float fi = float(i); float ang = uWind + (fi - 3.) * .45 + sin(fi * 12.9898) * .25; vec2 D = vec2(cos(ang), sin(ang));
             float k = 2.4 + fi * 1.55 + sin(fi * 7.3) * .4, w = sqrt(9.81 * k), a = .02 / (1. + fi * .32);
-            float ph = k * dot(D, vW) - w * uT + fi * 1.913; g += D * (k * a * cos(ph)); }
+            float ph = k * dot(D, vW) - w * uT + fi * 1.913; g += D * (k * a * cos(ph)) * clamp(1.6 - k * px, 0., 1.); }
           vec2 g3 = vec2(0.);
           for (int i = 0; i < 4; i++){ float fi = float(i); float ang = uWind + 1.9 * sin(fi * 2.3 + 1.); vec2 D = vec2(cos(ang), sin(ang)); float k = 14. + fi * 6.5, w = sqrt(9.81 * k), a = .006 / (1. + fi * .4);
-            float ph = k * dot(D, vW) - w * uT + fi * 2.7; g3 += D * (k * a * cos(ph)); }
+            float ph = k * dot(D, vW) - w * uT + fi * 2.7; g3 += D * (k * a * cos(ph)) * clamp(1.6 - k * px, 0., 1.); }
           float gust = smoothstep(.45, .8, vn(vW * .012 - wd * uT * .05 + uGust * 3.));
           n = normalize(n + vec3(-(g.x * fa + g3.x * fb) * (1. + gust * .8), 0., -(g.y * fa + g3.y * fb) * (1. + gust * .8)));
           vec3 P = vec3(vP.x, vP.y, vP.z);

@@ -1554,7 +1554,6 @@
  "⛵ Vitorlásverseny – a kormánynál": "⛵ Парусная гонка – за штурвалом",
  "A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél": "За штурвалом 15-метровой яхты Zephyr: старт, огибание буёв, три соперника, в каждой гонке новая трасса и ветер",
  "🏠 A ház makettje a regatta-bóján": "🏠 Макет дома на регатном буе",
- "A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig": "Посреди Балатона, вокруг тебя гонка и сцены (Титаник, морское чудовище…) · можно увеличить до натуральной величины",
  "Vitorlás sakk": "Парусные шахматы",
  "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!": "Шахматы на Балатоне: вёсельная лодка, корабль с головой коня, гоночная яхта, маяк, шхуна и трёхмачтовик – против компьютера или вдвоём!",
  "Virtuális világ: vitorlásverseny, a ház makettje": "Виртуальный мир: парусная гонка, макет дома",
@@ -1821,5 +1820,6 @@
  "Futó (versenyjacht) – {#} lehetséges lépés": "Слон (гоночная яхта) – возможных ходов: {#}",
  "Futó (versenyjacht) – nem léphet": "Слон (гоночная яхта) – нет ходов",
  "Vezér (fregatt) – {#} lehetséges lépés": "Ферзь (фрегат) – возможных ходов: {#}",
- "Vezér (fregatt) – nem léphet": "Ферзь (фрегат) – нет ходов"
+ "Vezér (fregatt) – nem léphet": "Ферзь (фрегат) – нет ходов",
+ "A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig": "Посреди Балатона, вокруг тебя гонка и сцены (морское чудовище…) · можно увеличить до натуральной величины"
 }

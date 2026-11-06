@@ -570,8 +570,8 @@
   }
 
   const EVS = { storm: evStorm, titanic: evTitanic, monster: evMonster, heli: evHeli, steamer: evSteamer, police: evPolice, plane: evPlane, sub: evSub };
-  const EV_ORDER = ["titanic", "monster", "steamer", "heli", "storm", "police", "plane", "sub", "titanic", "monster", "heli", "steamer", "police", "storm", "plane", "sub"];
-  const EV_LIST = [["titanic", "🚢", "Titanic és a jéghegy"], ["monster", "🐉", "Tengeri szörny"], ["heli", "🚁", "Mentőhelikopter"], ["steamer", "🛳", "Lapátkerekes gőzös"], ["storm", "⛈", "Nyári zivatar"], ["police", "🚤", "Vízirendőrség"], ["plane", "✈", "Reklámrepülő"], ["sub", "⚓", "Tengeralattjáró"]];
+  const EV_ORDER = ["monster", "steamer", "heli", "storm", "police", "plane", "sub", "monster", "heli", "steamer", "police", "storm", "plane", "sub"];   /* a Titanic a tulajdonos kérésére kikerült (2026. nov. 6.) */
+  const EV_LIST = [["monster", "🐉", "Tengeri szörny"], ["heli", "🚁", "Mentőhelikopter"], ["steamer", "🛳", "Lapátkerekes gőzös"], ["storm", "⛈", "Nyári zivatar"], ["police", "🚤", "Vízirendőrség"], ["plane", "✈", "Reklámrepülő"], ["sub", "⚓", "Tengeralattjáró"]];
   function bjStart(id) {
     if (BJ.cur) { try { BJ.cur.root.visible = false; if (BJ.cur.stop) BJ.cur.stop(); } catch (e) {} BJ.cur = null; }
     if (!BJ.race) return;

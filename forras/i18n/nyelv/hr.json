@@ -1554,7 +1554,6 @@
  "⛵ Vitorlásverseny – a kormánynál": "⛵ Jedriličarska regata – za kormilom",
  "A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél": "Za kormilom 15-metarske Zephyr: start, obilazak plutača, tri suparnika, u svakoj utrci nova staza i vjetar",
  "🏠 A ház makettje a regatta-bóján": "🏠 Maketa kuće na regatnoj plutači",
- "A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig": "Usred Balatona, oko tebe regata i prizori (Titanic, morsko čudovište…) · može se povećati do prirodne veličine",
  "Vitorlás sakk": "Jedriličarski šah",
  "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!": "Šah na Balatonu: čamac, brod s konjskom glavom, regatna jedrilica, svjetionik, škuna i trojarbolni brod – protiv računala ili u dvoje!",
  "Virtuális világ: vitorlásverseny, a ház makettje": "Virtualni svijet: regata, maketa kuće",
@@ -1821,5 +1820,6 @@
  "Futó (versenyjacht) – {#} lehetséges lépés": "Lovac (regatna jahta) – {#} mogućih poteza",
  "Futó (versenyjacht) – nem léphet": "Lovac (regatna jahta) – ne može se pomaknuti",
  "Vezér (fregatt) – {#} lehetséges lépés": "Kraljica (fregata) – {#} mogućih poteza",
- "Vezér (fregatt) – nem léphet": "Kraljica (fregata) – ne može se pomaknuti"
+ "Vezér (fregatt) – nem léphet": "Kraljica (fregata) – ne može se pomaknuti",
+ "A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig": "Usred Balatona, oko tebe regata i prizori (morsko čudovište…) · može se povećati do prirodne veličine"
 }

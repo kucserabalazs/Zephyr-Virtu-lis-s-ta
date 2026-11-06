@@ -226,10 +226,12 @@
         void main(){
           vec2 wd = vec2(cos(uWind), sin(uWind));
           float fadeD = 1. - smoothstep(60., 420., vDist), fa = 1. - smoothstep(25., 240., vDist), fb = 1. - smoothstep(8., 70., vDist);
+          /* élsimítás: egy pixel hány métert fed – a pixelnél rövidebb hullámok simán elhalványulnak (nincs moiré, nincs „kockásodás”) */
+          float px = length(fwidth(vW)) + 1e-4;
           /* a nagy (Gerstner) hullámok normálisa PIXELENKÉNT számolva – így sima, nem lapos-sokszöges (nem „kockás”) */
           vec3 n = vec3(0., 1., 0.); float crest = 0.;
           for (int i = 0; i < 5; i++){
-            float dir = uWind + uW[i].x, k = uW[i].y, A = uW[i].z * fadeD, Q = uW[i].w, c = sqrt(9.81 / k);
+            float dir = uWind + uW[i].x, k = uW[i].y, A = uW[i].z * fadeD * clamp(1.6 - k * px, 0., 1.), Q = uW[i].w, c = sqrt(9.81 / k);
             vec2 D = vec2(cos(dir), sin(dir)); float f = k * dot(D, vW) - k * c * uT;
             n.x -= D.x * k * A * cos(f); n.z -= D.y * k * A * cos(f); n.y -= Q * k * A * sin(f); crest += A * k * max(0., sin(f));
           }
@@ -237,10 +239,10 @@
           vec2 g = vec2(0.);
           for (int i = 0; i < 7; i++){ float fi = float(i); float ang = uWind + (fi - 3.) * .45 + sin(fi * 12.9898) * .25; vec2 D = vec2(cos(ang), sin(ang));
             float k = 2.4 + fi * 1.55 + sin(fi * 7.3) * .4, w = sqrt(9.81 * k), a = .02 / (1. + fi * .32);
-            float ph = k * dot(D, vW) - w * uT + fi * 1.913; g += D * (k * a * cos(ph)); }
+            float ph = k * dot(D, vW) - w * uT + fi * 1.913; g += D * (k * a * cos(ph)) * clamp(1.6 - k * px, 0., 1.); }
           vec2 g3 = vec2(0.);
           for (int i = 0; i < 4; i++){ float fi = float(i); float ang = uWind + 1.9 * sin(fi * 2.3 + 1.); vec2 D = vec2(cos(ang), sin(ang)); float k = 14. + fi * 6.5, w = sqrt(9.81 * k), a = .006 / (1. + fi * .4);
-            float ph = k * dot(D, vW) - w * uT + fi * 2.7; g3 += D * (k * a * cos(ph)); }
+            float ph = k * dot(D, vW) - w * uT + fi * 2.7; g3 += D * (k * a * cos(ph)) * clamp(1.6 - k * px, 0., 1.); }
           float gust = smoothstep(.45, .8, vn(vW * .012 - wd * uT * .05 + uGust * 3.));
           n = normalize(n + vec3(-(g.x * fa + g3.x * fb) * (1. + gust * .8), 0., -(g.y * fa + g3.y * fb) * (1. + gust * .8)));
           vec3 P = vec3(vP.x, vP.y, vP.z);
@@ -413,17 +415,33 @@
   }
   function hullPoint(u, th, side) {   /* th: 0 = fenék közepe, 1 = fedélzetél */
     const s = hullShape(u);
-    const x = side * s.hb * Math.pow(Math.sin(th * Math.PI / 2), .42);
-    const y = -s.depth + (s.depth + s.sheer) * Math.pow(th, 2.1);
+    /* modern versenyhajó-szelvény: hátul széles, lapos fenék és kemény „áll” (chine), elöl éles V – a sziluett így karcsú és dinamikus */
+    const e = .3 + .42 * Math.pow(u, 1.5), pw = 2.7 - 1.1 * u;
+    const x = side * s.hb * Math.pow(Math.sin(th * Math.PI / 2), e) * (1 + .025 * Math.sin(th * Math.PI) * u);   /* elöl enyhe kihajlás a perem alatt */
+    const y = -s.depth + (s.depth + s.sheer) * Math.pow(th, pw);
     return [x, y, s.z];
   }
+  /* a hajótest festése textúrából (éles csíkok): vízszintesen a magasság (vízvonal-sávok), függőlegesen a peremtől mért távolság (peremcsíkok) */
+  function hullTex(o) {
+    const key = "h" + o.hull + o.boot + o.stripe;
+    return TEXC[key] || (TEXC[key] = canvasTex(512, 512, (g, w, h) => {
+      const Y = (y) => (y + .7) / 1.8 * w, D = (d) => d / 1.4 * h;   /* x: magasság −0.7…1.1 m; y: a peremtől lefelé 0…1.4 m */
+      g.fillStyle = o.hull; g.fillRect(0, 0, w, h);
+      g.fillStyle = o.stripe; g.fillRect(0, D(.06), w, D(.07) - D(.06) + D(.045));   /* széles peremcsík */
+      g.fillStyle = o.stripe; g.fillRect(0, D(.155), w, Math.max(2, D(.012)));   /* vékony kísérőcsík */
+      g.fillStyle = "rgba(255,255,255,.55)"; g.fillRect(0, D(.06) - 1, w, 2);
+      g.fillStyle = "#1a2236"; g.fillRect(0, 0, Y(-.015), h);   /* algagátló festés a vízvonal alatt */
+      g.fillStyle = o.boot; g.fillRect(Y(-.015), 0, Y(.075) - Y(-.015), h);   /* vízvonalcsík */
+      g.fillStyle = "rgba(255,255,255,.7)"; g.fillRect(Y(.075), 0, 2, h);
+    }, { repeat: [1, 1] }));
+  }
   function buildHull(o) {
-    const NU = 34, NT = 12, pos = [], col = [], idx = [];
+    const NU = 72, NT = 26, pos = [], col = [], idx = [], uvs = [];
     const cHull = new THREE.Color(o.hull), cBoot = new THREE.Color(o.boot), cAF = new THREE.Color("#1a2236"), cStripe = new THREE.Color(o.stripe);
     const colorAt = (y, sheer) => y < -.01 ? cAF : y < .09 ? cBoot : (y > sheer - .1 && y < sheer - .045 ? cStripe : cHull);
     for (const side of [-1, 1]) {
       const base = pos.length / 3;
-      for (let i = 0; i <= NU; i++) { const u = i / NU; for (let j = 0; j <= NT; j++) { const p = hullPoint(u, j / NT, side); pos.push(...p); const c = colorAt(p[1], hullShape(u).sheer); col.push(c.r, c.g, c.b); } }
+      for (let i = 0; i <= NU; i++) { const u = i / NU; for (let j = 0; j <= NT; j++) { const p = hullPoint(u, j / NT, side); pos.push(...p); const c = colorAt(p[1], hullShape(u).sheer); col.push(c.r, c.g, c.b); uvs.push((p[1] + .7) / 1.8, 1 - (hullShape(u).sheer - p[1]) / 1.4); } }
       for (let i = 0; i < NU; i++) for (let j = 0; j < NT; j++) {
         const a = base + i * (NT + 1) + j, b = a + 1, c = a + NT + 1, d = c + 1;
         if (side > 0) idx.push(a, c, b, b, c, d); else idx.push(a, b, c, b, d, c);
@@ -431,9 +449,9 @@
     }
     /* tükör (tatfal): a két oldal u=0 szelvénye közötti lap */
     const tb = pos.length / 3; const s0 = hullShape(0);
-    for (let j = 0; j <= NT; j++) { const p = hullPoint(0, j / NT, -1); pos.push(...p); const q = hullPoint(0, j / NT, 1); pos.push(...q); const c = colorAt(p[1], s0.sheer); col.push(c.r, c.g, c.b, c.r, c.g, c.b); }
+    for (let j = 0; j <= NT; j++) { const p = hullPoint(0, j / NT, -1); pos.push(...p); const q = hullPoint(0, j / NT, 1); pos.push(...q); const c = colorAt(p[1], s0.sheer); col.push(c.r, c.g, c.b, c.r, c.g, c.b); const uu = (p[1] + .7) / 1.8, vv = 1 - (s0.sheer - p[1]) / 1.4; uvs.push(uu, vv, uu, vv); }
     for (let j = 0; j < NT; j++) { const a = tb + j * 2, b = a + 1, c = a + 2, d = a + 3; idx.push(a, c, b, b, c, d); }
-    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2)); g.setIndex(idx); g.computeVertexNormals();
     W.disposables.push(g); return g;
   }
   /* fedélzet: elöl teljes szélességű, a kokpitnál csak az oldalfedélzetek; enyhe domborulat */
@@ -484,8 +502,17 @@
   function makeBoat(o) {
     o = Object.assign({ detail: 0, hull: "#eeeeea", boot: "#1d3a8a", stripe: "#1d3a8a", main: "#f4f2ea", jib: "#efeee6", num: "HUN 1", crew: 3, spin: ["#e5262f", "#ffffff", "#1f5fa8"], deckCol: "#e6e7e6" }, o);
     const G = new THREE.Group(), body = new THREE.Group(); G.add(body);   /* body: dőlés + bólintás */
-    const hullMat = std({ vertexColors: true, roughness: .32, metalness: .05 });
+    /* fényes gélbevonat: lakkréteg (clearcoat), éles festett csíkok */
+    const hullMat = new THREE.MeshPhysicalMaterial({ map: hullTex(o), roughness: .3, metalness: 0, clearcoat: 1, clearcoatRoughness: .07, side: THREE.DoubleSide }); W.disposables.push(hullMat);
+    hullMat.map.colorSpace = THREE.SRGBColorSpace;
     mesh(buildHull(o), hullMat, body);
+    const vis = o.vis !== false;   /* a részletek (kajütablakok, korlát, kokpit, csörlők) minden hajón – a VR-versenyen a saját hajónak külön fedélzete van */
+    /* körbefutó tíkfa peremléc és fekete ütközőléc a test peremén */
+    { const railPts = (sd, dx, dy) => { const pts = []; for (let k = 0; k <= 40; k++) { const u = .004 + k / 40 * .99, sh = hullShape(u); pts.push(new THREE.Vector3(sd * (sh.hb + dx), sh.sheer + dy, sh.z)); } return pts; };
+      const tm = std({ color: "#9a6a3c", roughness: .5 }), rb = std({ color: "#1a1d22", roughness: .45 });
+      const tg = [], rg = [];
+      [-1, 1].forEach((sd) => { const I4 = new THREE.Matrix4(); tg.push([new THREE.TubeGeometry(new THREE.CatmullRomCurve3(railPts(sd, -.035, .06)), 60, .022, 6, false), I4]); rg.push([new THREE.TubeGeometry(new THREE.CatmullRomCurve3(railPts(sd, .012, -.035)), 60, .03, 6, false), I4]); });
+      mesh(mergeGeoms(tg), tm, body); mesh(mergeGeoms(rg), rb, body); }
     const deckMat = std({ color: "#d9dbdb", map: nonslipTex(), roughness: .9 });
     mesh(buildDeck(o.detail), deckMat, body);
     const white = std({ color: "#ecece7", roughness: .38 }), dark = std({ color: "#1d232b", roughness: .4, metalness: .2 });
@@ -499,7 +526,7 @@
     cg.translate(0, 0, -2.75 / 2);
     const cabin = mesh(cg, white, body); cabin.position.set(0, hullShape(.42).sheer + .02, .05);
     const cz0 = -1.33, cz1 = 1.42;
-    if (o.detail) {
+    if (vis) {
       [-1, 1].forEach((sd) => {   /* hosszú, sötétített oldalablakok a ferde kajütfalon */
         const wn = mesh(new THREE.PlaneGeometry(1.75, .16), glass, body);
         const by = hullShape(.42).sheer + .02, sl = Math.atan2(.17, .44);
@@ -511,14 +538,14 @@
       [-1, 1].forEach((sd) => { const h = mesh(new THREE.BoxGeometry(.04, .05, 1.8), teak, body); h.position.set(sd * .55, hullShape(.42).sheer + .5, .1); });
       /* csúszótető és lejáró */
       const hatch = mesh(new THREE.BoxGeometry(.72, .06, .8), white, body); hatch.position.set(0, hullShape(.42).sheer + .49, -.85);
-      const comp = mesh(new THREE.PlaneGeometry(.62, .38), dark, body); comp.position.set(0, CK.sole + .52, cz0 - .002); comp.rotation.y = Math.PI;
+      if (o.detail) { const comp = mesh(new THREE.PlaneGeometry(.62, .38), dark, body); comp.position.set(0, CK.sole + .52, cz0 - .002); comp.rotation.y = Math.PI; }
       /* elülső tetőablak */
       const fh = mesh(new THREE.BoxGeometry(.5, .04, .5), glass, body); fh.position.set(0, hullShape(.42).sheer + .48, .9);
     }
     /* kokpit: padló, ülések teakkal, peremek, kormányrúd, csörlők */
     const ck = new THREE.Group(); body.add(ck);
     const ckz0 = hullShape(CK.u0).z, ckz1 = hullShape(CK.u1).z, ckL = ckz1 - ckz0;
-    if (o.detail) {
+    if (vis) {
       const sole = mesh(new THREE.BoxGeometry(CK.w - .02, .04, ckL), teak, ck); sole.position.set(0, CK.sole, (ckz0 + ckz1) / 2);
       [-1, 1].forEach((sd) => {
         const seat = mesh(new THREE.BoxGeometry(.44, .05, ckL - .55), teak, ck); seat.position.set(sd * (CK.w / 2 - .22), CK.seat, (ckz0 + ckz1) / 2 + .2);
@@ -532,9 +559,9 @@
       });
       const bulk = mesh(new THREE.BoxGeometry(CK.w, .1, .06), teak, ck); bulk.position.set(0, CK.seat + .02, ckz1 - .03);
       /* műszerfal a lejáró mellett (élő adatokkal – a vitorlázásnál frissül) */
-      const it = canvasTex(512, 256, (g) => { g.fillStyle = "#0b0f14"; g.fillRect(0, 0, 512, 256); });
+      if (o.detail) { const it = canvasTex(512, 256, (g) => { g.fillStyle = "#0b0f14"; g.fillRect(0, 0, 512, 256); });
       const inst = mesh(new THREE.PlaneGeometry(.36, .18), basic({ map: it }), ck); inst.position.set(-.48, CK.sole + .62, cz0 - .004); inst.rotation.y = Math.PI;
-      G.userData.instTex = it;
+      G.userData.instTex = it; }
       /* iránytű */
       const cmp = mesh(new THREE.SphereGeometry(.06, 20, 12, 0, TAU, 0, Math.PI / 2), glass, ck); cmp.position.set(.48, CK.sole + .66, cz0 - .02);
       /* utazósín (traveller) a kokpit elején */
@@ -569,8 +596,8 @@
     const bow = new THREE.Vector3(0, hullShape(1).sheer + .05, HULL.L / 2 - .12), stern = new THREE.Vector3(0, hullShape(0).sheer + .08, -HULL.L / 2 + .05);
     parts.push(rodGeom(bow, new THREE.Vector3(0, foreH, mastZ + .05), .007, 4));
     parts.push(rodGeom(stern, top, .006, 4));
-    /* korlátok és oszlopok (csak a részletes hajón) */
-    if (o.detail) {
+    /* korlátok és oszlopok, orrkorlát, tatlétra */
+    if (vis) {
       const posts = [];
       for (let u = .06; u <= .88; u += .1) { const s = hullShape(u); [-1, 1].forEach((sd) => { const b = new THREE.Vector3(sd * (s.hb - .07), s.sheer + .05, s.z); const t = b.clone(); t.y += .62; posts.push([b, t, sd]); parts.push(rodGeom(b, t, .013, 6)); }); }
       [-1, 1].forEach((sd) => { const ps = posts.filter((p) => p[2] === sd); for (let i = 0; i < ps.length - 1; i++) { [.62, .32].forEach((h) => parts.push(rodGeom(ps[i][0].clone().setY(ps[i][0].y + h), ps[i + 1][0].clone().setY(ps[i + 1][0].y + h), .004, 4))); } });
@@ -578,6 +605,14 @@
       const pu = []; for (let k = 0; k <= 8; k++) { const a = -Math.PI / 2 + k / 8 * Math.PI; pu.push(new THREE.Vector3(Math.sin(a) * .42, hullShape(.95).sheer + .62, HULL.L / 2 - .55 + Math.cos(a) * .28)); }
       for (let k = 0; k < pu.length - 1; k++) parts.push(rodGeom(pu[k], pu[k + 1], .014, 6));
       [-1, 1].forEach((sd) => parts.push(rodGeom(new THREE.Vector3(sd * .42, hullShape(.93).sheer + .05, HULL.L / 2 - .55), new THREE.Vector3(sd * .42, hullShape(.93).sheer + .62, HULL.L / 2 - .55), .014, 6)));
+      /* tatkorlát (pushpit) és fürdőlétra a tatfalon */
+      const s0 = hullShape(0.02), pp = []; for (let k = 0; k <= 6; k++) { const a = k / 6; pp.push(new THREE.Vector3((a - .5) * 2 * (s0.hb - .12), s0.sheer + .62, s0.z + .12 + Math.sin(a * Math.PI) * .05)); }
+      for (let k = 0; k < pp.length - 1; k++) parts.push(rodGeom(pp[k], pp[k + 1], .014, 6));
+      [-1, 1].forEach((sd) => parts.push(rodGeom(new THREE.Vector3(sd * (s0.hb - .12), s0.sheer + .05, s0.z + .15), new THREE.Vector3(sd * (s0.hb - .12), s0.sheer + .62, s0.z + .12), .014, 6)));
+      const lz = hullShape(0).z - .03; [-.16, .16].forEach((lx) => parts.push(rodGeom(new THREE.Vector3(lx, hullShape(0).sheer + .05, lz), new THREE.Vector3(lx, -.25, lz - .1), .011, 6)));
+      for (let k = 0; k < 4; k++) { const yy = hullShape(0).sheer - .1 - k * .2; parts.push(rodGeom(new THREE.Vector3(-.16, yy, lz - k * .025), new THREE.Vector3(.16, yy, lz - k * .025), .012, 6)); }
+      /* orrvasalat horgonygörgővel */
+      parts.push(rodGeom(new THREE.Vector3(0, hullShape(1).sheer + .06, HULL.L / 2 - .3), new THREE.Vector3(0, hullShape(1).sheer + .1, HULL.L / 2 + .12), .03, 8));
     }
     mesh(mergeGeoms(parts), wire, body);
     /* bum (forog az árbóc körül) */
@@ -1293,7 +1328,7 @@
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
     makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
-    const boat = makeBoat({ detail: 0, crew: 0, hull: "#0b2f5e", boot: "#ffffff", stripe: "#c62828", jib: "#d61f26", main: "#f6f4ec", num: "HUN 27", name: "ZEPHYR", logo: "ZEPHYR", spin: ["#e2483d", "#ffffff", "#0b2f5e"] });
+    const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#0b2f5e", boot: "#ffffff", stripe: "#c62828", jib: "#d61f26", main: "#f6f4ec", num: "HUN 27", name: "ZEPHYR", logo: "ZEPHYR", spin: ["#e2483d", "#ffffff", "#0b2f5e"] });
     boat.scale.setScalar(VR_SC); boat.rotation.y = Math.PI; root.add(boat); VRR.boat = boat;
     const CK2 = vrCockpit(boat); VRR.ck = CK2;
     /* a felhasználó helye: a jobb oldali (styrbord) kerék mögött; a hajó orra −z felé néz (a hajó π-vel elforgatva) */
@@ -4227,8 +4262,8 @@
   }
 
   const EVS = { storm: evStorm, titanic: evTitanic, monster: evMonster, heli: evHeli, steamer: evSteamer, police: evPolice, plane: evPlane, sub: evSub };
-  const EV_ORDER = ["titanic", "monster", "steamer", "heli", "storm", "police", "plane", "sub", "titanic", "monster", "heli", "steamer", "police", "storm", "plane", "sub"];
-  const EV_LIST = [["titanic", "🚢", "Titanic és a jéghegy"], ["monster", "🐉", "Tengeri szörny"], ["heli", "🚁", "Mentőhelikopter"], ["steamer", "🛳", "Lapátkerekes gőzös"], ["storm", "⛈", "Nyári zivatar"], ["police", "🚤", "Vízirendőrség"], ["plane", "✈", "Reklámrepülő"], ["sub", "⚓", "Tengeralattjáró"]];
+  const EV_ORDER = ["monster", "steamer", "heli", "storm", "police", "plane", "sub", "monster", "heli", "steamer", "police", "storm", "plane", "sub"];   /* a Titanic a tulajdonos kérésére kikerült (2026. nov. 6.) */
+  const EV_LIST = [["monster", "🐉", "Tengeri szörny"], ["heli", "🚁", "Mentőhelikopter"], ["steamer", "🛳", "Lapátkerekes gőzös"], ["storm", "⛈", "Nyári zivatar"], ["police", "🚤", "Vízirendőrség"], ["plane", "✈", "Reklámrepülő"], ["sub", "⚓", "Tengeralattjáró"]];
   function bjStart(id) {
     if (BJ.cur) { try { BJ.cur.root.visible = false; if (BJ.cur.stop) BJ.cur.stop(); } catch (e) {} BJ.cur = null; }
     if (!BJ.race) return;

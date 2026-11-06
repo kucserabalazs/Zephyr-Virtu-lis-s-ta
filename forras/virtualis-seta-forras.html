@@ -5996,7 +5996,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const DEMO = /mentes/.test(location.hash + location.search), DEMO_M = /szorny|polip/.test(location.hash + location.search), DEMO_B = /boja/.test(location.hash + location.search), DEMO_S = /tengeralattjaro/.test(location.hash + location.search), DEMO_G = /gozos/.test(location.hash + location.search), DEMO_K = /kajak/.test(location.hash + location.search), DEMO_V = /vihar/.test(location.hash + location.search), DEMO_T = /titanic/.test(location.hash + location.search);  /* bemutató: #mentes a cím végén -> azonnal helikopteres mentés */
     const FORCE = (location.hash.match(/regatta=(\w+)/) || [])[1];  /* fejlesztői bemutató: #regatta=plane stb. */
     let extras = [], extra = null, recent = [], nextExtra = performance.now() + (FORCE || DEMO || DEMO_M || DEMO_B || DEMO_S || DEMO_G || DEMO_K || DEMO_V || DEMO_T ? 1500 : rnd(20000, 45000));
-    const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, titanic: .9, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
+    const KINDS = { race: 3, police: 2.5, plane: 2, blimp: 1.8, steam: 1.7, rescue: 1.6, storm: 1.4, kayak: 1.4, buoy: .9, sub: .8, monster: .8 };  /* véletlen esemény-súlyok */
     const Z = 1.45;  /* járművek nagyítása */
     let storm = null, stormNow = null;  /* viharfelhő állapota: minden szereplő más-más módon reagál rá */
     const stormAt = (px) => storm ? storm.k * Math.max(0, 1 - Math.abs(px - storm.x) / (storm.w * 1.3)) : 0, stormG = () => storm ? storm.k : 0;
@@ -8410,7 +8410,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     d = document.createElement("div"); d.id = "worldPick"; d.className = "world-pick"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Virtuális világ");
     d.innerHTML = `<div class="wp-card"><button type="button" class="wp-x" aria-label="Bezárás">✕</button><h2>Virtuális világ</h2>
       <button type="button" data-w="race"><b>⛵ Vitorlásverseny – a kormánynál</b><span>A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél</span></button>
-      <button type="button" data-w="maquette"><b>🏠 A ház makettje a regatta-bóján</b><span>A Balaton közepén, körülötted verseny és jelenetek (Titanic, tengeri szörny…) · nagyítható életnagyságig</span></button>
+      <button type="button" data-w="maquette"><b>🏠 A ház makettje a regatta-bóján</b><span>A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig</span></button>
       <p>VR szemüvegben a legszebb (Meta Quest: „VR” gomb). Itt egérrel/ujjal nézel körbe.</p></div>`;
     d.addEventListener("click", (e) => { const t = e.target.closest("[data-w]"); if (t) { d.remove(); openWorld(t.dataset.w); } else if (e.target === d || e.target.closest(".wp-x")) d.remove(); });
     document.body.appendChild(d);
@@ -8841,7 +8841,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function pWorld(g) {
     /* 2026. nov. 6.: a tulajdonos kérésére VR-ben csak két világ marad – a vitorlásverseny a kormánynál és a makett */
     const items = [["race", "⛵  Vitorlásverseny – a kormánynál", "A 15 méteres Zephyr kormánykerekénél állsz: fogd meg és forgasd! Rajt, bójakerülés bal kéz felől, három ellenfél, futamonként új pálya."],
-                   ["maquette", "🏠  A ház makettje", "Egy regatta-bóján a Balaton közepén: körülötted verseny, időnként Titanic, tengeri szörny, helikopter… Két kézzel széthúzva életnagyságú lesz."]];
+                   ["maquette", "🏠  A ház makettje", "Egy regatta-bóján a Balaton közepén: körülötted verseny, időnként tengeri szörny, helikopter… Két kézzel széthúzva életnagyságú lesz."]];
     items.forEach(([k, t, d], i) => {
       const y = 140 + i * 228;
       btn(g, 40, y, VW - 80, 208, "", () => { vrClose(); openWorld(k); });
