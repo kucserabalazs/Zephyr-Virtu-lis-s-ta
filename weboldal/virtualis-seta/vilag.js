@@ -4057,9 +4057,11 @@
       const bg = g.createLinearGradient(0, 0, 0, PH); bg.addColorStop(0, "rgba(14,52,98,.94)"); bg.addColorStop(1, "rgba(7,28,58,.94)");
       g.beginPath(); g.roundRect ? g.roundRect(5, 5, PW - 10, PH - 10, 40) : g.rect(5, 5, PW - 10, PH - 10); g.fillStyle = bg; g.fill(); g.lineWidth = 6; g.strokeStyle = "rgba(255,209,102,.85)"; g.stroke();
       let rowY = 0;
+      /* hosszú szöveg: a betűméret addig csökken, amíg ki nem fér (ne lógjon ki a panelből) */
+      const fitFont = (wt, fs, min, t, maxW) => { g.font = `${wt} ${fs}px system-ui, sans-serif`; while (fs > min && g.measureText(t).width > maxW) { fs -= 2; g.font = `${wt} ${fs}px system-ui, sans-serif`; } };
       const api = {
-        title(t, s) { g.fillStyle = "#ffd166"; g.font = "800 50px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(t, 44, 66); g.fillStyle = "#fff"; g.font = "600 34px system-ui, sans-serif"; g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
-        row(i, t, c, r) { const y = 210 + i * 66; g.fillStyle = c || "#fff"; g.beginPath(); g.arc(58, y, 11, 0, TAU); g.fill(); g.fillStyle = "#fff"; g.font = "600 36px system-ui, sans-serif"; g.textAlign = "left"; g.fillText(t, 84, y); if (r) { g.textAlign = "right"; g.fillStyle = "#7fd3ff"; g.fillText(r, PW - 50, y); } rowY = y; },
+        title(t, s) { g.fillStyle = "#ffd166"; g.textAlign = "left"; g.textBaseline = "middle"; fitFont(800, 50, 32, t, PW - 88); g.fillText(t, 44, 66); g.fillStyle = "#fff"; fitFont(600, 34, 22, s || "", PW - 88); g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
+        row(i, t, c, r) { const y = 210 + i * 66; g.fillStyle = c || "#fff"; g.beginPath(); g.arc(58, y, 11, 0, TAU); g.fill(); g.fillStyle = "#fff"; g.textAlign = "left"; fitFont(600, 36, 22, t, PW - 84 - (r ? 220 : 44)); g.fillText(t, 84, y); if (r) { g.textAlign = "right"; g.fillStyle = "#7fd3ff"; g.fillText(r, PW - 50, y); } rowY = y; },
         buttons(list, row) {
           const n = list.length, gap = 16, w = (PW - 80 - gap * (n - 1)) / n, y = PH - 150 - (row || 0) * 126, h = 110;
           list.forEach(([lbl, fn, on], i) => {
