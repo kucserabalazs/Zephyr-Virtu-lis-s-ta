@@ -3430,9 +3430,63 @@ const PLAN_DIMS = {
   fregatt:  { "Hálószoba": [2.575, 4.10], "Nappali · konyha": [2.575, 5.90], "Fürdő": [1.65, 1.80] },
   dingi:    { "Szoba · konyha": [5.40, 4.35, 0, "a lakás egésze, fürdővel"] },
   kaloz:    { "Szoba · konyha": [5.40, 4.10, 0, "a lakás egésze, fürdővel"] },
-  hatso:    { "Hálószoba": [5.40, 1.85], "Nappali · konyha": [5.40, 4.46, 19.6, "az étkezővel együtt, L alakú"], "Fürdő": [2.30, 1.96] }
+  hatso:    { "Hálószoba": [5.40, 1.85], "Nappali · konyha": [5.40, 4.46, 19.6, "az étkezővel együtt, L alakú"], "Fürdő": [2.30, 1.96] },
+  /* a Kadett (6.) belül pontosan olyan, mint a Schooner – csak a terasza más (tulajdonos, nov. 6.) */
+  kadett:   { "Hálószoba": [5.40, 1.85], "Nappali · konyha": [5.40, 4.46, 19.6, "az étkezővel együtt, L alakú"], "Fürdő": [2.30, 1.96] }
 };
 Object.keys(PLAN_DIMS).forEach((k) => { if (PLANS[k]) PLANS[k].dims = PLAN_DIMS[k]; });
+/* A rajzolt alaprajzok igazítása a hivatalos (hatóság által elfogadott) tervrajzhoz – 2026. nov. 6.
+   A falak a tervrajz szerinti helyre kerülnek; a bútorok mérete marad, csak a helyük tolódik arányosan (és a szobába szorul);
+   a séta pontjai (SCENES[…].m) ugyanígy, hogy a házvázlaton a helyükön legyenek. */
+(function () {
+  const pw = (segs) => (x) => { for (const [a, b, c, d] of segs) if (x <= b + 1e-9) return x <= a ? c + (x - a) : c + (x - a) * (d - c) / (b - a); const l = segs[segs.length - 1]; return l[3] + (x - l[1]); };
+  function reshape(P, gid, fx, rooms, fy) {
+    fy = fy || ((x, y) => y);
+    const ext = (f) => ((Math.abs(f[6] || 0) % 180) === 90 ? f[4] : f[3]);
+    const extY = (f) => ((Math.abs(f[6] || 0) % 180) === 90 ? f[3] : f[4]);
+    const inRoom = (x, y) => rooms.find((r) => x >= r[1] - .05 && x <= r[1] + r[3] + .05 && y >= r[2] - .05 && y <= r[2] + r[4] + .05);
+    (P.furn || []).forEach((f) => {
+      if (["window", "door"].includes(f[0])) { const cx = f[1] + f[3] / 2, cy = f[2] + f[4] / 2; f[1] = +(fx(cx, cy) - f[3] / 2).toFixed(3); f[2] = +(fy(cx, cy) - f[4] / 2).toFixed(3); return; }
+      const ex = ext(f), ey = extY(f), cx = f[1] + ex / 2, cy = f[2] + ey / 2, nx = fx(cx, cy), ny = fy(cx, cy);
+      const r = inRoom(nx, ny);
+      let w = ex; if (r && w > r[3] - .1) { w = r[3] - .14; if ((Math.abs(f[6] || 0) % 180) === 90) f[4] = w; else f[3] = w; }
+      let x0 = nx - w / 2, y0 = ny - ey / 2;
+      if (r) { x0 = Math.max(r[1] + .02, Math.min(r[1] + r[3] - w - .02, x0)); }
+      f[1] = +x0.toFixed(3); f[2] = +y0.toFixed(3);
+    });
+    (P.marks || []).forEach((m) => { const x = m[1], y = m[2]; m[1] = +fx(x, y).toFixed(3); m[2] = +fy(x, y).toFixed(3); });
+    Object.keys(P.lp || {}).forEach((k) => { const v = P.lp[k], x = v[0], y = v[1]; v[0] = +fx(x, y).toFixed(3); v[1] = +fy(x, y).toFixed(3); });
+    (P.open || []).forEach((o) => { o[0] = +fx(o[0], (o[1] + o[2]) / 2).toFixed(3); });
+    (P.outs || []).forEach((o) => { const x1 = fx(o[1], o[2] + o[4] / 2), x2 = fx(o[1] + o[3], o[2] + o[4] / 2), y1 = fy(o[1] + o[3] / 2, o[2]), y2 = fy(o[1] + o[3] / 2, o[2] + o[4]); o[1] = +x1.toFixed(3); o[3] = +(x2 - x1).toFixed(3); o[2] = +y1.toFixed(3); o[4] = +(y2 - y1).toFixed(3); });
+    P.rooms = rooms;
+    Object.keys(SCENES).forEach((k) => { const sc = SCENES[k]; if (sc.g === gid && sc.m) { const x = sc.m[0], y = sc.m[1]; sc.m = [+fx(x, y).toFixed(3), +fy(x, y).toFixed(3)].concat(sc.m.slice(2)); } });
+  }
+  /* Korvett (Első, földszint): hálószoba 2,0 m, nappali-konyha 3,3 m, fürdő 1,5 m széles (a rajzolt változat a fölötte lévő Fregattét követte) */
+  if (PLANS.korvett) {
+    const top = pw([[0, 2.575, 0, 2.0], [2.575, 2.675, 2.0, 2.1], [2.675, 5.3, 2.1, 5.4]]);
+    const bot = pw([[0, 1.6, 0, 1.5], [1.6, 1.7, 1.5, 1.55], [1.7, 2.675, 1.55, 2.1], [2.675, 5.3, 2.1, 5.4]]);
+    const fx = (x, y) => (y < 0 ? x * 5.4 / 5.3 : y < 4.15 ? top(x) : bot(x));
+    reshape(PLANS.korvett, "korvett", fx, [["Hálószoba", 0, 0, 2.0, 4.1], ["Nappali · konyha", 2.1, 0, 3.3, 6.2], ["Fürdő", 0, 4.2, 1.5, 2], ["Előszoba", 1.55, 4.2, 0.55, 2]]);
+  }
+  /* Schooner (5.) és Kadett (6.): belül egyformák – hálószoba 1,85 m mély, alatta a 4,46 m-es L alakú nappali-konyha-étkező, benne a 2,3 × 1,96 m-es fürdő */
+  [["hatso", "schooner"], ["kadett", "kadett"]].forEach(([k, gid]) => {
+    const P = PLANS[k]; if (!P) return;
+    const fy = pw([[0, 2, 0, 1.85], [2, 2.1, 1.85, 1.95], [2.1, 4.2, 1.95, 4.45], [4.2, 6.2, 4.45, 6.41]]);
+    const bot = pw([[0, 2, 0, 2.3], [2, 5.4, 2.3, 5.4]]);
+    const fx = (x, y) => (y >= 4.15 && y <= 6.25 ? bot(x) : x);
+    reshape(P, gid, fx, [["Hálószoba", 0, 0, 5.4, 1.85], ["Étkező", 0, 1.95, 2.1, 2.4], ["Nappali · konyha", 2.1, 1.95, 3.3, 4.46], ["Fürdő", 0, 4.45, 2.3, 1.96]], (x, y) => fy(y));
+    if (P.box) P.box = [P.box[0], P.box[1], P.box[2], +(P.box[3] + .21).toFixed(2)];
+  });
+  /* Dingi és Kalóz: a rajz x tengelye a tervrajz mélysége (Dingi 4,35 m, Kalóz 4,1 m), y tengelye a szélessége (5,4 m) */
+  [["dingi", 4.35], ["kaloz", 4.1]].forEach(([k, d]) => {
+    const P = PLANS[k]; if (!P) return;
+    const sx = d / 4.4, sy = 5.4 / 5.85;
+    const fx = (x) => (x <= 4.4 ? x * sx : x - (4.4 - d)), fy = (x, y) => (x <= 4.45 || y <= 5.9 ? y * sy : y);
+    const rooms = P.rooms.map((r) => [r[0], +(r[1] * sx).toFixed(3), +(r[2] * sy).toFixed(3), +(r[3] * sx).toFixed(3), +(r[4] * sy).toFixed(3)]);
+    reshape(P, k, fx, rooms, fy);
+    if (P.box) { P.box = [P.box[0], P.box[1], +(P.box[2] - (4.4 - d)).toFixed(2), +(P.box[3] - .45).toFixed(2)]; }
+  });
+})();
 PLANS.kadett.title = "Kadett alaprajz";
 /* A belső tér egy az egyben a Schoonerét követi; csak a terasz más: nem fedett, kicsit nagyobb,
    bal sarkában csigalépcső a tetőteraszra, jobb oldalán érkezik fel a Schooner teraszáról induló lépcső */
