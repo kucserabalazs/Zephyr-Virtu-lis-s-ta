@@ -334,3 +334,12 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
 - Makett 2D: körbenéző kamera (ORB a 06-makett.js-ben), nézetgombok, összecsukható HUD minden világban (07-vezerlo.js .wh-tog, localStorage zephyr-hud-min).
 - Sakk (virtualis-seta-forras.html gameChess): lvlCfg 1–24, thinkAsync Web Workerrel, RANKS, S.maxLvl, menük S.menu main/lvl/legend, drawBar/drawMenu, új drawPiece (oldalnézet, glyphFlag), csata: fire/impact/geyser, S.cam ráközelítés + mozis keret, drawSinking. Fordítás: /home/claude/t/tr_chess2.py.
 - Hátra: szebb hajótestek a versenyen (felhasználó kérte 23:00), Titanic törlés, hattyúk, hal, díszlet, makett parkoló, jetpack.
+
+## 00:30 (nov. 7.) – elmaradások pótolva
+- Titanic törölve (makett EV_ORDER/EV_LIST, stégjáték KINDS, leírások 23 nyelven).
+- 03-hajo.js: új hajótest (hullPoint szelvény, hullTex csíkok, MeshPhysical clearcoat, peremléc, ütközőléc, tatkorlát, létra, orrvasalat; o.vis – részletek minden hajón, a VR-verseny saját hajója vis:false). Víz: fwidth-alapú fodor-élsimítás.
+- 06c: makeSwan (swanBodyGeom, featherTex, 24 elemes InstancedMesh nyak, SW_POSE úszás/éber/táplálkozás/tollászkodás, fiókák), makeFish + dropsAt cseppek.
+- 06b: hátsó parkoló és kert a parkolo.jpg / kert.jpg szerint (PZ0/PZ1, fűrácskő, keresztben álló autók, zöld kerítés, kerti konyha és kő tűzrakó a nyugati oldalon).
+- 06-makett.js: FLY (toggleFly, flyTick, flyStep) – jetpack VR-ben csippentős botkormánnyal, gépen gombokkal.
+- 05b: kormány v3 (S.grabs két kéz, one-euro szűrő, curl/pinch fogás, engedékeny elengedés, v²-es visszaközpontosítás, WA_MAX .9π), S.rgrab a sugaras fogáshoz. Teszt: /home/claude/t/vrwheel3.py.
+- Bejárás: WS.spin alapból be (spinV migráció), xrSpinTick előjel megfordítva (kéz jobbra → nézet jobbra), simítás.
