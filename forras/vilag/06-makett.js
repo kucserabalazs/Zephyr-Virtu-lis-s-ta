@@ -1,171 +1,354 @@
 
-  /* =================================================================== 3. A HÁZ MAKETTJE (asztalnyi méretben, az alaprajzok alapján) */
+  /* =================================================================== 3. A HÁZ MAKETTJE – építészeti makett a hivatalos tervrajz szerint (2026. nov. 6.)
+     • Csak a Zephyr épülete: egyetlen téglatest, kívül 6,0 × 22,2 m (belül 5,4 m széles), két szint, lapos tető. A mellette álló kisebb ház
+       a szomszédé (külön helyrajzi szám, saját falak, más tetőmagasság) – nem része a makettnek.
+     • Elöl (az utca és a Balaton felé, kb. 345°): Korvett (földszint) és Fregatt (emelet), erkéllyel/terasszal; középen a fedett bejáró a lépcsővel;
+       utána Dingi (földszint) és Kalóz (emelet); hátul Schooner (földszint) és Kadett (emelet) – belül egyformák, a Kadett terasza a hátsó, emeleti fa terasz.
+     • A ház keleti oldalán a parkoló, mögötte a kert. Tájolás a Google légifelvételből; a fény a választott nap és óra napállása szerint vet árnyékot.
+     • Rámutatva kiemelés és adatok, csippentésre választás: „Belépés a lakásba” vagy „Foglalás”. Ha a foglalásban már van időpont: zöld = szabad, piros = foglalt. */
   const MAQ = {};
-  const APT_PLAN = { korvett: "korvett", fregatt: "fregatt", dingi: "kozep", kaloz: "kozep", schooner: "hatso", kadett: "hatso" };
-  /* lakások a telken (a „site” vázlat sávjai): [lakás, szint, sáv kezdete y (m)] – a ház 3,2…12 m között (x) */
-  const UNITS = [["korvett", 0, 20.27], ["fregatt", 1, 20.27], ["dingi", 0, 12.56], ["kaloz", 1, 12.56], ["schooner", 0, 7.45], ["kadett", 1, 7.45]];
-  const FLOOR_H = 2.85;
-  function planOf(id) { const P = T.PLANS; const g = T.GROUPS.find((q) => q.id === id) || {}; return P[g.plan] || P[APT_PLAN[id]] || P.elso; }
-  /* alaprajz (x: 0..~5,3, y: −1,5..~6,9) → telek (x: 3,2..12, y: sáv) */
-  function planToSite(px, py, y0) { return [3.2 + (6.95 - py) * (8.6 / 8.4) + .1, y0 + .05 + px * (4.85 / 5.3)]; }
-  const ROOMCOL = (n) => /fürd/i.test(n) ? "#cfd8dc" : /háló/i.test(n) ? "#c8a27a" : /nappali|konyha|szoba/i.test(n) ? "#d9bb92" : /előt|előszoba/i.test(n) ? "#bfc3c4" : /erkély|terasz|bejárat/i.test(n) ? "#9b7653" : "#d6c7aa";
+  const SCALE = 1 / 60;               /* M 1:60 */
+  const FLOOR_H = 2.85, WALL = .3, PART = .25, IN_W = 5.4, OUT_W = IN_W + 2 * WALL;
+  /* a ház koordinátái méterben: x = kelet felé (a parkoló oldala), z = az utcától hátrafelé (165° felé), y = fel */
+  const Z_A = WALL, Z_HALL = Z_A + 6.2 + PART, Z_B = Z_HALL + 4.0 + PART, Z_C = Z_B + 4.35 + PART, Z_END = Z_C + 6.41 + WALL;
+  const APTCOL = { korvett: "#e2483d", dingi: "#3fb37f", fregatt: "#3d8fe2", kaloz: "#9b6be2", schooner: "#2bb3c0", kadett: "#d9a441" };
+  /* lakásonként: szint, és az alaprajz (méter) → ház (méter) leképezés */
+  const UNITS = {
+    korvett:  { lvl: 0, map: (x, y) => [WALL + x, Z_A + y] },
+    fregatt:  { lvl: 1, map: (x, y) => [WALL + x, Z_A + y] },
+    dingi:    { lvl: 0, map: (x, y) => [WALL + y, Z_B + (4.35 - x)] },
+    kaloz:    { lvl: 1, map: (x, y) => [WALL + y, Z_B + (4.10 - x)] },
+    schooner: { lvl: 0, map: (x, y) => [WALL + x, Z_C + y] },
+    kadett:   { lvl: 1, map: (x, y) => [WALL + x, Z_C + y] }
+  };
+  function planOf(id) { const P = T.PLANS; const g = T.GROUPS.find((q) => q.id === id) || {}; return P[g.plan] || P.elso; }
+  const ROOMCOL = (n) => /fürd/i.test(n) ? "#b9c6cc" : /háló/i.test(n) ? "#a77a4f" : /nappali|konyha|szoba|étkez/i.test(n) ? "#b9895a" : /előt|előszoba/i.test(n) ? "#9e9a92" : "#b08a63";
+  /* téglalap az alaprajzból → a ház koordinátáiba (tengelyhez igazítva) */
+  function mapRect(U, x, y, w, h) {
+    const a = U.map(x, y), b = U.map(x + w, y + h);
+    return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])];
+  }
+  function sunDirFor(ymd, h) {
+    /* napállás → irány a ház koordinátáiban (+z = 165°, +x = 75°) */
+    let p = { az: 230, el: 45 };
+    try { if (T.sunPos) p = T.sunPos(ymd, h); } catch (e) {}
+    const d = (p.az - 165) * D2R, el = Math.max(6, p.el) * D2R;
+    return { v: new THREE.Vector3(-Math.sin(d) * Math.cos(el), Math.sin(el), Math.cos(d) * Math.cos(el)), p };
+  }
+
   function buildMaquette() {
-    const root = W.root, SC = 1 / 45;   /* 1:45 */
-    const model = new THREE.Group(); model.scale.setScalar(SC); MAQ.model = model;
+    const root = W.root;
+    const model = new THREE.Group(); model.scale.setScalar(SCALE); MAQ.model = model;
     const turn = new THREE.Group(); turn.add(model); MAQ.turn = turn;
     const stand = new THREE.Group(); stand.add(turn); root.add(stand); MAQ.stand = stand;
-    /* a telek közepe a forgástengelyen */
-    model.position.set(-6 * 1, 0, -(-12.6 + 43.2 / 2) * 1); model.position.multiplyScalar(SC);
-    model.position.set(-6, 0, -9.0); model.position.multiplyScalar(SC);
-    /* talapzat: diófa keret, üveglap alatta */
-    const wood = std({ color: "#6b4426", roughness: .5 }), felt = std({ color: "#20402c", roughness: .9 });
-    const baseW = 19.5 * SC, baseD = 46 * SC;
-    const base = mesh(new THREE.BoxGeometry(baseW, .05, baseD), wood, turn); base.position.y = -.026;
-    const top = mesh(new THREE.BoxGeometry(baseW - .02, .006, baseD - .02), felt, turn); top.position.y = .0;
-    base.userData.xr = { down: (h, src) => { MAQ.drag = { x: src.o.x, z: src.o.z, a: turn.rotation.y, d: src.d.clone() }; }, drag: (src) => { if (!MAQ.drag) return; const d0 = MAQ.drag.d, d1 = src.d; const a0 = Math.atan2(d0.x, d0.z), a1 = Math.atan2(d1.x, d1.z); turn.rotation.y = MAQ.drag.a + wrapA(a1 - a0) * 4; }, up: () => { MAQ.drag = null; } };
+    /* a telek közepe a forgástengelyen (x: −4…16 m, z: −10…40 m) */
+    const SX0 = -3, SX1 = 13.5, SZ0 = -10, SZ1 = 40, CX = (SX0 + SX1) / 2, CZ = (SZ0 + SZ1) / 2;
+    model.position.set(-CX * SCALE, 0, -CZ * SCALE);
+    const parts = {};   /* szín → geometria-lista (összevonva rajzoljuk – Questen ez számít) */
+    const P = (col, g, m, opt) => { const k = col + (opt ? "|" + JSON.stringify(opt) : ""); (parts[k] = parts[k] || { col, opt, list: [] }).list.push([g, m]); };
+    const box = (col, x0, z0, x1, z1, y0, h, opt) => P(col, new THREE.BoxGeometry(Math.max(.01, x1 - x0), h, Math.max(.01, z1 - z0)), M4((x0 + x1) / 2, y0 + h / 2, (z0 + z1) / 2), opt);
+    const cyl = (col, x, z, r, y0, h, seg, opt) => P(col, new THREE.CylinderGeometry(r, r, h, seg || 10), M4(x, y0 + h / 2, z), opt);
+
+    /* ---------- talapzat (diófa keret, filc) ---------- */
+    const baseW = (SX1 - SX0) * SCALE, baseD = (SZ1 - SZ0) * SCALE;
+    const wood = std({ color: "#5b3a22", roughness: .45 }), felt = std({ color: "#2c3a2e", roughness: .95 });
+    const base = mesh(new THREE.BoxGeometry(baseW + .03, .045, baseD + .03), wood, turn); base.position.y = -.0235; base.receiveShadow = true;
+    const feltM = mesh(new THREE.BoxGeometry(baseW, .004, baseD), felt, turn); feltM.position.y = -.001; feltM.receiveShadow = true;
+    base.userData.xr = { down: (h, src) => { MAQ.drag = { a: turn.rotation.y, d: src.d.clone() }; MAQ.auto = false; }, drag: (src) => { if (!MAQ.drag) return; const d0 = MAQ.drag.d, d1 = src.d; turn.rotation.y = MAQ.drag.a + wrapA(Math.atan2(d1.x, d1.z) - Math.atan2(d0.x, d0.z)) * 4; }, up: () => { MAQ.drag = null; } };
     T.xr.extra.add(base); W.objs.push(base);
-    /* talaj és burkolatok a telekvázlatból */
-    const site = T.PLANS.site || {};
-    const areaCol = { lawn: "#5f9a48", gravel: "#b9b2a4", bricks: "#a4673f", grid: "#8f9a8a", road: "#4a4d52", deck: "#8a6a48", reed: "#9a9a5a", water: "#3a7fa8" };
-    const groundParts = {};
-    const addBox = (key, col, x, y, w, d, h, z0) => { (groundParts[col] = groundParts[col] || []).push([new THREE.BoxGeometry(w, h, d), M4(x + w / 2, (z0 || 0) + h / 2, y + d / 2)]); };
-    (site.furn || []).forEach((f) => {
-      const [type, x, y, w, d, , , extra] = f;
-      if (type === "area") addBox("a", areaCol[extra] || "#8a9a80", x, y, w, d, .06 + (extra === "lawn" ? 0 : .02));
-      else if (type === "hedge") addBox("h", "#2f6a34", x, y, w, d, 1.4);
-      else if (type === "fence") addBox("f", "#3f5d3f", x, y, Math.max(w, .06), Math.max(d, .06), 1.6);
-      else if (type === "shed") addBox("s", "#8c939b", x, y, w, d, 2.1);
-      else if (type === "gazebo") { addBox("gz", "#e9e6dc", x, y, w, d, .06, 2.45); [[0, 0], [w - .1, 0], [0, d - .1], [w - .1, d - .1]].forEach(([dx, dy]) => addBox("gp", "#e9e6dc", x + dx, y + dy, .1, .1, 2.4)); }
-      else if (type === "counter2" || type === "sink") addBox("c", "#d8d4cc", x, y, w, d, .9);
-      else if (type === "sup") for (let k = 0; k < (extra || 3); k++) addBox("sp", ["#ffd166", "#1f5fa8", "#e5262f", "#3fb37f"][k % 4], x, y + k * .12, w, .1, .12, .1 + k * .14);
-      else if (type === "bikes") for (let k = 0; k < (extra || 4); k++) addBox("bk", "#2b2f36", x + k * (w / (extra || 4)), y, .06, d, 1.0);
-      else if (type === "gate") addBox("g", "#5a5f66", x, y, w, Math.max(d, .08), 1.7);
+
+    /* ---------- utca, járda, kerítés, előkert ---------- */
+    box("#3e4248", SX0, -9.2, SX1, -4.4, 0, .05);                                   /* aszfalt */
+    for (let x = SX0 + .6; x < SX1; x += 3.2) box("#e8e4d6", x, -6.88, x + 1.6, -6.72, .05, .006);   /* felezővonal */
+    box("#b9b4a8", SX0, -4.4, SX1, -2.7, 0, .12);                                   /* járda */
+    box("#9aa08f", SX0, -2.7, SX1, SZ1, 0, .04);                                    /* telek alap */
+    box("#6fa25a", -.4, -2.5, 6.3, -.05, .04, .03);                                 /* előkert gyep */
+    box("#cfc6b4", 1.4, -2.7, 2.6, -.05, .04, .04);                                  /* bejárati járda */
+    [[-.4, 1.2], [2.8, 6.3]].forEach(([a, b]) => box("#3f4a46", a, -2.62, b, -2.5, .04, 1.3));   /* utcai kerítés (a kapuknál nyitva) */
+    box("#5a6066", 1.25, -2.66, 1.32, -2.46, .04, 1.5); box("#5a6066", 2.7, -2.66, 2.77, -2.46, .04, 1.5);
+    /* parkoló a ház keleti oldalán: zúzottkő, autók */
+    box("#a39d91", 6.3, -2.7, 12.6, 22.3, .04, .025);
+    for (let z = 1; z < 21; z += 2.6) box("#8e887d", 6.3, z, 12.6, z + .08, .065, .004);   /* parkolóhelyek jelölése */
+    box("#3d6a3a", 12.6, -2.7, 12.9, SZ1, .04, 1.7);                                 /* keleti sövény */
+    /* kert a ház mögött */
+    box("#5f9a48", -.4, 22.3, 12.6, SZ1, .04, .03);
+    box("#cfc6b4", 6.6, 22.3, 7.8, SZ1 - 2, .04, .035);                              /* kerti út */
+    box("#3f4a46", -.55, 22.3, -.4, SZ1, .04, 1.4);                                  /* nyugati telekhatár (a szomszéd felé) */
+    box("#3f4a46", -.55, SZ1 - .15, 12.9, SZ1, .04, 1.4);                            /* hátsó kerítés */
+    /* grillterasz / kerti konyha pergolával, napozóágyak, SUP-tartó, kerékpárok */
+    box("#8a6a48", 8.4, 27, 12.2, 31, .04, .08);
+    [[8.5, 27.1], [12.0, 27.1], [8.5, 30.8], [12.0, 30.8]].forEach(([x, z]) => box("#e9e6dc", x, z, x + .12, z + .12, .12, 2.3));
+    for (let k = 0; k < 9; k++) box("#e9e6dc", 8.4, 27 + k * .5, 12.2, 27.08 + k * .5, 2.42, .08);
+    box("#d8d4cc", 8.6, 27.2, 10.8, 27.8, .12, .9); box("#2b2f36", 10.9, 27.2, 11.8, 27.8, .12, 1.0);
+    box("#9c6b3f", 9.2, 28.6, 11.4, 29.6, .82, .06); [[9.3, 28.7], [11.2, 28.7], [9.3, 29.4], [11.2, 29.4]].forEach(([x, z]) => box("#7a5a3a", x, z, x + .08, z + .08, .12, .7));
+    [[2.2, 30], [3.6, 30]].forEach(([x, z]) => { box("#f2efe6", x, z, x + .7, z + 1.9, .12, .25); box("#f2efe6", x, z, x + .7, z + .5, .37, .25); });
+    for (let k = 0; k < 4; k++) box(["#ffd166", "#1f5fa8", "#e5262f", "#3fb37f"][k], 11.2, 33 + k * .5, 12.4, 33.1 + k * .5, .5 + k * .02, .1);
+    for (let k = 0; k < 4; k++) box("#2b2f36", 11.6, 36 + k * .55, 11.68, 37.6 + k * .05, .04, 1.0);
+    box("#8c939b", 9.4, 34.6, 11.2, 37.2, .04, 2.1);                                /* tároló */
+    /* fák */
+    [[1.5, 26, 2.2], [4.5, 35.5, 2.8], [10.0, 38.2, 1.6], [11.6, 24.5, 1.4], [0.8, 38, 2.0], [-1.6, -6.1, 1.4], [11.2, -3.4, 1.3]].forEach(([x, z, r]) => {
+      cyl("#5a3d24", x, z, .18, .04, 2.6, 8);
+      P("#3e7d3a", new THREE.IcosahedronGeometry(r, 1), M4(x, 2.6 + r * .75, z), { flat: 1 });
     });
-    Object.keys(groundParts).forEach((col) => { const g = mergeGeoms(groundParts[col]); mesh(g, std({ color: col, roughness: .85 }), model); });
-    /* fa (a kert sarkában) */
-    (site.furn || []).filter((f) => f[0] === "tree").forEach(([, x, y, w]) => { const tr = mesh(new THREE.CylinderGeometry(.15, .22, 2.2, 8), std({ color: "#5a3d24" }), model); tr.position.set(x + w / 2, 1.1, y + w / 2); const cr = mesh(new THREE.IcosahedronGeometry(w / 1.6, 1), std({ color: "#3e7d3a", roughness: .9, flatShading: true }), model); cr.position.set(x + w / 2, 3.2, y + w / 2); });
-    /* a ház: lakásonként padló, falak (makett-magasságban metszve), bútorok */
+
+    /* ---------- az épület ---------- */
+    const Y1 = FLOOR_H, roofY = 2 * FLOOR_H;
+    MAQ.lv = [new THREE.Group(), new THREE.Group()]; MAQ.lv.forEach((g, i) => { g.position.y = i * FLOOR_H; model.add(g); });
+    const lvParts = [{}, {}];
+    const LP = (lv, col, g, m, opt) => { const k = col + (opt ? "|" + JSON.stringify(opt) : ""); (lvParts[lv][k] = lvParts[lv][k] || { col, opt, list: [] }).list.push([g, m]); };
+    const lbox = (lv, col, x0, z0, x1, z1, y0, h, opt) => LP(lv, col, new THREE.BoxGeometry(Math.max(.01, x1 - x0), h, Math.max(.01, z1 - z0)), M4((x0 + x1) / 2, y0 + h / 2, (z0 + z1) / 2), opt);
+    /* födémek (padló) szintenként */
+    [0, 1].forEach((lv) => lbox(lv, "#ece7dc", 0, 0, OUT_W, Z_END, -.2, .2));
+    /* külső falak: magas (homlokzat, tetővel) és metszett (alacsony, „babaház” nézet) változat */
+    MAQ.shell = [[], []];
+    const shellBox = (lv, x0, z0, x1, z1, tall) => { const h = tall ? FLOOR_H - .2 : 1.05; const g = new THREE.BoxGeometry(x1 - x0, h, z1 - z0); g.translate((x0 + x1) / 2, h / 2, (z0 + z1) / 2); return g; };
+    [0, 1].forEach((lv) => [true, false].forEach((tall) => {
+      const gs = [[0, 0, OUT_W, WALL], [0, Z_END - WALL, OUT_W, Z_END], [0, 0, WALL, Z_END], [OUT_W - WALL, 0, OUT_W, Z_END]].map((r) => [shellBox(lv, ...r, tall), new THREE.Matrix4()]);
+      /* a lakások közti válaszfalak teljes szélességben */
+      [Z_HALL - PART, Z_B - PART, Z_C - PART].forEach((z) => gs.push([shellBox(lv, WALL, z, OUT_W - WALL, z + PART, tall), new THREE.Matrix4()]));
+      const m = mesh(mergeGeoms(gs), std({ color: tall ? "#f4f1ea" : "#f7f4ee", roughness: .9 }), MAQ.lv[lv]);
+      m.castShadow = true; m.receiveShadow = true; m.userData.tall = tall; MAQ.shell[lv].push(m);
+    }));
+    /* lakások: padló, belső falak (metszett), bútorok */
     MAQ.apts = {};
-    const wallM = std({ color: "#f3efe6", roughness: .9 }), slabM = std({ color: "#e8e3d8", roughness: .9 });
-    UNITS.forEach(([id, lvl, y0]) => {
-      const P = planOf(id), g = new THREE.Group(); g.position.y = lvl * FLOOR_H; model.add(g);
-      const grp = T.GROUPS.find((q) => q.id === id) || {}, col = new THREE.Color(((site.apts || []).find((a) => a[5] === id) || [])[6] || "#999");
-      const parts = { floor: {}, wall: [], furn: {} };
-      const rect = (r, h, tgt, colr, z0) => { const [a, b] = planToSite(r[1], r[2], y0), [c, d] = planToSite(r[1] + r[3], r[2] + r[4], y0); const x0 = Math.min(a, c), x1 = Math.max(a, c), z0b = Math.min(b, d), z1 = Math.max(b, d);
-        (tgt[colr] = tgt[colr] || []).push([new THREE.BoxGeometry(x1 - x0, h, z1 - z0b), M4((x0 + x1) / 2, (z0 || 0) + h / 2, (z0b + z1) / 2)]); return [x0, z0b, x1, z1]; };
-      const rooms = (P.rooms || []).concat((P.outs || []).map((r) => r.concat(["out"])));
+    Object.keys(UNITS).forEach((id) => {
+      const U = UNITS[id], Pl = planOf(id), lv = U.lvl;
       let bb = [1e9, 1e9, -1e9, -1e9];
-      rooms.forEach((r) => {
-        const out = r[5] === "out", c = out ? "#9b7653" : ROOMCOL(r[0]);
-        const q = rect(r, .12, parts.floor, c, out ? -.05 : 0);
-        if (!out) { bb = [Math.min(bb[0], q[0]), Math.min(bb[1], q[1]), Math.max(bb[2], q[2]), Math.max(bb[3], q[3])];
-          /* falak a szoba szélein (alacsony, metszett) */
-          const t = .12, h = 1.05, [x0, z0, x1, z1] = q;
-          [[x0, z0, x1 - x0, t], [x0, z1 - t, x1 - x0, t], [x0, z0, t, z1 - z0], [x1 - t, z0, t, z1 - z0]].forEach(([x, z, w, d]) => parts.wall.push([new THREE.BoxGeometry(w, h, d), M4(x + w / 2, .12 + h / 2, z + d / 2)]));
-        } else {
-          /* erkély/terasz korlát */
-          const [x0, z0, x1, z1] = q; parts.wall.push([new THREE.BoxGeometry(.05, .9, z1 - z0), M4(x1 - .03, .45, (z0 + z1) / 2)]);
-        }
+      (Pl.rooms || []).forEach((r) => {
+        const q = mapRect(U, r[1], r[2], r[3], r[4]);
+        q[0] = Math.max(WALL, q[0]); q[2] = Math.min(OUT_W - WALL, q[2]);
+        bb = [Math.min(bb[0], q[0]), Math.min(bb[1], q[1]), Math.max(bb[2], q[2]), Math.max(bb[3], q[3])];
+        lbox(lv, ROOMCOL(r[0]), q[0], q[1], q[2], q[3], 0, .03);
+        /* belső válaszfalak a szobák szélein (a külső falak mentén nem kell) */
+        const t = .1, h = .95, inside = (v, a, b) => v > a + .05 && v < b - .05;
+        if (inside(q[0], WALL, OUT_W - WALL)) lbox(lv, "#faf8f3", q[0] - t / 2, q[1], q[0] + t / 2, q[3], 0, h, { c: 1 });
+        if (inside(q[2], WALL, OUT_W - WALL)) lbox(lv, "#faf8f3", q[2] - t / 2, q[1], q[2] + t / 2, q[3], 0, h, { c: 1 });
+        lbox(lv, "#faf8f3", q[0], q[1] - t / 2, q[2], q[1] + t / 2, 0, h, { c: 1 });
+        lbox(lv, "#faf8f3", q[0], q[3] - t / 2, q[2], q[3] + t / 2, 0, h, { c: 1 });
       });
-      /* bútorok az alaprajz tereptárgyaiból */
-      const FC = { bed: "#f4f1ea", sofa: "#8a7a6a", table6: "#9c6b3f", table: "#9c6b3f", box: "#c9b28f", shower: "#bfe3f0", wc: "#ffffff", sink: "#ffffff", stairs: "#bdbdbd", kitchen: "#e9e6df", chair: "#7a5a3a", tv: "#222", wardrobe: "#c9b28f" };
-      const FH = { bed: .5, sofa: .75, table6: .75, table: .75, box: .9, shower: 2, wc: .45, sink: .85, stairs: 1.2, kitchen: .9, chair: .9, wardrobe: 2.1 };
-      (P.furn || []).forEach((f) => {
-        const [type, x, y, w, d] = f; if (["door", "window", "area", "lane"].includes(type) || !(w > .05 && d > .05)) return;
-        const c = FC[type] || "#cdbfa6"; const r = rect([type, x, y, w, d], FH[type] || .7, parts.furn, c, .12);
-        if (type === "bed") { const [x0, z0, x1, z1] = r; (parts.furn["#ffffff"] = parts.furn["#ffffff"] || []).push([new THREE.BoxGeometry((x1 - x0) * .9, .12, Math.min(.5, (z1 - z0) * .25)), M4((x0 + x1) / 2, .7, z0 + .3)]); }
-      });
-      Object.keys(parts.floor).forEach((c) => mesh(mergeGeoms(parts.floor[c]), std({ color: c, roughness: .8 }), g));
-      if (parts.wall.length) mesh(mergeGeoms(parts.wall), wallM, g);
-      Object.keys(parts.furn).forEach((c) => mesh(mergeGeoms(parts.furn[c]), std({ color: c, roughness: .7 }), g));
-      /* födém alatta (emeleten) */
-      if (lvl) { const s = mesh(new THREE.BoxGeometry(bb[2] - bb[0], .22, bb[3] - bb[1]), slabM, g); s.position.set((bb[0] + bb[2]) / 2, -.12, (bb[1] + bb[3]) / 2); }
-      /* kiemelő keret + rámutatási doboz */
-      const glowM = basic({ color: col, transparent: true, opacity: 0, depthWrite: false });
-      const glow = mesh(new THREE.BoxGeometry(bb[2] - bb[0] + .3, 1.6, bb[3] - bb[1] + .3), glowM, g); glow.position.set((bb[0] + bb[2]) / 2, .8, (bb[1] + bb[3]) / 2);
-      const hit = glow;
-      const info = { id, lvl, g, glow, glowM, bb, y0, name: grp.name || id, no: grp.no, where: grp.where || "", lock: !!grp.lock, label: null };
-      hit.userData.xr = {
-        hover: (on) => maqHover(info, on),
-        click: (h) => maqEnter(info, h)
-      };
-      T.xr.extra.add(hit); W.objs.push(hit);
-      MAQ.apts[id] = info;
+      furnish(lv, U, Pl, lbox, LP);
+      MAQ.apts[id] = { id, lv, bb, name: ((T.GROUPS.find((q) => q.id === id) || {}).name) || id, no: (T.GROUPS.find((q) => q.id === id) || {}).no, lock: !!(T.GROUPS.find((q) => q.id === id) || {}).lock,
+        area: (Pl.rooms || []).reduce((s, r) => s + r[3] * r[4], 0) };
     });
-    /* épülethéj: üvegszerű külső falak szintenként (a makett „átlátszó”), és a tető – gombbal kapcsolható */
-    const shellM = std({ color: "#f6f2e8", roughness: .9, transparent: true, opacity: .22, depthWrite: false });
-    const roofM = std({ color: "#8a3b2c", roughness: .75, side: THREE.DoubleSide });
-    const shell = new THREE.Group(); model.add(shell); MAQ.shell = shell;
-    [0, 1].forEach((lv) => { const w = mesh(new THREE.BoxGeometry(8.8, FLOOR_H - .1, 18.0), shellM, shell); w.position.set(7.6, lv * FLOOR_H + FLOOR_H / 2, 16.25); });
-    const roof = new THREE.Group(); model.add(roof); MAQ.roof = roof;
-    const rs = new THREE.Shape(); rs.moveTo(-5.2, 0); rs.lineTo(5.2, 0); rs.lineTo(0, 2.4); rs.closePath();
-    const rg = new THREE.ExtrudeGeometry(rs, { depth: 18.8, bevelEnabled: false }); rg.translate(0, 0, -9.4);
-    const rm = mesh(rg, roofM, roof); rm.position.set(7.6, 2 * FLOOR_H + .05, 16.25);
-    for (let k = 0; k < 24; k++) { const tile = mesh(new THREE.BoxGeometry(.06, .05, 18.8), std({ color: "#6e2b20" }), roof); const t = k / 23, side = t < .5 ? -1 : 1, q = side < 0 ? t * 2 : (t - .5) * 2; tile.position.set(7.6 + side * 5.2 * (1 - q), 2 * FLOOR_H + .08 + 2.4 * q, 16.25); }
-    roof.visible = false; MAQ.roofOn = false;
-    /* autók a belső parkolóban és az utcán */
-    const car = (x, z, ry, col) => { const g = new THREE.Group(); const b = std({ color: col, roughness: .3, metalness: .5 }), gl = std({ color: "#1d2a36", roughness: .1, metalness: .6 });
-      const body = mesh(new THREE.BoxGeometry(1.8, .7, 4.3), b, g); body.position.y = .55; const cab = mesh(new THREE.BoxGeometry(1.6, .55, 2.2), gl, g); cab.position.set(0, 1.15, -.2);
-      [[-.85, 1.4], [.85, 1.4], [-.85, -1.4], [.85, -1.4]].forEach(([wx, wz]) => { const wh = mesh(new THREE.CylinderGeometry(.33, .33, .22, 14), std({ color: "#151515" }), g); wh.rotation.z = Math.PI / 2; wh.position.set(wx, .33, wz); });
-      g.position.set(x, 0, z); g.rotation.y = ry; model.add(g); };
-    car(5.2, 3.4, 0, "#c62828"); car(8.0, 3.4, 0, "#e9ecef"); car(1.4, 29.6, Math.PI / 2, "#1f5fa8"); car(10.6, 29.6, -Math.PI / 2, "#2b2f36");
-    /* lépcsőház a két lakássor között + tetőszerkezet jelzése (vékony párkány) */
-    const stair = mesh(new THREE.BoxGeometry(8.8, 5.6, 2.4), std({ color: "#dcd7cc", roughness: .9, transparent: true, opacity: .55 }), model); stair.position.set(7.6, 2.8, 18.9);
-    for (let k = 0; k < 14; k++) { const st = mesh(new THREE.BoxGeometry(1.1, .18, .3), std({ color: "#9a9a9a" }), model); st.position.set(4.4, .1 + k * .2, 17.9 + k * .16); }
-    /* felirat a talapzat elején */
-    const plate = canvasTex(1024, 160, (g) => { g.fillStyle = "#c9a24a"; g.fillRect(0, 0, 1024, 160); g.fillStyle = "#2a1c0c"; g.font = "800 64px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ZEPHYR APARTMANHÁZ · ZAMÁRDI", 512, 70); g.font = "500 34px Georgia, serif"; g.fillText("Gáspár András utca 58. · M 1:45", 512, 124); });
-    const pl = mesh(new THREE.PlaneGeometry(.32, .05), basic({ map: plate }), turn); pl.position.set(0, -.026, baseD / 2 + .0015);
-    /* elhelyezés: asztalmagasságban, előttünk */
+    /* fedett bejáró a lépcsővel (földszint) és emeleti folyosó/terasz */
+    lbox(0, "#cfc6b4", WALL, Z_HALL, OUT_W - WALL, Z_B - PART, 0, .03);
+    for (let k = 0; k < 15; k++) lbox(0, "#d7d3cb", WALL, Z_B - PART - .3 - k * .26, WALL + 1.0, Z_B - PART - k * .26, 0, .19 * (k + 1), { c: 1 });
+    lbox(1, "#a98a66", WALL + 1.1, Z_HALL, OUT_W - WALL, Z_B - PART, 0, .04);         /* emeleti terasz a bejáró fölött */
+    lbox(1, "#cfd8dc", WALL + 1.1, Z_HALL + .02, OUT_W - WALL, Z_HALL + .06, .04, 1.0, { glass: 1 });
+    /* elöl: Korvett terasza (földszint) és a Fregatt erkélye (emelet) */
+    lbox(0, "#a98a66", 0, -1.45, OUT_W, 0, -.06, .06); lbox(1, "#a98a66", 0, -1.45, OUT_W, 0, -.18, .18);
+    lbox(1, "#cfd8dc", 0, -1.45, OUT_W, -1.4, 0, 1.0, { glass: 1 }); lbox(1, "#cfd8dc", 0, -1.45, .05, 0, 0, 1.0, { glass: 1 }); lbox(1, "#cfd8dc", OUT_W - .05, -1.45, OUT_W, 0, 0, 1.0, { glass: 1 });
+    /* hátul: a Schooner terasza (földszint) és a Kadett emeleti fa terasza oszlopokon, csigalépcsővel */
+    lbox(0, "#a98a66", 0, Z_END, OUT_W, Z_END + 2.9, -.04, .06);
+    lbox(1, "#9b7653", 0, Z_END, OUT_W, Z_END + 3.3, -.2, .2);
+    [[.1, Z_END + 3.1], [OUT_W - .3, Z_END + 3.1]].forEach(([x, z]) => box("#e9e6dc", x, z, x + .2, z + .2, 0, Y1 - .2));
+    lbox(1, "#cfd8dc", 0, Z_END + 3.25, OUT_W, Z_END + 3.3, 0, 1.0, { glass: 1 }); lbox(1, "#cfd8dc", OUT_W - .05, Z_END, OUT_W, Z_END + 3.3, 0, 1.0, { glass: 1 });
+    for (let k = 0; k < 14; k++) { const a = k * .45; P("#8f969c", new THREE.BoxGeometry(.75, .05, .22), M4(-.6 + Math.cos(a) * .4, .2 * (k + 1), Z_END + 2.2 + Math.sin(a) * .4, -a)); }
+    cyl("#7f868c", -.6, Z_END + 2.2, .05, 0, Y1 + 1.0, 8);
+    /* lapos tető attikafallal (a légifelvétel szerint világos, lapos tető) */
+    MAQ.roof = new THREE.Group(); model.add(MAQ.roof);
+    const roofParts = [[new THREE.BoxGeometry(OUT_W, .25, Z_END + 1.45), M4(OUT_W / 2, roofY + .125, (Z_END - 1.45) / 2)]];
+    [[0, -1.45, OUT_W, -1.3], [0, Z_END - .15, OUT_W, Z_END], [0, -1.45, .15, Z_END], [OUT_W - .15, -1.45, OUT_W, Z_END]].forEach(([x0, z0, x1, z1]) => roofParts.push([new THREE.BoxGeometry(x1 - x0, .5, z1 - z0), M4((x0 + x1) / 2, roofY + .5, (z0 + z1) / 2)]));
+    const roofM = mesh(mergeGeoms(roofParts), std({ color: "#c9c9c4", roughness: .85 }), MAQ.roof); roofM.castShadow = true; roofM.receiveShadow = true;
+    /* ablakok és üvegajtók a homlokzaton (az alaprajzok nyílászáróiból, a külső falakon) */
+    Object.keys(UNITS).forEach((id) => {
+      const U = UNITS[id], Pl = planOf(id);
+      (Pl.furn || []).forEach((f) => {
+        if (f[0] !== "window" && f[0] !== "door") return;
+        const q = mapRect(U, f[1], f[2], f[3], f[4]), cx = (q[0] + q[2]) / 2, cz = (q[1] + q[3]) / 2;
+        const onX = cx < WALL + .35 || cx > OUT_W - WALL - .35, onZ = cz < WALL + .4 || cz > Z_END - WALL - .4 || Math.abs(cz - (Z_A - WALL)) < .4;
+        if (!onX && !onZ) return;
+        const door = f[0] === "door", y0 = door ? 0 : .9, h = door ? 2.1 : 1.25;
+        if (onX) { const x = cx < OUT_W / 2 ? -.02 : OUT_W + .02, len = q[3] - q[1]; MAQ.win = MAQ.win || []; MAQ.win.push([U.lvl, x, cz, .05, Math.max(.5, len), y0, h]); }
+        else { const z = cz < Z_END / 2 ? -.02 : Z_END + .02, len = q[2] - q[0]; MAQ.win = MAQ.win || []; MAQ.win.push([U.lvl, cx, z, Math.max(.5, len), .05, y0, h]); }
+      });
+    });
+    (MAQ.win || []).forEach(([lv, x, z, w, d, y0, h]) => { lbox(lv, "#2d4a63", x - w / 2, z - d / 2, x + w / 2, z + d / 2, y0, h, { glass: 1, tall: 1 }); lbox(lv, "#ffffff", x - w / 2 - .04, z - d / 2 - .01, x + w / 2 + .04, z + d / 2 + .01, y0 - .06, .06, { tall: 1 }); });
+
+    /* ---------- az összevont részek kirajzolása ---------- */
+    const mk = (pt, parent) => {
+      const o = pt.opt || {};
+      const mat = o.glass ? std({ color: pt.col, roughness: .1, metalness: .2, transparent: true, opacity: .45, depthWrite: false }) : std({ color: pt.col, roughness: o.flat ? .95 : .8, flatShading: !!o.flat });
+      const m = mesh(mergeGeoms(pt.list), mat, parent); m.castShadow = !o.glass; m.receiveShadow = true; m.userData.tall = !!o.tall; return m;
+    };
+    Object.values(parts).forEach((pt) => mk(pt, model));
+    MAQ.tallBits = [[], []];
+    [0, 1].forEach((lv) => Object.values(lvParts[lv]).forEach((pt) => { const m = mk(pt, MAQ.lv[lv]); if (pt.opt && pt.opt.tall) MAQ.tallBits[lv].push(m); }));
+
+    /* ---------- lakásonkénti kiemelés, felirat, választás ---------- */
+    Object.values(MAQ.apts).forEach((A) => {
+      const col = new THREE.Color(APTCOL[A.id] || "#999");
+      const gm = basic({ color: col, transparent: true, opacity: 0, depthWrite: false });
+      const glow = mesh(new THREE.BoxGeometry(A.bb[2] - A.bb[0] + .2, FLOOR_H - .3, A.bb[3] - A.bb[1] + .2), gm, MAQ.lv[A.lv]);
+      glow.position.set((A.bb[0] + A.bb[2]) / 2, (FLOOR_H - .3) / 2, (A.bb[1] + A.bb[3]) / 2);
+      A.glow = glow; A.gm = gm; A.col = col;
+      glow.userData.xr = { hover: (on) => maqHover(A, on), click: () => maqSelect(A) };
+      T.xr.extra.add(glow); W.objs.push(glow);
+    });
+    maqAvail();
+
+    /* ---------- tájolás: iránytű és a Balaton iránya a talapzat elején ---------- */
+    const rose = canvasTex(512, 512, (g) => {
+      g.translate(256, 256); g.strokeStyle = "#c9a24a"; g.lineWidth = 8; g.beginPath(); g.arc(0, 0, 200, 0, TAU); g.stroke();
+      g.fillStyle = "#e5262f"; g.beginPath(); g.moveTo(0, -190); g.lineTo(44, 0); g.lineTo(-44, 0); g.closePath(); g.fill();
+      g.fillStyle = "#f3efe6"; g.beginPath(); g.moveTo(0, 190); g.lineTo(44, 0); g.lineTo(-44, 0); g.closePath(); g.fill();
+      g.fillStyle = "#f3efe6"; g.font = "900 96px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("É", 0, -240 + 30);
+    });
+    const ro = mesh(new THREE.PlaneGeometry(3.6, 3.6), basic({ map: rose, transparent: true, depthWrite: false }), model);
+    /* a −z (az utca felé) 345°; az észak ettől 15°-kal az óramutató járása szerint */
+    ro.rotation.set(-Math.PI / 2, 0, -15 * D2R); ro.position.set(9.4, .08, 4.5);
+    const lake = canvasTex(1024, 256, (g) => { g.fillStyle = "rgba(58,127,168,.92)"; g.fillRect(0, 0, 1024, 256); g.fillStyle = "#fff"; g.font = "800 70px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("▼ erre a Balaton · kb. 100 m", 512, 128); });
+    const lk = mesh(new THREE.PlaneGeometry(10, 2.5), basic({ map: lake, transparent: true }), model); lk.rotation.set(-Math.PI / 2, 0, Math.PI); lk.position.set(CX, .07, -8.4);
+    /* névtábla a talapzat elején */
+    const plate = canvasTex(1024, 160, (g) => { g.fillStyle = "#c9a24a"; g.fillRect(0, 0, 1024, 160); g.fillStyle = "#2a1c0c"; g.font = "800 60px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ZEPHYR APARTMANHÁZ · ZAMÁRDI", 512, 66); g.font = "500 32px Georgia, serif"; g.fillText("Gáspár András utca 58. · M 1:60 · a hivatalos tervrajz szerint", 512, 124); });
+    const pl = mesh(new THREE.PlaneGeometry(baseW * .9, baseW * .9 * 160 / 1024), basic({ map: plate }), turn); pl.position.set(0, -.024, -(baseD / 2) - .0155); pl.rotation.y = Math.PI;
+
+    /* ---------- fény: a napállás szerint, árnyékkal ---------- */
+    const r = T.sceneEl.renderer; MAQ.shadowWas = r.shadowMap.enabled; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap;
     MAQ.lights = addLights(new THREE.Vector3(.4, .9, .3).normalize(), true);
-    const y = T.inVR ? .92 : -.5, dist = T.inVR ? .62 : .72;
-    const yaw = T.camYaw();
-    stand.position.set(-Math.sin(yaw) * dist, y, -Math.cos(yaw) * dist);
-    stand.rotation.y = yaw;
-    if (!T.inVR) { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.55; }
-    turn.rotation.y = -Math.PI / 2 + .3;   /* a ház felénk, a kert hátul – kissé oldalról */
-    /* asztallap az egész alatt (VR-ben: kényelmes magasság) */
-    const tw = baseD + .16, td = baseW + .22;
-    const table = mesh(new THREE.BoxGeometry(tw, .04, td), std({ color: "#3b2a1d", roughness: .45 }), stand); table.position.y = -.075; table.rotation.y = turn.rotation.y + Math.PI / 2;
-    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const lg = mesh(new THREE.BoxGeometry(.05, .85, .05), std({ color: "#2a1d13", roughness: .5 }), stand); lg.position.set(a * (tw / 2 - .06), -.52, b * (td / 2 - .06)); lg.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), turn.rotation.y + Math.PI / 2); });
-    /* környezet: puha háttér */
-    const bg = mesh(new THREE.SphereGeometry(40, 32, 16), basic({ color: "#1b2a3a", side: THREE.BackSide }), root);
+    MAQ.lights.hemi.intensity = .62; MAQ.lights.amb.intensity = .12;
+    const sun = MAQ.lights.sun; sun.castShadow = true; sun.shadow.mapSize.set(1536, 1536); sun.shadow.bias = -.0004; sun.shadow.normalBias = .002;
+    const sc = sun.shadow.camera; sc.left = -.7; sc.right = .7; sc.top = .7; sc.bottom = -.7; sc.near = .05; sc.far = 6; sc.updateProjectionMatrix();
+    MAQ.sunTgt = new THREE.Object3D(); stand.add(MAQ.sunTgt); sun.target = MAQ.sunTgt;
+    MAQ.day = (T.sunDefaultDay && T.sunDefaultDay()) || "2027-07-15"; MAQ.hour = 15;
+    maqLight();
+
+    /* ---------- elhelyezés: asztalmagasságban, előttünk; a ház utcafrontja felénk ---------- */
+    const y = T.inVR ? .9 : -.42, dist = T.inVR ? .7 : .6, yaw = T.camYaw();
+    stand.position.set(-Math.sin(yaw) * dist, y, -Math.cos(yaw) * dist); stand.rotation.y = yaw;
+    if (!T.inVR) { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.6; }
+    turn.rotation.y = Math.PI + .35;   /* az utca felénk, kissé oldalról – így látszik a parkoló is */
+    /* kerek asztal – a makett szabadon forgatható rajta */
+    const tr = Math.hypot(baseW, baseD) / 2 + .06;
+    const table = mesh(new THREE.CylinderGeometry(tr, tr, .04, 64), std({ color: "#3b2a1d", roughness: .45 }), stand); table.position.y = -.07; table.receiveShadow = true;
+    MAQ.table = table;
+    const leg = mesh(new THREE.CylinderGeometry(.05, .09, .85, 16), std({ color: "#2a1d13", roughness: .5 }), table); leg.position.y = -.44;
+    const foot = mesh(new THREE.CylinderGeometry(.28, .3, .03, 32), std({ color: "#2a1d13", roughness: .5 }), table); foot.position.y = -.87;
+    mesh(new THREE.SphereGeometry(40, 32, 16), basic({ color: "#1b2a3a", side: THREE.BackSide }), root);
     const floor = mesh(new THREE.CircleGeometry(12, 48), std({ color: "#2c3a48", roughness: .95 }), root); floor.rotation.x = -Math.PI / 2; floor.position.y = T.inVR ? 0 : -1.4;
-    MAQ.upper = true;
+    MAQ.upper = true; MAQ.roofOn = false; MAQ.sel = null; MAQ.auto = undefined;
+    W.onClose = () => { try { T.sceneEl.renderer.shadowMap.enabled = MAQ.shadowWas; } catch (e) {} };
     return { tick: maqTick, panel: maqPanel, hud: maqHud };
   }
-  function maqHover(info, on) {
-    info.hov = on;
-    if (!info.label) {
-      info.label = labelSprite([(info.no ? info.no + " · " : "") + info.name, info.lock ? "saját használat – nem foglalható" : (info.where + " · csippents: belépés")], { size: 6.5, fs: 50 });
-      info.label.position.set((info.bb[0] + info.bb[2]) / 2, 3.2, (info.bb[1] + info.bb[3]) / 2); info.g.add(info.label);
-    }
-    info.label.visible = !!on;
+
+  /* bútorok az alaprajz tereptárgyaiból – egyszerű, de felismerhető formák */
+  function furnish(lv, U, Pl, lbox) {
+    (Pl.furn || []).forEach((f) => {
+      const [type, x, y, w0, d0, , rot] = f; if (["door", "window", "area", "lane", "stairs"].includes(type) || !(w0 > .05 && d0 > .05)) return;
+      const sw = Math.abs(rot || 0) % 180 === 90, w = sw ? d0 : w0, d = sw ? w0 : d0, cx = x + w0 / 2, cy = y + d0 / 2;
+      const q = mapRect(U, cx - w / 2, cy - d / 2, w, d); const [x0, z0, x1, z1] = q, mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
+      const long = (x1 - x0) > (z1 - z0);
+      switch (type) {
+        case "bed": lbox(lv, "#8d6e52", x0, z0, x1, z1, .03, .3); lbox(lv, "#f7f4ee", x0 + .04, z0 + .04, x1 - .04, z1 - .04, .33, .18);
+          lbox(lv, "#3d8fe2", x0 + .04, z0 + .04 + (z1 - z0) * .35, x1 - .04, z1 - .04, .5, .03);   /* takaró */
+          if (long) { lbox(lv, "#ffffff", x0 + .1, z0 + .15, x0 + .55, z1 - .15, .51, .12); } else { lbox(lv, "#ffffff", x0 + .15, z0 + .1, x1 - .15, z0 + .5, .51, .12); } break;
+        case "sofa": lbox(lv, "#7d8a96", x0, z0, x1, z1, .03, .42);
+          if (long) lbox(lv, "#6b7884", x0, z1 - .22, x1, z1, .45, .38); else lbox(lv, "#6b7884", x1 - .22, z0, x1, z1, .45, .38); break;
+        case "table4": case "table6": case "table2": case "table5": case "table":
+          lbox(lv, "#9c6b3f", x0, z0, x1, z1, .72, .05); [[x0, z0], [x1 - .06, z0], [x0, z1 - .06], [x1 - .06, z1 - .06]].forEach(([a, b]) => lbox(lv, "#6b4426", a, b, a + .06, b + .06, .03, .7)); break;
+        case "chair": lbox(lv, "#7a5a3a", x0 + .05, z0 + .05, x1 - .05, z1 - .05, .43, .05); lbox(lv, "#7a5a3a", x0 + .05, z0 + .05, x1 - .05, z0 + .1, .48, .45); break;
+        case "shower": lbox(lv, "#e6eef2", x0, z0, x1, z1, .03, .06); lbox(lv, "#bfe3f0", x0, z0, x1, z0 + .03, .09, 1.9, { glass: 1 }); lbox(lv, "#bfe3f0", x0, z0, x0 + .03, z1, .09, 1.9, { glass: 1 }); break;
+        case "wc": lbox(lv, "#ffffff", x0 + .05, z0 + .05, x1 - .05, z1 - .05, .03, .4); break;
+        case "sink": lbox(lv, "#ffffff", x0, z0, x1, z1, .78, .12); break;
+        case "counter": lbox(lv, "#e9e6df", x0, z0, x1, z1, .03, .85); lbox(lv, "#3b3b3b", x0, z0, x1, z1, .88, .04); break;
+        case "washer": lbox(lv, "#f2f2f2", x0, z0, x1, z1, .03, .85); break;
+        case "tv": lbox(lv, "#1a1a1a", x0, z0, x1, z1, .9, .45); break;
+        case "shelf": lbox(lv, "#c9a77b", x0, z0, x1, z1, .03, 1.6); break;
+        default: {
+          const lab = String(f[5] || ""), h = /szekrény/.test(lab) ? 2.0 : /hűtő/.test(lab) ? 1.75 : /klíma|bojler/.test(lab) ? 0 : /fotel|pouf/.test(lab) ? .45 : /asztal/.test(lab) ? .74 : .55;
+          if (h > 0) lbox(lv, /szekrény/.test(lab) ? "#c9b28f" : /hűtő/.test(lab) ? "#f4f4f4" : /fotel/.test(lab) ? "#8a7a6a" : "#cbb894", x0, z0, x1, z1, .03, h);
+        }
+      }
+    });
   }
-  function maqEnter(info, hit) {
-    if (info.lock) return;
-    /* a rámutatott ponthoz legközelebbi panoráma a lakásban */
-    let best = (T.GROUPS.find((q) => q.id === info.id) || {}).entry;
-    if (hit && hit.point) {
-      const lp = MAQ.model.worldToLocal(hit.point.clone());
-      let bd = 1e9;
-      Object.keys(T.SCENES).forEach((k) => { const s = T.SCENES[k]; if (s.g !== info.id || !s.m) return; const [sx, sz] = planToSite(s.m[0], s.m[1], info.y0); const d = Math.hypot(sx - lp.x, sz - lp.z); if (d < bd) { bd = d; best = k; } });
+  /* ha a foglalásban már van időpont: szabad (zöld) / foglalt (piros) */
+  function maqAvail() {
+    let S = null; try { S = T.vrPanel && T.vrPanel.S && T.vrPanel.S.book; } catch (e) {}
+    const B = window.ZephyrBooking && ZephyrBooking.vr;
+    MAQ.dates = S && S.ci && S.co ? { ci: S.ci, co: S.co } : null;
+    Object.values(MAQ.apts).forEach((A) => {
+      A.free = null;
+      if (!MAQ.dates || !B || A.lock) return;
+      let ok = true; for (let d = MAQ.dates.ci; d < MAQ.dates.co; d = addDay(d, 1)) if (!B.free(A.id, d)) { ok = false; break; }
+      A.free = ok;
+    });
+  }
+  function addDay(s, n) { const [y, m, d] = s.split("-").map(Number); const t = new Date(y, m - 1, d + n); return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0"); }
+  function maqLight() {
+    const L = MAQ.lights; if (!L) return;
+    const s = sunDirFor(MAQ.day, MAQ.hour); MAQ.sunInfo = s.p;
+    const v = s.v.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), MAQ.turn.rotation.y + MAQ.stand.rotation.y);
+    MAQ.stand.updateMatrixWorld(true);
+    const c = new THREE.Vector3(); MAQ.stand.getWorldPosition(c);
+    MAQ.sunTgt.position.set(0, 0, 0);
+    L.sun.position.copy(c).addScaledVector(v, 3);
+    const low = s.p.el < 0; L.sun.intensity = low ? .2 : 1.15; L.sun.color.set(s.p.el < 12 ? 0xffc48a : 0xfff0d8);
+  }
+  function maqHover(A, on) {
+    A.hov = on;
+    if (!A.label) {
+      const cap = (() => { try { const c = ZephyrBooking.vr.cfg(); const a = c && c.apartments.find((q) => q.id === A.id); return a ? a.cap + " fő · " : ""; } catch (e) { return ""; } })();
+      A.label = labelSprite([(A.no ? A.no + " · " : "") + A.name, A.lock ? "saját lakás – nem foglalható" : `${cap}kb. ${Math.round(A.area)} m² · csippents rá`], { size: 7.5, fs: 50 });
+      A.label.position.set((A.bb[0] + A.bb[2]) / 2, FLOOR_H + 2.6, (A.bb[1] + A.bb[3]) / 2); MAQ.lv[A.lv].add(A.label);
     }
+    A.label.visible = !!on || MAQ.sel === A;
+  }
+  /* választás: kártya két gombbal – belépés a lakásba / foglalás ezzel a lakással */
+  function maqSelect(A) {
+    if (MAQ.sel && MAQ.sel !== A && MAQ.sel.label) MAQ.sel.label.visible = false;
+    MAQ.sel = A; maqHover(A, true);
+    if (MAQ.card) { T.xr.extra.delete(MAQ.card); W.objs = W.objs.filter((o) => o !== MAQ.card); MAQ.card.parent && MAQ.card.parent.remove(MAQ.card); MAQ.card = null; }
+    const CW = 1000, CH = 420, btns = [];
+    const tx = canvasTex(CW, CH, (g) => {
+      g.fillStyle = "rgba(9,34,70,.94)"; g.beginPath(); g.roundRect ? g.roundRect(6, 6, CW - 12, CH - 12, 40) : g.rect(6, 6, CW - 12, CH - 12); g.fill(); g.lineWidth = 8; g.strokeStyle = "#" + A.col.getHexString(); g.stroke();
+      g.fillStyle = "#ffd166"; g.font = "800 64px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText((A.no ? A.no + " · " : "") + A.name, 50, 80);
+      g.fillStyle = "#fff"; g.font = "600 38px system-ui, sans-serif";
+      const st = A.free === true ? "✓ szabad a választott időpontban" : A.free === false ? "✕ foglalt a választott időpontban" : `kb. ${Math.round(A.area)} m² · ${A.lv ? "emelet" : "földszint"}`;
+      g.fillText(A.lock ? "A tulajdonos saját lakása – nem foglalható" : st, 50, 150);
+      const bt = (x, w, label, on, fn) => { btns.push({ x, y: 220, w, h: 150, fn }); g.fillStyle = on ? "#ffd166" : "rgba(255,255,255,.14)"; g.beginPath(); g.roundRect ? g.roundRect(x, 220, w, 150, 30) : g.rect(x, 220, w, 150); g.fill(); g.lineWidth = 4; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke(); g.fillStyle = on ? "#0b2f5e" : "#fff"; g.font = "800 46px system-ui, sans-serif"; g.textAlign = "center"; g.fillText(label, x + w / 2, 296); };
+      if (A.lock) bt(50, CW - 100, "‹ Bezárás", false, () => maqDeselect());
+      else { bt(50, 430, "👁 Belépés", false, () => maqEnter(A)); bt(500, 450, "📅 Foglalás", true, () => maqBook(A)); }
+    });
+    const card = mesh(new THREE.PlaneGeometry(.4, .4 * CH / CW), basic({ map: tx, transparent: true, depthTest: false, depthWrite: false }), MAQ.stand);
+    card.renderOrder = 996; card.position.set(0, .36, 0);
+    card.userData.xr = { click: (h) => { if (!h || !h.uv) return; const x = h.uv.x * CW, y = (1 - h.uv.y) * CH; const b = btns.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) b.fn(); } };
+    T.xr.extra.add(card); W.objs.push(card); MAQ.card = card;
+  }
+  function maqDeselect() { if (MAQ.sel && MAQ.sel.label) MAQ.sel.label.visible = false; MAQ.sel = null; if (MAQ.card) { T.xr.extra.delete(MAQ.card); MAQ.card.visible = false; } }
+  function maqEnter(A) {
+    if (A.lock) return;
+    const best = (T.GROUPS.find((q) => q.id === A.id) || {}).entry;
     W.close(() => T.go(best));
   }
+  function maqBook(A) { if (A.lock) return; W.close(() => { try { T.book(A.id); } catch (e) { if (window.ZephyrBooking) ZephyrBooking.open({ apt: A.id }); } }); }
   function maqTick(dt) {
-    Object.values(MAQ.apts).forEach((a) => { const tgt = a.hov ? .28 : 0; a.glowM.opacity += (tgt - a.glowM.opacity) * Math.min(1, dt * 8); a.g.visible = a.lvl === 0 || MAQ.upper; });
-    if (MAQ.roof) { MAQ.roof.visible = MAQ.roofOn && MAQ.upper; MAQ.shell.children[1].visible = MAQ.upper; }
-    if (!T.inVR && !MAQ.drag && MAQ.auto !== false) MAQ.turn.rotation.y += dt * .06;
+    Object.values(MAQ.apts).forEach((A) => {
+      const show = A.lv === 0 || MAQ.upper;
+      MAQ.lv[A.lv].visible = A.lv === 0 || MAQ.upper;
+      const base = A.free === true ? .2 : A.free === false ? .16 : 0, tgt = A.hov || MAQ.sel === A ? .34 : base;
+      if (A.free === true) A.gm.color.set("#3fb37f"); else if (A.free === false) A.gm.color.set("#e5262f"); else A.gm.color.copy(A.col);
+      A.gm.opacity += (tgt - A.gm.opacity) * Math.min(1, dt * 8); A.glow.visible = show;
+    });
+    MAQ.roof.visible = MAQ.roofOn && MAQ.upper;
+    /* tetővel: teljes magasságú homlokzat (ablakokkal); tető nélkül: metszett „babaház” nézet */
+    [0, 1].forEach((lv) => { const tall = MAQ.roofOn || (lv === 0 && MAQ.upper); MAQ.shell[lv].forEach((m) => (m.visible = m.userData.tall === tall)); MAQ.tallBits[lv].forEach((m) => (m.visible = tall)); });
+    if (!T.inVR && !MAQ.drag && MAQ.auto !== false) MAQ.turn.rotation.y += dt * .05;
+    MAQ.lt = (MAQ.lt || 0) + dt; if (MAQ.lt > .25) { MAQ.lt = 0; maqLight(); }
   }
+  const hhmm = (h) => `${Math.floor(h)}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
+  function sunLine() { const p = MAQ.sunInfo || { az: 0, el: 0 }; return p.el < 0 ? "a nap már lement" : `a nap ${["É", "ÉK", "K", "DK", "D", "DNy", "Ny", "ÉNy"][Math.round(p.az / 45) % 8]} felől, ${Math.round(p.el)}°`; }
   function maqPanel(P) {
-    P.title("A ház makettje", "Mutass egy lakásra · csippentés = belépés");
-    P.row(0, "Forgatás: csippentsd meg a talapzatot, és húzd.", "#ffffff");
-    P.row(1, "Földszint: Korvett (1), Dingi (2), Schooner (5)", "#ffd166");
-    P.row(2, "Emelet: Fregatt (3), Kalóz (4), Kadett (6)", "#ffd166");
-    P.buttons([[MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }], [MAQ.roofOn ? "Tető ki" : "Tető be", () => { MAQ.roofOn = !MAQ.roofOn; }], ["⟲", () => MAQ.turn.rotation.y -= .4], ["⟳", () => MAQ.turn.rotation.y += .4], ["‹ Vissza", () => W.close()]]);
+    P.title("A ház makettje", "a hivatalos tervrajz szerint · M 1:60");
+    P.row(0, "Csippents egy lakásra: belépés vagy foglalás", "#ffffff");
+    P.row(1, MAQ.dates ? "Zöld = szabad, piros = foglalt a napjaidon" : "Forgatás: fogd meg a talapzatot és húzd", "#ffd166");
+    P.row(2, `Fény: ${MAQ.day.slice(5).replace("-", ".")}. ${hhmm(MAQ.hour)} – ${sunLine()}`, "#ffd166");
+    P.buttons([[MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }], [MAQ.roofOn ? "Tető ki" : "Tető be", () => { MAQ.roofOn = !MAQ.roofOn; }],
+      ["☀ −1 ó", () => { MAQ.hour = Math.max(5, MAQ.hour - 1); maqLight(); }], ["☀ +1 ó", () => { MAQ.hour = Math.min(21, MAQ.hour + 1); maqLight(); }], ["‹ Vissza", () => W.close()]]);
   }
   function maqHud(H) {
-    H.title("A ház makettje", "Koppints egy lakásra a belépéshez");
-    H.buttons([[MAQ.upper ? "Emelet elrejtése" : "Emelet mutatása", () => { MAQ.upper = !MAQ.upper; }], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["⟲", () => { MAQ.auto = false; MAQ.turn.rotation.y -= .4; }], ["⟳", () => { MAQ.auto = false; MAQ.turn.rotation.y += .4; }]]);
-    H.hint("Körbenézés: húzd a képet · a makett lassan forog");
+    H.title("A ház makettje", "A hivatalos tervrajz szerint · koppints egy lakásra: belépés vagy foglalás");
+    H.buttons([[MAQ.upper ? "Emelet elrejtése" : "Emelet mutatása", () => { MAQ.upper = !MAQ.upper; }], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }],
+      ["☀ korábban", () => { MAQ.hour = Math.max(5, MAQ.hour - 1); maqLight(); }], ["☀ később", () => { MAQ.hour = Math.min(21, MAQ.hour + 1); maqLight(); }],
+      ["⟲", () => { MAQ.auto = false; MAQ.turn.rotation.y -= .4; }], ["⟳", () => { MAQ.auto = false; MAQ.turn.rotation.y += .4; }]]);
+    H.hint(`Fény: ${MAQ.day.replace(/-/g, ".")}. ${hhmm(MAQ.hour)} – ${sunLine()}${MAQ.dates ? " · zöld = szabad, piros = foglalt" : ""}`);
   }

@@ -202,6 +202,7 @@
     if (!W.active) { if (after) after(); return; }
     W.active = false; W.gen = (W.gen || 0) + 1;
     audioStop();
+    if (W.onClose) { try { W.onClose(); } catch (e) {} W.onClose = null; }
     const cvs = T.sceneEl.canvas;
     cvs.removeEventListener("pointermove", on2DMove); cvs.removeEventListener("pointerdown", on2DDown); cvs.removeEventListener("pointerup", on2DUp); cvs.style.cursor = "";
     removeEventListener("keydown", kd); removeEventListener("keyup", ku);
