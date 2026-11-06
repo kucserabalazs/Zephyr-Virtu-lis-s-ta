@@ -219,6 +219,8 @@
     S.del = S.wa / WA_MAX * .55;
     S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; });   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
     /* fizika (a vitorlázás modellje, a nagyobb hajóhoz igazítva) */
+    /* a szél lassan leng (±7°) – mint a Balatonon; a pálya ugyanaz marad */
+    S.wf = C.wf + Math.sin(S.t / 47 + C.lvl) * 7 * D2R + Math.sin(S.t / 13) * 2 * D2R;
     const twa = Math.abs(wrapA(S.wf - S.b)) * R2D;
     const spin = twa > 120 && S.st === "race";
     const vt = polar(twa, spin) * KN * 1.32 * (S.st === "pre" ? .7 : 1) * (S.tws / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
@@ -255,7 +257,11 @@
     if (S.st === "pre") { [-30, -10, -5, -4, -3, -2, -1].forEach((tt) => { if (S.t >= tt && !S.horns[tt]) { S.horns[tt] = 1; if (tt === -30 || tt === -10) horn(.7, .14); else beep(); } }); if (S.t >= 0) { S.st = "race"; horn(1.5, .2); S.msg = "RAJT! Irány az 1. bója"; S.msgT = 5; } }
     /* bójakerülés: a bója 26 m-es körén belül; a bója bal kéz felől maradjon (a hajó a bója jobbján halad el) */
     if (S.st === "race" && !S.fin) {
-      if (S.next < S.marks.length) { const m = S.marks[S.next], d = Math.hypot(m.x - S.x, m.z - S.z); if (d < 26) { S.next++; horn(.3, .1); S.msg = S.next < S.marks.length ? `✓ ${S.next}. bója – jöhet a ${S.next + 1}.` : "✓ Utolsó bója – irány a befutó!"; S.msgT = 4; } }
+      if (S.next < S.marks.length) { const m = S.marks[S.next], d = Math.hypot(m.x - S.x, m.z - S.z);
+        /* a bóját bal kéz felől (a hajó bal oldalán) kell hagyni: a bója a hajó bal oldalára essen, amikor elhaladunk mellette */
+        if (d < 26) { const port = [fz, -fx], side2 = (m.x - S.x) * port[0] + (m.z - S.z) * port[1];
+          if (side2 > -3) { S.next++; horn(.3, .1); S.msg = S.next < S.marks.length ? `✓ ${S.next}. bója – jöhet a ${S.next + 1}.` : "✓ Utolsó bója – irány a befutó!"; S.msgT = 4; S.wrongT = 0; }
+          else if (!S.wrongT || W.t - S.wrongT > 6) { S.wrongT = W.t; S.msg = "⚠ Rossz oldal! A bóját BAL kéz felől kerüld – fordulj vissza és menj el mellette jobbról"; S.msgT = 5; beep(); } } }
       else if (crossLine(S)) { S.fin = S.t; S.res.push({ n: "Zephyr (te)", t: S.t, me: true }); horn(1.2, .2); S.msg = "BEFUTÓ!"; S.msgT = 6; }
     }
     S.prevSide = lineSide(S);
@@ -301,6 +307,10 @@
       if (W.t - r.lastTack > 14 && ((r.tack > 0 && relD >= 22 * D2R) || (r.tack < 0 && relD <= -22 * D2R))) { r.tack = -r.tack; r.lastTack = W.t; } }
     /* ütközés elkerülése (a saját hajónkkal és egymással) */
     [S].concat(S.riv).forEach((o) => { if (o === r) return; const dx = o.x - r.x, dz = o.z - r.z, d = Math.hypot(dx, dz); if (d < 22) want += (wrapA(Math.atan2(dx, -dz) - r.b) > 0 ? -1 : 1) * .45 * (1 - d / 22); });
+    /* a kitérés se fordítsa a hajót a szélbe (holtszög): legalább 40°-kal a szél mellett maradjon */
+    { const relW = wrapA(want - S.wf); if (Math.abs(relW) < 40 * D2R) want = S.wf + (relW === 0 ? r.tack : Math.sign(relW)) * 40 * D2R; }
+    /* egymásba se csússzanak: fizikai szétválasztás */
+    S.riv.forEach((o) => { if (o === r) return; const dx = r.x - o.x, dz = r.z - o.z, d = Math.hypot(dx, dz); if (d < 9 && d > .01) { const k = (9 - d) / 2; r.x += dx / d * k; r.z += dz / d * k; o.x -= dx / d * k; o.z -= dz / d * k; } });
     r.b += clamp(wrapA(want - r.b), -.28 * dt, .28 * dt);
     const twa = Math.abs(wrapA(S.wf - r.b)) * R2D, spin = twa > 120 && S.st === "race";
     const vt = polar(twa, spin) * KN * 1.32 * r.skill * (S.st === "pre" ? .6 : 1) * (S.tws / (12 * KN)) ** .5 * (r.fin ? .4 : 1);
