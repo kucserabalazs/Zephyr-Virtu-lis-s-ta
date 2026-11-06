@@ -3696,13 +3696,74 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   /* VR-es ajánlatkérés: a megadott időszakra minden apartman szabad-e, és mennyibe kerül (a felület megnyitása nélkül) */
   let qMaps = null, qAt = 0;
-  async function vrQuote(q) {
+  async function vrReady(force) {
     if (!cfg) { try { cfg = await api("/config"); if (!cfg || !Array.isArray(cfg.apartments)) throw 0; } catch (e) { cfg = demoConfig(); } }
-    if (!qMaps || Date.now() - qAt > 120000) {
+    if (force || !qMaps || Date.now() - qAt > 120000) {
       const to = addD(cfg.today, Math.min(420, (cfg.horizon_days || 400) + 1)), ids = cfg.apartments.map((a) => a.id);
       const res = await Promise.all(ids.map((id) => cfg.demo ? Promise.resolve({ days: demoDays(cfg, id) }) : api("/availability?apt=" + id + "&from=" + cfg.today + "&to=" + to)));
       qMaps = {}; ids.forEach((id, k) => { const m = {}; res[k].days.forEach((d) => (m[d.d] = d)); qMaps[id] = m; }); qAt = Date.now();
     }
+    return { cfg, maps: qMaps };
+  }
+  /* ---------- VR-ben, kilépés nélkül végigvihető foglalás (a 3D-s panel ezt hívja) ---------- */
+  /* egy éjszaka a naptárban: hány apartman szabad, és a legolcsóbb ára */
+  function vrNight(d) {
+    if (!cfg || !qMaps) return null;
+    let free = 0, min = 0;
+    cfg.apartments.forEach((a) => { const x = (qMaps[a.id] || {})[d]; if (x && x.free) { free++; const p = x.p || a.price; if (!min || p < min) min = p; } });
+    return { free, all: cfg.apartments.length, min };
+  }
+  /* ár tételesen (ugyanaz a számítás, mint a 2D űrlapon): szállásdíj, kedvezmény, IFA, összesen, előleg */
+  function vrPrice(q) {
+    if (!cfg || !qMaps || !q || !q.ci || !q.co) return null;
+    const n = diff(q.ci, q.co); let acc = 0; const byApt = {};
+    for (let d = q.ci; d < q.co; d = addD(d, 1)) (q.apts || []).forEach((id) => { const a = cfg.apartments.find((x) => x.id === id) || {}; const p = ((qMaps[id] || {})[d] || {}).p || a.price || 0; byApt[id] = (byApt[id] || 0) + p; acc += p; });
+    const g = window.ZephyrGame && window.ZephyrGame.discount ? window.ZephyrGame.discount() : null;
+    const disc = g ? Math.round(acc * g.pct / 100 / 100) * 100 : 0;
+    const tax = (q.adults || 0) * n * (cfg.tax || 0), total = acc - disc + tax, dep = Math.round(total * (cfg.deposit_pct || 0) / 100 / 100) * 100;
+    return { n, acc, byApt, disc, discPct: g ? g.pct : 0, tax, total, dep, rest: total - dep, taxPer: cfg.tax || 0, depPct: cfg.deposit_pct || 0 };
+  }
+  /* a 2D űrlappal azonos ellenőrzés; hiba esetén a mező neve is visszajön, hogy a VR-panel oda ugorjon */
+  function vrCheck(F, q) {
+    const v = (k) => String(F[k] == null ? "" : F[k]).trim();
+    if (!v("name") || v("name").split(/\s+/).length < 2) return { err: "Kérjük, add meg a teljes neved (vezeték- és keresztnév).", field: "name" };
+    if (v("phone").replace(/\D/g, "").length < 8) return { err: "Kérjük, adj meg érvényes telefonszámot.", field: "phone" };
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v("email"))) return { err: "Kérjük, adj meg érvényes e-mail címet.", field: "email" };
+    if (v("birth_place").length < 2) return { err: "Kérjük, add meg a születési helyed.", field: "birth_place" };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v("birth_date")) || isNaN(pd(v("birth_date"))) || v("birth_date") > addD(cfg.today, -18 * 365)) return { err: "Kérjük, add meg a születési időd ÉÉÉÉ-HH-NN alakban (a foglalónak nagykorúnak kell lennie).", field: "birth_date" };
+    if (!/^[A-Za-z0-9-]{5,20}$/.test(v("id_doc").replace(/\s/g, ""))) return { err: "Kérjük, add meg a személyi igazolványod vagy útleveled számát.", field: "id_doc" };
+    if ((q.apts || []).length > (q.adults || 0)) return { err: "Minden apartmanhoz legalább egy felnőtt vendég kell.", field: null };
+    if (!F.accept) return { err: "A foglaláshoz el kell fogadnod a házirendet és az adatkezelési tájékoztatót.", field: "accept" };
+    return null;
+  }
+  async function vrSubmit(q, F) {
+    await vrReady();
+    const bad = vrCheck(F, q); if (bad) return bad;
+    /* foglalás előtt friss szabad-napok: ha közben valaki lefoglalta, szólunk */
+    try { await vrReady(true); } catch (e) {}
+    const busy = (q.apts || []).filter((id) => { for (let d = q.ci; d < q.co; d = addD(d, 1)) { const x = (qMaps[id] || {})[d]; if (!x || !x.free) return true; } return false; });
+    if (busy.length) return { err: "Közben valaki lefoglalta: " + busy.map((id) => (cfg.apartments.find((a) => a.id === id) || {}).name || id).join(", ") + ". Kérjük, válassz újra.", field: null, stale: true };
+    if (cfg.demo) { await new Promise((r) => setTimeout(r, 700)); return { ok: true, ref: "ZEPHYR-DEMO", demo: true }; }
+    const as = (q.apts || []).map((id) => cfg.apartments.find((a) => a.id === id)).filter(Boolean);
+    const out = as.map((a) => ({ apt: a.id, a, adults: 0, children: 0 }));
+    const put = (k, n) => { let i = 0, guard = 0; while (n > 0 && guard++ < 200) { const o = out[i % out.length]; if (o.adults + o.children < o.a.cap) { o[k]++; n--; } i++; } };
+    /* előbb minden apartmanba egy felnőtt, utána a többi vendég */
+    out.forEach((o) => { if (q.adults > out.reduce((c, x) => c + x.adults, 0)) o.adults++; });
+    put("adults", q.adults - out.reduce((c, x) => c + x.adults, 0)); put("children", q.children || 0);
+    const g = window.ZephyrGame && window.ZephyrGame.discount ? window.ZephyrGame.discount() : null;
+    const body = { apt: q.apts[0], checkin: q.ci, checkout: q.co, adults: q.adults, children: q.children || 0, name: String(F.name).trim(), phone: String(F.phone).trim(), email: String(F.email).trim(),
+      birth_place: String(F.birth_place).trim(), birth_date: F.birth_date, id_doc: String(F.id_doc).replace(/\s/g, ""), note: (F.note || "") + (F.note ? " " : "") + "[VR-ben foglalva]", accept: true, website: "" };
+    if (out.length > 1) body.apts = out.map((o) => ({ apt: o.apt, adults: o.adults, children: o.children }));
+    if (g) body.game = g.code;
+    try {
+      const r = await api("/book", { method: "POST", body });
+      if (g && window.ZephyrGame.used) window.ZephyrGame.used();
+      qMaps = null;
+      return { ok: true, ref: r && r.ref, demo: false };
+    } catch (e) { return { err: e.message || "Hiba történt a küldéskor.", field: null }; }
+  }
+  async function vrQuote(q) {
+    await vrReady();
     const n = diff(q.ci, q.co), minN = cfg.min_nights || 1, lead = addD(cfg.today, cfg.lead_days || 0);
     if (q.ci < lead) return { err: "Ilyen korán már nem foglalható – válassz későbbi érkezést." };
     if (n < minN) return { err: `Legalább ${minN} éjszakára foglalható.` };
@@ -4328,7 +4389,8 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     st.loading = false; render();
   }
 
-  window.ZephyrBooking = { open, close, isOpen, apiUrl, quote: vrQuote, reset: () => { cfg = null; qMaps = null; } };
+  window.ZephyrBooking = { open, close, isOpen, apiUrl, quote: vrQuote, reset: () => { cfg = null; qMaps = null; },
+    vr: { ready: vrReady, night: vrNight, price: vrPrice, check: vrCheck, submit: vrSubmit, cfg: () => cfg, free: (id, d) => !!(qMaps && qMaps[id] && qMaps[id][d] && qMaps[id][d].free), docs: () => cfg ? { rules: cfg.rules_url, privacy: cfg.privacy_url } : {} } };
 })();
 /* Zephyr Apartmanház – tulajdonosi felület (jelszóval védett admin a foglalási ablakban)
    Megnyitás: a foglalási ablak „Tulajdonosi belépés” gombja, vagy a link végére írt #foglalas-admin */

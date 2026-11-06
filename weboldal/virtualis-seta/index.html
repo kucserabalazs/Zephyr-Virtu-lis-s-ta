@@ -1841,13 +1841,74 @@ html.zdoc-lock, html.zdoc-lock body { overflow: hidden; }
   }
   /* VR-es ajánlatkérés: a megadott időszakra minden apartman szabad-e, és mennyibe kerül (a felület megnyitása nélkül) */
   let qMaps = null, qAt = 0;
-  async function vrQuote(q) {
+  async function vrReady(force) {
     if (!cfg) { try { cfg = await api("/config"); if (!cfg || !Array.isArray(cfg.apartments)) throw 0; } catch (e) { cfg = demoConfig(); } }
-    if (!qMaps || Date.now() - qAt > 120000) {
+    if (force || !qMaps || Date.now() - qAt > 120000) {
       const to = addD(cfg.today, Math.min(420, (cfg.horizon_days || 400) + 1)), ids = cfg.apartments.map((a) => a.id);
       const res = await Promise.all(ids.map((id) => cfg.demo ? Promise.resolve({ days: demoDays(cfg, id) }) : api("/availability?apt=" + id + "&from=" + cfg.today + "&to=" + to)));
       qMaps = {}; ids.forEach((id, k) => { const m = {}; res[k].days.forEach((d) => (m[d.d] = d)); qMaps[id] = m; }); qAt = Date.now();
     }
+    return { cfg, maps: qMaps };
+  }
+  /* ---------- VR-ben, kilépés nélkül végigvihető foglalás (a 3D-s panel ezt hívja) ---------- */
+  /* egy éjszaka a naptárban: hány apartman szabad, és a legolcsóbb ára */
+  function vrNight(d) {
+    if (!cfg || !qMaps) return null;
+    let free = 0, min = 0;
+    cfg.apartments.forEach((a) => { const x = (qMaps[a.id] || {})[d]; if (x && x.free) { free++; const p = x.p || a.price; if (!min || p < min) min = p; } });
+    return { free, all: cfg.apartments.length, min };
+  }
+  /* ár tételesen (ugyanaz a számítás, mint a 2D űrlapon): szállásdíj, kedvezmény, IFA, összesen, előleg */
+  function vrPrice(q) {
+    if (!cfg || !qMaps || !q || !q.ci || !q.co) return null;
+    const n = diff(q.ci, q.co); let acc = 0; const byApt = {};
+    for (let d = q.ci; d < q.co; d = addD(d, 1)) (q.apts || []).forEach((id) => { const a = cfg.apartments.find((x) => x.id === id) || {}; const p = ((qMaps[id] || {})[d] || {}).p || a.price || 0; byApt[id] = (byApt[id] || 0) + p; acc += p; });
+    const g = window.ZephyrGame && window.ZephyrGame.discount ? window.ZephyrGame.discount() : null;
+    const disc = g ? Math.round(acc * g.pct / 100 / 100) * 100 : 0;
+    const tax = (q.adults || 0) * n * (cfg.tax || 0), total = acc - disc + tax, dep = Math.round(total * (cfg.deposit_pct || 0) / 100 / 100) * 100;
+    return { n, acc, byApt, disc, discPct: g ? g.pct : 0, tax, total, dep, rest: total - dep, taxPer: cfg.tax || 0, depPct: cfg.deposit_pct || 0 };
+  }
+  /* a 2D űrlappal azonos ellenőrzés; hiba esetén a mező neve is visszajön, hogy a VR-panel oda ugorjon */
+  function vrCheck(F, q) {
+    const v = (k) => String(F[k] == null ? "" : F[k]).trim();
+    if (!v("name") || v("name").split(/\s+/).length < 2) return { err: "Kérjük, add meg a teljes neved (vezeték- és keresztnév).", field: "name" };
+    if (v("phone").replace(/\D/g, "").length < 8) return { err: "Kérjük, adj meg érvényes telefonszámot.", field: "phone" };
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v("email"))) return { err: "Kérjük, adj meg érvényes e-mail címet.", field: "email" };
+    if (v("birth_place").length < 2) return { err: "Kérjük, add meg a születési helyed.", field: "birth_place" };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v("birth_date")) || isNaN(pd(v("birth_date"))) || v("birth_date") > addD(cfg.today, -18 * 365)) return { err: "Kérjük, add meg a születési időd ÉÉÉÉ-HH-NN alakban (a foglalónak nagykorúnak kell lennie).", field: "birth_date" };
+    if (!/^[A-Za-z0-9-]{5,20}$/.test(v("id_doc").replace(/\s/g, ""))) return { err: "Kérjük, add meg a személyi igazolványod vagy útleveled számát.", field: "id_doc" };
+    if ((q.apts || []).length > (q.adults || 0)) return { err: "Minden apartmanhoz legalább egy felnőtt vendég kell.", field: null };
+    if (!F.accept) return { err: "A foglaláshoz el kell fogadnod a házirendet és az adatkezelési tájékoztatót.", field: "accept" };
+    return null;
+  }
+  async function vrSubmit(q, F) {
+    await vrReady();
+    const bad = vrCheck(F, q); if (bad) return bad;
+    /* foglalás előtt friss szabad-napok: ha közben valaki lefoglalta, szólunk */
+    try { await vrReady(true); } catch (e) {}
+    const busy = (q.apts || []).filter((id) => { for (let d = q.ci; d < q.co; d = addD(d, 1)) { const x = (qMaps[id] || {})[d]; if (!x || !x.free) return true; } return false; });
+    if (busy.length) return { err: "Közben valaki lefoglalta: " + busy.map((id) => (cfg.apartments.find((a) => a.id === id) || {}).name || id).join(", ") + ". Kérjük, válassz újra.", field: null, stale: true };
+    if (cfg.demo) { await new Promise((r) => setTimeout(r, 700)); return { ok: true, ref: "ZEPHYR-DEMO", demo: true }; }
+    const as = (q.apts || []).map((id) => cfg.apartments.find((a) => a.id === id)).filter(Boolean);
+    const out = as.map((a) => ({ apt: a.id, a, adults: 0, children: 0 }));
+    const put = (k, n) => { let i = 0, guard = 0; while (n > 0 && guard++ < 200) { const o = out[i % out.length]; if (o.adults + o.children < o.a.cap) { o[k]++; n--; } i++; } };
+    /* előbb minden apartmanba egy felnőtt, utána a többi vendég */
+    out.forEach((o) => { if (q.adults > out.reduce((c, x) => c + x.adults, 0)) o.adults++; });
+    put("adults", q.adults - out.reduce((c, x) => c + x.adults, 0)); put("children", q.children || 0);
+    const g = window.ZephyrGame && window.ZephyrGame.discount ? window.ZephyrGame.discount() : null;
+    const body = { apt: q.apts[0], checkin: q.ci, checkout: q.co, adults: q.adults, children: q.children || 0, name: String(F.name).trim(), phone: String(F.phone).trim(), email: String(F.email).trim(),
+      birth_place: String(F.birth_place).trim(), birth_date: F.birth_date, id_doc: String(F.id_doc).replace(/\s/g, ""), note: (F.note || "") + (F.note ? " " : "") + "[VR-ben foglalva]", accept: true, website: "" };
+    if (out.length > 1) body.apts = out.map((o) => ({ apt: o.apt, adults: o.adults, children: o.children }));
+    if (g) body.game = g.code;
+    try {
+      const r = await api("/book", { method: "POST", body });
+      if (g && window.ZephyrGame.used) window.ZephyrGame.used();
+      qMaps = null;
+      return { ok: true, ref: r && r.ref, demo: false };
+    } catch (e) { return { err: e.message || "Hiba történt a küldéskor.", field: null }; }
+  }
+  async function vrQuote(q) {
+    await vrReady();
     const n = diff(q.ci, q.co), minN = cfg.min_nights || 1, lead = addD(cfg.today, cfg.lead_days || 0);
     if (q.ci < lead) return { err: "Ilyen korán már nem foglalható – válassz későbbi érkezést." };
     if (n < minN) return { err: `Legalább ${minN} éjszakára foglalható.` };
@@ -2473,7 +2534,8 @@ html.zdoc-lock, html.zdoc-lock body { overflow: hidden; }
     st.loading = false; render();
   }
 
-  window.ZephyrBooking = { open, close, isOpen, apiUrl, quote: vrQuote, reset: () => { cfg = null; qMaps = null; } };
+  window.ZephyrBooking = { open, close, isOpen, apiUrl, quote: vrQuote, reset: () => { cfg = null; qMaps = null; },
+    vr: { ready: vrReady, night: vrNight, price: vrPrice, check: vrCheck, submit: vrSubmit, cfg: () => cfg, free: (id, d) => !!(qMaps && qMaps[id] && qMaps[id][d] && qMaps[id][d].free), docs: () => cfg ? { rules: cfg.rules_url, privacy: cfg.privacy_url } : {} } };
 })();
 /* Zephyr Apartmanház – tulajdonosi felület (jelszóval védett admin a foglalási ablakban)
    Megnyitás: a foglalási ablak „Tulajdonosi belépés” gombja, vagy a link végére írt #foglalas-admin */
@@ -8353,20 +8415,23 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       e.addEventListener("loaded", () => { const m = e.getObject3D("mesh"); if (m) { m.material.map = t; m.material.needsUpdate = true; m.renderOrder = 998; } vrPlace(); });
       e.addEventListener("click", (ev) => { const ix = ev.detail && ev.detail.intersection; if (ix && ix.uv) vrClick(ix.uv.x * VW, (1 - ix.uv.y) * VH); });
       rig.appendChild(e); VRS.panel = e;
+      _hsCache = null;   /* a sugár azonnal „lássa” az új panelt (ne csak a következő gyorstár-frissítéskor) */
       vrPlace();
       clearInterval(VRS.timer); VRS.timer = setInterval(vrHoverTick, 90);
     }
     vrDraw();
   }
-  function vrClose() { clearInterval(VRS.timer); if (VRS.panel) { VRS.panel.remove(); VRS.panel = null; } if (VRS.tex) { VRS.tex.dispose(); VRS.tex = null; } }
+  function vrClose() { clearInterval(VRS.timer); if (VRS.panel) { VRS.panel.remove(); VRS.panel = null; } if (VRS.tex) { VRS.tex.dispose(); VRS.tex = null; } try { bkKeyboard(false); } catch (e) {} }
   function vrPlace() {
     /* a nézési irány elé, kicsit lejjebb, felénk fordítva (a rig koordinátáiban) */
     if (!VRS.panel) return;
     const yawW = camYaw(), ry = rig.object3D.rotation.y, a = yawW - ry;
     let eyeY = 1.4; try { const xc = sceneEl.renderer.xr.getCamera(); const p = new THREE.Vector3(); xc.getWorldPosition(p); if (p.y > .5) eyeY = p.y; } catch (e) {}
-    const d = 1.05;
-    VRS.panel.object3D.position.set(-Math.sin(a) * d, eyeY - .22, -Math.cos(a) * d);
-    VRS.panel.object3D.rotation.set(-.18, a, 0, "YXZ");
+    const kbOn = VRS.page === "book" && VRS.book && VRS.book.step === "data";   /* billentyűzetnél a panel feljebb, a billentyűzet alatta */
+    const d = kbOn ? .98 : 1.05;
+    VRS.panel.object3D.position.set(-Math.sin(a) * d, eyeY - (kbOn ? .02 : .22), -Math.cos(a) * d);
+    VRS.panel.object3D.rotation.set(kbOn ? -.08 : -.18, a, 0, "YXZ");
+    try { kbPlace(); } catch (e) {}
   }
   function vrHoverTick() {
     if (!VRS.panel) return;
@@ -8399,6 +8464,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (VRS.page !== "main") btn(g, VW - 212, 26, 76, 72, "‹", () => { VRS.page = "main"; vrDraw(); }, { round: 36 });
     g.font = "600 36px system-ui, sans-serif";
     g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 116, VW - 80, 2);
+    if (VRS.page !== "book") { try { bkKeyboard(false); } catch (e) {} }
     ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld }[VRS.page] || pMain)(g);
     if (VRS.tex) VRS.tex.needsUpdate = true;
   }
@@ -8429,7 +8495,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const mOn = typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused;
     btn(g, X(2), y1, W3, H1, mOn ? "♫ Zene: be" : "♫ Zene: ki", () => { try { toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); });
     const y2 = y1 + H1 + gp;
-    btn(g, X(0), y2, W3 * 2 + 26, H1, "📅  Foglalás itt, VR-ben", () => { vrBookInit(); VRS.page = "book"; vrDraw(); });
+    const bkGo = VRS.book && VRS.book.step !== "date" && VRS.book.step !== "done";
+    btn(g, X(0), y2, W3 * 2 + 26, H1, bkGo ? "📅  Foglalás folytatása" : "📅  Foglalás itt, VR-ben", () => { if (VRS.book && VRS.book.step === "done") VRS.book = null; vrBookInit(); VRS.page = "book"; vrDraw(); vrPlace(); }, { on: 1, sub: bkGo ? "ott folytatod, ahol abbahagytad" : "időpont · apartman · adatok – kilépés nélkül" });
     btn(g, X(2), y2, W3, H1, "Foglalás\n2D ablakban", () => vrEndSession(() => window.ZephyrBooking && ZephyrBooking.open({ apt: ["korvett", "dingi", "fregatt", "kaloz", "schooner"].includes((SCENES[current] || {}).g) ? SCENES[current].g : "" })));
     const y3 = y2 + H1 + gp, H3 = VH - 40 - y3;
     btn(g, X(0), y3, W3, H3, "⟲ Vissza", () => { try { if (typeof goBack === "function") goBack(); } catch (e) {} }, { off: typeof goBack !== "function" });
@@ -8502,63 +8569,345 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     A.forEach((q, i) => btn(g, 40 + (i % 2) * (cw + 30), 150 + Math.floor(i / 2) * (ch + 22), cw, ch, `${q.no} · ${q.name}`, () => { vrClose(); go(q.entry, false); }, { on: (SCENES[current] || {}).g === q.id, sub: q.where || q.sub }));
   }
 
-  /* --- VR-en belüli foglalás: időpont, éjszakák, létszám → szabad apartmanok → a név/e-mail a 2D űrlapon --- */
+  /* --- VR-en belüli foglalás, kilépés nélkül (2026. nov. 6.) ---
+     1. Mikor? – naptár: hány apartman szabad éjszakánként, érkezés + távozás két csippentéssel, létszám
+     2. Melyik? – a szabad apartmanok kártyán, áruk; „👁 Megnézem” átvisz a panorámájába, a foglalás közben megmarad
+     3. Adataid – nagy, csippentéssel nyomható magyar billentyűzet a panel alatt (a böngésző a VR-ben nem ad billentyűzetet)
+     4. Összesítés – tételes ár (szállásdíj, kedvezmény, IFA, előleg), házirend és adatkezelés a VR-ben olvasható
+     5. Kész – foglalási azonosító. A foglalás ugyanazon a szerveren, ugyanazzal az ellenőrzéssel megy, mint a 2D űrlapon. */
+  const vYmd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const vPd = (s) => { const [y, m, d] = String(s).split("-").map(Number); return new Date(y, m - 1, d); };
+  const vAdd = (s, n) => { const d = vPd(s); d.setDate(d.getDate() + n); return vYmd(d); };
+  const vDiff = (a, b) => Math.round((vPd(b) - vPd(a)) / 864e5);
+  const HU_MON = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
+  const vHu = (s, wd) => { const d = vPd(s); return HU_MON[d.getMonth()].slice(0, 3) + ". " + d.getDate() + "." + (wd === false ? "" : " " + ["vas.", "hétfő", "kedd", "szerda", "csüt.", "péntek", "szomb."][d.getDay()]); };
+  const vMoney = (n) => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " Ft";
+  const BK_FIELDS = [
+    ["name", "Teljes név", "pl. Kiss Anna"], ["phone", "Telefonszám", "+36 30 123 4567"],
+    ["email", "E-mail cím", "nev@pelda.hu"], ["birth_place", "Születési hely", "pl. Budapest"],
+    ["birth_date", "Születési idő", "ÉÉÉÉ-HH-NN"], ["id_doc", "Személyi ig. / útlevél száma", "pl. 123456AB"],
+    ["note", "Megjegyzés (nem kötelező)", "pl. késői érkezés"]
+  ];
   function vrBookInit() {
     if (VRS.book) return;
-    const d = new Date(); d.setDate(d.getDate() + 14);
-    VRS.book = { ci: d, nights: 3, adults: 2, children: 0, res: null, loading: false, sel: [], err: "" };
+    const B = VRS.book = { step: "date", m: 0, ci: null, co: null, adults: 2, children: 0, sel: [], form: {}, field: "name", err: "", loading: true, ready: false, result: null, doc: null, page: 0, caps: false, num: false };
+    const sc = SCENES[current] || {};
+    if (["korvett", "dingi", "fregatt", "kaloz", "schooner"].includes(sc.g)) B.pre = sc.g;   /* ha egy apartmanban állsz, azt ajánljuk elsőként */
+    if (!window.ZephyrBooking || !ZephyrBooking.vr) { B.loading = false; B.err = "A foglalási rendszer most nem érhető el."; return; }
+    ZephyrBooking.vr.ready().then(() => {
+      B.loading = false; B.ready = true;
+      /* a naptár az első olyan hónapon nyílik, ahol van szabad éjszaka (télen a ház zárva – ne üres hónapokat lásson a vendég) */
+      try {
+        const c = bkCfg(), t0 = vPd(c.today); let d = vAdd(c.today, c.lead_days || 0); const end = vAdd(c.today, c.horizon_days || 400);
+        while (d < end) { const n = ZephyrBooking.vr.night(d); if (n && n.free) break; d = vAdd(d, 1); }
+        if (d < end) { const f = vPd(d); B.m = Math.max(0, Math.min(12, (f.getFullYear() - t0.getFullYear()) * 12 + f.getMonth() - t0.getMonth())); B.firstFree = d; }
+      } catch (e) {}
+      if (VRS.page === "book") vrDraw();
+    })
+      .catch(() => { B.loading = false; B.err = "A foglalási adatok most nem érhetők el – próbáld újra kicsit később."; if (VRS.page === "book") vrDraw(); });
   }
-  const vYmd = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-  const vHu = (d, wd) => ["jan.", "febr.", "márc.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szept.", "okt.", "nov.", "dec."][d.getMonth()] + " " + d.getDate() + "." + (wd === false ? "" : " " + ["vasárnap", "hétfő", "kedd", "szerda", "csütörtök", "péntek", "szombat"][d.getDay()]);
-  const vMoney = (n) => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " Ft";
+  function bkCfg() { return (window.ZephyrBooking && ZephyrBooking.vr && ZephyrBooking.vr.cfg()) || null; }
+  /* egy apartman egy éjszakája szabad-e (a foglalási modul gyorstárából) */
+  function bkNightApt(id, d) { return ZephyrBooking.vr.free(id, d); }
+  function bkRangeOk(B, ci, co) {
+    /* van-e legalább egy apartman, amely az egész időszakra szabad */
+    const c = bkCfg(); if (!c) return false;
+    return c.apartments.some((a) => { for (let d = ci; d < co; d = vAdd(d, 1)) if (!bkNightApt(a.id, d)) return false; return true; });
+  }
+  function bkNeed(B) { return B.adults + B.children; }
+  function bkSelCap(B) { const c = bkCfg(); return B.sel.reduce((s, id) => s + ((c.apartments.find((a) => a.id === id) || {}).cap || 0), 0); }
+  function bkQ(B) { return { ci: B.ci, co: B.co, adults: B.adults, children: B.children, apts: B.sel.slice() }; }
+
   function pBook(g) {
-    const B = VRS.book; if (!B) return vrBookInit();
-    const co = new Date(B.ci); co.setDate(co.getDate() + B.nights);
-    const chg = (f) => () => { f(); B.res = null; B.sel = []; B.err = ""; vrDraw(); };
-    const row = (y, label, val, minus, plus, mm, pp) => {
-      txt(g, label, 60, y + 40, { fs: 32, w: 500, c: "rgba(255,255,255,.8)" });
-      if (mm) btn(g, 290, y, 90, 80, "«", mm, { fs: 34 });
-      btn(g, 390, y, 90, 80, "−", minus, { fs: 44 });
-      txt(g, val, 685, y + 40, { a: "center", fs: 34, w: 700 });
-      btn(g, 890, y, 90, 80, "+", plus, { fs: 44 });
-      if (pp) btn(g, 990, y, 90, 80, "»", pp, { fs: 34 });
-    };
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    row(140, "Érkezés", vHu(B.ci), chg(() => { const d = new Date(B.ci); d.setDate(d.getDate() - 1); if (d >= today) B.ci = d; }), chg(() => B.ci.setDate(B.ci.getDate() + 1)),
-      chg(() => { const d = new Date(B.ci); d.setDate(d.getDate() - 7); B.ci = d < today ? new Date(today) : d; }), chg(() => B.ci.setDate(B.ci.getDate() + 7)));
-    row(234, "Éjszakák", B.nights + " éj → " + vHu(co, false), chg(() => B.nights = Math.max(1, B.nights - 1)), chg(() => B.nights = Math.min(30, B.nights + 1)));
-    row(328, "Felnőtt", String(B.adults), chg(() => B.adults = Math.max(1, B.adults - 1)), chg(() => B.adults = Math.min(20, B.adults + 1)));
-    row(422, "Gyermek", String(B.children), chg(() => B.children = Math.max(0, B.children - 1)), chg(() => B.children = Math.min(12, B.children + 1)));
-    if (!B.res) {
-      btn(g, 60, 530, VW - 120, 110, B.loading ? "Keresés…" : "Szabad apartmanok keresése", () => vrBookSearch(), { on: 1, off: B.loading });
-      if (B.err) txt(g, B.err, VW / 2, 690, { a: "center", fs: 30, c: "#ffb4a8" });
-      txt(g, "A név és az e-mail megadásához a VR-ből a 2D foglalási ablakba lépünk át.", VW / 2, VH - 70, { a: "center", fs: 26, w: 500, c: "rgba(255,255,255,.65)" });
-      return;
-    }
-    const fr = B.res.apts.filter((a) => a.free);
-    if (!fr.length) { txt(g, "Erre az időszakra nincs szabad apartman – próbálj más dátumot.", VW / 2, 580, { a: "center", fs: 32, c: "#ffd166" }); return; }
-    const need = B.adults + B.children, cw = (VW - 120 - 4 * 14) / 5;
-    fr.slice(0, 5).forEach((a, i) => {
-      const on = B.sel.includes(a.id);
-      btn(g, 60 + i * (cw + 14), 520, cw, 150, a.name, () => { const k = B.sel.indexOf(a.id); if (k >= 0) B.sel.splice(k, 1); else B.sel.push(a.id); vrDraw(); }, { on, sub: a.cap + " fő · " + vMoney(a.total), fs: 36 });
+    const B = VRS.book; if (!B) { vrBookInit(); return pBook(g); }
+    if (B.loading || (!B.ready && !B.err)) { txt(g, "Szabad napok betöltése…", VW / 2, VH / 2, { a: "center", fs: 40 }); return; }
+    if (!B.ready) { txt(g, B.err, VW / 2, VH / 2, { a: "center", fs: 34, c: "#ffb4a8" }); return; }
+    /* lépésjelző a fejléc alatt */
+    const steps = [["date", "1 · Mikor?"], ["apts", "2 · Melyik?"], ["data", "3 · Adataid"], ["sum", "4 · Összesítés"]];
+    const si = steps.findIndex((s) => s[0] === B.step);
+    if (B.step !== "done" && B.step !== "doc") steps.forEach(([k, l], i) => {
+      const w = (VW - 80 - 3 * 12) / 4, x = 40 + i * (w + 12);
+      rr(g, x, 128, w, 46, 23); g.fillStyle = i === si ? "#ffd166" : i < si ? "rgba(255,209,102,.32)" : "rgba(255,255,255,.08)"; g.fill();
+      txt(g, l, x + w / 2, 151, { a: "center", fs: 26, w: 700, c: i === si ? "#0b2f5e" : "#fff" });
     });
-    const cap = B.res.apts.filter((a) => B.sel.includes(a.id)).reduce((c, a) => c + a.cap, 0), sum = B.res.apts.filter((a) => B.sel.includes(a.id)).reduce((c, a) => c + a.total, 0);
-    const ok = B.sel.length && cap >= need;
-    btn(g, 60, 700, VW - 120, 110, ok ? `Tovább: név és e-mail (${vMoney(sum)})` : B.sel.length ? `Kevés a hely: ${cap} fő / ${need} fő` : "Válassz apartmant", () => {
-      const q = { ci: vYmd(B.ci), co: vYmd(co), adults: B.adults, children: B.children, apts: B.sel.slice() };
-      vrEndSession(() => window.ZephyrBooking && ZephyrBooking.open(q));
-    }, { on: !!ok, off: !ok });
+    ({ date: bkDate, apts: bkApts, data: bkData, sum: bkSum, done: bkDone, doc: bkDoc }[B.step] || bkDate)(g, B);
+    bkKeyboard(B.step === "data");
   }
-  async function vrBookSearch() {
-    const B = VRS.book; if (!B || B.loading) return;
-    B.loading = true; B.err = ""; vrDraw();
-    try {
-      const co = new Date(B.ci); co.setDate(co.getDate() + B.nights);
-      B.res = await ZephyrBooking.quote({ ci: vYmd(B.ci), co: vYmd(co), adults: B.adults, children: B.children });
-      if (B.res && B.res.err) { B.err = B.res.err; B.res = null; }
-      else { const need = B.adults + B.children, fr = B.res.apts.filter((a) => a.free); const one = fr.find((a) => a.cap >= need); B.sel = one ? [one.id] : []; }
-    } catch (e) { B.err = "A foglalási adatok most nem érhetők el."; B.res = null; }
-    B.loading = false; vrDraw();
+
+  /* 1. lépés – naptár */
+  function bkDate(g, B) {
+    const c = bkCfg(), t0 = vPd(c.today), first = new Date(t0.getFullYear(), t0.getMonth() + B.m, 1);
+    const lead = vAdd(c.today, c.lead_days || 0), last = vAdd(c.today, c.horizon_days || 400);
+    btn(g, 40, 190, 90, 70, "‹", () => { B.m = Math.max(0, B.m - 1); vrDraw(); }, { off: B.m === 0, fs: 46 });
+    txt(g, first.getFullYear() + ". " + HU_MON[first.getMonth()], VW / 2, 225, { a: "center", fs: 40, w: 800 });
+    btn(g, VW - 130, 190, 90, 70, "›", () => { B.m = Math.min(12, B.m + 1); vrDraw(); }, { off: B.m >= 12, fs: 46 });
+    const cw = (VW - 80) / 7, ch = 58, y0 = 298;
+    ["H", "K", "Sze", "Cs", "P", "Szo", "V"].forEach((d, i) => txt(g, d, 40 + i * cw + cw / 2, 282, { a: "center", fs: 24, w: 700, c: "rgba(255,255,255,.6)" }));
+    const off = (first.getDay() + 6) % 7, dim = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+    for (let k = 1; k <= dim; k++) {
+      const i = off + k - 1, x = 40 + (i % 7) * cw, y = y0 + Math.floor(i / 7) * (ch + 6), d = vYmd(new Date(first.getFullYear(), first.getMonth(), k));
+      const n = ZephyrBooking.vr.night(d) || { free: 0, all: 5 }, past = d < lead || d > last;
+      const inR = B.ci && B.co && d >= B.ci && d < B.co, isCi = d === B.ci, isCo = d === B.co;
+      const canCo = B.ci && !B.co && d > B.ci && bkRangeOk(B, B.ci, d);
+      const ok = !past && (n.free > 0 || canCo);
+      const idx = VRS.btns.length, hov = idx === VRS.hover;
+      VRS.btns.push({ x: x + 3, y, w: cw - 6, h: ch, off: !ok, fn: () => {
+        if (!B.ci || B.co || d <= B.ci) { if (n.free > 0) { B.ci = d; B.co = null; } }
+        else if (bkRangeOk(B, B.ci, d)) { B.co = d; B.sel = []; }
+        else if (n.free > 0) { B.ci = d; B.co = null; }
+        B.err = ""; vrDraw();
+      } });
+      rr(g, x + 3, y, cw - 6, ch, 14);
+      g.fillStyle = isCi || isCo ? "#ffd166" : inR ? "rgba(255,209,102,.42)" : past ? "rgba(255,255,255,.03)" : n.free === 0 ? (canCo ? "rgba(120,190,140,.18)" : "rgba(229,38,47,.16)") : hov ? "rgba(255,255,255,.3)" : "rgba(63,179,127,.26)";
+      g.fill(); if (hov && ok) { g.lineWidth = 4; g.strokeStyle = "#ffd166"; g.stroke(); }
+      const fc = isCi || isCo ? "#0b2f5e" : past ? "rgba(255,255,255,.25)" : "#fff";
+      txt(g, String(k), x + 16, y + 24, { fs: 28, w: 800, c: fc });
+      if (!past) txt(g, n.free === 0 ? (canCo ? "távozás" : "foglalt") : n.free + " szabad", x + cw - 12, y + ch - 16, { a: "right", fs: 19, w: 600, c: isCi || isCo ? "#0b2f5e" : n.free === 0 ? "rgba(255,255,255,.55)" : "#bff0d5" });
+    }
+    /* alul: kiválasztott időszak + létszám + tovább */
+    const yb = VH - 128;
+    const nights = B.ci && B.co ? vDiff(B.ci, B.co) : 0, minN = c.min_nights || 1;
+    const sel = !B.ci ? "Csippents az érkezés napjára" : !B.co ? vHu(B.ci) + " → csippents a távozás napjára" : vHu(B.ci) + " → " + vHu(B.co) + " · " + nights + " éj";
+    txt(g, sel, 44, yb - 22, { fs: 28, w: 700, c: "#ffd166" });
+    const step = (x, label, val, dn, up) => { txt(g, label, x, yb + 48, { fs: 26, w: 600, c: "rgba(255,255,255,.8)" }); btn(g, x + 118, yb + 10, 70, 76, "−", dn, { fs: 44 }); txt(g, String(val), x + 220, yb + 48, { a: "center", fs: 38, w: 800 }); btn(g, x + 252, yb + 10, 70, 76, "+", up, { fs: 44 }); };
+    const capAll = c.apartments.reduce((s, a) => s + a.cap, 0);
+    step(44, "Felnőtt", B.adults, () => { B.adults = Math.max(1, B.adults - 1); vrDraw(); }, () => { B.adults = Math.min(capAll - B.children, B.adults + 1); vrDraw(); });
+    step(400, "Gyermek", B.children, () => { B.children = Math.max(0, B.children - 1); vrDraw(); }, () => { B.children = Math.min(capAll - B.adults, B.children + 1); vrDraw(); });
+    let why = ""; if (B.ci && B.co && nights < minN) why = `Legalább ${minN} éjszaka`; else if (c.max_nights && nights > c.max_nights) why = `Legfeljebb ${c.max_nights} éjszaka`;
+    const free = B.ci && B.co && !why ? bkFreeAptsNow(B) : [], capF = free.reduce((s, a) => s + a.cap, 0);
+    if (!why && B.ci && B.co && bkNeed(B) > capF) why = `Erre az időre ${capF} főnek van hely`;
+    const okNext = B.ci && B.co && !why;
+    btn(g, 770, yb + 4, VW - 810, 92, okNext ? "Tovább: szabad apartmanok ›" : why || "Válassz időszakot", () => { B.step = "apts"; B.sel = bkAutoSel(B); vrDraw(); }, { on: !!okNext, off: !okNext, fs: 32 });
+  }
+  const _bkTh = {};
+  function bkThumb(id) {
+    if (_bkTh[id]) return _bkTh[id];
+    const grp = GROUPS.find((q) => q.id === id) || {}, sid = SCENES[id + "-nappali"] ? id + "-nappali" : grp.entry;
+    if (!sid || !SCENES[sid]) return null;
+    const im = new Image(); im._sid = sid; im.onload = () => { if (VRS.page === "book" && VRS.book && VRS.book.step === "apts") vrDraw(); };
+    im.src = imgUrl(sid); return (_bkTh[id] = im);   /* a 4096-os panoráma (a séta úgyis betölti) – a kivágás így éles */
+  }
+  function bkFreeAptsNow(B) { const c = bkCfg(); return c.apartments.filter((a) => { for (let d = B.ci; d < B.co; d = vAdd(d, 1)) if (!bkNightApt(a.id, d)) return false; return true; }); }
+  function bkAutoSel(B) {
+    const fr = bkFreeAptsNow(B), need = bkNeed(B);
+    if (B.pre && fr.some((a) => a.id === B.pre) && fr.find((a) => a.id === B.pre).cap >= need) return [B.pre];
+    const one = fr.filter((a) => a.cap >= need).sort((a, b) => a.cap - b.cap)[0];
+    return one ? [one.id] : [];
+  }
+
+  /* 2. lépés – apartmanok */
+  function bkApts(g, B) {
+    const fr = bkFreeAptsNow(B), need = bkNeed(B);
+    txt(g, `${vHu(B.ci)} → ${vHu(B.co)} · ${vDiff(B.ci, B.co)} éj · ${B.adults} felnőtt${B.children ? " + " + B.children + " gyermek" : ""}`, 44, 215, { fs: 30, w: 700, c: "#ffd166" });
+    if (!fr.length) { txt(g, "Erre az időszakra már nincs szabad apartman.", VW / 2, 420, { a: "center", fs: 34 }); }
+    const cw = (VW - 80 - 24) / 2, ch = fr.length > 4 ? 120 : 150;
+    fr.forEach((a, i) => {
+      const x = 40 + (i % 2) * (cw + 24), y = 248 + Math.floor(i / 2) * (ch + 12), on = B.sel.includes(a.id);
+      const pr = ZephyrBooking.vr.price({ ci: B.ci, co: B.co, apts: [a.id], adults: 0 });
+      btn(g, x, y, cw - 150, ch, "", () => { const k = B.sel.indexOf(a.id); if (k >= 0) B.sel.splice(k, 1); else B.sel.push(a.id); B.err = ""; vrDraw(); }, { on });
+      /* kis fotó az apartmanról (a séta saját képéből kivágva) */
+      const th = bkThumb(a.id), tw = Math.round(ch * 1.45) - 16;
+      if (th && th.complete && th.naturalWidth) {
+        const sc = SCENES[th._sid] || {}, cx = ((sc.s ?? .5) % 1) * th.naturalWidth, sw = th.naturalWidth * .28, sh = sw * (ch - 16) / tw;
+        g.save(); rr(g, x + 8, y + 8, tw, ch - 16, 14); g.clip();
+        g.drawImage(th, Math.max(0, Math.min(th.naturalWidth - sw, cx - sw / 2)), th.naturalHeight / 2 - sh / 2, sw, sh, x + 8, y + 8, tw, ch - 16); g.restore();
+      }
+      const tx0 = x + 8 + tw + 18;
+      txt(g, (on ? "✓ " : "") + a.no + " · " + a.name, tx0, y + ch / 2 - 22, { fs: 34, w: 800, c: on ? "#0b2f5e" : "#fff" });
+      txt(g, `${a.cap} fő · ${vMoney(pr ? pr.acc : 0)}`, tx0, y + ch / 2 + 22, { fs: 26, w: 600, c: on ? "#0b2f5e" : "rgba(255,255,255,.85)" });
+      btn(g, x + cw - 138, y, 138, ch, "👁\nMegnézem", () => { const grp = GROUPS.find((q) => q.id === a.id); vrClose(); if (grp && grp.entry) go(grp.entry, false); }, { fs: 26 });
+    });
+    const cap = bkSelCap(B), pr = B.sel.length ? ZephyrBooking.vr.price(bkQ(B)) : null;
+    const yb = VH - 124;
+    btn(g, 40, yb, 230, 92, "‹ Időpont", () => { B.step = "date"; vrDraw(); }, { fs: 32 });
+    const ok = B.sel.length && cap >= need && B.sel.length <= B.adults;
+    const lab = !B.sel.length ? "Válassz apartmant" : cap < need ? `Kevés a hely: ${cap} / ${need} fő – válassz még egyet` : B.sel.length > B.adults ? "Minden apartmanba kell egy felnőtt" : `Tovább: adataid ›  (${vMoney(pr ? pr.total : 0)})`;
+    btn(g, 290, yb, VW - 330, 92, lab, () => { B.step = "data"; B.err = ""; vrDraw(); vrPlace(); }, { on: !!ok, off: !ok, fs: 32 });
+    txt(g, "Tipp: a „👁 Megnézem” átvisz az apartmanba – a ☰ Menüből a foglalás ott folytatódik, ahol abbahagytad.", VW / 2, yb - 26, { a: "center", fs: 22, w: 500, c: "rgba(255,255,255,.62)" });
+  }
+
+  /* 3. lépés – adatok + billentyűzet */
+  function bkData(g, B) {
+    const cw = (VW - 80 - 20) / 2, ch = 92;
+    BK_FIELDS.forEach(([k, label, ph], i) => {
+      const x = 40 + (i % 2) * (cw + 20), y = 192 + Math.floor(i / 2) * (ch + 12), on = B.field === k, v = B.form[k] || "";
+      const idx = VRS.btns.length, hov = idx === VRS.hover;
+      VRS.btns.push({ x, y, w: cw, h: ch, fn: () => { B.field = k; vrDraw(); } });
+      rr(g, x, y, cw, ch, 18); g.fillStyle = on ? "rgba(255,255,255,.95)" : hov ? "rgba(255,255,255,.22)" : "rgba(255,255,255,.1)"; g.fill();
+      g.lineWidth = on ? 5 : 2; g.strokeStyle = on ? "#ffd166" : B.errField === k ? "#ff8a7a" : "rgba(255,255,255,.3)"; g.stroke();
+      txt(g, label, x + 20, y + 24, { fs: 22, w: 700, c: on ? "#0b2f5e" : "rgba(255,255,255,.7)" });
+      g.save(); g.beginPath(); g.rect(x + 14, y + 40, cw - 28, 48); g.clip();
+      let show = v || ph; g.font = "600 32px system-ui, sans-serif"; while (show.length > 1 && g.measureText(show).width > cw - 50) show = show.slice(1);
+      txt(g, show, x + 20, y + 64, { fs: 32, w: 600, c: v ? (on ? "#0b2f5e" : "#fff") : on ? "rgba(11,47,94,.38)" : "rgba(255,255,255,.35)" });
+      if (on) { const w = v ? g.measureText(show).width : 0; g.fillStyle = "#0b2f5e"; g.fillRect(x + 22 + w, y + 46, 3, 36); }
+      g.restore();
+    });
+    /* elfogadás + dokumentumok */
+    const ya = 192 + 3 * (ch + 12) + ch - 92;
+    const xa = 40 + cw + 20;
+    btn(g, xa, ya, 92, 92, B.form.accept ? "✓" : "", () => { B.form.accept = !B.form.accept; vrDraw(); }, { on: !!B.form.accept, fs: 54 });
+    txt(g, "Elfogadom a házirendet és", xa + 112, ya + 26, { fs: 24, w: 600 }); txt(g, "az adatkezelési tájékoztatót", xa + 112, ya + 56, { fs: 24, w: 600 });
+    btn(g, xa + 112, ya + 66, 150, 34, "Házirend", () => bkOpenDoc(B, "rules"), { fs: 21, round: 17 });
+    btn(g, xa + 272, ya + 66, 180, 34, "Adatkezelés", () => bkOpenDoc(B, "privacy"), { fs: 21, round: 17 });
+    const yb = VH - 104;
+    if (B.err) txt(g, B.err, VW / 2, yb - 28, { a: "center", fs: 25, w: 700, c: "#ffb4a8" });
+    btn(g, 40, yb, 230, 80, "‹ Apartman", () => { B.step = "apts"; vrDraw(); vrPlace(); }, { fs: 30 });
+    btn(g, 290, yb, VW - 330, 80, "Tovább: összesítés ›", () => {
+      const bad = ZephyrBooking.vr.check(B.form, bkQ(B));
+      if (bad) { B.err = bad.err; B.errField = bad.field; if (bad.field && bad.field !== "accept") B.field = bad.field; vrDraw(); return; }
+      B.err = ""; B.errField = null; B.step = "sum"; vrDraw(); vrPlace();
+    }, { on: 1, fs: 32 });
+  }
+
+  /* 4. lépés – összesítés és elküldés */
+  function bkSum(g, B) {
+    const c = bkCfg(), q = bkQ(B), p = ZephyrBooking.vr.price(q);
+    const names = B.sel.map((id) => (c.apartments.find((a) => a.id === id) || {}).name).join(" + ");
+    const L = [["Időszak", `${vHu(B.ci)} → ${vHu(B.co)} (${p.n} éj)`], ["Apartman", names], ["Vendégek", `${B.adults} felnőtt${B.children ? ", " + B.children + " gyermek" : ""}`], ["Foglaló", `${B.form.name} · ${B.form.email}`]];
+    L.forEach(([k, v], i) => { txt(g, k, 60, 222 + i * 50, { fs: 26, w: 600, c: "rgba(255,255,255,.65)" }); txt(g, v, 300, 222 + i * 50, { fs: 30, w: 700 }); });
+    const P = [["Szállásdíj", p.acc]]; if (p.disc) P.push([`Játék-kedvezmény (${p.discPct}%)`, -p.disc]);
+    P.push([`Idegenforgalmi adó (${B.adults} fő × ${p.n} éj × ${vMoney(p.taxPer)})`, p.tax]);
+    const y0 = 430; rr(g, 40, y0 - 18, VW - 80, 52 * P.length + 150, 22); g.fillStyle = "rgba(255,255,255,.07)"; g.fill();
+    P.forEach(([k, v], i) => { txt(g, k, 70, y0 + 16 + i * 52, { fs: 27, w: 500 }); txt(g, vMoney(v), VW - 70, y0 + 16 + i * 52, { a: "right", fs: 29, w: 700 }); });
+    const yt = y0 + 16 + P.length * 52;
+    g.fillStyle = "rgba(255,209,102,.6)"; g.fillRect(70, yt - 20, VW - 140, 2);
+    txt(g, "Összesen", 70, yt + 18, { fs: 34, w: 800, c: "#ffd166" }); txt(g, vMoney(p.total), VW - 70, yt + 18, { a: "right", fs: 38, w: 800, c: "#ffd166" });
+    txt(g, `Előleg (${p.depPct}%): ${vMoney(p.dep)} · a többi érkezéskor: ${vMoney(p.rest)}`, 70, yt + 66, { fs: 24, w: 600, c: "rgba(255,255,255,.8)" });
+    const yb = VH - 104;
+    if (B.err) txt(g, B.err, VW / 2, yb - 26, { a: "center", fs: 25, w: 700, c: "#ffb4a8" });
+    btn(g, 40, yb, 230, 80, "‹ Módosítás", () => { B.step = "data"; vrDraw(); vrPlace(); }, { fs: 30 });
+    btn(g, 290, yb, VW - 330, 80, B.sending ? "Küldés…" : (c.demo ? "Foglalás elküldése (bemutató mód)" : "Foglalás elküldése ✓"), async () => {
+      if (B.sending) return; B.sending = true; B.err = ""; vrDraw();
+      const r = await ZephyrBooking.vr.submit(bkQ(B), B.form);
+      B.sending = false;
+      if (r && r.ok) { B.result = r; B.step = "done"; vrHaptic(null, .7, 60); try { sndNav(); } catch (e) {} }
+      else { B.err = (r && r.err) || "Hiba történt."; if (r && r.stale) { _bkReload(B); B.step = "date"; B.co = null; } else if (r && r.field) { B.field = r.field; B.errField = r.field; B.step = "data"; } }
+      vrDraw(); vrPlace();
+    }, { on: !B.sending, off: !!B.sending, fs: 32 });
+  }
+  function _bkReload(B) { B.ready = false; B.loading = true; ZephyrBooking.vr.ready(true).then(() => { B.loading = false; B.ready = true; vrDraw(); }).catch(() => { B.loading = false; B.ready = true; vrDraw(); }); }
+
+  /* 5. lépés – kész */
+  function bkDone(g, B) {
+    const r = B.result || {}, c = bkCfg() || {};
+    txt(g, "⚓", VW / 2, 250, { a: "center", fs: 96 });
+    txt(g, r.demo ? "Így nézne ki a sikeres foglalás" : "Köszönjük! Foglalási kérésed megérkezett.", VW / 2, 360, { a: "center", fs: 42, w: 800, c: "#ffd166" });
+    txt(g, r.demo ? "Bemutató mód – a kérés nem lett elküldve." : "Foglalási azonosító: " + (r.ref || "–"), VW / 2, 425, { a: "center", fs: 34, w: 700 });
+    txt(g, `A napokat ideiglenesen lefoglaltuk. Hamarosan e-mailben visszaigazoljuk (${B.form.email || ""}),`, VW / 2, 500, { a: "center", fs: 26, w: 500 });
+    txt(g, "az előleg átutalásához szükséges adatokkal.", VW / 2, 536, { a: "center", fs: 26, w: 500 });
+    if (c.phone) txt(g, "Kérdés esetén: " + c.phone + " · " + (c.email || ""), VW / 2, 600, { a: "center", fs: 26, w: 600, c: "rgba(255,255,255,.8)" });
+    btn(g, VW / 2 - 300, VH - 140, 600, 96, "Vissza a sétához", () => { VRS.book = null; vrClose(); }, { on: 1, fs: 34 });
+  }
+
+  /* házirend / adatkezelés a VR-ben: a PDF előre elkészített oldalképei lapozhatóan */
+  function bkOpenDoc(B, kind) {
+    const d = ZephyrBooking.vr.docs(), url = kind === "rules" ? d.rules : d.privacy;
+    B.doc = { kind, url, pages: 0, imgs: [], back: B.step }; B.page = 0; B.step = "doc"; vrDraw(); vrPlace();
+    const base = url ? new URL(url, location.href).href.replace(/\.pdf(?:[?#].*)?$/i, "") : null; if (!base) return;
+    fetch(base + "/index.json").then((r) => r.ok ? r.json() : null).then((j) => {
+      const n = j && +j.pages || 0; B.doc.pages = n;
+      for (let i = 1; i <= n; i++) { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => { if (VRS.page === "book" && B.step === "doc") vrDraw(); }; im.src = base + "/" + i + ".webp"; B.doc.imgs.push(im); }
+      vrDraw();
+    }).catch(() => {});
+  }
+  function bkDoc(g, B) {
+    const D = B.doc || {}, im = D.imgs && D.imgs[B.page];
+    txt(g, D.kind === "rules" ? "Házirend" : "Adatkezelési tájékoztató", 60, 160, { fs: 34, w: 800, c: "#ffd166" });
+    if (D.pages) txt(g, `${B.page + 1}. oldal / ${D.pages}`, VW / 2, 160, { a: "center", fs: 28, w: 600 });
+    const bx = 250, by = 190, bw = VW - 500, bh = VH - 230;
+    if (im && im.complete && im.naturalWidth) {
+      /* a lap felső része nagyítva, a csippentős görgetés helyett két félre bontva: ▲ felső / ▼ alsó fél */
+      const half = B.half || 0, sh = im.naturalHeight / 2, sy = half * sh;
+      const s = Math.min(bw / im.naturalWidth, bh / sh), w = im.naturalWidth * s, h = sh * s;
+      g.fillStyle = "#fff"; g.fillRect(VW / 2 - w / 2, by, w, h); g.drawImage(im, 0, sy, im.naturalWidth, sh, VW / 2 - w / 2, by, w, h);
+    } else txt(g, D.url ? "Betöltés…" : "A dokumentum itt nem érhető el.", VW / 2, VH / 2, { a: "center", fs: 32 });
+    btn(g, 40, 200, 190, 90, "‹ Vissza", () => { B.step = D.back || "data"; vrDraw(); vrPlace(); }, { fs: 30, on: 1 });
+    btn(g, 40, 320, 190, 120, "▲\nfelső fél", () => { B.half = 0; vrDraw(); }, { fs: 26, off: !B.half });
+    btn(g, 40, 460, 190, 120, "▼\nalsó fél", () => { B.half = 1; vrDraw(); }, { fs: 26, off: B.half === 1 });
+    btn(g, VW - 230, 320, 190, 120, "‹ Előző\noldal", () => { B.page = Math.max(0, B.page - 1); B.half = 0; vrDraw(); }, { fs: 26, off: B.page === 0 });
+    btn(g, VW - 230, 460, 190, 120, "Következő\noldal ›", () => { B.page = Math.min((D.pages || 1) - 1, B.page + 1); B.half = 0; vrDraw(); }, { fs: 26, off: B.page >= (D.pages || 1) - 1 });
+  }
+
+  /* ---------- VR-billentyűzet: magyar QWERTZ, ékezetekkel, a panel alatt, mint egy íróasztalon ---------- */
+  const KB_W = 1280, KB_H = 470;
+  const KB_ROWS = {
+    abc: [["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "ö", "ü", "ó"], ["q", "w", "e", "r", "t", "z", "u", "i", "o", "p", "ő", "ú"], ["a", "s", "d", "f", "g", "h", "j", "k", "l", "é", "á", "ű"], ["⇧", "í", "y", "x", "c", "v", "b", "n", "m", ",", ".", "-", "⌫"], ["@", "+", "space", ".hu", ".com", "Kész ⏎"]]
+  };
+  function bkKeyboard(on) {
+    if (!on || !inVR && !VRS.kbForce) { if (VRS.kb) { VRS.kb.visible = false; XRP.extra.delete(VRS.kb); } return; }
+    if (!VRS.kb) {
+      const cv = document.createElement("canvas"); cv.width = KB_W; cv.height = KB_H;
+      const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(1.12, 1.12 * KB_H / KB_W), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthTest: false, depthWrite: false }));
+      m.renderOrder = 998; m.userData.cv = cv; m.userData.tex = t; m.userData.keys = []; m.userData.hov = -1;
+      const at = (hit) => { if (!hit || !hit.uv) return -1; const x = hit.uv.x * KB_W, y = (1 - hit.uv.y) * KB_H; return m.userData.keys.findIndex((k) => x >= k.x && x <= k.x + k.w && y >= k.y && y <= k.y + k.h); };
+      m.userData.xr = {
+        hover: (o, hit) => { const i = o ? at(hit) : -1; if (i !== m.userData.hov) { m.userData.hov = i; kbDraw(); } },
+        move: (hit) => { const i = at(hit); if (i !== m.userData.hov) { m.userData.hov = i; kbDraw(); } },
+        click: (hit) => { const i = at(hit); if (i >= 0) { kbPress(m.userData.keys[i].k); vrHaptic(null, .35, 14); } }
+      };
+      rig.object3D.add(m); VRS.kb = m;
+    }
+    VRS.kb.visible = true; XRP.extra.add(VRS.kb);
+    kbDraw();
+  }
+  function kbDraw() {
+    const m = VRS.kb; if (!m) return; const g = m.userData.cv.getContext("2d"), B = VRS.book || {};
+    g.clearRect(0, 0, KB_W, KB_H);
+    const bg = g.createLinearGradient(0, 0, 0, KB_H); bg.addColorStop(0, "rgba(14,52,98,.97)"); bg.addColorStop(1, "rgba(7,28,58,.97)");
+    rr(g, 4, 4, KB_W - 8, KB_H - 8, 34); g.fillStyle = bg; g.fill(); g.lineWidth = 5; g.strokeStyle = "rgba(255,209,102,.8)"; g.stroke();
+    m.userData.keys = [];
+    const rows = KB_ROWS.abc, kh = 78, gap = 9, y0 = 22;
+    rows.forEach((row, r) => {
+      const units = row.map((k) => k === "space" ? 4 : k === "Kész ⏎" ? 2.4 : k === ".com" || k === ".hu" ? 1.5 : k === "⇧" || k === "⌫" ? 1.4 : 1);
+      const tot = units.reduce((a, b) => a + b, 0), uw = (KB_W - 44 - gap * (row.length - 1)) / tot;
+      let x = 22; const y = y0 + r * (kh + gap);
+      row.forEach((k, i) => {
+        const w = units[i] * uw, idx = m.userData.keys.length, hov = idx === m.userData.hov;
+        m.userData.keys.push({ k, x, y, w, h: kh });
+        const special = k.length > 1 || k === "⇧" || k === "⌫";
+        rr(g, x, y, w, kh, 16);
+        g.fillStyle = hov ? "#ffd166" : k === "Kész ⏎" ? "rgba(255,209,102,.85)" : (k === "⇧" && B.caps) ? "rgba(255,209,102,.6)" : special ? "rgba(255,255,255,.2)" : "rgba(255,255,255,.12)"; g.fill();
+        g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.35)"; g.stroke();
+        let lab = k === "space" ? "szóköz" : k; if (B.caps && k.length === 1) lab = k.toUpperCase();
+        g.fillStyle = hov || k === "Kész ⏎" ? "#0b2f5e" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
+        g.font = `${special ? 700 : 600} ${k.length > 2 ? 30 : 40}px system-ui, sans-serif`; g.fillText(lab, x + w / 2, y + kh / 2 + 2);
+        x += w + gap;
+      });
+    });
+    m.userData.tex.needsUpdate = true;
+    kbPlace();
+  }
+  function kbPlace() {
+    const m = VRS.kb; if (!m || !VRS.panel) return;
+    const p = VRS.panel.object3D, a = p.rotation.y;
+    /* a panel alá, közelebb hozzád, mint egy asztalon fekvő billentyűzet (kb. 40°-ban megdöntve) */
+    m.position.set(p.position.x + Math.sin(a) * .26, p.position.y - .58, p.position.z + Math.cos(a) * .26);
+    m.rotation.set(-.72, a, 0, "YXZ");
+  }
+  function kbPress(k) {
+    const B = VRS.book; if (!B || B.step !== "data") return;
+    const f = B.field || "name", v = String(B.form[f] || "");
+    const order = BK_FIELDS.map((x) => x[0]);
+    if (k === "⇧") { B.caps = !B.caps; }
+    else if (k === "⌫") { B.form[f] = f === "birth_date" ? v.replace(/-?\d$/, "") : v.slice(0, -1); }
+    else if (k === "Kész ⏎") { const i = order.indexOf(f); B.field = order[Math.min(order.length - 1, i + 1)]; if (i === order.length - 1) B.field = order[0]; }
+    else {
+      let ch = k === "space" ? " " : k;
+      if (B.caps && ch.length === 1) { ch = ch.toUpperCase(); B.caps = false; }
+      if (f === "birth_date") {
+        const dg = (v + ch).replace(/\D/g, "").slice(0, 8); if (!/\d/.test(ch)) { vrDraw(); return; }
+        B.form[f] = dg.slice(0, 4) + (dg.length > 4 ? "-" + dg.slice(4, 6) : "") + (dg.length > 6 ? "-" + dg.slice(6, 8) : "");
+      } else if (f === "phone" && !/[\d+ ]/.test(ch)) { vrDraw(); return; }
+      else {
+        /* név és hely: nagy kezdőbetű magától a szavak elején */
+        if ((f === "name" || f === "birth_place") && ch.length === 1 && (!v || v.endsWith(" "))) ch = ch.toUpperCase();
+        if (f === "id_doc") ch = ch.toUpperCase();
+        B.form[f] = (v + ch).slice(0, f === "note" ? 300 : 80);
+      }
+    }
+    try { sndNav(); } catch (e) {}
+    vrDraw();
   }
 
   /* --- Térhang VR-ben: a séta zenéje és a víz hangja a térben (HRTF), a víz a Balaton irányából --- */
@@ -8647,7 +8996,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   /* ---------- Kézkövetés és kontroller egységesen (WebXR input source-ok): sugár, rámutatás, csippentés = kattintás ----------
      Meta Quest 2-n kontroller nélkül, saját kézzel: mutass a kezeddel, a csippentés (hüvelyk + mutatóujj) a kattintás.
      Kontrollerrel ugyanez a ravasszal; joystick sehol sem kell. */
-  const XRP = { on: false, session: null, src: {}, ray: {}, hov: {}, press: {}, drag: {}, extra: new Set(), btnPrev: {}, wrist: null, panelUV: null };
+  const XRP = { on: false, session: null, src: {}, ray: {}, hov: {}, press: {}, drag: {}, extra: new Set(), btnPrev: {}, wrist: null, panelUV: null, spin: {}, stick: {}, bar: null };
   let _rc = null;
   function xrStart() {
     let s = null; try { s = sceneEl.renderer.xr.getSession(); } catch (e) {}
@@ -8667,6 +9016,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     XRP.ray = {}; XRP.src = {}; XRP.seen = {};
     Object.keys(XRP.hov).forEach((k) => xrSetHover(k, null)); XRP.hov = {}; XRP.press = {}; XRP.drag = {};
     if (XRP.wrist) { kill(XRP.wrist); XRP.wrist = null; }
+    if (XRP.bar) { XRP.bar.items.forEach((m) => { XRP.extra.delete(m); (m.userData.tex || []).forEach((t) => t.dispose()); }); kill(XRP.bar.g); XRP.bar = null; }
+    XRP.spin = {}; XRP.stick = {};
   }
   /* egy kéz sugara: vékony fénycsík + célkör a találati ponton */
   function xrRayMesh(key) {
@@ -8719,10 +9070,12 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (down) {
       XRP.press[key] = t || null;
       if (t && t.kind === "obj" && t.h.down) { XRP.drag[key] = t; t.h.down(t.hit, XRP.src[key], key); }
+      if (!t) xrSpinStart(key);   /* üres helyre csippentve: a kéz oldalra húzásával fordul a világ */
       const r = XRP.ray[key]; if (r) r.halo.scale.setScalar(.6);
       return;
     }
     const r = XRP.ray[key]; if (r) r.halo.scale.setScalar(1);
+    if (XRP.spin[key]) { XRP.spin[key] = null; }
     const d = XRP.drag[key]; XRP.drag[key] = null;
     if (d && d.h.up) d.h.up(XRP.src[key], key);
     const p = XRP.press[key]; XRP.press[key] = null;
@@ -8737,7 +9090,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (!XRP.on) return;
     const r = sceneEl.renderer, frame = r.xr.getFrame && r.xr.getFrame(), ref = r.xr.getReferenceSpace && r.xr.getReferenceSpace();
     if (!frame || !ref) return;
-    const c = camObj(); const parent = c && c.parent; if (!parent) return;
+    /* A kezek és a kontrollerek pozíciója a rig (a „játéktér”) koordinátáiban értendő – ugyanott, ahol az A-Frame a kézmodellt rajzolja.
+       (Korábban a kamera szülőjét vettük, de VR-ben az A-Frame oda másolja a fej pozícióját – így a sugár ~1,6 m-rel a kéz fölött, a fej fölött indult.) */
+    const parent = rig && rig.object3D; if (!parent) return;
     parent.updateMatrixWorld(true);
     const seen = {}, targets = xrTargets();
     let anyPointer = false;
@@ -8751,7 +9106,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const o = new THREE.Vector3().setFromMatrixPosition(m), d = new THREE.Vector3(0, 0, -1).transformDirection(m);
       const S0 = XRP.src[key] || (XRP.src[key] = {});
       S0.src = src; S0.o = o; S0.d = d; S0.hand = !!src.hand;
+      S0.lo = pose.transform.position;   /* a kéz helye a játéktérben (a rig forgatásától független) – a „csippentve forgatáshoz” */
       if (src.gripSpace) { const gp = frame.getPose(src.gripSpace, ref); S0.grip = gp ? new THREE.Matrix4().fromArray(gp.transform.matrix).premultiply(parent.matrixWorld) : null; }
+      if (src.hand) xrPalm(S0, src, frame, ref, parent);
+      xrSpinTick(key, S0, frame, ref);
+      xrStick(key, src);
       /* húzás közben (pl. kormányrúd, makett forgatása) a fogott tárgy kapja a mozgást */
       const dr = XRP.drag[key];
       if (dr && dr.h.drag) dr.h.drag(S0, key);
@@ -8776,7 +9135,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (anyPointer) { XRP.lastPtr = performance.now(); removeGaze(); }
     else if (inVR && !gaze && performance.now() - (XRP.lastPtr || 0) > 1800) addGaze();
     XRP.seen = seen;
-    xrWrist();
+    xrWrist(); xrBar();
   }
   /* csukló-menü: a bal csukló fölött lebegő „☰ Menü” gomb, mindig a fejed felé fordul – a jobb kezeddel rámutatva, csippentéssel nyílik */
   function menuButton() { if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.togglePanel(); else vrToggle(); }
@@ -8794,12 +9153,143 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       sceneEl.object3D.add(m); XRP.wrist = m;
     }
     const w = XRP.wrist;
-    if (!L || !L.grip || !inVR) { w.visible = false; return; }
+    if (!L || !inVR) { w.visible = false; return; }
+    const xc = sceneEl.renderer.xr.getCamera();
+    if (L.hand) {
+      /* kézkövetésnél: csak akkor jelenik meg, ha a bal tenyered magad felé / felfelé fordítod – a tenyér fölött lebeg, nagyobb gombként */
+      if (!L.palmUp || !L.palmC) { w.visible = false; return; }
+      w.visible = true; w.scale.setScalar(XRP.hov.right && XRP.hov.right.o === w ? 1.65 : 1.45);
+      xc.getWorldPosition(_v2);
+      w.position.copy(L.palmC).addScaledVector(L.palmN, .075);
+      w.lookAt(_v2);
+      return;
+    }
+    if (!L.grip) { w.visible = false; return; }
     w.visible = true;
     _v1.setFromMatrixPosition(L.grip);
-    _v2.set(0, L.hand ? .065 : .08, L.hand ? .03 : .02).applyMatrix4(_m1.extractRotation(L.grip));
+    _v2.set(0, .08, .02).applyMatrix4(_m1.extractRotation(L.grip));
     w.position.copy(_v1).add(_v2);
-    const xc = sceneEl.renderer.xr.getCamera(); xc.getWorldPosition(_v2); w.lookAt(_v2);
+    xc.getWorldPosition(_v2); w.lookAt(_v2);
+  }
+
+  /* ---------- Forgás és lépés VR-ben (2026. nov. 6.) ----------
+     Kontrollerrel: a bot jobbra/balra = 45°-os fordulás (gyomorkímélő ugrás), előre = a nyílra lép, amerre nézel, hátra = vissza.
+     Kézzel, kontroller nélkül: (1) a látótered alján lebegő ↺ / ↻ gomb – csippents rá; (2) üres helyre csippents, és húzd oldalra a kezed:
+     vele fordul a világ, mint egy földgömb; (3) egyszerűen körbefordulsz. A bal tenyered felfelé fordítva előjön a ☰ Menü. */
+  const TURN = Math.PI / 4;
+  function headPos(v) { try { sceneEl.renderer.xr.getCamera().getWorldPosition(v); } catch (e) { v.set(0, 1.6, 0); } return v; }
+  function vrTurn(a, quiet) {
+    /* a rig elforgatása a fejed körül (nem a játéktér közepe körül), így fordulás közben nem csúszol el */
+    if (!rig || !a) return;
+    const R = rig.object3D, h = headPos(new THREE.Vector3());
+    const dx = R.position.x - h.x, dz = R.position.z - h.z, c = Math.cos(a), s = Math.sin(a);
+    R.position.x = h.x + dx * c + dz * s; R.position.z = h.z - dx * s + dz * c;
+    R.rotation.y += a;
+    if (!quiet) { Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, .3, 18)); try { sndNav(); } catch (e) {} if (XRP.bar) XRP.bar.follow = 1; }
+    try { vrAudioScene(); } catch (e) {}
+  }
+  function vrStepForward() {
+    /* a nézési irányodhoz legközelebb eső nyíl (±40°-on belül) – mintha rákattintanál */
+    if (!spots) return false;
+    const h = headPos(new THREE.Vector3()), f = new THREE.Vector3();
+    sceneEl.renderer.xr.getCamera().getWorldDirection(f); f.y = 0; if (f.lengthSq() < 1e-6) return false; f.normalize();
+    let best = null, bd = Math.cos(40 * Math.PI / 180);
+    spots.querySelectorAll(".hotspot").forEach((el) => {
+      if (el._ix !== 1 || !el.object3D || !isShown(el.object3D)) return;
+      const p = el.object3D.getWorldPosition(new THREE.Vector3()).sub(h); p.y = 0; if (p.lengthSq() < 1e-4) return; p.normalize();
+      const dd = p.dot(f); if (dd > bd) { bd = dd; best = el; }
+    });
+    if (best) { best.emit("click", { intersection: null, cursorEl: null }); return true; }
+    Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, .15, 40));
+    return false;
+  }
+  function xrStick(key, src) {
+    const gp = src.gamepad; if (!gp || !gp.axes || src.hand) return;
+    const ax = gp.axes.length >= 4 ? gp.axes[2] : gp.axes[0], ay = gp.axes.length >= 4 ? gp.axes[3] : gp.axes[1];
+    const S = XRP.stick[key] || (XRP.stick[key] = { armed: true });
+    const m = Math.max(Math.abs(ax || 0), Math.abs(ay || 0));
+    if (m < .3) { S.armed = true; return; }
+    if (!S.armed || m < .72) return;
+    S.armed = false;
+    if (window.ZephyrWorld && ZephyrWorld.active && ZephyrWorld.stick && ZephyrWorld.stick(ax, ay)) return;   /* ha a világ maga kezeli */
+    if (Math.abs(ax) >= Math.abs(ay)) vrTurn(ax > 0 ? -TURN : TURN);
+    else if (ay < 0) vrStepForward();
+    else { try { if (typeof goBack === "function") goBack(); } catch (e) {} }
+  }
+  /* csippentve forgatás: a kéz vízszintes szöge a fejed körül (a játéktér koordinátáiban, így a forgatás nem hat vissza rá) */
+  function xrLocalAngle(S0, frame, ref) {
+    if (!S0 || !S0.lo) return null;
+    let hx = 0, hz = 0; try { const vp = frame.getViewerPose(ref); if (vp) { hx = vp.transform.position.x; hz = vp.transform.position.z; } } catch (e) {}
+    const x = S0.lo.x - hx, z = S0.lo.z - hz; if (x * x + z * z < .0025) return null;
+    return Math.atan2(-x, -z);
+  }
+  function xrSpinStart(key) {
+    if (window.ZephyrWorld && ZephyrWorld.active) return;
+    const S0 = XRP.src[key]; if (!S0) return;
+    XRP.spin[key] = { a0: null, done: 0 };
+  }
+  function xrSpinTick(key, S0, frame, ref) {
+    const sp = XRP.spin[key]; if (!sp) return;
+    const a = xrLocalAngle(S0, frame, ref); if (a == null) return;
+    if (sp.a0 == null) { sp.a0 = a; return; }
+    let d = a - sp.a0; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+    const want = -d * 1.6;   /* a kéz 30°-os mozdulata ~48°-ot fordít */
+    vrTurn(want - sp.done, true); sp.done = want;
+  }
+  /* a tenyér iránya a kéz ízületeiből: csukló, mutatóujj- és kisujj-kézközépcsont */
+  function xrPalm(S0, src, frame, ref, parent) {
+    try {
+      const J = (n) => { const j = src.hand.get(n); const p = j && frame.getJointPose(j, ref); return p ? new THREE.Vector3(p.transform.position.x, p.transform.position.y, p.transform.position.z).applyMatrix4(parent.matrixWorld) : null; };
+      const w = J("wrist"), i = J("index-finger-metacarpal"), p = J("pinky-finger-metacarpal"), mid = J("middle-finger-metacarpal");
+      if (!w || !i || !p) { S0.palmUp = false; return; }
+      const a = i.clone().sub(w), b = p.clone().sub(w);
+      const n = src.handedness === "left" ? b.clone().cross(a) : a.clone().cross(b); n.normalize();
+      const c = w.clone().add(i).add(p).add(mid || w).multiplyScalar(.25);
+      const h = headPos(new THREE.Vector3()), toHead = h.clone().sub(c).normalize();
+      const f = n.dot(toHead), up = n.y;
+      const score = Math.max(f, up * .9);
+      S0.palmC = c; S0.palmN = n; S0.palmScore = score;
+      S0.palmUp = S0.palmUp ? score > .35 : score > .6;
+    } catch (e) { S0.palmUp = false; }
+  }
+  /* --- alsó eszközsor: ↺ 45°  ·  ☰ Menü  ·  45° ↻ – a látótered alján lebeg, lefelé nézve mindig ott van --- */
+  function xrBarCanvas(label, sub, hov) {
+    const cv = document.createElement("canvas"); cv.width = 300; cv.height = 220; const g = cv.getContext("2d");
+    g.fillStyle = hov ? "rgba(255,209,102,.98)" : "rgba(11,47,94,.92)"; g.beginPath(); g.roundRect ? g.roundRect(8, 8, 284, 204, 46) : g.rect(8, 8, 284, 204); g.fill();
+    g.lineWidth = 8; g.strokeStyle = hov ? "#fff" : "#ffd166"; g.stroke();
+    g.fillStyle = hov ? "#0b2f5e" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.font = "800 100px system-ui, sans-serif"; g.fillText(label, 150, 92);
+    g.font = "700 40px system-ui, sans-serif"; g.fillText(sub, 150, 172);
+    return cv;
+  }
+  function xrBar() {
+    if (!inVR) { if (XRP.bar) XRP.bar.g.visible = false; return; }
+    const worldOn = !!(window.ZephyrWorld && ZephyrWorld.active);
+    if (!XRP.bar) {
+      const g = new THREE.Group(), items = [];
+      [["↺", "Balra", () => vrTurn(TURN)], ["☰", "Menü", () => menuButton()], ["↻", "Jobbra", () => vrTurn(-TURN)]].forEach(([l, s, fn], k) => {
+        const tx = [false, true].map((hv) => { const t = new THREE.CanvasTexture(xrBarCanvas(l, s, hv)); t.colorSpace = THREE.SRGBColorSpace; return t; });
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(.15, .11), new THREE.MeshBasicMaterial({ map: tx[0], transparent: true, depthTest: false, depthWrite: false }));
+        m.renderOrder = 997; m.position.x = (k - 1) * .175;
+        m.userData.xr = { click: fn, hover: (on) => { m.material.map = tx[on ? 1 : 0]; m.scale.setScalar(on ? 1.12 : 1); } };
+        m.userData.tex = tx; g.add(m); items.push(m);
+      });
+      sceneEl.object3D.add(g); XRP.bar = { g, items, yaw: null, follow: 1 };
+      items.forEach((m) => XRP.extra.add(m));
+    }
+    const B = XRP.bar;
+    B.g.visible = !worldOn;
+    if (worldOn) return;
+    const xc = sceneEl.renderer.xr.getCamera(), h = headPos(new THREE.Vector3()), f = new THREE.Vector3();
+    xc.getWorldDirection(f); f.y = 0; if (f.lengthSq() < 1e-6) return; f.normalize();
+    const yaw = Math.atan2(-f.x, -f.z);
+    /* „lusta” követés: csak akkor fordul utánad, ha már 35°-nál jobban elnéztél, akkor finoman */
+    if (B.yaw == null || B.follow) { B.yaw = yaw; B.follow = 0; }
+    let d = yaw - B.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+    if (Math.abs(d) > .61 || B.chase) { B.chase = Math.abs(d) > .03; B.yaw += d * .12; }
+    const dist = .72, drop = .5;
+    B.g.position.set(h.x - Math.sin(B.yaw) * dist, h.y - drop, h.z - Math.cos(B.yaw) * dist);
+    B.g.rotation.set(-Math.atan2(drop, dist) * .85, B.yaw, 0, "YXZ");
   }
   /* minden képkockában (VR-ben is) – A-Frame komponens a jeleneten */
   function regXR() {
@@ -8819,6 +9309,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
     ac, outBus, noiseBuf, xr: XRP, camYaw, xrRaf, vrClose, vrEnd: (f) => vrEndSession(f), headY() { try { const xc = sceneEl.renderer.xr.getCamera(), p = new THREE.Vector3(); xc.getWorldPosition(p); return inVR ? p.y : 0; } catch (e) { return 0; } },
     setBusy(v) { busy = !!v; },
+    /* a VR-panel elérése (tesztekhez és a világ-modulhoz): állapot, megnyitás, kattintás a vászon-koordinátán, billentyű */
+    vrPanel: { get S() { return VRS; }, open: (p) => vrOpen(p), click: (x, y) => vrClick(x, y), turn: (a) => vrTurn(a), step: () => vrStepForward(), key: (k) => kbPress(k) },
     xrForget(objs) { Object.keys(XRP.hov).forEach((k) => { const t = XRP.hov[k]; if (t && t.kind === "obj" && objs.includes(t.o)) XRP.hov[k] = null; });
       Object.keys(XRP.drag).forEach((k) => { const t = XRP.drag[k]; if (t && objs.includes(t.o)) XRP.drag[k] = null; });
       Object.keys(XRP.press).forEach((k) => { const t = XRP.press[k]; if (t && t.kind === "obj" && objs.includes(t.o)) XRP.press[k] = null; }); }
