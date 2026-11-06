@@ -2419,44 +2419,66 @@
     /* előkert: cserjék, virágok */
     [[.3, -1.8], [5.4, -1.9], [-.1, -.7]].forEach(([x, z]) => add("foliage", leafGeom([[x, .45, z, .5, 7, .9]], "#5f9a3a", .1)));
     flowers(add, -.3, -2.3, 1.2, -1.2, 40); flowers(add, 3, -2.3, 5.2, -1.5, 50);
-    /* behajtó és parkoló: térkő a ház mellett, hátul fűrácskő (lyukas betonelemek) */
-    box("brick", 6.3, .04, -2.7, 9.0, .065, 22.3);
-    box("grid", 9.0, .04, 10, 12.6, .062, 22.3); box("brick", 9.0, .04, -2.7, 12.6, .065, 10);
-    [["#e9ecef", 10.8, 13.5], ["#4a5058", 10.8, 18.7]].forEach(([c, x, z], i) => car(add, c, x, z, i % 2 ? 0 : Math.PI));
-    box("hedge", 12.6, .04, -2.7, 13.0, 1.75, 22.3);
-    /* hátsó kert: műfű, betonozott pihenő; a keleti telekhatáron zöld belátásgátló kerítés, nyugaton tujasor */
-    box("grass", -.4, .04, 22.3, 12.6, .07, SZ1);
-    box("#7f9a86", 12.6, .04, 22.3, 12.75, 2.0, SZ1);
+    /* BEHAJTÓ ÉS HÁTSÓ PARKOLÓ (2026. nov. 6., a hátsó parkoló és a kert 360°-os fotói szerint átrendezve):
+       • a ház keleti oldala mellett és a keleti sövény mentén végig térkövezett behajtó (téglalap alakú térkő) – a kertig fut;
+       • a ház mögött (a zárt terasz és a hátsó L-lépcső mögött) gyephézagos, lyukas betonelemes parkoló 4 autónak:
+         az autók keresztben állnak, orral nyugatra (a kertből oldalról látszanak), az első a lépcső mellett – mint a fotón a fehér terepjáró;
+       • a parkoló nyugati szélén zöld belátásgátló kerítés, mögötte a Schooner kis kertje;
+       • a kert nyugati felén a nádfonatos kerti konyha pavilonnal, előtte betonozott pihenőn a kő tűzrakóasztal (grillező) kőpadokkal,
+         mellette két napozószék és a kerti zuhany; középen és keleten egy-egy pavilon asztallal, székekkel; a keleti sövénynél kerti csap és kuka. */
+    const PZ0 = Z_END + 3.3, PZ1 = PZ0 + 6.4, PX0 = 1.1, PX1 = 10.4;
+    box("brick", 6.3, .04, -2.7, 12.6, .065, PZ0);          /* behajtó a ház mellett */
+    box("brick", PX1, .04, PZ0, 12.6, .065, PZ1 + 4.2);     /* behajtó a keleti sövény mentén, a kertig */
+    box("grid", PX0, .04, PZ0, PX1, .062, PZ1);             /* gyephézagos parkoló */
+    box("#9aa0a6", PX0 - .05, .04, PZ1 - .05, PX1, .075, PZ1 + .05); box("#9aa0a6", PX1 - .05, .04, PZ0, PX1 + .05, .075, PZ1 + 4.2);   /* szegélykő */
+    [[PX0 + .3, PZ0 + 1.4, "#eef0f2"], [PX0 + .3, PZ0 + 4.2, "#4a5058"], [PX0 + 4.65, PZ0 + 4.2, "#8a1f24"]].forEach(([x0, z, c]) => car(add, c, x0 + 2.15, z, Math.PI / 2));   /* orral nyugatra */
+    for (let k = 0; k < 3; k++) box("#e9ecef", PX0 + 4.45 + (k === 2 ? -4.35 : 0), .062, PZ0 + .15 + (k % 2) * 2.8, PX0 + 4.5 + (k === 2 ? -4.35 : 0), .066, PZ0 + 2.65 + (k % 2) * 2.8);   /* parkolóhely-jelölés */
+    box("hedge", 12.6, .04, -2.7, 13.0, 1.75, SZ1);
+    /* zöld belátásgátló kerítés a parkoló nyugati szélén és a Schooner-kert déli szélén */
+    box("#4f6f5c", PX0 - .06, .04, PZ0, PX0, 1.75, PZ1); box("#4f6f5c", -.4, .04, PZ1 - .06, PX0, 1.75, PZ1);
+    for (let z = PZ0 + .5; z < PZ1; z += 1.25) box("frame", PX0 - .09, .04, z, PX0 - .03, 1.8, z + .05);
+    /* gyep: a Schooner kis kertje és a hátsó kert (műfű) */
+    box("grass", -.4, .04, PZ0, PX0 - .06, .07, PZ1 - .06); box("grass", -.4, .04, PZ1, PX1, .07, SZ1);
     for (let z = 23; z < SZ1 - .5; z += 1.15) add("foliage", leafGeom([[-.9, 1.6, z, .55, 6, 3.2]], "#2f5a2c", .1));
     box("hedge", -.6, .04, SZ1 - .25, 12.9, 1.6, SZ1);
-    box("#bdb7ad", 7.4, .04, 25.8, 12.5, .1, 32.2);
+    /* betonozott pihenő a kerti konyha és a tűzrakó körül */
+    box("#bdb7ad", -.3, .04, PZ1 + .4, 5.2, .1, PZ1 + 5.0);
     /* fehér kerti pavilonok (gazebo): a kerti konyha fölött és két ülőhely */
     const gazebo = (cx, cz, w) => { const h = w / 2; [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { box("#c9cdd2|m", cx + a * h - .03, .1, cz + b * h - .03, cx + a * h + .03, 2.2, cz + b * h + .03); for (let y = .5; y < 2.1; y += .4) box("#c9cdd2|m", cx + a * h - .04, y, cz + b * h - .04, cx + a * h + .04, y + .03, cz + b * h + .04); });
       add("#f4f3ee", new THREE.ConeGeometry(w * .74, .75, 4, 1, true), M4(cx, 2.55, cz, Math.PI / 4)); add("#e9e7df", new THREE.ConeGeometry(w * .73, .74, 4, 1, true), M4(cx, 2.54, cz, Math.PI / 4));
       [[0, -h], [0, h]].forEach(([dx, dz]) => box("#f4f3ee", cx - h, 2.0, cz + dz - .01, cx + h, 2.2, cz + dz + .01)); [[-h, 0], [h, 0]].forEach(([dx]) => box("#f4f3ee", cx + dx - .01, 2.0, cz - h, cx + dx + .01, 2.2, cz + h)); };
     const tableSet = (cx, cz) => { box("#9aa0a6", cx - .45, .74, cz - .45, cx + .45, .78, cz + .45); box("#2b2f36|m", cx - .03, .1, cz - .03, cx + .03, .74, cz + .03);
       [[0, -.75, 0], [0, .75, Math.PI], [-.75, 0, Math.PI / 2], [.75, 0, -Math.PI / 2]].forEach(([dx, dz, r]) => chair(add, cx + dx, cz + dz, r, -1, "#2b2f36", .07)); };
-    gazebo(9.3, 27.2, 3); gazebo(3.2, 27.6, 2.8); gazebo(3.2, 33.6, 2.8);
-    tableSet(3.2, 27.6); tableSet(3.2, 33.6);
-    /* kerti konyha: nádfonatos pult, világos munkalap, mosogató */
-    box("rattan", 8.0, .1, 26.2, 10.6, 1.0, 26.8); box("#d9d4c8", 7.95, 1.0, 26.15, 10.65, 1.05, 26.85); box("steel", 9.6, 1.05, 26.3, 10.1, 1.06, 26.7);
-    box("#2b2f36|m", 7.6, .1, 26.4, 7.9, 1.6, 26.7);   /* hűtő / grill */
-    /* kő tűzrakó asztal kőpadokkal, napozószékek */
-    box("#cfcabe", 8.8, .1, 29.0, 9.8, .55, 29.8); box("#3a3a3a", 9.0, .55, 29.2, 9.6, .56, 29.6);
-    box("#cfcabe", 8.5, .1, 30.4, 10.1, .45, 30.75); box("#cfcabe", 10.4, .1, 29.0, 10.75, .45, 30.0);
-    [[11.4, 28.0], [11.4, 29.3]].forEach(([x, z]) => { add("#2b2f36", new THREE.BoxGeometry(.6, .04, 1.1), M4(x, .55, z, 0, -.35)); add("#2b2f36", new THREE.BoxGeometry(.6, .04, .6), M4(x, .78, z - .7, 0, -1.0));
-      [[-.28], [.28]].forEach(([dx]) => add("#1c1f24|m", new THREE.BoxGeometry(.03, .6, 1.4), M4(x + dx, .45, z - .1, 0, .4))); });
-    /* SUP-tartó, kerékpárok, tároló */
-    box("#7a5a3a", 11.1, .04, 32.8, 11.2, 1.3, 33.0); box("#7a5a3a", 12.4, .04, 32.8, 12.5, 1.3, 33.0);
-    for (let k = 0; k < 4; k++) add(["#ffd166", "#1f5fa8", "#e5262f", "#3fb37f"][k], new THREE.BoxGeometry(1.5, .1, .7), M4(11.8, .45 + k * .26, 33.3 + k * .02));
-    for (let k = 0; k < 4; k++) bike(add, 11.6, 36 + k * .55, ["#2b2f36", "#c62828", "#1f5fa8", "#e9ecef"][k]);
-    box("#8c939b", 9.4, .04, 34.6, 11.2, 2.1, 37.2); box("#6d737a", 9.3, 2.1, 34.5, 11.3, 2.18, 37.3); box("#5a3d24", 10.0, .04, 34.58, 10.6, 1.9, 34.6);
+    const KX = 2.2, KZ = PZ1 + 3.6;   /* a kerti konyha pavilonja */
+    gazebo(KX, KZ, 3); gazebo(6.6, PZ1 + 2.6, 2.8); gazebo(9.0, PZ1 + 6.2, 2.8);
+    tableSet(6.6, PZ1 + 2.6); tableSet(9.0, PZ1 + 6.2);
+    /* kerti konyha: nádfonatos pult, világos munkalap, mosogató, mellette a kerti hűtő */
+    box("rattan", KX - 1.3, .1, KZ + .3, KX + 1.3, 1.0, KZ + .9); box("#d9d4c8", KX - 1.35, 1.0, KZ + .25, KX + 1.35, 1.05, KZ + .95); box("steel", KX + .3, 1.05, KZ + .4, KX + .8, 1.06, KZ + .8);
+    box("#2b2f36|m", KX - 1.75, .1, KZ + .35, KX - 1.4, 1.5, KZ + .85);
+    /* a grillező: kő tűzrakóasztal (középen fémtálca), három oldalán kőpad – a konyha előtt, a pihenő közepén */
+    const GX = 3.4, GZ = PZ1 + 1.7;
+    box("#d2cdc1", GX - .55, .1, GZ - .4, GX + .55, .5, GZ + .4); box("#cfcabe", GX - .7, .5, GZ - .5, GX + .7, .58, GZ + .5); box("#3a3a3a", GX - .3, .58, GZ - .22, GX + .3, .6, GZ + .22);
+    box("#555", GX - .26, .6, GZ - .18, GX + .26, .66, GZ + .18);   /* tálca, rács */
+    for (let k = -2; k <= 2; k++) box("#222", GX + k * .1 - .01, .66, GZ - .18, GX + k * .1 + .01, .67, GZ + .18);
+    [[GX, GZ - 1.05, 1.5, .34], [GX, GZ + 1.05, 1.5, .34], [GX + 1.15, GZ, .34, 1.2]].forEach(([x, z, w, d]) => { box("#cfcabe", x - w / 2, .1, z - d / 2, x + w / 2, .4, z + d / 2); box("#bdb8ac", x - w / 2 + .1, .1, z - d / 2 + .06, x - w / 2 + .22, .38, z + d / 2 - .06); box("#bdb8ac", x + w / 2 - .22, .1, z - d / 2 + .06, x + w / 2 - .1, .38, z + d / 2 - .06); });
+    /* napozószékek (sötét, kartámás) a pihenő nyugati szélén, kerti zuhany a kerítésnél */
+    [[.6, GZ - .6], [.6, GZ + .5]].forEach(([x, z]) => { add("#2b2f36", new THREE.BoxGeometry(1.1, .04, .6), M4(x, .5, z, Math.PI / 2, 0, -.3)); add("#2b2f36", new THREE.BoxGeometry(.6, .04, .62), M4(x - .72, .78, z, Math.PI / 2, 0, -1.0));
+      [[-.28], [.28]].forEach(([dz]) => add("#1c1f24|m", new THREE.BoxGeometry(1.4, .6, .03), M4(x - .1, .42, z + dz, 0, 0, .4))); });
+    cyl("frame", -.15, .04, PZ1 + 1.0, .04, 2.1, -1); box("frame", -.2, 2.1, PZ1 + .95, .25, 2.14, PZ1 + 1.05); cyl("steel", .22, 1.95, PZ1 + 1.0, .1, .04, -1); box("#7a5a3a", -.4, .04, PZ1 + .6, .4, .1, PZ1 + 1.4);
+    /* kerékpárok a konyha mögött, SUP-tartó és tároló (hűtő, kompresszor) a kert hátsó részén */
+    for (let k = 0; k < 4; k++) bike(add, 4.2 + k * .55, KZ + 1.9, ["#2b2f36", "#c62828", "#1f5fa8", "#e9ecef"][k]);
+    box("#7a5a3a", 6.6, .04, SZ1 - 2.6, 6.7, 1.3, SZ1 - 2.4); box("#7a5a3a", 6.6, .04, SZ1 - 1.2, 6.7, 1.3, SZ1 - 1.0);
+    for (let k = 0; k < 4; k++) add(["#ffd166", "#1f5fa8", "#e5262f", "#3fb37f"][k], new THREE.BoxGeometry(.7, .1, 1.5), M4(6.95 + k * .02, .45 + k * .26, SZ1 - 1.8));
+    box("#8c939b", 1.0, .04, SZ1 - 2.5, 3.2, 2.1, SZ1 - .5); box("#6d737a", .9, 2.1, SZ1 - 2.6, 3.3, 2.18, SZ1 - .4); box("#5a3d24", 1.7, .04, SZ1 - 2.52, 2.3, 1.9, SZ1 - 2.5);
+    /* kerti csap a keleti sövénynél, kuka a behajtó végén */
+    box("#c9c2b2", 10.2, .04, PZ1 + 7.6, 10.4, 1.0, PZ1 + 8.0); cyl("steel", 10.15, .75, PZ1 + 7.8, .03, .12, -1);
+    box("#2b2f36", 12.0, .065, PZ1 + 1.0, 12.5, 1.05, PZ1 + 1.5); box("#f2c94c", 12.0, 1.05, PZ1 + 1.0, 12.5, 1.1, PZ1 + 1.5);
     /* fák a kertben */
-    [[6.0, 38.2, 2.0], [10.0, 38.4, 1.6], [11.8, 24.0, 1.3], [-1.6, -6.1, 1.4], [11.2, -3.4, 1.3]].forEach(([x, z, r]) => tree(add, x, z, r));
-    flowers(add, -.2, 22.6, 1.4, 25, 70); flowers(add, 4.8, 38.6, 8.6, 39.6, 70);
-    /* kerti lámpák (bollardok) */
-    for (let z = 23.5; z < SZ1 - 2; z += 4) { cyl("frame", 7.25, .04, z, .06, .7, -1); cyl("bulb", 7.25, .7, z, .07, .1, -1); }
-    garland(add, [[7.85, 2.15, 25.75], [12.4, 2.3, 25.9], [12.4, 2.3, 32.0], [7.85, 2.15, 32.0]], .25, -1, "all");   /* fényfüzér a pihenő fölött */
+    [[6.0, 38.6, 2.0], [10.6, 38.8, 1.4], [11.8, 24.0, 1.3], [-1.6, -6.1, 1.4], [11.2, -3.4, 1.3]].forEach(([x, z, r]) => tree(add, x, z, r));
+    flowers(add, -.2, PZ0 + .3, .9, PZ1 - .4, 50); flowers(add, 4.8, 39.0, 8.6, 39.6, 60);
+    /* kerti lámpák (bollardok) a parkoló és a gyep határán */
+    for (let x = 1.6; x < PX1; x += 3) { cyl("frame", x, .04, PZ1 + .25, .06, .7, -1); cyl("bulb", x, .7, PZ1 + .25, .07, .1, -1); }
+    garland(add, [[KX - 1.5, 2.15, KZ - 1.5], [6.6 + 1.4, 2.15, PZ1 + 1.2], [9.0 + 1.4, 2.2, PZ1 + 4.8], [9.0 - 1.4, 2.2, PZ1 + 7.6]], .25, -1, "all");   /* fényfüzér a pavilonok között */
 
     /* ------------------------------------------------ az épület */
     const Y1 = FLOOR_H;
