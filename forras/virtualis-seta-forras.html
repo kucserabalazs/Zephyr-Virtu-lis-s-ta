@@ -9536,7 +9536,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (down) {
       XRP.press[key] = t || null;
       if (t && t.kind === "obj" && t.h.down) { XRP.drag[key] = t; t.h.down(t.hit, XRP.src[key], key); }
-      if (!t && WS.spin) xrSpinStart(key);   /* (régi) üres helyre csippentve forgatás – csak ha a beállításban bekapcsolod */   /* üres helyre csippentve: a kéz oldalra húzásával fordul a világ */
+      if (!t && WS.spin) xrSpinStart(key);   /* üres helyre csippentve: a kéz oldalra húzásával fordul a nézet (alapból bekapcsolva, a csuklómenüben kikapcsolható) */   /* üres helyre csippentve: a kéz oldalra húzásával fordul a világ */
       const r = XRP.ray[key]; if (r) r.halo.scale.setScalar(.6);
       return;
     }
@@ -9628,8 +9628,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       "Gyöngyház": ["#f4f1ea", "#bfb8aa", "rgba(232,226,214,.97)", "rgba(170,160,145,.97)"], "Balaton-türkiz": ["#2c9a92", "#0b3f45", "rgba(36,128,122,.97)", "rgba(10,62,66,.97)"] },
     strap: ["Fém lánc", "Barna bőr", "Kék szilikon", "Vitorlakötél"]
   };
-  const WS_DEF = { size: "Nagy", metal: "Arany", dial: "Tengerkék", strap: "Fém lánc", compass: true, sound: true, tap: false, face: "Digitális", loco: true, turnDeg: 45, spin: false };
-  let WS = (() => { try { return Object.assign({}, WS_DEF, JSON.parse(localStorage.getItem("zephyrOra") || "{}")); } catch (e) { return Object.assign({}, WS_DEF); } })();
+  const WS_DEF = { size: "Nagy", metal: "Arany", dial: "Tengerkék", strap: "Fém lánc", compass: true, sound: true, tap: false, face: "Digitális", loco: true, turnDeg: 45, spin: true, spinV: 2 };
+  let WS = (() => { try { const o = Object.assign({}, WS_DEF, JSON.parse(localStorage.getItem("zephyrOra") || "{}")); if ((o.spinV || 0) < 2) { o.spin = true; o.spinV = 2; } return o; } catch (e) { return Object.assign({}, WS_DEF); } })();   /* 2026. nov.: a csippentve forgatás alapból bekapcsolva (a tulajdonos kérése) */
   /* 2026. nov. 6. (3. kör, a tulajdonos kérésére): a kéz fölötti ↑↓←→ „mikrogesztus” mozgás alapból KI (zavaró volt), és a csuklómenü
      koppintás nélkül, a csukló felfordításával + ránézéssel AZONNAL nyílik – egy régebben elmentett „koppintásos” beállítás sem írja felül. */
   WS.tap = false; WS.loco = false;
@@ -10114,8 +10114,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     let d = a - sp.a0; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
     /* holtsáv: egy elhibázott csippentésnél a kéz remegése ne forgasson */
     if (!sp.live) { if (Math.abs(d) < .09) return; sp.live = true; sp.a0 = a; return; }
-    const want = -d * 1.6;   /* a kéz 30°-os mozdulata ~48°-ot fordít */
-    vrTurn(want - sp.done, true); sp.done = want;
+    /* CSIPPENTVE FORGATÁS (2026. nov. 7., a tulajdonos kérése): csippents a semmibe magad előtt, és húzd a kezed jobbra → a nézet veled együtt jobbra fordul,
+       balra húzva balra. A kéz 30°-os mozdulata ~50°-ot fordít; finoman simítva, hogy ne rángasson. */
+    const want = d * 1.65;
+    const step = (want - sp.done) * .65; vrTurn(step, true); sp.done += step;
   }
   /* a tenyér iránya a kéz ízületeiből: csukló, mutatóujj- és kisujj-kézközépcsont */
   function xrPalm(S0, src, frame, ref, parent) {
