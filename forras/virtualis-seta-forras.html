@@ -8432,12 +8432,235 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function vrExit() {
     inVR = false;
     document.body.classList.remove("in-vr");
-    removeGaze(); vrClose(); vrMenuButton(false); vrAudio(false); xrStop();
+    removeGaze(); vrClose(); vrMenuButton(false); vrAudio(false); xrStop(); vrnClear();
     try { rig.object3D.position.set(0, 0, 0); } catch (e) {}
     if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.vrChanged(false);
     const c = camObj(); if (c) { c.fov = deviceFov(); c.updateProjectionMatrix(); }
     if (VRS.after) { const f = VRS.after; VRS.after = null; setTimeout(f, 350); }
   }
+  /* ===========================================================================================
+     VR-navigáció (2026-11-06): a szemüvegben a nyilak, táblák helyett csak az látszik, HOVA LEHET MENNI.
+     Minden szomszédos fotóhely egy fénylő jelölő a padlón, pontosan ott, ahol a fotón az a hely van:
+     arany gyűrű lassan lüktetve, benne az irányba áramló nyílhegyek, fölötte halvány fényoszlop és
+     egy úszó névtábla (ikon + a hely neve). Rámutatva kifényesedik, rezzen a kéz; csippentésre átugrasz.
+     Ami fölfelé vezet (pl. lépcső az emeletre), annál a jelölő a levegőben, feléd fordulva lebeg.
+     =========================================================================================== */
+  const VRN = { g: null, scene: null, list: [], hov: {}, tex: null, hidden: [] };
+  function vrnTextures() {
+    if (VRN.tex) return VRN.tex;
+    const mk = (w, h, f) => { const c = document.createElement("canvas"); c.width = w; c.height = h; f(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+    /* gyűrű: puha fényudvar + éles arany perem + belső halvány tányér */
+    const ring = mk(512, 512, (g, w) => { const c = w / 2;
+      let gr = g.createRadialGradient(c, c, 0, c, c, c); gr.addColorStop(0, "rgba(255,230,160,.10)"); gr.addColorStop(.62, "rgba(255,214,120,.16)"); gr.addColorStop(.74, "rgba(255,226,150,.95)"); gr.addColorStop(.79, "rgba(255,248,220,1)"); gr.addColorStop(.84, "rgba(255,210,110,.85)"); gr.addColorStop(.92, "rgba(255,190,80,.22)"); gr.addColorStop(1, "rgba(255,190,80,0)");
+      g.fillStyle = gr; g.beginPath(); g.arc(c, c, c, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 3; g.setLineDash([18, 22]); g.beginPath(); g.arc(c, c, c * .62, 0, Math.PI * 2); g.stroke(); });
+    /* nyílhegyek (három chevron egymás után) – a textúra eltolásával „áramlanak” */
+    const chev = mk(256, 512, (g, w, h) => { g.clearRect(0, 0, w, h); g.lineCap = "round"; g.lineJoin = "round";
+      for (let i = 0; i < 3; i++) { const y = 70 + i * 150; g.strokeStyle = `rgba(255,${235 - i * 10},${190 - i * 30},${.95 - i * .25})`; g.lineWidth = 34; g.beginPath(); g.moveTo(40, y + 70); g.lineTo(w / 2, y); g.lineTo(w - 40, y + 70); g.stroke(); } });
+    chev.wrapT = THREE.RepeatWrapping;
+    /* fényoszlop: alul erős, fölfelé elhalványul */
+    const beam = mk(8, 256, (g, w, h) => { const gr = g.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, "rgba(255,226,150,.85)"); gr.addColorStop(.35, "rgba(255,214,130,.28)"); gr.addColorStop(1, "rgba(255,214,130,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+    VRN.tex = { ring, chev, beam }; return VRN.tex;
+  }
+  function vrnIcon(link) {
+    const k = String(link[5] || "") + " " + String(link[6] || ""), lb = String(link[3] || "").toLowerCase();
+    if (/apt|bed/.test(k)) return "🛏️"; if (/home|zephyr/.test(k)) return "🏠"; if (/sundeck|steg/.test(k) || /stég/.test(lb)) return "🏖️";
+    if (/parking/.test(k)) return "🅿️"; if (/grill/.test(k)) return "🔥"; if (/sup/.test(k)) return "🏄"; if (/bike/.test(k)) return "🚲"; if (/gate/.test(k)) return "🚪";
+    if (/fel |emelet|lépcső/.test(lb)) return "⬆️"; if (/^le\b|le a |vízbe|úszás/.test(lb)) return "⬇️"; if (/strand|víz|nád/.test(lb)) return "🌊"; if (/terasz/.test(lb)) return "☀️";
+    return "➜";
+  }
+  function vrnLabelTex(title, sub, ico) {
+    const c = document.createElement("canvas"), g = c.getContext("2d"); c.width = 1100; c.height = 260;
+    g.font = "800 74px system-ui, sans-serif"; const tw = Math.min(800, g.measureText(title).width);
+    const W = Math.max(560, Math.min(1090, tw + 300)), x0 = (c.width - W) / 2;
+    const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+    g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 24; rr(x0 + 8, 18, W - 16, 210, 105);
+    const bg = g.createLinearGradient(0, 18, 0, 228); bg.addColorStop(0, "rgba(22,64,118,.96)"); bg.addColorStop(1, "rgba(8,30,62,.96)"); g.fillStyle = bg; g.fill(); g.shadowBlur = 0;
+    g.lineWidth = 6; g.strokeStyle = "rgba(255,209,102,.95)"; g.stroke();
+    g.fillStyle = "rgba(255,255,255,.07)"; rr(x0 + 20, 28, W - 40, 80, 60); g.fill();
+    /* ikon-korong */
+    g.beginPath(); g.arc(x0 + 118, 123, 80, 0, Math.PI * 2); const ig = g.createLinearGradient(0, 43, 0, 203); ig.addColorStop(0, "#ffe08a"); ig.addColorStop(1, "#f2b233"); g.fillStyle = ig; g.fill();
+    g.font = "86px system-ui, 'Apple Color Emoji', 'Noto Color Emoji', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#0b2f5e"; g.fillText(ico, x0 + 118, 128);
+    g.textAlign = "left"; g.fillStyle = "#ffffff"; let fs = 74; g.font = `800 ${fs}px system-ui, sans-serif`; while (fs > 34 && g.measureText(title).width > W - 260) { fs -= 3; g.font = `800 ${fs}px system-ui, sans-serif`; }
+    g.fillText(title, x0 + 222, 100);
+    g.fillStyle = "#ffd166"; g.font = "600 42px system-ui, sans-serif"; g.fillText(sub, x0 + 224, 172);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return { t, ar: c.height / c.width };
+  }
+  function vrnLinks(sc) {
+    /* minden kimenő irány: nyilak (l), telefonos nyilak (pl – a tábla sorai pontos helyen), séta-irányok (wl) */
+    const out = [], seen = new Set();
+    [].concat(sc.l || [], sc.pl || [], sc.wl || []).forEach((l) => { if (!l || !isVisible(l[0]) || seen.has(l[0])) return; seen.add(l[0]); out.push(l); });
+    return out;
+  }
+  function vrnClear() {
+    if (VRN.g) { VRN.list.forEach((m) => { XRP.extra.delete(m.hit); m.dispose(); }); if (VRN.g.parent) VRN.g.parent.remove(VRN.g); }
+    VRN.g = null; VRN.list = []; VRN.scene = null; VRN.hov = {};
+    VRN.hidden.forEach((o) => { o.visible = true; }); VRN.hidden = [];
+  }
+  function vrnBuild() {
+    vrnClear(); const sc = SCENES[current]; if (!sc || !spots) return;
+    const T = vrnTextures(); VRN.g = new THREE.Group(); VRN.g.name = "vr-nav"; sceneEl.object3D.add(VRN.g); VRN.scene = current;
+    spots.object3D.updateMatrixWorld(true);
+    const h = headPos(new THREE.Vector3()), o0 = spots.object3D.localToWorld(new THREE.Vector3(0, 0, 0));
+    const floorY = (rig ? rig.object3D.position.y : 0), eyeH = Math.max(1.2, Math.min(1.9, h.y - floorY || 1.6));
+    vrnLinks(sc).forEach((link) => {
+      const [to, x, y, label] = link; const p = dirFrom(x, y, 1); const d = spots.object3D.localToWorld(new THREE.Vector3(p.x, p.y, p.z)).sub(o0).normalize();
+      const floor = d.y < -.07; let pos;
+      if (floor) { const dist = Math.max(1.4, Math.min(9, (eyeH * .95) / -d.y)); pos = h.clone().addScaledVector(d, dist); pos.y = floorY + .015; }
+      else { pos = h.clone().addScaledVector(d, 3.6); }
+      const dist = Math.hypot(pos.x - h.x, pos.z - h.z), k = Math.max(.8, Math.min(1.9, Math.sqrt(dist / 2.6)));
+      const m = new THREE.Group(); m.position.copy(pos); VRN.g.add(m);
+      const R = .42 * k, mats = [], geos = [];
+      const add = (geo, mat, parent) => { geos.push(geo); mats.push(mat); const x2 = new THREE.Mesh(geo, mat); (parent || m).add(x2); return x2; };
+      const tilt = new THREE.Group(); m.add(tilt);
+      if (floor) tilt.rotation.x = -Math.PI / 2;   /* a padlón fekve */
+      else { const q = new THREE.Vector3().subVectors(h, pos); tilt.rotation.y = Math.atan2(q.x, q.z); }   /* a levegőben lebegve, feléd fordulva */
+      const ringM = new THREE.MeshBasicMaterial({ map: T.ring, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffffff, fog: false, side: THREE.DoubleSide });
+      const ring = add(new THREE.PlaneGeometry(R * 2.4, R * 2.4), ringM, tilt); ring.renderOrder = 960;
+      const chevT = T.chev.clone(); chevT.needsUpdate = true; chevT.wrapT = THREE.RepeatWrapping;
+      const chevM = new THREE.MeshBasicMaterial({ map: chevT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .85, side: THREE.DoubleSide });
+      const chev = add(new THREE.PlaneGeometry(R * .9, R * 1.5), chevM, tilt); chev.renderOrder = 961; chev.position.z = .004;
+      /* a nyílhegyek a haladás irányába (tőled el) mutassanak */
+      if (floor) chev.rotation.z = Math.atan2(-(pos.x - h.x), -(pos.z - h.z));
+      const beamM = new THREE.MeshBasicMaterial({ map: T.beam, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: floor ? .55 : 0, side: THREE.DoubleSide });
+      const beam = add(new THREE.CylinderGeometry(R * .55, R * .75, 1.5 * k, 28, 1, true), beamM); beam.position.y = .75 * k; beam.renderOrder = 959; beam.visible = floor;
+      const title = String(label || (SCENES[to] && SCENES[to].n) || "Tovább").replace(/\n/g, " · ");
+      const lt = vrnLabelTex(title, "csippents – odaugrasz", vrnIcon(link));
+      const lblM = new THREE.SpriteMaterial({ map: lt.t, transparent: true, depthWrite: false, depthTest: false, opacity: .92 }); mats.push(lblM);
+      const lbl = new THREE.Sprite(lblM); const lw = .62 * k; lbl.scale.set(lw * 2, lw * 2 * lt.ar, 1); lbl.position.y = floor ? 1.55 * k : R * 1.5 + .2; lbl.renderOrder = 990; m.add(lbl);
+      /* láthatatlan, bőkezű célterület: gyűrű + oszlop + tábla egyben */
+      const hitM = new THREE.MeshBasicMaterial({ visible: false }); const hit = add(new THREE.CylinderGeometry(R * 1.35, R * 1.35, floor ? 1.9 * k : R * 3.4, 12), hitM); hit.position.y = floor ? .95 * k : 0;
+      const mk = { link, to, m, ring, chev, beam, lbl, lw, k, floor, hot: 0, t0: Math.random() * 6, hit, base: lt.ar,
+        dispose() { geos.forEach((g2) => g2.dispose()); mats.forEach((q) => { if (q.map && q.map !== T.ring && q.map !== T.beam) q.map.dispose(); q.dispose(); }); } };
+      hit.userData.xr = {
+        hover: (on, h2, key) => { VRN.hov[key || "x"] = on ? mk : null; if (on) { try { xrPulse(XRP.src[key] && XRP.src[key].src, .25, 14); } catch (e) {} } },
+        click: () => vrnGo(mk)
+      };
+      XRP.extra.add(hit); VRN.list.push(mk);
+    });
+    /* egymást takaró táblák: az irányuk (a fejedből nézve) túl közel → a távolabbiak feljebb kerülnek, lépcsőzetesen */
+    const ang = (mk) => Math.atan2(mk.m.position.x - h.x, mk.m.position.z - h.z);
+    const byD = VRN.list.slice().sort((a2, b2) => a2.m.position.distanceTo(h) - b2.m.position.distanceTo(h));
+    byD.forEach((mk, i) => { mk.lift = 0; for (let j = 0; j < i; j++) { const o = byD[j]; let da = Math.abs(ang(mk) - ang(o)); if (da > Math.PI) da = Math.PI * 2 - da; if (da < .32 && Math.abs(mk.lift - o.lift) < .9) mk.lift = o.lift + 1; } });
+  }
+  function vrnGo(mk) {
+    if (busy) return; const link = mk.link;
+    try { Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, .5, 30)); } catch (e) {}
+    VRN.leaving = { mk, t: performance.now() };
+    if (link[6] && WALKS[link[6]]) walk(WALKS[link[6]]); else if (inVR) vrnTransition(mk).catch((e) => { console.warn("vrt", e); VRN.trans = false; }); else go(link[0], false, arriveLook(link[0]));
+  }
+  /* ---- Átmenet két fotóhely között (VR): a fotó vázlattá „rajzolódik” (fénylő tusvonalak), előresuhansz egy
+     vonalakból álló alagúton a padló-rácson, majd az új hely vázlata kirajzolódik és kitöltődik a valódi fotóval. ---- */
+  const VRT = { sky: null, mat: null, fx: null };
+  function vrtSetup() {
+    if (VRT.sky) return VRT;
+    const skyMesh = sky.getObject3D("mesh"); if (!skyMesh) return null;
+    VRT.mat = new THREE.ShaderMaterial({
+      uniforms: { map: { value: null }, tx: { value: new THREE.Vector2(1 / 4096, 1 / 2048) }, uMix: { value: 0 }, uDim: { value: 0 }, uOp: { value: 1 }, uT: { value: 0 } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+      fragmentShader: `uniform sampler2D map; uniform vec2 tx; uniform float uMix, uDim, uOp, uT; varying vec2 vUv;
+        float L(vec2 o){ vec3 c = texture2D(map, vUv + o * tx * 2.4).rgb; return dot(c, vec3(.299, .587, .114)); }
+        void main(){
+          vec3 c = texture2D(map, vUv).rgb;
+          float gx = -L(vec2(-1.,-1.)) - 2.*L(vec2(-1.,0.)) - L(vec2(-1.,1.)) + L(vec2(1.,-1.)) + 2.*L(vec2(1.,0.)) + L(vec2(1.,1.));
+          float gy = -L(vec2(-1.,-1.)) - 2.*L(vec2(0.,-1.)) - L(vec2(1.,-1.)) + L(vec2(-1.,1.)) + 2.*L(vec2(0.,1.)) + L(vec2(1.,1.));
+          float e = smoothstep(.16, .55, length(vec2(gx, gy)));
+          vec3 paper = mix(vec3(.02, .07, .16), vec3(.05, .16, .3), smoothstep(.2, .8, vUv.y));
+          float shimmer = .85 + .15 * sin(vUv.x * 900. + vUv.y * 400. - uT * 6.);
+          vec3 ink = vec3(1., .87, .56) * shimmer;
+          vec3 sk = mix(paper, ink, e) + c * .06;
+          vec3 col = mix(c, sk, uMix);
+          col = mix(col, paper * .7 + ink * e * .12, uDim);
+          gl_FragColor = vec4(col, uOp);
+          #include <colorspace_fragment>
+        }`,
+      transparent: true, depthWrite: false, side: THREE.BackSide
+    });
+    VRT.sky = new THREE.Mesh(skyMesh.geometry, VRT.mat); VRT.sky.matrixAutoUpdate = false; VRT.sky.visible = false; VRT.sky.renderOrder = 5; VRT.sky.frustumCulled = false;
+    sceneEl.object3D.add(VRT.sky);
+    /* a rig-hez kötött hatások (a rig átforgatásakor sem ugranak): fénycsíkok és vázlatos padlórács */
+    const fx = new THREE.Group(); fx.visible = false; rig.object3D.add(fx);
+    const N = 220, pos = new Float32Array(N * 6), sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const sm = new THREE.LineBasicMaterial({ color: 0xffe2a0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    const streaks = new THREE.LineSegments(sg, sm); streaks.frustumCulled = false; fx.add(streaks);
+    const gc = document.createElement("canvas"); gc.width = gc.height = 256; const gg = gc.getContext("2d"); gg.strokeStyle = "rgba(255,222,150,.9)"; gg.lineWidth = 3; gg.strokeRect(0, 0, 256, 256); gg.strokeStyle = "rgba(255,222,150,.35)"; gg.lineWidth = 1.5; gg.beginPath(); gg.moveTo(128, 0); gg.lineTo(128, 256); gg.moveTo(0, 128); gg.lineTo(256, 128); gg.stroke();
+    const gt = new THREE.CanvasTexture(gc); gt.wrapS = gt.wrapT = THREE.RepeatWrapping; gt.repeat.set(24, 24); gt.anisotropy = 4;
+    const gm = new THREE.MeshBasicMaterial({ map: gt, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    /* a rács kifelé elhalványul (ne legyen éles széle) */
+    gm.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying vec2 vR;").replace("#include <uv_vertex>", "#include <uv_vertex>\nvR = uv - .5;"); sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying vec2 vR;").replace("#include <dithering_fragment>", "#include <dithering_fragment>\ngl_FragColor.a *= smoothstep(.5, .08, length(vR));"); };
+    const grid = new THREE.Mesh(new THREE.PlaneGeometry(48, 48), gm); grid.rotation.x = -Math.PI / 2; grid.position.y = .01; fx.add(grid);
+    VRT.fx = { g: fx, streaks, pos, N, grid, gt, seeds: Array.from({ length: N }, () => [Math.random() * Math.PI * 2, 1.2 + Math.random() * 7, Math.random() * 60 - 30, .6 + Math.random() * 2.2, Math.random()]) };
+    return VRT;
+  }
+  function vrtFrame(dir, off, k) {
+    /* a vázlatgömb a valódi égbolt helyén, a haladási irányban eltolva (így „elsuhan” melletted) */
+    const skyMesh = sky.getObject3D("mesh"); skyMesh.updateMatrixWorld(true);
+    VRT.sky.matrix.copy(skyMesh.matrixWorld).premultiply(new THREE.Matrix4().makeTranslation(-dir.x * off, 0, -dir.z * off)).multiply(new THREE.Matrix4().makeScale(.95, .95, .95));
+    VRT.sky.matrixWorldNeedsUpdate = true; VRT.mat.uniforms.uT.value = performance.now() / 1000;
+  }
+  function vrtStreaks(dl, speed, op, ld) {
+    const F = VRT.fx, p = F.pos, h = headPos(new THREE.Vector3()); rig.object3D.worldToLocal(h);
+    const ax = ld, side = new THREE.Vector3(-ax.z, 0, ax.x), up = new THREE.Vector3(0, 1, 0);
+    F.seeds.forEach((s, i) => {
+      s[2] -= speed * dl; if (s[2] < -30) s[2] += 60;
+      const r = s[1], a = s[0], len = s[3] * (.4 + speed * .05);
+      const cx = h.x + side.x * Math.cos(a) * r, cy = Math.max(.05, h.y + Math.sin(a) * r * .55), cz = h.z + side.z * Math.cos(a) * r;
+      const b = i * 6; p[b] = cx + ax.x * s[2]; p[b + 1] = cy; p[b + 2] = cz + ax.z * s[2]; p[b + 3] = cx + ax.x * (s[2] + len); p[b + 4] = cy; p[b + 5] = cz + ax.z * (s[2] + len);
+    });
+    F.streaks.geometry.attributes.position.needsUpdate = true; F.streaks.material.opacity = op;
+    F.grid.position.x = h.x; F.grid.position.z = h.z; F.grid.material.opacity = op * .9;
+    F.gt.offset.x -= ax.x * speed * dl / 2; F.gt.offset.y += ax.z * speed * dl / 2;
+  }
+  async function vrnTransition(mk) {
+    const to = mk.to; if (!vrtSetup() || !skyTex) return go(to, false, arriveLook(to));
+    VRN.trans = true;
+    const h = headPos(new THREE.Vector3()), dir = mk.m.position.clone().sub(h); dir.y = 0; if (dir.lengthSq() < 1e-6) dir.set(0, 0, -1); dir.normalize();
+    const ldir = rig.object3D.worldToLocal(h.clone().add(dir)).sub(rig.object3D.worldToLocal(h.clone())); ldir.y = 0; ldir.normalize();
+    const U = VRT.mat.uniforms; U.map.value = skyTex; U.uMix.value = 0; U.uDim.value = 0; U.uOp.value = 1;
+    if (skyTex.image && skyTex.image.width) U.tx.value.set(1 / skyTex.image.width, 1 / skyTex.image.height);
+    VRT.sky.visible = true; VRT.fx.g.visible = true; vrtFrame(dir, 0);
+    const run = (ms, f) => new Promise((res) => { ms *= VRT.slow || 1; const t0 = performance.now(); let last = t0; (function st() { const n = performance.now(), k = Math.min(1, (n - t0) / ms), dl = Math.min(.05, (n - last) / 1000); last = n; f(k, dl); k < 1 ? xrRaf(st) : res(); })(); });
+    const sm = (k) => k * k * (3 - 2 * k);
+    try {
+      /* 1. a fotóból vázlat lesz, indulsz */
+      await run(420, (k, dl) => { U.uMix.value = sm(k); vrtFrame(dir, 4 * k * k); vrtStreaks(dl, 2 + 10 * k, .55 * k, ldir); });
+      /* 2. száguldás a vonal-alagútban; közben (takarásban) betölt és átvált a következő fotóra */
+      let swapped = false; const p0 = performance.now();
+      go(to, false, arriveLook(to)).finally(() => { swapped = true; });
+      await run(380, (k, dl) => { U.uDim.value = sm(k); vrtFrame(dir, 4 + 30 * k * k); vrtStreaks(dl, 12 + 14 * k, .55 + .35 * k, ldir); });
+      while ((!swapped || current !== to) && performance.now() - p0 < 4000) await new Promise((r) => xrRaf(() => { vrtStreaks(.016, 26, .9, ldir); r(); }));
+      /* 3. megérkezés: az új hely vázlata elébed úszik… */
+      U.map.value = skyTex; if (skyTex && skyTex.image && skyTex.image.width) U.tx.value.set(1 / skyTex.image.width, 1 / skyTex.image.height);
+      const hd = new THREE.Vector3(); headDir(hd); hd.y = 0; if (hd.lengthSq() < 1e-6) hd.copy(dir); hd.normalize();
+      const ld2 = rig.object3D.worldToLocal(headPos(new THREE.Vector3()).add(hd)).sub(rig.object3D.worldToLocal(headPos(new THREE.Vector3()))); ld2.y = 0; ld2.normalize();
+      await run(400, (k, dl) => { U.uDim.value = 1 - sm(k); vrtFrame(hd, -26 * (1 - sm(k))); vrtStreaks(dl, 22 * (1 - k) + 1, .9 * (1 - k), ld2); });
+      /* 4. …és kitöltődik a valódi fotóval */
+      await run(460, (k, dl) => { U.uMix.value = 1 - sm(k); vrtFrame(hd, 0); });
+    } finally {
+      VRT.sky.visible = false; VRT.fx.g.visible = false; U.map.value = null; VRN.trans = false;
+    }
+  }
+  function vrnTick() {
+    if (!inVR || worldOn() || !spots) { if (VRN.g) vrnClear(); return; }
+    /* a régi jelzések (nyilak, irányjelző tábla) VR-ben rejtve; a feliratok (pl. „Közös hűtő”) maradnak */
+    Array.from(spots.children || []).forEach((el) => { if ((el._ix === 1 || el._ix === 0) && el.object3D && el.object3D.visible) { el.object3D.visible = false; VRN.hidden.push(el.object3D); } });
+    if (busy || VRN.trans) { if (VRN.g) VRN.g.visible = false; return; }
+    if (!VRN.g || VRN.scene !== current) vrnBuild();
+    if (!VRN.g) return; VRN.g.visible = true;
+    const t = performance.now() / 1000, hovSet = new Set(Object.values(VRN.hov).filter(Boolean)), h = headPos(_vrnH || (_vrnH = new THREE.Vector3()));
+    VRN.list.forEach((mk) => {
+      const want = hovSet.has(mk) ? 1 : 0; mk.hot += (want - mk.hot) * .18;
+      const pulse = 1 + .05 * Math.sin(t * 2.2 + mk.t0) + mk.hot * .22;
+      mk.ring.scale.setScalar(pulse); mk.ring.material.color.setRGB(1, 1 - .05 * mk.hot, 1 - .25 * mk.hot);
+      mk.chev.material.map.offset.y = -((t * .6 + mk.t0) % 1); mk.chev.material.opacity = .55 + .4 * mk.hot + .1 * Math.sin(t * 3 + mk.t0);
+      if (mk.floor) mk.beam.material.opacity = .35 + .45 * mk.hot + .08 * Math.sin(t * 1.7 + mk.t0);
+      /* a tábla mindig olvasható méretű: távolabb nagyobb, rámutatva még kicsit nő */
+      const dd = Math.max(1, mk.m.position.distanceTo(h)), s = mk.lw * 2 * Math.max(1, dd / 3.2) * (1 + .12 * mk.hot);
+      mk.lbl.scale.set(s, s * mk.base, 1); mk.lbl.material.opacity = .82 + .18 * mk.hot;
+      mk.lbl.position.y = (mk.floor ? 1.55 * mk.k : .6) + (mk.lift || 0) * s * mk.base * 1.15 + Math.sin(t * 1.3 + mk.t0) * .025;
+    });
+  }
+  let _vrnH = null;
   function vrHaptic(h, v, ms) {
     if (!h) { Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, v, ms)); return; }
     try { const tc = h.components["tracked-controls"], src = tc && tc.controller, gp = src && src.gamepad; const a = gp && gp.hapticActuators && gp.hapticActuators[0]; if (a && a.pulse) a.pulse(v, ms); } catch (e) {}
@@ -9331,6 +9554,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function xrTick() {
     if (!XRP.on) xrStart();
     if (!XRP.on) return;
+    try { vrnTick(); } catch (e) { console.warn('vrn', e); }
     const r = sceneEl.renderer, frame = r.xr.getFrame && r.xr.getFrame(), ref = r.xr.getReferenceSpace && r.xr.getReferenceSpace();
     if (!frame || !ref) return;
     /* A kezek és a kontrollerek pozíciója a rig (a „játéktér”) koordinátáiban értendő – ugyanott, ahol az A-Frame a kézmodellt rajzolja.
@@ -9832,6 +10056,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (!spots) return false;
     const h = headPos(new THREE.Vector3()), f = new THREE.Vector3();
     headDir(f); f.y = 0; if (f.lengthSq() < 1e-6) return false; f.normalize();
+    if (VRN.list.length && !VRN.trans) {   /* VR-ben az új jelölők közül a nézési irányhoz legközelebbi */
+      let bm = null, bdm = Math.cos(45 * Math.PI / 180);
+      VRN.list.forEach((mk) => { const p = mk.m.position.clone().sub(h); p.y = 0; if (p.lengthSq() < 1e-4) return; p.normalize(); const dd = p.dot(f); if (dd > bdm) { bdm = dd; bm = mk; } });
+      if (bm) { vrnGo(bm); return true; }
+    }
     let best = null, bd = Math.cos(40 * Math.PI / 180);
     spots.querySelectorAll(".hotspot").forEach((el) => {
       if (el._ix !== 1 || !el.object3D || !isShown(el.object3D)) return;
@@ -10135,7 +10364,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
 
   /* ---------- Híd a „Virtuális világ” modulhoz (vilag.js – csak megnyitáskor töltődik be) ---------- */
-  window.ZephyrTour = {
+  window.ZephyrTour = { vrn: VRN, vrt: VRT, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
     get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
