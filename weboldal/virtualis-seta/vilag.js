@@ -188,14 +188,17 @@
   function makeWater(parent, opt) {
     opt = opt || {};
     /* poláris háló: középen sűrű (a hajó körül), kifelé ritkul – 1,6 km sugárig */
-    const RINGS = 110, SEG = 150, R0 = .6, RMAX = 1600;
+    const RINGS = opt.rings || 110, SEG = opt.seg || 150, R0 = .6, RMAX = opt.rmax || 1600;
     const pos = [], idx = [];
     for (let i = 0; i <= RINGS; i++) { const r = i === 0 ? 0 : R0 * Math.pow(RMAX / R0, (i - 1) / (RINGS - 1)); for (let j = 0; j < SEG; j++) { const a = j / SEG * TAU; pos.push(Math.cos(a) * r, 0, Math.sin(a) * r); } }
     for (let i = 0; i < RINGS; i++) for (let j = 0; j < SEG; j++) { const a = i * SEG + j, b = i * SEG + (j + 1) % SEG, c = (i + 1) * SEG + j, d = (i + 1) * SEG + (j + 1) % SEG; idx.push(a, c, b, b, c, d); }
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
     const wv = WAVES.map(([a, L, A, Q]) => new THREE.Vector4(a * D2R, TAU / L, A, Q));
     const mat = new THREE.ShaderMaterial({
-      uniforms: { uT: { value: 0 }, uOff: { value: new THREE.Vector2() }, uWind: { value: WIND_DIR }, uW: { value: wv }, uSun: { value: SUN }, uCam: { value: new THREE.Vector3() }, uGust: { value: new THREE.Vector2(1, 0) } },
+      uniforms: { uT: { value: 0 }, uOff: { value: new THREE.Vector2() }, uWind: { value: WIND_DIR }, uW: { value: wv }, uSun: { value: opt.sun || SUN }, uCam: { value: new THREE.Vector3() }, uGust: { value: new THREE.Vector2(1, 0) },
+        /* színek (a makett-világ napszakhoz igazítja őket; az alapértékek a vitorlázás délutánja) */
+        uSkyH: { value: new THREE.Color(.70, .80, .87) }, uSkyZ: { value: new THREE.Color(.25, .45, .75) }, uDeep: { value: new THREE.Color(.06, .25, .27) }, uShallow: { value: new THREE.Color(.18, .44, .41) },
+        uSunC: { value: new THREE.Color(1, .95, .82) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 } },
       vertexShader: `
         uniform float uT, uWind; uniform vec2 uOff; uniform vec4 uW[5];
         varying vec3 vP; varying vec3 vN; varying float vDist;
@@ -213,7 +216,7 @@
           gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        uniform float uT, uWind; uniform vec3 uSun, uCam; uniform vec2 uGust;
+        uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust;
         varying vec3 vP; varying vec3 vN; varying float vDist;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
@@ -233,17 +236,16 @@
           vec3 view = normalize(uCam - P);
           float fres = .02 + .98 * pow(1. - max(dot(n, view), 0.), 5.);
           vec3 refl = reflect(-view, n); float el = clamp(refl.y, 0., 1.);
-          vec3 sky = mix(vec3(.70,.80,.87), vec3(.25,.45,.75), pow(el, .45));
-          vec3 deep = vec3(.06,.25,.27), shallow = vec3(.18,.44,.41);
-          vec3 base = mix(shallow, deep, clamp(.5 + n.x * 2.5, 0., 1.)) * (1. - gust * .18);
+          vec3 sky = mix(uSkyH, uSkyZ, pow(el, .45));
+          vec3 base = mix(uShallow, uDeep, clamp(.5 + n.x * 2.5, 0., 1.)) * (1. - gust * .18) * uLight;
           vec3 col = mix(base, sky, fres * .7);
           float sp = pow(max(dot(refl, uSun), 0.), 380.) * 7. + pow(max(dot(refl, uSun), 0.), 40.) * .25;
-          col += vec3(1., .95, .82) * sp * (1. - gust * .3);
+          col += uSunC * sp * uSpec * (1. - gust * .3);
           /* hullámtaraj: halvány fehér hab a meredek részeken */
-          col = mix(col, vec3(.92,.95,.95), smoothstep(.72, .95, 1. - n.y) * .45 * fa);
+          col = mix(col, vec3(.92,.95,.95) * uLight, smoothstep(.72, .95, 1. - n.y) * .45 * fa);
           /* pára a horizont felé */
           float hz = smoothstep(250., 1550., vDist);
-          col = mix(col, vec3(.84,.89,.91), hz * .85);
+          col = mix(col, uHaze, hz * .85);
           gl_FragColor = vec4(col, 1.);
           #include <colorspace_fragment>
         }`
@@ -1062,20 +1064,18 @@
       const f = Math.sin(W.t * 7 + q.ph) * (Math.sin(W.t * .6 + q.ph) > .3 ? .6 : .08); q.wl.rotation.z = f; q.wr.rotation.z = -f; }); } };
   }
 
-  /* =================================================================== 3. A HÁZ MAKETTJE – építészeti makett a hivatalos tervrajz szerint (2026. nov. 6.)
-     • Csak a Zephyr épülete: egyetlen téglatest, kívül 6,0 × 22,2 m (belül 5,4 m széles), két szint, lapos tető. A mellette álló kisebb ház
-       a szomszédé (külön helyrajzi szám, saját falak, más tetőmagasság) – nem része a makettnek.
-     • Elöl (az utca és a Balaton felé, kb. 345°): Korvett (földszint) és Fregatt (emelet), erkéllyel/terasszal; középen a fedett bejáró a lépcsővel;
-       utána Dingi (földszint) és Kalóz (emelet); hátul Schooner (földszint) és Kadett (emelet) – belül egyformák, a Kadett terasza a hátsó, emeleti fa terasz.
-     • A ház keleti oldalán a parkoló, mögötte a kert. Tájolás a Google légifelvételből; a fény a választott nap és óra napállása szerint vet árnyékot.
-     • Rámutatva kiemelés és adatok, csippentésre választás: „Belépés a lakásba” vagy „Foglalás”. Ha a foglalásban már van időpont: zöld = szabad, piros = foglalt. */
+  /* =================================================================== 3. A HÁZ MAKETTJE – varázslatos helyszínen, asztaltól életnagyságig (2026. nov. 6., 2. változat)
+     • Helyszín: fa napozóstég a Balatonon, Zamárdiban (06c) – valódi napállás szerinti égbolt, a túlpart nevezetességeivel, élővilággal.
+     • A ház (06b): csak a Zephyr épülete (egy téglatest, 6,0 × 22,2 m), a hivatalos tervrajz szerint, valódi ablaknyílásokkal, berendezve.
+     • Méretek: 1:100 · 1:60 · 1:40 az asztalon → 1:20 · 1:10 a stég padlóján → 1:1 ÉLETNAGYSÁG (a ház a parton áll, besétálhatsz).
+       Kézzel: két kézzel csippents és húzd szét / össze (mint egy fotót a telefonon). A csuklómenüben (bal tenyér felfelé) minden beállítás.
+     • Életnagyságban: csippents a földre / padlóra → odalépsz; ⬆/⬇ az emeletre; a lakásokban fénylő 📷 gömbök → a valódi 360°-os fotó.
+     • Kiválasztott lakás: „Belépés” (a valódi fotókba) vagy „Foglalás” (térbeli foglalópanel, a lakás előre kijelölve). */
   const MAQ = {};
-  const SCALE = 1 / 60;               /* M 1:60 */
   const FLOOR_H = 2.85, WALL = .3, PART = .25, IN_W = 5.4, OUT_W = IN_W + 2 * WALL;
-  /* a ház koordinátái méterben: x = kelet felé (a parkoló oldala), z = az utcától hátrafelé (165° felé), y = fel */
+  /* a ház koordinátái méterben: x = kelet felé (a parkoló oldala, 75°), z = az utcától hátrafelé (165° felé), y = fel */
   const Z_A = WALL, Z_HALL = Z_A + 6.2 + PART, Z_B = Z_HALL + 4.0 + PART, Z_C = Z_B + 4.35 + PART, Z_END = Z_C + 6.41 + WALL;
   const APTCOL = { korvett: "#e2483d", dingi: "#3fb37f", fregatt: "#3d8fe2", kaloz: "#9b6be2", schooner: "#2bb3c0", kadett: "#d9a441" };
-  /* lakásonként: szint, és az alaprajz (méter) → ház (méter) leképezés */
   const UNITS = {
     korvett:  { lvl: 0, map: (x, y) => [WALL + x, Z_A + y] },
     fregatt:  { lvl: 1, map: (x, y) => [WALL + x, Z_A + y] },
@@ -1085,246 +1085,214 @@
     kadett:   { lvl: 1, map: (x, y) => [WALL + x, Z_C + y] }
   };
   function planOf(id) { const P = T.PLANS; const g = T.GROUPS.find((q) => q.id === id) || {}; return P[g.plan] || P.elso; }
-  const ROOMCOL = (n) => /fürd/i.test(n) ? "#b9c6cc" : /háló/i.test(n) ? "#a77a4f" : /nappali|konyha|szoba|étkez/i.test(n) ? "#b9895a" : /előt|előszoba/i.test(n) ? "#9e9a92" : "#b08a63";
-  /* téglalap az alaprajzból → a ház koordinátáiba (tengelyhez igazítva) */
-  function mapRect(U, x, y, w, h) {
-    const a = U.map(x, y), b = U.map(x + w, y + h);
-    return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])];
-  }
-  function sunDirFor(ymd, h) {
-    /* napállás → irány a ház koordinátáiban (+z = 165°, +x = 75°) */
-    let p = { az: 230, el: 45 };
-    try { if (T.sunPos) p = T.sunPos(ymd, h); } catch (e) {}
-    const d = (p.az - 165) * D2R, el = Math.max(6, p.el) * D2R;
-    return { v: new THREE.Vector3(-Math.sin(d) * Math.cos(el), Math.sin(el), Math.cos(d) * Math.cos(el)), p };
-  }
+  function mapRect(U, x, y, w, h) { const a = U.map(x, y), b = U.map(x + w, y + h); return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])]; }
+  const SCALES = [1 / 100, 1 / 60, 1 / 40, 1 / 25, 1 / 15, 1 / 10, 1];
+  const SCALE_TXT = (s) => s >= .99 ? "életnagyság" : "1:" + Math.round(1 / s);
+  const TABLE_Y = .78, USER_Z = 1.3, TABLE_R = .82;
+  const EYE2D = 1.6;
+  const _q = new THREE.Vector3(), _q2 = new THREE.Vector3(), _q3 = new THREE.Vector3();
+
+  function headWorld(v) { v = v || new THREE.Vector3(); try { if (T.inVR) T.sceneEl.renderer.xr.getCamera().getWorldPosition(v); else T.camObj().getWorldPosition(v); } catch (e) { v.set(0, 1.6, 0); } return v; }
 
   function buildMaquette() {
     const root = W.root;
-    const model = new THREE.Group(); model.scale.setScalar(SCALE); MAQ.model = model;
-    const turn = new THREE.Group(); turn.add(model); MAQ.turn = turn;
-    const stand = new THREE.Group(); stand.add(turn); root.add(stand); MAQ.stand = stand;
-    /* a telek közepe a forgástengelyen (x: −4…16 m, z: −10…40 m) */
-    const SX0 = -3, SX1 = 13.5, SZ0 = -10, SZ1 = 40, CX = (SX0 + SX1) / 2, CZ = (SZ0 + SZ1) / 2;
-    model.position.set(-CX * SCALE, 0, -CZ * SCALE);
-    const parts = {};   /* szín → geometria-lista (összevonva rajzoljuk – Questen ez számít) */
-    const P = (col, g, m, opt) => { const k = col + (opt ? "|" + JSON.stringify(opt) : ""); (parts[k] = parts[k] || { col, opt, list: [] }).list.push([g, m]); };
-    const box = (col, x0, z0, x1, z1, y0, h, opt) => P(col, new THREE.BoxGeometry(Math.max(.01, x1 - x0), h, Math.max(.01, z1 - z0)), M4((x0 + x1) / 2, y0 + h / 2, (z0 + z1) / 2), opt);
-    const cyl = (col, x, z, r, y0, h, seg, opt) => P(col, new THREE.CylinderGeometry(r, r, h, seg || 10), M4(x, y0 + h / 2, z), opt);
+    const rig = T.rig.object3D;
+    MAQ.rig0 = { p: rig.position.clone(), ry: rig.rotation.y };
+    const floorY = T.inVR ? rig.position.y : rig.position.y - EYE2D;
+    /* ---------- a helyszín ---------- */
+    buildMagicWorld(root, floorY);
+    const env = ENV.env, site = ENV.site;
+    /* elhelyezés: a felhasználó a stég déli részén áll (site: 0, 0, 0,95), a tó (345°) felé néz */
+    const yaw = T.camYaw(); env.rotation.y = yaw - 15 * D2R; env.position.set(0, floorY, 0); env.updateMatrixWorld(true);
+    const h = headWorld(new THREE.Vector3()), p = site.localToWorld(new THREE.Vector3(0, 0, USER_Z));
+    env.position.x += h.x - p.x; env.position.z += h.z - p.z; env.updateMatrixWorld(true);
+    MAQ.floorY = floorY;
 
-    /* ---------- talapzat (diófa keret, filc) ---------- */
-    const baseW = (SX1 - SX0) * SCALE, baseD = (SZ1 - SZ0) * SCALE;
-    const wood = std({ color: "#5b3a22", roughness: .45 }), felt = std({ color: "#2c3a2e", roughness: .95 });
-    const base = mesh(new THREE.BoxGeometry(baseW + .03, .045, baseD + .03), wood, turn); base.position.y = -.0235; base.receiveShadow = true;
-    const feltM = mesh(new THREE.BoxGeometry(baseW, .004, baseD), felt, turn); feltM.position.y = -.001; feltM.receiveShadow = true;
-    base.userData.xr = { down: (h, src) => { MAQ.drag = { a: turn.rotation.y, d: src.d.clone() }; MAQ.auto = false; }, drag: (src) => { if (!MAQ.drag) return; const d0 = MAQ.drag.d, d1 = src.d; turn.rotation.y = MAQ.drag.a + wrapA(Math.atan2(d1.x, d1.z) - Math.atan2(d0.x, d0.z)) * 4; }, up: () => { MAQ.drag = null; } };
-    T.xr.extra.add(base); W.objs.push(base);
+    /* ---------- az asztal (tölgy, sárgaréz berakással) ---------- */
+    const table = new THREE.Group(); site.add(table); MAQ.table = table;
+    const oak = std({ map: txPlanks("oak", "#7a5534", "#94683f", 7), roughness: .45 }), brass = std({ color: "#c9a24a", roughness: .28, metalness: .9 });
+    const tt = mesh(new THREE.CylinderGeometry(TABLE_R, TABLE_R - .02, .05, 72), oak, table); tt.position.y = TABLE_Y - .025; tt.receiveShadow = true; tt.castShadow = true;
+    const ring = mesh(new THREE.TorusGeometry(TABLE_R - .04, .008, 6, 120), brass, table); ring.rotation.x = Math.PI / 2; ring.position.y = TABLE_Y + .001;
+    const col = mesh(new THREE.CylinderGeometry(.07, .1, TABLE_Y - .1, 20), std({ color: "#4a3221", roughness: .5 }), table); col.position.y = (TABLE_Y - .1) / 2 + .06; col.castShadow = true;
+    [0, 1, 2, 3].forEach((k) => { const a = k / 4 * TAU + Math.PI / 4; const f = mesh(new THREE.BoxGeometry(.06, .06, .42), std({ color: "#4a3221", roughness: .5 }), table); f.position.set(Math.cos(a) * .2, .04, Math.sin(a) * .2); f.rotation.y = -a + Math.PI / 2; });
+    const plate = canvasTex(1024, 200, (g) => { const gr = g.createLinearGradient(0, 0, 0, 200); gr.addColorStop(0, "#e2c46a"); gr.addColorStop(1, "#a8822e"); g.fillStyle = gr; g.fillRect(0, 0, 1024, 200);
+      g.fillStyle = "#2a1c0c"; g.font = "800 66px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ZEPHYR APARTMANHÁZ", 512, 72); g.font = "500 36px Georgia, serif"; g.fillText("Zamárdi · Gáspár András utca 58. · a hivatalos tervrajz szerint", 512, 148); });
+    const pl = mesh(new THREE.PlaneGeometry(.42, .082), std({ map: plate, roughness: .35, metalness: .6 }), table); pl.position.set(0, TABLE_Y - .026, TABLE_R + .005); pl.rotation.x = -.0;
 
-    /* ---------- utca, járda, kerítés, előkert ---------- */
-    box("#3e4248", SX0, -9.2, SX1, -4.4, 0, .05);                                   /* aszfalt */
-    for (let x = SX0 + .6; x < SX1; x += 3.2) box("#e8e4d6", x, -6.88, x + 1.6, -6.72, .05, .006);   /* felezővonal */
-    box("#b9b4a8", SX0, -4.4, SX1, -2.7, 0, .12);                                   /* járda */
-    box("#9aa08f", SX0, -2.7, SX1, SZ1, 0, .04);                                    /* telek alap */
-    box("#6fa25a", -.4, -2.5, 6.3, -.05, .04, .03);                                 /* előkert gyep */
-    box("#cfc6b4", 1.4, -2.7, 2.6, -.05, .04, .04);                                  /* bejárati járda */
-    [[-.4, 1.2], [2.8, 6.3]].forEach(([a, b]) => box("#3f4a46", a, -2.62, b, -2.5, .04, 1.3));   /* utcai kerítés (a kapuknál nyitva) */
-    box("#5a6066", 1.25, -2.66, 1.32, -2.46, .04, 1.5); box("#5a6066", 2.7, -2.66, 2.77, -2.46, .04, 1.5);
-    /* parkoló a ház keleti oldalán: zúzottkő, autók */
-    box("#a39d91", 6.3, -2.7, 12.6, 22.3, .04, .025);
-    for (let z = 1; z < 21; z += 2.6) box("#8e887d", 6.3, z, 12.6, z + .08, .065, .004);   /* parkolóhelyek jelölése */
-    box("#3d6a3a", 12.6, -2.7, 12.9, SZ1, .04, 1.7);                                 /* keleti sövény */
-    /* kert a ház mögött */
-    box("#5f9a48", -.4, 22.3, 12.6, SZ1, .04, .03);
-    box("#cfc6b4", 6.6, 22.3, 7.8, SZ1 - 2, .04, .035);                              /* kerti út */
-    box("#3f4a46", -.55, 22.3, -.4, SZ1, .04, 1.4);                                  /* nyugati telekhatár (a szomszéd felé) */
-    box("#3f4a46", -.55, SZ1 - .15, 12.9, SZ1, .04, 1.4);                            /* hátsó kerítés */
-    /* grillterasz / kerti konyha pergolával, napozóágyak, SUP-tartó, kerékpárok */
-    box("#8a6a48", 8.4, 27, 12.2, 31, .04, .08);
-    [[8.5, 27.1], [12.0, 27.1], [8.5, 30.8], [12.0, 30.8]].forEach(([x, z]) => box("#e9e6dc", x, z, x + .12, z + .12, .12, 2.3));
-    for (let k = 0; k < 9; k++) box("#e9e6dc", 8.4, 27 + k * .5, 12.2, 27.08 + k * .5, 2.42, .08);
-    box("#d8d4cc", 8.6, 27.2, 10.8, 27.8, .12, .9); box("#2b2f36", 10.9, 27.2, 11.8, 27.8, .12, 1.0);
-    box("#9c6b3f", 9.2, 28.6, 11.4, 29.6, .82, .06); [[9.3, 28.7], [11.2, 28.7], [9.3, 29.4], [11.2, 29.4]].forEach(([x, z]) => box("#7a5a3a", x, z, x + .08, z + .08, .12, .7));
-    [[2.2, 30], [3.6, 30]].forEach(([x, z]) => { box("#f2efe6", x, z, x + .7, z + 1.9, .12, .25); box("#f2efe6", x, z, x + .7, z + .5, .37, .25); });
-    for (let k = 0; k < 4; k++) box(["#ffd166", "#1f5fa8", "#e5262f", "#3fb37f"][k], 11.2, 33 + k * .5, 12.4, 33.1 + k * .5, .5 + k * .02, .1);
-    for (let k = 0; k < 4; k++) box("#2b2f36", 11.6, 36 + k * .55, 11.68, 37.6 + k * .05, .04, 1.0);
-    box("#8c939b", 9.4, 34.6, 11.2, 37.2, .04, 2.1);                                /* tároló */
-    /* fák */
-    [[1.5, 26, 2.2], [4.5, 35.5, 2.8], [10.0, 38.2, 1.6], [11.6, 24.5, 1.4], [0.8, 38, 2.0], [-1.6, -6.1, 1.4], [11.2, -3.4, 1.3]].forEach(([x, z, r]) => {
-      cyl("#5a3d24", x, z, .18, .04, 2.6, 8);
-      P("#3e7d3a", new THREE.IcosahedronGeometry(r, 1), M4(x, 2.6 + r * .75, z), { flat: 1 });
+    /* ---------- a makett: tartó → forgató → modell ---------- */
+    const holder = new THREE.Group(); site.add(holder); MAQ.holder = holder;
+    const turn = new THREE.Group(); holder.add(turn); MAQ.turn = turn;
+    const model = new THREE.Group(); turn.add(model); MAQ.model = model;
+    const H = buildHouse(model); MAQ.H = H;
+    const S = H.site; MAQ.C = new THREE.Vector3((S.SX0 + S.SX1) / 2, 0, (S.SZ0 + S.SZ1) / 2); MAQ.R = Math.hypot(S.SX1 - S.SX0, S.SZ1 - S.SZ0) / 2;
+    /* diófa talapzat a telek alatt (makettméretekben) – megfogva forgatható */
+    const base = new THREE.Group(); turn.add(base); MAQ.base = base;
+    const wood = std({ color: "#5b3a22", roughness: .42 });
+    const bw = S.SX1 - S.SX0, bd = S.SZ1 - S.SZ0;
+    const bm = mesh(new THREE.BoxGeometry(bw + 1.6, 2.6, bd + 1.6), wood, base); bm.position.y = -1.3; bm.receiveShadow = true; bm.castShadow = true;
+    const lip = mesh(new THREE.BoxGeometry(bw + 1.9, .5, bd + 1.9), brass, base); lip.position.y = -2.4;
+    MAQ.baseHit = bm;
+    bm.userData.xr = { down: (hh, src) => { if (MAQ.two) return; MAQ.drag = { a: turn.rotation.y, d: src.d.clone() }; MAQ.auto = false; },
+      drag: (src) => { if (!MAQ.drag || MAQ.two) return; const d0 = MAQ.drag.d, d1 = src.d; turn.rotation.y = MAQ.drag.a + wrapA(Math.atan2(d1.x, d1.z) - Math.atan2(d0.x, d0.z)) * 4; },
+      up: () => { MAQ.drag = null; } };
+    T.xr.extra.add(bm); W.objs.push(bm);
+    /* iránytű a talapzat sarkán (a modellel együtt fordul) */
+    const rose = canvasTex(512, 512, (g) => {
+      g.translate(256, 256); g.strokeStyle = "#c9a24a"; g.lineWidth = 10; g.beginPath(); g.arc(0, 0, 200, 0, TAU); g.stroke();
+      for (let k = 0; k < 16; k++) { g.save(); g.rotate(k / 16 * TAU); g.fillStyle = k % 4 ? "#c9a24a" : "#f3efe6"; g.fillRect(-3, -200, 6, k % 4 ? 18 : 30); g.restore(); }
+      g.fillStyle = "#e5262f"; g.beginPath(); g.moveTo(0, -180); g.lineTo(40, 0); g.lineTo(-40, 0); g.closePath(); g.fill();
+      g.fillStyle = "#f3efe6"; g.beginPath(); g.moveTo(0, 180); g.lineTo(40, 0); g.lineTo(-40, 0); g.closePath(); g.fill();
+      g.fillStyle = "#f3efe6"; g.font = "900 84px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("É", 0, -232);
     });
+    const ro = mesh(new THREE.PlaneGeometry(4.2, 4.2), basic({ map: rose, transparent: true, depthWrite: false }), base);
+    ro.rotation.set(-Math.PI / 2, 0, -15 * D2R); ro.position.set(S.SX1 - 1.2 - MAQ.C.x, .03, S.SZ0 + 13 - MAQ.C.z); ro.renderOrder = 3;
 
-    /* ---------- az épület ---------- */
-    const Y1 = FLOOR_H, roofY = 2 * FLOOR_H;
-    MAQ.lv = [new THREE.Group(), new THREE.Group()]; MAQ.lv.forEach((g, i) => { g.position.y = i * FLOOR_H; model.add(g); });
-    const lvParts = [{}, {}];
-    const LP = (lv, col, g, m, opt) => { const k = col + (opt ? "|" + JSON.stringify(opt) : ""); (lvParts[lv][k] = lvParts[lv][k] || { col, opt, list: [] }).list.push([g, m]); };
-    const lbox = (lv, col, x0, z0, x1, z1, y0, h, opt) => LP(lv, col, new THREE.BoxGeometry(Math.max(.01, x1 - x0), h, Math.max(.01, z1 - z0)), M4((x0 + x1) / 2, y0 + h / 2, (z0 + z1) / 2), opt);
-    /* födémek (padló) szintenként */
-    [0, 1].forEach((lv) => lbox(lv, "#ece7dc", 0, 0, OUT_W, Z_END, -.2, .2));
-    /* külső falak: magas (homlokzat, tetővel) és metszett (alacsony, „babaház” nézet) változat */
-    MAQ.shell = [[], []];
-    const shellBox = (lv, x0, z0, x1, z1, tall) => { const h = tall ? FLOOR_H - .2 : 1.05; const g = new THREE.BoxGeometry(x1 - x0, h, z1 - z0); g.translate((x0 + x1) / 2, h / 2, (z0 + z1) / 2); return g; };
-    [0, 1].forEach((lv) => [true, false].forEach((tall) => {
-      const gs = [[0, 0, OUT_W, WALL], [0, Z_END - WALL, OUT_W, Z_END], [0, 0, WALL, Z_END], [OUT_W - WALL, 0, OUT_W, Z_END]].map((r) => [shellBox(lv, ...r, tall), new THREE.Matrix4()]);
-      /* a lakások közti válaszfalak teljes szélességben */
-      [Z_HALL - PART, Z_B - PART, Z_C - PART].forEach((z) => gs.push([shellBox(lv, WALL, z, OUT_W - WALL, z + PART, tall), new THREE.Matrix4()]));
-      const m = mesh(mergeGeoms(gs), std({ color: tall ? "#f4f1ea" : "#f7f4ee", roughness: .9 }), MAQ.lv[lv]);
-      m.castShadow = true; m.receiveShadow = true; m.userData.tall = tall; MAQ.shell[lv].push(m);
-    }));
-    /* lakások: padló, belső falak (metszett), bútorok */
-    MAQ.apts = {};
-    Object.keys(UNITS).forEach((id) => {
-      const U = UNITS[id], Pl = planOf(id), lv = U.lvl;
-      let bb = [1e9, 1e9, -1e9, -1e9];
-      (Pl.rooms || []).forEach((r) => {
-        const q = mapRect(U, r[1], r[2], r[3], r[4]);
-        q[0] = Math.max(WALL, q[0]); q[2] = Math.min(OUT_W - WALL, q[2]);
-        bb = [Math.min(bb[0], q[0]), Math.min(bb[1], q[1]), Math.max(bb[2], q[2]), Math.max(bb[3], q[3])];
-        lbox(lv, ROOMCOL(r[0]), q[0], q[1], q[2], q[3], 0, .03);
-        /* belső válaszfalak a szobák szélein (a külső falak mentén nem kell) */
-        const t = .1, h = .95, inside = (v, a, b) => v > a + .05 && v < b - .05;
-        if (inside(q[0], WALL, OUT_W - WALL)) lbox(lv, "#faf8f3", q[0] - t / 2, q[1], q[0] + t / 2, q[3], 0, h, { c: 1 });
-        if (inside(q[2], WALL, OUT_W - WALL)) lbox(lv, "#faf8f3", q[2] - t / 2, q[1], q[2] + t / 2, q[3], 0, h, { c: 1 });
-        lbox(lv, "#faf8f3", q[0], q[1] - t / 2, q[2], q[1] + t / 2, 0, h, { c: 1 });
-        lbox(lv, "#faf8f3", q[0], q[3] - t / 2, q[2], q[3] + t / 2, 0, h, { c: 1 });
-      });
-      furnish(lv, U, Pl, lbox, LP);
-      MAQ.apts[id] = { id, lv, bb, name: ((T.GROUPS.find((q) => q.id === id) || {}).name) || id, no: (T.GROUPS.find((q) => q.id === id) || {}).no, lock: !!(T.GROUPS.find((q) => q.id === id) || {}).lock,
-        area: (Pl.rooms || []).reduce((s, r) => s + r[3] * r[4], 0) };
-    });
-    /* fedett bejáró a lépcsővel (földszint) és emeleti folyosó/terasz */
-    lbox(0, "#cfc6b4", WALL, Z_HALL, OUT_W - WALL, Z_B - PART, 0, .03);
-    for (let k = 0; k < 15; k++) lbox(0, "#d7d3cb", WALL, Z_B - PART - .3 - k * .26, WALL + 1.0, Z_B - PART - k * .26, 0, .19 * (k + 1), { c: 1 });
-    lbox(1, "#a98a66", WALL + 1.1, Z_HALL, OUT_W - WALL, Z_B - PART, 0, .04);         /* emeleti terasz a bejáró fölött */
-    lbox(1, "#cfd8dc", WALL + 1.1, Z_HALL + .02, OUT_W - WALL, Z_HALL + .06, .04, 1.0, { glass: 1 });
-    /* elöl: Korvett terasza (földszint) és a Fregatt erkélye (emelet) */
-    lbox(0, "#a98a66", 0, -1.45, OUT_W, 0, -.06, .06); lbox(1, "#a98a66", 0, -1.45, OUT_W, 0, -.18, .18);
-    lbox(1, "#cfd8dc", 0, -1.45, OUT_W, -1.4, 0, 1.0, { glass: 1 }); lbox(1, "#cfd8dc", 0, -1.45, .05, 0, 0, 1.0, { glass: 1 }); lbox(1, "#cfd8dc", OUT_W - .05, -1.45, OUT_W, 0, 0, 1.0, { glass: 1 });
-    /* hátul: a Schooner terasza (földszint) és a Kadett emeleti fa terasza oszlopokon, csigalépcsővel */
-    lbox(0, "#a98a66", 0, Z_END, OUT_W, Z_END + 2.9, -.04, .06);
-    lbox(1, "#9b7653", 0, Z_END, OUT_W, Z_END + 3.3, -.2, .2);
-    [[.1, Z_END + 3.1], [OUT_W - .3, Z_END + 3.1]].forEach(([x, z]) => box("#e9e6dc", x, z, x + .2, z + .2, 0, Y1 - .2));
-    lbox(1, "#cfd8dc", 0, Z_END + 3.25, OUT_W, Z_END + 3.3, 0, 1.0, { glass: 1 }); lbox(1, "#cfd8dc", OUT_W - .05, Z_END, OUT_W, Z_END + 3.3, 0, 1.0, { glass: 1 });
-    for (let k = 0; k < 14; k++) { const a = k * .45; P("#8f969c", new THREE.BoxGeometry(.75, .05, .22), M4(-.6 + Math.cos(a) * .4, .2 * (k + 1), Z_END + 2.2 + Math.sin(a) * .4, -a)); }
-    cyl("#7f868c", -.6, Z_END + 2.2, .05, 0, Y1 + 1.0, 8);
-    /* lapos tető attikafallal (a légifelvétel szerint világos, lapos tető) */
-    MAQ.roof = new THREE.Group(); model.add(MAQ.roof);
-    const roofParts = [[new THREE.BoxGeometry(OUT_W, .25, Z_END + 1.45), M4(OUT_W / 2, roofY + .125, (Z_END - 1.45) / 2)]];
-    [[0, -1.45, OUT_W, -1.3], [0, Z_END - .15, OUT_W, Z_END], [0, -1.45, .15, Z_END], [OUT_W - .15, -1.45, OUT_W, Z_END]].forEach(([x0, z0, x1, z1]) => roofParts.push([new THREE.BoxGeometry(x1 - x0, .5, z1 - z0), M4((x0 + x1) / 2, roofY + .5, (z0 + z1) / 2)]));
-    const roofM = mesh(mergeGeoms(roofParts), std({ color: "#c9c9c4", roughness: .85 }), MAQ.roof); roofM.castShadow = true; roofM.receiveShadow = true;
-    /* ablakok és üvegajtók a homlokzaton (az alaprajzok nyílászáróiból, a külső falakon) */
-    Object.keys(UNITS).forEach((id) => {
-      const U = UNITS[id], Pl = planOf(id);
-      (Pl.furn || []).forEach((f) => {
-        if (f[0] !== "window" && f[0] !== "door") return;
-        const q = mapRect(U, f[1], f[2], f[3], f[4]), cx = (q[0] + q[2]) / 2, cz = (q[1] + q[3]) / 2;
-        const onX = cx < WALL + .35 || cx > OUT_W - WALL - .35, onZ = cz < WALL + .4 || cz > Z_END - WALL - .4 || Math.abs(cz - (Z_A - WALL)) < .4;
-        if (!onX && !onZ) return;
-        const door = f[0] === "door", y0 = door ? 0 : .9, h = door ? 2.1 : 1.25;
-        if (onX) { const x = cx < OUT_W / 2 ? -.02 : OUT_W + .02, len = q[3] - q[1]; MAQ.win = MAQ.win || []; MAQ.win.push([U.lvl, x, cz, .05, Math.max(.5, len), y0, h]); }
-        else { const z = cz < Z_END / 2 ? -.02 : Z_END + .02, len = q[2] - q[0]; MAQ.win = MAQ.win || []; MAQ.win.push([U.lvl, cx, z, Math.max(.5, len), .05, y0, h]); }
-      });
-    });
-    (MAQ.win || []).forEach(([lv, x, z, w, d, y0, h]) => { lbox(lv, "#2d4a63", x - w / 2, z - d / 2, x + w / 2, z + d / 2, y0, h, { glass: 1, tall: 1 }); lbox(lv, "#ffffff", x - w / 2 - .04, z - d / 2 - .01, x + w / 2 + .04, z + d / 2 + .01, y0 - .06, .06, { tall: 1 }); });
-
-    /* ---------- az összevont részek kirajzolása ---------- */
-    const mk = (pt, parent) => {
-      const o = pt.opt || {};
-      const mat = o.glass ? std({ color: pt.col, roughness: .1, metalness: .2, transparent: true, opacity: .45, depthWrite: false }) : std({ color: pt.col, roughness: o.flat ? .95 : .8, flatShading: !!o.flat });
-      const m = mesh(mergeGeoms(pt.list), mat, parent); m.castShadow = !o.glass; m.receiveShadow = true; m.userData.tall = !!o.tall; return m;
-    };
-    Object.values(parts).forEach((pt) => mk(pt, model));
-    MAQ.tallBits = [[], []];
-    [0, 1].forEach((lv) => Object.values(lvParts[lv]).forEach((pt) => { const m = mk(pt, MAQ.lv[lv]); if (pt.opt && pt.opt.tall) MAQ.tallBits[lv].push(m); }));
-
-    /* ---------- lakásonkénti kiemelés, felirat, választás ---------- */
+    /* ---------- lakásonkénti kiemelés és választás ---------- */
+    MAQ.apts = H.apts;
     Object.values(MAQ.apts).forEach((A) => {
-      const col = new THREE.Color(APTCOL[A.id] || "#999");
-      const gm = basic({ color: col, transparent: true, opacity: 0, depthWrite: false });
-      const glow = mesh(new THREE.BoxGeometry(A.bb[2] - A.bb[0] + .2, FLOOR_H - .3, A.bb[3] - A.bb[1] + .2), gm, MAQ.lv[A.lv]);
-      glow.position.set((A.bb[0] + A.bb[2]) / 2, (FLOOR_H - .3) / 2, (A.bb[1] + A.bb[3]) / 2);
-      A.glow = glow; A.gm = gm; A.col = col;
+      const c = new THREE.Color(APTCOL[A.id] || "#999");
+      const gm = basic({ color: c, transparent: true, opacity: 0, depthWrite: false });
+      const glow = mesh(new THREE.BoxGeometry(A.bb[2] - A.bb[0] + .2, FLOOR_H - .3, A.bb[3] - A.bb[1] + .2), gm, H.lv[A.lv]);
+      glow.position.set((A.bb[0] + A.bb[2]) / 2, (FLOOR_H - .3) / 2, (A.bb[1] + A.bb[3]) / 2); glow.renderOrder = 4;
+      A.glow = glow; A.gm = gm; A.col = c;
       glow.userData.xr = { hover: (on) => maqHover(A, on), click: () => maqSelect(A) };
       T.xr.extra.add(glow); W.objs.push(glow);
     });
     maqAvail();
-
-    /* ---------- tájolás: iránytű és a Balaton iránya a talapzat elején ---------- */
-    const rose = canvasTex(512, 512, (g) => {
-      g.translate(256, 256); g.strokeStyle = "#c9a24a"; g.lineWidth = 8; g.beginPath(); g.arc(0, 0, 200, 0, TAU); g.stroke();
-      g.fillStyle = "#e5262f"; g.beginPath(); g.moveTo(0, -190); g.lineTo(44, 0); g.lineTo(-44, 0); g.closePath(); g.fill();
-      g.fillStyle = "#f3efe6"; g.beginPath(); g.moveTo(0, 190); g.lineTo(44, 0); g.lineTo(-44, 0); g.closePath(); g.fill();
-      g.fillStyle = "#f3efe6"; g.font = "900 96px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("É", 0, -240 + 30);
+    /* ---------- életnagyságban: 360°-os fotópontok és lépés (teleport) ---------- */
+    MAQ.orbs = [];
+    const orbTex = canvasTex(256, 256, (g) => { const gr = g.createRadialGradient(128, 128, 10, 128, 128, 120); gr.addColorStop(0, "rgba(255,240,200,1)"); gr.addColorStop(.35, "rgba(255,209,102,.9)"); gr.addColorStop(1, "rgba(255,180,60,0)"); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+      g.fillStyle = "#0b2f5e"; g.font = "800 92px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("360°", 128, 132); });
+    H.spots.forEach((sp) => {
+      const o = new THREE.Sprite(basic({ map: orbTex, transparent: true, depthWrite: false })); o.scale.set(.42, .42, 1); o.position.set(sp.x, 1.45, sp.z); H.lv[sp.lv].add(o); o.visible = false; o.renderOrder = 6;
+      o.userData.xr = { hover: (on) => { o.scale.setScalar(on ? .55 : .42); if (on) showTip(o, "📷 " + sp.n + " – valódi 360°-os fotó", "Csippents rá: belépsz a fotóba"); else showTip(null); }, click: () => { W.close(() => T.go(sp.id)); } };
+      T.xr.extra.add(o); W.objs.push(o); MAQ.orbs.push(o);
     });
-    const ro = mesh(new THREE.PlaneGeometry(3.6, 3.6), basic({ map: rose, transparent: true, depthWrite: false }), model);
-    /* a −z (az utca felé) 345°; az észak ettől 15°-kal az óramutató járása szerint */
-    ro.rotation.set(-Math.PI / 2, 0, -15 * D2R); ro.position.set(9.4, .08, 4.5);
-    const lake = canvasTex(1024, 256, (g) => { g.fillStyle = "rgba(58,127,168,.92)"; g.fillRect(0, 0, 1024, 256); g.fillStyle = "#fff"; g.font = "800 70px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("▼ erre a Balaton · kb. 100 m", 512, 128); });
-    const lk = mesh(new THREE.PlaneGeometry(10, 2.5), basic({ map: lake, transparent: true }), model); lk.rotation.set(-Math.PI / 2, 0, Math.PI); lk.position.set(CX, .07, -8.4);
-    /* névtábla a talapzat elején */
-    const plate = canvasTex(1024, 160, (g) => { g.fillStyle = "#c9a24a"; g.fillRect(0, 0, 1024, 160); g.fillStyle = "#2a1c0c"; g.font = "800 60px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ZEPHYR APARTMANHÁZ · ZAMÁRDI", 512, 66); g.font = "500 32px Georgia, serif"; g.fillText("Gáspár András utca 58. · M 1:60 · a hivatalos tervrajz szerint", 512, 124); });
-    const pl = mesh(new THREE.PlaneGeometry(baseW * .9, baseW * .9 * 160 / 1024), basic({ map: plate }), turn); pl.position.set(0, -.024, -(baseD / 2) - .0155); pl.rotation.y = Math.PI;
+    /* teleport-felületek: a telek, a két szint padlója (a ház alapterületén + teraszok) és a part */
+    const tpM = basic({ visible: false });
+    const tp0 = mesh(new THREE.PlaneGeometry(S.SX1 - S.SX0, S.SZ1 - S.SZ0), tpM, model); tp0.rotation.x = -Math.PI / 2; tp0.position.set(MAQ.C.x, .09, MAQ.C.z);
+    const tp1 = mesh(new THREE.PlaneGeometry(OUT_W, Z_END + 4.75), tpM, model); tp1.rotation.x = -Math.PI / 2; tp1.position.set(OUT_W / 2, FLOOR_H + .02, (Z_END + 3.3 - 1.45) / 2);
+    MAQ.tp = [tp0, tp1];
+    [tp0, tp1].forEach((m, i) => { m.userData.xr = { click: (hit) => { if (hit && hit.point) teleport(hit.point, i); } }; T.xr.extra.add(m); W.objs.push(m); });
+    ENV.land.userData.xr = { click: (hit) => { if (MAQ.mode === "life" && hit && hit.point) teleport(hit.point, 0); } };
+    /* távcső: a látnivalók feliratai */
+    ENV.telHit.userData.xr = { hover: (on) => { if (on) showTip(ENV.telescope, "🔭 Távcső", "Csippents rá: a Balaton látnivalói a láthatáron"); else showTip(null); }, click: () => toggleSights() };
+    T.xr.extra.add(ENV.telHit); W.objs.push(ENV.telHit);
 
-    /* ---------- fény: a napállás szerint, árnyékkal ---------- */
-    const r = T.sceneEl.renderer; MAQ.shadowWas = r.shadowMap.enabled; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFShadowMap;
-    MAQ.lights = addLights(new THREE.Vector3(.4, .9, .3).normalize(), true);
-    MAQ.lights.hemi.intensity = .62; MAQ.lights.amb.intensity = .12;
-    const sun = MAQ.lights.sun; sun.castShadow = true; sun.shadow.mapSize.set(1536, 1536); sun.shadow.bias = -.0004; sun.shadow.normalBias = .002;
-    const sc = sun.shadow.camera; sc.left = -.7; sc.right = .7; sc.top = .7; sc.bottom = -.7; sc.near = .05; sc.far = 6; sc.updateProjectionMatrix();
-    MAQ.sunTgt = new THREE.Object3D(); stand.add(MAQ.sunTgt); sun.target = MAQ.sunTgt;
-    MAQ.day = (T.sunDefaultDay && T.sunDefaultDay()) || "2027-07-15"; MAQ.hour = 15;
-    maqLight();
+    /* ---------- fény, árnyék ---------- */
+    const r = T.sceneEl.renderer; MAQ.shadowWas = r.shadowMap.enabled; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+    MAQ.envWas = T.sceneEl.object3D.environment || null;
+    const sun = ENV.lights.sun; sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -.0005; sun.shadow.normalBias = .02;
 
-    /* ---------- elhelyezés: asztalmagasságban, előttünk; a ház utcafrontja felénk ---------- */
-    const y = T.inVR ? .9 : -.42, dist = T.inVR ? .7 : .6, yaw = T.camYaw();
-    stand.position.set(-Math.sin(yaw) * dist, y, -Math.cos(yaw) * dist); stand.rotation.y = yaw;
-    if (!T.inVR) { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.6; }
-    turn.rotation.y = Math.PI + .35;   /* az utca felénk, kissé oldalról – így látszik a parkoló is */
-    /* kerek asztal – a makett szabadon forgatható rajta */
-    const tr = Math.hypot(baseW, baseD) / 2 + .06;
-    const table = mesh(new THREE.CylinderGeometry(tr, tr, .04, 64), std({ color: "#3b2a1d", roughness: .45 }), stand); table.position.y = -.07; table.receiveShadow = true;
-    MAQ.table = table;
-    const leg = mesh(new THREE.CylinderGeometry(.05, .09, .85, 16), std({ color: "#2a1d13", roughness: .5 }), table); leg.position.y = -.44;
-    const foot = mesh(new THREE.CylinderGeometry(.28, .3, .03, 32), std({ color: "#2a1d13", roughness: .5 }), table); foot.position.y = -.87;
-    mesh(new THREE.SphereGeometry(40, 32, 16), basic({ color: "#1b2a3a", side: THREE.BackSide }), root);
-    const floor = mesh(new THREE.CircleGeometry(12, 48), std({ color: "#2c3a48", roughness: .95 }), root); floor.rotation.x = -Math.PI / 2; floor.position.y = T.inVR ? 0 : -1.4;
-    MAQ.upper = true; MAQ.roofOn = false; MAQ.sel = null; MAQ.auto = undefined;
-    W.onClose = () => { try { T.sceneEl.renderer.shadowMap.enabled = MAQ.shadowWas; } catch (e) {} };
-    return { tick: maqTick, panel: maqPanel, hud: maqHud };
+    /* ---------- áttűnés (életnagyságba lépéskor) ---------- */
+    const fm = basic({ color: "#fff1cf", transparent: true, opacity: 0, side: THREE.BackSide, depthTest: false, depthWrite: false });
+    MAQ.fade = mesh(new THREE.SphereGeometry(.5, 16, 12), fm, root); MAQ.fade.renderOrder = 1000; MAQ.fade.visible = false;
+
+    /* ---------- kezdőállapot: aranyóra, 1:60 az asztalon, az utcafront felénk ---------- */
+    MAQ.day = (T.sunDefaultDay && T.sunDefaultDay()) || "2027-07-15";
+    MAQ.st = sunTimesOf(MAQ.day);
+    MAQ.hour = MAQ.hourT = MAQ.st.set ? MAQ.st.set - .75 : 19.5;
+    MAQ.preset = 4;
+    envSetTime(MAQ.day, MAQ.hour);
+    MAQ.mode = "table"; MAQ.s = MAQ.sT = 1 / 40; MAQ.upper = true; MAQ.roofOn = false; MAQ.sel = null; MAQ.auto = undefined; MAQ.level = 0; MAQ.sights = false;
+    turn.rotation.y = Math.PI + .35;
+    applyPlacement(true);
+    if (!T.inVR) { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.62; }
+    audioStart({ water: .03, wind: .012 });
+    W.onClose = () => {
+      try { T.sceneEl.renderer.shadowMap.enabled = MAQ.shadowWas; T.sceneEl.object3D.environment = MAQ.envWas; } catch (e) {}
+      try { const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p); if (T.inVR) rg.rotation.y = MAQ.rig0.ry; } catch (e) {}
+      showTip(null); uwDispose(); envDispose(); MAQ.card = null; MAQ.sightL = null;
+    };
+    W.maq = { MAQ, ENV, UW, goLife, goTable, goDive, goSurface, setPreset, stepScale, nudgeHour, toggleSights };   /* tesztekhez */
+    return { tick: maqTick, panel: maqPanel, hud: maqHud, wrist: maqWrist };
+  }
+  function sunTimesOf(ymd) {
+    let rise = null, set = null, prev = -90;
+    for (let hh = 3; hh <= 23; hh += 1 / 30) { let e = -90; try { e = T.sunPos(ymd, hh).el; } catch (x) { return { rise: 5.5, set: 20.5 }; } if (prev < -.833 && e >= -.833 && rise == null) rise = hh; if (prev >= -.833 && e < -.833) set = hh; prev = e; }
+    return { rise, set };
+  }
+  const PRESETS = [["Hajnal", (s) => (s.rise || 5.2) + .25], ["Reggel", (s) => (s.rise || 5.2) + 2.2], ["Dél", () => 13], ["Délután", () => 16.5], ["Aranyóra", (s) => (s.set || 20.5) - .75],
+    ["Naplemente", (s) => (s.set || 20.5) - .05], ["Kék óra", (s) => (s.set || 20.5) + .45], ["Éjszaka", () => 23.3]];
+  function setPreset(i) { MAQ.preset = (i + PRESETS.length) % PRESETS.length; MAQ.hourT = PRESETS[MAQ.preset][1](MAQ.st); W.panelDirty = 1; }
+  function nudgeHour(d) { MAQ.hourT = clamp(MAQ.hourT + d, 4, 23.9); W.panelDirty = 1; }
+
+  /* ---------- méret és elhelyezés ---------- */
+  function applyPlacement(now) {
+    const s = MAQ.s, life = MAQ.mode === "life";
+    const H = MAQ.H, model = MAQ.model;
+    model.scale.setScalar(s);
+    if (life) { MAQ.holder.position.copy(LIFE_POS); MAQ.turn.rotation.y = 0; model.position.set(0, 0, 0); }
+    else {
+      model.position.set(-MAQ.C.x * s, 0, -MAQ.C.z * s);
+      MAQ.base.scale.setScalar(s); MAQ.base.position.set(0, 0, 0);
+      const onTable = s <= 1 / 30;
+      const R = MAQ.R * s;
+      if (onTable) MAQ.holder.position.set(0, TABLE_Y + 2.6 * s + .002, 0);
+      else MAQ.holder.position.set(0, .002 + 2.6 * s, USER_Z - .75 - R);
+    }
+    MAQ.base.visible = !life;
+    /* árnyékkamera a mérethez */
+    const sc = ENV.lights.sun.shadow.camera, half = life ? 34 : MAQ.R * s * 1.05 + .25;
+    sc.left = -half; sc.right = half; sc.top = half; sc.bottom = -half; sc.near = .05; sc.far = life ? 160 : 40; sc.updateProjectionMatrix();
+    MAQ.shadowD = life ? 70 : Math.max(3, half * 4);
+    /* címkék mérete */
+    Object.values(MAQ.apts).forEach((A) => { if (A.label) { const k = 7.5 / Math.sqrt(60 * s); A.label.scale.set(k, k * A.label.userData.ar, 1); } });
+  }
+  function setScale(s, animate) {
+    if (MAQ.mode === "life") return;
+    MAQ.sT = clamp(s, 1 / 150, 1 / 8); if (!animate) { MAQ.s = MAQ.sT; applyPlacement(); }
+    W.panelDirty = 1; wristRedraw();
+  }
+  function stepScale(dir) {
+    if (MAQ.mode === "life") { if (dir < 0) goTable(); return; }
+    const cur = MAQ.sT; let i = SCALES.findIndex((q) => q > cur * 1.02); if (i < 0) i = SCALES.length;
+    if (dir > 0) { const nx = SCALES[i]; if (nx >= .99) goLife(); else if (nx) setScale(nx, true); }
+    else { let j = SCALES.length - 1; while (j >= 0 && SCALES[j] >= cur * .98) j--; if (j >= 0) setScale(SCALES[j], true); }
+  }
+  /* életnagyság: áttűnés, a ház a parton, mi az utcán a kapu előtt, a ház felé fordulva */
+  function goLife() {
+    if (MAQ.mode === "life" || MAQ.fading) return;
+    fadeThen(() => {
+      MAQ.mode = "life"; MAQ.s = MAQ.sT = 1; MAQ.roofOn = true; MAQ.upper = true; MAQ.level = 0; maqDeselect(); applyPlacement(true); lifeTargets(true);
+      const site = ENV.site; site.updateMatrixWorld(true);
+      /* nézés a ház felé (site +z) */
+      const fw = new THREE.Vector3(0, 0, 1).transformDirection(site.matrixWorld); faceYaw(Math.atan2(-fw.x, -fw.z));
+      const target = site.localToWorld(new THREE.Vector3(LIFE_POS.x + 2.0, 0, LIFE_POS.z - 3.6));
+      placeUser(target, 0);
+      wristRedraw(); W.panelDirty = 1;
+    });
+  }
+  function goTable() {
+    if (MAQ.mode !== "life" || MAQ.fading) return;
+    fadeThen(() => {
+      MAQ.mode = "table"; MAQ.s = MAQ.sT = 1 / 40; MAQ.roofOn = false; MAQ.level = 0; applyPlacement(true); lifeTargets(false);
+      const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p);
+      const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceYaw(Math.atan2(-fw.x, -fw.z));
+      placeUser(site.localToWorld(new THREE.Vector3(0, 0, USER_Z)), -1);
+      MAQ.turn.rotation.y = Math.PI + .35; wristRedraw(); W.panelDirty = 1;
+    });
+  }
+  /* a felhasználó (a feje) a megadott pontra kerül; lvl: 0/1 szint (életnagyságban), −1 = a stég */
+  function placeUser(pt, lvl) {
+    const rg = T.rig.object3D; rg.updateMatrixWorld(true);
+    const hw = headWorld(new THREE.Vector3());
+    rg.position.x += pt.x - hw.x; rg.position.z += pt.z - hw.z;
+    rg.position.y = pt.y + (T.inVR ? 0 : EYE2D);
+    if (lvl >= 0) MAQ.level = lvl;
+    if (W.panel && !W.panelHidden) setTimeout(() => { try { if (W.active) W.togglePanel(), W.togglePanel(); } catch (e) {} }, 30);
+  }
+  function teleport(pt, lvl) { if (MAQ.mode !== "life") return; placeUser(pt, lvl); try { flap(.03); } catch (e) {} wristRedraw(); }
+  function goLevel(lvl) {
+    if (MAQ.mode !== "life") return; const hw = headWorld(new THREE.Vector3()); const y = MAQ.model.localToWorld(new THREE.Vector3(0, lvl ? FLOOR_H : 0, 0)).y;
+    placeUser(new THREE.Vector3(hw.x, y, hw.z), lvl); wristRedraw(); W.panelDirty = 1;
+  }
+  function lifeTargets(on) { const L = ENV.land; if (on) { T.xr.extra.add(L); if (!W.objs.includes(L)) W.objs.push(L); } else { T.xr.extra.delete(L); W.objs = W.objs.filter((o) => o !== L); } }
+  function fadeThen(fn) {
+    MAQ.fading = { t: 0, fn, done: false }; MAQ.fade.visible = true;
   }
 
-  /* bútorok az alaprajz tereptárgyaiból – egyszerű, de felismerhető formák */
-  function furnish(lv, U, Pl, lbox) {
-    (Pl.furn || []).forEach((f) => {
-      const [type, x, y, w0, d0, , rot] = f; if (["door", "window", "area", "lane", "stairs"].includes(type) || !(w0 > .05 && d0 > .05)) return;
-      const sw = Math.abs(rot || 0) % 180 === 90, w = sw ? d0 : w0, d = sw ? w0 : d0, cx = x + w0 / 2, cy = y + d0 / 2;
-      const q = mapRect(U, cx - w / 2, cy - d / 2, w, d); const [x0, z0, x1, z1] = q, mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
-      const long = (x1 - x0) > (z1 - z0);
-      switch (type) {
-        case "bed": lbox(lv, "#8d6e52", x0, z0, x1, z1, .03, .3); lbox(lv, "#f7f4ee", x0 + .04, z0 + .04, x1 - .04, z1 - .04, .33, .18);
-          lbox(lv, "#3d8fe2", x0 + .04, z0 + .04 + (z1 - z0) * .35, x1 - .04, z1 - .04, .5, .03);   /* takaró */
-          if (long) { lbox(lv, "#ffffff", x0 + .1, z0 + .15, x0 + .55, z1 - .15, .51, .12); } else { lbox(lv, "#ffffff", x0 + .15, z0 + .1, x1 - .15, z0 + .5, .51, .12); } break;
-        case "sofa": lbox(lv, "#7d8a96", x0, z0, x1, z1, .03, .42);
-          if (long) lbox(lv, "#6b7884", x0, z1 - .22, x1, z1, .45, .38); else lbox(lv, "#6b7884", x1 - .22, z0, x1, z1, .45, .38); break;
-        case "table4": case "table6": case "table2": case "table5": case "table":
-          lbox(lv, "#9c6b3f", x0, z0, x1, z1, .72, .05); [[x0, z0], [x1 - .06, z0], [x0, z1 - .06], [x1 - .06, z1 - .06]].forEach(([a, b]) => lbox(lv, "#6b4426", a, b, a + .06, b + .06, .03, .7)); break;
-        case "chair": lbox(lv, "#7a5a3a", x0 + .05, z0 + .05, x1 - .05, z1 - .05, .43, .05); lbox(lv, "#7a5a3a", x0 + .05, z0 + .05, x1 - .05, z0 + .1, .48, .45); break;
-        case "shower": lbox(lv, "#e6eef2", x0, z0, x1, z1, .03, .06); lbox(lv, "#bfe3f0", x0, z0, x1, z0 + .03, .09, 1.9, { glass: 1 }); lbox(lv, "#bfe3f0", x0, z0, x0 + .03, z1, .09, 1.9, { glass: 1 }); break;
-        case "wc": lbox(lv, "#ffffff", x0 + .05, z0 + .05, x1 - .05, z1 - .05, .03, .4); break;
-        case "sink": lbox(lv, "#ffffff", x0, z0, x1, z1, .78, .12); break;
-        case "counter": lbox(lv, "#e9e6df", x0, z0, x1, z1, .03, .85); lbox(lv, "#3b3b3b", x0, z0, x1, z1, .88, .04); break;
-        case "washer": lbox(lv, "#f2f2f2", x0, z0, x1, z1, .03, .85); break;
-        case "tv": lbox(lv, "#1a1a1a", x0, z0, x1, z1, .9, .45); break;
-        case "shelf": lbox(lv, "#c9a77b", x0, z0, x1, z1, .03, 1.6); break;
-        default: {
-          const lab = String(f[5] || ""), h = /szekrény/.test(lab) ? 2.0 : /hűtő/.test(lab) ? 1.75 : /klíma|bojler/.test(lab) ? 0 : /fotel|pouf/.test(lab) ? .45 : /asztal/.test(lab) ? .74 : .55;
-          if (h > 0) lbox(lv, /szekrény/.test(lab) ? "#c9b28f" : /hűtő/.test(lab) ? "#f4f4f4" : /fotel/.test(lab) ? "#8a7a6a" : "#cbb894", x0, z0, x1, z1, .03, h);
-        }
-      }
-    });
-  }
-  /* ha a foglalásban már van időpont: szabad (zöld) / foglalt (piros) */
+  /* ---------- foglaltság a választott napokon ---------- */
   function maqAvail() {
     let S = null; try { S = T.vrPanel && T.vrPanel.S && T.vrPanel.S.book; } catch (e) {}
     const B = window.ZephyrBooking && ZephyrBooking.vr;
@@ -1337,84 +1305,1614 @@
     });
   }
   function addDay(s, n) { const [y, m, d] = s.split("-").map(Number); const t = new Date(y, m - 1, d + n); return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0"); }
-  function maqLight() {
-    const L = MAQ.lights; if (!L) return;
-    const s = sunDirFor(MAQ.day, MAQ.hour); MAQ.sunInfo = s.p;
-    const v = s.v.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), MAQ.turn.rotation.y + MAQ.stand.rotation.y);
-    MAQ.stand.updateMatrixWorld(true);
-    const c = new THREE.Vector3(); MAQ.stand.getWorldPosition(c);
-    MAQ.sunTgt.position.set(0, 0, 0);
-    L.sun.position.copy(c).addScaledVector(v, 3);
-    const low = s.p.el < 0; L.sun.intensity = low ? .2 : 1.15; L.sun.color.set(s.p.el < 12 ? 0xffc48a : 0xfff0d8);
-  }
+
+  /* ---------- rámutatás, kiválasztás, kártya ---------- */
   function maqHover(A, on) {
+    if (MAQ.mode === "life") return;
     A.hov = on;
     if (!A.label) {
       const cap = (() => { try { const c = ZephyrBooking.vr.cfg(); const a = c && c.apartments.find((q) => q.id === A.id); return a ? a.cap + " fő · " : ""; } catch (e) { return ""; } })();
-      A.label = labelSprite([(A.no ? A.no + " · " : "") + A.name, A.lock ? "saját lakás – nem foglalható" : `${cap}kb. ${Math.round(A.area)} m² · csippents rá`], { size: 7.5, fs: 50 });
-      A.label.position.set((A.bb[0] + A.bb[2]) / 2, FLOOR_H + 2.6, (A.bb[1] + A.bb[3]) / 2); MAQ.lv[A.lv].add(A.label);
+      A.label = labelSprite([(A.no ? A.no + " · " : "") + A.name, A.lock ? "saját lakás – nem foglalható" : `${cap}kb. ${Math.round(A.area)} m² · csippents rá`], { size: 1, fs: 50 });
+      A.label.userData.ar = A.label.scale.y; A.label.position.set((A.bb[0] + A.bb[2]) / 2, FLOOR_H + 2.6, (A.bb[1] + A.bb[3]) / 2); MAQ.H.lv[A.lv].add(A.label);
+      applyPlacement();
     }
     A.label.visible = !!on || MAQ.sel === A;
   }
-  /* választás: kártya két gombbal – belépés a lakásba / foglalás ezzel a lakással */
+  function placeFacing(obj, dist, dy, side) {
+    const hw = headWorld(new THREE.Vector3()), yaw = T.camYaw() + (side || 0);
+    obj.position.set(hw.x - Math.sin(yaw) * dist, hw.y + dy, hw.z - Math.cos(yaw) * dist);
+    obj.lookAt(hw.x, obj.position.y, hw.z);
+  }
   function maqSelect(A) {
+    if (MAQ.mode === "life") return;
     if (MAQ.sel && MAQ.sel !== A && MAQ.sel.label) MAQ.sel.label.visible = false;
     MAQ.sel = A; maqHover(A, true);
-    if (MAQ.card) { T.xr.extra.delete(MAQ.card); W.objs = W.objs.filter((o) => o !== MAQ.card); MAQ.card.parent && MAQ.card.parent.remove(MAQ.card); MAQ.card = null; }
-    const CW = 1000, CH = 420, btns = [];
+    if (MAQ.card) { T.xr.extra.delete(MAQ.card); W.objs = W.objs.filter((o) => o !== MAQ.card); if (MAQ.card.parent) MAQ.card.parent.remove(MAQ.card); MAQ.card = null; }
+    const CW = 1000, CH = 470, btns = [];
     const tx = canvasTex(CW, CH, (g) => {
-      g.fillStyle = "rgba(9,34,70,.94)"; g.beginPath(); g.roundRect ? g.roundRect(6, 6, CW - 12, CH - 12, 40) : g.rect(6, 6, CW - 12, CH - 12); g.fill(); g.lineWidth = 8; g.strokeStyle = "#" + A.col.getHexString(); g.stroke();
-      g.fillStyle = "#ffd166"; g.font = "800 64px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText((A.no ? A.no + " · " : "") + A.name, 50, 80);
+      const bg = g.createLinearGradient(0, 0, 0, CH); bg.addColorStop(0, "rgba(16,56,104,.96)"); bg.addColorStop(1, "rgba(7,28,58,.96)");
+      g.fillStyle = bg; g.beginPath(); g.roundRect ? g.roundRect(6, 6, CW - 12, CH - 12, 44) : g.rect(6, 6, CW - 12, CH - 12); g.fill(); g.lineWidth = 8; g.strokeStyle = "#" + A.col.getHexString(); g.stroke();
+      g.fillStyle = "#ffd166"; g.font = "800 66px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText((A.no ? A.no + " · " : "") + A.name + " Apartman", 50, 82);
       g.fillStyle = "#fff"; g.font = "600 38px system-ui, sans-serif";
       const st = A.free === true ? "✓ szabad a választott időpontban" : A.free === false ? "✕ foglalt a választott időpontban" : `kb. ${Math.round(A.area)} m² · ${A.lv ? "emelet" : "földszint"}`;
-      g.fillText(A.lock ? "A tulajdonos saját lakása – nem foglalható" : st, 50, 150);
-      const bt = (x, w, label, on, fn) => { btns.push({ x, y: 220, w, h: 150, fn }); g.fillStyle = on ? "#ffd166" : "rgba(255,255,255,.14)"; g.beginPath(); g.roundRect ? g.roundRect(x, 220, w, 150, 30) : g.rect(x, 220, w, 150); g.fill(); g.lineWidth = 4; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke(); g.fillStyle = on ? "#0b2f5e" : "#fff"; g.font = "800 46px system-ui, sans-serif"; g.textAlign = "center"; g.fillText(label, x + w / 2, 296); };
+      g.fillText(A.lock ? "A tulajdonos saját lakása – nem foglalható" : st, 50, 152);
+      g.fillStyle = "rgba(255,255,255,.75)"; g.font = "500 32px system-ui, sans-serif"; g.fillText("Belépés: a valódi 360°-os fotókba · Foglalás: itt, a térben", 50, 208);
+      const bt = (x, w, label, on, fn) => { btns.push({ x, y: 260, w, h: 160, fn }); g.fillStyle = on ? "#ffd166" : "rgba(255,255,255,.14)"; g.beginPath(); g.roundRect ? g.roundRect(x, 260, w, 160, 32) : g.rect(x, 260, w, 160); g.fill(); g.lineWidth = 4; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke(); g.fillStyle = on ? "#0b2f5e" : "#fff"; g.font = "800 50px system-ui, sans-serif"; g.textAlign = "center"; g.fillText(label, x + w / 2, 342); };
       if (A.lock) bt(50, CW - 100, "‹ Bezárás", false, () => maqDeselect());
-      else { bt(50, 430, "👁 Belépés", false, () => maqEnter(A)); bt(500, 450, "📅 Foglalás", true, () => maqBook(A)); }
+      else { bt(50, 290, "👁 Belépés", false, () => maqEnter(A)); bt(360, 360, "📅 Foglalás", true, () => maqBook(A)); bt(740, 210, "✕", false, () => maqDeselect()); }
     });
-    const card = mesh(new THREE.PlaneGeometry(.4, .4 * CH / CW), basic({ map: tx, transparent: true, depthTest: false, depthWrite: false }), MAQ.stand);
-    card.renderOrder = 996; card.position.set(0, .36, 0);
+    const card = mesh(new THREE.PlaneGeometry(.46, .46 * CH / CW), basic({ map: tx, transparent: true, depthTest: false, depthWrite: false }), W.root);
+    card.renderOrder = 996; placeFacing(card, .62, -.12, -.32);
     card.userData.xr = { click: (h) => { if (!h || !h.uv) return; const x = h.uv.x * CW, y = (1 - h.uv.y) * CH; const b = btns.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) b.fn(); } };
     T.xr.extra.add(card); W.objs.push(card); MAQ.card = card;
+    try { winch(); } catch (e) {}
   }
   function maqDeselect() { if (MAQ.sel && MAQ.sel.label) MAQ.sel.label.visible = false; MAQ.sel = null; if (MAQ.card) { T.xr.extra.delete(MAQ.card); MAQ.card.visible = false; } }
-  function maqEnter(A) {
-    if (A.lock) return;
-    const best = (T.GROUPS.find((q) => q.id === A.id) || {}).entry;
-    W.close(() => T.go(best));
-  }
+  function maqEnter(A) { if (A.lock) return; const best = (T.GROUPS.find((q) => q.id === A.id) || {}).entry; W.close(() => T.go(best)); }
   function maqBook(A) { if (A.lock) return; W.close(() => { try { T.book(A.id); } catch (e) { if (window.ZephyrBooking) ZephyrBooking.open({ apt: A.id }); } }); }
+  /* lebegő tipp (rámutatáskor) */
+  function showTip(obj, t1, t2) {
+    if (!obj) { if (MAQ.tip) MAQ.tip.visible = false; return; }
+    if (!MAQ.tip) { MAQ.tip = labelSprite(["", ""], { size: .34, fs: 46, w: 900 }); W.root.add(MAQ.tip); }
+    MAQ.tip.userData.set([t1, t2 || ""]); MAQ.tip.visible = true;
+    const p = obj.getWorldPosition(new THREE.Vector3()), hw = headWorld(new THREE.Vector3()); const d = p.clone().sub(hw); const L = Math.min(d.length(), 1.2); d.normalize();
+    MAQ.tip.position.copy(hw).addScaledVector(d, L * .8); MAQ.tip.position.y += .12;
+  }
+
+  /* ---------- a Balaton látnivalói (a távcsőnél / a csuklómenüben) ---------- */
+  const SIGHTS = [
+    [296, .9, "Tihanyi Bencés Apátság", "5,5 km · 1055-ben alapította I. András", "Az alapítólevél őrzi a legrégebbi magyar mondattöredéket. Barokk templom két toronnyal, csodás kilátás a tóra."],
+    [302, 1.6, "Tihany · levendulamezők", "6 km · júniusban–júliusban lilába borul", "Levendulaszüret, Levendula Ház Látogatóközpont; a félsziget közepén a Belső-tó (vulkáni kráter) és a Barátlakások."],
+    [287, .45, "Szántód–Tihany komp", "4,4 km · a legrövidebb átkelés", "Kb. 10 perc alatt visz át a túlpartra – Tihany kapuja."],
+    [325, .8, "Balatonfüred", "8,5 km · Tagore sétány, szívkórház", "Vitorláskikötő, Anna-bál, a reformkori fürdőváros – a Balaton „fővárosa”."],
+    [254.6, .75, "Badacsony", "37 km · tanúhegy, bazaltorgonák", "Koporsó alakú vulkáni hegy, borvidék, Kisfaludy-ház; mellette a Gulács, a Szent György-hegy és Szigliget vára."],
+    [181.5, 2.9, "Kőhegyi kilátó (Zamárdi)", "3 km · a ház mögötti dombon", "Fehér kilátótorony a Kőhegyen: az egész tó és a Tihanyi-félsziget a lábad előtt."],
+    [84, .8, "Siófok", "7 km · Petőfi sétány, víztorony", "Pezsgő üdülőváros szabadstrandokkal, a „magyar tenger fővárosa”."]
+  ];
+  function toggleSights() {
+    MAQ.sights = !MAQ.sights;
+    if (!MAQ.sightL) {
+      MAQ.sightL = SIGHTS.map(([b, e, n, l1, l2]) => {
+        const sp = labelSprite([n, l1], { size: 26, fs: 52, w: 980 }); const R = 480, a = b * D2R; sp.position.set(Math.sin(a) * R, WATER_Y + Math.tan(e * D2R) * R + 18, -Math.cos(a) * R); ENV.env.add(sp);
+        const pin = mesh(new THREE.CylinderGeometry(.6, .6, 16, 6), basic({ color: "#ffd166", transparent: true, opacity: .8 }), ENV.env); pin.position.copy(sp.position); pin.position.y -= 14;
+        sp.userData.xr = { hover: (on) => sp.scale.multiplyScalar(on ? 1.12 : 1 / 1.12), click: () => { sp.userData.set([n, l2.length > 52 ? l2.slice(0, 52) + "…" : l2]); setTimeout(() => sp.userData.set([n, l1]), 6000); } };
+        T.xr.extra.add(sp); W.objs.push(sp); return [sp, pin];
+      });
+    }
+    MAQ.sightL.forEach(([sp, pin]) => { sp.visible = pin.visible = MAQ.sights; });
+    W.panelDirty = 1; wristRedraw();
+  }
+
+  /* ---------- képkocka ---------- */
   function maqTick(dt) {
+    const life = MAQ.mode === "life";
+    /* méret simítása */
+    if (!life && Math.abs(MAQ.s - MAQ.sT) > 1e-6) { MAQ.s = Math.exp(lerp(Math.log(MAQ.s), Math.log(MAQ.sT), Math.min(1, dt * 6))); if (Math.abs(MAQ.s / MAQ.sT - 1) < .002) MAQ.s = MAQ.sT; applyPlacement(); }
+    /* asztal: kisebb méreteknél látszik, nagyobbaknál a stégbe süllyed */
+    const tWant = !life && MAQ.s <= 1 / 30 ? 0 : -1.0; MAQ.table.position.y += (tWant - MAQ.table.position.y) * Math.min(1, dt * 5); MAQ.table.visible = MAQ.table.position.y > -.95;
+    /* két kézzel nagyítás: csippents mindkét kezeddel, és húzd szét / össze */
+    const X = T.xr, pl = X.pinch || {};
+    if (T.inVR && pl.left && pl.right && X.src.left && X.src.right && X.src.left.o && X.src.right.o) {
+      const d = X.src.left.o.distanceTo(X.src.right.o);
+      if (!MAQ.two) { MAQ.two = { d0: Math.max(.05, d), s0: life ? 1 / 8 : MAQ.s }; MAQ.drag = null; }
+      else { const want = MAQ.two.s0 * Math.pow(d / MAQ.two.d0, 1.6);
+        if (life) { if (want < 1 / 8 * .55) { MAQ.two = null; goTable(); } }
+        else if (want >= 1 / 8.2 && !MAQ.fading) { MAQ.two = null; goLife(); }
+        else setScale(want, false); }
+    } else MAQ.two = null;
+    /* láthatóságok */
+    const H = MAQ.H;
+    MAQ.H.roof.visible = MAQ.roofOn && MAQ.upper;
+    H.lv[1].visible = MAQ.upper;
+    H.meshes.forEach((m) => {
+      const v = m.userData.vis, lv = m.userData.lv;
+      if (v === "tall") m.visible = MAQ.roofOn || life || (lv === 0 && MAQ.upper);
+      else if (v === "low") m.visible = !(MAQ.roofOn || life || (lv === 0 && MAQ.upper));
+      else if (v === "pT") m.visible = life;
+      else if (v === "pL") m.visible = !life;
+      else if (v === "life") m.visible = life;
+    });
     Object.values(MAQ.apts).forEach((A) => {
-      const show = A.lv === 0 || MAQ.upper;
-      MAQ.lv[A.lv].visible = A.lv === 0 || MAQ.upper;
+      const show = !life && (A.lv === 0 || MAQ.upper);
       const base = A.free === true ? .2 : A.free === false ? .16 : 0, tgt = A.hov || MAQ.sel === A ? .34 : base;
       if (A.free === true) A.gm.color.set("#3fb37f"); else if (A.free === false) A.gm.color.set("#e5262f"); else A.gm.color.copy(A.col);
       A.gm.opacity += (tgt - A.gm.opacity) * Math.min(1, dt * 8); A.glow.visible = show;
+      if (A.label && life) A.label.visible = false;
     });
-    MAQ.roof.visible = MAQ.roofOn && MAQ.upper;
-    /* tetővel: teljes magasságú homlokzat (ablakokkal); tető nélkül: metszett „babaház” nézet */
-    [0, 1].forEach((lv) => { const tall = MAQ.roofOn || (lv === 0 && MAQ.upper); MAQ.shell[lv].forEach((m) => (m.visible = m.userData.tall === tall)); MAQ.tallBits[lv].forEach((m) => (m.visible = tall)); });
-    if (!T.inVR && !MAQ.drag && MAQ.auto !== false) MAQ.turn.rotation.y += dt * .05;
-    MAQ.lt = (MAQ.lt || 0) + dt; if (MAQ.lt > .25) { MAQ.lt = 0; maqLight(); }
+    MAQ.tp.forEach((m) => { m.visible = life; });
+    MAQ.orbs.forEach((o) => { o.visible = life; if (life) o.material.rotation = Math.sin(W.t * 1.5) * .05; });
+    if (life) MAQ.orbs.forEach((o, i) => { const k = (o.scale.x > .5 ? .55 : .42) * (1 + Math.sin(W.t * 2.2 + i) * .06); o.scale.set(k, k, 1); });
+    if (!T.inVR && !life && !MAQ.drag && MAQ.auto !== false) MAQ.turn.rotation.y += dt * .04;
+    /* napszak: az óra simán halad a cél felé */
+    if (Math.abs(MAQ.hour - MAQ.hourT) > 1e-3) { MAQ.hour += (MAQ.hourT - MAQ.hour) * Math.min(1, dt * 2.2); if (Math.abs(MAQ.hour - MAQ.hourT) < .004) MAQ.hour = MAQ.hourT; MAQ.envT = (MAQ.envT || 0) + dt; if (MAQ.envT > .06) { MAQ.envT = 0; envSetTime(MAQ.day, MAQ.hour); } }
+    /* nap (árnyékvető fény) a modell fölött */
+    const sun = ENV.lights.sun, tg = sun.target; MAQ.holder.getWorldPosition(tg.position);
+    if (life) { const hw = headWorld(_q); tg.position.lerp(hw, .0).setY(tg.position.y); }
+    tg.updateMatrixWorld(); sun.position.copy(tg.position).addScaledVector(ENV.lights.sunDirW || _q2.set(0, 1, 0), MAQ.shadowD || 4);
+    /* esti fények a házban */
+    const ev = ENV.evening || 0; MAQ.H.glass.emissiveIntensity = ev * (life ? .12 : .55); MAQ.H.bulb.emissiveIntensity = ev * 2.4 * (.9 + .1 * Math.sin(W.t * 2)); MAQ.H.lampIn.emissiveIntensity = ev * 1.6;
+    if (MAQ.H.sign) MAQ.H.sign.material.emissiveIntensity = ev * .9;
+    /* áttűnés */
+    if (MAQ.fading) { const F = MAQ.fading; F.t += dt; const hw = headWorld(_q3); MAQ.fade.position.copy(hw);
+      const a = F.t < .45 ? F.t / .45 : F.t < .6 ? 1 : Math.max(0, 1 - (F.t - .6) / .7); MAQ.fade.material.opacity = a;
+      if (!F.done && F.t >= .5) { F.done = true; try { F.fn(); } catch (e) { console.warn(e); } }
+      if (F.t > 1.3) { MAQ.fading = null; MAQ.fade.visible = false; } }
+    /* környezet */
+    envTick(dt, headWorld(_q3));
+    if (MAQ.dive) uwTick(dt, headWorld(_q3));
+    if (MAQ.card && MAQ.card.visible === false && MAQ.sel == null) {}
   }
-  const hhmm = (h) => `${Math.floor(h)}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
-  function sunLine() { const p = MAQ.sunInfo || { az: 0, el: 0 }; return p.el < 0 ? "a nap már lement" : `a nap ${["É", "ÉK", "K", "DK", "D", "DNy", "Ny", "ÉNy"][Math.round(p.az / 45) % 8]} felől, ${Math.round(p.el)}°`; }
+  const hhmm = (h) => { const m = Math.round(h * 60); return `${Math.floor(m / 60) % 24}:${String(m % 60).padStart(2, "0")}`; };
+  function sunLine() { const p = ENV.sunInfo || { az: 0, el: 0 }; return p.el < -.8 ? (p.el < -12 ? "csillagos éjszaka" : "a nap lement – szürkület") : `a nap ${["É", "ÉK", "K", "DK", "D", "DNy", "Ny", "ÉNy"][Math.round(p.az / 45) % 8]} felől, ${Math.round(p.el)}° magasan`; }
+  const dayHu = (ymd) => { const [y, m, d] = ymd.split("-").map(Number); return `${["jan.", "febr.", "márc.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szept.", "okt.", "nov.", "dec."][m - 1]} ${d}.`; };
+  function wristRedraw() { try { const P = T.xr && T.xr.wristP; if (P && P.m.visible) P.draw(); } catch (e) {} }
+
+  /* ---------- csuklómenü (bal tenyér felfelé) – a makett minden beállítása ---------- */
+  function maqWrist() {
+    const life = MAQ.mode === "life", turnA = Math.PI / 4;
+    const turn = (a) => { try { T.vrPanel.turn(a); } catch (e) {} };
+    const sun3 = [["◂☀", "Korábban", () => nudgeHour(-.5)], ["◐", PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", "Később", () => nudgeHour(.5)]];
+    const turn3 = [["↺", "Balra", () => turn(turnA)], ["↻", "Jobbra", () => turn(-turnA)], ["‹", "A sétához", () => W.close()]];
+    if (MAQ.dive) return [["🌊", "Fel a stégre", () => goSurface()], ["🐟", "Halak neve", () => showTip(null)], ["▣", "Makett", () => goSurface()]].concat(sun3, turn3);
+    if (life) return [
+      MAQ.level ? ["⬇", "Földszint", () => goLevel(0)] : ["⬆", "Emelet", () => goLevel(1)], ["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▣", "Makett", () => goTable()],
+      ...sun3,
+      ["📅", "Foglalás", () => W.close(() => { try { T.book(null); } catch (e) {} })], ["🐟", "Merülés", () => goDive()], ["🔭", MAQ.sights ? "Feliratok ki" : "Látnivalók", () => toggleSights()],
+      ...turn3];
+    return [
+      ["＋", "Nagyobb", () => stepScale(1)], ["－", "Kisebb", () => stepScale(-1)], ["🚶", "Életnagyság", () => goLife()],
+      ["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▤", MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }], ["🐟", "Merülés", () => goDive()],
+      ...sun3, ...turn3];
+  }
+  /* ---------- nagy lebegő panel (VR) ---------- */
   function maqPanel(P) {
-    P.title("A ház makettje", "a hivatalos tervrajz szerint · M 1:60");
-    P.row(0, "Csippents egy lakásra: belépés vagy foglalás", "#ffffff");
-    P.row(1, MAQ.dates ? "Zöld = szabad, piros = foglalt a napjaidon" : "Forgatás: fogd meg a talapzatot és húzd", "#ffd166");
-    P.row(2, `Fény: ${MAQ.day.slice(5).replace("-", ".")}. ${hhmm(MAQ.hour)} – ${sunLine()}`, "#ffd166");
-    P.buttons([[MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }], [MAQ.roofOn ? "Tető ki" : "Tető be", () => { MAQ.roofOn = !MAQ.roofOn; }],
-      ["☀ −1 ó", () => { MAQ.hour = Math.max(5, MAQ.hour - 1); maqLight(); }], ["☀ +1 ó", () => { MAQ.hour = Math.min(21, MAQ.hour + 1); maqLight(); }], ["‹ Vissza", () => W.close()]]);
+    const life = MAQ.mode === "life";
+    if (MAQ.dive) { P.title("Merülés a Balatonba", "A stég előtt, 1,6 m mélyen · a Balaton élővilága");
+      P.row(0, "Mutass egy halra: kiírja a nevét", "#ffffff"); P.row(1, "Küsz, dévérkeszeg, ponty, fogassüllő, csuka, harcsa, angolna", "#ffd166");
+      P.row(2, `${dayHu(MAQ.day)} ${hhmm(MAQ.hour)} · ${PRESETS[MAQ.preset][0]}`, "#7fd3ff"); P.row(3, "Közel menve a küszraj szétrebben", "#c9a24a");
+      P.buttons([["◂☀ Korábban", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["Később ☀▸", () => nudgeHour(.5)]], 1);
+      P.buttons([["🌊 Fel a stégre", () => goSurface()], ["‹ Vissza a sétához", () => W.close()]]); return; }
+    P.title(life ? "A Zephyr ház – életnagyságban" : "A ház makettje · " + SCALE_TXT(MAQ.s), "Zamárdi, a Balaton partján · a hivatalos tervrajz szerint");
+    if (life) { P.row(0, "Csippents a földre vagy a padlóra: odalépsz", "#ffffff"); P.row(1, "A fénylő 360° gömbök: a lakás valódi fotói", "#ffd166"); }
+    else { P.row(0, "Csippents egy lakásra: belépés vagy foglalás", "#ffffff"); P.row(1, MAQ.dates ? "Zöld = szabad, piros = foglalt a napjaidon" : "Két kézzel csippentve húzd szét: nagyobb lesz", "#ffd166"); }
+    P.row(2, `${dayHu(MAQ.day)} ${hhmm(MAQ.hour)} · ${PRESETS[MAQ.preset][0]} – ${sunLine()}`, "#7fd3ff");
+    P.row(3, "A bal tenyered felfelé fordítva: minden beállítás", "#c9a24a");
+    P.buttons([["◂☀ Korábban", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["Később ☀▸", () => nudgeHour(.5)], [MAQ.sights ? "🔭 Feliratok ki" : "🔭 Látnivalók", () => toggleSights()], MAQ.dive ? ["🌊 Fel", () => goSurface()] : ["🐟 Merülés", () => goDive()]], 1);
+    if (life) P.buttons([[MAQ.level ? "⬇ Földszint" : "⬆ Emelet", () => goLevel(MAQ.level ? 0 : 1)], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▣ Makett", () => goTable()], ["‹ Vissza", () => W.close()]]);
+    else P.buttons([["＋ Nagyobb", () => stepScale(1)], ["－ Kisebb", () => stepScale(-1)], ["🚶 Életnagyság", () => goLife()], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], [MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }], ["🧭 Valódi irány", () => { MAQ.auto = false; MAQ.turn.rotation.y = 0; }], ["‹ Vissza", () => W.close()]]);
   }
+  /* ---------- 2D kezelőfelület ---------- */
   function maqHud(H) {
-    H.title("A ház makettje", "A hivatalos tervrajz szerint · koppints egy lakásra: belépés vagy foglalás");
-    H.buttons([[MAQ.upper ? "Emelet elrejtése" : "Emelet mutatása", () => { MAQ.upper = !MAQ.upper; }], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }],
-      ["☀ korábban", () => { MAQ.hour = Math.max(5, MAQ.hour - 1); maqLight(); }], ["☀ később", () => { MAQ.hour = Math.min(21, MAQ.hour + 1); maqLight(); }],
-      ["⟲", () => { MAQ.auto = false; MAQ.turn.rotation.y -= .4; }], ["⟳", () => { MAQ.auto = false; MAQ.turn.rotation.y += .4; }]]);
-    H.hint(`Fény: ${MAQ.day.replace(/-/g, ".")}. ${hhmm(MAQ.hour)} – ${sunLine()}${MAQ.dates ? " · zöld = szabad, piros = foglalt" : ""}`);
+    const life = MAQ.mode === "life";
+    H.title(life ? "A Zephyr ház – életnagyságban" : "A ház makettje · " + SCALE_TXT(MAQ.s), life ? "Koppints a földre: odalépsz · a fénylő 360° gömbök a valódi fotók" : "A Balaton partján, Zamárdiban · koppints egy lakásra: belépés vagy foglalás");
+    if (MAQ.dive) { H.title("Merülés a Balatonba", "Mutass egy halra: kiírja a nevét · küsz, keszeg, ponty, fogas, csuka, harcsa, angolna"); H.buttons([["🌊 Fel a stégre", () => goSurface()], ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)]]); H.hint(`${dayHu(MAQ.day)} ${hhmm(MAQ.hour)} · ${PRESETS[MAQ.preset][0]}`); return; }
+    if (life) H.buttons([[MAQ.level ? "⬇ Földszint" : "⬆ Emelet", () => goLevel(MAQ.level ? 0 : 1)], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▣ Vissza a maketthez", () => goTable()],
+      ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🐟 Merülés", () => goDive()]]);
+    else H.buttons([["＋ Nagyobb", () => stepScale(1)], ["－ Kisebb", () => stepScale(-1)], ["🚶 Életnagyság", () => goLife()], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], [MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }],
+      ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], ["⟲", () => { MAQ.auto = false; MAQ.turn.rotation.y -= .4; }], ["⟳", () => { MAQ.auto = false; MAQ.turn.rotation.y += .4; }], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🐟 Merülés", () => goDive()]]);
+    H.hint(`${dayHu(MAQ.day)} ${hhmm(MAQ.hour)} · ${PRESETS[MAQ.preset][0]} – ${sunLine()}${MAQ.dates && !life ? " · zöld = szabad, piros = foglalt" : ""}`);
   }
+
+  /* =================================================================== 3/A. A ZEPHYR HÁZ – részletes modell a hivatalos tervrajz szerint (méterben; a makett ezt kicsinyíti)
+     • Külső falak valódi nyílásokkal (ablak, teraszajtó, bejárati ajtó) – életnagyságban belülről is kilátsz a kertre.
+     • Belső válaszfalak az alaprajz szobáiból, az ajtóknál nyitva; makettnézetben derékmagasságban metszve („babaház”), életnagyságban teljes magasságban.
+     • Padló a helyiség szerint (parketta, csempe, kő), bútorok részletesen (ágy fejtámlával, párnákkal; kanapé díszpárnákkal; konyhapult főzőlappal, mosogatóval…).
+     • Kert: utca járdával, kerítés kapuval, előkert, parkoló autókkal, sövény, hátsó kert pergolával és fényfüzérrel, napozóágyak, SUP-tartó, kerékpárok, fák. */
+  const HX = {};
+  function hmat(key) {
+    if (HX[key]) return HX[key];
+    const tile = (t, n) => { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 1); t.userData = { tile: n }; return t; };
+    let m;
+    switch (key) {
+      case "plaster": m = std({ color: "#f4f1ea", map: tile(txNoise("plaster", "#f2efe8", .07, 6000, 3), 1.6), roughness: .92 }); break;
+      case "plasterIn": m = std({ color: "#f8f6f1", map: tile(txNoise("plasterIn", "#f7f5f0", .04, 3000, 3), 1.6), roughness: .95 }); break;
+      case "terrace": m = std({ map: tile(txPlanks("terrace", "#8e6644", "#b0825a", 8), 1.6), roughness: .78 }); break;
+      case "parquet": m = std({ map: tile(txPlanks("parquet", "#c79b6a", "#e0b886", 10, { gap: .25, gapW: 1 }), 1.4), roughness: .55 }); break;
+      case "tiles": m = std({ map: tile(canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#d9dcdc"; g.fillRect(0, 0, w, h); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { g.fillStyle = `hsl(190,6%,${rr(84, 90)}%)`; g.fillRect(i * 64 + 1, j * 64 + 1, 62, 62); } }), .9), roughness: .25 }); break;
+      case "stone": m = std({ map: tile(canvasTex(256, 256, (g, w, h) => { noiseFill(g, w, h, "#cfc8bb", .12, 3000, 4); g.strokeStyle = "rgba(90,80,70,.4)"; g.lineWidth = 2; for (let i = 0; i <= 2; i++) { g.beginPath(); g.moveTo(0, i * 128); g.lineTo(w, i * 128); g.stroke(); g.beginPath(); g.moveTo(i * 128 + (i % 2) * 64, 0); g.lineTo(i * 128 + (i % 2) * 64, h); g.stroke(); } }), 1.2), roughness: .7 }); break;
+      case "grass": m = std({ map: tile(txGrass(), 3), roughness: .95 }); break;
+      case "asph": m = std({ map: tile(txNoise("asph", "#3c4046", .25, 5000, 3), 4), roughness: .95 }); break;
+      case "pave": m = std({ map: tile(canvasTex(256, 256, (g, w, h) => { noiseFill(g, w, h, "#b9b2a4", .14, 2000, 4); g.strokeStyle = "rgba(70,64,56,.45)"; g.lineWidth = 2; for (let i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(0, i * 64); g.lineTo(w, i * 64); g.stroke(); } for (let j = 0; j < 4; j++) for (let i = 0; i <= 2; i++) { const x = i * 128 + (j % 2) * 64; g.beginPath(); g.moveTo(x, j * 64); g.lineTo(x, j * 64 + 64); g.stroke(); } }), 1.2), roughness: .85 }); break;
+      case "gravel": m = std({ map: tile(txNoise("gravel", "#a8a196", .35, 9000, 3), 1.5), roughness: 1 }); break;
+      case "roof": m = std({ map: tile(txNoise("roof", "#b9bab6", .2, 6000, 3), 2), roughness: .95 }); break;
+      case "hedge": m = windify(std({ map: tile(canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#2f5a2a"; g.fillRect(0, 0, w, h); for (let i = 0; i < 2600; i++) { g.fillStyle = `hsl(${rr(95, 120)},${rr(35, 55)}%,${rr(16, 38)}%)`; g.beginPath(); g.ellipse(rand() * w, rand() * h, rr(2, 5), rr(1, 3), rand() * 3, 0, TAU); g.fill(); } }), 1), roughness: .95 }), .0012, 1.3, "hedge"); break;
+      case "glass": m = std({ color: "#9fc0d0", roughness: .04, metalness: .3, transparent: true, opacity: .32, depthWrite: false, envMapIntensity: 1.6, emissive: new THREE.Color("#ffc878"), emissiveIntensity: 0 }); break;
+      case "rail": m = std({ color: "#cfe3ea", roughness: .05, metalness: .2, transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide }); break;
+      case "frame": m = std({ color: "#33373d", roughness: .45, metalness: .5 }); break;
+      case "steel": m = std({ color: "#c9cdd2", roughness: .25, metalness: .9 }); break;
+      case "chrome": m = std({ color: "#e8ecef", roughness: .1, metalness: 1 }); break;
+      case "foliage": m = windify(std({ color: "#ffffff", vertexColors: true, roughness: .92 }), .004, 1.1, "fol"); break;
+      case "foliage2": m = windify(std({ color: "#ffffff", vertexColors: true, roughness: .92 }), .005, 1.2, "fol2"); break;
+      case "bulb": m = std({ color: "#fff2c8", emissive: new THREE.Color("#ffcf7a"), emissiveIntensity: 0, roughness: .4 }); break;
+      case "lampIn": m = std({ color: "#fff8e8", emissive: new THREE.Color("#ffd9a0"), emissiveIntensity: 0, roughness: .5 }); break;
+      case "vc": m = std({ vertexColors: true, roughness: .75 }); break;
+      case "vcm": m = std({ vertexColors: true, roughness: .3, metalness: .6 }); break;
+      default: m = std({ color: key.split("|")[0], roughness: key.includes("|m") ? .3 : .75, metalness: key.includes("|m") ? .6 : 0, flatShading: key.includes("|f") });
+    }
+    return HX[key] = m;
+  }
+  /* UV a világkoordinátából (méterben, a domináns normál szerint) – így a textúrák minden dobozon egyforma léptékűek */
+  function worldUV(g, tile) {
+    const p = g.attributes.position, n = g.attributes.normal; if (!g.attributes.uv) g.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(p.count * 2), 2));
+    const uv = g.attributes.uv;
+    for (let i = 0; i < p.count; i++) { const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+      if (ay >= ax && ay >= az) uv.setXY(i, p.getX(i) / tile, p.getZ(i) / tile); else if (ax >= az) uv.setXY(i, p.getZ(i) / tile, p.getY(i) / tile); else uv.setXY(i, p.getX(i) / tile, p.getY(i) / tile); }
+  }
+
+  function buildHouse(model) {
+    const H = { lv: [new THREE.Group(), new THREE.Group()], meshes: [], apts: {}, spots: [], floors: [] };
+    H.lv.forEach((g, i) => { g.position.y = i * FLOOR_H; model.add(g); });
+    H.roof = new THREE.Group(); model.add(H.roof);
+    const reg = {};
+    /* add(anyag, geometria, mátrix, szint (-1 = telek), láthatóság) – a láthatóság: all | tall | low | pT | pL | life | roof */
+    /* a sima színű elemek (#rrggbb) egyetlen csúcsszínes anyagba kerülnek (fém: „|m”) – így a ház ~60 rajzolási hívás, nem 200 */
+    const add = (mk, g, m, lv, vis) => {
+      if (mk[0] === "#") { const metal = mk.includes("|m"), c = new THREE.Color(mk.split("|")[0]), n = g.attributes.position.count, a = new Float32Array(n * 3);
+        for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; } g.setAttribute("color", new THREE.BufferAttribute(a, 3)); mk = metal ? "vcm" : "vc"; }
+      const k = mk + "~" + (lv == null ? -1 : lv) + "~" + (vis || "all"); (reg[k] = reg[k] || { mk, lv: lv == null ? -1 : lv, vis: vis || "all", list: [] }).list.push([g, m || new THREE.Matrix4()]); };
+    const box = (mk, x0, y0, z0, x1, y1, z1, lv, vis) => add(mk, new THREE.BoxGeometry(Math.max(.005, x1 - x0), Math.max(.005, y1 - y0), Math.max(.005, z1 - z0)), M4((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), lv, vis);
+    const cyl = (mk, x, y0, z, r, h, lv, vis, seg, r2) => add(mk, new THREE.CylinderGeometry(r, r2 == null ? r : r2, h, seg || 12), M4(x, y0 + h / 2, z), lv, vis);
+    const ball = (mk, x, y, z, r, lv, vis, sx, sy, sz) => add(mk, new THREE.IcosahedronGeometry(r, 1), M4(x, y, z, 0, 0, 0, sx || 1, sy || 1, sz || 1), lv, vis);
+    H.add = add; H.box = box;
+
+    /* ------------------------------------------------ a telek: utca, járda, kerítés, előkert, parkoló, kert */
+    const SX0 = -3, SX1 = 13.5, SZ0 = -10, SZ1 = 40; H.site = { SX0, SX1, SZ0, SZ1 };
+    box("asph", SX0, 0, -9.2, SX1, .05, -4.4);
+    for (let x = SX0 + .6; x < SX1; x += 3.2) box("#ece8da", x, .05, -6.88, x + 1.6, .056, -6.72);
+    box("#9a958c", SX0, 0, -4.48, SX1, .14, -4.36);                       /* szegélykő */
+    box("pave", SX0, 0, -4.4, SX1, .12, -2.7);
+    box("#8d9583", SX0, 0, -2.7, SX1, .04, SZ1);
+    box("grass", -.4, .04, -2.5, 6.3, .07, -.05);
+    box("pave", 1.4, .04, -2.7, 2.6, .08, -.05);
+    /* utcai kerítés: antracit lécek, oszlopok, kapu; postaláda, házszám */
+    [[-.4, 1.2], [2.8, 6.3]].forEach(([a, b]) => { for (let y = .1; y < 1.3; y += .16) box("frame", a, .04 + y, -2.6, b, .04 + y + .1, -2.54); for (let x = a; x <= b + .01; x += 1.5) box("frame", x - .04, .04, -2.62, x + .04, 1.42, -2.52); });
+    box("frame", 1.22, .04, -2.66, 1.32, 1.6, -2.46); box("frame", 2.68, .04, -2.66, 2.78, 1.6, -2.46);
+    for (let x = 1.36; x < 2.66; x += .11) box("frame", x, .12, -2.58, x + .05, 1.3, -2.55);   /* kapu */
+    box("#c9a24a|m", 2.85, 1.0, -2.68, 3.2, 1.25, -2.62);                                         /* postaláda */
+    /* előkert: gömbcserjék, virágágyás */
+    [[.3, -1.8], [5.6, -1.9], [4.4, -.6], [-.1, -.7]].forEach(([x, z]) => add("foliage", leafGeom([[x, .4, z, .45, 7, .8]], "#3f7a34", .1)));
+    flowers(add, -.3, -2.3, 1.2, -1.2, 40); flowers(add, 3, -2.3, 6.1, -1.5, 60);
+    /* parkoló: térkő, felfestés, autók */
+    box("pave", 6.3, .04, -2.7, 12.6, .065, 22.3);
+    for (let z = 1; z < 21; z += 2.6) box("#f2efe6", 6.6, .065, z, 12.3, .068, z + .08);
+    [["#c62828", 9.4, 2.3], ["#e9ecef", 9.4, 7.5], ["#1f5fa8", 9.4, 12.7], ["#4a5058", 9.4, 17.9]].forEach(([c, x, z], i) => car(add, c, x, z + 1.3, i % 2 ? 0 : Math.PI));
+    box("hedge", 12.6, .04, -2.7, 13.0, 1.75, SZ1);
+    /* hátsó kert */
+    box("grass", -.4, .04, 22.3, 12.6, .07, SZ1);
+    for (let z = 23; z < SZ1 - 2; z += .9) box("stone", 6.85, .05, z, 7.55, .085, z + .55);         /* lépőkövek */
+    box("hedge", -.6, .04, 22.3, -.4, 1.5, SZ1); box("hedge", -.6, .04, SZ1 - .25, 12.9, 1.5, SZ1);
+    /* pergola kerti konyhával, asztallal, fényfüzérrel */
+    box("terrace", 8.4, .04, 27, 12.2, .12, 31);
+    [[8.5, 27.1], [12.0, 27.1], [8.5, 30.8], [12.0, 30.8]].forEach(([x, z]) => box("#efece4", x, .12, z, x + .12, 2.42, z + .12));
+    box("#efece4", 8.4, 2.42, 27, 12.2, 2.52, 27.12); box("#efece4", 8.4, 2.42, 30.88, 12.2, 2.52, 31);
+    for (let k = 0; k < 13; k++) box("#efece4", 8.4 + k * .3, 2.52, 27, 8.46 + k * .3, 2.6, 31);
+    add("foliage2", leafGeom([[9.2, 2.6, 27.2, .5, 6, .5], [10.6, 2.62, 27.1, .5, 6, .5], [11.8, 2.6, 30.8, .5, 6, .5], [8.8, 2.6, 30.9, .45, 5, .5], [12.1, 1.6, 27.1, .35, 5, 2.2]], "#5a9440"));   /* futónövény */
+    box("#d8d4cc", 8.6, .12, 27.2, 10.8, .98, 27.8); box("#3b3b3b", 8.55, .98, 27.15, 10.85, 1.03, 27.85); box("#2b2f36|m", 10.9, .12, 27.2, 11.8, 1.1, 27.8);
+    box("#9c6b3f", 9.2, .8, 28.6, 11.4, .86, 29.6); [[9.3, 28.7], [11.2, 28.7], [9.3, 29.4], [11.2, 29.4]].forEach(([x, z]) => box("#7a5a3a", x, .12, z, x + .08, .8, z + .08));
+    [[9.5, 28.25], [10.6, 28.25], [9.5, 29.95], [10.6, 29.95]].forEach(([x, z], i) => chair(add, x, z, i < 2 ? 0 : Math.PI, -1, "#7a5a3a", .12));
+    garland(add, [[8.5, 2.4, 27.1], [12.1, 2.4, 27.1], [12.1, 2.4, 30.9], [8.5, 2.4, 30.9], [8.5, 2.4, 27.1]], .22, -1, "all");
+    /* napozóágyak párnával, napernyő */
+    [[2.2, 30], [3.6, 30]].forEach(([x, z]) => { box("#f2efe6", x, .12, z, x + .7, .32, z + 1.9); box("#e8f0f4", x + .05, .32, z + .5, x + .65, .4, z + 1.85); add("#e8f0f4", new THREE.BoxGeometry(.6, .08, .55), M4(x + .35, .5, z + .28, 0, -.7)); });
+    cyl("#c9cdd2|m", 3.15, .04, 29.5, .03, 2.3, -1); add("#e85a3a", new THREE.ConeGeometry(1.3, .4, 8, 1, true), M4(3.15, 2.35, 29.5)); add("#f4f1e8", new THREE.ConeGeometry(1.31, .41, 8, 1, true), M4(3.15, 2.36, 29.5, Math.PI / 8));
+    /* SUP-tartó, kerékpárok, tároló */
+    box("#7a5a3a", 11.1, .04, 32.8, 11.2, 1.3, 33.0); box("#7a5a3a", 12.4, .04, 32.8, 12.5, 1.3, 33.0);
+    for (let k = 0; k < 4; k++) add(["#ffd166", "#1f5fa8", "#e5262f", "#3fb37f"][k], new THREE.BoxGeometry(1.5, .1, .7), M4(11.8, .45 + k * .26, 33.3 + k * .02));
+    for (let k = 0; k < 4; k++) bike(add, 11.6, 36 + k * .55, ["#2b2f36", "#c62828", "#1f5fa8", "#e9ecef"][k]);
+    box("#8c939b", 9.4, .04, 34.6, 11.2, 2.1, 37.2); box("#6d737a", 9.3, 2.1, 34.5, 11.3, 2.18, 37.3); box("#5a3d24", 10.0, .04, 34.58, 10.6, 1.9, 34.6);
+    /* fák a kertben */
+    [[1.5, 26, 2.2], [4.5, 35.5, 2.8], [10.0, 38.2, 1.6], [11.6, 24.5, 1.4], [0.8, 38, 2.0], [-1.6, -6.1, 1.4], [11.2, -3.4, 1.3]].forEach(([x, z, r]) => tree(add, x, z, r));
+    flowers(add, -.2, 22.6, 1.4, 25, 70); flowers(add, 4.8, 38.6, 8.6, 39.6, 70);
+    /* kerti lámpák (bollardok) */
+    for (let z = 23.5; z < SZ1 - 2; z += 4) { cyl("frame", 6.6, .04, z, .06, .7, -1); cyl("bulb", 6.6, .7, z, .07, .1, -1); }
+
+    /* ------------------------------------------------ az épület */
+    const Y1 = FLOOR_H;
+    /* födémek (alul vakolt mennyezet) */
+    [0, 1].forEach((lv) => box("plasterIn", 0, -.2, 0, OUT_W, 0, Z_END, lv));
+    /* nyílások a külső falakon: az alaprajzok ablakaiból és ajtóiból */
+    const open = { W: [[], []], E: [[], []], N: [[], []], S: [[], []] };   /* N = utcai homlokzat (z = 0), S = hátsó (z = Z_END) */
+    Object.keys(UNITS).forEach((id) => {
+      const U = UNITS[id], Pl = planOf(id);
+      (Pl.furn || []).forEach((f) => {
+        if (f[0] !== "window" && f[0] !== "door") return;
+        const q = mapRect(U, f[1], f[2], f[3], f[4]), cx = (q[0] + q[2]) / 2, cz = (q[1] + q[3]) / 2, lab = String(f[5] || "");
+        const door = f[0] === "door", y0 = door ? 0 : .9, y1 = door ? 2.15 : 2.15, kind = door ? (/bejárati/.test(lab) ? "entry" : "glass") : "win";
+        if (cx < WALL + .35) open.W[U.lvl].push({ a: q[1], b: q[3], y0, y1, kind });
+        else if (cx > OUT_W - WALL - .35) open.E[U.lvl].push({ a: q[1], b: q[3], y0, y1, kind });
+        else if (cz < WALL + .4) open.N[U.lvl].push({ a: q[0], b: q[2], y0, y1, kind });
+        else if (cz > Z_END - WALL - .4) open.S[U.lvl].push({ a: q[0], b: q[2], y0, y1, kind });
+      });
+    });
+    /* a fedett bejáró felőli ajtók (a Dingi/Kalóz és a lépcsőház) – a középső szakasz nyitott oldalain nincs külső fal */
+    const wallRun = (lv, side, from, to, Hh, vis, list) => {
+      /* a falat a nyílások köré rakjuk össze: alatta (parapet), fölötte (szemöldök), köztük teljes magasság */
+      const ops = list.filter((o) => o.b > from && o.a < to).map((o) => Object.assign({}, o, { a: Math.max(from, o.a), b: Math.min(to, o.b) })).sort((p, q) => p.a - q.a);
+      const seg = (a, b, y0, y1) => { if (b - a < .01 || y1 - y0 < .01) return;
+        if (side === "W") box("plaster", 0, y0, a, WALL, y1, b, lv, vis); else if (side === "E") box("plaster", OUT_W - WALL, y0, a, OUT_W, y1, b, lv, vis);
+        else if (side === "N") box("plaster", a, y0, 0, b, y1, WALL, lv, vis); else box("plaster", a, y0, Z_END - WALL, b, y1, Z_END, lv, vis); };
+      let cur = from;
+      ops.forEach((o) => { seg(cur, o.a, 0, Hh); seg(o.a, o.b, 0, Math.min(o.y0, Hh)); if (o.y1 < Hh) seg(o.a, o.b, o.y1, Hh); cur = Math.max(cur, o.b);
+        /* üveg, keret, könyöklő */
+        const top = Math.min(o.y1, Hh); if (o.y0 >= top) return;
+        const pane = (a, b, y0, y1, mk) => { const t = mk === "glass" ? .02 : .05;
+          if (side === "W") box(mk, WALL / 2 - t / 2, y0, a, WALL / 2 + t / 2, y1, b, lv, vis); else if (side === "E") box(mk, OUT_W - WALL / 2 - t / 2, y0, a, OUT_W - WALL / 2 + t / 2, y1, b, lv, vis);
+          else if (side === "N") box(mk, a, y0, WALL / 2 - t / 2, b, y1, WALL / 2 + t / 2, lv, vis); else box(mk, a, y0, Z_END - WALL / 2 - t / 2, b, y1, Z_END - WALL / 2 + t / 2, lv, vis); };
+        if (o.kind === "entry") { pane(o.a + .04, o.b - .04, o.y0, top - .02, "#5b4a3c"); pane(o.a, o.a + .05, o.y0, top, "frame"); pane(o.b - .05, o.b, o.y0, top, "frame"); return; }
+        pane(o.a + .05, o.b - .05, o.y0 + .05, top - .05, "glass");
+        pane(o.a, o.a + .06, o.y0, top, "frame"); pane(o.b - .06, o.b, o.y0, top, "frame"); pane(o.a, o.b, top - .06, top, "frame"); pane(o.a, o.b, o.y0, o.y0 + .06, "frame");
+        if (o.b - o.a > 1.0) pane((o.a + o.b) / 2 - .03, (o.a + o.b) / 2 + .03, o.y0, top, "frame");
+        if (o.kind === "win") { const sx = .06; if (side === "W") box("#d9d4c8", -sx, o.y0 - .05, o.a - .03, WALL, o.y0, o.b + .03, lv, vis); else if (side === "E") box("#d9d4c8", OUT_W - WALL, o.y0 - .05, o.a - .03, OUT_W + sx, o.y0, o.b + .03, lv, vis);
+          else if (side === "N") box("#d9d4c8", o.a - .03, o.y0 - .05, -sx, o.b + .03, o.y0, WALL, lv, vis); else box("#d9d4c8", o.a - .03, o.y0 - .05, Z_END - WALL, o.b + .03, o.y0, Z_END + sx, lv, vis); }
+      });
+      seg(cur, to, 0, Hh);
+    };
+    [0, 1].forEach((lv) => [["tall", FLOOR_H - .2], ["low", 1.05]].forEach(([vis, Hh]) => {
+      wallRun(lv, "N", 0, OUT_W, Hh, vis, open.N[lv]); wallRun(lv, "S", 0, OUT_W, Hh, vis, open.S[lv]);
+      /* oldalfalak: a fedett bejáró szakaszán (Z_HALL…Z_B) a földszinten nyitott (kapualj), az emeleten a folyosó */
+      [["W", open.W[lv]], ["E", open.E[lv]]].forEach(([s, L]) => {
+        if (lv === 0) { wallRun(lv, s, 0, Z_HALL, Hh, vis, L); wallRun(lv, s, Z_B - PART, Z_END, Hh, vis, L); if (s === "W") box("#e2dccf", -.05, 0, Z_HALL, WALL, Hh, Z_B - PART, lv, vis); }   /* a lépcsőháznál a szomszéd fala látszik (ott nincs külön Zephyr-fal) */
+        else wallRun(lv, s, 0, Z_END, Hh, vis, L);
+      });
+    }));
+    /* lakáselválasztó falak (teljes szélesség) – a bejárati ajtóknál nyitva */
+    const doorsAll = [[], []];
+    Object.keys(UNITS).forEach((id) => { const U = UNITS[id]; (planOf(id).furn || []).forEach((f) => { if (f[0] === "door") doorsAll[U.lvl].push(mapRect(U, f[1], f[2], f[3], f[4])); }); });
+    const partRun = (lv, mk, axis, c, from, to, th, Hh, vis, doors) => {
+      /* axis "x": a fal x mentén fut (z = c); "z": z mentén (x = c) */
+      const gaps = doors.filter((d) => axis === "x" ? (d[1] < c + .3 && d[3] > c - .3 && d[2] > from && d[0] < to && (d[2] - d[0]) > .3) : (d[0] < c + .3 && d[2] > c - .3 && d[3] > from && d[1] < to && (d[3] - d[1]) > .3))
+        .map((d) => axis === "x" ? [Math.max(from, d[0]), Math.min(to, d[2])] : [Math.max(from, d[1]), Math.min(to, d[3])]).sort((p, q) => p[0] - q[0]);
+      const seg = (a, b, y0, y1) => { if (b - a < .02 || y1 <= y0) return; if (axis === "x") box(mk, a, y0, c - th / 2, b, y1, c + th / 2, lv, vis); else box(mk, c - th / 2, y0, a, c + th / 2, y1, b, lv, vis); };
+      let cur = from; gaps.forEach(([a, b]) => { seg(cur, a, 0, Hh); if (Hh > 2.15) seg(a, b, 2.15, Hh); cur = Math.max(cur, b); }); seg(cur, to, 0, Hh);
+    };
+    [0, 1].forEach((lv) => [["pT", FLOOR_H - .2], ["pL", .95]].forEach(([vis, Hh]) => {
+      [Z_HALL - PART, Z_B - PART, Z_C - PART].forEach((z) => partRun(lv, "plasterIn", "x", z + PART / 2, WALL, OUT_W - WALL, PART, Hh, vis, doorsAll[lv]));
+    }));
+    /* lakások: padló, belső válaszfalak, bútorok, mennyezeti lámpák, sétapontok (valódi 360°-os fotók) */
+    Object.keys(UNITS).forEach((id) => {
+      const U = UNITS[id], Pl = planOf(id), lv = U.lvl; let bb = [1e9, 1e9, -1e9, -1e9];
+      const doors = (Pl.furn || []).filter((f) => f[0] === "door").map((f) => mapRect(U, f[1], f[2], f[3], f[4]));
+      (Pl.rooms || []).forEach((r) => {
+        const q = mapRect(U, r[1], r[2], r[3], r[4]); q[0] = Math.max(WALL, q[0]); q[2] = Math.min(OUT_W - WALL, q[2]);
+        bb = [Math.min(bb[0], q[0]), Math.min(bb[1], q[1]), Math.max(bb[2], q[2]), Math.max(bb[3], q[3])];
+        const fm = /fürd|wc/i.test(r[0]) ? "tiles" : /előt|előszoba|közleked/i.test(r[0]) ? "stone" : "parquet";
+        box(fm, q[0], 0, q[1], q[2], .025, q[3], lv);
+        H.floors.push({ lv, q, id });
+        const inside = (v, a, b) => v > a + .05 && v < b - .05;
+        [["pT", FLOOR_H - .2], ["pL", .95]].forEach(([vis, Hh]) => {
+          if (inside(q[0], WALL, OUT_W - WALL)) partRun(lv, "plasterIn", "z", q[0], q[1], q[3], .1, Hh, vis, doors);
+          if (inside(q[2], WALL, OUT_W - WALL)) partRun(lv, "plasterIn", "z", q[2], q[1], q[3], .1, Hh, vis, doors);
+          /* a külső falak és a lakáselválasztó falak mentén nem kell külön válaszfal (különben eltakarná az ablakokat) */
+          const onWall = (z) => z <= WALL + .08 || z >= Z_END - WALL - .08 || [Z_HALL - PART, Z_HALL, Z_B - PART, Z_B, Z_C - PART, Z_C].some((w) => Math.abs(z - w) < .1);
+          if (!onWall(q[1])) partRun(lv, "plasterIn", "x", q[1], q[0], q[2], .1, Hh, vis, doors);
+          if (!onWall(q[3])) partRun(lv, "plasterIn", "x", q[3], q[0], q[2], .1, Hh, vis, doors);
+        });
+        /* mennyezeti lámpa (életnagyságban), szőnyeg a nappaliban/hálóban */
+        const cx = (q[0] + q[2]) / 2, cz = (q[1] + q[3]) / 2;
+        cyl("lampIn", cx, FLOOR_H - .26, cz, .2, .05, lv, "life", 20); cyl("#d8d2c6", cx, FLOOR_H - .23, cz, .03, .03, lv, "life");
+        if (/nappali|háló|szoba/i.test(r[0]) && (q[2] - q[0]) > 1.8 && (q[3] - q[1]) > 1.8) box(["#b9a58a", "#9aa7b4", "#c7b08e", "#a3998d"][(r[1] * 7 + r[2] * 3 | 0) % 4], cx - .9, .025, cz - .65, cx + .9, .035, cz + .65, lv);
+      });
+      furnishDetailed(add, lv, U, Pl, id);
+      const g = T.GROUPS.find((q) => q.id === id) || {};
+      H.apts[id] = { id, lv, bb, name: g.name || id, no: g.no, lock: !!g.lock, area: (Pl.rooms || []).reduce((s, r) => s + r[3] * r[4], 0) };
+      /* 360°-os fotópontok: a séta jelenetei, amelyek ebben a lakásban vannak */
+      Object.keys(T.SCENES || {}).forEach((sid) => { const S = T.SCENES[sid]; if (!S || S.g !== id || !S.m) return; const p = U.map(S.m[0], S.m[1]); if (p[0] < WALL || p[0] > OUT_W - WALL) return; H.spots.push({ id: sid, apt: id, lv, x: p[0], z: p[1], n: S.n }); });
+    });
+    /* fedett bejáró a lépcsővel (földszint), emeleti folyosó/terasz */
+    box("stone", WALL, 0, Z_HALL, OUT_W - WALL, .03, Z_B - PART, 0);
+    for (let k = 0; k < 15; k++) box("#d7d3cb", WALL, 0, Z_B - PART - .3 - k * .26, WALL + 1.0, .19 * (k + 1), Z_B - PART - k * .26, 0);
+    box("steel", WALL + 1.0, .9, Z_HALL + .2, WALL + 1.04, .94, Z_B - PART - .2, 0);   /* kapaszkodó */
+    box("terrace", WALL + 1.1, 0, Z_HALL, OUT_W - WALL, .04, Z_B - PART, 1);
+    box("rail", WALL + 1.1, .04, Z_HALL + .02, OUT_W - WALL, 1.04, Z_HALL + .05, 1); box("steel", WALL + 1.1, 1.04, Z_HALL + .01, OUT_W - WALL, 1.08, Z_HALL + .06, 1);
+    /* fali lámpák a bejárónál, házjel */
+    [[OUT_W + .04, 1.9, Z_HALL + .4], [OUT_W + .04, 1.9, Z_B - .6]].forEach(([x, y, z]) => { box("frame", x - .04, y - .12, z - .06, x + .04, y + .12, z + .06, 0); box("bulb", x + .02, y - .08, z - .04, x + .06, y + .08, z + .04, 0); });
+    /* elöl: Korvett terasza és a Fregatt erkélye üvegkorláttal */
+    box("terrace", 0, -.06, -1.45, OUT_W, 0, 0, 0);
+    box("terrace", 0, -.18, -1.45, OUT_W, 0, 0, 1); box("plaster", 0, -.24, -1.45, OUT_W, -.18, 0, 1);
+    railing(box, 0, -1.45, OUT_W, -1.4, 1); railing(box, 0, -1.45, .05, 0, 1); railing(box, OUT_W - .05, -1.45, OUT_W, 0, 1);
+    /* hátul: a Schooner terasza, a Kadett emeleti fa terasza oszlopokon, csigalépcsővel */
+    box("terrace", 0, -.04, Z_END, OUT_W, .02, Z_END + 2.9, 0);
+    box("terrace", 0, -.2, Z_END, OUT_W, 0, Z_END + 3.3, 1);
+    [[.1, Z_END + 3.1], [OUT_W - .3, Z_END + 3.1]].forEach(([x, z]) => box("#e9e6dc", x, 0, z, x + .2, Y1 - .2, z + .2));
+    railing(box, 0, Z_END + 3.25, OUT_W, Z_END + 3.3, 1); railing(box, OUT_W - .05, Z_END, OUT_W, Z_END + 3.3, 1);
+    for (let k = 0; k < 14; k++) { const a = k * .45; add("#8f969c|m", new THREE.BoxGeometry(.75, .05, .22), M4(-.6 + Math.cos(a) * .4, .2 * (k + 1), Z_END + 2.2 + Math.sin(a) * .4, -a)); }
+    cyl("#7f868c|m", -.6, 0, Z_END + 2.2, .05, Y1 + 1.0);
+    { const pts = []; for (let k = 0; k <= 40; k++) { const a = k / 40 * 14 * .45; pts.push(new THREE.Vector3(-.6 + Math.cos(a) * .78, .2 * (k / 40 * 14 + 1) + .9, Z_END + 2.2 + Math.sin(a) * .78)); }
+      add("steel", new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, .02, 6)); }
+    /* esőcsatorna-lefolyók a sarkokon */
+    [[-.06, -.06], [OUT_W + .06, -.06], [-.06, Z_END + .06], [OUT_W + .06, Z_END + .06]].forEach(([x, z]) => cyl("#8a9096|m", x, 0, z, .05, 2 * FLOOR_H + .4));
+    /* lapos tető attikával, fedkővel, szellőzőkkel – mennyezetként is (életnagyságban) */
+    const roofY = 2 * FLOOR_H;
+    box("roof", 0, roofY, -1.45, OUT_W, roofY + .25, Z_END, 2, "roof");
+    box("plasterIn", 0, roofY - .02, 0, OUT_W, roofY, Z_END, 2, "roof");
+    [[0, -1.45, OUT_W, -1.3], [0, Z_END - .15, OUT_W, Z_END], [0, -1.45, .15, Z_END], [OUT_W - .15, -1.45, OUT_W, Z_END]].forEach(([x0, z0, x1, z1]) => { box("plaster", x0, roofY + .25, z0, x1, roofY + .7, z1, 2, "roof"); box("#8a8d90|m", x0 - .02, roofY + .7, z0 - .02, x1 + .02, roofY + .74, z1 + .02, 2, "roof"); });
+    [[2, 5], [4, 12], [2.5, 19]].forEach(([x, z]) => cyl("#a9adb0|m", x, roofY + .25, z, .12, .45, 2, "roof"));
+    /* a homlokzati névtábla (ZEPHYR) a bejáró fölött – arany betűk */
+    const sign = canvasTex(1024, 192, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "#d4af5a"; g.font = "700 150px Georgia, serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ZEPHYR", w / 2, h / 2 + 8); });
+    const sg = mesh(new THREE.PlaneGeometry(2.4, .45), std({ map: sign, transparent: true, roughness: .3, metalness: .7, emissive: new THREE.Color("#ffcf7a"), emissiveMap: sign, emissiveIntensity: 0 }), H.lv[0]);
+    sg.position.set(OUT_W + .03, 2.45, (Z_HALL + Z_B) / 2); sg.rotation.y = Math.PI / 2; H.sign = sg;
+
+    /* ------------------------------------------------ kirajzolás: összevonás anyagonként, láthatósági csoportonként */
+    Object.values(reg).forEach((r) => {
+      const mat = hmat(r.mk), geo = mergeGeoms(r.list);
+      const tile = mat.map && mat.map.userData && mat.map.userData.tile; if (tile) worldUV(geo, tile);
+      const parent = r.lv === -1 ? model : r.lv === 2 ? H.roof : H.lv[r.lv];
+      const m = mesh(geo, mat, parent); const tr = mat.transparent;
+      m.castShadow = !tr && r.mk !== "grass" && r.mk !== "pave" && r.mk !== "asph"; m.receiveShadow = true;
+      m.userData.vis = r.vis; m.userData.lv = r.lv; if (tr) m.renderOrder = 2;
+      H.meshes.push(m);
+    });
+    H.glass = hmat("glass"); H.bulb = hmat("bulb"); H.lampIn = hmat("lampIn");
+    return H;
+  }
+  /* --- segédek a házhoz --- */
+  function railing(box, x0, z0, x1, z1, lv) {
+    box("rail", x0, .02, z0, x1, 1.02, z1, lv);
+    const long = (x1 - x0) > (z1 - z0);
+    if (long) { box("steel", x0, 1.02, z0 - .01, x1, 1.06, z1 + .01, lv); for (let x = x0; x <= x1 + .01; x += 1.2) box("steel", x - .02, 0, z0 - .01, x + .02, 1.02, z1 + .01, lv); }
+    else { box("steel", x0 - .01, 1.02, z0, x1 + .01, 1.06, z1, lv); for (let z = z0; z <= z1 + .01; z += 1.2) box("steel", x0 - .01, 0, z - .02, x1 + .01, 1.02, z + .02, lv); }
+  }
+  function flowers(add, x0, z0, x1, z1, n) {
+    add("#5e4632", new THREE.BoxGeometry(x1 - x0, .06, z1 - z0), M4((x0 + x1) / 2, .07, (z0 + z1) / 2));
+    const cols = ["#e5262f", "#ffd166", "#ffffff", "#c86ad8", "#ff8a3a", "#f06aa0"];
+    for (let k = 0; k < n; k++) { const x = rr(x0 + .05, x1 - .05), z = rr(z0 + .05, z1 - .05), h = rr(.12, .35);
+      add("#4f7a3a", new THREE.CylinderGeometry(.006, .008, h, 3), M4(x, .1 + h / 2, z));
+      add(cols[k % cols.length], new THREE.IcosahedronGeometry(rr(.025, .045), 0), M4(x, .1 + h, z)); }
+  }
+  function tree(add, x, z, r) {
+    add("#5a3d24", new THREE.CylinderGeometry(.12, .2, 2.8, 8), M4(x, 1.4, z));
+    add("#5a3d24", new THREE.CylinderGeometry(.05, .08, 1.2, 6), M4(x + .3, 2.6, z, 0, 0, -.6));
+    add("#5a3d24", new THREE.CylinderGeometry(.04, .07, 1.0, 6), M4(x - .25, 2.7, z + .1, 0, .5, .5));
+    add("foliage", leafGeom([[x, 2.6 + r * .8, z, r, 9, .9], [x + r * .5, 2.4 + r * .5, z + r * .2, r * .7, 5], [x - r * .45, 2.5 + r * .55, z - r * .25, r * .72, 5], [x + r * .1, 2.6 + r * 1.25, z - r * .1, r * .6, 4]], ["#4f8a3c", "#5f9a42", "#6a8f3a"][Math.abs(Math.round(x * 3 + z)) % 3]));
+  }
+  function car(add, col, x, z, rot) {
+    const P = (lx, ly, lz) => { const c = Math.cos(rot), s = Math.sin(rot); return [x + lx * c + lz * s, ly, z - lx * s + lz * c]; };
+    const B = (mk, w, h, d, lx, ly, lz) => { const p = P(lx, ly, lz); add(mk, new THREE.BoxGeometry(w, h, d), M4(p[0], p[1], p[2], rot)); };
+    B(col + "|m", 1.78, .55, 4.25, 0, .55, 0); B(col + "|m", 1.7, .12, 4.1, 0, .87, 0);
+    B("#1c2630|m", 1.56, .5, 2.2, 0, 1.15, .15); B(col + "|m", 1.5, .06, 2.0, 0, 1.43, .2);
+    B("#fff6d8", .32, .1, .04, -.6, .7, -2.13); B("#fff6d8", .32, .1, .04, .6, .7, -2.13); B("#c62828", .3, .1, .04, -.62, .74, 2.13); B("#c62828", .3, .1, .04, .62, .74, 2.13);
+    B("#2a2d32", 1.8, .16, .1, 0, .38, -2.14); B("#2a2d32", 1.8, .16, .1, 0, .38, 2.14);
+    [[-.82, -1.35], [.82, -1.35], [-.82, 1.35], [.82, 1.35]].forEach(([lx, lz]) => { const p = P(lx, .33, lz);
+      add("#15171a", new THREE.CylinderGeometry(.33, .33, .22, 16), M4(p[0], p[1], p[2], rot, 0, Math.PI / 2)); add("#c9cdd2|m", new THREE.CylinderGeometry(.2, .2, .23, 10), M4(p[0], p[1], p[2], rot, 0, Math.PI / 2)); });
+  }
+  function bike(add, x, z, col) {
+    [[0, -.52], [0, .52]].forEach(([dx, dz]) => add("#15171a", new THREE.TorusGeometry(.33, .025, 6, 18), M4(x + dx, .37, z + dz, Math.PI / 2)));
+    add(col + "|m", new THREE.BoxGeometry(.04, .04, .9), M4(x, .62, z, 0, -.15)); add(col + "|m", new THREE.BoxGeometry(.04, .5, .04), M4(x, .55, z - .15, 0, .3));
+    add("#15171a", new THREE.BoxGeometry(.1, .04, .22), M4(x, .86, z - .2)); add("#c9cdd2|m", new THREE.BoxGeometry(.5, .03, .03), M4(x, .92, z + .45));
+  }
+  function chair(add, x, z, rot, lv, col, y0) {
+    y0 = y0 || 0; const c = Math.cos(rot), s = Math.sin(rot), P = (lx, lz) => [x + lx * c + lz * s, z - lx * s + lz * c];
+    add(col, new THREE.BoxGeometry(.42, .04, .42), M4(x, y0 + .45, z, rot), lv);
+    const b = P(0, .19); add(col, new THREE.BoxGeometry(.42, .42, .03), M4(b[0], y0 + .68, b[1], rot, .08), lv);
+    [[-.18, -.18], [.18, -.18], [-.18, .18], [.18, .18]].forEach(([a, d]) => { const p = P(a, d); add(col, new THREE.BoxGeometry(.035, .45, .035), M4(p[0], y0 + .225, p[1], rot), lv); });
+  }
+  function garland(add, pts, sag, lv, vis) {
+    for (let i = 0; i < pts.length - 1; i++) { const a = new THREE.Vector3(...pts[i]), b = new THREE.Vector3(...pts[i + 1]); let prev = a;
+      for (let k = 1; k <= 10; k++) { const u = k / 10, p = a.clone().lerp(b, u); p.y -= Math.sin(u * Math.PI) * sag; const [g, m] = rodGeom(prev, p, .006, 4); add("#202020", g, m, lv, vis); prev = p;
+        if (k < 10) add("bulb", new THREE.SphereGeometry(.03, 8, 6), M4(p.x, p.y - .04, p.z), lv, vis); } }
+  }
+  /* --- részletes bútorok az alaprajz tereptárgyaiból --- */
+  function furnishDetailed(add, lv, U, Pl, id) {
+    const accent = { korvett: "#c0504a", dingi: "#3f9b72", fregatt: "#3d7fc2", kaloz: "#8a64c8", schooner: "#2a9aa6", kadett: "#c99a3a" }[id] || "#888";
+    const B = (mk, x0, y0, z0, x1, y1, z1) => add(mk, new THREE.BoxGeometry(Math.max(.005, x1 - x0), Math.max(.005, y1 - y0), Math.max(.005, z1 - z0)), M4((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), lv);
+    (Pl.furn || []).forEach((f) => {
+      const [type, x, y, w0, d0, , rot] = f; if (["door", "window", "area", "lane", "stairs"].includes(type) || !(w0 > .05 && d0 > .05)) return;
+      const sw = Math.abs(rot || 0) % 180 === 90, w = sw ? d0 : w0, d = sw ? w0 : d0, cx = x + w0 / 2, cy = y + d0 / 2;
+      const [x0, z0, x1, z1] = mapRect(U, cx - w / 2, cy - d / 2, w, d), mx = (x0 + x1) / 2, mz = (z0 + z1) / 2, W2 = x1 - x0, D2 = z1 - z0, long = W2 > D2;
+      const lab = String(f[5] || "");
+      switch (type) {
+        case "bed": {
+          B("#7d5f45", x0, .03, z0, x1, .32, z1); B("#f7f5ef", x0 + .03, .32, z0 + .03, x1 - .03, .52, z1 - .03);
+          /* fejtámla a rövidebb oldalon (x0 vagy z0 felől), takaró, párnák, pléd */
+          if (long) { B("#6d7b88", x0 - .02, .03, z0, x0 + .06, 1.05, z1); B("#e9eef2", x0 + .45, .52, z0 + .04, x1 - .04, .6, z1 - .04); B(accent, x1 - .55, .6, z0 + .04, x1 - .1, .62, z1 - .04);
+            const n = D2 > 1.2 ? 2 : 1; for (let k = 0; k < n; k++) { const a = z0 + .08 + k * (D2 - .16) / n; B("#ffffff", x0 + .08, .52, a + .03, x0 + .42, .66, a + (D2 - .16) / n - .03); } }
+          else { B("#6d7b88", x0, .03, z0 - .02, x1, 1.05, z0 + .06); B("#e9eef2", x0 + .04, .52, z0 + .45, x1 - .04, .6, z1 - .04); B(accent, x0 + .04, .6, z1 - .55, x1 - .04, .62, z1 - .1);
+            const n = W2 > 1.2 ? 2 : 1; for (let k = 0; k < n; k++) { const a = x0 + .08 + k * (W2 - .16) / n; B("#ffffff", a + .03, .52, z0 + .08, a + (W2 - .16) / n - .03, .66, z0 + .42); } }
+          break; }
+        case "sofa": {
+          const ax = long; B("#5f6b76", x0, .1, z0, x1, .42, z1);
+          [[x0 + .03, z0 + .03], [x1 - .03, z1 - .03]].forEach(() => {});
+          if (ax) { B("#6b7884", x0, .42, z1 - .22, x1, .82, z1); B("#5a6672", x0, .1, z0, x0 + .14, .62, z1); B("#5a6672", x1 - .14, .1, z0, x1, .62, z1);
+            const n = Math.max(2, Math.round(W2 / .8)); for (let k = 0; k < n; k++) { const a = x0 + .15 + k * (W2 - .3) / n; B("#7c8994", a + .01, .42, z0 + .04, a + (W2 - .3) / n - .01, .52, z1 - .22); }
+            B(accent, x0 + .2, .5, z1 - .34, x0 + .6, .82, z1 - .2); B("#e8d9b0", x1 - .6, .5, z1 - .34, x1 - .2, .82, z1 - .2); }
+          else { B("#6b7884", x1 - .22, .42, z0, x1, .82, z1); B("#5a6672", x0, .1, z0, x1, .62, z0 + .14); B("#5a6672", x0, .1, z1 - .14, x1, .62, z1);
+            const n = Math.max(2, Math.round(D2 / .8)); for (let k = 0; k < n; k++) { const a = z0 + .15 + k * (D2 - .3) / n; B("#7c8994", x0 + .04, .42, a + .01, x1 - .22, .52, a + (D2 - .3) / n - .01); }
+            B(accent, x1 - .34, .5, z0 + .2, x1 - .2, .82, z0 + .6); B("#e8d9b0", x1 - .34, .5, z1 - .6, x1 - .2, .82, z1 - .2); }
+          [[x0 + .05, z0 + .05], [x1 - .08, z0 + .05], [x0 + .05, z1 - .08], [x1 - .08, z1 - .08]].forEach(([a, b]) => B("#2b2b2b", a, .03, b, a + .03, .1, b + .03));
+          /* állólámpa a kanapé végénél */
+          const lx = ax ? x1 + .25 : mx + .0, lz = ax ? z1 - .2 : z1 + .25;
+          add("#2b2f36|m", new THREE.CylinderGeometry(.012, .012, 1.45, 6), M4(lx, .75, lz), lv); add("#2b2f36|m", new THREE.CylinderGeometry(.14, .14, .02, 16), M4(lx, .04, lz), lv);
+          add("lampIn", new THREE.CylinderGeometry(.12, .18, .24, 16, 1, true), M4(lx, 1.5, lz), lv);
+          break; }
+        case "table4": case "table6": case "table2": case "table5": case "table": case "round4": {
+          const round = type === "round4";
+          if (round) { add("#9c6b3f", new THREE.CylinderGeometry(Math.min(W2, D2) / 2, Math.min(W2, D2) / 2, .04, 28), M4(mx, .74, mz), lv); add("#6b4426", new THREE.CylinderGeometry(.05, .2, .72, 12), M4(mx, .38, mz), lv); }
+          else { B("#a8774a", x0, .72, z0, x1, .76, z1); [[x0 + .03, z0 + .03], [x1 - .09, z0 + .03], [x0 + .03, z1 - .09], [x1 - .09, z1 - .09]].forEach(([a, b]) => B("#6b4426", a, .03, b, a + .06, .72, b + .06)); }
+          /* váza virággal, alátétek */
+          add("#d8e6ea", new THREE.CylinderGeometry(.045, .035, .16, 12), M4(mx, .84, mz), lv);
+          for (let k = 0; k < 6; k++) add(["#e5262f", "#ffd166", "#ffffff", "#c86ad8"][k % 4], new THREE.IcosahedronGeometry(.03, 0), M4(mx + Math.cos(k) * .05, .95 + (k % 2) * .03, mz + Math.sin(k) * .05), lv);
+          break; }
+        case "chair": chair(add, mx, mz, (rot || 0) * D2R, lv, "#7a5a3a"); break;
+        case "shower": B("#eef3f5", x0, .03, z0, x1, .09, z1); B("rail", x0, .09, z0, x1, 2.0, z0 + .02); B("rail", x0, .09, z0, x0 + .02, 2.0, z1);
+          add("chrome", new THREE.CylinderGeometry(.012, .012, 1.1, 6), M4(x1 - .1, 1.45, z1 - .06), lv); add("chrome", new THREE.CylinderGeometry(.09, .09, .02, 16), M4(x1 - .2, 2.0, z1 - .2), lv); break;
+        case "wc": add("#ffffff", new THREE.CylinderGeometry(.18, .15, .4, 16), M4(mx, .23, mz), lv); B("#ffffff", mx - .2, .03, long ? z0 : mz + .1, mx + .2, .8, long ? z0 + .16 : mz + .26); break;
+        case "sink": B("#e9e6df", x0, .03, z0, x1, .78, z1); B("#ffffff", x0 + .02, .78, z0 + .02, x1 - .02, .86, z1 - .02); add("chrome", new THREE.CylinderGeometry(.012, .012, .18, 6), M4(mx, .95, mz), lv); break;
+        case "counter": case "counter2": {
+          B("#ecebe6", x0, .1, z0, x1, .86, z1); B("#2b2b2b", x0, .03, z0, x1, .1, z1); B("#3a3a3a", x0 - .01, .86, z0 - .01, x1 + .01, .9, z1 + .01);
+          const n = Math.max(1, Math.round((long ? W2 : D2) / .6)); for (let k = 1; k < n; k++) { const t = k / n; if (long) B("#c9c7c0", x0 + W2 * t - .005, .12, z0 - .002, x0 + W2 * t + .005, .84, z1 + .002); else B("#c9c7c0", x0 - .002, .12, z0 + D2 * t - .005, x1 + .002, .84, z0 + D2 * t + .005); }
+          if (type === "counter") { const a = long ? [x0 + W2 * .25, mz] : [mx, z0 + D2 * .25], b = long ? [x0 + W2 * .7, mz] : [mx, z0 + D2 * .7];
+            add("#15171a|m", new THREE.BoxGeometry(.55, .01, .5), M4(a[0], .905, a[1]), lv); [[-.13, -.12], [.13, -.12], [-.13, .12], [.13, .12]].forEach(([dx, dz]) => add("#555", new THREE.TorusGeometry(.07, .006, 4, 16), M4(a[0] + dx, .912, a[1] + dz, 0, Math.PI / 2), lv));
+            add("steel", new THREE.BoxGeometry(.45, .02, .38), M4(b[0], .905, b[1]), lv); add("chrome", new THREE.CylinderGeometry(.012, .012, .3, 6), M4(b[0], 1.05, b[1] + (long ? .17 : 0)), lv); }
+          break; }
+        case "washer": B("#f2f2f2", x0, .03, z0, x1, .85, z1); add("#1c2630|m", new THREE.CylinderGeometry(.16, .16, .02, 20), M4(mx, .45, mz, 0, Math.PI / 2), lv); break;
+        case "tv": B("#2b2f36", x0, .03, z0, x1, .45, z1); B("#0d0f12|m", long ? x0 + .05 : mx - .02, .9, long ? mz - .02 : z0 + .05, long ? x1 - .05 : mx + .02, 1.45, long ? mz + .02 : z1 - .05); break;
+        case "shelf": B("#c9a77b", x0, .03, z0, x1, 1.6, z1); for (let k = 0; k < 4; k++) for (let j = 0; j < 6; j++) { const t = (j + .5) / 6; const c = ["#8a3a2a", "#2a5a8a", "#d9b44a", "#3a7a4a", "#5a3a6a"][(j + k) % 5];
+            if (long) B(c, x0 + W2 * t - .04, .1 + k * .38, z0 + .03, x0 + W2 * t + .03, .32 + k * .38, z1 - .03); else B(c, x0 + .03, .1 + k * .38, z0 + D2 * t - .04, x1 - .03, .32 + k * .38, z0 + D2 * t + .03); } break;
+        case "shed": break;
+        default: {
+          const h = /szekrény/.test(lab) ? 2.0 : /hűtő/.test(lab) ? 1.8 : /klíma|bojler/.test(lab) ? 0 : /fotel|pouf/.test(lab) ? .45 : /asztal/.test(lab) ? .74 : /éjjeli|komód/.test(lab) ? .55 : .55;
+          if (h <= 0) break;
+          if (/szekrény/.test(lab)) { B("#d8c7a6", x0, .03, z0, x1, h, z1); if (long) { B("#b9a786", mx - .005, .1, z0 - .003, mx + .005, h - .05, z1 + .003); } else B("#b9a786", x0 - .003, .1, mz - .005, x1 + .003, h - .05, mz + .005);
+            add("steel", new THREE.BoxGeometry(.02, .3, .02), M4(long ? mx - .05 : x0 - .01, 1.1, long ? z0 - .01 : mz - .05), lv); }
+          else if (/hűtő/.test(lab)) { B("#f4f4f4", x0, .03, z0, x1, h, z1); B("#c9c9c9", x0 - .003, 1.15, z0 - .003, x1 + .003, 1.16, z1 + .003); }
+          else if (/fotel/.test(lab)) { B("#8a7a6a", x0, .1, z0, x1, .45, z1); B("#7a6a5a", x0, .45, z1 - .15, x1, .85, z1); }
+          else if (/éjjeli/.test(lab)) { B("#a8875e", x0, .03, z0, x1, .5, z1); add("lampIn", new THREE.CylinderGeometry(.07, .1, .16, 12, 1, true), M4(mx, .66, mz), lv); add("#c9a24a|m", new THREE.CylinderGeometry(.01, .05, .1, 8), M4(mx, .55, mz), lv); }
+          else B("#cbb894", x0, .03, z0, x1, h, z1);
+        }
+      }
+    });
+  }
+
+  /* =================================================================== 3/B. A MAKETT VARÁZSLATOS HELYSZÍNE – a Balaton partján, Zamárdiban
+     • Egy nyolcszögletű fa napozóstégen állsz a vízen; mögötted palló vezet a füves partra (mint a ház saját napozóstégje a strandon).
+     • Előtted a tó: északnyugatra a Tihanyi-félsziget az apátság két tornyával, északra Balatonfüred és a Balaton-felvidék dombjai,
+       messze nyugaton a Badacsony „koporsója”, a Gulács, a Szent György-hegy; délre a Kőhegy fehér kilátója. Valós irányokban (Zamárdi strandjáról mérve).
+     • Napszak: a választott nap és óra valódi napállása szerint – hajnal, dél, aranyóra, naplemente, kék óra, csillagos éjszaka holddal.
+     • Élet: hattyúk és récék a nádas mellett, sirályok, vitorlások lobogó vitorlával, a Szántód–Tihany komp, kiugró halak, szitakötők, lepkék a levendulán,
+       este szentjánosbogarak, lámpások, fényfüzér; hangok: víz csobogása, nádirigó, sirály, este tücskök.
+     Koordináták: ENV.env = észak felé igazított csoport (É = −z, K = +x); ENV.site = a ház tengelyéhez igazítva (−z = 345°, a tó felé; +x = 75°).
+     A site-ban: a stég közepe (0,0,0), a padló y = 0, a víz y = −0,55, a part vonala z = +26, a ház utcája (életnagyságban) z ≈ 53. */
+  const ENV = { wt: { value: 0 } };
+  const WATER_Y = -.55, SHORE_Z = 26, DECK_R = 5.6;
+  const LIFE_POS = new THREE.Vector3(-3, 0, 60);   /* életnagyságban a ház (0,0) pontja a site-ban: az utca középvonala z = 53,2 */
+
+  /* --- napszak: színek a nap magassága szerint (fok) --- */
+  const SKYK = [
+    /*  el     zenit      horizont   napfény-glória  napfény    fényerő  ég-fény */
+    [-16, "#02040b", "#050912", "#000000", "#000000", 0, .07],
+    [-8, "#060d24", "#141a38", "#140c1c", "#000000", 0, .12],
+    [-3, "#14285a", "#5a4a78", "#a8506a", "#000000", 0, .22],
+    [0, "#24407c", "#e07a52", "#ff6a2a", "#ff7232", .35, .34],
+    [4, "#3354a0", "#f6a05c", "#ff8a36", "#ff9448", .9, .46],
+    [10, "#3866b2", "#f5c88f", "#ffc070", "#ffc27a", 1.25, .58],
+    [22, "#2f66c0", "#c8dcee", "#fff0d4", "#fff0d8", 1.5, .7],
+    [55, "#2a64c8", "#b9d5ee", "#fff6e6", "#fff6ea", 1.62, .76]];
+  const _ca = new THREE.Color(), _cb = new THREE.Color();
+  function skyAt(el) {
+    let i = 0; while (i < SKYK.length - 2 && el > SKYK[i + 1][0]) i++;
+    const a = SKYK[i], b = SKYK[i + 1], k = clamp((el - a[0]) / (b[0] - a[0]), 0, 1);
+    const c = (j) => new THREE.Color(a[j]).lerp(_cb.set(b[j]), k);
+    return { zen: c(1), hor: c(2), glow: c(3), sunC: c(4), sunI: lerp(a[5], b[5], k), hemiI: lerp(a[6], b[6], k) };
+  }
+  const dirFromAzEl = (az, el, v) => { const a = az * D2R, e = el * D2R; return (v || new THREE.Vector3()).set(Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)); };
+
+  /* --- szél: lombok, nád, levendula ringatása (vertex-shader) --- */
+  function windify(mat, amp, freq, key) {
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uWT = ENV.wt;
+      sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uWT;").replace("#include <begin_vertex>", `#include <begin_vertex>
+        { vec3 w0 = vec3(0.);
+          #ifdef USE_INSTANCING
+            w0 = instanceMatrix[3].xyz;
+          #endif
+          float hh = max(position.y, 0.), ph = w0.x * .37 + w0.z * .29 + position.x * .45 + position.z * .3;
+          float gust = .65 + .35 * sin(uWT * .31 + w0.x * .02);
+          transformed.x += sin(uWT * ${freq.toFixed(2)} + ph) * ${amp.toFixed(4)} * hh * hh * gust;
+          transformed.z += cos(uWT * ${(freq * .83).toFixed(2)} + ph * 1.3) * ${(amp * .6).toFixed(4)} * hh * hh * gust; }`);
+    };
+    mat.customProgramCacheKey = () => "wind-" + (key || "") + amp + "-" + freq;
+    return mat;
+  }
+  /* fénygömbök (additív „glória”) a lámpák, izzók körül – este kigyúlnak */
+  function glowPoints(parent, pts, size, color, k) {
+    const g = new THREE.BufferGeometry(), a = new Float32Array(pts.length * 3), ph = new Float32Array(pts.length);
+    pts.forEach((p, i) => { a[i * 3] = p.x; a[i * 3 + 1] = p.y; a[i * 3 + 2] = p.z; ph[i] = rand() * 100; });
+    g.setAttribute("position", new THREE.BufferAttribute(a, 3)); g.setAttribute("ph", new THREE.BufferAttribute(ph, 1));
+    const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uT: { value: 0 }, uA: { value: 0 }, uC: { value: new THREE.Color(color) }, uS: { value: size } },
+      vertexShader: `attribute float ph; uniform float uT, uS; varying float vF; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; vF = .85 + .15 * sin(uT * 3. + ph); gl_PointSize = uS * 300. / -mv.z; }`,
+      fragmentShader: `uniform vec3 uC; uniform float uA; varying float vF; void main(){ float d = length(gl_PointCoord - .5) * 2.; float a = exp(-d * d * 4.) * (1. - smoothstep(.85, 1., d)); gl_FragColor = vec4(uC * a * uA * vF, 1.); }` });
+    W.disposables.push(g, m); const P = new THREE.Points(g, m); P.frustumCulled = false; P.renderOrder = 5; parent.add(P);
+    (ENV.halos = ENV.halos || []).push({ m, k: k || 1 }); return P;
+  }
+  /* lombkorona: sok kis „levélcsomó” egy tömbben; a normálisok a korona közepétől kifelé mutatnak (lágy, térbeli fény),
+     a csúcsszín alul és belül sötétebb, fölül világosabb, kicsit változó árnyalattal */
+  function leafGeom(clumps, base, jitter, detail) {
+    const out = []; const cB = new THREE.Color(base);
+    clumps.forEach(([cx, cy, cz, R, n, sy]) => {
+      for (let k = 0; k < (n || 9); k++) {
+        const a = rand() * TAU, e = rr(-.5, 1), d = Math.sqrt(rand()) * R * .62, r = R * rr(.36, .55);
+        const px = cx + Math.cos(a) * Math.cos(e) * d, py = cy + Math.sin(e) * d * (sy || 1), pz = cz + Math.sin(a) * Math.cos(e) * d;
+        const q = new THREE.IcosahedronGeometry(r, detail == null ? 1 : detail); const p = q.attributes.position, nr = q.attributes.normal, col = [];
+        const tint = cB.clone().offsetHSL(rr(-.025, .025), rr(-.06, .06), rr(-.05, .05));
+        for (let i = 0; i < p.count; i++) {
+          let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const f = 1 + (Math.sin(x * 13.1 + y * 7.7) * .5 + Math.sin(z * 11.3 + x * 5.1) * .5) * (jitter || .18);
+          x = x * f + px; y = y * f * (sy || 1) + py; z = z * f + pz; p.setXYZ(i, x, y, z);
+          const o = new THREE.Vector3(x - cx, (y - cy) / (sy || 1), z - cz).normalize();
+          const nn = new THREE.Vector3(nr.getX(i), nr.getY(i), nr.getZ(i)).lerp(o, .7).normalize(); nr.setXYZ(i, nn.x, nn.y, nn.z);
+          const k2 = clamp(.55 + o.y * .45, 0, 1) * clamp(.6 + Math.hypot(x - cx, z - cz) / (R * 1.2) * .5, 0, 1);
+          const c = tint.clone().multiplyScalar(.55 + .65 * k2); col.push(c.r, c.g, c.b);
+        }
+        q.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); out.push([q, new THREE.Matrix4()]);
+      }
+    });
+    return mergeGeoms(out);
+  }
+  function inst(geo, mat, mats, parent, shadow) {
+    const m = new THREE.InstancedMesh(geo, mat, mats.length); W.disposables.push(geo);
+    mats.forEach((q, i) => m.setMatrixAt(i, q)); m.instanceMatrix.needsUpdate = true; m.frustumCulled = false;
+    if (shadow) { m.castShadow = true; m.receiveShadow = true; }
+    parent.add(m); return m;
+  }
+
+  /* --- procedurális textúrák (a ház is használja) --- */
+  const TX = {};
+  function noiseFill(g, w, h, base, spread, n, sz) {
+    g.fillStyle = base; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < n; i++) { const v = (rand() - .5) * spread; g.fillStyle = v > 0 ? `rgba(255,255,255,${v})` : `rgba(0,0,0,${-v})`; const s = rr(sz * .4, sz); g.fillRect(rand() * w, rand() * h, s, s); }
+  }
+  function txPlanks(key, c0, c1, n, opt) {
+    opt = opt || {};
+    if (TX[key]) return TX[key];
+    return TX[key] = canvasTex(512, 512, (g, w, h) => {
+      const bh = h / n;
+      for (let i = 0; i < n; i++) {
+        const c = new THREE.Color(c0).lerp(new THREE.Color(c1), rand());
+        g.fillStyle = "#" + c.getHexString(); g.fillRect(0, i * bh, w, bh);
+        /* erezet */
+        for (let k = 0; k < 26; k++) { g.strokeStyle = `rgba(${rand() < .5 ? "40,24,10" : "255,240,220"},${rr(.04, .12)})`; g.lineWidth = rr(.6, 2); g.beginPath(); const y0 = i * bh + rand() * bh; g.moveTo(0, y0);
+          for (let x = 0; x <= w; x += 32) g.lineTo(x, y0 + Math.sin(x * .02 + k) * rr(.5, 2.2)); g.stroke(); }
+        /* görcsök, illesztések */
+        if (rand() < .5) { g.fillStyle = "rgba(60,36,16,.35)"; g.beginPath(); g.ellipse(rand() * w, i * bh + bh / 2, rr(4, 9), rr(2, 4), 0, 0, TAU); g.fill(); }
+        const j = rand() * w; g.fillStyle = "rgba(20,12,6,.55)"; g.fillRect(j, i * bh, 2, bh);
+        g.fillStyle = `rgba(15,9,4,${opt.gap || .7})`; g.fillRect(0, i * bh, w, opt.gapW || 3);
+      }
+    }, { repeat: [1, 1] });
+  }
+  function txNoise(key, base, spread, n, sz, rep) { if (TX[key]) return TX[key]; return TX[key] = canvasTex(256, 256, (g, w, h) => noiseFill(g, w, h, base, spread, n, sz), { repeat: rep || [1, 1] }); }
+  function txGrass() {
+    if (TX.grass) return TX.grass;
+    return TX.grass = canvasTex(512, 512, (g, w, h) => {
+      noiseFill(g, w, h, "#5d8f3e", .22, 2500, 26);
+      for (let i = 0; i < 9000; i++) { const x = rand() * w, y = rand() * h, l = rr(3, 9); const c = new THREE.Color().setHSL(rr(.22, .3), rr(.35, .6), rr(.22, .5));
+        g.strokeStyle = "#" + c.getHexString(); g.lineWidth = rr(.6, 1.6); g.beginPath(); g.moveTo(x, y); g.lineTo(x + rr(-2, 2), y - l); g.stroke(); }
+      for (let i = 0; i < 70; i++) { g.fillStyle = ["#fff6c8", "#ffffff", "#f7d84a", "#c8a6e8"][i % 4]; g.beginPath(); g.arc(rand() * w, rand() * h, rr(1, 2.2), 0, TAU); g.fill(); }
+    }, { repeat: [1, 1] });
+  }
+  function txSand() { return txNoise("sand", "#bfae8a", .22, 2500, 4); }
+
+  /* ===================================================================================== ÉGBOLT */
+  function makeMagicSky(parent) {
+    const tex = cloudTexture(); tex.wrapS = THREE.RepeatWrapping;
+    const U = { uSun: { value: new THREE.Vector3(0, .3, -1).normalize() }, uMoon: { value: new THREE.Vector3(.3, .5, .8).normalize() }, uZen: { value: new THREE.Color() }, uHor: { value: new THREE.Color() },
+      uGlow: { value: new THREE.Color() }, uSunC: { value: new THREE.Color() }, uDay: { value: 1 }, uNight: { value: 0 }, uT: { value: 0 }, uClouds: { value: tex } };
+    const mat = new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, fog: false, uniforms: U,
+      vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = modelViewMatrix * vec4(position,1.); gl_Position = projectionMatrix * p; gl_Position.z = gl_Position.w; }`,
+      fragmentShader: `uniform vec3 uSun, uMoon, uZen, uHor, uGlow, uSunC; uniform float uDay, uNight, uT; uniform sampler2D uClouds; varying vec3 vDir;
+        float h3(vec3 p){ return fract(sin(dot(p, vec3(127.1,311.7,74.7))) * 43758.5453); }
+        void main(){
+          vec3 d = normalize(vDir); float el = d.y;
+          vec3 col = mix(uHor, uZen, pow(clamp(el, 0., 1.), .42));
+          float s = max(dot(d, uSun), 0.), low = 1. - smoothstep(0., .5, el);
+          col += uGlow * (pow(s, 4.) * .32 * low + pow(s, 40.) * .5 + pow(s, 400.) * 1.2);
+          float sd = smoothstep(.99955, .99972, dot(d, uSun)) * step(-.02, uSun.y);
+          col = mix(col, uSunC * 4. + vec3(.4), sd);
+          float ca = 0.;
+          if (el > 0.) {
+            float u = atan(d.x, -d.z) / 6.2831853 + .5 + uT * .0005, v = 1. - clamp(el / .62, 0., 1.);
+            vec4 c = texture2D(uClouds, vec2(u, clamp(v, .02, .98))); ca = c.a * smoothstep(0., .05, el) * .9 * (1. - uNight * .78);
+            vec3 lit = mix(uHor * .9 + .05, vec3(1.), .25 + .6 * uDay) * (.25 + .75 * max(uDay, .12));
+            vec3 cc = mix(lit * .62, lit, c.r) + uGlow * (pow(s, 3.) * .9 + .25) * (1. - uDay * .55) * c.r;
+            cc = mix(cc, vec3(.05,.07,.12), uNight * .75);
+            col = mix(col, cc, ca);
+          }
+          if (uNight > .01 && el > 0.) {
+            vec3 q = d * 240.; vec3 i = floor(q); float r = h3(i); vec3 f = fract(q) - .5;
+            float st = step(.9962, r) * smoothstep(.42, .0, length(f)) * (.55 + .45 * sin(uT * (2. + r * 3.) + r * 90.));
+            /* a Tejút halvány sávja */
+            float mw = exp(-pow(dot(d, normalize(vec3(.55, .25, -.8))) * 3.2, 2.)) * .05 * (.6 + .4 * h3(floor(d * 90.)));
+            col += (vec3(st * 1.5) + vec3(.7, .75, .95) * mw) * uNight * (1. - ca);
+          }
+          float md = dot(d, uMoon);
+          col += (vec3(.98, .95, .86) * smoothstep(.99965, .9998, md) + vec3(.35, .4, .6) * pow(max(md, 0.), 160.) * .5) * uNight * (1. - ca * .7);
+          if (el < 0.) col = mix(uHor * .92, uZen * .25, clamp(-el * 5., 0., 1.));
+          gl_FragColor = vec4(col, 1.);
+          #include <colorspace_fragment>
+        }`
+    });
+    W.disposables.push(mat);
+    const m = mesh(new THREE.SphereGeometry(8000, 48, 24), mat, parent); m.renderOrder = -20; m.frustumCulled = false;
+    m.userData.U = U; return m;
+  }
+
+  /* ===================================================================================== PANORÁMA (a túlpart, valós irányokban) */
+  /* adatcsatornák a textúrában: R = távolság (0 közel … 1 messze), G = világosság-részlet, B = épület (> .5 fehér fal; este ablakfény), A = fedés */
+  function panoTexture() {
+    const w = 4096, h = 512, top = 4;
+    const yOf = (e) => h - e / top * h;
+    const X = (b) => ((b % 360) + 360) % 360 / 360 * w;
+    const ns = (b, f) => Math.sin(b * f) * .5 + Math.sin(b * f * 2.7 + 1) * .25 + Math.sin(b * f * 6.1 + 2) * .12;
+    const C = (r, gg, b) => `rgb(${Math.round(r * 255)},${Math.round(gg * 255)},${Math.round(b * 255)})`;
+    const t = canvasTex(w, h, (g) => {
+      const layer = (b0, b1, step, fe, R) => {   /* fe(b) → magasság fokban; b1 lehet > 360 */
+        g.beginPath(); g.moveTo(X(b0), h);
+        for (let b = b0; b <= b1 + 1e-6; b += step) { let x = X(b); if (b >= 360 && X(b0) > x) x += w; g.lineTo(x, yOf(Math.max(0, fe(b)))); }
+        let xe = X(b1); if (b1 >= 360 && X(b0) > xe) xe += w; g.lineTo(xe, h); g.closePath();
+        const gr = g.createLinearGradient(0, yOf(2.4), 0, h); gr.addColorStop(0, C(R, .55, 0)); gr.addColorStop(1, C(R, .4, 0)); g.fillStyle = gr; g.fill();
+        if (b1 >= 360) { g.save(); g.translate(-w, 0); g.fill(); g.restore(); }
+      };
+      const bld = (b, e0, e1, wd, R, white) => { g.fillStyle = C(R, .5, white ? 1 : .3); const x = X(b); g.fillRect(x - wd / 2, yOf(e1), wd, yOf(e0) - yOf(e1)); };
+      const bump = (b, c, wd, hh) => { const d = Math.abs(b - c); return d < wd ? hh * Math.cos(d / wd * Math.PI / 2) ** 1.5 : 0; };
+      /* 1) messze nyugaton (37–40 km): Szent György-hegy, Badacsony, Gulács, Tóti-hegy, Szigliget */
+      layer(243, 268, .1, (b) => { let e = .06 + .02 * ns(b, 1.3);
+        e = Math.max(e, bump(b, 258.4, 1.6, .36), bump(b, 251.6, .7, .3), bump(b, 249.8, .8, .27), bump(b, 247.2, 1.2, .19), bump(b, 245.5, .9, .14));
+        const d = Math.abs(b - 254.6); if (d < 2.1) e = Math.max(e, .44 * Math.min(1, (2.1 - d) / .55));   /* Badacsony: lapos tetejű „koporsó” */
+        return e; }, .97);
+      /* 2) Balaton-felvidék (10–16 km) */
+      layer(298, 412, .2, (b) => { let e = 1.1 + .28 * ns(b, .08) + .14 * ns(b, .41); if (b > 380) e *= clamp(1 - (b - 380) / 34, .12, 1); if (b < 306) e *= (b - 298) / 8 + .2; return e; }, .74);
+      /* 3) a Kenesei magaspart és a keleti partok (20–30 km) */
+      layer(400, 432, .2, (b) => .14 + .07 * ns(b, .7) - (b > 425 ? (b - 425) * .02 : 0), .88);
+      /* 4) Balatonfüred (8–9 km): városszél, házak, a Tagore sétány fái */
+      layer(318, 336, .1, (b) => .32 + .12 * Math.abs(ns(b, 2.2)), .52);
+      for (let k = 0; k < 260; k++) { const b = rr(318.5, 335.5); bld(b, rr(.06, .2), rr(.2, .42), rr(2, 5), .5, rand() < .78); }
+      /* 5) a Tihanyi-félsziget (5–7 km): Csúcs-hegy, Óvár, az apátság dombja, a falu */
+      layer(281, 323, .1, (b) => { let e = .12 + bump(b, 303.5, 9.5, .92) + bump(b, 296.4, 3.2, .62) + bump(b, 309, 6, .55) + bump(b, 287, 4, .3) + .05 * ns(b, 3.1);
+        if (b > 316) e *= clamp((323 - b) / 7, 0, 1) * .8 + .2; if (b < 284) e *= (b - 281) / 3; return e; }, .31);
+      for (let k = 0; k < 160; k++) { const b = rr(292.2, 299.5); const e0 = rr(.3, .62); bld(b, e0, e0 + rr(.04, .1), rr(3, 6), .3, rand() < .7); }   /* Tihany falu */
+      /* 6) déli part nyugat felé: Szántód, Balatonföldvár (4–8 km), a révvel */
+      layer(204, 258, .2, (b) => .2 + .12 * Math.abs(ns(b, 1.9)) + .08 * Math.abs(ns(b, 6.3)) - (b > 248 ? (b - 248) * .015 : 0), .42);
+      for (let k = 0; k < 120; k++) { const b = rr(214, 246); bld(b, rr(.04, .14), rr(.14, .3), rr(2, 4), .42, rand() < .6); }
+      /* 7) keleti part: Siófok (7 km) – a magas szállodákkal */
+      layer(52, 104, .2, (b) => .2 + .1 * Math.abs(ns(b, 2.1)) + .06 * Math.abs(ns(b, 7)) - (b < 60 ? (60 - b) * .02 : 0), .45);
+      for (let k = 0; k < 14; k++) { const b = rr(80, 89); bld(b, .1, rr(.4, .78), rr(5, 9), .45, true); }
+      for (let k = 0; k < 120; k++) { const b = rr(66, 100); bld(b, rr(.05, .14), rr(.14, .32), rr(2, 4), .45, rand() < .65); }
+      /* 8) Kőhegy (3 km, dél) a fehér kilátóval */
+      layer(160, 205, .2, (b) => .9 + bump(b, 181, 15, 1.35) + .12 * ns(b, 2.3), .2);
+      /* finom részletek: fasorok, erdőfoltok – egyetlen képpont-menetben (a G csatorna világossága) */
+      const id = g.getImageData(0, 0, w, h), d = id.data;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; if (!d[i + 3] || d[i + 2] > 100) continue;
+        const q = Math.sin((x >> 1) * 12.9898 + (y >> 1) * 78.233) * 43758.5453, n = q - Math.floor(q);
+        d[i + 1] = Math.max(0, Math.min(255, d[i + 1] * (.62 + .8 * n * n))); }
+      g.putImageData(id, 0, 0);
+    });
+    t.colorSpace = THREE.NoColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 8; t.needsUpdate = true;
+    return t;
+  }
+  function makePanorama(parent) {
+    const R = 4000, top = 4 * D2R, h = R * Math.tan(top);
+    const g = new THREE.CylinderGeometry(R, R, h, 256, 1, true); g.translate(0, h / 2 + WATER_Y - .4, 0);
+    const U = { uMap: { value: panoTexture() }, uNear: { value: new THREE.Color() }, uFar: { value: new THREE.Color() }, uHaze: { value: new THREE.Color() }, uLight: { value: 1 }, uNight: { value: 0 }, uT: { value: 0 } };
+    const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.BackSide, fog: false, uniforms: U,
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+      fragmentShader: `uniform sampler2D uMap; uniform vec3 uNear, uFar, uHaze; uniform float uLight, uNight, uT; varying vec2 vUv;
+        float h2(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+        void main(){
+          vec4 t = texture2D(uMap, vUv); if (t.a < .03) discard;
+          vec3 base = mix(uNear, uFar, t.r) * (.62 + .9 * t.g);
+          base = mix(base, uHaze, pow(t.r, 1.6) * .72);
+          float wall = smoothstep(.45, .6, t.b);
+          vec3 col = mix(base, mix(vec3(.95, .93, .88) * uLight, uHaze, t.r * .55), wall);
+          vec2 cell = floor(vUv * vec2(4096., 512.));
+          float lit = wall * step(.45, h2(cell)) * (.75 + .25 * sin(uT * 2. + h2(cell + 3.) * 40.));
+          col += vec3(1., .78, .45) * lit * uNight * 1.4;
+          gl_FragColor = vec4(col, t.a);
+          #include <colorspace_fragment>
+        }` });
+    W.disposables.push(mat);
+    const m = mesh(g, mat, parent); m.renderOrder = -10; m.frustumCulled = false;
+    m.rotation.y = Math.PI; m.scale.x = -1;   /* É (0°) → −z, ugyanúgy, mint a vitorlázásnál (mérve) */
+    m.userData.U = U; return m;
+  }
+
+  /* nevezetességek külön, részletes táblán (a panoráma felbontása ennyi távolságra kevés lenne): a tihanyi apátság és a kőhegyi kilátó */
+  function makeLandmarks(parent) {
+    const list = [];
+    const add = (bearing, elev0, wDeg, hDeg, R, draw, cw, ch) => {
+      const tex = canvasTex(cw, ch, draw); const w = 2 * R * Math.tan(wDeg / 2 * D2R), hh = R * Math.tan(hDeg * D2R);
+      const mat = basic({ map: tex, transparent: true, depthWrite: false, fog: false, alphaTest: .05 });
+      const m = mesh(new THREE.PlaneGeometry(w, hh), mat, parent); const a = bearing * D2R;
+      m.position.set(Math.sin(a) * R, WATER_Y - .4 + R * Math.tan(elev0 * D2R) + hh / 2, -Math.cos(a) * R); m.lookAt(0, m.position.y, 0); m.renderOrder = -8;
+      list.push(mat); return m;
+    };
+    /* Tihanyi Bencés Apátság (296°, 5,5 km): barokk templom két tornyával, mellette a rendház – a valódi méretnél 1,6× nagyobb, hogy felismerhető legyen */
+    add(296.1, .62, .9, .9, 3950, (g, w, h) => {
+      const base = h * .97;
+      g.fillStyle = "#e9e2cf"; g.fillRect(w * .08, base - h * .2, w * .5, h * .2);            /* rendház */
+      g.fillStyle = "#7d5a4a"; g.beginPath(); g.moveTo(w * .06, base - h * .2); g.lineTo(w * .33, base - h * .29); g.lineTo(w * .6, base - h * .2); g.fill();
+      for (let k = 0; k < 7; k++) { g.fillStyle = "#6a7480"; g.fillRect(w * (.11 + k * .065), base - h * .14, w * .025, h * .06); }
+      g.fillStyle = "#f1ead6"; g.fillRect(w * .58, base - h * .36, w * .3, h * .36);           /* templom */
+      g.fillStyle = "#6e4f42"; g.beginPath(); g.moveTo(w * .57, base - h * .36); g.lineTo(w * .73, base - h * .44); g.lineTo(w * .89, base - h * .36); g.fill();
+      [.6, .8].forEach((x) => { g.fillStyle = "#f4eedc"; g.fillRect(w * x, base - h * .66, w * .085, h * .66);   /* tornyok */
+        g.fillStyle = "#4d5560"; g.beginPath(); g.moveTo(w * (x - .01), base - h * .66); g.quadraticCurveTo(w * (x + .0425), base - h * .74, w * (x + .0425), base - h * .9); g.quadraticCurveTo(w * (x + .0425), base - h * .74, w * (x + .095), base - h * .66); g.fill();
+        g.fillStyle = "#c9a24a"; g.fillRect(w * (x + .039), base - h * .97, w * .007, h * .08);
+        g.fillStyle = "#3a3a40"; g.beginPath(); g.arc(w * (x + .0425), base - h * .55, w * .02, 0, TAU); g.fill(); });
+      g.fillStyle = "#5a6b4a"; for (let k = 0; k < 40; k++) { g.beginPath(); g.arc(rand() * w, base - rand() * h * .08, rr(4, 12), 0, TAU); g.fill(); }
+    }, 256, 256);
+    /* Kőhegyi kilátó (182°, ~3 km, a domb tetején) */
+    add(181.5, 2.0, .35, .5, 2950, (g, w, h) => {
+      g.fillStyle = "#f3f0e8"; g.fillRect(w * .4, h * .2, w * .2, h * .8); g.fillStyle = "#8a6a4a"; g.fillRect(w * .32, h * .14, w * .36, h * .08);
+      g.strokeStyle = "#f3f0e8"; g.lineWidth = 4; g.strokeRect(w * .32, h * .03, w * .36, h * .11);
+    }, 64, 128);
+    return list;
+  }
+
+  /* ===================================================================================== A STÉG */
+  function buildMagicDeck(site) {
+    const g = new THREE.Group(); site.add(g); ENV.deck = g;
+    const planks = txPlanks("deck", "#9b6f47", "#c0905f", 8); planks.repeat.set(1, 1);
+    const deckMat = std({ map: planks, roughness: .82 });
+    ENV.deckMat = deckMat;
+    /* nyolcszög: a deszkák (UV méterben, 0,25 m széles deszkák) */
+    const N = 8, pts = []; for (let i = 0; i < N; i++) { const a = (i + .5) / N * TAU; pts.push(new THREE.Vector2(Math.cos(a) * DECK_R, Math.sin(a) * DECK_R)); }
+    const shp = new THREE.Shape(pts);
+    const top = new THREE.ExtrudeGeometry(shp, { depth: .14, bevelEnabled: true, bevelThickness: .02, bevelSize: .03, bevelSegments: 1 });
+    top.rotateX(Math.PI / 2); top.translate(0, -.0, 0);
+    { const p = top.attributes.position, uv = top.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 2, p.getZ(i) / 2); }
+    const deck = mesh(top, deckMat, g); deck.receiveShadow = true; ENV.deckTop = deck;
+    /* cölöpök a vízben */
+    const postMat = std({ color: "#4a3626", roughness: .9 });
+    const posts = []; for (let i = 0; i < N; i++) { const a = (i + .5) / N * TAU; posts.push(M4(Math.cos(a) * (DECK_R - .25), WATER_Y - .9, Math.sin(a) * (DECK_R - .25))); }
+    [[0, 0], [2.4, 0], [-2.4, 0], [0, 2.4], [0, -2.4]].forEach(([x, z]) => posts.push(M4(x, WATER_Y - .9, z)));
+    inst(new THREE.CylinderGeometry(.13, .15, 2.2, 10), postMat, posts, g);
+    /* korlát: alacsony fa korlát a pallónál nyitva (dél felé) */
+    const rail = [], railMat = std({ color: "#7a5538", roughness: .7 });
+    for (let i = 0; i < N; i++) {
+      const a0 = (i + .5) / N * TAU, a1 = (i + 1.5) / N * TAU, mid = (a0 + a1) / 2;
+      if (Math.abs(wrapA(mid - Math.PI / 2)) < .3) continue;   /* +z (dél) felé: a palló bejárata */
+      const p0 = new THREE.Vector3(Math.cos(a0) * (DECK_R - .08), 0, Math.sin(a0) * (DECK_R - .08)), p1 = new THREE.Vector3(Math.cos(a1) * (DECK_R - .08), 0, Math.sin(a1) * (DECK_R - .08));
+      rail.push(rodGeom(p0.clone().setY(.95), p1.clone().setY(.95), .045, 8)); rail.push(rodGeom(p0.clone().setY(.5), p1.clone().setY(.5), .025, 6));
+      for (let k = 1; k < 6; k++) { const q = p0.clone().lerp(p1, k / 6); rail.push(rodGeom(q.clone().setY(0), q.clone().setY(.95), .022, 6)); }
+    }
+    for (let i = 0; i < N; i++) { const a = (i + .5) / N * TAU, x = Math.cos(a) * (DECK_R - .08), z = Math.sin(a) * (DECK_R - .08); rail.push([new THREE.BoxGeometry(.12, 1.12, .12), M4(x, .56, z)]); }
+    mesh(mergeGeoms(rail), railMat, g).castShadow = false;
+    /* lámpásoszlopok a sarkokon (a fényfüzér tartói) */
+    ENV.lanterns = [];
+    const glassM = std({ color: "#ffd9a0", emissive: new THREE.Color("#ffb25a"), emissiveIntensity: 0, roughness: .3, transparent: true, opacity: .92 });
+    const ironM = std({ color: "#20242a", roughness: .5, metalness: .6 });
+    const lp = [], lg = [], tops = [];
+    for (let i = 0; i < N; i++) {
+      const a = (i + .5) / N * TAU; if (Math.abs(wrapA(a - Math.PI / 2)) < .5) continue;
+      const x = Math.cos(a) * (DECK_R - .08), z = Math.sin(a) * (DECK_R - .08);
+      lp.push([new THREE.CylinderGeometry(.035, .045, 2.3, 8), M4(x, 1.15, z)]);
+      lp.push([new THREE.BoxGeometry(.24, .03, .24), M4(x, 2.3, z)]); lp.push([new THREE.ConeGeometry(.2, .16, 4), M4(x, 2.62, z, Math.PI / 4)]);
+      [[-.1, -.1], [.1, -.1], [-.1, .1], [.1, .1]].forEach(([dx, dz]) => lp.push([new THREE.BoxGeometry(.02, .26, .02), M4(x + dx, 2.43, z + dz)]));
+      lg.push([new THREE.BoxGeometry(.17, .24, .17), M4(x, 2.43, z)]);
+      tops.push(new THREE.Vector3(x, 2.25, z)); ENV.lanterns.push(new THREE.Vector3(x, 2.43, z));
+    }
+    mesh(mergeGeoms(lp), ironM, g); const lgM = mesh(mergeGeoms(lg), glassM, g);
+    ENV.glows = [{ mat: glassM, k: 3.2, flick: 1 }];
+    /* fényfüzér a lámpások között (lógó ívben) – alkonyatkor kigyúl */
+    const bulbs = [], bulbM = std({ color: "#fff2c8", emissive: new THREE.Color("#ffcf7a"), emissiveIntensity: 0, roughness: .4 });
+    const wire = [];
+    for (let i = 0; i < tops.length; i++) {
+      const a = tops[i], b = tops[(i + 1) % tops.length]; if (a.distanceTo(b) > 6) continue;
+      let prev = a; for (let k = 1; k <= 12; k++) { const u = k / 12; const p = a.clone().lerp(b, u); p.y -= Math.sin(u * Math.PI) * .38; wire.push(rodGeom(prev, p, .006, 4)); prev = p; if (k < 12 && k % 2 === 0) bulbs.push(M4(p.x, p.y - .05, p.z)); }
+    }
+    /* a közép fölött keresztben is (a makett fölött) – két ív a szemközti oszlopok között */
+    [[0, 3], [1, 4], [2, 5]].forEach(([i, j]) => { const a = tops[i], b = tops[j]; if (!a || !b) return; let prev = a; for (let k = 1; k <= 20; k++) { const u = k / 20; const p = a.clone().lerp(b, u); p.y -= Math.sin(u * Math.PI) * .3; wire.push(rodGeom(prev, p, .005, 4)); prev = p; if (k % 2 === 1) bulbs.push(M4(p.x, p.y - .05, p.z)); } });
+    mesh(mergeGeoms(wire), std({ color: "#202020" }), g);
+    inst(new THREE.SphereGeometry(.035, 8, 6), bulbM, bulbs, g);
+    glowPoints(g, bulbs.map((m) => new THREE.Vector3().setFromMatrixPosition(m)), .09, "#ffb860", .9);
+    glowPoints(g, ENV.lanterns, .35, "#ffa040", 1);
+    ENV.glows.push({ mat: bulbM, k: 2.6, tw: 1 });
+    /* levendulás ládák (tihanyi levendula) a korlát mentén */
+    const boxM = std({ map: txPlanks("box", "#7f5a3a", "#9c7048", 4), roughness: .8 });
+    const lav = [], lavHead = [], boxes = [], lavBush = [];
+    [[-3.6, -2.6, .62], [3.6, -2.6, -.62], [-4.3, 1.6, 1.3], [4.3, 1.6, -1.3]].forEach(([x, z, r]) => {
+      boxes.push([new THREE.BoxGeometry(1.5, .38, .42), M4(x, .19, z, r)]);
+      for (let k = 0; k < 150; k++) { const lx = rr(-.68, .68), lz = rr(-.16, .16), hgt = rr(.3, .55); const c = Math.cos(r), s = Math.sin(r);
+        const px = x + lx * c + lz * s, pz = z - lx * s + lz * c;
+        lav.push(M4(px, .38, pz, rr(0, TAU), rr(-.35, .35), rr(-.35, .35), 1, hgt / .5, 1));
+        lavHead.push(M4(px + rr(-.06, .06), .38 + hgt * .92, pz + rr(-.06, .06), rr(0, TAU), rr(-.3, .3), 0)); }
+      /* a levendulabokor zöld-szürke „párnája” */
+      for (let k = 0; k < 5; k++) { const lx = -.56 + k * .28, c = Math.cos(r), s = Math.sin(r); lavBush.push([new THREE.IcosahedronGeometry(.2, 1), M4(x + lx * c, .42, z - lx * s, 0, 0, 0, 1.1, .7, .9)]); }
+    });
+    mesh(mergeGeoms(boxes), boxM, g).receiveShadow = true;
+    mesh(mergeGeoms(lavBush), windify(std({ color: "#7d9470", roughness: .95, flatShading: true }), .02, 1.4, "lavb"), g);
+    const stem = new THREE.CylinderGeometry(.004, .006, .5, 3); stem.translate(0, .25, 0);
+    inst(stem, windify(std({ color: "#6f8f5a", roughness: .9 }), .35, 1.6, "lav"), lav, g);
+    const head = new THREE.CapsuleGeometry(.018, .11, 1, 4); head.translate(0, .02, 0);
+    inst(head, windify(std({ color: "#8a6cc8", roughness: .8, emissive: new THREE.Color("#2a1650"), emissiveIntensity: .25 }), .02, 1.6, "lavh"), lavHead, g);
+    ENV.lavender = lavHead.map((m) => new THREE.Vector3().setFromMatrixPosition(m));
+    /* padok */
+    const benchM = std({ map: txPlanks("bench", "#a4774c", "#c39466", 5), roughness: .7 });
+    const bench = [];
+    [[-4.4, -.3, Math.PI / 2], [4.4, -.3, -Math.PI / 2]].forEach(([x, z, r]) => {
+      const c = Math.cos(r), s = Math.sin(r), P = (lx, ly, lz) => [x + lx * c + lz * s, ly, z - lx * s + lz * c];
+      for (let k = 0; k < 3; k++) { const q = P(0, .45, -.2 + k * .14); bench.push([new THREE.BoxGeometry(1.7, .04, .12), M4(q[0], q[1], q[2], r)]); }
+      for (let k = 0; k < 2; k++) { const q = P(0, .62 + k * .16, .12); bench.push([new THREE.BoxGeometry(1.7, .1, .03), M4(q[0], q[1], q[2], r, -.18)]); }
+      [-.7, .7].forEach((lx) => { const q = P(lx, .22, -.06); bench.push([new THREE.BoxGeometry(.06, .44, .4), M4(q[0], q[1], q[2], r)]); });
+    });
+    mesh(mergeGeoms(bench), benchM, g).castShadow = true;
+    /* távcső (rámutatva: a látnivalók feliratai a láthatáron) */
+    const tel = new THREE.Group(); g.add(tel); tel.position.set(-3.0, 0, -3.9);
+    const brass = std({ color: "#c9a24a", roughness: .3, metalness: .85 }), blk = std({ color: "#1b1d22", roughness: .4, metalness: .4 });
+    [0, 1, 2].forEach((k) => { const a = k / 3 * TAU; rodBetween(new THREE.Vector3(Math.cos(a) * .32, 0, Math.sin(a) * .32), new THREE.Vector3(0, 1.15, 0), .018, blk, tel); });
+    const tube = mesh(new THREE.CylinderGeometry(.05, .07, .75, 16), brass, tel); tube.position.set(0, 1.25, 0); tube.rotation.set(Math.PI / 2 - .08, 0, 0);
+    const piv = new THREE.Group(); tel.add(piv); piv.position.y = 1.2; piv.add(tube); tube.position.set(0, .05, -.1);
+    piv.rotation.y = -((296 - 345) * D2R);   /* a cső Tihany (296°) felé néz */
+    ENV.telescope = tel;
+    const hitT = mesh(new THREE.BoxGeometry(.7, 1.6, .7), basic({ visible: false }), tel); hitT.position.y = .8;
+    ENV.telHit = hitT;
+    /* palló a partra */
+    const walk = [], wM = std({ map: txPlanks("walk", "#94693f", "#b88a5a", 6), roughness: .85 });
+    const wTop = new THREE.BoxGeometry(2.2, .12, SHORE_Z + 2 - DECK_R + .3);
+    { const p = wTop.attributes.position, uv = wTop.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 2, p.getZ(i) / 2); }
+    const wk = mesh(wTop, wM, g); wk.position.set(0, -.06, (DECK_R + SHORE_Z + 2) / 2 - .15); wk.receiveShadow = true;
+    for (let z = DECK_R + 1; z < SHORE_Z; z += 2.4) { walk.push([new THREE.CylinderGeometry(.1, .12, 1.8, 8), M4(-1.05, WATER_Y - .7, z)]); walk.push([new THREE.CylinderGeometry(.1, .12, 1.8, 8), M4(1.05, WATER_Y - .7, z)]); }
+    /* kötélkorlát + kis oszlopok a palló mentén, napelemes lámpácskák */
+    const ropePts = [], plamps = [];
+    for (let z = DECK_R + .3; z < SHORE_Z; z += 3) [-1.05, 1.05].forEach((x) => { walk.push([new THREE.CylinderGeometry(.05, .06, .9, 8), M4(x, .45, z)]); plamps.push(M4(x, .93, z)); ropePts.push([x, z]); });
+    mesh(mergeGeoms(walk), postMat, g);
+    const rope = []; [-1.05, 1.05].forEach((x) => { const zs = ropePts.filter((q) => q[0] === x).map((q) => q[1]); for (let i = 0; i < zs.length - 1; i++) { let prev = new THREE.Vector3(x, .82, zs[i]); for (let k = 1; k <= 6; k++) { const u = k / 6; const p = new THREE.Vector3(x, .82 - Math.sin(u * Math.PI) * .16, lerp(zs[i], zs[i + 1], u)); rope.push(rodGeom(prev, p, .016, 5)); prev = p; } } });
+    mesh(mergeGeoms(rope), std({ color: "#d8c49a", roughness: 1 }), g);
+    const capM = std({ color: "#fff3d0", emissive: new THREE.Color("#ffc46a"), emissiveIntensity: 0 });
+    inst(new THREE.SphereGeometry(.05, 8, 6), capM, plamps, g); ENV.glows.push({ mat: capM, k: 2 });
+    return g;
+  }
+
+  /* ===================================================================================== A PART: füves part, fák, sétány, utca */
+  function buildShore(site) {
+    const g = new THREE.Group(); site.add(g); ENV.shore = g;
+    const grass = txGrass(); grass.repeat.set(1, 1);
+    const L = 1400, D = 900;
+    const land = new THREE.PlaneGeometry(L, D, 70, 45); land.rotateX(-Math.PI / 2); land.translate(0, 0, SHORE_Z + D / 2);
+    { const p = land.attributes.position, uv = land.attributes.uv; const col = [];
+      for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), dz = z - SHORE_Z;
+        /* a part rézsűje a víz felé, távolabb enyhe hullámzás (dombok a Kőhegy felé) */
+        let y = dz < 3 ? -1.1 + dz / 3 * 1.1 : 0; if (dz > 140) y += (dz - 140) * .03 + Math.sin(x * .01) * 2; p.setY(i, y);
+        uv.setXY(i, x / 3, z / 3);
+        const c = new THREE.Color().setHSL(.25 + .03 * Math.sin(x * .05 + z * .03), .35, .55 + .1 * Math.sin(x * .021) * Math.cos(z * .017)); col.push(c.r, c.g, c.b); }
+      land.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); land.computeVertexNormals(); }
+    const lm = mesh(land, std({ map: grass, vertexColors: true, roughness: .95 }), g); lm.receiveShadow = true; ENV.land = lm;
+    /* homokos-iszapos sáv a vízparton */
+    const beach = new THREE.PlaneGeometry(L, 7, 70, 4); beach.rotateX(-Math.PI / 2);
+    { const p = beach.attributes.position, uv = beach.attributes.uv; for (let i = 0; i < p.count; i++) { const z = p.getZ(i); p.setZ(i, SHORE_Z - 1.5 + z); p.setY(i, -1.1 + (z + 3.5) / 7 * 1.15 - .06); uv.setXY(i, p.getX(i) / 2, z / 2); } beach.computeVertexNormals(); }
+    mesh(beach, std({ map: txSand(), roughness: 1 }), g).receiveShadow = true;
+    /* a ház utcája (Gáspár András utca) – hosszan, járdával; a makett életnagyságban ide kerül */
+    const SZ = LIFE_POS.z - 6.8;
+    const asph = txNoise("asph", "#3c4046", .25, 5000, 3); asph.repeat.set(1, 1);
+    const road = new THREE.PlaneGeometry(L, 4.8); road.rotateX(-Math.PI / 2); { const p = road.attributes.position, uv = road.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 4, p.getZ(i) / 4); }
+    const rd = mesh(road, std({ map: asph, roughness: .95 }), g); rd.position.set(0, .03, SZ); rd.receiveShadow = true;
+    const swalk = txNoise("pave", "#b9b2a4", .2, 2600, 6);
+    [-1, 1].forEach((s) => { const sw = new THREE.PlaneGeometry(L, 1.7); sw.rotateX(-Math.PI / 2); { const p = sw.attributes.position, uv = sw.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 2, p.getZ(i) / 2); }
+      const m = mesh(sw, std({ map: swalk, roughness: .9 }), g); m.position.set(0, .08, SZ + s * 3.25); m.receiveShadow = true; });
+    /* sétány a pallótól az utcáig */
+    const path = new THREE.PlaneGeometry(2.2, SZ - SHORE_Z - 3); path.rotateX(-Math.PI / 2); { const p = path.attributes.position, uv = path.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 2, p.getZ(i) / 2); }
+    const pm = mesh(path, std({ map: swalk, roughness: .9 }), g); pm.position.set(0, .04, (SHORE_Z + SZ - 3) / 2 + 1.5); pm.receiveShadow = true;
+    /* fák: fűzek a parton, nyárfák, gömbkoronás hársak; a telek környékét és a kilátást (észak) szabadon hagyjuk */
+    const free = (x, z) => !(x > -10 && x < 15 && z > SZ - 5 && z < LIFE_POS.z + 44) && Math.abs(x) > 3.2 && !(z > SZ - 4.2 && z < SZ + 4.2);
+    const trees = { willow: [], poplar: [], linden: [] }, trunks = [];
+    for (let k = 0; k < 520 && (trees.willow.length + trees.poplar.length + trees.linden.length) < 150; k++) {
+      const x = rr(-240, 240), z = SHORE_Z + 2 + Math.pow(rand(), 1.6) * 330; if (!free(x, z)) continue;
+      const near = z < SHORE_Z + 14, kind = near ? (rand() < .7 ? "willow" : "poplar") : rand() < .35 ? "poplar" : rand() < .6 ? "linden" : "willow";
+      const s = rr(.8, 1.3), y = z - SHORE_Z > 140 ? (z - SHORE_Z - 140) * .03 : 0, r = rr(0, TAU);
+      trees[kind].push(M4(x, y, z, r, 0, 0, s, s * rr(.9, 1.15), s));
+      trunks.push(M4(x, y, z, r, 0, 0, s, s * (kind === "poplar" ? 1.6 : 1), s));
+    }
+    const trunkG = new THREE.CylinderGeometry(.16, .28, 4, 7); trunkG.translate(0, 2, 0);
+    inst(trunkG, std({ color: "#5a4636", roughness: .95 }), trunks, g);
+    const fol = (k) => windify(std({ vertexColors: true, roughness: .92 }), .0025, 1.1, k);
+    /* a parti fák (sok példány) egyszerűbb csomókból és árnyék nélkül – Quest 2-n ez számít */
+    inst(leafGeom([[0, 5.0, 0, 2.6, 6, .7], [1.5, 4.0, .4, 1.9, 4, 1.2], [-1.4, 4.1, -.5, 1.9, 4, 1.25], [0, 3.4, 1.4, 1.7, 4, 1.3], [0, 6.0, 0, 1.6, 3, .8]], "#86a856", .18, 0), fol("willow"), trees.willow, g);
+    inst(leafGeom([[0, 6.5, 0, 1.3, 6, 2.6], [0, 9.8, 0, .95, 4, 2.2], [0, 4.2, 0, 1.2, 3, 1.4]], "#4f7d3a", .18, 0), fol("poplar"), trees.poplar, g);
+    inst(leafGeom([[0, 5.6, 0, 2.7, 7, .95], [1.3, 6.6, .3, 1.9, 4], [-1.2, 6.4, -.6, 1.9, 4], [.2, 7.6, -.2, 1.6, 3], [0, 4.6, .8, 1.7, 3]], "#5e8f3e", .18, 0), fol("linden"), trees.linden, g);
+    /* nád a part mentén és a stég körül (a tó felé eső kilátást szabadon hagyva) */
+    const reeds = [], heads = [];
+    const clump = (cx, cz, n, rad) => { for (let k = 0; k < n; k++) { const a = rand() * TAU, r = Math.sqrt(rand()) * rad, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r, h = rr(1.4, 2.5);
+      reeds.push(M4(x, WATER_Y - .1, z, rr(0, TAU), rr(-.12, .12), rr(-.12, .12), 1, h / 2, 1)); if (rand() < .12) heads.push(M4(x, WATER_Y - .1 + h * .93, z, 0, rr(-.1, .1), rr(-.1, .1))); } };
+    for (let x = -120; x <= 120; x += 4.5) { if (Math.abs(x) < 3) continue; clump(x + rr(-1.5, 1.5), SHORE_Z - rr(2.5, 6), Math.abs(x) < 16 ? 26 : 16, 2.4); }
+    [[6.8, 2.5, 60], [-6.9, 2.2, 60], [7.3, -1.8, 40], [-7.4, -1.4, 40], [4.2, 7.5, 40], [-4, 8, 40], [9, 10, 50], [-9.5, 12, 50]].forEach(([x, z, n]) => clump(x, z, n, 1.9));
+    const blade = new THREE.BoxGeometry(.012, 2, .02); blade.translate(0, 1, 0);
+    inst(blade, windify(std({ color: "#8a9a52", roughness: .9 }), .045, 1.35, "reed"), reeds, g);
+    const cat = new THREE.CapsuleGeometry(.022, .16, 2, 6);
+    inst(cat, windify(std({ color: "#6a4a2a", roughness: .9 }), .0, 1.35, "cat"), heads, g);
+    ENV.reedSpots = [[6.8, 2.5], [-6.9, 2.2], [7.3, -1.8], [-7.4, -1.4], [4.2, 7.5], [-4, 8]];
+    /* tavirózsák (tündérrózsa) a nádas előtt */
+    const pads = [], flowers = [];
+    ENV.reedSpots.forEach(([x, z]) => { for (let k = 0; k < 7; k++) { const a = rand() * TAU, r = rr(1.8, 3.6), px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (Math.hypot(px, pz) < DECK_R + .6) continue;
+      pads.push(M4(px, WATER_Y + .03, pz, rr(0, TAU), 0, 0, rr(.7, 1.3), 1, rr(.7, 1.3))); if (rand() < .35) flowers.push(M4(px + .05, WATER_Y + .05, pz, rr(0, TAU))); } });
+    const padG = new THREE.CircleGeometry(.22, 14, .25, TAU - .5); padG.rotateX(-Math.PI / 2);
+    inst(padG, std({ color: "#3f7a3a", roughness: .5, side: THREE.DoubleSide }), pads, g);
+    const flG = new THREE.ConeGeometry(.07, .07, 8, 1, true); flG.rotateX(Math.PI); flG.translate(0, .04, 0);
+    inst(flG, std({ color: "#fbe8f0", emissive: new THREE.Color("#f6c3d6"), emissiveIntensity: .15, side: THREE.DoubleSide }), flowers, g);
+    ENV.pads = pads.map((m) => new THREE.Vector3().setFromMatrixPosition(m));
+    /* parkvilágítás a sétány mentén */
+    const lampP = [], lampH = [];
+    for (let z = SHORE_Z + 4; z < SZ - 4; z += 8) [-1.8, 1.8].forEach((x) => { lampP.push([new THREE.CylinderGeometry(.05, .07, 3.2, 8), M4(x, 1.6, z)]); lampH.push(M4(x, 3.25, z)); });
+    for (let x = -60; x <= 60; x += 15) { lampP.push([new THREE.CylinderGeometry(.06, .08, 5, 8), M4(x, 2.5, SZ - 3.6)]); lampH.push(M4(x, 5.05, SZ - 3.6)); }
+    mesh(mergeGeoms(lampP), std({ color: "#2a2e33", metalness: .5, roughness: .5 }), g);
+    const lhM = std({ color: "#fff4d6", emissive: new THREE.Color("#ffc878"), emissiveIntensity: 0 });
+    inst(new THREE.SphereGeometry(.18, 12, 8), lhM, lampH, g); ENV.glows.push({ mat: lhM, k: 2.4 });
+    glowPoints(g, lampH.map((m) => new THREE.Vector3().setFromMatrixPosition(m)), .9, "#ffb860", .8);
+    /* a déli láthatár közeli fasora: a parti fák mögötti település (gyűrű) */
+    return g;
+  }
+  function makeTreeline(parent) {
+    const R = 430, top = 5 * D2R, h = R * Math.tan(top);
+    const tex = canvasTex(2048, 256, (g, w, hh) => {
+      const X = (b) => b / 360 * w, yOf = (e) => hh - e / 5 * hh;
+      for (let pass = 0; pass < 3; pass++) for (let k = 0; k < 900; k++) {
+        const b = rr(70, 262), e = (b < 82 || b > 250 ? .4 : 1) * rr(1.2, 2.8) * (pass === 2 ? .7 : 1), r = rr(5, 16) * (pass + 1) * .5;
+        const c = new THREE.Color().setHSL(rr(.22, .3), rr(.3, .5), rr(.14, .26) + pass * .03); g.fillStyle = "#" + c.getHexString();
+        g.beginPath(); g.ellipse(X(b), yOf(e), r, r * rr(.8, 1.3), 0, 0, TAU); g.fill(); g.fillRect(X(b) - r, yOf(e), 2 * r, hh);
+        if (pass === 1 && rand() < .07) { g.fillStyle = rand() < .7 ? "#9a4b35" : "#e8e2d6"; const x = X(rr(95, 240)), y = yOf(rr(.6, 1.2)); g.beginPath(); g.moveTo(x - 14, y); g.lineTo(x, y - 9); g.lineTo(x + 14, y); g.fill(); g.fillStyle = "#e9e3d6"; g.fillRect(x - 11, y, 22, 10); }
+      }
+      g.fillStyle = "#e9e3d6"; const cx = X(208), cy = yOf(2.2); g.fillRect(cx - 4, cy, 8, 30); g.beginPath(); g.moveTo(cx - 5, cy); g.lineTo(cx, cy - 18); g.lineTo(cx + 5, cy); g.fill();   /* templomtorony */
+    });
+    const g = new THREE.CylinderGeometry(R, R, h + 8, 160, 1, true); g.translate(0, h / 2 - 8, 0);
+    const mat = basic({ map: tex, transparent: true, side: THREE.BackSide, depthWrite: false, fog: false, alphaTest: .1 });
+    const m = mesh(g, mat, parent); m.renderOrder = -9; m.rotation.y = Math.PI; m.scale.x = -1; m.frustumCulled = false;
+    m.userData.mat = mat; return m;
+  }
+
+  /* ===================================================================================== ÉLET A VÍZEN ÉS A LEVEGŐBEN */
+  /* több alkatrész egyetlen csúcsszínes hálóban: [geometria, mátrix, szín] */
+  function colorMesh(list, opt) {
+    const parts = list.map(([g, m, c]) => { const col = new THREE.Color(c), n = g.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = col.r; a[i * 3 + 1] = col.g; a[i * 3 + 2] = col.b; } g.setAttribute("color", new THREE.BufferAttribute(a, 3)); return [g, m]; });
+    const mm = new THREE.Mesh(mergeGeoms(parts), std(Object.assign({ vertexColors: true, roughness: .7 }, opt || {}))); return mm;
+  }
+  function makeSwan(male) {
+    const W2 = "#f7f6f0", L = [];
+    L.push([new THREE.SphereGeometry(.3, 16, 12), M4(0, .12, 0, 0, 0, 0, .85, .55, 1.35), W2]);
+    [-1, 1].forEach((s) => L.push([new THREE.SphereGeometry(.26, 12, 8, 0, TAU, 0, Math.PI / 2), M4(s * .12, .2, .06, 0, -.35, s * .45, .45, .55, 1.2), W2]));
+    L.push([new THREE.ConeGeometry(.1, .25, 8), M4(0, .2, .42, 0, -Math.PI / 2 - .5, 0), W2]);
+    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, .2, -.3), new THREE.Vector3(0, .42, -.38), new THREE.Vector3(0, .62, -.33), new THREE.Vector3(0, .78, -.38), new THREE.Vector3(0, .8, -.46)]);
+    L.push([new THREE.TubeGeometry(curve, 16, .05, 8), new THREE.Matrix4(), W2]);
+    L.push([new THREE.SphereGeometry(.07, 12, 8), M4(0, .8, -.47, 0, 0, 0, .85, .85, 1.25), W2]);
+    L.push([new THREE.ConeGeometry(.032, .13, 8), M4(0, .775, -.58, 0, -Math.PI / 2 - .35, 0), "#e0662a"]);
+    L.push([new THREE.SphereGeometry(male ? .03 : .022, 8, 6), M4(0, .81, -.53), "#15171a"]);
+    [-1, 1].forEach((s) => L.push([new THREE.SphereGeometry(.012, 6, 4), M4(s * .05, .815, -.5), "#15171a"]));
+    const g = new THREE.Group(), m = colorMesh(L, { roughness: .75 }); m.castShadow = true; g.add(m); return g;
+  }
+  function makeSwanOld(male) {
+    const g = new THREE.Group(), wht = std({ color: "#f7f6f0", roughness: .75 }), blk = std({ color: "#15171a", roughness: .5 }), ora = std({ color: "#e0662a", roughness: .5 });
+    const body = mesh(new THREE.SphereGeometry(.3, 16, 12), wht, g); body.scale.set(.85, .55, 1.35); body.position.y = .12;
+    /* felemelt szárnyak (a bütykös hattyú jellegzetes tartása) */
+    [-1, 1].forEach((s) => { const wg = mesh(new THREE.SphereGeometry(.26, 12, 8, 0, TAU, 0, Math.PI / 2), wht, g); wg.scale.set(.45, .55, 1.2); wg.position.set(s * .12, .2, .06); wg.rotation.set(-.35, 0, s * .45); });
+    const tail = mesh(new THREE.ConeGeometry(.1, .25, 8), wht, g); tail.rotation.x = -Math.PI / 2 - .5; tail.position.set(0, .2, .42);
+    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, .2, -.3), new THREE.Vector3(0, .42, -.38), new THREE.Vector3(0, .62, -.33), new THREE.Vector3(0, .78, -.38), new THREE.Vector3(0, .8, -.46)]);
+    mesh(new THREE.TubeGeometry(curve, 16, .05, 8), wht, g);
+    const head = mesh(new THREE.SphereGeometry(.07, 12, 8), wht, g); head.scale.set(.85, .85, 1.25); head.position.set(0, .8, -.47);
+    const beak = mesh(new THREE.ConeGeometry(.032, .13, 8), ora, g); beak.rotation.x = -Math.PI / 2 - .35; beak.position.set(0, .775, -.58);
+    const knob = mesh(new THREE.SphereGeometry(male ? .03 : .022, 8, 6), blk, g); knob.position.set(0, .81, -.53);
+    [-1, 1].forEach((s) => { const e = mesh(new THREE.SphereGeometry(.012, 6, 4), blk, g); e.position.set(s * .05, .815, -.5); });
+    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    return g;
+  }
+  function makeDuck(male) {
+    const L = [], body = male ? "#a69a8c" : "#8a6a48";
+    L.push([new THREE.SphereGeometry(.13, 12, 8), M4(0, .04, 0, 0, 0, 0, .8, .55, 1.3), body]);
+    if (male) L.push([new THREE.SphereGeometry(.09, 10, 8), M4(0, .07, -.1, 0, 0, 0, 1, .9, .8), "#6a3a2a"]);
+    L.push([new THREE.SphereGeometry(.06, 10, 8), M4(0, .17, -.15), male ? "#1f5a3a" : "#7a5a3a"]);
+    L.push([new THREE.BoxGeometry(.035, .015, .07), M4(0, .16, -.22), male ? "#e8c13a" : "#c88a3a"]);
+    if (male) L.push([new THREE.TorusGeometry(.045, .008, 4, 12), M4(0, .12, -.14, 0, Math.PI / 2, 0), "#ffffff"]);
+    L.push([new THREE.ConeGeometry(.05, .12, 6), M4(0, .08, .17, 0, -Math.PI / 2 - .6, 0), body]);
+    const g = new THREE.Group(); g.add(colorMesh(L, { roughness: .8 })); return g;
+  }
+  function makeDuckOld(male) {
+    const g = new THREE.Group();
+    const bodyM = std({ color: male ? "#a69a8c" : "#8a6a48", roughness: .85 }), headM = std({ color: male ? "#1f5a3a" : "#7a5a3a", roughness: .4, metalness: male ? .3 : 0 });
+    const b = mesh(new THREE.SphereGeometry(.13, 12, 8), bodyM, g); b.scale.set(.8, .55, 1.3); b.position.y = .04;
+    if (male) { const br = mesh(new THREE.SphereGeometry(.09, 10, 8), std({ color: "#6a3a2a" }), g); br.position.set(0, .07, -.1); br.scale.set(1, .9, .8); }
+    const h = mesh(new THREE.SphereGeometry(.06, 10, 8), headM, g); h.position.set(0, .17, -.15);
+    const bk = mesh(new THREE.BoxGeometry(.035, .015, .07), std({ color: male ? "#e8c13a" : "#c88a3a" }), g); bk.position.set(0, .16, -.22);
+    if (male) { const ring = mesh(new THREE.TorusGeometry(.045, .008, 4, 12), std({ color: "#ffffff" }), g); ring.rotation.x = Math.PI / 2; ring.position.set(0, .12, -.14); }
+    const tl = mesh(new THREE.ConeGeometry(.05, .12, 6), bodyM, g); tl.rotation.x = -Math.PI / 2 - .6; tl.position.set(0, .08, .17);
+    return g;
+  }
+  function makeFish() {
+    const g = new THREE.Group(), m = std({ color: "#c8d0d6", roughness: .25, metalness: .7 });
+    const b = mesh(new THREE.SphereGeometry(.12, 10, 6), m, g); b.scale.set(.35, .6, 1.4);
+    const t = mesh(new THREE.ConeGeometry(.08, .12, 4), m, g); t.rotation.x = Math.PI / 2; t.position.z = .2; t.scale.set(.2, 1, 1);
+    return g;
+  }
+  function makeDragonfly() {
+    const g = new THREE.Group(), bm = std({ color: "#2a6ad6", roughness: .3, metalness: .5, emissive: new THREE.Color("#0a2a6a"), emissiveIntensity: .4 });
+    const wm = basic({ color: "#dfefff", transparent: true, opacity: .35, side: THREE.DoubleSide, depthWrite: false });
+    const b = mesh(new THREE.CylinderGeometry(.006, .004, .09, 5), bm, g); b.rotation.x = Math.PI / 2;
+    const wl = [], wg = new THREE.PlaneGeometry(.07, .015); wg.translate(.035, 0, 0); wg.rotateX(-Math.PI / 2);
+    [[-1, -.012], [1, -.012], [-1, .004], [1, .004]].forEach(([s, z]) => { const w = mesh(wg, wm, g); w.scale.x = s; w.position.z = z; wl.push(w); });
+    g.userData.w = wl; return g;
+  }
+  function makeButterfly(col) {
+    const g = new THREE.Group(), wm = std({ color: col, side: THREE.DoubleSide, roughness: .6 });
+    const wg = new THREE.CircleGeometry(.035, 8); wg.translate(.03, 0, 0); wg.rotateX(-Math.PI / 2);
+    const l = mesh(wg, wm, g), r = mesh(wg, wm, g); r.scale.x = -1;
+    mesh(new THREE.CylinderGeometry(.004, .004, .045, 4), std({ color: "#222" }), g).rotation.x = Math.PI / 2;
+    g.userData.w = [l, r]; return g;
+  }
+  /* távoli vitorlás egyszerűsítve (2 rajzolási hívás): test + árboc egyben, a vitorlák lobognak (vertex-shader) */
+  function makeFarBoat(sailCol, hullCol) {
+    const g = new THREE.Group();
+    const hs = new THREE.Shape(); hs.moveTo(0, -4.2); hs.quadraticCurveTo(1.25, -2, 1.2, 2.6); hs.lineTo(.95, 3.6); hs.lineTo(-.95, 3.6); hs.lineTo(-1.2, 2.6); hs.quadraticCurveTo(-1.25, -2, 0, -4.2);
+    const hull = new THREE.ExtrudeGeometry(hs, { depth: .9, bevelEnabled: false }); hull.rotateX(Math.PI / 2); hull.translate(0, .55, 0);
+    const L = [[hull, new THREE.Matrix4(), hullCol], [new THREE.BoxGeometry(1.6, .5, 2.6), M4(0, .7, .6), "#e8e8e2"], [new THREE.CylinderGeometry(.06, .07, 11, 6), M4(0, 6, -.6), "#c9ced4"], [new THREE.CylinderGeometry(.05, .05, 4.2, 6), M4(0, 1.6, 1.4, 0, Math.PI / 2, 0), "#c9ced4"]];
+    g.add(colorMesh(L, { roughness: .4 }));
+    const sp = []; const main = new THREE.BufferGeometry(); const jib = new THREE.BufferGeometry();
+    const tri = (A, B, C, nu) => { const pos = []; for (let j = 0; j <= nu; j++) for (let i = 0; i <= nu - j; i++) { const u = i / nu, v = j / nu; pos.push(A[0] + (B[0] - A[0]) * u + (C[0] - A[0]) * v, A[1] + (B[1] - A[1]) * u + (C[1] - A[1]) * v, A[2] + (B[2] - A[2]) * u + (C[2] - A[2]) * v); } const idx = []; let o = 0; for (let j = 0; j < nu; j++) { const row = nu - j + 1; for (let i = 0; i < nu - j; i++) { idx.push(o + i, o + i + 1, o + i + row); if (i < nu - j - 1) idx.push(o + i + 1, o + i + row + 1, o + i + row); } o += row; } const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals(); return ge; };
+    const sails = mergeGeoms([[tri([0, 1.7, -.55], [0, 1.7, 3.4], [0, 11, -.55], 8), new THREE.Matrix4()], [tri([0, 1.2, -4], [0, 1.6, -.9], [0, 10, -.7], 6), new THREE.Matrix4()]]);
+    const sm = std({ color: sailCol, roughness: .7, side: THREE.DoubleSide });
+    sm.onBeforeCompile = (sh) => { sh.uniforms.uWT = ENV.wt; sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uWT;").replace("#include <begin_vertex>", `#include <begin_vertex>
+      float lf = clamp((position.z + .6) / 4., 0., 1.) * clamp(position.y / 11., 0., 1.);
+      transformed.x += .45 * sin(position.y * .35 + position.z * .4) + lf * .12 * sin(uWT * 9. + position.y * 1.7 + position.z * 2.);`); };
+    sm.customProgramCacheKey = () => "farsail" + sailCol;
+    const s = new THREE.Mesh(sails, sm); W.disposables.push(sails); g.add(s); g.userData.sail = s;
+    return g;
+  }
+  function buildLife(site) {
+    const L = ENV.life = { swans: [], ducks: [], boats: [], fish: [], splash: [], drag: [], bfly: [] };
+    /* hattyúcsalád: két felnőtt lassan körözik a nádas mellett */
+    [[1, 10, .05, 0], [0, 11.5, .05, .5], [1, 15, -.035, 2.2]].forEach(([male, r, sp, ph], i) => { const s = makeSwan(male); site.add(s); L.swans.push({ g: s, r, sp, a: ph + rr(0, 1), ph: rr(0, 9), cx: i === 2 ? -4 : 2, cz: i === 2 ? -6 : 1 }); });
+    [[1], [0], [1], [0]].forEach(([m], i) => { const d = makeDuck(m); site.add(d); L.ducks.push({ g: d, i, a: rr(0, TAU), ph: rr(0, 9) }); });
+    /* vitorlások a tavon (a regatta hajói) */
+    /* egy részletes vitorlás (lobogó vitorla, legénység) közelebb, a többi egyszerűsített a távolban */
+    { const b = BOATS[2 % BOATS.length]; const g = makeBoat(Object.assign({ detail: 0, crew: 2 }, b)); ENV.env.add(g);
+      L.boats.push({ g, x: -60, z: -110, b: 1.2, v: 2.5, wp: null, ph: rand() * 9, wk: makeWake(ENV.env, .55), near: 1 }); }
+    [["#f4f2ea", "#ffffff"], ["#e9e4d4", "#1d3a8a"], ["#f6f4ec", "#c62828"], ["#ffffff", "#2b2f36"], ["#f2efe4", "#e9ecef"]].forEach(([sc, hc]) => {
+      const g = makeFarBoat(sc, hc); ENV.env.add(g); const a = rr(-1.3, 1.1), d = rr(260, 1100);
+      L.boats.push({ g, x: Math.sin(a) * d, z: -Math.cos(a) * d - 60, b: rr(0, TAU), v: 2.5, wp: null, ph: rand() * 9, far: 1 });
+    });
+    L.ferry = makeFerry(); ENV.env.add(L.ferry.g);
+    L.gulls = makeGulls(site);
+    /* kiugró halak */
+    for (let k = 0; k < 3; k++) { const f = makeFish(); f.visible = false; site.add(f); L.fish.push({ g: f, t: rr(2, 9), on: false }); }
+    const ringM = basic({ color: "#ffffff", transparent: true, opacity: 0, depthWrite: false });
+    for (let k = 0; k < 6; k++) { const r = mesh(new THREE.RingGeometry(.9, 1, 32), ringM.clone(), site); W.disposables.push(r.material); r.rotation.x = -Math.PI / 2; r.visible = false; L.splash.push({ m: r, t: 9 }); }
+    /* szitakötők a nádasnál, lepkék a levendulán */
+    for (let k = 0; k < 4; k++) { const d = makeDragonfly(); site.add(d); const s = ENV.reedSpots[k % ENV.reedSpots.length]; L.drag.push({ g: d, home: new THREE.Vector3(s[0] * .8, .9, s[1] * .8), p: new THREE.Vector3(s[0] * .8, .9, s[1] * .8), tgt: new THREE.Vector3(), t: 0 }); }
+    ["#f2c94c", "#ffffff", "#e8833a", "#7ec8e3"].forEach((c, k) => { const b = makeButterfly(c); site.add(b); L.bfly.push({ g: b, i: k, t: rr(0, 9), p: ENV.lavender[(k * 37) % ENV.lavender.length].clone() }); });
+    /* szentjánosbogarak (este) és aranyló „varázspor” a makett körül */
+    const ff = new THREE.BufferGeometry(), N = 90, pp = new Float32Array(N * 3), ph = new Float32Array(N);
+    for (let i = 0; i < N; i++) { const s = ENV.reedSpots[i % ENV.reedSpots.length]; const a = rand() * TAU, r = rr(.5, 4); pp[i * 3] = s[0] + Math.cos(a) * r; pp[i * 3 + 1] = rr(.2, 2.2); pp[i * 3 + 2] = s[1] + Math.sin(a) * r; ph[i] = rand() * 100; }
+    ff.setAttribute("position", new THREE.BufferAttribute(pp, 3)); ff.setAttribute("ph", new THREE.BufferAttribute(ph, 1));
+    const ffM = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uT: { value: 0 }, uA: { value: 0 }, uC: { value: new THREE.Color("#c8ff6a") }, uS: { value: 70 } },
+      vertexShader: `attribute float ph; uniform float uT, uS; varying float vA; void main(){ vec3 p = position + vec3(sin(uT * .4 + ph) * .6, sin(uT * .7 + ph * 1.3) * .25, cos(uT * .33 + ph * .7) * .6);
+        vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv; vA = pow(max(0., sin(uT * 1.3 + ph * 2.1)), 6.); gl_PointSize = uS * (1. / -mv.z); }`,
+      fragmentShader: `uniform vec3 uC; uniform float uA; varying float vA; void main(){ float d = length(gl_PointCoord - .5); float a = smoothstep(.5, 0., d); gl_FragColor = vec4(uC * a * a, a * vA * uA); }` });
+    W.disposables.push(ff, ffM); const ffp = new THREE.Points(ff, ffM); ffp.frustumCulled = false; site.add(ffp); L.ff = ffM;
+    const dust = new THREE.BufferGeometry(), M = 140, dp = new Float32Array(M * 3), dph = new Float32Array(M);
+    for (let i = 0; i < M; i++) { const a = rand() * TAU, r = Math.sqrt(rand()) * 3.2; dp[i * 3] = Math.cos(a) * r; dp[i * 3 + 1] = rr(.3, 2.6); dp[i * 3 + 2] = Math.sin(a) * r; dph[i] = rand() * 100; }
+    dust.setAttribute("position", new THREE.BufferAttribute(dp, 3)); dust.setAttribute("ph", new THREE.BufferAttribute(dph, 1));
+    const dM = ffM.clone(); dM.uniforms = { uT: ffM.uniforms.uT, uA: { value: .5 }, uC: { value: new THREE.Color("#ffd98a") }, uS: { value: 26 } }; W.disposables.push(dust, dM);
+    const dpp = new THREE.Points(dust, dM); dpp.frustumCulled = false; site.add(dpp); L.dust = dM;
+  }
+  const _v3a = new THREE.Vector3(), _v3b = new THREE.Vector3();
+  function lifeTick(dt) {
+    const L = ENV.life; if (!L) return; const t = W.t;
+    L.swans.forEach((s) => { s.a += s.sp * dt; const x = s.cx + Math.cos(s.a) * s.r, z = s.cz + Math.sin(s.a) * s.r * .8;
+      s.g.position.set(x, WATER_Y - .02 + Math.sin(t * 1.3 + s.ph) * .02, z); s.g.rotation.y = Math.atan2(-Math.sin(s.a) * s.sp, -(Math.cos(s.a) * s.sp * .8)) + Math.PI;
+      s.g.rotation.z = Math.sin(t * 1.1 + s.ph) * .03; });
+    L.ducks.forEach((d) => { d.a += dt * .09 * (d.i % 2 ? 1 : -1); const c = ENV.reedSpots[d.i % ENV.reedSpots.length]; const x = c[0] + Math.cos(d.a) * 3.2 + Math.sin(t * .3 + d.ph) * .6, z = c[1] + Math.sin(d.a) * 3.2;
+      d.g.position.set(x, WATER_Y + .01 + Math.sin(t * 2 + d.ph) * .015, z); d.g.rotation.y = -d.a + (d.i % 2 ? 0 : Math.PI); });
+    /* vitorlások: útpontról útpontra, széllel */
+    const WF = 315 * D2R;
+    L.boats.forEach((o) => {
+      if (!o.wp || Math.hypot(o.wp[0] - o.x, o.wp[1] - o.z) < 30) o.wp = o.near ? [rr(-160, 160), rr(-220, -70)] : [rr(-900, 700), rr(-1300, -200)];
+      let want = Math.atan2(o.wp[0] - o.x, -(o.wp[1] - o.z)); const tw = wrapA(WF - want); if (Math.abs(tw) < 46 * D2R) want = WF - Math.sign(tw || 1) * 46 * D2R;
+      o.b += clamp(wrapA(want - o.b), -.15 * dt, .15 * dt); const t2 = Math.abs(wrapA(WF - o.b)) * R2D; o.v += ((t2 < 40 ? 1 : 3.2) - o.v) * dt / 8;
+      const fx = Math.sin(o.b), fz = -Math.cos(o.b); o.x += fx * o.v * dt; o.z += fz * o.v * dt;
+      o.g.position.set(o.x, WATER_Y + Math.sin(t * 1.4 + o.ph) * .05, o.z); o.g.rotation.y = Math.atan2(fx, fz);
+      if (o.far) { o.g.rotation.y += Math.PI; o.g.rotation.z = Math.sin(t * .8 + o.ph) * .05 + .12 * (wrapA(WF - o.b) > 0 ? 1 : -1); o.g.userData.sail.rotation.y = clamp((t2 - 30) * .012, .1, 1.2) * (wrapA(WF - o.b) > 0 ? -1 : 1); return; }
+      const OS = o.g.userData.S, yaw = o.g.rotation.y, X = [Math.cos(yaw), -Math.sin(yaw)], wf = [Math.sin(WF), -Math.cos(WF)];
+      OS.side = (wf[0] * X[0] + wf[1] * X[1]) > 0 ? -1 : 1; OS.boom = clamp((t2 - 28) * .78, 7, 82) * D2R * OS.side; OS.jib = clamp((t2 - 28) * .55, 8, 52) * D2R; OS.luff = clamp(1 - (t2 - 18) / 18, 0, 1);
+      OS.heel = -OS.side * clamp(Math.sin(t2 * D2R) ** 1.4 * 16, 0, 20) * D2R; OS.pitch = Math.sin(t * 1.2 + o.ph) * .025;
+      o.g.userData.update(dt); o.wk.push(o.x, o.z, o.g.rotation.y, o.v, dt, WATER_Y + .05);
+    });
+    L.ferry.tick(dt); L.ferry.g.position.y += WATER_Y;
+    L.gulls.tick(dt, 0, -10);
+    /* hal kiugrik, gyűrűk a vízen */
+    L.fish.forEach((f) => {
+      f.t -= dt;
+      if (!f.on && f.t < 0) { f.on = true; f.u = 0; const a = rr(-2.2, 2.2), r = rr(8, 26); f.x = Math.sin(a) * r; f.z = -Math.cos(a) * r; f.d = rr(0, TAU); f.g.visible = true; ringAt(f.x, f.z); }
+      if (f.on) { f.u += dt * 1.6; const u = f.u; f.g.position.set(f.x + Math.cos(f.d) * u * .9, WATER_Y + Math.sin(Math.min(u, 1) * Math.PI) * .55, f.z + Math.sin(f.d) * u * .9);
+        f.g.rotation.set(-(Math.cos(Math.min(u, 1) * Math.PI)) * 1.1, -f.d + Math.PI / 2, 0);
+        if (u >= 1) { f.on = false; f.g.visible = false; f.t = rr(4, 14); ringAt(f.g.position.x, f.g.position.z); try { plop(); } catch (e) {} } }
+    });
+    L.splash.forEach((s) => { s.t += dt; if (s.t > 3) { s.m.visible = false; return; } s.m.visible = true; const k = .15 + s.t * .7; s.m.scale.set(k, k, k); s.m.material.opacity = (1 - s.t / 3) * .45; });
+    /* szitakötők: cikázás a nádas fölött (nappal) */
+    const day = ENV.dayK || 0;
+    L.drag.forEach((d) => { d.g.visible = day > .3; if (!d.g.visible) return; d.t -= dt;
+      if (d.t < 0) { d.t = rr(.5, 2.2); d.tgt.set(d.home.x + rr(-2.5, 2.5), rr(.4, 1.4), d.home.z + rr(-2.5, 2.5)); }
+      _v3a.subVectors(d.tgt, d.p); const L2 = _v3a.length(); if (L2 > .02) { d.p.addScaledVector(_v3a.normalize(), Math.min(L2, dt * 2.6)); d.g.rotation.y = Math.atan2(-_v3a.x, -_v3a.z); }
+      d.g.position.copy(d.p).y += Math.sin(t * 9 + d.home.x) * .01;
+      d.g.userData.w.forEach((w, i) => { w.rotation.z = Math.sin(t * 60 + i) * .5 * (i % 2 ? 1 : -1); }); });
+    L.bfly.forEach((b) => { b.g.visible = day > .4; if (!b.g.visible) return; b.t += dt; const lv = ENV.lavender; if (Math.floor(b.t / 3.2) !== b.k) { b.k = Math.floor(b.t / 3.2); b.to = lv[(b.k * 53 + b.i * 97) % lv.length]; }
+      if (b.to) { _v3a.copy(b.to).y += .12 + Math.abs(Math.sin(b.t * 2)) * .3; b.p.lerp(_v3a, Math.min(1, dt * .9)); }
+      b.g.position.copy(b.p).y += Math.sin(b.t * 7) * .03; b.g.rotation.y = Math.sin(b.t * .7) * 2;
+      const f = Math.sin(b.t * 18) * 1.1; b.g.userData.w[0].rotation.z = f; b.g.userData.w[1].rotation.z = -f; });
+    L.ff.uniforms.uT.value = t; L.ff.uniforms.uA.value = clamp(1 - day * 1.6, 0, 1);
+    L.dust.uniforms.uA.value = .25 + (1 - day) * .45 + (ENV.gold || 0) * .4;
+  }
+  function ringAt(x, z) { const L = ENV.life; const s = L.splash.reduce((a, b) => (b.t > a.t ? b : a)); s.t = 0; s.m.position.set(x, WATER_Y + .04, z); }
+
+  /* ===================================================================================== HANGOK: madarak, tücskök, csobbanás */
+  function chirp() {
+    const a = T.ac(); if (!a) return; const t0 = a.currentTime, n = 2 + (rand() * 4 | 0), base = rr(2600, 4200), pan = a.createStereoPanner ? a.createStereoPanner() : null;
+    const out = a.createGain(); out.gain.value = .022; if (pan) { pan.pan.value = rr(-.9, .9); out.connect(pan).connect(T.outBus()); } else out.connect(T.outBus());
+    for (let k = 0; k < n; k++) { const o = a.createOscillator(), g = a.createGain(), t = t0 + k * rr(.08, .16); o.type = "sine";
+      o.frequency.setValueAtTime(base * rr(.9, 1.1), t); o.frequency.exponentialRampToValueAtTime(base * rr(1.2, 1.6), t + .05); o.frequency.exponentialRampToValueAtTime(base * rr(.7, .9), t + .09);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + .01); g.gain.exponentialRampToValueAtTime(.001, t + .1); o.connect(g).connect(out); o.start(t); o.stop(t + .12); }
+  }
+  function gullCall() {
+    const a = T.ac(); if (!a) return; const t0 = a.currentTime, out = a.createGain(); out.gain.value = .02; const lp = a.createBiquadFilter(); lp.type = "bandpass"; lp.frequency.value = 1400; lp.Q.value = 1.4;
+    out.connect(T.outBus());
+    for (let k = 0; k < 3; k++) { const o = a.createOscillator(), g = a.createGain(), t = t0 + k * .28; o.type = "sawtooth";
+      o.frequency.setValueAtTime(1500, t); o.frequency.exponentialRampToValueAtTime(820, t + .24);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + .03); g.gain.exponentialRampToValueAtTime(.001, t + .25); o.connect(g).connect(lp); o.start(t); o.stop(t + .27); }
+    lp.connect(out);
+  }
+  function cricket() {
+    const a = T.ac(); if (!a) return; const t0 = a.currentTime, out = a.createGain(); out.gain.value = .008; out.connect(T.outBus());
+    const f = rr(4300, 4900);
+    for (let k = 0; k < 4; k++) { const o = a.createOscillator(), g = a.createGain(), t = t0 + k * .09; o.type = "square"; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + .005); g.gain.setValueAtTime(1, t + .04); g.gain.linearRampToValueAtTime(0, t + .05); o.connect(g).connect(out); o.start(t); o.stop(t + .06); }
+  }
+  function plop() {
+    const a = T.ac(); if (!a) return; const t0 = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.type = "sine";
+    o.frequency.setValueAtTime(900, t0); o.frequency.exponentialRampToValueAtTime(260, t0 + .12); g.gain.setValueAtTime(.06, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + .18); o.connect(g).connect(T.outBus()); o.start(t0); o.stop(t0 + .2);
+  }
+  function soundTick(dt) {
+    ENV.snd = ENV.snd || { b: 2, g: 6, c: 1 };
+    const S = ENV.snd, day = ENV.dayK || 0;
+    S.b -= dt; S.g -= dt; S.c -= dt;
+    if (S.b < 0) { S.b = rr(1.5, 6); if (day > .35) chirp(); }
+    if (S.g < 0) { S.g = rr(8, 22); if (day > .4) gullCall(); }
+    if (S.c < 0) { S.c = rr(.25, .9); if (day < .3) cricket(); }
+  }
+
+  /* ===================================================================================== ÖSSZERAKÁS + NAPSZAK */
+  function buildMagicWorld(root, floorY) {
+    const env = new THREE.Group(); root.add(env); ENV.env = env;
+    const site = new THREE.Group(); env.add(site); ENV.site = site; site.rotation.y = 15 * D2R;   /* −z = 345° (a ház tengelye, a tó felé) */
+    ENV.glows = [];
+    ENV.sky = makeMagicSky(env);
+    ENV.pano = makePanorama(env);
+    ENV.trees = makeTreeline(env);
+    ENV.lmk = makeLandmarks(env);
+    ENV.water = makeWater(env, { sun: new THREE.Vector3(0, .3, -1).normalize(), rmax: 2400, rings: 84, seg: 128 }); ENV.water.position.y = WATER_Y;
+    buildMagicDeck(site);
+    const keep = ENV.glows; buildShore(site); ENV.glows = keep.concat(ENV.glows.filter((q) => !keep.includes(q)));
+    buildLife(site);
+    /* fények */
+    const sun = new THREE.DirectionalLight(0xffffff, 1.2), hemi = new THREE.HemisphereLight(0xcfe0f0, 0x46503a, .6), amb = new THREE.AmbientLight(0xffffff, .05);
+    root.add(sun, hemi, amb); sun.target = new THREE.Object3D(); root.add(sun.target);
+    const lamp = new THREE.PointLight(0xffb866, 0, 9, 1.6); site.add(lamp); lamp.position.set(0, 2.3, 0);
+    ENV.lights = { sun, hemi, amb, lamp };
+    ENV.floorY = floorY;
+    return ENV;
+  }
+  /* napszak beállítása: dátum + óra → minden szín, fény, éjszakai fények */
+  function envSetTime(ymd, hour) {
+    let p = { az: 230, el: 30 }; try { if (T.sunPos) p = T.sunPos(ymd, hour); } catch (e) {}
+    ENV.sunInfo = p;
+    const s = skyAt(p.el), day = smooth(clamp((p.el + 4) / 12, 0, 1)), night = 1 - smooth(clamp((p.el + 9) / 8, 0, 1)), gold = smooth(clamp((p.el + 2) / 5, 0, 1)) * (1 - smooth(clamp((p.el - 8) / 14, 0, 1)));
+    ENV.dayK = day; ENV.night = night; ENV.gold = gold;
+    const sd = dirFromAzEl(p.az, p.el), sdC = dirFromAzEl(p.az, Math.max(p.el, -3));
+    /* a hold: a nappal ellentétes égrészen, kb. 25° magasan (egyszerűsítve) */
+    const md = dirFromAzEl((p.az + 160) % 360, 28);
+    const U = ENV.sky.userData.U; U.uSun.value.copy(sdC); U.uMoon.value.copy(md); U.uZen.value.copy(s.zen); U.uHor.value.copy(s.hor); U.uGlow.value.copy(s.glow); U.uSunC.value.copy(s.sunC.clone().lerp(new THREE.Color(1, .98, .9), day * .6)); U.uDay.value = day; U.uNight.value = night;
+    /* víz */
+    const wu = ENV.water.userData.mat.uniforms; wu.uSun.value.copy(p.el > -2 ? sdC : md); wu.uSkyH.value.copy(s.hor); wu.uSkyZ.value.copy(s.zen.clone().lerp(s.hor, .25));
+    wu.uHaze.value.copy(s.hor).lerp(s.zen, .08); wu.uSunC.value.copy(p.el > -2 ? s.glow.clone().multiplyScalar(1.1) : new THREE.Color(.55, .6, .75)); wu.uSpec.value = p.el > -2 ? 1 : .35;
+    const lt = .25 + .75 * day; wu.uLight.value = lt;
+    /* a Balaton tejes-türkiz vize; aranyórában a lemenő nap színét veszi fel */
+    wu.uDeep.value.set("#1f6763").lerp(s.hor, gold * .3); wu.uShallow.value.set("#5aa597").lerp(s.hor, gold * .35);
+    wu.uSkyZ.value.copy(s.zen).lerp(s.hor, .35 + gold * .3);
+    /* panoráma és fasor */
+    const pu = ENV.pano.userData.U; pu.uHaze.value.copy(s.hor).lerp(s.zen, .15);
+    pu.uNear.value.set("#365638").lerp(new THREE.Color("#3a2e3e"), gold * .65).lerp(new THREE.Color("#070b14"), night * .9);
+    pu.uFar.value.set("#7d95aa").lerp(new THREE.Color("#8a6e86"), gold * .6).lerp(new THREE.Color("#0b1222"), night * .9);
+    pu.uLight.value = .25 + .75 * day; pu.uNight.value = night;
+    ENV.trees.userData.mat.color.setRGB(.25 + .75 * day, .25 + .72 * day, .3 + .7 * day).lerp(new THREE.Color("#c98a6a"), gold * .25);
+    ENV.lmk.forEach((m) => m.color.setRGB(.22 + .7 * day, .22 + .68 * day, .26 + .66 * day).lerp(s.hor, .25).lerp(new THREE.Color("#ffb080"), gold * .25));
+    /* fények */
+    const L = ENV.lights;
+    const sw = dirFromAzEl(p.az, Math.max(p.el, 2)).applyQuaternion(ENV.env.quaternion);
+    L.sunDirW = p.el > -1 ? sw : dirFromAzEl((p.az + 160) % 360, 28).applyQuaternion(ENV.env.quaternion);
+    L.sun.color.copy(p.el > -1 ? s.sunC : new THREE.Color(.55, .62, .85)); L.sun.intensity = p.el > -1 ? s.sunI : .28 * night;
+    L.hemi.color.copy(s.zen).lerp(s.hor, .5).lerp(new THREE.Color(1, 1, 1), .35 * day); L.hemi.groundColor.set("#3d4a32").multiplyScalar(.3 + .7 * day); L.hemi.intensity = s.hemiI + .05;
+    L.amb.intensity = .04 + .05 * night;
+    const evening = clamp(1 - day * 1.25, 0, 1); ENV.evening = evening;
+    L.lamp.intensity = evening * 2.2;
+    /* a környezeti tükröződés (üveg, fém, víz nélkül) a napszak színeivel */
+    envPMREM(s, day);
+  }
+  let _pmT = 0;
+  function envPMREM(s, day) {
+    const now = performance.now(); if (now - _pmT < 600 && ENV.envMap) return; _pmT = now;
+    try {
+      const r = T.sceneEl.renderer; const cv = document.createElement("canvas"); cv.width = 128; cv.height = 64; const g = cv.getContext("2d");
+      const gr = g.createLinearGradient(0, 0, 0, 64); const hx = (c) => "#" + c.clone().convertLinearToSRGB().getHexString();
+      gr.addColorStop(0, hx(s.zen)); gr.addColorStop(.48, hx(s.hor)); gr.addColorStop(.52, hx(new THREE.Color("#4a5a40").multiplyScalar(.3 + .7 * day))); gr.addColorStop(1, hx(new THREE.Color("#2b2a22").multiplyScalar(.3 + .7 * day)));
+      g.fillStyle = gr; g.fillRect(0, 0, 128, 64);
+      const t = new THREE.CanvasTexture(cv); t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.SRGBColorSpace;
+      if (!ENV.pmrem) ENV.pmrem = new THREE.PMREMGenerator(r);
+      const rt = ENV.pmrem.fromEquirectangular(t); t.dispose();
+      if (ENV.envRT) ENV.envRT.dispose(); ENV.envRT = rt; ENV.envMap = rt.texture;
+      T.sceneEl.object3D.environment = rt.texture;
+    } catch (e) {}
+  }
+  function envTick(dt, camW) {
+    ENV.wt.value += dt;
+    const U = ENV.sky.userData.U; U.uT.value = W.t; ENV.pano.userData.U.uT.value = W.t;
+    const wm = ENV.water.userData.mat; wm.uniforms.uT.value = W.t; wm.uniforms.uWind.value = WIND_DIR;
+    if (camW) { const cl = ENV.env.worldToLocal(_v3b.copy(camW)); cl.y -= WATER_Y; wm.uniforms.uCam.value.copy(cl); }
+    /* lámpák pislákolása, fényfüzér */
+    const ev = ENV.evening || 0;
+    (ENV.glows || []).forEach((q, i) => { let k = q.k * ev; if (q.flick) k *= .85 + .15 * Math.sin(W.t * 11 + i) * Math.sin(W.t * 7.3); if (q.tw) k *= .9 + .1 * Math.sin(W.t * 2 + i); q.mat.emissiveIntensity = k; });
+    (ENV.halos || []).forEach((q) => { q.m.uniforms.uA.value = ev * q.k; q.m.uniforms.uT.value = W.t; });
+    if (ENV.lights.lamp) ENV.lights.lamp.intensity = ev * 2.2 * (.92 + .08 * Math.sin(W.t * 9) * Math.sin(W.t * 5.1));
+    lifeTick(dt); soundTick(dt);
+  }
+  function envDispose() { try { if (ENV.envRT) ENV.envRT.dispose(); if (ENV.pmrem) ENV.pmrem.dispose(); } catch (e) {} ENV.envRT = null; ENV.pmrem = null; ENV.envMap = null; ENV.life = null; ENV.snd = null; ENV.halos = null; Object.keys(TX).forEach((k) => delete TX[k]); }
+
+  /* =================================================================== 3/C. MERÜLÉS A BALATONBA – a stég előtt, a víz alatt (a Meta „Oceanarium” élménye nyomán, de balatoni élővilággal)
+     • A felszín alulról: hullámzó, csillogó tükör; fölötted a „Snell-ablak” fényes köre, lefelé fénypászmák, a homokos fenéken fényhálók (kausztika).
+     • Halak (valódi balatoni fajok): küszraj (több száz ezüst kis hal), dévérkeszegek, pontyok, fogassüllők (a Balaton királya), csuka a hínárban,
+       egy 2 méteres harcsa a fenék közelében, angolna. Rámutatva kiírja a nevét és egy mondatot róla.
+     • Hínármező (süllőhínár, békaszőlő) ringatózik, kagylók és kövek a fenéken, egy elsüllyedt öreg fatörzs, buborékok, lebegő szemcsék.
+     Koordináták: a site-ban, a stégtől északra (z ≈ −9); a fenék y = WATER_Y − 3,2; a fejed kb. 1,6 m-rel a felszín alatt. */
+  const UW = {};
+  const UW_Z = -9, UW_BOT = WATER_Y - 3.2;
+  const FISH = {
+    kusz:   { n: "Küsz", d: "A Balaton ezüst rajhala – egykor a halászok fő zsákmánya", len: .14, h: .03, w: .018, back: "#4c6a72", belly: "#e8eef0", fin: "#c9d3d6", metal: .75 },
+    keszeg: { n: "Dévérkeszeg", d: "Magas hátú, lapos testű, a nádas szélén falatozik", len: .45, h: .17, w: .05, back: "#5a5a46", belly: "#d8cfa8", fin: "#6a6250", metal: .5 },
+    ponty:  { n: "Ponty", d: "Aranyos-bronz pikkelyek, bajusz – a fenéken túr", len: .7, h: .2, w: .11, back: "#5e5228", belly: "#e2c27a", fin: "#7a5a2a", metal: .45 },
+    fogas:  { n: "Fogassüllő", d: "A Balaton királya: a „fogas” csak innen kerül az asztalra", len: .65, h: .12, w: .08, back: "#5a6a62", belly: "#e2e6dc", fin: "#7a8a80", stripes: 7, metal: .4 },
+    csuka:  { n: "Csuka", d: "Lesből vadászó ragadozó – a hínárban rejtőzik", len: .9, h: .12, w: .08, back: "#4a5a2a", belly: "#e0dcb0", fin: "#7a6a3a", spots: 1, metal: .3 },
+    harcsa: { n: "Harcsa", d: "Európa legnagyobb édesvízi hala – ez itt 2 méteres!", len: 2.1, h: .32, w: .3, back: "#3a3a32", belly: "#b8b2a0", fin: "#2e2e28", metal: .1 },
+    angolna:{ n: "Angolna", d: "Kígyózva úszik – a Sargasso-tengerből érkezett", len: .8, h: .05, w: .045, back: "#3a4030", belly: "#c8c4a0", fin: "#3a4030", metal: .2 }
+  };
+  /* hal-geometria: ellipszoid test (a feje −z felé), farokúszó, hátúszó, mellúszók; csúcsszínek (sötét hát, világos has, sávok) */
+  function fishGeom(F) {
+    const body = new THREE.SphereGeometry(.5, 18, 12); body.rotateX(Math.PI / 2);   /* pólusok a z tengelyen */
+    const p = body.attributes.position, col = [];
+    const cB = new THREE.Color(F.back), cL = new THREE.Color(F.belly), tmp = new THREE.Color();
+    for (let i = 0; i < p.count; i++) {
+      let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+      const u = z + .5;                                    /* 0 = fej, 1 = farok */
+      const taper = F === FISH.harcsa ? (1 - Math.pow(u, 1.6) * .75) : F === FISH.angolna ? 1 - Math.pow(u, 3) * .6 : Math.sin(Math.PI * Math.min(1, u * .95 + .08)) ** .7;
+      x *= F.w * 2 * taper; y *= F.h * 2 * taper * (F === FISH.harcsa && u < .25 ? 1.1 : 1); z *= F.len;
+      p.setXYZ(i, x, y, z);
+      const k = clamp(.5 - y / (F.h * 2 * Math.max(taper, .2)) * 1.4, 0, 1);
+      tmp.copy(cB).lerp(cL, smooth(k));
+      if (F.stripes && Math.sin(u * F.stripes * TAU) > .55 && k < .6) tmp.multiplyScalar(.55);
+      if (F.spots && Math.sin(x * 90 + z * 40) * Math.sin(z * 70) > .55 && k < .7) tmp.lerp(new THREE.Color("#d8d8a0"), .5);
+      col.push(tmp.r, tmp.g, tmp.b);
+    }
+    body.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); body.computeVertexNormals();
+    const fin = (shape, m) => { const g = new THREE.ShapeGeometry(shape); g.applyMatrix4(m); const c = new THREE.Color(F.fin); const n = g.attributes.position.count; const a = []; for (let i = 0; i < n; i++) a.push(c.r, c.g, c.b); g.setAttribute("color", new THREE.Float32BufferAttribute(a, 3)); return g; };
+    const L = F.len, H = F.h;
+    const tail = new THREE.Shape(); tail.moveTo(0, 0); tail.lineTo(L * .28, H * 1.1); tail.lineTo(L * .22, 0); tail.lineTo(L * .28, -H * 1.1); tail.closePath();
+    const dors = new THREE.Shape(); dors.moveTo(-L * .12, 0); dors.lineTo(L * .02, H * .9); dors.lineTo(L * .14, 0); dors.closePath();
+    const pect = new THREE.Shape(); pect.moveTo(0, 0); pect.lineTo(L * .12, H * .25); pect.lineTo(L * .1, -H * .15); pect.closePath();
+    const rotY = new THREE.Matrix4().makeRotationY(-Math.PI / 2);   /* a síkidom x → z */
+    const parts = [body];
+    if (F !== FISH.angolna) parts.push(fin(tail, new THREE.Matrix4().makeTranslation(0, 0, L * .42).multiply(rotY)));
+    parts.push(fin(dors, new THREE.Matrix4().makeTranslation(0, H * .85, F === FISH.angolna ? 0 : L * .02).multiply(rotY).multiply(new THREE.Matrix4().makeScale(F === FISH.angolna ? 4 : 1, F === FISH.angolna ? .3 : 1, 1))));
+    [-1, 1].forEach((s) => parts.push(fin(pect, new THREE.Matrix4().makeTranslation(s * F.w * .9, -H * .3, -L * .22).multiply(new THREE.Matrix4().makeRotationY(-Math.PI / 2 + s * .6)))));
+    if (F === FISH.harcsa || F === FISH.ponty) {   /* bajuszszálak */
+      const n = F === FISH.harcsa ? 2 : 1, len = F === FISH.harcsa ? .55 : .06;
+      [-1, 1].forEach((s) => { for (let k = 0; k < n; k++) { const g = new THREE.CylinderGeometry(.004, .008, len, 4); g.translate(0, len / 2, 0); g.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-Math.PI / 2 - .3 - k * .5, 0, s * (.9 + k * .4)))); g.translate(s * F.w * .5, H * .1 - k * H * .3, -L * .48);
+        const c = new THREE.Color("#2a2620"), a = []; for (let i = 0; i < g.attributes.position.count; i++) a.push(c.r, c.g, c.b); g.setAttribute("color", new THREE.Float32BufferAttribute(a, 3)); parts.push(g); } });
+    }
+    /* szem */
+    [-1, 1].forEach((s) => { const g = new THREE.SphereGeometry(Math.max(.004, F.h * .14), 8, 6); g.translate(s * F.w * .75, H * .25, -L * .36); const c = new THREE.Color(F === FISH.fogas ? "#d8e6ea" : "#15171a"), a = []; for (let i = 0; i < g.attributes.position.count; i++) a.push(c.r, c.g, c.b); g.setAttribute("color", new THREE.Float32BufferAttribute(a, 3)); parts.push(g); });
+    const merged = mergeGeoms(parts.map((g) => [g, new THREE.Matrix4()]));
+    merged.computeBoundingSphere(); return merged;
+  }
+  /* úszómozgás a vertex-shaderben: a farok felé erősödő hullám (példányonként eltolt fázissal) */
+  function swimify(mat, amp, freq, k, key) {
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uWT = ENV.wt;
+      sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uWT;").replace("#include <begin_vertex>", `#include <begin_vertex>
+        { float ph = 0.;
+          #ifdef USE_INSTANCING
+            ph = instanceMatrix[3].x * 3.1 + instanceMatrix[3].z * 2.3;
+          #endif
+          float u = clamp(position.z * ${(1 / Math.max(.01, k)).toFixed(3)} + .5, 0., 1.4);
+          transformed.x += sin(uWT * ${freq.toFixed(2)} + ph - position.z * ${(6 / Math.max(.01, k)).toFixed(2)}) * ${amp.toFixed(4)} * (u * u + .05); }`);
+    };
+    mat.customProgramCacheKey = () => "swim-" + key; return mat;
+  }
+  function buildUnderwater(site) {
+    const g = new THREE.Group(); site.add(g); g.visible = false; UW.g = g;
+    const C = new THREE.Vector3(0, UW_BOT, UW_Z);
+    /* „vízalatti égbolt”: a köd színe felé, felfelé világosabb, lefelé sötétebb */
+    const dome = new THREE.SphereGeometry(70, 32, 16), dc = [];
+    for (let i = 0; i < dome.attributes.position.count; i++) { const y = dome.attributes.position.getY(i) / 70; const c = new THREE.Color("#0e3a3c").lerp(new THREE.Color("#4fa59a"), smooth(clamp(y * .5 + .5, 0, 1))); dc.push(c.r, c.g, c.b); }
+    dome.setAttribute("color", new THREE.Float32BufferAttribute(dc, 3));
+    const dm = mesh(dome, basic({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false }), g); dm.position.set(0, WATER_Y - 2, UW_Z); dm.renderOrder = -30; UW.dome = dm;
+    /* a felszín alulról: hullámok, Snell-ablak, csillogás */
+    const sU = { uT: { value: 0 }, uC: { value: new THREE.Vector3() }, uDay: { value: 1 }, uSky: { value: new THREE.Color() } };
+    const surf = mesh(new THREE.PlaneGeometry(160, 160, 1, 1), new THREE.ShaderMaterial({ side: THREE.DoubleSide, transparent: true, depthWrite: false, fog: false, uniforms: sU,
+      vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+      fragmentShader: `uniform float uT, uDay; uniform vec3 uC, uSky; varying vec3 vW;
+        float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }
+        void main(){
+          vec3 d = normalize(vW - uC); float up = max(d.y, 0.);
+          vec2 q = vW.xz * .8 + vec2(uT * .25, uT * .18); float n = vn(q) * .6 + vn(q * 2.3 - uT * .3) * .4;
+          float win = smoothstep(.62, .78, up + (n - .5) * .08);                     /* Snell-ablak: kb. 97°-os kúp */
+          vec3 inside = mix(vec3(.55, .82, .8), uSky, .45) * (.55 + .7 * uDay) + vec3(1., .96, .85) * pow(n, 6.) * 1.6 * uDay;
+          vec3 outside = vec3(.12, .36, .36) * (.5 + .5 * uDay) + vec3(.4, .7, .65) * pow(n, 4.) * .35 * uDay;
+          vec3 col = mix(outside, inside, win);
+          float dist = length(vW - uC); col = mix(col, vec3(.13, .38, .37) * (.35 + .65 * uDay), smoothstep(6., 38., dist));
+          gl_FragColor = vec4(col, .97);
+          #include <colorspace_fragment>
+        }` }), g);
+    W.disposables.push(surf.material); surf.rotation.x = -Math.PI / 2; surf.position.set(0, WATER_Y - .02, UW_Z); UW.surf = surf;
+    /* a fenék: homok fodrokkal, kausztika (fényháló) */
+    const bU = { uT: { value: 0 }, uDay: { value: 1 }, uC: { value: new THREE.Vector3() } };
+    const bed = new THREE.PlaneGeometry(140, 140, 90, 90); bed.rotateX(-Math.PI / 2);
+    { const p = bed.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i), r = Math.hypot(x, z); p.setY(i, Math.sin(x * 1.7 + z * .4) * .04 + Math.sin(x * .13) * Math.cos(z * .11) * .4 + (r > 30 ? -(r - 30) * .04 : 0) + (z > 12 ? (z - 12) * .12 : 0)); } bed.computeVertexNormals(); }
+    const bedM = new THREE.ShaderMaterial({ uniforms: bU, fog: false,
+      vertexShader: `varying vec3 vW; varying vec3 vN; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; vN = normal; gl_Position = projectionMatrix * viewMatrix * w; }`,
+      fragmentShader: `uniform float uT, uDay; uniform vec3 uC; varying vec3 vW; varying vec3 vN;
+        float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        vec2 h22(vec2 p){ return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453); }
+        float caust(vec2 p){ vec2 i = floor(p), f = fract(p); float m = 9.; for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++){ vec2 o = vec2(x, y); vec2 r = o + .5 + .4 * sin(uT * .9 + 6.28 * h22(i + o)) - f; m = min(m, dot(r, r)); } return m; }
+        void main(){
+          vec2 p = vW.xz;
+          float grain = h2(floor(p * 60.)) * .08 + h2(floor(p * 9.)) * .06;
+          vec3 sand = vec3(.62, .58, .46) * (.86 + grain) * (.8 + .2 * vN.y);
+          float c = pow(1. - clamp(caust(p * 1.3) * 1.6, 0., 1.), 5.) + pow(1. - clamp(caust(p * 2.1 + 3.) * 1.6, 0., 1.), 5.) * .6;
+          vec3 col = sand * (.35 + .5 * uDay) + vec3(.9, 1., .85) * c * .55 * uDay;
+          float dist = length(vW - uC); col = mix(col, vec3(.11, .33, .33) * (.35 + .65 * uDay), smoothstep(2., 30., dist));
+          gl_FragColor = vec4(col, 1.);
+          #include <colorspace_fragment>
+        }` });
+    W.disposables.push(bedM); const bm = mesh(bed, bedM, g); bm.position.set(0, UW_BOT, UW_Z); UW.bed = bm;
+    UW.mats = [sU, bU];
+    /* cölöpök a fenékig (algásan), a nád szára a fenékből */
+    const posts = [], algae = [];
+    for (let i = 0; i < 8; i++) { const a = (i + .5) / 8 * TAU; posts.push(M4(Math.cos(a) * (DECK_R - .25), (UW_BOT + WATER_Y) / 2 - .4, Math.sin(a) * (DECK_R - .25))); }
+    for (let z = DECK_R + 1; z < SHORE_Z; z += 2.4) [-1.05, 1.05].forEach((x) => posts.push(M4(x, (UW_BOT + WATER_Y) / 2 - .4, z)));
+    inst(new THREE.CylinderGeometry(.13, .16, WATER_Y - UW_BOT + .4, 10), std({ color: "#3e3a2a", roughness: 1 }), posts, g);
+    posts.forEach((m) => { const p = new THREE.Vector3().setFromMatrixPosition(m); for (let k = 0; k < 10; k++) { const a = rand() * TAU; algae.push(M4(p.x + Math.cos(a) * .16, UW_BOT + rr(.2, 2.4), p.z + Math.sin(a) * .16, rand() * TAU, 0, 0, 1, rr(.6, 1.4), 1)); } });
+    const strip = new THREE.PlaneGeometry(.06, .5, 1, 6); strip.translate(0, .25, 0);
+    const weed = (c) => { const m = std({ color: c, roughness: .8, side: THREE.DoubleSide }); m.onBeforeCompile = (sh) => { sh.uniforms.uWT = ENV.wt; sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uWT;").replace("#include <begin_vertex>", `#include <begin_vertex>
+      { vec3 w0 = vec3(0.);
+        #ifdef USE_INSTANCING
+          w0 = instanceMatrix[3].xyz;
+        #endif
+        float hh = position.y; transformed.x += sin(uWT * 1.1 + w0.x * 1.7 + hh * 2.5) * .12 * hh * hh * 4.; transformed.z += cos(uWT * .9 + w0.z * 1.3 + hh * 2.) * .08 * hh * hh * 4.; }`); }; m.customProgramCacheKey = () => "weed" + c; return m; };
+    inst(strip, weed("#5f7a3a"), algae, g);
+    /* hínármező: hosszú, ringó szálak (süllőhínár) foltokban */
+    const weeds = [];
+    [[-6, -6, 30], [5, -7, 26], [-3, -13, 40], [8, -14, 30], [-10, -10, 34], [2, -18, 40], [-7, -2, 20], [7, -1, 20]].forEach(([x, z, n]) => { for (let k = 0; k < n; k++) { const a = rand() * TAU, r = Math.sqrt(rand()) * 1.8; weeds.push(M4(x + Math.cos(a) * r, UW_BOT - .05, z + Math.sin(a) * r, rand() * TAU, 0, 0, rr(1, 1.8), rr(2, 4.6), 1)); } });
+    inst(strip, weed("#4f7a32"), weeds, g);
+    /* nád szára (a stég körüli nádfoltok alatt) */
+    const stems = []; ENV.reedSpots.forEach(([x, z]) => { for (let k = 0; k < 30; k++) { const a = rand() * TAU, r = Math.sqrt(rand()) * 1.9; stems.push(M4(x + Math.cos(a) * r, UW_BOT, z + Math.sin(a) * r, 0, rr(-.05, .05), rr(-.05, .05), 1, (WATER_Y - UW_BOT) / 2, 1)); } });
+    const stemG = new THREE.CylinderGeometry(.008, .012, 2, 4); stemG.translate(0, 1, 0);
+    inst(stemG, std({ color: "#6a7a42", roughness: .9 }), stems, g);
+    /* kövek, kagylók, elsüllyedt fatörzs */
+    const stones = [], shells = [];
+    for (let k = 0; k < 80; k++) { const x = rr(-14, 14), z = UW_Z + rr(-12, 12); stones.push(M4(x, UW_BOT + .02, z, rand() * 3, rand(), rand(), rr(.08, .3), rr(.05, .14), rr(.08, .25))); }
+    for (let k = 0; k < 60; k++) { const x = rr(-10, 10), z = UW_Z + rr(-9, 9); shells.push(M4(x, UW_BOT + .02, z, rand() * 3, -.2, 0, 1, .5, 1)); }
+    inst(new THREE.DodecahedronGeometry(1, 0), std({ color: "#6e6a5e", roughness: .95, flatShading: true }), stones, g);
+    inst(new THREE.SphereGeometry(.05, 8, 4, 0, Math.PI), std({ color: "#5a5040", roughness: .5, metalness: .2 }), shells, g);
+    const log = mesh(new THREE.CylinderGeometry(.22, .3, 5, 10), std({ color: "#3a2e20", roughness: 1 }), g); log.rotation.set(0, .6, Math.PI / 2 - .08); log.position.set(3.2, UW_BOT + .25, UW_Z - 4);
+    const br = mesh(new THREE.CylinderGeometry(.06, .1, 1.6, 6), std({ color: "#3a2e20", roughness: 1 }), g); br.position.set(3.6, UW_BOT + .8, UW_Z - 4.4); br.rotation.set(.3, 0, -.6);
+    /* fénypászmák */
+    const rayTex = canvasTex(64, 256, (gg, w, h) => { const gr = gg.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "rgba(255,255,230,.55)"); gr.addColorStop(1, "rgba(255,255,230,0)"); gg.fillStyle = gr; gg.fillRect(0, 0, w, h);
+      const gx = gg.createLinearGradient(0, 0, w, 0); gx.addColorStop(0, "rgba(0,0,0,1)"); gx.addColorStop(.5, "rgba(0,0,0,0)"); gx.addColorStop(1, "rgba(0,0,0,1)"); gg.globalCompositeOperation = "destination-out"; gg.fillStyle = gx; gg.fillRect(0, 0, w, h); });
+    UW.rays = [];
+    for (let k = 0; k < 14; k++) { const m = mesh(new THREE.PlaneGeometry(rr(.5, 1.4), 5.5), basic({ map: rayTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .35, fog: false, side: THREE.DoubleSide }), g);
+      m.geometry.translate(0, -2.75, 0); m.position.set(rr(-6, 6), WATER_Y - .05, UW_Z + rr(-6, 6)); m.rotation.set(rr(-.25, .25), rr(0, TAU), rr(-.25, .25)); m.renderOrder = 7; UW.rays.push({ m, ph: rand() * 9, o: m.material.opacity }); }
+    /* halak */
+    UW.fish = [];
+    const mk = (key, n, swim) => {
+      const F = FISH[key], geo = fishGeom(F);
+      const mat = swimify(std({ vertexColors: true, roughness: .35, metalness: F.metal, side: THREE.DoubleSide }), swim[0] * F.len, swim[1], F.len, key);
+      const im = new THREE.InstancedMesh(geo, mat, n); im.frustumCulled = false; g.add(im); W.disposables.push(geo);
+      const list = []; for (let i = 0; i < n; i++) list.push({ p: new THREE.Vector3(rr(-8, 8), UW_BOT + rr(.3, 2.6), UW_Z + rr(-8, 8)), v: new THREE.Vector3(rr(-1, 1), 0, rr(-1, 1)).normalize().multiplyScalar(.2), ph: rand() * 9, tgt: null, t: 0 });
+      im.userData.xr = { hover: (on, hit) => { if (on) fishTip(F, hit); else showTip(null); } };
+      T.xr.extra.add(im); W.objs.push(im);
+      const o = { key, F, im, list }; UW.fish.push(o); return o;
+    };
+    mk("kusz", 160, [.08, 14]); mk("keszeg", 10, [.06, 5]); mk("ponty", 4, [.05, 3.2]); mk("fogas", 3, [.05, 4]); mk("csuka", 1, [.04, 3]); mk("harcsa", 1, [.06, 1.6]); mk("angolna", 2, [.35, 5]);
+    /* buborékok és lebegő szemcsék */
+    const mkPts = (n, size, col, alpha) => { const ge = new THREE.BufferGeometry(), a = new Float32Array(n * 3), ph = new Float32Array(n); for (let i = 0; i < n; i++) { a[i * 3] = rr(-8, 8); a[i * 3 + 1] = UW_BOT + rand() * 3.2; a[i * 3 + 2] = UW_Z + rr(-8, 8); ph[i] = rand() * 100; }
+      ge.setAttribute("position", new THREE.BufferAttribute(a, 3)); ge.setAttribute("ph", new THREE.BufferAttribute(ph, 1));
+      const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { uT: { value: 0 }, uS: { value: size }, uC: { value: new THREE.Color(col) }, uA: { value: alpha }, uR: { value: col === "#ffffff" ? 1 : 0 }, uB: { value: UW_BOT }, uTop: { value: WATER_Y } },
+        vertexShader: `attribute float ph; uniform float uT, uS, uR, uB, uTop; varying float vA; void main(){ vec3 p = position;
+          if (uR > .5) { p.y = uB + mod(p.y - uB + uT * (.35 + fract(ph) * .4), uTop - uB); p.x += sin(uT * 3. + ph) * .03; } else { p += vec3(sin(uT * .2 + ph), sin(uT * .13 + ph * 1.7) * .3, cos(uT * .17 + ph)) * .3; }
+          vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = uS * 300. / -mv.z; vA = 1.; }`,
+        fragmentShader: `uniform vec3 uC; uniform float uA, uR; void main(){ float d = length(gl_PointCoord - .5) * 2.; float a = uR > .5 ? smoothstep(1., .7, d) * (smoothstep(.4, .8, d) + .25) : smoothstep(1., 0., d); gl_FragColor = vec4(uC, a * uA); }` });
+      W.disposables.push(ge, m); const P = new THREE.Points(ge, m); P.frustumCulled = false; g.add(P); return m; };
+    UW.bub = mkPts(70, .03, "#ffffff", .7); UW.dust = mkPts(400, .012, "#d8efe0", .5);
+    return UW;
+  }
+  function fishTip(F, hit) {
+    if (!MAQ.tip) { MAQ.tip = labelSprite(["", ""], { size: .34, fs: 46, w: 900 }); W.root.add(MAQ.tip); }
+    MAQ.tip.userData.set(["🐟 " + F.n, F.d]); MAQ.tip.visible = true;
+    const hw = headWorld(new THREE.Vector3()); const p = hit && hit.point ? hit.point.clone() : hw; const d = p.sub(hw); const L = Math.min(d.length(), 1.1); d.normalize();
+    MAQ.tip.position.copy(hw).addScaledVector(d, L * .75); MAQ.tip.position.y += .14;
+  }
+  const _m4 = new THREE.Matrix4(), _qq = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0), _one = new THREE.Vector3(1, 1, 1), _fw = new THREE.Vector3(), _tv = new THREE.Vector3();
+  function uwTick(dt, camW) {
+    if (!UW.g || !UW.g.visible) return;
+    const t = W.t, day = ENV.dayK || 0;
+    const camL = ENV.site.worldToLocal(_tv.copy(camW));
+    UW.mats.forEach((u) => { u.uT.value = t; u.uDay.value = .25 + .75 * day; if (u.uC) u.uC.value.copy(camW); });
+    UW.surf.material.uniforms.uSky.value.copy(ENV.sky.userData.U.uHor.value);
+    UW.rays.forEach((r) => { r.m.material.opacity = r.o * (.6 + .4 * Math.sin(t * .7 + r.ph)) * day; r.m.rotation.y += dt * .02; });
+    UW.bub.uniforms.uT.value = t; UW.dust.uniforms.uT.value = t;
+    /* raj: a küszök egy vándorló középpont körül, egymást kerülve; a nagyobb halak lassan cirkálnak; a harcsa a fenéken */
+    const cen = UW.cen || (UW.cen = new THREE.Vector3(0, UW_BOT + 1.6, UW_Z));
+    cen.set(Math.sin(t * .11) * 5, UW_BOT + 1.4 + Math.sin(t * .23) * .7, UW_Z + Math.cos(t * .09) * 5);
+    UW.fish.forEach((o) => {
+      const F = o.F, big = F.len > .3, n = o.list.length;
+      o.list.forEach((f, i) => {
+        if (o.key === "kusz") {
+          _fw.copy(cen).add(_tv.set(Math.sin(i * 2.1 + t * .5) * 1.4, Math.sin(i * 1.3 + t * .7) * .5, Math.cos(i * 1.7 + t * .4) * 1.4)).sub(f.p);
+          /* a kezed / fejed közelében szétrebbennek */
+          const dc = f.p.distanceTo(camL); if (dc < 1.0) _fw.addScaledVector(_tv.copy(f.p).sub(camL).normalize(), 6 * (1 - dc));
+          f.v.addScaledVector(_fw, dt * 1.6); const sp = f.v.length(), mx = 1.3; if (sp > mx) f.v.multiplyScalar(mx / sp);
+        } else {
+          f.t -= dt;
+          if (!f.tgt || f.t < 0 || f.p.distanceTo(f.tgt) < .5) { f.t = rr(4, 12); f.tgt = new THREE.Vector3(rr(-9, 9), o.key === "harcsa" || o.key === "ponty" ? UW_BOT + rr(.25, .6) : UW_BOT + rr(.5, 2.6), UW_Z + rr(-9, 7)); }
+          _fw.copy(f.tgt).sub(f.p); const want = _fw.normalize().multiplyScalar(o.key === "harcsa" ? .28 : o.key === "csuka" ? (f.t < 1 ? 1.6 : .12) : big ? .4 : .5);
+          f.v.lerp(want, Math.min(1, dt * .6));
+          const dc = f.p.distanceTo(camL); if (dc < 1.4) f.v.addScaledVector(_tv.copy(f.p).sub(camL).normalize(), dt * 1.2);
+        }
+        f.p.addScaledVector(f.v, dt); f.p.y = clamp(f.p.y, UW_BOT + .15, WATER_Y - .25);
+        /* irány: a fej (−z) a sebesség felé */
+        if (f.v.lengthSq() > 1e-6) { _fw.copy(f.v).normalize(); _m4.lookAt(_tv.set(0, 0, 0), _fw, _up); _qq.setFromRotationMatrix(_m4); }
+        _m4.compose(f.p, _qq, _one); o.im.setMatrixAt(i, _m4);
+      });
+      o.im.instanceMatrix.needsUpdate = true;
+      if (o.key === "kusz") o.im.computeBoundingSphere();
+    });
+    /* időnként buborék-csobbanás hang */
+    UW.snd = (UW.snd || 3) - dt; if (UW.snd < 0) { UW.snd = rr(2, 6); try { bubbleSnd(); } catch (e) {} }
+  }
+  function bubbleSnd() {
+    const a = T.ac(); if (!a) return; const t0 = a.currentTime;
+    for (let k = 0; k < 4; k++) { const o = a.createOscillator(), g = a.createGain(), t = t0 + k * rr(.05, .12); o.type = "sine"; const f = rr(500, 1100);
+      o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 1.8, t + .06); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.02, t + .005); g.gain.exponentialRampToValueAtTime(.0005, t + .08); o.connect(g).connect(T.outBus()); o.start(t); o.stop(t + .1); }
+  }
+  /* be- és kimerülés (áttűnéssel) */
+  function goDive() {
+    if (MAQ.fading) return;
+    fadeThen(() => {
+      if (MAQ.mode === "life") { MAQ.mode = "table"; MAQ.s = MAQ.sT = 1 / 40; MAQ.roofOn = false; applyPlacement(true); lifeTargets(false); }
+      if (!UW.g) buildUnderwater(ENV.site);
+      MAQ.dive = true; UW.g.visible = true; setDiveLook(true);
+      const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceYaw(Math.atan2(-fw.x, -fw.z));
+      placeUser(site.localToWorld(new THREE.Vector3(0, UW_BOT + .05, UW_Z + 5.5)), -1);
+      wristRedraw(); W.panelDirty = 1;
+    });
+  }
+  function goSurface() {
+    if (MAQ.fading || !MAQ.dive) return;
+    fadeThen(() => {
+      MAQ.dive = false; UW.g.visible = false; setDiveLook(false); showTip(null);
+      const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p);
+      const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceYaw(Math.atan2(-fw.x, -fw.z));
+      placeUser(site.localToWorld(new THREE.Vector3(0, 0, USER_Z)), -1);
+      wristRedraw(); W.panelDirty = 1;
+    });
+  }
+  function setDiveLook(on) {
+    const sc = T.sceneEl.object3D;
+    if (on) { UW.fogWas = sc.fog || null; sc.fog = new THREE.FogExp2(0x2a7470, .085); AU.set("water", .06, .5); AU.set("wind", 0, .5); if (AU.water) AU.water.f.frequency.setTargetAtTime(260, T.ac().currentTime, .3); }
+    else { sc.fog = UW.fogWas || null; AU.set("water", .03, .5); AU.set("wind", .012, .5); if (AU.water) AU.water.f.frequency.setTargetAtTime(700, T.ac().currentTime, .3); }
+    [ENV.sky, ENV.pano, ENV.trees, ENV.water].forEach((m) => { if (m) m.visible = !on; });
+    (ENV.lmk || []).forEach(() => {});
+  }
+  function uwDispose() { const sc = T.sceneEl.object3D; if (MAQ.dive) sc.fog = UW.fogWas || null; MAQ.dive = false; Object.keys(UW).forEach((k) => delete UW[k]); }
 
   /* ------------------------------------------------------------------ fények */
   function addLights(sunDir, soft) {
@@ -1453,13 +2951,13 @@
       const api = {
         title(t, s) { g.fillStyle = "#ffd166"; g.font = "800 50px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(t, 44, 66); g.fillStyle = "#fff"; g.font = "600 34px system-ui, sans-serif"; g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
         row(i, t, c, r) { const y = 210 + i * 66; g.fillStyle = c || "#fff"; g.beginPath(); g.arc(58, y, 11, 0, TAU); g.fill(); g.fillStyle = "#fff"; g.font = "600 36px system-ui, sans-serif"; g.textAlign = "left"; g.fillText(t, 84, y); if (r) { g.textAlign = "right"; g.fillStyle = "#7fd3ff"; g.fillText(r, PW - 50, y); } rowY = y; },
-        buttons(list) {
-          const n = list.length, gap = 16, w = (PW - 80 - gap * (n - 1)) / n, y = PH - 150, h = 110;
+        buttons(list, row) {
+          const n = list.length, gap = 16, w = (PW - 80 - gap * (n - 1)) / n, y = PH - 150 - (row || 0) * 126, h = 110;
           list.forEach(([lbl, fn, on], i) => {
             const x = 40 + i * (w + gap), k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn });
             g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 24) : g.rect(x, y, w, h);
             g.fillStyle = on ? "#ffd166" : hov ? "rgba(255,255,255,.32)" : "rgba(255,255,255,.12)"; g.fill(); g.lineWidth = hov ? 5 : 2; g.strokeStyle = hov ? "#ffd166" : "rgba(255,255,255,.35)"; g.stroke();
-            g.fillStyle = on ? "#0b2f5e" : "#fff"; g.font = `700 ${lbl.length > 14 ? 30 : 38}px system-ui, sans-serif`; g.textAlign = "center"; g.fillText(lbl, x + w / 2, y + h / 2 + 2);
+            g.fillStyle = on ? "#0b2f5e" : "#fff"; g.font = `700 ${lbl.length > 14 || n > 5 ? 28 : 38}px system-ui, sans-serif`; g.textAlign = "center"; g.fillText(lbl, x + w / 2, y + h / 2 + 2);
           });
         }
       };

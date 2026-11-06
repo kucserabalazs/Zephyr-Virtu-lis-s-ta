@@ -36,13 +36,13 @@
       const api = {
         title(t, s) { g.fillStyle = "#ffd166"; g.font = "800 50px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(t, 44, 66); g.fillStyle = "#fff"; g.font = "600 34px system-ui, sans-serif"; g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
         row(i, t, c, r) { const y = 210 + i * 66; g.fillStyle = c || "#fff"; g.beginPath(); g.arc(58, y, 11, 0, TAU); g.fill(); g.fillStyle = "#fff"; g.font = "600 36px system-ui, sans-serif"; g.textAlign = "left"; g.fillText(t, 84, y); if (r) { g.textAlign = "right"; g.fillStyle = "#7fd3ff"; g.fillText(r, PW - 50, y); } rowY = y; },
-        buttons(list) {
-          const n = list.length, gap = 16, w = (PW - 80 - gap * (n - 1)) / n, y = PH - 150, h = 110;
+        buttons(list, row) {
+          const n = list.length, gap = 16, w = (PW - 80 - gap * (n - 1)) / n, y = PH - 150 - (row || 0) * 126, h = 110;
           list.forEach(([lbl, fn, on], i) => {
             const x = 40 + i * (w + gap), k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn });
             g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 24) : g.rect(x, y, w, h);
             g.fillStyle = on ? "#ffd166" : hov ? "rgba(255,255,255,.32)" : "rgba(255,255,255,.12)"; g.fill(); g.lineWidth = hov ? 5 : 2; g.strokeStyle = hov ? "#ffd166" : "rgba(255,255,255,.35)"; g.stroke();
-            g.fillStyle = on ? "#0b2f5e" : "#fff"; g.font = `700 ${lbl.length > 14 ? 30 : 38}px system-ui, sans-serif`; g.textAlign = "center"; g.fillText(lbl, x + w / 2, y + h / 2 + 2);
+            g.fillStyle = on ? "#0b2f5e" : "#fff"; g.font = `700 ${lbl.length > 14 || n > 5 ? 28 : 38}px system-ui, sans-serif`; g.textAlign = "center"; g.fillText(lbl, x + w / 2, y + h / 2 + 2);
           });
         }
       };

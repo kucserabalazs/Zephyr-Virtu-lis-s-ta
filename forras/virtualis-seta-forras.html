@@ -9231,7 +9231,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   /* ---------- Kézkövetés és kontroller egységesen (WebXR input source-ok): sugár, rámutatás, csippentés = kattintás ----------
      Meta Quest 2-n kontroller nélkül, saját kézzel: mutass a kezeddel, a csippentés (hüvelyk + mutatóujj) a kattintás.
      Kontrollerrel ugyanez a ravasszal; joystick sehol sem kell. */
-  const XRP = { on: false, session: null, src: {}, ray: {}, hov: {}, press: {}, drag: {}, extra: new Set(), btnPrev: {}, wrist: null, panelUV: null, spin: {}, stick: {}, bar: null };
+  const XRP = { on: false, session: null, src: {}, ray: {}, hov: {}, press: {}, drag: {}, extra: new Set(), btnPrev: {}, wrist: null, panelUV: null, spin: {}, stick: {}, bar: null, pinch: {} };
   let _rc = null;
   function xrStart() {
     let s = null; try { s = sceneEl.renderer.xr.getSession(); } catch (e) {}
@@ -9304,6 +9304,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function xrPulse(src, v, ms) { try { const a = src && src.gamepad && src.gamepad.hapticActuators && src.gamepad.hapticActuators[0]; if (a && a.pulse) a.pulse(v, ms); } catch (e) {} }
   function xrSelect(src, down) {
     const key = src.handedness || "none", t = XRP.hov[key];
+    XRP.pinch[key] = !!down;   /* a világ-modul két kezes nagyításához */
     if (down) {
       XRP.press[key] = t || null;
       if (t && t.kind === "obj" && t.h.down) { XRP.drag[key] = t; t.h.down(t.hit, XRP.src[key], key); }
@@ -9424,27 +9425,32 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const P = { m, t: 0, hov: -1, btns: [] };
     const items = () => {
       const world = !!(window.ZephyrWorld && ZephyrWorld.active);
+      if (world && ZephyrWorld.spec && ZephyrWorld.spec.wrist) { try { return ZephyrWorld.spec.wrist(); } catch (e) {} }
       if (world) return [["☰", "Panel", () => ZephyrWorld.togglePanel()], ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)],
         ["‹", "A sétához", () => ZephyrWorld.close()], ["❔", "Súgó", () => { ZephyrWorld.close(() => vrOpen("help")); }], ["✕", "Kilépés", () => vrEndSession()]];
       return [["☰", "Menü", () => vrToggle()], ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)],
         ["📅", "Foglalás", () => { vrBookInit(); vrOpen("book"); VRS.page = "book"; vrDraw(); vrPlace(); }], ["☀", "Napállás", () => { sunSet(true); vrOpen("sun"); VRS.page = "sun"; vrDraw(); }], ["⛵", "3D világ", () => { vrOpen("world"); VRS.page = "world"; vrDraw(); }]];
     };
     P.draw = () => {
+      /* a sorok száma a gombok számától függ (a 3D-világokban akár 4 × 3 gomb) – a vászon és a tábla magassága ehhez igazodik */
+      const it = items(), rows = Math.max(2, Math.ceil(it.length / 3)), bh = rows > 2 ? 150 : 212, ch = 40 + rows * bh + (rows - 1) * 16;
+      if (cv.height !== ch) { cv.height = ch; P.ch = ch; m.geometry.dispose(); m.geometry = new THREE.PlaneGeometry(.21, .21 * ch / CW); }
+      const CH = ch;
       const g = cv.getContext("2d"); g.clearRect(0, 0, CW, CH); P.btns = [];
       g.fillStyle = "rgba(9,34,70,.95)"; g.beginPath(); g.roundRect ? g.roundRect(6, 6, CW - 12, CH - 12, 46) : g.rect(6, 6, CW - 12, CH - 12); g.fill(); g.lineWidth = 7; g.strokeStyle = "#ffd166"; g.stroke();
-      const it = items(), bw = (CW - 40 - 2 * 16) / 3, bh = (CH - 40 - 16) / 2;
+      const bw = (CW - 40 - 2 * 16) / 3;
       it.forEach(([ic, lab, fn], i) => {
         const x = 20 + (i % 3) * (bw + 16), y = 20 + Math.floor(i / 3) * (bh + 16), hv = i === P.hov;
         P.btns.push({ x, y, w: bw, h: bh, fn });
         g.fillStyle = hv ? "#ffd166" : "rgba(255,255,255,.12)"; g.beginPath(); g.roundRect ? g.roundRect(x, y, bw, bh, 30) : g.rect(x, y, bw, bh); g.fill();
         g.lineWidth = 3; g.strokeStyle = "rgba(255,255,255,.35)"; g.stroke();
         g.fillStyle = hv ? "#0b2f5e" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
-        g.font = "800 92px system-ui, sans-serif"; g.fillText(ic, x + bw / 2, y + bh * .42);
-        g.font = "700 36px system-ui, sans-serif"; g.fillText(lab, x + bw / 2, y + bh * .82);
+        g.font = `800 ${rows > 2 ? 66 : 92}px system-ui, sans-serif`; g.fillText(ic, x + bw / 2, y + bh * .4);
+        g.font = `700 ${rows > 2 ? (lab.length > 11 ? 28 : 33) : 36}px system-ui, sans-serif`; g.fillText(lab, x + bw / 2, y + bh * .8);
       });
       t.needsUpdate = true;
     };
-    const at = (hit) => { if (!hit || !hit.uv) return -1; const x = hit.uv.x * CW, y = (1 - hit.uv.y) * CH; return P.btns.findIndex((b) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h); };
+    const at = (hit) => { if (!hit || !hit.uv) return -1; const x = hit.uv.x * CW, y = (1 - hit.uv.y) * (P.ch || CH); return P.btns.findIndex((b) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h); };
     m.userData.xr = {
       hover: (on, hit) => { const i = on ? at(hit) : -1; if (i !== P.hov) { P.hov = i; P.draw(); } },
       move: (hit) => { const i = at(hit); if (i !== P.hov) { P.hov = i; P.draw(); } },

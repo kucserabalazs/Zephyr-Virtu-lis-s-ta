@@ -69,14 +69,17 @@
   function makeWater(parent, opt) {
     opt = opt || {};
     /* poláris háló: középen sűrű (a hajó körül), kifelé ritkul – 1,6 km sugárig */
-    const RINGS = 110, SEG = 150, R0 = .6, RMAX = 1600;
+    const RINGS = opt.rings || 110, SEG = opt.seg || 150, R0 = .6, RMAX = opt.rmax || 1600;
     const pos = [], idx = [];
     for (let i = 0; i <= RINGS; i++) { const r = i === 0 ? 0 : R0 * Math.pow(RMAX / R0, (i - 1) / (RINGS - 1)); for (let j = 0; j < SEG; j++) { const a = j / SEG * TAU; pos.push(Math.cos(a) * r, 0, Math.sin(a) * r); } }
     for (let i = 0; i < RINGS; i++) for (let j = 0; j < SEG; j++) { const a = i * SEG + j, b = i * SEG + (j + 1) % SEG, c = (i + 1) * SEG + j, d = (i + 1) * SEG + (j + 1) % SEG; idx.push(a, c, b, b, c, d); }
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
     const wv = WAVES.map(([a, L, A, Q]) => new THREE.Vector4(a * D2R, TAU / L, A, Q));
     const mat = new THREE.ShaderMaterial({
-      uniforms: { uT: { value: 0 }, uOff: { value: new THREE.Vector2() }, uWind: { value: WIND_DIR }, uW: { value: wv }, uSun: { value: SUN }, uCam: { value: new THREE.Vector3() }, uGust: { value: new THREE.Vector2(1, 0) } },
+      uniforms: { uT: { value: 0 }, uOff: { value: new THREE.Vector2() }, uWind: { value: WIND_DIR }, uW: { value: wv }, uSun: { value: opt.sun || SUN }, uCam: { value: new THREE.Vector3() }, uGust: { value: new THREE.Vector2(1, 0) },
+        /* színek (a makett-világ napszakhoz igazítja őket; az alapértékek a vitorlázás délutánja) */
+        uSkyH: { value: new THREE.Color(.70, .80, .87) }, uSkyZ: { value: new THREE.Color(.25, .45, .75) }, uDeep: { value: new THREE.Color(.06, .25, .27) }, uShallow: { value: new THREE.Color(.18, .44, .41) },
+        uSunC: { value: new THREE.Color(1, .95, .82) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 } },
       vertexShader: `
         uniform float uT, uWind; uniform vec2 uOff; uniform vec4 uW[5];
         varying vec3 vP; varying vec3 vN; varying float vDist;
@@ -94,7 +97,7 @@
           gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        uniform float uT, uWind; uniform vec3 uSun, uCam; uniform vec2 uGust;
+        uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust;
         varying vec3 vP; varying vec3 vN; varying float vDist;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
@@ -114,17 +117,16 @@
           vec3 view = normalize(uCam - P);
           float fres = .02 + .98 * pow(1. - max(dot(n, view), 0.), 5.);
           vec3 refl = reflect(-view, n); float el = clamp(refl.y, 0., 1.);
-          vec3 sky = mix(vec3(.70,.80,.87), vec3(.25,.45,.75), pow(el, .45));
-          vec3 deep = vec3(.06,.25,.27), shallow = vec3(.18,.44,.41);
-          vec3 base = mix(shallow, deep, clamp(.5 + n.x * 2.5, 0., 1.)) * (1. - gust * .18);
+          vec3 sky = mix(uSkyH, uSkyZ, pow(el, .45));
+          vec3 base = mix(uShallow, uDeep, clamp(.5 + n.x * 2.5, 0., 1.)) * (1. - gust * .18) * uLight;
           vec3 col = mix(base, sky, fres * .7);
           float sp = pow(max(dot(refl, uSun), 0.), 380.) * 7. + pow(max(dot(refl, uSun), 0.), 40.) * .25;
-          col += vec3(1., .95, .82) * sp * (1. - gust * .3);
+          col += uSunC * sp * uSpec * (1. - gust * .3);
           /* hullámtaraj: halvány fehér hab a meredek részeken */
-          col = mix(col, vec3(.92,.95,.95), smoothstep(.72, .95, 1. - n.y) * .45 * fa);
+          col = mix(col, vec3(.92,.95,.95) * uLight, smoothstep(.72, .95, 1. - n.y) * .45 * fa);
           /* pára a horizont felé */
           float hz = smoothstep(250., 1550., vDist);
-          col = mix(col, vec3(.84,.89,.91), hz * .85);
+          col = mix(col, uHaze, hz * .85);
           gl_FragColor = vec4(col, 1.);
           #include <colorspace_fragment>
         }`
