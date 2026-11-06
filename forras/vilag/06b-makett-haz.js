@@ -69,7 +69,7 @@
     for (let x = SX0 + .6; x < SX1; x += 3.2) box("#ece8da", x, .05, -6.88, x + 1.6, .056, -6.72);
     box("#9a958c", SX0, 0, -4.48, SX1, .14, -4.36);                       /* szegélykő */
     box("pave", SX0, 0, -4.4, SX1, .12, -2.7);
-    box("#8d9583", SX0, 0, -2.7, SX1, .04, SZ1);
+    box("#8d9583", SX0, -.06, -2.7, SX1, -.005, SZ1);   /* telek alap (a ház padlója alatt) */
     box("grass", -.4, .04, -2.5, 6.3, .07, -.05);
     box("pave", 1.4, .04, -2.7, 2.6, .08, -.05);
     /* utcai kerítés: antracit lécek, oszlopok, kapu; postaláda, házszám */
