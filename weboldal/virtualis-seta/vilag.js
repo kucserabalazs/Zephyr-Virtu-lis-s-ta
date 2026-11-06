@@ -1326,7 +1326,12 @@
     if (MAQ.mode !== "life") return; const hw = headWorld(new THREE.Vector3()); const y = MAQ.model.localToWorld(new THREE.Vector3(0, lvl ? FLOOR_H : 0, 0)).y;
     placeUser(new THREE.Vector3(hw.x, y, hw.z), lvl); wristRedraw(); W.panelDirty = 1;
   }
-  function lifeTargets(on) { const L = ENV.land; if (on) { T.xr.extra.add(L); if (!W.objs.includes(L)) W.objs.push(L); } else { T.xr.extra.delete(L); W.objs = W.objs.filter((o) => o !== L); } }
+  /* életnagyságban a part, a palló és a stég is járható (csippentés = odalépés) */
+  function lifeTargets(on) {
+    [ENV.land, ENV.walk, ENV.deckTop].forEach((L) => { if (!L) return;
+      if (!L.userData.xr) L.userData.xr = { click: (hit) => { if (MAQ.mode === "life" && hit && hit.point) teleport(hit.point, 0); } };
+      if (on) { T.xr.extra.add(L); if (!W.objs.includes(L)) W.objs.push(L); } else { T.xr.extra.delete(L); W.objs = W.objs.filter((o) => o !== L); } });
+  }
   function fadeThen(fn) {
     MAQ.fading = { t: 0, fn, done: false }; MAQ.fade.visible = true;
   }
@@ -2359,7 +2364,7 @@
     const walk = [], wM = std({ map: txPlanks("walk", "#94693f", "#b88a5a", 6), roughness: .85 });
     const wTop = new THREE.BoxGeometry(2.2, .12, SHORE_Z + 2 - DECK_R + .3);
     { const p = wTop.attributes.position, uv = wTop.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 2, p.getZ(i) / 2); }
-    const wk = mesh(wTop, wM, g); wk.position.set(0, -.06, (DECK_R + SHORE_Z + 2) / 2 - .15); wk.receiveShadow = true;
+    const wk = mesh(wTop, wM, g); ENV.walk = wk; wk.position.set(0, -.06, (DECK_R + SHORE_Z + 2) / 2 - .15); wk.receiveShadow = true;
     for (let z = DECK_R + 1; z < SHORE_Z; z += 2.4) [-1.05, 1.05].forEach((x) => { walk.push([new THREE.CylinderGeometry(.1, .12, .0 - UW_BOT, 8), M4(x, UW_BOT / 2, z)]); ENV.postPos.push(new THREE.Vector3(x, 0, z)); });
     /* kötélkorlát + kis oszlopok a palló mentén, napelemes lámpácskák */
     const ropePts = [], plamps = [];
@@ -2817,7 +2822,7 @@
   const UW_Z = -9, UW_BOT = WATER_Y - 3.2;
   const FISH = {
     kusz:   { n: "Küsz", d: "A Balaton ezüst rajhala – egykor a halászok fő zsákmánya", len: .14, h: .03, w: .018, back: "#4c6a72", belly: "#e8eef0", fin: "#c9d3d6", metal: .75 },
-    keszeg: { n: "Dévérkeszeg", d: "Magas hátú, lapos testű, a nádas szélén falatozik", len: .45, h: .17, w: .05, back: "#5a5a46", belly: "#d8cfa8", fin: "#6a6250", metal: .5 },
+    keszeg: { n: "Dévérkeszeg", d: "Magas hátú, lapos testű, a nádas szélén falatozik", len: .5, h: .15, w: .045, back: "#5a5a46", belly: "#d8cfa8", fin: "#6a6250", metal: .5 },
     ponty:  { n: "Ponty", d: "Aranyos-bronz pikkelyek, bajusz – a fenéken túr", len: .7, h: .2, w: .11, back: "#5e5228", belly: "#e2c27a", fin: "#7a5a2a", metal: .45 },
     fogas:  { n: "Fogassüllő", d: "A Balaton királya: a „fogas” csak innen kerül az asztalra", len: .65, h: .12, w: .08, back: "#5a6a62", belly: "#e2e6dc", fin: "#7a8a80", stripes: 7, metal: .4 },
     csuka:  { n: "Csuka", d: "Lesből vadászó ragadozó – a hínárban rejtőzik", len: .9, h: .12, w: .08, back: "#4a5a2a", belly: "#e0dcb0", fin: "#7a6a3a", spots: 1, metal: .3 },

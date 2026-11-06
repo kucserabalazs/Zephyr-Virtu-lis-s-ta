@@ -260,7 +260,12 @@
     if (MAQ.mode !== "life") return; const hw = headWorld(new THREE.Vector3()); const y = MAQ.model.localToWorld(new THREE.Vector3(0, lvl ? FLOOR_H : 0, 0)).y;
     placeUser(new THREE.Vector3(hw.x, y, hw.z), lvl); wristRedraw(); W.panelDirty = 1;
   }
-  function lifeTargets(on) { const L = ENV.land; if (on) { T.xr.extra.add(L); if (!W.objs.includes(L)) W.objs.push(L); } else { T.xr.extra.delete(L); W.objs = W.objs.filter((o) => o !== L); } }
+  /* életnagyságban a part, a palló és a stég is járható (csippentés = odalépés) */
+  function lifeTargets(on) {
+    [ENV.land, ENV.walk, ENV.deckTop].forEach((L) => { if (!L) return;
+      if (!L.userData.xr) L.userData.xr = { click: (hit) => { if (MAQ.mode === "life" && hit && hit.point) teleport(hit.point, 0); } };
+      if (on) { T.xr.extra.add(L); if (!W.objs.includes(L)) W.objs.push(L); } else { T.xr.extra.delete(L); W.objs = W.objs.filter((o) => o !== L); } });
+  }
   function fadeThen(fn) {
     MAQ.fading = { t: 0, fn, done: false }; MAQ.fade.visible = true;
   }

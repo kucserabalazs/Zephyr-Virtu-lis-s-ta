@@ -9,7 +9,7 @@
   const UW_Z = -9, UW_BOT = WATER_Y - 3.2;
   const FISH = {
     kusz:   { n: "Küsz", d: "A Balaton ezüst rajhala – egykor a halászok fő zsákmánya", len: .14, h: .03, w: .018, back: "#4c6a72", belly: "#e8eef0", fin: "#c9d3d6", metal: .75 },
-    keszeg: { n: "Dévérkeszeg", d: "Magas hátú, lapos testű, a nádas szélén falatozik", len: .45, h: .17, w: .05, back: "#5a5a46", belly: "#d8cfa8", fin: "#6a6250", metal: .5 },
+    keszeg: { n: "Dévérkeszeg", d: "Magas hátú, lapos testű, a nádas szélén falatozik", len: .5, h: .15, w: .045, back: "#5a5a46", belly: "#d8cfa8", fin: "#6a6250", metal: .5 },
     ponty:  { n: "Ponty", d: "Aranyos-bronz pikkelyek, bajusz – a fenéken túr", len: .7, h: .2, w: .11, back: "#5e5228", belly: "#e2c27a", fin: "#7a5a2a", metal: .45 },
     fogas:  { n: "Fogassüllő", d: "A Balaton királya: a „fogas” csak innen kerül az asztalra", len: .65, h: .12, w: .08, back: "#5a6a62", belly: "#e2e6dc", fin: "#7a8a80", stripes: 7, metal: .4 },
     csuka:  { n: "Csuka", d: "Lesből vadászó ragadozó – a hínárban rejtőzik", len: .9, h: .12, w: .08, back: "#4a5a2a", belly: "#e0dcb0", fin: "#7a6a3a", spots: 1, metal: .3 },
