@@ -11972,6 +11972,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     let y2 = top + 52;
     if (msg) {   /* több sorba tördelve, ha nem fér ki */
       let fs = W < 600 ? 15 : 18; g.font = `800 ${fs}px Manrope, Arial, sans-serif`;
+      if (window.ZI18N && ZI18N.lang !== "hu") msg = ZI18N.t(msg);   /* előbb fordít, aztán tördel */
       const maxW = W - 48, words = msg.split(" "), lines = []; let cur = "";
       words.forEach((w) => { const tt = cur ? cur + " " + w : w; if (g.measureText(tt).width > maxW && cur) { lines.push(cur); cur = w; } else cur = tt; }); lines.push(cur);
       const lh = fs * 1.3, bw = Math.min(W - 24, Math.max(...lines.map((l) => g.measureText(l).width)) + 34), bh = lines.length * lh + 16;
@@ -13599,7 +13600,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       for (let k = 0; k < n; k++) { const h = S.hist.pop(); S.s = h.s; S.capW = h.capW; S.capB = h.capB; S.last = h.last; S.keys.pop(); }
       S.sel = -1; S.moves = []; S.anim = null; S.sink = []; S.conf = []; status(); save(); maybeAI();
     }
-    function hint() { if (S.st !== "play" || S.thinking || (!S.two && S.s.turn !== S.human)) return; const m = think(S.s, 1); if (m) { S.hint = { f: m.f, t: m.t, t0: S.t }; S.msg = `Ötlet: ${NAME[m.p.toLowerCase()].split(" ")[0]} ${sqName(m.f)} → ${sqName(m.t)}`; } }
+    function hint() { if (S.st !== "play" || S.thinking || (!S.two && S.s.turn !== S.human)) return; const m = think(S.s, 1); if (m) { S.hint = { f: m.f, t: m.t, t0: S.t }; S.msg = `💡 ${NAME[m.p.toLowerCase()].split(" ")[0]} · ${sqName(m.f)} → ${sqName(m.t)}`; } }
     if (!load()) { S.keys.push(posKey(S.s)); status(); } else { status(); }
     S.flip = !S.two && S.human === "b"; setTimeout(maybeAI, 600);
     if (/sakkteszt/.test(location.hash + location.search)) window.__chess = { S, legal, apply, think, doMove, hitSq: (x, y) => hitSq(x, y), sqXY: (i) => sqXY(i) };   /* fejlesztői teszt: #sakkteszt */
@@ -13857,6 +13858,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       document.body.appendChild(gmEl);
       gmEl.querySelector(".gm-tabs").innerHTML = GM_LIST.map((q) => `<button type="button" data-gm="${q.id}" style="--gc:${q.c}">${q.n}</button>`).join("");
       gmCv = gmEl.querySelector(".gm-cv"); gmG = gmCv.getContext("2d");
+      /* a játékok vászonra írt feliratai is a választott nyelven: a fillText/strokeText/measureText a szótárból fordít (számok: {#}) */
+      { const cache = new Map(), tx = (s) => { if (typeof s !== "string" || !window.ZI18N || ZI18N.lang === "hu" || !/\p{L}/u.test(s)) return s; const k = ZI18N.lang + "|" + s; let o = cache.get(k); if (o == null) { o = ZI18N.t(s); if (cache.size > 3000) cache.clear(); cache.set(k, o); } return o; };
+        const ft = gmG.fillText.bind(gmG), sk = gmG.strokeText.bind(gmG), mt = gmG.measureText.bind(gmG);
+        gmG.fillText = (s, x, y, m) => (m == null ? ft(tx(s), x, y) : ft(tx(s), x, y, m)); gmG.strokeText = (s, x, y, m) => (m == null ? sk(tx(s), x, y) : sk(tx(s), x, y, m)); gmG.measureText = (s) => mt(tx(s)); }
       gmEl.querySelector(".gm-x").addEventListener("click", gmClose);
       gmEl.querySelector(".gm-tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-gm]"); if (b) { gmStart(b.dataset.gm); gmMenu(false); } });
       gmEl.querySelector(".gm-cur").addEventListener("click", () => gmMenu(gmEl.querySelector(".gm-hd").classList.contains("min")));
