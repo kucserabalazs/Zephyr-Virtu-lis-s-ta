@@ -165,6 +165,7 @@
       lfo = a.createOscillator(); lfo.frequency.value = 17; const lg = a.createGain(); lg.gain.value = .5; lfo.connect(lg).connect(am.gain); src.connect(f).connect(am).connect(g); src.start(); lfo.start(); nodes = [src, lfo]; }
     else if (kind === "engine" || kind === "prop") { const o1 = a.createOscillator(), o2 = a.createOscillator(); o1.type = "sawtooth"; o2.type = "square"; o1.frequency.value = kind === "prop" ? 92 : 58; o2.frequency.value = kind === "prop" ? 46 : 87;
       const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = kind === "prop" ? 900 : 520; const m2 = a.createGain(); m2.gain.value = .25; o1.connect(f); o2.connect(m2).connect(f); f.connect(g); o1.start(); o2.start(); nodes = [o1, o2]; src = { o1, o2 }; }
+    else if (kind === "rain") { src = a.createBufferSource(); src.buffer = T.noiseBuf(4); src.loop = true; const f = a.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 1200; const f2 = a.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = 7000; src.connect(f).connect(f2).connect(g); src.start(); nodes = [src]; src = null; }
     else if (kind === "siren") { const o = a.createOscillator(); o.type = "triangle"; o.frequency.value = 700; lfo = a.createOscillator(); lfo.type = "square"; lfo.frequency.value = .9; const lg = a.createGain(); lg.gain.value = 160; lfo.connect(lg).connect(o.frequency); o.connect(g); o.start(); lfo.start(); nodes = [o, lfo]; }
     return { set(v, rate) { try { g.gain.setTargetAtTime(Math.max(0, v), a.currentTime, .15); if (src && src.o1 && rate) { src.o1.frequency.setTargetAtTime((kind === "prop" ? 92 : 58) * rate, a.currentTime, .2); src.o2.frequency.setTargetAtTime((kind === "prop" ? 46 : 87) * rate, a.currentTime, .2); } } catch (e) {} },
       stop() { try { g.gain.setTargetAtTime(0, a.currentTime, .3); setTimeout(() => { nodes.forEach((n) => { try { n.stop(); } catch (e) {} }); try { g.disconnect(); } catch (e) {} }, 1500); } catch (e) {} } };
@@ -509,8 +510,56 @@
       } };
   }
 
-  const EVS = { titanic: evTitanic, monster: evMonster, heli: evHeli, steamer: evSteamer, police: evPolice, plane: evPlane, sub: evSub };
-  const EV_ORDER = ["titanic", "monster", "steamer", "heli", "police", "plane", "sub", "titanic", "monster", "heli", "steamer", "police", "plane", "sub"];
+  /* ---------- 8. Nyári zivatar: elsötétül az ég, zuhog az eső, villámlik és dörög, majd kisüt a nap ---------- */
+  function evStorm() {
+    const root = new THREE.Group(); BJ.race.add(root); root.visible = false;
+    const domeM = basic({ color: "#151b24", transparent: true, opacity: 0, side: THREE.BackSide, depthWrite: false, fog: false });
+    const dome = mesh(new THREE.SphereGeometry(140, 32, 16), domeM, root); dome.renderOrder = -5;
+    const flashM = basic({ color: "#dfe8ff", transparent: true, opacity: 0, side: THREE.BackSide, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
+    const flash = mesh(new THREE.SphereGeometry(135, 24, 12), flashM, root); flash.renderOrder = -4;
+    /* eső: 2600 csepp vonalként, a GPU mozgatja (egy rajzolási hívás) */
+    const N = 2600, pos = new Float32Array(N * 6), ph = new Float32Array(N * 2);
+    for (let i = 0; i < N; i++) { const x = rr(-40, 40), z = rr(-40, 40), y = rand() * 30; pos.set([x, y, z, x - .05, y - .7, z + .02], i * 6); ph[i * 2] = ph[i * 2 + 1] = rand(); }
+    const rg = new THREE.BufferGeometry(); rg.setAttribute("position", new THREE.BufferAttribute(pos, 3)); rg.setAttribute("ph", new THREE.BufferAttribute(ph, 1));
+    const rU = { uT: { value: 0 }, uA: { value: 0 } };
+    const rainM = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: rU,
+      vertexShader: `attribute float ph; uniform float uT; varying float vF; void main(){ vec3 p = position; p.y = mod(p.y - uT * (17. + ph * 6.), 30.) - 1.; vF = ph; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.); }`,
+      fragmentShader: `uniform float uA; varying float vF; void main(){ gl_FragColor = vec4(.78, .84, .9, uA * (.25 + .25 * vF)); }` });
+    W.disposables.push(rg, rainM); const rain = new THREE.LineSegments(rg, rainM); rain.frustumCulled = false; root.add(rain);
+    /* villám: cikcakkos, elágazó fényes vonal */
+    const boltM = basic({ color: "#f4f7ff", transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
+    let bolt = null; const makeBolt = () => { if (bolt) { root.remove(bolt); bolt.geometry.dispose(); } const a = rand() * TAU, d = rr(90, 200), x = Math.sin(a) * d, z = -Math.abs(Math.cos(a)) * d; const pts = []; let px = x, py = 95, pz = z; pts.push(px, py, pz);
+      while (py > 0) { const ny = py - rr(5, 11), nx = px + rr(-6, 6), nz = pz + rr(-6, 6); pts.push(nx, Math.max(0, ny), nz); if (rand() < .25 && ny > 20) { pts.push(nx + rr(-12, 12), ny - rr(8, 16), nz + rr(-12, 12)); pts.push(nx, Math.max(0, ny), nz); } px = nx; py = ny; pz = nz; }
+      const segs = []; for (let i = 0; i < pts.length / 3 - 1; i++) segs.push(pts[i * 3], pts[i * 3 + 1], pts[i * 3 + 2], pts[i * 3 + 3], pts[i * 3 + 4], pts[i * 3 + 5]);
+      const bg = new THREE.BufferGeometry(); bg.setAttribute("position", new THREE.Float32BufferAttribute(segs, 3)); bolt = new THREE.LineSegments(bg, boltM); bolt.frustumCulled = false; root.add(bolt); return d; };
+    const rings = ringPool(root, 24); let rs = null; const st = { t: 0 };
+    root.userData.tip = ["⛈ Nyári zivatar", "Balatoni vihar: pár perc, aztán újra kisüt"];
+    return { name: "Nyári zivatar", root,
+      start() { st.t = 0; st.next = 6; root.visible = true; rs = loopSnd("rain"); const Lg = ENV.lights; st.base = Lg ? { s: Lg.sun.intensity, h: Lg.hemi.intensity, a: Lg.amb.intensity } : null; },
+      tick(dt) {
+        st.t += dt; const T0 = 56, k = smooth(clamp(st.t / 8, 0, 1)) * (1 - smooth(clamp((st.t - T0 + 9) / 9, 0, 1)));
+        domeM.opacity = k * .5; rU.uT.value = st.t; rU.uA.value = k;
+        /* a fények elhalványulnak (a felhők eltakarják a napot) – villámláskor egy pillanatra fehér fény */
+        { const Lg = ENV.lights; if (Lg && st.base) { if (Math.abs(Lg.sun.intensity - st.lastS) > 1e-3 && st.lastS != null) st.base.s = Lg.sun.intensity / Math.max(.05, st.lastK); const fl2 = st.fl > 0 ? Math.max(0, st.fl / .35) : 0;
+          st.lastK = 1 - .7 * k; Lg.sun.intensity = st.base.s * st.lastK;
+          { const sc = T.sceneEl.object3D; if (st.envI == null) st.envI = sc.environmentIntensity != null ? sc.environmentIntensity : 1; sc.environmentIntensity = st.envI * (1 - .6 * k) + fl2 * .6;
+            const wu = ENV.water && ENV.water.userData.mat.uniforms; if (wu && wu.uLight) { if (st.wl == null || Math.abs(wu.uLight.value - st.wlSet) > 1e-3) st.wl = wu.uLight.value; st.wlSet = wu.uLight.value = st.wl * (1 - .55 * k) + fl2 * .3; } } Lg.hemi.intensity = st.base.h * (1 - .45 * k) + fl2 * 1.2; Lg.amb.intensity = st.base.a + fl2 * .8; st.lastS = Lg.sun.intensity; } }
+        const hw = ENV.site.worldToLocal(headWorld(new THREE.Vector3())); rain.position.set(hw.x, 0, hw.z); dome.position.set(hw.x, 0, hw.z); flash.position.copy(dome.position);
+        if (rs) rs.set(.09 * k);
+        for (let i = 0; i < 8 * k; i++) if (Math.random() < dt * 6) rings.emit(hw.x + rr(-14, 14), hw.z + rr(-14, 14), rr(.15, .35), .6);
+        rings.tick(dt);
+        st.next -= dt; if (st.next < 0 && k > .5) { st.next = rr(4, 9); const d = makeBolt(); st.fl = .35; setTimeout(() => boom(.5 * clamp(120 / d, .35, 1), 160, 3.2), d / 340 * 1000 * .35); }
+        if (st.fl > 0) { st.fl -= dt; const f = Math.max(0, st.fl / .35); const flick = f * (Math.sin(st.t * 60) > -.3 ? 1 : .3); flashM.opacity = flick * .35; boltM.opacity = flick; } else { flashM.opacity = 0; boltM.opacity = 0; }
+        if (st.t > T0) { root.visible = false; if (rs) rs.stop(); restore(); return false; }
+        return true;
+      }, stop() { if (rs) rs.stop(); restore(); } };
+    function restore() { const Lg = ENV.lights; if (Lg && st.base) { Lg.sun.intensity = st.base.s; Lg.hemi.intensity = st.base.h; Lg.amb.intensity = st.base.a; st.base = null; }
+      if (st.envI != null) { T.sceneEl.object3D.environmentIntensity = st.envI; st.envI = null; } const wu = ENV.water && ENV.water.userData.mat.uniforms; if (wu && wu.uLight && st.wl != null) { wu.uLight.value = st.wl; st.wl = null; } }
+  }
+
+  const EVS = { storm: evStorm, titanic: evTitanic, monster: evMonster, heli: evHeli, steamer: evSteamer, police: evPolice, plane: evPlane, sub: evSub };
+  const EV_ORDER = ["titanic", "monster", "steamer", "heli", "storm", "police", "plane", "sub", "titanic", "monster", "heli", "steamer", "police", "storm", "plane", "sub"];
+  const EV_LIST = [["titanic", "🚢", "Titanic és a jéghegy"], ["monster", "🐉", "Tengeri szörny"], ["heli", "🚁", "Mentőhelikopter"], ["steamer", "🛳", "Lapátkerekes gőzös"], ["storm", "⛈", "Nyári zivatar"], ["police", "🚤", "Vízirendőrség"], ["plane", "✈", "Reklámrepülő"], ["sub", "⚓", "Tengeralattjáró"]];
   function bjStart(id) {
     if (BJ.cur) { try { BJ.cur.root.visible = false; if (BJ.cur.stop) BJ.cur.stop(); } catch (e) {} BJ.cur = null; }
     if (!BJ.race) return;
