@@ -8422,7 +8422,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     d.innerHTML = `<div class="wp-card"><button type="button" class="wp-x" aria-label="Bezárás">✕</button><h2>Virtuális világ</h2>
       <button type="button" data-w="regatta"><b>🏁 Regatta a stégnél</b><span>3D vitorlások versenye a napozóstég előtt</span></button>
       <button type="button" data-w="sail"><b>⛵ Vitorlázás a Zephyrrel</b><span>Raptor 27, piros génua – Tihany és Badacsony a láthatáron</span></button>
-      <button type="button" data-w="maquette"><b>🏠 A ház makettje</b><span>Mutass egy lakásra, és belépsz a panorámájába</span></button>
+      <button type="button" data-w="maquette"><b>🏠 A ház makettje a Balaton partján</b><span>Napozóstég aranyórában · nagyítható életnagyságig · merülés a halak közé</span></button>
       <p>VR szemüvegben a legszebb (Meta Quest: „VR” gomb). Itt egérrel/ujjal nézel körbe.</p></div>`;
     d.addEventListener("click", (e) => { const t = e.target.closest("[data-w]"); if (t) { d.remove(); openWorld(t.dataset.w); } else if (e.target === d || e.target.closest(".wp-x")) d.remove(); });
     document.body.appendChild(d);
@@ -8627,7 +8627,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function pWorld(g) {
     const items = [["regatta", "🏁  Regatta a stégnél", "A napozóstégen állsz: 3D vitorlások versenyeznek a Balatonon, bóják, rendezőhajó, rajtjelek."],
                    ["sail", "⛵  Vitorlázás a Zephyrrel", "A Raptor 27 kormányánál: piros génua, Tihany és Badacsony a láthatáron. Fogd meg a kormányrudat!"],
-                   ["maquette", "🏠  A ház makettje", "Az egész ház asztalnyi méretben, alaprajzok szerint. Mutass egy lakásra, és belépsz a panorámájába."]];
+                   ["maquette", "🏠  A ház makettje", "Stég a Balatonon, aranyórában. Két kézzel széthúzva életnagyságú lesz – sétálj be! Merülés a halak közé."]];
     items.forEach(([k, t, d], i) => {
       const y = 140 + i * 228;
       btn(g, 40, y, VW - 80, 208, "", () => { vrClose(); openWorld(k); });
