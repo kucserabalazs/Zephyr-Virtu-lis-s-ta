@@ -3423,6 +3423,16 @@ PLANS.dingi.furn.push(
   ["box", 7.5, 4.75, 0.15, 0.75, "összecsukható ruhaszárító"],
   ["table3", 4.58, 3.59, 1.07, 0.8, "asztal"]);
 PLANS.kadett = JSON.parse(JSON.stringify(PLANS.hatso));
+/* Belső méretek a hivatalos, méretezett tervrajzokból („Épület egyben – földszint / emelet, méretezett, végleges”, 2026. nov. 6-án feltöltve).
+   A rajzolt alaprajz (rooms) a panorámák alapján készült – a vendégnek mutatott számok ezek: [szélesség, hossz, alapterület (ha nem téglalap), megjegyzés] méterben. */
+const PLAN_DIMS = {
+  korvett:  { "Hálószoba": [2.00, 4.10], "Nappali · konyha": [3.30, 5.90], "Fürdő": [1.50, 1.80] },
+  fregatt:  { "Hálószoba": [2.575, 4.10], "Nappali · konyha": [2.575, 5.90], "Fürdő": [1.65, 1.80] },
+  dingi:    { "Szoba · konyha": [5.40, 4.35, 0, "a lakás egésze, fürdővel"] },
+  kaloz:    { "Szoba · konyha": [5.40, 4.10, 0, "a lakás egésze, fürdővel"] },
+  hatso:    { "Hálószoba": [5.40, 1.85], "Nappali · konyha": [5.40, 4.46, 19.6, "az étkezővel együtt, L alakú"], "Fürdő": [2.30, 1.96] }
+};
+Object.keys(PLAN_DIMS).forEach((k) => { if (PLANS[k]) PLANS[k].dims = PLAN_DIMS[k]; });
 PLANS.kadett.title = "Kadett alaprajz";
 /* A belső tér egy az egyben a Schoonerét követi; csak a terasz más: nem fedett, kicsit nagyobb,
    bal sarkában csigalépcső a tetőteraszra, jobb oldalán érkezik fel a Schooner teraszáról induló lépcső */
@@ -8578,15 +8588,24 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.strokeStyle = "rgba(244,241,230,.55)"; g.lineWidth = out ? 2 : 4; g.strokeRect(X(r[1]), Y(r[2]), r[3] * sc, r[4] * sc);
       txt(g, r[0], X(r[1]) + 12, Y(r[2]) + 24, { fs: 24, w: 500, c: "rgba(244,241,230,.6)" });
       /* méretek az alaprajz szerint: szélesség × hossz és alapterület – hogy a vendég tudja, mekkora a szoba */
-      if (!out && r[3] * sc > 150 && r[4] * sc > 74) {
-        const m = (v) => v.toFixed(1).replace(".", ",");
-        txt(g, `${m(r[3])} × ${m(r[4])} m · ${Math.round(r[3] * r[4])} m²`, X(r[1]) + 12, Y(r[2]) + 52, { fs: 22, w: 700, c: "rgba(255,209,102,.85)" });
+      const dm = plan.dims && plan.dims[r[0]];
+      if (!out && (dm || !plan.dims) && r[3] * sc > 150 && r[4] * sc > 74) {
+        /* a tervrajz szerinti belső méret (ha van), különben a rajzolt alaprajzé */
+        const m = (v) => (Math.round(v * 100) / 100).toFixed(2).replace(/0$/, "").replace(".", ",");
+        const w = dm ? dm[0] : r[3], h = dm ? dm[1] : r[4], ar = dm && dm[2] ? dm[2] : w * h;
+        /* a szoba szélességébe férjen: kisebb betű, szükség esetén két sor (méret / alapterület) */
+        const l1 = `${m(w)} × ${m(h)} m`, l2 = `${String(Math.round(ar * 10) / 10).replace(".", ",")} m²`, room = r[3] * sc - 20;
+        let fz = 22; const fits = (t) => { g.font = `700 ${fz}px system-ui, sans-serif`; return g.measureText(t).width <= room; };
+        let yy = Y(r[2]) + 52;
+        if (fits(l1 + " · " + l2)) txt(g, l1 + " · " + l2, X(r[1]) + 12, yy, { fs: fz, w: 700, c: "rgba(255,209,102,.9)" });
+        else { while (fz > 15 && !fits(l1)) fz--; txt(g, l1, X(r[1]) + 12, yy, { fs: fz, w: 700, c: "rgba(255,209,102,.9)" }); yy += fz + 4; txt(g, l2, X(r[1]) + 12, yy, { fs: fz, w: 700, c: "rgba(255,209,102,.9)" }); }
+        if (dm && dm[3] && r[4] * sc > 110) { let f3 = 19; g.font = `500 ${f3}px system-ui, sans-serif`; while (f3 > 14 && g.measureText(dm[3]).width > room) { f3--; g.font = `500 ${f3}px system-ui, sans-serif`; } txt(g, dm[3], X(r[1]) + 12, yy + 26, { fs: f3, w: 500, c: "rgba(255,209,102,.7)" }); }
       }
     });
     if (plan && plan.furn) {
       /* fekhelyek valós mérete (az alaprajz bútorai közül) */
       const beds = []; plan.furn.forEach((f) => { if (f[0] === "bed" || f[0] === "sofa") { const a = Math.round(Math.min(f[3], f[4]) * 100), b = Math.round(Math.max(f[3], f[4]) * 100); beds.push(`${f[5] || (f[0] === "bed" ? "ágy" : "kanapé")} ${a}×${b} cm`); } });
-      const lg = (beds.length ? "Fekhelyek: " + beds.join(" · ") + "   ·   " : "") + "Méretek az alaprajz szerint, tájékoztató jellegűek";
+      const lg = (beds.length ? "Fekhelyek: " + beds.join(" · ") + "   ·   " : "") + (plan.dims ? "Belső méretek a hivatalos tervrajz szerint" : "Méretek az alaprajz szerint, tájékoztató jellegűek");
       let fsz = 22; g.font = `600 ${fsz}px system-ui, sans-serif`; while (fsz > 15 && g.measureText(lg).width > VW - 100) { fsz--; g.font = `600 ${fsz}px system-ui, sans-serif`; }
       txt(g, lg, VW / 2, VH - 52, { a: "center", fs: fsz, w: 600, c: "rgba(255,255,255,.72)" });
     }
