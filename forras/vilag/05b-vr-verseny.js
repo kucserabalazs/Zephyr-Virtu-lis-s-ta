@@ -63,6 +63,7 @@
     /* a két kerék: talapzat (karbon oszlop), tetején iránytű-búra és műszer; a kerék karbon, bőrrel bevont peremmel, 6 küllővel */
     const WR = .46, wheels = [];   /* kisebb, kézre eső kerék (a tulajdonos kérése) – átmérő ~92 cm */
     const instT = canvasTex(512, 512, (gg) => { gg.fillStyle = "#06090d"; gg.fillRect(0, 0, 512, 512); });
+    const chartT = canvasTex(1024, 1024, (gg) => { gg.fillStyle = "#0a2236"; gg.fillRect(0, 0, 1024, 1024); }); chartT.anisotropy = 4;
     [-1, 1].forEach((sd) => {
       const x = sd * (hs.hb - .78), z = hs.z + .55;
       const ped = new THREE.Group(); G.add(ped); ped.position.set(x, deckY, z);
@@ -73,6 +74,11 @@
       const card = mesh(new THREE.CylinderGeometry(.085, .085, .02, 24), std({ color: "#f2e6c8", roughness: .5 }), ped); card.position.set(0, 1.14, -.05);
       /* a műszerkijelző a talapzat tetején, a kormányos felé döntve (élő adatok) */
       const scr = mesh(new THREE.PlaneGeometry(.34, .34), basic({ map: instT }), ped); scr.position.set(0, 1.2, -.2); scr.rotation.set(-.5, Math.PI, 0);   /* nagyobb kijelző: bója-irány, távolság, sebesség, kis pályatérkép */
+      /* TÉRKÉP-PLOTTER a kormányos előtt, kis karon a kerék fölött (csak a te kerekednél): pálya, ideális útvonal, számozott bóják,
+         kerülési irány, a hajód és a nyomvonalad, ellenfelek, szél – folyamatosan, a hajó orra felé forgatva */
+      if (sd < 0) { const arm = mesh(new THREE.CylinderGeometry(.018, .018, .5, 10), chrome, ped); arm.position.set(-.22 * sd, 1.2, -.2); arm.rotation.z = -.9 * sd;
+        const frame = mesh(new THREE.BoxGeometry(.48, .43, .03), carbon, ped); frame.position.set(-.4 * sd, 1.42, -.24); frame.rotation.set(-.45, Math.PI - .35 * sd, 0);
+        const ch = mesh(new THREE.PlaneGeometry(.45, .4), basic({ map: chartT }), ped); ch.position.copy(frame.position); ch.rotation.copy(frame.rotation); ch.translateZ(.017); }
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
       const [gb, mb] = rodGeom(new THREE.Vector3(-.22, 0, .25), new THREE.Vector3(-.22, .95, .1), .016, 8); mesh(gb, chrome, ped).applyMatrix4(mb);
       const [gb2, mb2] = rodGeom(new THREE.Vector3(.22, 0, .25), new THREE.Vector3(.22, .95, .1), .016, 8); mesh(gb2, chrome, ped).applyMatrix4(mb2);
@@ -168,7 +174,7 @@
       /* a kezében a szkótakötél: a két tenyér között, onnan le a fedélzeti csigához – így „trimmel”, nem a levegőt fogja */
       mesh(mergeGeoms([rodGeom(new THREE.Vector3(-.19, .5, .43), new THREE.Vector3(.19, .5, .43), .012, 5), rodGeom(new THREE.Vector3(.19, .5, .43), new THREE.Vector3(.05, -.02, .95), .012, 5), rodGeom(new THREE.Vector3(-.19, .5, .43), new THREE.Vector3(-.3, .3, .2), .012, 5)]), ropeM, g2);
       crew.push({ g: g2, u }); });
-    return { G, wheels, instT, deckY, helm: new THREE.Vector3(hs.hb - .74, deckY, hs.z - .62), crew, sh };
+    return { G, wheels, instT, chartT, deckY, helm: new THREE.Vector3(hs.hb - .74, deckY, hs.z - .62), crew, sh };
   }
   /* --------------------------------------------------------------- felépítés */
   function buildVRace() {
@@ -508,6 +514,59 @@
   const mmss = (t) => { const s = Math.max(0, Math.abs(t)); return `${t < 0 ? "−" : ""}${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`; };
   function vrPlace() { const S = VRR; const prog = (o) => (o.fin ? 1e6 - o.fin : 0) + (o.next || 0) * 1e4 - Math.hypot((o === S ? S.tgt : null) ? S.tgt.x - o.x : 0, (o === S && S.tgt) ? S.tgt.z - o.z : 0); const all = [S].concat(S.riv).map((o) => [o, prog(o)]).sort((a, b) => b[1] - a[1]); return all.findIndex((q) => q[0] === S) + 1; }
   /* műszerek: a talapzati kijelzők (sebesség, szél, bója iránya) és az árbóckijelző (idő, helyezés) */
+  /* ideális útvonal egy szakaszon: szél ellen / hátszélben két csapásban (halzon a laylinig, majd fordulás / jibbelés), különben egyenesen */
+  function vrLegPath(A, B, wf) {
+    const brg = Math.atan2(B.x - A.x, -(B.z - A.z)), rel = Math.abs(wrapA(brg - (wf + Math.PI)));   /* a széllel szembeni irány: wf+π (a szél „felől” jön) */
+    const up = Math.abs(wrapA(brg - wf - Math.PI)) > Math.PI - 40 * D2R ? false : false;
+    const toWind = Math.abs(wrapA(brg - wf)) < 42 * D2R, downW = Math.abs(wrapA(brg - wf - Math.PI)) < 28 * D2R;
+    if (!toWind && !downW) return [A, B];
+    const off = toWind ? 45 * D2R : (180 - 150) * D2R, base = toWind ? wf : wf + Math.PI;
+    const d1 = [Math.sin(base + off), -Math.cos(base + off)], d2 = [Math.sin(base - off), -Math.cos(base - off)];
+    const solve = (u, v) => { const bx = B.x - A.x, bz = B.z - A.z, det = u[0] * v[1] - u[1] * v[0]; if (Math.abs(det) < 1e-6) return null; const t1 = (bx * v[1] - bz * v[0]) / det, t2 = (u[0] * bz - u[1] * bx) / det; return t1 > 0 && t2 > 0 ? { x: A.x + u[0] * t1, z: A.z + u[1] * t1 } : null; };
+    const P = solve(d1, d2) || solve(d2, d1); return P ? [A, P, B] : [A, B];
+  }
+  function vrChart() {
+    const S = VRR, t = S.ck.chartT; if (!t) return; const g = t._canvas.getContext("2d"), W2 = 1024, C = S.C;
+    S.trail = S.trail || []; const lt = S.trail[S.trail.length - 1]; if (!lt || Math.hypot(lt.x - S.x, lt.z - S.z) > 6) { S.trail.push({ x: S.x, z: S.z }); if (S.trail.length > 400) S.trail.shift(); }
+    /* háttér: tengerkék, finom rács, keret */
+    const bg = g.createLinearGradient(0, 0, 0, W2); bg.addColorStop(0, "#0d3150"); bg.addColorStop(1, "#071c30"); g.fillStyle = bg; g.fillRect(0, 0, W2, W2);
+    const cx = W2 / 2, cy = W2 * .56;
+    const lineMid = { x: (C.line.a.x + C.line.b.x) / 2, z: (C.line.a.z + C.line.b.z) / 2 };
+    const pts = S.marks.concat([C.line.a, C.line.b, { x: S.x, z: S.z }]); let span = 80; pts.forEach((q) => { span = Math.max(span, Math.hypot(q.x - S.x, q.z - S.z)); }); const k = (W2 * .42) / span;
+    const c0 = Math.cos(-S.b), s0 = Math.sin(-S.b);
+    const P = (x, z) => { const dx = x - S.x, dz = z - S.z; return [cx + (dx * c0 - dz * s0) * k, cy + (dx * s0 + dz * c0) * k]; };
+    g.strokeStyle = "rgba(127,211,255,.08)"; g.lineWidth = 2; for (let i = -10; i <= 10; i++) { const a1 = P(S.x + i * 100, S.z - 2000), a2 = P(S.x + i * 100, S.z + 2000), b1 = P(S.x - 2000, S.z + i * 100), b2 = P(S.x + 2000, S.z + i * 100); g.beginPath(); g.moveTo(a1[0], a1[1]); g.lineTo(a2[0], a2[1]); g.moveTo(b1[0], b1[1]); g.lineTo(b2[0], b2[1]); g.stroke(); }
+    /* ideális útvonal: rajttól a bójákon át a befutóig (megtett szakasz halványabb) */
+    const way = [lineMid].concat(S.marks.map((m) => ({ x: m.x, z: m.z })), [lineMid]);
+    for (let i = 0; i < way.length - 1; i++) {
+      const path = vrLegPath(way[i], way[i + 1], S.wf), done = i < S.next, cur = i === S.next;
+      g.setLineDash(cur ? [] : [22, 16]); g.lineWidth = cur ? 10 : 6; g.strokeStyle = done ? "rgba(160,180,200,.3)" : cur ? "#ffd166" : "rgba(255,209,102,.6)";
+      g.beginPath(); path.forEach((q, j) => { const [x, y] = P(q.x, q.z); j ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); g.setLineDash([]);
+      /* szakasz felirat a közepén */
+      const mid = path[Math.floor(path.length / 2)], mm = P((path[0].x + path[path.length - 1].x) / 2, (path[0].z + path[path.length - 1].z) / 2);
+      const kind = path.length === 3 ? (Math.abs(wrapA(Math.atan2(way[i + 1].x - way[i].x, -(way[i + 1].z - way[i].z)) - S.wf)) < 50 * D2R ? "cirkálás" : "hátszél") : "egyenesen";
+      if (!done) { g.font = "700 30px system-ui"; g.textAlign = "center"; const lbl = `${i + 1}. szakasz · ${kind}`; const tw = g.measureText(lbl).width + 24; g.fillStyle = "rgba(6,20,36,.75)"; g.fillRect(mm[0] - tw / 2, mm[1] - 22 + 40, tw, 40); g.fillStyle = cur ? "#ffd166" : "#cfe3f2"; g.fillText(lbl, mm[0], mm[1] + 50); }
+    }
+    /* rajt- és célvonal (sakktábla-mintás) */
+    { const a = P(C.line.a.x, C.line.a.z), b = P(C.line.b.x, C.line.b.z); const n = 12; for (let i = 0; i < n; i++) { g.strokeStyle = i % 2 ? "#ffffff" : "#14202a"; g.lineWidth = 9; g.beginPath(); g.moveTo(a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n); g.lineTo(a[0] + (b[0] - a[0]) * (i + 1) / n, a[1] + (b[1] - a[1]) * (i + 1) / n); g.stroke(); }
+      g.fillStyle = "#ffffff"; g.font = "700 26px system-ui"; g.textAlign = "center"; g.fillText(S.next >= S.marks.length ? "CÉL" : "RAJT / CÉL", (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 18); }
+    /* bóják: számozva, a kerülési irány íves nyíllal (bal kéz felől = az óramutatóval ellentétesen) */
+    S.marks.forEach((m, i) => { const [x, y] = P(m.x, m.z), cur = i === S.next, done = i < S.next, r = cur ? 34 : 26;
+      if (!done) { g.strokeStyle = cur ? "#ffd166" : "rgba(255,209,102,.7)"; g.lineWidth = cur ? 7 : 5; const rr2 = r + 30; g.beginPath(); g.arc(x, y, rr2, -.2, -2.9, true); g.stroke();
+        const ea = -2.9, ex = x + Math.cos(ea) * rr2, ey = y + Math.sin(ea) * rr2; g.fillStyle = g.strokeStyle; g.beginPath(); g.moveTo(ex - 14, ey - 4); g.lineTo(ex + 6, ey - 16); g.lineTo(ex + 8, ey + 10); g.closePath(); g.fill(); }
+      g.beginPath(); g.arc(x, y, r, 0, TAU); g.fillStyle = done ? "#4a5a68" : cur ? "#ffb703" : "#ff7a00"; g.fill(); g.lineWidth = 4; g.strokeStyle = "#fff"; g.stroke();
+      g.fillStyle = "#0b1b2a"; g.font = `900 ${cur ? 40 : 32}px system-ui`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(i + 1), x, y + 2); g.textBaseline = "alphabetic"; });
+    /* nyomvonal és a hajók */
+    if (S.trail.length > 1) { g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 4; g.beginPath(); S.trail.forEach((q, j) => { const [x, y] = P(q.x, q.z); j ? g.lineTo(x, y) : g.moveTo(x, y); }); const [x0, y0] = P(S.x, S.z); g.lineTo(x0, y0); g.stroke(); }
+    S.riv.forEach((r) => { const [x, y] = P(r.x, r.z); g.save(); g.translate(x, y); g.rotate(r.b - S.b); g.fillStyle = "#e9f6ff"; g.beginPath(); g.moveTo(0, -18); g.lineTo(10, 12); g.lineTo(-10, 12); g.closePath(); g.fill(); g.restore(); g.fillStyle = "#cfe3f2"; g.font = "600 22px system-ui"; g.textAlign = "left"; g.fillText(r.o.name.split(" ")[0], x + 14, y + 6); });
+    g.save(); g.translate(cx, cy); g.fillStyle = "#ff4b3a"; g.strokeStyle = "#fff"; g.lineWidth = 4; g.beginPath(); g.moveTo(0, -30); g.lineTo(18, 22); g.lineTo(0, 12); g.lineTo(-18, 22); g.closePath(); g.fill(); g.stroke(); g.restore();
+    /* szélirány (a térkép bal felső sarkában) és fejléc */
+    { const wx = 90, wy = 120, a = S.wf - S.b; g.fillStyle = "rgba(6,20,36,.8)"; g.beginPath(); g.arc(wx, wy, 62, 0, TAU); g.fill(); g.save(); g.translate(wx, wy); g.rotate(a + Math.PI); g.fillStyle = "#7fd3ff"; g.beginPath(); g.moveTo(0, -46); g.lineTo(16, 10); g.lineTo(0, 0); g.lineTo(-16, 10); g.closePath(); g.fill(); g.restore(); g.fillStyle = "#cfe3f2"; g.font = "700 22px system-ui"; g.textAlign = "center"; g.fillText("SZÉL", wx, wy + 86); }
+    g.fillStyle = "rgba(6,20,36,.85)"; g.fillRect(0, 0, W2, 64); g.fillStyle = "#ffd166"; g.font = "800 38px system-ui"; g.textAlign = "center";
+    const tg = S.tgt || lineMid; g.fillText(S.ocs === 1 ? "KORAI RAJT – vissza a vonal mögé" : S.next < S.marks.length ? `→ ${S.next + 1}. bója · ${Math.round(Math.hypot(tg.x - S.x, tg.z - S.z))} m · bal kéz felől` : `→ CÉL · ${Math.round(Math.hypot(lineMid.x - S.x, lineMid.z - S.z))} m`, W2 / 2, 46);
+    g.strokeStyle = "#ffd166"; g.lineWidth = 6; g.strokeRect(3, 3, W2 - 6, W2 - 6);
+    t.needsUpdate = true;
+  }
   function vrInstruments() {
     const S = VRR, t = S.ck.instT, g = t._canvas.getContext("2d"), w = 512;
     g.fillStyle = "#06090d"; g.fillRect(0, 0, w, w);
@@ -526,6 +585,7 @@
       S.riv.forEach((r) => { const [x, y] = P2(r.x, r.z); g.fillStyle = "#e9f6ff"; g.beginPath(); g.arc(x, y, 4, 0, TAU); g.fill(); });
       g.fillStyle = "#ff5a4a"; g.beginPath(); g.moveTo(cx, cy - 9); g.lineTo(cx + 6, cy + 6); g.lineTo(cx - 6, cy + 6); g.closePath(); g.fill(); g.restore(); }
     t.needsUpdate = true;
+    vrChart();
     const m = S.mastT, g2 = m._canvas.getContext("2d"); g2.fillStyle = "#06090d"; g2.fillRect(0, 0, 1024, 256);
     const cell = (x, lbl, val) => { g2.fillStyle = "#7fd3ff"; g2.font = "600 30px system-ui"; g2.textAlign = "center"; g2.fillText(lbl, x + 170, 52); g2.fillStyle = "#e9f6ff"; g2.font = "800 110px system-ui"; g2.fillText(val, x + 170, 180); };
     cell(0, S.st === "pre" ? "RAJTIG" : "IDŐ", mmss(S.t)); cell(341, "HELY", S.st === "pre" ? "–" : `${S.fin ? S.res.findIndex((q) => q.me) + 1 : vrPlace()}/4`); cell(682, "SEBESSÉG", (S.v / KN).toFixed(1));
