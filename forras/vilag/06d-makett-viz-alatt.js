@@ -77,10 +77,10 @@
     dome.setAttribute("color", new THREE.Float32BufferAttribute(dc, 3));
     const dm = mesh(dome, basic({ vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false }), g); dm.position.set(0, WATER_Y - 2, UW_Z); dm.renderOrder = -30; UW.dome = dm;
     /* a felszín alulról: hullámok, Snell-ablak, csillogás */
-    const sU = { uT: { value: 0 }, uC: { value: new THREE.Vector3() }, uDay: { value: 1 }, uSky: { value: new THREE.Color() } };
+    const sU = { uT: { value: 0 }, uC: { value: new THREE.Vector3() }, uDay: { value: 1 }, uSky: { value: new THREE.Color() }, uSunW: { value: new THREE.Vector3(0, 1, 0) }, uSiteInv: { value: new THREE.Matrix4() } };
     const surf = mesh(new THREE.PlaneGeometry(160, 160, 1, 1), new THREE.ShaderMaterial({ side: THREE.DoubleSide, transparent: true, depthWrite: false, fog: false, uniforms: sU,
       vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
-      fragmentShader: `uniform float uT, uDay; uniform vec3 uC, uSky; varying vec3 vW;
+      fragmentShader: `uniform float uT, uDay; uniform vec3 uC, uSky, uSunW; uniform mat4 uSiteInv; varying vec3 vW;
         float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }
         void main(){
@@ -90,6 +90,14 @@
           vec3 inside = mix(vec3(.4, .7, .68), uSky, .3) * (.45 + .45 * uDay) * (.8 + .4 * n) + vec3(1., .96, .85) * pow(n, 7.) * 1.1 * uDay;
           vec3 outside = vec3(.12, .36, .36) * (.5 + .5 * uDay) + vec3(.4, .7, .65) * pow(n, 4.) * .35 * uDay;
           vec3 col = mix(outside, inside, win);
+          /* a nap a Snell-ablakban (a fénytörés miatt „összenyomva”) */
+          vec3 ad = normalize(vec3(d.x * 1.33, max(d.y, .05), d.z * 1.33));
+          col += vec3(1., .95, .8) * pow(max(dot(ad, normalize(uSunW)), 0.), 60.) * 2.2 * win * uDay;
+          /* a stég és a palló sötét sziluettje fölöttünk */
+          vec3 sp = (uSiteInv * vec4(vW, 1.)).xyz;
+          float deck = 1. - smoothstep(${(DECK_R - .1).toFixed(2)}, ${(DECK_R + .1).toFixed(2)}, length(sp.xz));
+          float walk = (1. - smoothstep(1.05, 1.15, abs(sp.x))) * step(${DECK_R.toFixed(2)}, sp.z) * step(sp.z, ${SHORE_Z.toFixed(1)});
+          col *= 1. - max(deck, walk) * .82;
           float dist = length(vW - uC); col = mix(col, vec3(.13, .38, .37) * (.35 + .65 * uDay), smoothstep(6., 38., dist));
           gl_FragColor = vec4(col, .97);
           #include <colorspace_fragment>
@@ -188,6 +196,8 @@
     const camL = ENV.site.worldToLocal(_tv.copy(camW));
     UW.mats.forEach((u) => { u.uT.value = t; u.uDay.value = .25 + .75 * day; if (u.uC) u.uC.value.copy(camW); });
     UW.surf.material.uniforms.uSky.value.copy(ENV.sky.userData.U.uHor.value);
+    if (ENV.lights.sunDirW) UW.surf.material.uniforms.uSunW.value.copy(ENV.lights.sunDirW);
+    ENV.site.updateMatrixWorld(); UW.surf.material.uniforms.uSiteInv.value.copy(ENV.site.matrixWorld).invert();
     UW.rays.forEach((r) => { r.m.material.opacity = r.o * (.6 + .4 * Math.sin(t * .7 + r.ph)) * day; r.m.rotation.y += dt * .02; });
     UW.bub.uniforms.uT.value = t; UW.dust.uniforms.uT.value = t;
     /* raj: a küszök egy vándorló középpont körül, egymást kerülve; a nagyobb halak lassan cirkálnak; a harcsa a fenéken */
