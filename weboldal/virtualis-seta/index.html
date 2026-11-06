@@ -8322,7 +8322,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function camYaw() {
     /* a kamera tényleges (világ-) iránya radiánban – VR-ben a fej forgásával együtt */
     try {
-      const r = sceneEl.renderer, c = r && r.xr && r.xr.isPresenting ? r.xr.getCamera() : camObj();
+      const c = camObj() || sceneEl.renderer.xr.getCamera();   /* VR-ben is az A-Frame kamera: ez kapja meg a rig forgatását */
       if (c) { const d = new THREE.Vector3(); c.getWorldDirection(d); return Math.atan2(-d.x, -d.z); }
     } catch (e) {}
     const lc = cam.components["look-controls"];
@@ -8593,11 +8593,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   /* rövid súgó: első VR-belépéskor magától, utána a menüből – nagy betűkkel, hogyan irányítasz kézzel és kontrollerrel */
   function pHelp(g) {
     txt(g, "Így irányítasz", 60, 168, { fs: 44, w: 800, c: "#ffd166" });
-    const R = [["👉", "Mutass a kezeddel", "a kezedből halvány sugár indul – arra mutat, amit kiválasztasz"],
-               ["🤏", "Csippents = kattintás", "hüvelyk- és mutatóujj összeér (kontrolleren: ravasz)"],
-               ["↻", "Fordulás", "nézz le: ↺ ↻ gombok · vagy csippents a semmibe és húzd oldalra · kontroller: bot jobbra/balra"],
-               ["🖐", "Csuklómenü", "fordítsd fel a bal csuklód: előugrik a kezelőfelület (vagy nézz le: ☰) · kontroller: A/B/X/Y"],
-               ["➜", "Továbblépés", "mutass egy piros nyílra és csippents · kontroller: bot előre"]];
+    const R = [["✊", "Mozgás: ököl + hüvelykujj-koppintás", "megjelenik az ív · célozz és koppints újra: odaugrasz · nyitott kéz: vége"],
+               ["↔", "Fordulás és lépés: hüvelykujj-húzás", "öklöt tartva húzd a hüvelykujjad: ← → fordulás · ↑ előre · ↓ vissza (kontroller: bot)"],
+               ["👉", "Mutass + csippents = kattintás", "nyitott kézből sugár indul; hüvelyk- és mutatóujj összeér (kontroller: ravasz)"],
+               ["🖐", "Csuklómenü", "fordítsd fel a bal csuklód: kinyílik a kezelő térképpel (vagy nézz le: ☰)"],
+               ["➜", "Vagy: piros nyíl", "mutass egy piros nyílra és csippents · a térképen egy pontra bökve is odalépsz"]];
     R.forEach(([ic, t, d], i) => {
       const y = 214 + i * 104;
       rr(g, 40, y, VW - 80, 92, 20); g.fillStyle = "rgba(255,255,255,.08)"; g.fill();
@@ -9210,7 +9210,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const tick = () => {
         if (!inVR) return;
         try {
-          const xc = sceneEl.renderer.xr.isPresenting ? sceneEl.renderer.xr.getCamera() : camObj();
+          const xc = camObj() || sceneEl.renderer.xr.getCamera();   /* a rig forgatásával együtt */
           const f = new THREE.Vector3(), u = new THREE.Vector3(0, 1, 0); xc.getWorldDirection(f); u.applyQuaternion(xc.getWorldQuaternion(new THREE.Quaternion()));
           if (L.forwardX) { L.forwardX.value = f.x; L.forwardY.value = f.y; L.forwardZ.value = f.z; L.upX.value = u.x; L.upY.value = u.y; L.upZ.value = u.z; }
           else L.setOrientation(f.x, f.y, f.z, u.x, u.y, u.z);
@@ -9264,7 +9264,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     Object.keys(XRP.hov).forEach((k) => xrSetHover(k, null)); XRP.hov = {}; XRP.press = {}; XRP.drag = {};
     if (XRP.wristP) { kill(XRP.wristP.g); XRP.wristP = null; XRP.wrist = null; }
     if (XRP.bar) { XRP.bar.items.forEach((m) => { XRP.extra.delete(m); (m.userData.tex || []).forEach((t) => t.dispose()); }); kill(XRP.bar.g); XRP.bar = null; }
-    XRP.spin = {}; XRP.stick = {};
+    XRP.spin = {}; XRP.stick = {}; XRP.tutTried = 0; XRP.tutWait = 0;
+    if (XRP.loco) { Object.keys(XRP.loco).forEach((k) => kill(XRP.loco[k].g)); XRP.loco = null; }
+    if (XRP.tut) { XRP.extra.delete(XRP.tut.m); kill(XRP.tut.g); XRP.tut = null; }
   }
   /* egy kéz sugara: vékony fénycsík + célkör a találati ponton */
   function xrRayMesh(key) {
@@ -9315,11 +9317,12 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function xrPulse(src, v, ms) { try { const a = src && src.gamepad && src.gamepad.hapticActuators && src.gamepad.hapticActuators[0]; if (a && a.pulse) a.pulse(v, ms); } catch (e) {} }
   function xrSelect(src, down) {
     const key = src.handedness || "none", t = XRP.hov[key];
+    if (src.hand && XRP.src[key] && XRP.src[key].fist) { XRP.press[key] = null; return; }   /* a kézi mozgás koppintása ne legyen csippentés */
     XRP.pinch[key] = !!down;   /* a világ-modul két kezes nagyításához */
     if (down) {
       XRP.press[key] = t || null;
       if (t && t.kind === "obj" && t.h.down) { XRP.drag[key] = t; t.h.down(t.hit, XRP.src[key], key); }
-      if (!t) xrSpinStart(key);   /* üres helyre csippentve: a kéz oldalra húzásával fordul a világ */
+      if (!t && WS.spin) xrSpinStart(key);   /* (régi) üres helyre csippentve forgatás – csak ha a beállításban bekapcsolod */   /* üres helyre csippentve: a kéz oldalra húzásával fordul a világ */
       const r = XRP.ray[key]; if (r) r.halo.scale.setScalar(.6);
       return;
     }
@@ -9360,6 +9363,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (src.hand) xrPalm(S0, src, frame, ref, parent);
       xrSpinTick(key, S0, frame, ref);
       xrStick(key, src);
+      if (src.hand) { try { xrLoco(key, S0); } catch (e) { if (!XRP.lerr) { XRP.lerr = 1; console.warn("loco", e); } } }
+      /* ökölbe zárt kéznél (kézi mozgás) nincs sugár és nincs célzás – ne kattintson véletlenül semmire */
+      if (S0.fist) { R.g.visible = false; R.cur.visible = false; xrSetHover(key, null); continue; }
       /* húzás közben (pl. kormányrúd, makett forgatása) a fogott tárgy kapja a mozgást */
       const dr = XRP.drag[key];
       if (dr && dr.h.drag) dr.h.drag(S0, key);
@@ -9384,6 +9390,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (anyPointer) { XRP.lastPtr = performance.now(); removeGaze(); }
     else if (inVR && !gaze && performance.now() - (XRP.lastPtr || 0) > 1800) addGaze();
     XRP.seen = seen;
+    if ((seen.left || seen.right) && Object.keys(XRP.src).some((k) => XRP.src[k].hand) && !XRP.tutTried) { XRP.tutTried = 1; XRP.tutWait = performance.now() + 3500; }   /* előbb a rövid súgó jön (ha első belépés), a mozgás-bemutató utána */
+    if (XRP.tutWait && performance.now() > XRP.tutWait && !VRS.panel && inVR) { XRP.tutWait = 0; locoTutorial(false); }
+    if (XRP.tut && Object.keys(XRP.src).some((k) => XRP.src[k].lc && XRP.src[k].lc.mode)) locoTutClose();
     xrWrist(); xrBar();
   }
   /* csukló-menü: a bal csukló fölött lebegő „☰ Menü” gomb, mindig a fejed felé fordul – a jobb kezeddel rámutatva, csippentéssel nyílik */
@@ -9404,7 +9413,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       "Gyöngyház": ["#f4f1ea", "#bfb8aa", "rgba(232,226,214,.97)", "rgba(170,160,145,.97)"], "Balaton-türkiz": ["#2c9a92", "#0b3f45", "rgba(36,128,122,.97)", "rgba(10,62,66,.97)"] },
     strap: ["Fém lánc", "Barna bőr", "Kék szilikon", "Vitorlakötél"]
   };
-  const WS_DEF = { size: "Nagy", metal: "Arany", dial: "Tengerkék", strap: "Fém lánc", compass: true, sound: true, tap: false, face: "Digitális" };
+  const WS_DEF = { size: "Nagy", metal: "Arany", dial: "Tengerkék", strap: "Fém lánc", compass: true, sound: true, tap: false, face: "Digitális", loco: true, turnDeg: 45, spin: false };
   let WS = (() => { try { return Object.assign({}, WS_DEF, JSON.parse(localStorage.getItem("zephyrOra") || "{}")); } catch (e) { return Object.assign({}, WS_DEF); } })();
   function wsSet(k, v) { WS[k] = v; try { localStorage.setItem("zephyrOra", JSON.stringify(WS)); } catch (e) {} const P = XRP.wristP; if (P) { P.applyStyle(); P.draw(); P.drawHub(); } }
   function wSnd() { if (WS.sound) { try { sndNav(); } catch (e) {} } }
@@ -9421,7 +9430,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       ["✋", "Kezelés", [
         ["✋", "Nyitás: felfordítás", () => wsSet("tap", false), !WS.tap],
         ["👆", "Nyitás: + koppintás", () => wsSet("tap", true), !!WS.tap],
-        ["🧭", WS.compass ? "Iránytű ki" : "Iránytű be", () => wsSet("compass", !WS.compass), !!WS.compass]]],
+        ["🧭", WS.compass ? "Iránytű ki" : "Iránytű be", () => wsSet("compass", !WS.compass), !!WS.compass],
+        ["✊", WS.loco === false ? "Kézi mozgás be" : "Kézi mozgás ki", () => wsSet("loco", WS.loco === false), WS.loco !== false],
+        ["↻", "Fordulás szöge", [30, 45, 90].map((n) => ["↻", n + "°", () => wsSet("turnDeg", n), (WS.turnDeg || 45) === n])],
+        ["🤏", WS.spin ? "Csippentve forgatás ki" : "Csippentve forgatás be", () => wsSet("spin", !WS.spin), !!WS.spin],
+        ["❔", "Kézi mozgás – bemutató", () => locoTutorial(true)]]],
       ["🔊", "Hang", [["🔊", "Kattanás be", () => wsSet("sound", true), !!WS.sound], ["🔇", "Kattanás ki", () => wsSet("sound", false), !WS.sound]]],
       ["📏", "Gyors méret", pick("size", Object.keys(WSTY.size), "⌚")],
       ["↺", "Alaphelyzet", () => { WS = Object.assign({}, WS_DEF); wsSet("size", WS.size); }]]];
@@ -9438,7 +9451,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const apts = GROUPS.map((g) => [g.no ? String(g.no) : g.id === "strand" ? "🏖" : "🏡", g.name, () => go(g.entry), sceneGroup() === g.id]);
       const diveSoon = () => { openWorld("maquette"); let n = 0; const iv = setInterval(() => { const W = window.ZephyrWorld; if (++n > 60) clearInterval(iv); if (W && W.active && W.maq && W.maq.MAQ && !W.maq.MAQ.fading) { clearInterval(iv); try { W.maq.goDive(); } catch (e) {} } }, 300); };
       it = [
-        ["🧭", "Mozgás", [["⬆", "Előre", () => vrStepForward()], ["↶", "Vissza", () => { try { goBack(); } catch (e) {} }], ["↺", "Balra 45°", () => vrTurn(TURN)], ["↻", "Jobbra 45°", () => vrTurn(-TURN)], ["⤾", "Megfordulok", () => vrTurn(Math.PI)], ["🗺", "Alaprajz", pg("map")]]],
+        ["🧭", "Mozgás", [["✊", "Kézi mozgás – hogyan?", () => locoTutorial(true)], ["⬆", "Előre", () => vrStepForward()], ["↶", "Vissza", () => { try { goBack(); } catch (e) {} }], ["↺", "Balra 45°", () => vrTurn(TURN)], ["↻", "Jobbra 45°", () => vrTurn(-TURN)], ["⤾", "Megfordulok", () => vrTurn(Math.PI)], ["🗺", "Alaprajz", pg("map")]]],
         ["🏠", "Lakások", apts],
         ["📅", "Foglalás", [["📅", "Időpont és foglalás", pg("book", () => vrBookInit())], ["🗺", "Melyik lakás hol van", pg("map")], ["❔", "Hogyan foglalok?", pg("help")]]],
         ["☀", "Napállás", pg("sun", () => sunSet(true))],
@@ -9730,7 +9743,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const L = (XRP.seen && XRP.seen.left) ? XRP.src.left : (XRP.seen && XRP.seen.none) ? XRP.src.none : null;
     const P = xrWatch();
     if (!inVR) { P.g.visible = false; P.m.visible = false; XRP.wrist.visible = false; P.t = 0; P.open = false; return; }
-    const xc = sceneEl.renderer.xr.getCamera(); xc.getWorldPosition(_wv3);
+    headPos(_wv3);
     let base = null, nrm = null, axis = null;
     if (L && L.hand && L.wristJ && L.palmN) { nrm = L.palmN; axis = L.handDir || _wup; base = _wv.copy(L.wristJ).addScaledVector(nrm, .028).addScaledVector(axis, -.02); }
     else if (L && L.grip) { _wv.setFromMatrixPosition(L.grip); _wm.extractRotation(L.grip); nrm = new THREE.Vector3(0, 1, 0).applyMatrix4(_wm).normalize(); axis = new THREE.Vector3(0, 0, -1).applyMatrix4(_wm).normalize(); base = _wv.addScaledVector(nrm, .045); }
@@ -9791,7 +9804,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
      Kézzel, kontroller nélkül: (1) a látótered alján lebegő ↺ / ↻ gomb – csippents rá; (2) üres helyre csippents, és húzd oldalra a kezed:
      vele fordul a világ, mint egy földgömb; (3) egyszerűen körbefordulsz. A bal tenyered felfelé fordítva előjön a ☰ Menü. */
   const TURN = Math.PI / 4;
-  function headPos(v) { try { sceneEl.renderer.xr.getCamera().getWorldPosition(v); } catch (e) { v.set(0, 1.6, 0); } return v; }
+  /* A fej helye és iránya: az A-Frame kamerából (VR-ben is ez kapja meg a „játéktér” (rig) elforgatását és helyét).
+     A WebXR saját kamerájának világmátrixa a képkocka közben NEM tartalmazza a rig forgatását – ezért ment fordulás után
+     rossz irányba az „Előre” lépés. (javítva: 2026. nov. 6.) */
+  function headPos(v) { try { const c = camObj(); if (c) { c.getWorldPosition(v); return v; } sceneEl.renderer.xr.getCamera().getWorldPosition(v); } catch (e) { v.set(0, 1.6, 0); } return v; }
+  function headDir(v) { try { const c = camObj(); if (c) { c.getWorldDirection(v); return v; } sceneEl.renderer.xr.getCamera().getWorldDirection(v); } catch (e) { v.set(0, 0, -1); } return v; }
   function vrTurn(a, quiet) {
     /* a rig elforgatása a fejed körül (nem a játéktér közepe körül), így fordulás közben nem csúszol el */
     if (!rig || !a) return;
@@ -9804,7 +9821,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     /* a nézési irányodhoz legközelebb eső nyíl (±40°-on belül) – mintha rákattintanál */
     if (!spots) return false;
     const h = headPos(new THREE.Vector3()), f = new THREE.Vector3();
-    sceneEl.renderer.xr.getCamera().getWorldDirection(f); f.y = 0; if (f.lengthSq() < 1e-6) return false; f.normalize();
+    headDir(f); f.y = 0; if (f.lengthSq() < 1e-6) return false; f.normalize();
     let best = null, bd = Math.cos(40 * Math.PI / 180);
     spots.querySelectorAll(".hotspot").forEach((el) => {
       if (el._ix !== 1 || !el.object3D || !isShown(el.object3D)) return;
@@ -9863,9 +9880,197 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const f = n.dot(toHead), up = n.y;
       const score = Math.max(f, up * .9);
       S0.palmC = c; S0.palmN = n; S0.palmScore = score; S0.wristJ = w; S0.handDir = (mid || i).clone().sub(w).normalize(); S0.tip = J("index-finger-tip");
+      const ff = XRP.fakeJ && XRP.fakeJ[src.handedness];   /* tesztekhez: kitalált kézpóz (az emulátor nem tud öklöt) */
+      S0.jp = ff ? ff() : { tt: J("thumb-tip"), ip: J("index-finger-phalanx-proximal"), ii: J("index-finger-phalanx-intermediate"), it: S0.tip, mt: J("middle-finger-tip"), rt: J("ring-finger-tip"), pt: J("pinky-finger-tip"), mp: J("middle-finger-phalanx-proximal") };
+      if (ff) { S0.palmC = S0.jp.c || S0.palmC; S0.wristJ = S0.jp.w || S0.wristJ; }
       S0.palmUp = S0.palmUp ? score > .35 : score > .6;
     } catch (e) { S0.palmUp = false; }
   }
+  /* ===================================================================================================
+     KÉZI MOZGÁS – a Meta legújabb, Horizon OS 2.4-ben (2026. május) bevezetett kézkövetéses mozgása szerint („mikrogesztusok”):
+       1. Ökölbe (vagy lazán, „távirányítót fogva”) zárod a kezed, a hüvelykujj a mutatóujj oldalán pihen.
+       2. A hüvelykujjal rákoppintasz a mutatóujjad oldalára → bekapcsol a mozgás: a kéz fölött nyilak, a kézből ív indul a padlóra.
+       3. Célzás a karral; KOPPINTÁS = odaugrasz (a sétában az ív végéhez legközelebbi sétapontra, a 3D-világban az ív végére).
+          Hüvelykujj-HÚZÁS az ujjon: balra / jobbra = fordulás (45°), előre = egy lépés előre (a nézési irányodba), hátra = vissza.
+       4. Kinyitod a kezed → kikapcsol.
+     A tévedések ellen (Meta-ajánlás: „gating”): csak ökölbe zárt kéznél figyel, és ilyenkor a kéz sugara és a csippentés ki van kapcsolva. */
+  const LOCO = { TURN: Math.PI / 4 };
+  let _lv = null;
+  function segDist(p, a, b) { const ab = _lv.ab.copy(b).sub(a), t = Math.max(0, Math.min(1, _lv.ap.copy(p).sub(a).dot(ab) / Math.max(1e-6, ab.lengthSq()))); return _lv.q.copy(a).addScaledVector(ab, t).distanceTo(p); }
+  function locoUI(key) {
+    const L = XRP.loco || (XRP.loco = {});
+    if (L[key]) return L[key];
+    const g = new THREE.Group(); g.visible = false; sceneEl.object3D.add(g);
+    /* az ív: 48 pontos cső helyett pöttysor (olcsó, jól látszik) */
+    const dots = [], dm = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .9, depthWrite: false });
+    for (let i = 0; i < 40; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(.012, 8, 6), dm); d.renderOrder = 999; g.add(d); dots.push(d); }
+    /* célpont a padlón: két gyűrű + irányjelző nyíl */
+    const tgt = new THREE.Group(); g.add(tgt);
+    const r1 = new THREE.Mesh(new THREE.RingGeometry(.22, .27, 48), new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .9, depthWrite: false, side: THREE.DoubleSide })); r1.rotation.x = -Math.PI / 2; tgt.add(r1);
+    const r2 = new THREE.Mesh(new THREE.CircleGeometry(.2, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .18, depthWrite: false, side: THREE.DoubleSide })); r2.rotation.x = -Math.PI / 2; r2.position.y = .002; tgt.add(r2);
+    const sh = new THREE.Shape(); sh.moveTo(0, .17); sh.lineTo(.09, .04); sh.lineTo(.035, .04); sh.lineTo(.035, -.1); sh.lineTo(-.035, -.1); sh.lineTo(-.035, .04); sh.lineTo(-.09, .04); sh.closePath();
+    const ar = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .95, depthWrite: false, side: THREE.DoubleSide })); ar.rotation.x = -Math.PI / 2; ar.position.y = .004; tgt.add(ar);
+    /* a kéz fölötti „kereszt”: ↑ lépés, ↓ vissza, ← → fordulás, ● koppintás = ugrás */
+    const cv = document.createElement("canvas"); cv.width = 512; cv.height = 512; const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    const hud = new THREE.Mesh(new THREE.PlaneGeometry(.11, .11), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false })); hud.renderOrder = 1002; g.add(hud);
+    const lbl = document.createElement("canvas"); lbl.width = 768; lbl.height = 128; const ltex = new THREE.CanvasTexture(lbl); ltex.colorSpace = THREE.SRGBColorSpace;
+    const name = new THREE.Mesh(new THREE.PlaneGeometry(.6, .1), new THREE.MeshBasicMaterial({ map: ltex, transparent: true, depthTest: false, depthWrite: false })); name.renderOrder = 1002; tgt.add(name); name.position.y = .45;
+    return (L[key] = { g, dots, dm, tgt, r1, ar, hud, cv, tex, name, lbl, ltex, flash: null, flashT: 0, lastName: null, on: false });
+  }
+  function locoHud(U, active) {
+    const g = U.cv.getContext("2d"); g.clearRect(0, 0, 512, 512);
+    const C = 256, fl = (k) => U.flash === k && performance.now() - U.flashT < 450;
+    g.fillStyle = active ? "rgba(9,34,70,.82)" : "rgba(9,34,70,.55)"; g.beginPath(); g.arc(C, C, 236, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = active ? "#ffd166" : "rgba(255,209,102,.6)"; g.stroke();
+    const arrow = (ang, k) => { g.save(); g.translate(C, C); g.rotate(ang); g.fillStyle = fl(k) ? "#ffffff" : "#ffd166"; g.beginPath(); g.moveTo(0, -210); g.lineTo(62, -138); g.lineTo(-62, -138); g.closePath(); g.fill(); g.restore(); };
+    arrow(0, "up"); arrow(Math.PI, "down"); arrow(-Math.PI / 2, "left"); arrow(Math.PI / 2, "right");
+    g.fillStyle = fl("tap") ? "#ffffff" : active ? "#ffd166" : "rgba(255,255,255,.7)"; g.beginPath(); g.arc(C, C, active ? 58 : 40, 0, 7); g.fill();
+    g.fillStyle = "#0b2f5e"; g.font = "800 40px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(active ? "UGRÁS" : "👆", C, C + 2);
+    g.fillStyle = "#fff"; g.font = "700 34px system-ui, sans-serif"; g.fillText("lépés", C, 150); g.fillText("vissza", C, 365); g.fillText("↺", 112, C); g.fillText("↻", 400, C);
+    U.tex.needsUpdate = true;
+  }
+  function locoLabel(U, txt) {
+    if (U.lastName === txt) return; U.lastName = txt;
+    const g = U.lbl.getContext("2d"); g.clearRect(0, 0, 768, 128); if (!txt) { U.ltex.needsUpdate = true; return; }
+    g.font = "800 60px system-ui, sans-serif"; const w = Math.min(740, g.measureText(txt).width + 60);
+    g.fillStyle = "rgba(9,34,70,.92)"; g.beginPath(); g.roundRect ? g.roundRect(384 - w / 2, 10, w, 108, 40) : g.rect(384 - w / 2, 10, w, 108); g.fill(); g.lineWidth = 6; g.strokeStyle = "#ffd166"; g.stroke();
+    g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(txt, 384, 66); U.ltex.needsUpdate = true;
+  }
+  /* a pillanatnyi kézpóz: ököl? hol a hüvelykujj a mutatóujjhoz képest? */
+  function locoPose(S0) {
+    const j = S0.jp; if (!j || !j.tt || !j.ip || !j.ii || !S0.palmC) return null;
+    const c = S0.palmC, dTip = (t) => t ? t.distanceTo(c) : 1;
+    const curled = [j.mt, j.rt, j.pt].filter((t) => dTip(t) < .075).length, open = [j.it, j.mt, j.rt, j.pt].filter((t) => dTip(t) > .105).length;
+    const fist = curled >= 3 && dTip(j.it) < .095;
+    const d = segDist(j.tt, j.ip, j.ii);
+    return { fist, open: open >= 3, d, rel: j.tt.clone().sub(j.ip) };
+  }
+  function xrLoco(key, S0) {
+    if (!_lv) _lv = { ab: new THREE.Vector3(), ap: new THREE.Vector3(), q: new THREE.Vector3(), h: new THREE.Vector3(), f: new THREE.Vector3() };
+    const st = S0.lc || (S0.lc = { mode: false, touch: false, t0: 0, rel0: null, used: false, openT: 0, idle: 0 });
+    const U = locoUI(key);
+    if (!S0.hand || WS.loco === false || S0.palmUp || (XRP.wristP && XRP.wristP.open && key === "left")) { if (st.mode) locoExit(key, S0); S0.fist = false; U.g.visible = false; return; }
+    const P = locoPose(S0); if (!P) { U.g.visible = false; return; }
+    S0.fist = P.fist || st.mode;
+    const now = performance.now();
+    /* hüvelykujj érintés (hiszterézissel), koppintás és húzás */
+    /* érintés: közel kell érni (2,1 cm), de húzás közben a hüvelykujj lecsúszhat az ujj éléről – ezért csak 4,5 cm-en túl „enged el” */
+    const was = st.touch; st.touch = st.touch ? P.d < .045 : P.d < .021;
+    let ev = null;
+    if (st.touch && !was) { st.t0 = now; st.rel0 = P.rel.clone(); st.used = false; st.fr = 0; }
+    if (st.touch) st.fr = (st.fr || 0) + 1;
+    /* húzás: a hüvelykujj elmozdulása a mutatóujjhoz képest (a kar mozgása nem számít), a fejed irányában értelmezve */
+    const swipe = (rel) => { if (!st.rel0) return null; const dv = rel.clone().sub(st.rel0), f = _lv.f; headDir(f); f.y = 0; f.normalize();
+      const rgt = new THREE.Vector3(-f.z, 0, f.x), fw = dv.dot(f) + dv.y * .6, sd = dv.dot(rgt);   /* felfelé = előre is (az ujj élén fel-le húzva) */
+      if (Math.max(Math.abs(fw), Math.abs(sd)) < .013) return null; return Math.abs(sd) > Math.abs(fw) ? (sd > 0 ? "right" : "left") : (fw > 0 ? "up" : "down"); };
+    if (st.touch && !st.used) { const s2 = swipe(P.rel); if (s2) { st.used = true; ev = s2; } st.lastRel = P.rel.clone(); }
+    if (!st.touch && was && !st.used) { const s2 = st.lastRel && swipe(st.lastRel); ev = s2 || (now - st.t0 < 700 || st.fr <= 3 ? "tap" : null); }   /* rövid érintés = koppintás (lassú képkockáknál a képkockaszám dönt) */
+    /* kapuzás: koppintás ökölbe zárt kézzel → mozgás be */
+    if (!st.mode) {
+      if (ev === "tap" && P.fist) { st.mode = true; st.idle = now; U.flash = "tap"; U.flashT = now; xrPulse(S0.src, .35, 30); try { sndNav(); } catch (e) {} return locoDraw(key, S0, U, true); }
+      if (ev && ev !== "tap" && P.fist) { st.mode = true; st.idle = now; }   /* húzás már ökölből is működik */
+      else { U.g.visible = P.fist; if (P.fist) locoDraw(key, S0, U, false); return; }
+    }
+    /* kilépés: nyitott kéz 0,25 s-ig, vagy 10 s tétlenség */
+    if (P.open) { if (!st.openT) st.openT = now; if (now - st.openT > 250) return locoExit(key, S0); } else st.openT = 0;
+    if (now - st.idle > 10000) return locoExit(key, S0);
+    if (ev) { XRP.locoLog = (XRP.locoLog || []).slice(-9).concat(ev); }
+    if (ev) { st.idle = now; U.flash = ev; U.flashT = now; xrPulse(S0.src, .4, 25); }
+    if (ev === "left") vrTurn((WS.turnDeg || 45) * Math.PI / 180);
+    else if (ev === "right") vrTurn(-(WS.turnDeg || 45) * Math.PI / 180);
+    else if (ev === "up") locoStep(1);
+    else if (ev === "down") locoStep(-1);
+    else if (ev === "tap") locoJump(key);
+    locoDraw(key, S0, U, true);
+  }
+  function locoExit(key, S0) { if (S0.lc) { S0.lc.mode = false; S0.lc.openT = 0; } const U = XRP.loco && XRP.loco[key]; if (U) { U.g.visible = false; if (U.best && U.best.el) { try { U.best.el.emit("mouseleave"); } catch (e) {} } U.best = null; } }
+  function worldOn() { return !!(window.ZephyrWorld && ZephyrWorld.active); }
+  /* teleportfelületek a 3D-világban: amelyik tárgyat a világ „tp”-nek jelölte */
+  function tpSurfaces() { const a = []; XRP.extra.forEach((o) => { const t = o.userData && o.userData.tp; if (t && (typeof t !== "function" || t()) && isShown(o)) a.push(o); }); return a; }
+  /* az ív: a kéz előre néző irányából, parabola, a padlón / teleportfelületen áll meg */
+  function locoDraw(key, S0, U, active) {
+    U.g.visible = true; const j = S0.jp, h = headPos(_lv.h);
+    /* a „kereszt” a kéz fölött, a fejed felé fordulva */
+    const top = S0.palmC.clone().add(new THREE.Vector3(0, .1, 0)); U.hud.position.copy(top); U.hud.lookAt(h);
+    if (!U.hT || performance.now() - U.hT > 120 || U.wasA !== active) { U.hT = performance.now(); U.wasA = active; locoHud(U, active); }
+    U.dots.forEach((d) => (d.visible = active)); U.tgt.visible = active; if (!active) return;
+    const o = (j.ip || S0.palmC).clone(), dir = (j.mp || j.ip).clone().sub(S0.wristJ).normalize();
+    dir.y += .25; dir.normalize();   /* kicsit felfelé: kényelmesebb célzás, nem kell a kart emelni */
+    const floorY = rig ? rig.object3D.position.y : 0, v = dir.multiplyScalar(7.5), g = -9.8, pts = []; let hitP = null, hitObj = null;
+    const surf = worldOn() ? tpSurfaces() : [];
+    let prev = o.clone();
+    for (let i = 1; i <= 60 && !hitP; i++) {
+      const t = i * .028, p = new THREE.Vector3(o.x + v.x * t, o.y + v.y * t + .5 * g * t * t, o.z + v.z * t);
+      if (surf.length) { _rc.set(prev, p.clone().sub(prev).normalize()); _rc.far = prev.distanceTo(p); const hs = _rc.intersectObjects(surf, true); if (hs.length) { hitP = hs[0].point.clone(); hitObj = hs[0]; } }
+      if (!hitP && p.y <= floorY) { const k = (prev.y - floorY) / Math.max(1e-6, prev.y - p.y); hitP = prev.clone().lerp(p, k); }
+      pts.push(hitP || p); prev = p;
+    }
+    U.dots.forEach((d, i) => { const q = pts[Math.min(pts.length - 1, Math.floor(i / U.dots.length * pts.length))]; d.position.copy(q); d.scale.setScalar(.6 + .4 * Math.sin(performance.now() / 120 - i * .5) ** 2); });
+    if (!hitP) { U.tgt.visible = false; U.target = null; return; }
+    U.tgt.visible = true; U.tgt.position.copy(hitP); U.tgt.position.y += .01;
+    const fyaw = Math.atan2(-(hitP.x - h.x), -(hitP.z - h.z)); U.tgt.rotation.y = fyaw; U.name.rotation.y = 0;
+    U.name.lookAt(h); U.name.rotation.x = 0; U.name.rotation.z = 0;
+    if (worldOn()) { const ok = !!hitObj; U.target = ok ? { hit: hitObj } : null; U.r1.material.color.setHex(ok ? 0xffd166 : 0xff6b6b); locoLabel(U, ok ? "Koppints: odaugrasz" : "Ide nem lehet"); return; }
+    /* a sétában: az ív végéhez (a fejedből nézve) legközelebbi sétapont-nyíl, legfeljebb 35°-ra */
+    let best = null, bd = Math.cos(35 * Math.PI / 180);
+    const dv = hitP.clone().sub(h); dv.y = 0; dv.normalize();
+    if (spots) spots.querySelectorAll(".hotspot").forEach((el) => { if (el._ix !== 1 || !el.object3D || !isShown(el.object3D)) return; const p = el.object3D.getWorldPosition(new THREE.Vector3()).sub(h); p.y = 0; if (p.lengthSq() < 1e-4) return; p.normalize(); const dd = p.dot(dv); if (dd > bd) { bd = dd; best = el; } });
+    if ((U.best && U.best.el) !== best) { if (U.best && U.best.el) { try { U.best.el.emit("mouseleave"); } catch (e) {} } if (best) { try { best.emit("mouseenter"); } catch (e) {} xrPulse(S0.src, .2, 12); } U.best = best ? { el: best } : null; }
+    U.target = best ? { el: best } : null; U.r1.material.color.setHex(best ? 0xffd166 : 0x9aa4ad);
+    const nm = best ? (best._label || "Sétapont") : null;
+    locoLabel(U, best ? "→ " + nm : "Nincs erre sétapont");
+  }
+  function locoJump(key) {
+    const U = XRP.loco && XRP.loco[key]; if (!U || !U.target) { Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, .15, 40)); return; }
+    if (U.target.el) { const el = U.target.el; try { el.emit("mouseleave"); } catch (e) {} U.best = null; el.emit("click", { intersection: null, cursorEl: null }); }
+    else if (U.target.hit) { const o = U.target.hit.object; for (let q = o; q; q = q.parent) { if (q.userData && q.userData.xr && q.userData.xr.click) { q.userData.xr.click(U.target.hit); break; } } }
+  }
+  /* egy lépés előre (vagy vissza) */
+  function locoStep(dir) {
+    if (!worldOn()) { if (dir > 0) vrStepForward(); else { try { if (typeof goBack === "function") goBack(); } catch (e) {} } return; }
+    /* 3D-világ: 1,2 m-re előre/hátra (a nézési irányodba) a teleportfelületre */
+    const h = headPos(new THREE.Vector3()), f = new THREE.Vector3(); headDir(f); f.y = 0; f.normalize();
+    const p = h.clone().addScaledVector(f, 1.2 * dir); const surf = tpSurfaces(); if (!surf.length) return;
+    _rc.set(p.clone().setY(h.y + 1), new THREE.Vector3(0, -1, 0)); _rc.far = 6; const hs = _rc.intersectObjects(surf, true);
+    if (hs.length) { for (let q = hs[0].object; q; q = q.parent) { if (q.userData && q.userData.xr && q.userData.xr.click) { q.userData.xr.click(hs[0]); break; } } }
+  }
+  /* bemutató kártya: az első VR-belépéskor (kézzel) egyszer magától, utána a menüből bármikor */
+  function locoTutorial(force) {
+    if (XRP.tut) { if (force) locoTutPlace(); return; }
+    if (!force) { try { if (localStorage.getItem("zephyrLocoTut")) return; } catch (e) {} }
+    const cv = document.createElement("canvas"); cv.width = 1600; cv.height = 900; const g = cv.getContext("2d");
+    const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+    const bg = g.createLinearGradient(0, 0, 0, 900); bg.addColorStop(0, "#0b2f5e"); bg.addColorStop(1, "#06182f"); rr(6, 6, 1588, 888, 56); g.fillStyle = bg; g.fill(); g.lineWidth = 10; g.strokeStyle = "#ffd166"; g.stroke();
+    g.fillStyle = "#ffd166"; g.font = "800 66px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Mozgás a kezeddel – kontroller nélkül", 800, 84);
+    g.fillStyle = "#cfe0f2"; g.font = "600 34px system-ui, sans-serif"; g.fillText("Ugyanúgy, mint a Quest saját menüjében (Horizon OS 2.4): ököl + hüvelykujj", 800, 146);
+    /* egyszerű kézrajz: ököl oldalról, hüvelykujj a mutatóujjon */
+    const fist = (cx, cy, s, mark) => { g.save(); g.translate(cx, cy); g.scale(s, s);
+      g.fillStyle = "#f2c9a0"; g.strokeStyle = "#8a5a3a"; g.lineWidth = 5;
+      rr(-70, -40, 130, 120, 40); g.fill(); g.stroke();                               /* kézfej */
+      for (let k = 0; k < 4; k++) { rr(-62 + k * 0, -40 + k * 30, 0, 0, 0); }
+      for (let k = 0; k < 4; k++) { g.beginPath(); g.ellipse(52, -22 + k * 30, 26, 16, 0, 0, 7); g.fill(); g.stroke(); } /* behajlított ujjak */
+      g.beginPath(); g.ellipse(8, -58, 50, 17, -.12, 0, 7); g.fill(); g.stroke();     /* hüvelykujj a mutatóujj tetején */
+      rr(-60, 70, 70, 70, 20); g.fill(); g.stroke();                                   /* csukló */
+      if (mark) { g.fillStyle = "#ffd166"; g.beginPath(); g.arc(46, -58, 15, 0, 7); g.fill(); }
+      g.restore(); };
+    const step = (n, x, title, sub, draw) => { rr(x, 190, 360, 560, 36); g.fillStyle = "rgba(255,255,255,.08)"; g.fill(); g.lineWidth = 4; g.strokeStyle = "rgba(255,209,102,.6)"; g.stroke();
+      g.fillStyle = "#ffd166"; g.beginPath(); g.arc(x + 54, 244, 34, 0, 7); g.fill(); g.fillStyle = "#0b2f5e"; g.font = "800 44px system-ui"; g.fillText(n, x + 54, 246);
+      draw(x + 180, 420); g.fillStyle = "#fff"; g.font = "800 40px system-ui, sans-serif"; g.fillText(title, x + 180, 630);
+      g.fillStyle = "#cfe0f2"; g.font = "600 28px system-ui, sans-serif"; sub.split("\n").forEach((l, i) => g.fillText(l, x + 180, 680 + i * 34)); };
+    const arrow = (x, y, a, c) => { g.save(); g.translate(x, y); g.rotate(a); g.fillStyle = c || "#ffd166"; g.beginPath(); g.moveTo(0, -40); g.lineTo(30, 0); g.lineTo(10, 0); g.lineTo(10, 34); g.lineTo(-10, 34); g.lineTo(-10, 0); g.lineTo(-30, 0); g.closePath(); g.fill(); g.restore(); };
+    step("1", 30, "Ökölbe zárod", "lazán, mintha egy\ntávirányítót fognál", (x, y) => fist(x, y, 1.1, false));
+    step("2", 420, "Koppints", "hüvelykujjal a mutató-\nujjad oldalára → ív", (x, y) => { fist(x, y, 1.1, true); g.strokeStyle = "#ffd166"; g.lineWidth = 6; g.setLineDash([12, 12]); g.beginPath(); g.moveTo(x + 70, y - 100); g.quadraticCurveTo(x + 150, y - 190, x + 150, y - 40); g.stroke(); g.setLineDash([]); });
+    step("3", 810, "Célozz + koppints", "odaugrasz (a legközelebbi\nsétapontra)", (x, y) => { fist(x - 30, y + 20, .9, true); g.strokeStyle = "#ffd166"; g.lineWidth = 7; g.beginPath(); g.ellipse(x + 90, y + 90, 60, 18, 0, 0, 7); g.stroke(); arrow(x + 90, y + 30, Math.PI); });
+    step("4", 1200, "Húzd a hüvelykujjad", "← → fordulás · ↑ lépés\n↓ vissza · nyitott kéz: vége", (x, y) => { fist(x, y + 30, .9, true); arrow(x - 120, y - 40, -Math.PI / 2); arrow(x + 120, y - 40, Math.PI / 2); arrow(x, y - 130, 0); });
+    rr(560, 780, 480, 92, 46); g.fillStyle = "#ffd166"; g.fill(); g.fillStyle = "#0b2f5e"; g.font = "800 46px system-ui, sans-serif"; g.fillText("✓ Értem, kipróbálom", 800, 828);
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    const G = new THREE.Group(); sceneEl.object3D.add(G);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(.96, .54), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false })); m.renderOrder = 1004; G.add(m);
+    m.userData.xr = { click: () => locoTutClose() }; XRP.extra.add(m);
+    XRP.tut = { g: G, m }; locoTutPlace();
+  }
+  function locoTutPlace() { const T = XRP.tut; if (!T) return; const h = headPos(new THREE.Vector3()), f = new THREE.Vector3(); headDir(f); f.y = 0; if (f.lengthSq() < 1e-6) f.set(0, 0, -1); f.normalize();
+    T.g.position.copy(h).addScaledVector(f, .95); T.g.position.y -= .12; T.g.lookAt(h.x, T.g.position.y, h.z); }
+  function locoTutClose() { const T = XRP.tut; if (!T) return; try { localStorage.setItem("zephyrLocoTut", "1"); } catch (e) {} XRP.extra.delete(T.m); if (T.g.parent) T.g.parent.remove(T.g); T.m.geometry.dispose(); T.m.material.map.dispose(); T.m.material.dispose(); XRP.tut = null; }
   /* --- alsó eszközsor: ↺ 45°  ·  ☰ Menü  ·  45° ↻ – a látótered alján lebeg, lefelé nézve mindig ott van --- */
   function xrBarCanvas(label, sub, hov) {
     const cv = document.createElement("canvas"); cv.width = 300; cv.height = 220; const g = cv.getContext("2d");
@@ -9881,7 +10086,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const worldOn = !!(window.ZephyrWorld && ZephyrWorld.active);
     if (!XRP.bar) {
       const g = new THREE.Group(), items = [];
-      [["↺", "Balra", () => vrTurn(TURN)], ["☰", "Menü", () => menuButton()], ["↻", "Jobbra", () => vrTurn(-TURN)]].forEach(([l, s, fn], k) => {
+      [["↺", "Balra", () => vrTurn((WS.turnDeg || 45) * Math.PI / 180)], ["☰", "Menü", () => menuButton()], ["↻", "Jobbra", () => vrTurn(-(WS.turnDeg || 45) * Math.PI / 180)]].forEach(([l, s, fn], k) => {
         const tx = [false, true].map((hv) => { const t = new THREE.CanvasTexture(xrBarCanvas(l, s, hv)); t.colorSpace = THREE.SRGBColorSpace; return t; });
         const m = new THREE.Mesh(new THREE.PlaneGeometry(.15, .11), new THREE.MeshBasicMaterial({ map: tx[0], transparent: true, depthTest: false, depthWrite: false }));
         m.renderOrder = 997; m.position.x = (k - 1) * .175;
@@ -9895,8 +10100,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     /* nyitott panelnél (és billentyűzetnél) az eszközsor eltűnik – különben a sugár útjában lenne, és elnyelné a csippentést */
     B.g.visible = !worldOn && !VRS.panel;
     if (!B.g.visible) { B.follow = 1; return; }
-    const xc = sceneEl.renderer.xr.getCamera(), h = headPos(new THREE.Vector3()), f = new THREE.Vector3();
-    xc.getWorldDirection(f); f.y = 0; if (f.lengthSq() < 1e-6) return; f.normalize();
+    const h = headPos(new THREE.Vector3()), f = headDir(new THREE.Vector3()); f.y = 0; if (f.lengthSq() < 1e-6) return; f.normalize();
     const yaw = Math.atan2(-f.x, -f.z);
     /* „lusta” követés: csak akkor fordul utánad, ha már 35°-nál jobban elnéztél, akkor finoman */
     if (B.yaw == null || B.follow) { B.yaw = yaw; B.follow = 0; }
@@ -9943,7 +10147,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "6b74177a7a"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "86e80bb309"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 

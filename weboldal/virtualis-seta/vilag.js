@@ -1201,8 +1201,9 @@
     const tp0 = mesh(new THREE.PlaneGeometry(S.SX1 - S.SX0, S.SZ1 - S.SZ0), tpM, model); tp0.rotation.x = -Math.PI / 2; tp0.position.set(MAQ.C.x, .09, MAQ.C.z);
     const tp1 = mesh(new THREE.PlaneGeometry(OUT_W, Z_END + 4.75), tpM, model); tp1.rotation.x = -Math.PI / 2; tp1.position.set(OUT_W / 2, FLOOR_H + .02, (Z_END + 3.3 - 1.45) / 2);
     MAQ.tp = [tp0, tp1];
-    [tp0, tp1].forEach((m, i) => { m.userData.xr = { click: (hit) => { if (hit && hit.point) teleport(hit.point, i); } }; T.xr.extra.add(m); W.objs.push(m); });
-    ENV.land.userData.xr = { click: (hit) => { if (MAQ.mode === "life" && hit && hit.point) teleport(hit.point, 0); } };
+    const lifeOnly = () => MAQ.mode === "life";   /* a kézi mozgás íve csak életnagyságban landolhat rajtuk */
+    [tp0, tp1].forEach((m, i) => { m.userData.tp = lifeOnly; m.userData.xr = { click: (hit) => { if (hit && hit.point) teleport(hit.point, i); } }; T.xr.extra.add(m); W.objs.push(m); });
+    ENV.land.userData.xr = { click: (hit) => { if (MAQ.mode === "life" && hit && hit.point) teleport(hit.point, 0); } }; ENV.land.userData.tp = lifeOnly;
     /* távcső: a látnivalók feliratai */
     ENV.telHit.userData.xr = { hover: (on) => { if (on) showTip(ENV.telescope, "🔭 Távcső", "Csippents rá: a Balaton látnivalói a láthatáron"); else showTip(null); }, click: () => toggleSights() };
     T.xr.extra.add(ENV.telHit); W.objs.push(ENV.telHit);
@@ -1331,6 +1332,7 @@
   function lifeTargets(on) {
     [ENV.land, ENV.walk, ENV.deckTop].forEach((L) => { if (!L) return;
       if (!L.userData.xr) L.userData.xr = { click: (hit) => { if (MAQ.mode === "life" && hit && hit.point) teleport(hit.point, 0); } };
+      L.userData.tp = () => MAQ.mode === "life";
       if (on) { T.xr.extra.add(L); if (!W.objs.includes(L)) W.objs.push(L); } else { T.xr.extra.delete(L); W.objs = W.objs.filter((o) => o !== L); } });
   }
   function fadeThen(fn) {
