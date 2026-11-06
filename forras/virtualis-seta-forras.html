@@ -11752,7 +11752,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     { id: "duck", n: "Pizza a kacsáknak", d: "Dobj pici pizzát a vízimadaraknak – megeszik, örülnek, és pontot érnek!", c: "#2a86ad" },
     { id: "ring", n: "Mentőöv-célbadobás", d: "Dobd a mentőövet a sodródó bójákra!", c: "#f2b233" },
     { id: "race", n: "Vitorlás-regatta", d: "Versenyezz 3 hajóval a Balatonon, a stég előtt!", c: "#6a1b9a" },
-    { id: "mahj", n: "Vitorlás mahjong", d: "Párosítsd a szabad lapokat: az apartmanok hajói, Tihany, Badacsony, Zamárdi és a Zephyr-embléma!", c: "#0f7a6c" }
+    { id: "mahj", n: "Vitorlás mahjong", d: "Párosítsd a szabad lapokat: az apartmanok hajói, Tihany, Badacsony, Zamárdi és a Zephyr-embléma!", c: "#0f7a6c" },
+    { id: "chess", n: "Vitorlás sakk", d: "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!", c: "#1f5fa8" }
   ];
   let gmEl = null, gmCv = null, gmG = null, gmRaf = 0, gmGame = null, gmLast = 0, gmInput = 0, gmDock = null;
   const gmGiven = () => { try { const v = JSON.parse(localStorage.getItem(GM_KEY) || "null"); return !!(v && v.d === new Date().toDateString() && v.given); } catch (e) { return false; } };
@@ -13420,7 +13421,392 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     };
   }
 
-  const GM_MAKE = { slot: gameSlot, duck: gameDuck, ring: gameRing, race: gameRace, mahj: gameMahj };
+  /* ---------------- 6. Vitorlás sakk (2026. nov. 6., a tulajdonos ötlete) ----------------
+     A tábla a Balaton vize (két árnyalatú, hullámzó, csillogó mezők) egy fa pontonon, kötéllel, bikákkal, koordinátákkal a deszkákon.
+     A bábuk hajók – a méretük és alakjuk mondja meg, melyik mi:
+       gyalog = evezős csónak (két evezővel, evezőssel) · huszár = lófejes orrdíszű hajó (csíkos négyszögvitorla)
+       futó = karcsú versenyvitorlás hegyes, „püspöksüveg” vitorlával · bástya = világítótorony egy kis sziklaszigeten (éjjel-nappal villog)
+       vezér = kétárbócos szkúner koronás lobogóval · király = a legnagyobb, háromárbócos hajó koronával és kereszttel.
+     Világos: elefántcsont test, fehér vitorla, arany díszítés · Sötét: sötétkék test, bordó vitorla, sárgaréz.
+     Teljes szabályok (sakk, matt, patt, sáncolás, en passant, átváltozás választással, háromszori ismétlés, 50 lépés, kevés anyag),
+     gép elleni játék három szinten (alfa-béta keresés, nyugalmi keresés, mezőtáblák) vagy két játékos egy eszközön. Mentés a böngészőbe. */
+  function gameChess() {
+    const SANS = "Manrope, Arial, sans-serif", SER = 'Georgia, "Times New Roman", serif', TAU = Math.PI * 2;
+    const KEY = "zephyr-sakk";
+    const VAL = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+    const NAME = { p: "gyalog (evezős csónak)", n: "huszár (lófejes hajó)", b: "futó (versenyvitorlás)", r: "bástya (világítótorony)", q: "vezér (szkúner)", k: "király (háromárbócos)" };
+    /* mezőtáblák (világos szemszögéből, a8 = 0 … h1 = 63) */
+    const PST = {
+      p: [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0],
+      n: [-50, -40, -30, -30, -30, -30, -40, -50, -40, -20, 0, 0, 0, 0, -20, -40, -30, 0, 10, 15, 15, 10, 0, -30, -30, 5, 15, 20, 20, 15, 5, -30, -30, 0, 15, 20, 20, 15, 0, -30, -30, 5, 10, 15, 15, 10, 5, -30, -40, -20, 0, 5, 5, 0, -20, -40, -50, -40, -30, -30, -30, -30, -40, -50],
+      b: [-20, -10, -10, -10, -10, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 10, 10, 5, 0, -10, -10, 5, 5, 10, 10, 5, 5, -10, -10, 0, 10, 10, 10, 10, 0, -10, -10, 10, 10, 10, 10, 10, 10, -10, -10, 5, 0, 0, 0, 0, 5, -10, -20, -10, -10, -10, -10, -10, -10, -20],
+      r: [0, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10, 10, 10, 10, 10, 5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, 0, 0, 0, 5, 5, 0, 0, 0],
+      q: [-20, -10, -10, -5, -5, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 5, 5, 5, 0, -10, -5, 0, 5, 5, 5, 5, 0, -5, 0, 0, 5, 5, 5, 5, 0, -5, -10, 5, 5, 5, 5, 5, 0, -10, -10, 0, 5, 0, 0, 0, 0, -10, -20, -10, -10, -5, -5, -10, -10, -20],
+      k: [-30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -20, -30, -30, -40, -40, -30, -30, -20, -10, -20, -20, -20, -20, -20, -20, -10, 20, 20, 0, 0, 0, 0, 20, 20, 20, 30, 10, 0, 0, 10, 30, 20],
+      ke: [-50, -40, -30, -20, -20, -30, -40, -50, -30, -20, -10, 0, 0, -10, -20, -30, -30, -10, 20, 30, 30, 20, -10, -30, -30, -10, 30, 40, 40, 30, -10, -30, -30, -10, 30, 40, 40, 30, -10, -30, -30, -10, 20, 30, 30, 20, -10, -30, -30, -30, 0, 0, 0, 0, -30, -30, -50, -30, -30, -30, -30, -30, -30, -50]
+    };
+    const FILES = "abcdefgh";
+    const isW = (p) => p !== "." && p === p.toUpperCase(), colorOf = (p) => (p === "." ? null : isW(p) ? "w" : "b");
+    const rc = (i) => [i >> 3, i & 7], idx = (r, c) => r * 8 + c, on = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
+    const sqName = (i) => FILES[i & 7] + (8 - (i >> 3));
+    /* --------------- állás és lépésgenerálás --------------- */
+    function initial() { return { b: ("rnbqkbnrpppppppp" + ".".repeat(32) + "PPPPPPPPRNBQKBNR").split(""), turn: "w", cs: "KQkq", ep: -1, half: 0, full: 1 }; }
+    const clone = (s) => ({ b: s.b.slice(), turn: s.turn, cs: s.cs, ep: s.ep, half: s.half, full: s.full });
+    const KD = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]], ND = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+    const BD = [[-1, -1], [-1, 1], [1, -1], [1, 1]], RD = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    function attacked(s, sq, by) {   /* támadja-e a „by” szín a mezőt */
+      const [r, c] = rc(sq), B = s.b;
+      const pd = by === "w" ? 1 : -1;   /* világos gyalog alulról (nagyobb sorindexről) támad */
+      for (const dc of [-1, 1]) { const rr2 = r + pd, cc = c + dc; if (on(rr2, cc)) { const p = B[idx(rr2, cc)]; if (p === (by === "w" ? "P" : "p")) return true; } }
+      for (const [dr, dc] of ND) { const rr2 = r + dr, cc = c + dc; if (on(rr2, cc) && B[idx(rr2, cc)] === (by === "w" ? "N" : "n")) return true; }
+      for (const [dr, dc] of KD) { const rr2 = r + dr, cc = c + dc; if (on(rr2, cc) && B[idx(rr2, cc)] === (by === "w" ? "K" : "k")) return true; }
+      const slide = (dirs, set) => { for (const [dr, dc] of dirs) { let rr2 = r + dr, cc = c + dc; while (on(rr2, cc)) { const p = B[idx(rr2, cc)]; if (p !== ".") { if (colorOf(p) === by && set.includes(p.toLowerCase())) return true; break; } rr2 += dr; cc += dc; } } return false; };
+      return slide(BD, "bq") || slide(RD, "rq");
+    }
+    const kingSq = (s, col) => s.b.indexOf(col === "w" ? "K" : "k");
+    const inCheck = (s, col) => attacked(s, kingSq(s, col), col === "w" ? "b" : "w");
+    function pseudo(s) {
+      const mv = [], B = s.b, me = s.turn, op = me === "w" ? "b" : "w";
+      for (let i = 0; i < 64; i++) { const p = B[i]; if (p === "." || colorOf(p) !== me) continue; const t = p.toLowerCase(), [r, c] = rc(i);
+        if (t === "p") { const d = me === "w" ? -1 : 1, start = me === "w" ? 6 : 1, last = me === "w" ? 0 : 7;
+          const add = (to, cap, ep) => { if ((to >> 3) === last) "qrbn".split("").forEach((pr) => mv.push({ f: i, t: to, p, c: cap, promo: me === "w" ? pr.toUpperCase() : pr })); else mv.push({ f: i, t: to, p, c: cap, ep }); };
+          if (on(r + d, c) && B[idx(r + d, c)] === ".") { add(idx(r + d, c), "."); if (r === start && B[idx(r + 2 * d, c)] === ".") mv.push({ f: i, t: idx(r + 2 * d, c), p, c: ".", dbl: true }); }
+          for (const dc of [-1, 1]) { if (!on(r + d, c + dc)) continue; const to = idx(r + d, c + dc), q = B[to]; if (q !== "." && colorOf(q) === op) add(to, q); else if (to === s.ep) add(to, me === "w" ? "p" : "P", true); } }
+        else if (t === "n" || t === "k") { for (const [dr, dc] of t === "n" ? ND : KD) { if (!on(r + dr, c + dc)) continue; const to = idx(r + dr, c + dc), q = B[to]; if (q === "." || colorOf(q) === op) mv.push({ f: i, t: to, p, c: q }); }
+          if (t === "k") { const row = me === "w" ? 7 : 0, ks = me === "w" ? "K" : "k", qs = me === "w" ? "Q" : "q";
+            if (i === idx(row, 4) && !inCheck(s, me)) {
+              if (s.cs.includes(ks) && B[idx(row, 5)] === "." && B[idx(row, 6)] === "." && B[idx(row, 7)] === (me === "w" ? "R" : "r") && !attacked(s, idx(row, 5), op) && !attacked(s, idx(row, 6), op)) mv.push({ f: i, t: idx(row, 6), p, c: ".", castle: "K" });
+              if (s.cs.includes(qs) && B[idx(row, 3)] === "." && B[idx(row, 2)] === "." && B[idx(row, 1)] === "." && B[idx(row, 0)] === (me === "w" ? "R" : "r") && !attacked(s, idx(row, 3), op) && !attacked(s, idx(row, 2), op)) mv.push({ f: i, t: idx(row, 2), p, c: ".", castle: "Q" });
+            } } }
+        else { for (const [dr, dc] of t === "b" ? BD : t === "r" ? RD : KD) { let rr2 = r + dr, cc = c + dc; while (on(rr2, cc)) { const to = idx(rr2, cc), q = B[to]; if (q === ".") mv.push({ f: i, t: to, p, c: q }); else { if (colorOf(q) === op) mv.push({ f: i, t: to, p, c: q }); break; } rr2 += dr; cc += dc; } } }
+      }
+      return mv;
+    }
+    function apply(s, m) {
+      const n = clone(s), B = n.b, me = s.turn;
+      B[m.t] = m.promo || m.p; B[m.f] = ".";
+      if (m.ep) B[m.t + (me === "w" ? 8 : -8)] = ".";
+      if (m.castle) { const row = me === "w" ? 7 : 0; if (m.castle === "K") { B[idx(row, 5)] = B[idx(row, 7)]; B[idx(row, 7)] = "."; } else { B[idx(row, 3)] = B[idx(row, 0)]; B[idx(row, 0)] = "."; } }
+      let cs = n.cs; const strip = (ch) => { cs = cs.replace(ch, ""); };
+      if (m.p === "K") { strip("K"); strip("Q"); } if (m.p === "k") { strip("k"); strip("q"); }
+      [[63, "K"], [56, "Q"], [7, "k"], [0, "q"]].forEach(([sq, ch]) => { if (m.f === sq || m.t === sq) strip(ch); });
+      n.cs = cs; n.ep = m.dbl ? (m.f + m.t) / 2 : -1;
+      n.half = m.p.toLowerCase() === "p" || m.c !== "." ? 0 : s.half + 1; if (me === "b") n.full++;
+      n.turn = me === "w" ? "b" : "w"; return n;
+    }
+    function legal(s) { return pseudo(s).filter((m) => !inCheck(apply(s, m), s.turn)); }
+    const posKey = (s) => s.b.join("") + s.turn + s.cs + s.ep;
+    function insufficient(s) { const pcs = s.b.filter((p) => p !== "." && p.toLowerCase() !== "k"); if (!pcs.length) return true; if (pcs.length === 1 && "nNbB".includes(pcs[0])) return true;
+      if (pcs.every((p) => "bB".includes(p))) { const col = s.b.map((p, i) => ("bB".includes(p) ? ((i >> 3) + (i & 7)) % 2 : -1)).filter((x) => x >= 0); return col.every((x) => x === col[0]); } return false; }
+    /* --------------- értékelés és keresés --------------- */
+    function evaluate(s) {
+      let sc = 0, mat = 0; for (const p of s.b) if (p !== "." && p.toLowerCase() !== "p" && p.toLowerCase() !== "k") mat += VAL[p.toLowerCase()];
+      const end = mat <= 1300;
+      for (let i = 0; i < 64; i++) { const p = s.b[i]; if (p === ".") continue; const t = p.toLowerCase(), w = isW(p), tbl = t === "k" && end ? PST.ke : PST[t]; const v = VAL[t] + tbl[w ? i : (7 - (i >> 3)) * 8 + (i & 7)]; sc += w ? v : -v; }
+      return s.turn === "w" ? sc : -sc;
+    }
+    const mvv = (m) => (m.c !== "." ? VAL[m.c.toLowerCase()] * 10 - VAL[m.p.toLowerCase()] / 10 : 0) + (m.promo ? 800 : 0);
+    let nodes = 0, deadline = 0, stop = false;
+    function quiesce(s, a, b, d) {
+      if ((++nodes & 1023) === 0 && performance.now() > deadline) stop = true;
+      const stand = evaluate(s); if (stand >= b) return b; if (stand > a) a = stand; if (d <= 0 || stop) return a;
+      const ms = pseudo(s).filter((m) => m.c !== "." || m.promo).sort((x, y) => mvv(y) - mvv(x));
+      for (const m of ms) { const n = apply(s, m); if (inCheck(n, s.turn)) continue; const v = -quiesce(n, -b, -a, d - 1); if (v >= b) return b; if (v > a) a = v; }
+      return a;
+    }
+    function negamax(s, d, a, b, ply) {
+      if ((++nodes & 1023) === 0 && performance.now() > deadline) stop = true;
+      if (d <= 0) return quiesce(s, a, b, 4);
+      const ms = pseudo(s).sort((x, y) => mvv(y) - mvv(x)); let any = false, best = -1e9;
+      for (const m of ms) { const n = apply(s, m); if (inCheck(n, s.turn)) continue; any = true; const v = -negamax(n, d - 1, -b, -a, ply + 1); if (stop) return 0; if (v > best) best = v; if (v > a) a = v; if (a >= b) break; }
+      if (!any) return inCheck(s, s.turn) ? -100000 + ply : 0;
+      return best;
+    }
+    function think(s, level) {   /* level: 0 könnyű, 1 közepes, 2 nehéz */
+      const ms = legal(s); if (!ms.length) return null;
+      const budget = [140, 380, 900][level], maxD = [1, 3, 5][level]; deadline = performance.now() + budget; nodes = 0; stop = false;
+      let order = ms.slice().sort((x, y) => mvv(y) - mvv(x)), best = order[0], scores = [];
+      for (let d = 1; d <= maxD; d++) {
+        let a = -1e9, cur = null; const sc = [];
+        for (const m of order) { const v = -negamax(apply(s, m), d - 1, -1e9, -a, 1); if (stop) break; sc.push([m, v]); if (v > a) { a = v; cur = m; } }
+        if (stop && d > 1) break; if (cur) { best = cur; scores = sc; order = [cur].concat(order.filter((m) => m !== cur)); }
+        if (performance.now() > deadline) break;
+      }
+      if (level === 0 && scores.length > 2) {   /* könnyű szinten néha nem a legjobbat lépi */
+        scores.sort((x, y) => y[1] - x[1]); const top = scores.filter((q) => q[1] > scores[0][1] - 90); best = top[Math.floor(Math.random() * top.length)][0];
+      }
+      return best;
+    }
+    /* --------------- játékállapot --------------- */
+    const S = { s: initial(), hist: [], keys: [], sel: -1, moves: [], last: null, anim: null, sink: [], capW: [], capB: [], st: "play", msg: "", lvl: 1, human: "w", two: false, thinking: false, promo: null, ripples: [], btn: [], t: 0, hint: null, menu: false, flip: false, endT: 0, conf: [] };
+    function save() { try { localStorage.setItem(KEY, JSON.stringify({ s: S.s, hist: S.hist, keys: S.keys, capW: S.capW, capB: S.capB, lvl: S.lvl, human: S.human, two: S.two, last: S.last, st: S.st, msg: S.msg })); } catch (e) {} }
+    function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && v.s && v.s.b && v.s.b.length === 64) { Object.assign(S, { s: v.s, hist: v.hist || [], keys: v.keys || [], capW: v.capW || [], capB: v.capB || [], lvl: v.lvl == null ? 1 : v.lvl, human: v.human || "w", two: !!v.two, last: v.last || null, st: v.st || "play", msg: v.msg || "" }); return true; } } catch (e) {} return false; }
+    function newGame() { Object.assign(S, { s: initial(), hist: [], keys: [], sel: -1, moves: [], last: null, anim: null, sink: [], capW: [], capB: [], st: "play", hint: null, promo: null, conf: [], endT: 0 }); S.keys.push(posKey(S.s)); status(); save(); maybeAI(); }
+    function status() {
+      const s = S.s, ms = legal(s), chk = inCheck(s, s.turn), side = s.turn === "w" ? "Világos" : "Sötét";
+      if (!ms.length) { S.st = "over"; S.endT = S.t; if (chk) { const youWin = !S.two && s.turn !== S.human; S.msg = S.two ? `Sakk-matt! ${s.turn === "w" ? "Sötét" : "Világos"} nyert.` : youWin ? "Sakk-matt – GYŐZTÉL!" : "Sakk-matt – most a gép nyert."; if (S.two || youWin) { gmSnd.win(); confetti(); } } else S.msg = "Patt – döntetlen."; return; }
+      const rep = S.keys.filter((k) => k === S.keys[S.keys.length - 1]).length >= 3;
+      if (rep) { S.st = "over"; S.msg = "Háromszori ismétlés – döntetlen."; return; }
+      if (s.half >= 100) { S.st = "over"; S.msg = "50 lépés ütés és gyalogmozgás nélkül – döntetlen."; return; }
+      if (insufficient(s)) { S.st = "over"; S.msg = "Kevés az anyag a matthoz – döntetlen."; return; }
+      S.st = "play";
+      S.msg = chk ? "SAKK! " + (S.two ? side + " jön." : s.turn === S.human ? "Védd a királyod!" : "") : S.two ? side + " jön." : s.turn === S.human ? "Te jössz – koppints egy hajódra." : "A gép gondolkodik…";
+    }
+    function confetti() { for (let k = 0; k < 70; k++) S.conf.push({ x: Math.random(), y: -Math.random() * .3, vx: (Math.random() - .5) * .1, vy: .12 + Math.random() * .2, r: Math.random() * TAU, vr: (Math.random() - .5) * 6, f: k % 4 }); }
+    function doMove(m, fromAI) {
+      const before = S.s;
+      S.hist.push({ s: before, capW: S.capW.slice(), capB: S.capB.slice(), last: S.last });
+      S.s = apply(before, m); S.keys.push(posKey(S.s));
+      /* animáció: a hajó átsiklik (huszár: ugrik), a leütött hajó elsüllyed */
+      S.anim = { m, t: 0, dur: m.p.toLowerCase() === "n" ? .62 : .5 + Math.min(.35, Math.hypot((m.t >> 3) - (m.f >> 3), (m.t & 7) - (m.f & 7)) * .05) };
+      if (m.c !== ".") { const at = m.ep ? m.t + (before.turn === "w" ? 8 : -8) : m.t; S.sink.push({ p: m.c, sq: at, t: -S.anim.dur * .7 }); (isW(m.c) ? S.capW : S.capB).push(m.c); }
+      if (m.castle) { const row = before.turn === "w" ? 7 : 0; S.anim.rook = m.castle === "K" ? { f: idx(row, 7), t: idx(row, 5) } : { f: idx(row, 0), t: idx(row, 3) }; }
+      S.last = { f: m.f, t: m.t }; S.sel = -1; S.moves = []; S.hint = null;
+      gmSnd.splash(m.c !== "." ? .22 : .1);
+      status(); save();
+      if (S.st === "play" && inCheck(S.s, S.s.turn)) setTimeout(() => { try { fxTone(880, 660, .25, .05, "triangle"); } catch (e) {} }, 500);
+      if (!fromAI) maybeAI();
+    }
+    function maybeAI() {
+      if (S.two || S.st !== "play" || S.s.turn === S.human || S.thinking) return;
+      S.thinking = true; S.msg = "A gép gondolkodik…";
+      const ply = S.hist.length;
+      setTimeout(() => {
+        /* csak akkor lép, ha közben nem változott az állás (pl. visszalépés), és tényleg a gép jön */
+        if (S.two || S.s.turn === S.human || S.hist.length !== ply || S.st !== "play") { S.thinking = false; return; }
+        const m = think(S.s, S.lvl);
+        const wait = () => { if (S.anim) return setTimeout(wait, 60); S.thinking = false; if (m && S.st === "play" && S.hist.length === ply) doMove(m, true); else status(); };
+        wait();
+      }, 380);
+    }
+    function undo() {
+      if (S.thinking || !S.hist.length) return;
+      const n = S.two ? 1 : Math.min(S.hist.length, S.s.turn === S.human ? 2 : 1);
+      for (let k = 0; k < n; k++) { const h = S.hist.pop(); S.s = h.s; S.capW = h.capW; S.capB = h.capB; S.last = h.last; S.keys.pop(); }
+      S.sel = -1; S.moves = []; S.anim = null; S.sink = []; S.conf = []; status(); save(); maybeAI();
+    }
+    function hint() { if (S.st !== "play" || S.thinking || (!S.two && S.s.turn !== S.human)) return; const m = think(S.s, 1); if (m) { S.hint = { f: m.f, t: m.t, t0: S.t }; S.msg = `Ötlet: ${NAME[m.p.toLowerCase()].split(" ")[0]} ${sqName(m.f)} → ${sqName(m.t)}`; } }
+    if (!load()) { S.keys.push(posKey(S.s)); status(); } else { status(); }
+    S.flip = !S.two && S.human === "b"; setTimeout(maybeAI, 600);
+    if (/sakkteszt/.test(location.hash + location.search)) window.__chess = { S, legal, apply, think, doMove, hitSq: (x, y) => hitSq(x, y), sqXY: (i) => sqXY(i) };   /* fejlesztői teszt: #sakkteszt */
+    /* --------------- elrendezés --------------- */
+    let L = null;
+    function layout(W, H) {
+      const ph = W < 640, top = GM_TOP + (ph ? 34 : 40), bot = ph ? 128 : 84;
+      const avail = Math.min(W - (ph ? 22 : 60), H - top - bot - 46);
+      const frame = Math.max(14, Math.round(avail * .055)), sq = Math.floor((avail - 2 * frame) / 8);
+      const bw = sq * 8 + 2 * frame, bx = Math.round(W / 2 - bw / 2), by = Math.round(top + 22 + Math.max(0, (H - top - bot - 46 - bw) / 2));
+      L = { ph, sq, frame, bx, by, x0: bx + frame, y0: by + frame, bw, W, H, bot };
+      return L;
+    }
+    const sqXY = (i) => { const r = i >> 3, c = i & 7, rr2 = S.flip ? 7 - r : r, cc = S.flip ? 7 - c : c; return [L.x0 + cc * L.sq + L.sq / 2, L.y0 + rr2 * L.sq + L.sq / 2]; };
+    function hitSq(x, y) { const c = Math.floor((x - L.x0) / L.sq), r = Math.floor((y - L.y0) / L.sq); if (!on(r, c)) return -1; return S.flip ? idx(7 - r, 7 - c) : idx(r, c); }
+    /* --------------- rajz: víz, ponton --------------- */
+    function drawPontoon(g, t) {
+      const { bx, by, bw, frame } = L;
+      /* árnyék a vízen, a ponton deszkái */
+      g.fillStyle = "rgba(10,30,40,.35)"; g.fillRect(bx + 6, by + 8, bw, bw);
+      const planks = (x, y, w, h, vert) => { const n = Math.max(1, Math.round((vert ? w : h) / (frame * .55))); for (let k = 0; k < n; k++) { const sh = 30 + ((k * 37) % 13); g.fillStyle = `hsl(28,${sh}%,${36 + ((k * 53) % 9)}%)`;
+        if (vert) g.fillRect(x + k * w / n, y, w / n - 1, h); else g.fillRect(x, y + k * h / n, w, h / n - 1); } };
+      planks(bx, by, bw, frame, false); planks(bx, by + bw - frame, bw, frame, false); planks(bx, by + frame, frame, bw - 2 * frame, true); planks(bx + bw - frame, by + frame, frame, bw - 2 * frame, true);
+      /* szegek, kötél a peremen, bikák a sarkokon */
+      g.fillStyle = "rgba(30,20,10,.55)"; for (let k = 0; k <= 16; k++) { const u = k / 16; [[bx + u * bw, by + frame * .5], [bx + u * bw, by + bw - frame * .5], [bx + frame * .5, by + u * bw], [bx + bw - frame * .5, by + u * bw]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, Math.max(1, frame * .06), 0, TAU); g.fill(); }); }
+      g.strokeStyle = "#e8dcc0"; g.lineWidth = Math.max(2, frame * .16); g.setLineDash([frame * .3, frame * .12]); g.strokeRect(bx + frame * .2, by + frame * .2, bw - frame * .4, bw - frame * .4); g.setLineDash([]);
+      [[bx, by], [bx + bw, by], [bx, by + bw], [bx + bw, by + bw]].forEach(([x, y]) => { g.fillStyle = "#2b2f36"; g.beginPath(); g.ellipse(x, y, frame * .45, frame * .22, 0, 0, TAU); g.fill(); g.fillStyle = "#4a5058"; g.beginPath(); g.arc(x, y, frame * .16, 0, TAU); g.fill(); });
+      /* koordináták a deszkákon (beégetett felirat) */
+      g.fillStyle = "rgba(255,240,210,.85)"; g.font = `800 ${Math.max(10, frame * .52)}px ${SER}`; g.textAlign = "center"; g.textBaseline = "middle";
+      for (let k = 0; k < 8; k++) { const f = S.flip ? 7 - k : k; g.fillText(FILES[f], L.x0 + k * L.sq + L.sq / 2, by + bw - frame / 2); g.fillText(String(8 - (S.flip ? 7 - k : k)), bx + frame / 2, L.y0 + k * L.sq + L.sq / 2); }
+    }
+    function drawWater(g, t) {
+      const { x0, y0, sq } = L;
+      for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+        const light = (r + c) % 2 === 0, x = x0 + c * sq, y = y0 + r * sq;
+        const gr = g.createLinearGradient(x, y, x + sq, y + sq);
+        if (light) { gr.addColorStop(0, "#8fd6cf"); gr.addColorStop(1, "#6cc0bd"); } else { gr.addColorStop(0, "#2a7c8c"); gr.addColorStop(1, "#1d6274"); }
+        g.fillStyle = gr; g.fillRect(x, y, sq, sq);
+        /* hullámfodrok és csillanások (mezőnként eltolt fázissal) */
+        g.save(); g.beginPath(); g.rect(x, y, sq, sq); g.clip();
+        g.strokeStyle = light ? "rgba(255,255,255,.35)" : "rgba(170,230,240,.22)"; g.lineWidth = Math.max(1, sq * .025);
+        for (let k = 0; k < 3; k++) { const yy = y + sq * (.22 + k * .3) + Math.sin(t * 1.3 + c * 1.7 + r + k) * sq * .05; g.beginPath(); for (let u = 0; u <= 1.001; u += .125) { const xx = x + u * sq; const v = yy + Math.sin(u * 7 + t * 2.1 + r * 2 + k * 1.3 + c) * sq * .03; u === 0 ? g.moveTo(xx, v) : g.lineTo(xx, v); } g.stroke(); }
+        const gl = (Math.sin(t * 1.7 + r * 3.1 + c * 2.3) + 1) / 2; if (gl > .86) { g.fillStyle = `rgba(255,255,240,${(gl - .86) * 5})`; g.beginPath(); g.ellipse(x + sq * (.3 + .4 * ((r * 7 + c * 3) % 5) / 5), y + sq * .4, sq * .07, sq * .02, 0, 0, TAU); g.fill(); }
+        g.restore();
+      }
+      /* finom sötét rács a mezők között (bója-kötélnek tűnő vonal) */
+      g.strokeStyle = "rgba(255,255,255,.12)"; g.lineWidth = 1; for (let k = 1; k < 8; k++) { g.beginPath(); g.moveTo(x0 + k * sq, y0); g.lineTo(x0 + k * sq, y0 + 8 * sq); g.moveTo(x0, y0 + k * sq); g.lineTo(x0 + 8 * sq, y0 + k * sq); g.stroke(); }
+    }
+    /* --------------- rajz: a hajók --------------- */
+    const COL = { w: { hull: "#f6f1e3", hull2: "#d9d0b8", sail: "#fdfbf3", sail2: "#ddd7c6", trim: "#c99a2e", deck: "#c79a62", flag: "#c62828" }, b: { hull: "#16365f", hull2: "#0b1f3a", sail: "#a3232f", sail2: "#6e1520", trim: "#d6ad52", deck: "#8a6238", flag: "#f2c94c" } };
+    function hullPath(g, L2, B2, dir) {   /* felülnézeti hajótest: orr a „dir” irányba (−1 = fel, +1 = le) */
+      g.beginPath(); g.moveTo(0, dir * L2 * .55); g.bezierCurveTo(B2 * .55, dir * L2 * .35, B2 * .6, -dir * L2 * .25, B2 * .42, -dir * L2 * .45); g.lineTo(-B2 * .42, -dir * L2 * .45); g.bezierCurveTo(-B2 * .6, -dir * L2 * .25, -B2 * .55, dir * L2 * .35, 0, dir * L2 * .55); g.closePath();
+    }
+    function sailTri(g, x0, yb, h, w, col, col2, lean) { const gr = g.createLinearGradient(x0, yb - h, x0 + w, yb); gr.addColorStop(0, col); gr.addColorStop(1, col2); g.fillStyle = gr; g.beginPath(); g.moveTo(x0, yb); g.quadraticCurveTo(x0 + w * .55 + (lean || 0), yb - h * .45, x0 + (lean || 0) * .3, yb - h); g.lineTo(x0 + w, yb); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.18)"; g.lineWidth = .8; g.stroke(); }
+    function drawPiece(g, p, x, y, s, t, opt) {
+      opt = opt || {}; const w = isW(p), C = COL[w ? "w" : "b"], tp = p.toLowerCase(), dir = w ? -1 : 1, bob = Math.sin(t * 1.8 + x * .05 + y * .03) * s * .02;
+      g.save(); g.translate(x, y + bob); if (opt.rot) g.rotate(opt.rot); if (opt.sc) g.scale(opt.sc, opt.sc); if (opt.alpha != null) g.globalAlpha = opt.alpha;
+      /* árnyék és vízgyűrű */
+      if (!opt.icon) { g.fillStyle = "rgba(8,30,40,.28)"; g.beginPath(); g.ellipse(s * .04, s * .1, s * .36, s * .17, 0, 0, TAU); g.fill(); g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = Math.max(1, s * .02); g.beginPath(); g.ellipse(0, s * .06, s * (.34 + .03 * Math.sin(t * 2 + x)), s * .14, 0, 0, TAU); g.stroke(); }
+      const trimLine = () => { g.strokeStyle = C.trim; g.lineWidth = Math.max(1, s * .025); g.stroke(); };
+      if (tp === "p") {   /* evezős csónak */
+        const Lh = s * .62, Bh = s * .3, ph = Math.sin(t * 3 + x) * .35;
+        g.strokeStyle = "#8a5a2a"; g.lineWidth = Math.max(1.2, s * .03); [-1, 1].forEach((sd) => { g.save(); g.rotate(sd * ph * .5); g.beginPath(); g.moveTo(sd * Bh * .3, 0); g.lineTo(sd * s * .38, dir * s * .04); g.stroke(); g.fillStyle = "#a8763e"; g.beginPath(); g.ellipse(sd * s * .37, dir * s * .04, s * .05, s * .02, 0, 0, TAU); g.fill(); g.restore(); });
+        g.save(); g.scale(1, .82); hullPath(g, Lh, Bh, dir); g.fillStyle = C.hull; g.fill(); trimLine(); g.restore();
+        g.fillStyle = C.deck; g.beginPath(); g.ellipse(0, 0, Bh * .33, Lh * .3, 0, 0, TAU); g.fill();
+        g.fillStyle = "rgba(0,0,0,.25)"; g.fillRect(-Bh * .33, -s * .015, Bh * .66, s * .03);
+        g.fillStyle = w ? "#1f5fa8" : "#f2b233"; g.beginPath(); g.arc(0, -dir * s * .04, s * .07, 0, TAU); g.fill();   /* az evezős */
+        g.fillStyle = "#e8c4a0"; g.beginPath(); g.arc(0, -dir * s * .04 - s * .05, s * .045, 0, TAU); g.fill();
+      } else if (tp === "r") {   /* világítótorony sziklaszigeten */
+        g.fillStyle = "#6f6a60"; [[-.2, .08, .2], [.18, .1, .18], [0, .14, .24], [-.05, .02, .2]].forEach(([dx, dy, r]) => { g.beginPath(); g.ellipse(dx * s, dy * s, r * s, r * s * .55, 0, 0, TAU); g.fill(); });
+        g.fillStyle = "#8d877b"; [[-.12, .02, .12], [.1, .05, .1]].forEach(([dx, dy, r]) => { g.beginPath(); g.ellipse(dx * s, dy * s, r * s, r * s * .5, 0, 0, TAU); g.fill(); });
+        const tb = s * .06, tt = -s * .62, wb = s * .17, wt = s * .11;
+        g.save(); g.beginPath(); g.moveTo(-wb, tb); g.lineTo(-wt, tt); g.lineTo(wt, tt); g.lineTo(wb, tb); g.closePath(); g.clip();
+        for (let k = 0; k < 5; k++) { g.fillStyle = k % 2 ? (w ? "#fdfbf3" : "#1d2f4d") : (w ? "#c62828" : "#a3232f"); g.fillRect(-wb, tb - (k + 1) * (tb - tt) / 5, wb * 2, (tb - tt) / 5 + 1); }
+        const sh = g.createLinearGradient(-wb, 0, wb, 0); sh.addColorStop(0, "rgba(0,0,0,.25)"); sh.addColorStop(.4, "rgba(255,255,255,.15)"); sh.addColorStop(1, "rgba(0,0,0,.3)"); g.fillStyle = sh; g.fillRect(-wb, tt, wb * 2, tb - tt); g.restore();
+        g.fillStyle = C.trim; g.fillRect(-wt * 1.35, tt - s * .03, wt * 2.7, s * .035);
+        g.strokeStyle = C.trim; g.lineWidth = Math.max(1, s * .015); for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(k * wt * .6, tt - s * .03); g.lineTo(k * wt * .6, tt - s * .08); g.stroke(); }
+        const lit = .55 + .45 * Math.max(0, Math.sin(t * 2.4 + (w ? 0 : 1.7)));
+        g.fillStyle = `rgba(255,${200 + 40 * lit},${90 + 60 * lit},1)`; g.fillRect(-wt * .8, tt - s * .16, wt * 1.6, s * .11);
+        g.fillStyle = w ? "#3a3f46" : "#2a2e33"; g.beginPath(); g.moveTo(-wt, tt - s * .16); g.lineTo(0, tt - s * .26); g.lineTo(wt, tt - s * .16); g.closePath(); g.fill();
+        if (!opt.icon) { const a = t * 1.6 + (w ? 0 : 2); g.save(); g.globalCompositeOperation = "lighter"; const bg = g.createRadialGradient(0, tt - s * .1, 0, 0, tt - s * .1, s * .7); bg.addColorStop(0, `rgba(255,236,170,${.45 * lit})`); bg.addColorStop(1, "rgba(255,236,170,0)"); g.fillStyle = bg;
+          g.beginPath(); g.moveTo(0, tt - s * .1); g.arc(0, tt - s * .1, s * .7, a - .25, a + .25); g.closePath(); g.fill(); g.beginPath(); g.moveTo(0, tt - s * .1); g.arc(0, tt - s * .1, s * .7, a + Math.PI - .25, a + Math.PI + .25); g.closePath(); g.fill(); g.restore(); }
+      } else {
+        /* vitorlás hajók: test felülnézetben, árboc(ok) és vitorlák oldalnézetben fölötte */
+        const Lh = s * ({ n: .66, b: .62, q: .82, k: .92 }[tp]), Bh = s * ({ n: .3, b: .22, q: .32, k: .38 }[tp]);
+        g.save(); g.scale(1, .72); hullPath(g, Lh, Bh, dir); const hg = g.createLinearGradient(-Bh, 0, Bh, 0); hg.addColorStop(0, C.hull2); hg.addColorStop(.45, C.hull); hg.addColorStop(1, C.hull2); g.fillStyle = hg; g.fill(); trimLine(); g.restore();
+        g.fillStyle = C.deck; g.save(); g.scale(1, .72); hullPath(g, Lh * .8, Bh * .7, dir); g.fill(); g.restore();
+        if (tp === "n") {   /* lófejes hajó: előbb az árboc és a csíkos vitorla, aztán (elöl) a nagy, faragott lófej az orron */
+          /* árboc és csíkos négyszögvitorla */
+          const mh = s * .62; g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1.5, s * .03); g.beginPath(); g.moveTo(0, s * .02); g.lineTo(0, -mh); g.stroke();
+          const sw = s * .36, sy = -mh + s * .06, shh = s * .38, bil = Math.sin(t * 1.5 + x) * s * .015;
+          for (let k = 0; k < 4; k++) { g.fillStyle = k % 2 ? C.sail : (w ? "#c62828" : "#f2c94c"); g.beginPath(); g.moveTo(-sw / 2 + k * sw / 4, sy); g.lineTo(-sw / 2 + (k + 1) * sw / 4, sy); g.lineTo(-sw / 2 + (k + 1) * sw / 4 + bil, sy + shh); g.lineTo(-sw / 2 + k * sw / 4 + bil, sy + shh); g.closePath(); g.fill(); }
+          g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1, s * .02); g.beginPath(); g.moveTo(-sw / 2 - s * .03, sy); g.lineTo(sw / 2 + s * .03, sy); g.stroke();
+          /* a faragott lófej – nagy, hogy messziről is „ló” legyen */
+          g.save(); g.translate(0, dir * Lh * .4 * .72 - s * .02); const hs = s * .5, fx = w ? 1 : -1;
+          g.fillStyle = w ? "#e9dcc0" : "#6b4a2a"; g.beginPath(); g.moveTo(-hs * .18, hs * .35); g.bezierCurveTo(-hs * .3 * fx, -hs * .2, -hs * .1 * fx, -hs * .7, hs * .25 * fx, -hs * .75); g.lineTo(hs * .55 * fx, -hs * .55); g.quadraticCurveTo(hs * .62 * fx, -hs * .42, hs * .48 * fx, -hs * .36); g.lineTo(hs * .2 * fx, -hs * .4); g.bezierCurveTo(hs * .1 * fx, -hs * .1, hs * .25 * fx, hs * .15, hs * .18, hs * .35); g.closePath(); g.fill();
+          g.strokeStyle = C.trim; g.lineWidth = Math.max(1, s * .02); g.stroke();
+          g.fillStyle = w ? "#c99a2e" : "#2a1a0e"; for (let k = 0; k < 4; k++) { g.beginPath(); g.ellipse((-hs * .12 - k * hs * .02) * fx, -hs * (.62 - k * .17), hs * .07, hs * .04, .5 * fx, 0, TAU); g.fill(); }   /* sörény */
+          g.beginPath(); g.moveTo(hs * .12 * fx, -hs * .72); g.lineTo(hs * .05 * fx, -hs * .92); g.lineTo(hs * .22 * fx, -hs * .76); g.fill();   /* fül */
+          g.fillStyle = "#111"; g.beginPath(); g.arc(hs * .26 * fx, -hs * .6, Math.max(1, hs * .045), 0, TAU); g.fill();
+          g.restore();
+        } else if (tp === "b") {   /* karcsú versenyvitorlás, magas, hegyes „süveg” vitorlával */
+          const mh = s * .78; g.strokeStyle = "#9aa3ab"; g.lineWidth = Math.max(1.2, s * .022); g.beginPath(); g.moveTo(0, s * .03); g.lineTo(0, -mh); g.stroke();
+          const bw2 = s * .2, gr = g.createLinearGradient(-bw2, -mh, bw2, 0); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr;
+          g.beginPath(); g.moveTo(-bw2, -s * .02); g.quadraticCurveTo(-bw2 * .9, -mh * .55, 0, -mh); g.quadraticCurveTo(bw2 * .9, -mh * .55, bw2, -s * .02); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = .8; g.stroke();
+          g.save(); g.clip(); g.strokeStyle = C.trim; g.lineWidth = Math.max(2, s * .05); g.beginPath(); g.moveTo(-bw2, -mh * .25); g.lineTo(bw2, -mh * .6); g.stroke(); g.restore();   /* átlós sáv – a futó „átlója” */
+          g.fillStyle = C.flag; g.beginPath(); g.moveTo(0, -mh); g.lineTo(s * .12, -mh + s * .03); g.lineTo(0, -mh + s * .06); g.fill();
+        } else if (tp === "q") {   /* kétárbócos szkúner, koronás lobogóval */
+          const m1 = s * .78, m2 = s * .66; g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1.5, s * .028);
+          [[-s * .1, m2], [s * .1, m1]].forEach(([mx, mh]) => { g.beginPath(); g.moveTo(mx, s * .02); g.lineTo(mx, -mh); g.stroke(); });
+          const gaff = (mx, mh, w2) => { const gr = g.createLinearGradient(mx - w2, -mh, mx, 0); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr; g.beginPath(); g.moveTo(mx, -s * .05); g.lineTo(mx, -mh * .92); g.lineTo(mx - w2, -mh * .78); g.lineTo(mx - w2 * 1.05, -s * .06); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = .8; g.stroke(); };
+          gaff(s * .1, m1, s * .2); gaff(-s * .1, m2, s * .18);
+          sailTri(g, s * .12, -s * .05, m1 * .7, s * .2, C.sail, C.sail2, 0);   /* orrvitorla */
+          /* korona a fő árboc tetején */
+          g.fillStyle = C.trim; g.save(); g.translate(s * .1, -m1 - s * .05); const cw = s * .09; g.beginPath(); g.moveTo(-cw, cw * .5); g.lineTo(-cw, -cw * .2); g.lineTo(-cw * .5, cw * .15); g.lineTo(0, -cw * .55); g.lineTo(cw * .5, cw * .15); g.lineTo(cw, -cw * .2); g.lineTo(cw, cw * .5); g.closePath(); g.fill(); g.restore();
+          g.fillStyle = C.flag; g.beginPath(); g.moveTo(-s * .1, -m2); g.lineTo(-s * .24 + Math.sin(t * 4) * s * .01, -m2 + s * .03); g.lineTo(-s * .1, -m2 + s * .06); g.fill();
+        } else if (tp === "k") {   /* háromárbócos, keresztvitorlákkal, korona + kereszt */
+          const ms2 = [[-s * .16, s * .66], [0, s * .86], [s * .16, s * .62]];
+          g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1.6, s * .03); ms2.forEach(([mx, mh]) => { g.beginPath(); g.moveTo(mx, s * .02); g.lineTo(mx, -mh); g.stroke(); });
+          ms2.forEach(([mx, mh], mi) => { const n = mi === 1 ? 3 : 2; for (let k = 0; k < n; k++) { const y1 = -mh * (.18 + k * .27), hh = mh * .22, ww = s * (.17 - k * .03) * (mi === 1 ? 1.15 : 1), bil = Math.sin(t * 1.4 + k + mi) * s * .01;
+            const gr = g.createLinearGradient(mx, y1 - hh, mx, y1); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr; g.beginPath(); g.moveTo(mx - ww, y1 - hh); g.lineTo(mx + ww, y1 - hh); g.quadraticCurveTo(mx + ww * 1.08 + bil, y1 - hh / 2, mx + ww, y1); g.lineTo(mx - ww, y1); g.quadraticCurveTo(mx - ww * .92 + bil, y1 - hh / 2, mx - ww, y1 - hh); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = .8; g.stroke();
+            g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1, s * .015); g.beginPath(); g.moveTo(mx - ww * 1.08, y1 - hh); g.lineTo(mx + ww * 1.08, y1 - hh); g.stroke(); } });
+          /* korona és kereszt a fő árboc csúcsán, lobogó */
+          g.fillStyle = C.trim; g.save(); g.translate(0, -s * .9); const cw = s * .11; g.beginPath(); g.moveTo(-cw, cw * .45); g.lineTo(-cw, -cw * .25); g.lineTo(-cw * .5, cw * .1); g.lineTo(0, -cw * .55); g.lineTo(cw * .5, cw * .1); g.lineTo(cw, -cw * .25); g.lineTo(cw, cw * .45); g.closePath(); g.fill();
+          g.fillRect(-cw * .12, -cw * 1.25, cw * .24, cw * .75); g.fillRect(-cw * .38, -cw * 1.05, cw * .76, cw * .2); g.restore();
+          g.fillStyle = C.flag; g.beginPath(); g.moveTo(s * .16, -s * .62); g.lineTo(s * .32 + Math.sin(t * 4) * s * .015, -s * .58); g.lineTo(s * .16, -s * .54); g.fill();
+        }
+      }
+      g.restore();
+    }
+    /* --------------- képkocka --------------- */
+    function step(dt) {
+      S.t += dt;
+      if (S.anim) { S.anim.t += dt; if (S.anim.t >= S.anim.dur) { const [x, y] = sqXY(S.anim.m.t); S.ripples.push({ x, y, t: 0, k: S.anim.m.p.toLowerCase() === "n" ? 1.6 : 1 }); S.anim = null; maybeAI(); } }
+      S.sink.forEach((q) => { q.t += dt; if (q.t > 0 && !q.rip) { q.rip = 1; const [x, y] = sqXY(q.sq); S.ripples.push({ x, y, t: 0, k: 1.8 }); gmSnd.splash(.25); } }); S.sink = S.sink.filter((q) => q.t < 1.6);
+      S.ripples.forEach((r) => { r.t += dt; }); S.ripples = S.ripples.filter((r) => r.t < 1.4);
+      S.conf.forEach((c) => { c.x += c.vx * dt; c.y += c.vy * dt; c.r += c.vr * dt; }); S.conf = S.conf.filter((c) => c.y < 1.2);
+    }
+    function draw(g, W, H, t) {
+      layout(W, H);
+      lakeBg(g, W, H, t, false);
+      drawPontoon(g, t); drawWater(g, t);
+      const { sq } = L;
+      /* utolsó lépés, kijelölés, ötlet, sakk */
+      const tint = (i, col) => { const [x, y] = sqXY(i); g.fillStyle = col; g.fillRect(x - sq / 2, y - sq / 2, sq, sq); };
+      if (S.last) { tint(S.last.f, "rgba(255,209,102,.28)"); tint(S.last.t, "rgba(255,209,102,.38)"); }
+      if (S.hint && S.t - S.hint.t0 < 6) { const k = .4 + .3 * Math.sin(S.t * 6); tint(S.hint.f, `rgba(127,211,255,${k})`); tint(S.hint.t, `rgba(127,211,255,${k})`); }
+      if (S.st !== "over" || inCheck(S.s, S.s.turn)) { if (inCheck(S.s, S.s.turn)) { const [x, y] = sqXY(kingSq(S.s, S.s.turn)); const k = .5 + .5 * Math.sin(S.t * 6); const gr = g.createRadialGradient(x, y, sq * .1, x, y, sq * .62); gr.addColorStop(0, `rgba(255,60,60,${.55 * k + .2})`); gr.addColorStop(1, "rgba(255,60,60,0)"); g.fillStyle = gr; g.fillRect(x - sq * .62, y - sq * .62, sq * 1.24, sq * 1.24); } }
+      if (S.sel >= 0) { const [x, y] = sqXY(S.sel); g.strokeStyle = "#ffd166"; g.lineWidth = Math.max(2, sq * .06); g.strokeRect(x - sq / 2 + 2, y - sq / 2 + 2, sq - 4, sq - 4); }
+      S.moves.forEach((m) => { const [x, y] = sqXY(m.t); const cap = m.c !== "."; g.strokeStyle = cap ? "rgba(255,90,80,.95)" : "rgba(255,255,255,.85)"; g.lineWidth = Math.max(2, sq * .055);
+        g.beginPath(); g.arc(x, y, sq * (cap ? .42 : .17 + .02 * Math.sin(S.t * 5)), 0, TAU); g.stroke(); if (!cap) { g.fillStyle = "rgba(255,255,255,.25)"; g.fill(); } });
+      /* hullámgyűrűk */
+      S.ripples.forEach((r) => { const k = r.t / 1.4; g.strokeStyle = `rgba(255,255,255,${(1 - k) * .8})`; g.lineWidth = Math.max(1, sq * .04 * (1 - k)); g.beginPath(); g.ellipse(r.x, r.y + sq * .06, sq * (.2 + k * .6) * r.k, sq * (.08 + k * .25) * r.k, 0, 0, TAU); g.stroke(); });
+      /* a bábuk soronként felülről lefelé (az elöl lévők takarják a hátsókat); a mozgó hajó külön */
+      const A = S.anim, moving = A ? A.m.t : -1, rookMoving = A && A.rook ? A.rook.t : -1;
+      const order = []; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const i = S.flip ? idx(7 - r, 7 - c) : idx(r, c); order.push(i); }
+      const sinkAt = new Set(S.sink.filter((q) => q.t <= 0).map((q) => q.sq));
+      order.forEach((i) => {
+        const p = S.s.b[i];
+        S.sink.forEach((q) => { if (q.sq === i) { const [x, y] = sqXY(i); if (q.t <= 0) drawPiece(g, q.p, x, y + sq * .08, sq * 1.18, t); else { const k = q.t / 1.6; drawPiece(g, q.p, x, y + sq * .08 + sq * .25 * k, sq * 1.18, t, { rot: (isW(q.p) ? .9 : -.9) * k, sc: 1 - .35 * k, alpha: 1 - k });
+          for (let b = 0; b < 4; b++) { g.fillStyle = `rgba(255,255,255,${(1 - k) * .8})`; g.beginPath(); g.arc(x + Math.sin(b * 2.1 + q.t * 4) * sq * .2, y - k * sq * .5 - b * sq * .08, sq * .03, 0, TAU); g.fill(); } } } });
+        if (p === "." || i === moving || i === rookMoving) return;
+        const [x, y] = sqXY(i); drawPiece(g, p, x, y + sq * .08, sq * 1.18, t);
+      });
+      if (A) { const k = Math.min(1, A.t / A.dur), e = k * k * (3 - 2 * k), [x0, y0] = sqXY(A.m.f), [x1, y1] = sqXY(A.m.t), hop = A.m.p.toLowerCase() === "n" ? Math.sin(k * Math.PI) * sq * .55 : 0;
+        const px = x0 + (x1 - x0) * e, py = y0 + (y1 - y0) * e - hop;
+        if (A.m.p.toLowerCase() !== "n" && A.m.p.toLowerCase() !== "r") { g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = Math.max(1, sq * .05); g.beginPath(); g.moveTo(x0 + (x1 - x0) * Math.max(0, e - .35), y0 + (y1 - y0) * Math.max(0, e - .35)); g.lineTo(px, py); g.stroke(); }   /* nyomhullám */
+        drawPiece(g, A.m.promo && k > .9 ? A.m.promo : A.m.p, px, py + sq * .08, sq * 1.18, t, { sc: 1 + hop / sq * .25 });
+        if (A.rook) { const [rx0, ry0] = sqXY(A.rook.f), [rx1, ry1] = sqXY(A.rook.t); drawPiece(g, S.s.b[A.rook.t], rx0 + (rx1 - rx0) * e, ry0 + (ry1 - ry0) * e + sq * .08, sq * 1.18, t); } }
+      /* leütött hajók a tábla két oldalán */
+      const capRow = (list, y) => { const s2 = Math.min(sq * .55, (L.bw - 20) / Math.max(8, list.length)); list.slice().sort((a, b) => VAL[b.toLowerCase()] - VAL[a.toLowerCase()]).forEach((p, k) => drawPiece(g, p, L.bx + 10 + s2 * .5 + k * s2 * .9, y, s2, t, { icon: 1 })); };
+      capRow(S.flip ? S.capB : S.capW, L.by - sq * .32); capRow(S.flip ? S.capW : S.capB, L.by + L.bw + sq * .45);
+      /* állapotsor */
+      const sy = L.by - (L.ph ? 30 : 34) - sq * .1; g.font = `800 ${L.ph ? 16 : 19}px ${SANS}`; const tw = Math.min(W - 20, g.measureText(S.msg).width + 40);
+      g.fillStyle = "rgba(7,29,56,.82)"; g.beginPath(); g.roundRect ? g.roundRect(W / 2 - tw / 2, sy - 18, tw, 34, 17) : g.rect(W / 2 - tw / 2, sy - 18, tw, 34); g.fill();
+      g.fillStyle = /SAKK|matt|GYŐZ/.test(S.msg) ? "#ffd166" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(S.msg, W / 2, sy);
+      /* gombok */
+      S.btn = []; const by2 = H - (L.ph ? 118 : 70), labels = [["new", "Új játék"], ["undo", "↶ Vissza"], ["hint", "💡 Ötlet"], ["lvl", "Szint: " + ["Könnyű", "Közepes", "Nehéz"][S.lvl]], ["col", S.two ? "2 játékos" : "Szín: " + (S.human === "w" ? "világos" : "sötét")], ["flip", "⇅ Forgat"]];
+      const perRow = L.ph ? 3 : 6, bw = Math.min(170, (W - 20 - (perRow - 1) * 8) / perRow), bh = L.ph ? 44 : 46;
+      labels.forEach(([id, lb], k) => { const row = Math.floor(k / perRow), col = k % perRow, rowN = Math.min(perRow, labels.length - row * perRow), x = W / 2 - (rowN * bw + (rowN - 1) * 8) / 2 + col * (bw + 8), y = by2 + row * (bh + 8);
+        g.fillStyle = id === "new" ? "#f2b233" : "rgba(7,29,56,.85)"; g.beginPath(); g.roundRect ? g.roundRect(x, y, bw, bh, bh / 2) : g.rect(x, y, bw, bh); g.fill(); if (id !== "new") { g.strokeStyle = "rgba(255,255,255,.22)"; g.lineWidth = 1; g.stroke(); }
+        g.fillStyle = id === "new" ? "#14202a" : "#fff"; g.font = `800 ${L.ph ? 14 : 16}px ${SANS}`; g.fillText(lb, x + bw / 2, y + bh / 2 + .5); S.btn.push({ id, x, y, w: bw, h: bh }); });
+      /* átváltozás: válassz hajót */
+      if (S.promo) { const w = S.promo.m.p === "P", pw = Math.min(W - 30, sq * 5.6), ph2 = sq * 2.5, px = W / 2 - pw / 2, py = L.by + L.bw / 2 - ph2 / 2;
+        g.fillStyle = "rgba(7,29,56,.94)"; g.beginPath(); g.roundRect ? g.roundRect(px, py, pw, ph2, 18) : g.rect(px, py, pw, ph2); g.fill(); g.strokeStyle = "#f2b233"; g.lineWidth = 2; g.stroke();
+        g.fillStyle = "#ffd166"; g.font = `800 ${L.ph ? 14 : 17}px ${SANS}`; g.fillText("Mivé változzon az evezős csónak?", W / 2, py + 22);
+        S.promoBtn = []; "qrbn".split("").forEach((pr, k) => { const cx = px + pw * (k + .5) / 4, cy = py + ph2 * .66; g.fillStyle = "rgba(255,255,255,.08)"; g.beginPath(); g.arc(cx, cy, sq * .55, 0, TAU); g.fill(); drawPiece(g, w ? pr.toUpperCase() : pr, cx, cy + sq * .15, sq * .95, t, { icon: 1 }); S.promoBtn.push({ pr, x: cx - sq * .55, y: cy - sq * .7, w: sq * 1.1, h: sq * 1.3 }); }); }
+      /* vége: panel + jelzőzászló-konfetti */
+      if (S.st === "over") { const pw = Math.min(W - 40, 420), ph2 = 128, px = W / 2 - pw / 2, py = L.by + L.bw * .38;
+        g.fillStyle = "rgba(7,29,56,.92)"; g.beginPath(); g.roundRect ? g.roundRect(px, py, pw, ph2, 20) : g.rect(px, py, pw, ph2); g.fill(); g.strokeStyle = "rgba(242,178,51,.7)"; g.lineWidth = 2; g.stroke();
+        g.fillStyle = "#ffd166"; g.font = `800 ${L.ph ? 18 : 22}px ${SANS}`; g.fillText(S.msg, W / 2, py + 40);
+        g.fillStyle = "#fff"; g.font = `600 ${L.ph ? 13 : 15}px ${SANS}`; g.fillText("Új játék: a sárga gomb · vagy lépj vissza és próbáld újra", W / 2, py + 82); }
+      S.conf.forEach((c) => { g.save(); g.translate(c.x * W, c.y * H); g.rotate(c.r); const cs = [["#ffffff", "#1747a6"], ["#d8261c", "#d8261c"], ["#f7c51e", "#1747a6"], ["#1747a6", "#ffffff"]][c.f]; g.fillStyle = cs[0]; g.fillRect(-7, -5, 7, 10); g.fillStyle = cs[1]; g.fillRect(0, -5, 7, 10); g.restore(); });
+    }
+    const inR = (b, x, y) => b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+    return {
+      title: "Vitorlás sakk",
+      help: "A bábuk hajók: evezős csónak = gyalog, lófejes hajó = huszár, hegyes vitorlás = futó, világítótorony = bástya, szkúner koronával = vezér, háromárbócos = király. Koppints a hajódra, majd a gyűrűs mezőre.",
+      step, draw,
+      down(x, y, W, H) {
+        if (!L) return;
+        if (S.promo) { for (const b of S.promoBtn || []) if (inR(b, x, y)) { const m = S.promo.list.find((q) => q.promo.toLowerCase() === b.pr); S.promo = null; if (m) doMove(m); return; } S.promo = null; return; }
+        for (const b of S.btn) if (inR(b, x, y)) { gmSnd.click();
+          if (b.id === "new") newGame(); else if (b.id === "undo") undo(); else if (b.id === "hint") hint();
+          else if (b.id === "lvl") { S.lvl = (S.lvl + 1) % 3; save(); }
+          else if (b.id === "col") { if (S.two) { S.two = false; S.human = "w"; } else if (S.human === "w") S.human = "b"; else S.two = true; S.flip = !S.two && S.human === "b"; save(); status(); maybeAI(); }
+          else if (b.id === "flip") S.flip = !S.flip;
+          return; }
+        if (S.st !== "play" || S.anim || S.thinking || (!S.two && S.s.turn !== S.human)) return;
+        const i = hitSq(x, y); if (i < 0) { S.sel = -1; S.moves = []; return; }
+        const tgt = S.moves.filter((m) => m.t === i);
+        if (tgt.length) { if (tgt.length > 1 && tgt[0].promo) { S.promo = { m: tgt[0], list: tgt }; return; } doMove(tgt[0]); return; }
+        const p = S.s.b[i];
+        if (p !== "." && colorOf(p) === S.s.turn) { S.sel = i; S.moves = legal(S.s).filter((m) => m.f === i); gmSnd.pop(); S.msg = `${NAME[p.toLowerCase()][0].toUpperCase() + NAME[p.toLowerCase()].slice(1)} – ${S.moves.length ? S.moves.length + " lehetséges lépés" : "nem léphet"}`; }
+        else { S.sel = -1; S.moves = []; status(); }
+      },
+      key(k, down) { if (!down) return; if (k === "u" || k === "Backspace") undo(); if (k === "n") newGame(); }
+    };
+  }
+
+  const GM_MAKE = { slot: gameSlot, duck: gameDuck, ring: gameRing, race: gameRace, mahj: gameMahj, chess: gameChess };
   function gmFmt(ms) { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
   function gmHud() {}
   /* kilépéskor: ha elérte a rejtett játékidőt, megköszönjük, és ekkor kapja meg az ajándékot */
