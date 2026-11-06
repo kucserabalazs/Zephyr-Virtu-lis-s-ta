@@ -245,9 +245,16 @@
     const skin = std({ color: "#d9a988", roughness: .7 });
     for (let k = 0; k < (o.crew || 0); k++) {
       const c = new THREE.Group(); const vest = std({ color: o.crewCol || ["#ff7a00", "#e5262f", "#ffd166"][k % 3], roughness: .7 });
-      const torso = mesh(new THREE.CapsuleGeometry(.17, .38, 4, 10), vest, c); torso.position.y = .42;
-      const head = mesh(new THREE.SphereGeometry(.11, 12, 10), skin, c); head.position.y = .84;
-      const cap = mesh(new THREE.SphereGeometry(.115, 12, 8, 0, TAU, 0, Math.PI / 2), std({ color: "#ffffff" }), c); cap.position.y = .87;
+      /* vitorlázó: sötét vízálló dzseki, rajta élénk mentőmellény, karok a kötélen, sapka napellenzővel, napszemüveg */
+      const jacket = std({ color: "#20252c", roughness: .8 });
+      const torso = mesh(new THREE.CapsuleGeometry(.14, .36, 4, 10), jacket, c); torso.position.y = .42;
+      const vestM = mesh(new THREE.CapsuleGeometry(.155, .2, 4, 10), vest, c); vestM.position.y = .5; vestM.scale.set(1, 1, .9);
+      [-1, 1].forEach((sd) => { const arm = mesh(new THREE.CapsuleGeometry(.045, .32, 3, 6), jacket, c); arm.position.set(sd * .17, .52, .1); arm.rotation.set(1.0, 0, -sd * .25); const hand = mesh(new THREE.SphereGeometry(.04, 8, 6), skin, c); hand.position.set(sd * .2, .4, .27); });
+      const neck = mesh(new THREE.CylinderGeometry(.045, .05, .07, 8), skin, c); neck.position.y = .74;
+      const head = mesh(new THREE.SphereGeometry(.1, 12, 10), skin, c); head.position.y = .84; head.scale.set(.95, 1.05, 1);
+      const cap = mesh(new THREE.SphereGeometry(.105, 12, 8, 0, TAU, 0, Math.PI / 2), std({ color: "#ffffff" }), c); cap.position.y = .87;
+      const visor = mesh(new THREE.BoxGeometry(.14, .012, .1), std({ color: "#0b2f5e" }), c); visor.position.set(0, .875, .11);
+      const shades = mesh(new THREE.BoxGeometry(.15, .03, .02), std({ color: "#0d0f12", roughness: .1, metalness: .6 }), c); shades.position.set(0, .845, .095);
       const legs = mesh(new THREE.CapsuleGeometry(.08, .55, 3, 8), std({ color: "#2b3445" }), c); legs.position.set(0, .18, .0); legs.rotation.z = Math.PI / 2.4;
       body.add(c); crew.push({ g: c, z: -2.6 + k * .75, legs });
     }

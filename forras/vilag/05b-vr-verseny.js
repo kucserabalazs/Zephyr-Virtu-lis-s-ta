@@ -112,13 +112,16 @@
     const crew = [];
     const skin = std({ color: "#d9a988", roughness: .7 });
     [[.3, "#e5262f"], [.38, "#0b2f5e"], [.47, "#e5262f"], [.56, "#0b2f5e"]].forEach(([u, c]) => { const g2 = new THREE.Group(); G.add(g2);
-      const v = std({ color: c, roughness: .75 });
-      const torso = mesh(new THREE.CapsuleGeometry(.19, .42, 4, 10), v, g2); torso.position.y = .5;
+      const v = std({ color: c, roughness: .75 }), jk = std({ color: "#1d2229", roughness: .8 });
+      const torso = mesh(new THREE.CapsuleGeometry(.16, .42, 4, 10), jk, g2); torso.position.y = .5;
+      const vest = mesh(new THREE.CapsuleGeometry(.175, .22, 4, 10), v, g2); vest.position.y = .6; vest.scale.set(1, 1, .9);
+      const neck = mesh(new THREE.CylinderGeometry(.05, .055, .08, 8), skin, g2); neck.position.y = .86;
+      const shades = mesh(new THREE.BoxGeometry(.17, .035, .02), std({ color: "#0d0f12", roughness: .1, metalness: .6 }), g2); shades.position.set(0, .99, .11);
       const head = mesh(new THREE.SphereGeometry(.12, 14, 10), skin, g2); head.position.y = .98;
       const cap = mesh(new THREE.SphereGeometry(.125, 14, 8, 0, TAU, 0, Math.PI / 2), std({ color: "#ffffff" }), g2); cap.position.y = 1.01;
       const visor = mesh(new THREE.BoxGeometry(.16, .015, .12), std({ color: "#0b2f5e" }), g2); visor.position.set(0, 1.0, .14);
       const legs = mesh(new THREE.CapsuleGeometry(.09, .5, 3, 8), std({ color: "#20252c" }), g2); legs.position.set(0, .14, .2); legs.rotation.x = Math.PI / 2;
-      const arm = mesh(new THREE.CapsuleGeometry(.055, .4, 3, 8), v, g2); arm.position.set(0, .6, .28); arm.rotation.x = 1.1;
+      [-1, 1].forEach((sd) => { const arm = mesh(new THREE.CapsuleGeometry(.05, .38, 3, 8), jk, g2); arm.position.set(sd * .16, .62, .22); arm.rotation.set(1.1, 0, -sd * .2); const hd = mesh(new THREE.SphereGeometry(.045, 8, 6), skin, g2); hd.position.set(sd * .19, .5, .42); });
       crew.push({ g: g2, u }); });
     return { G, wheels, instT, deckY, helm: new THREE.Vector3(hs.hb - .74, deckY, hs.z - .62), crew, sh };
   }

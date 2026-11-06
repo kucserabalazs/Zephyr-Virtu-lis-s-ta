@@ -571,9 +571,16 @@
     const skin = std({ color: "#d9a988", roughness: .7 });
     for (let k = 0; k < (o.crew || 0); k++) {
       const c = new THREE.Group(); const vest = std({ color: o.crewCol || ["#ff7a00", "#e5262f", "#ffd166"][k % 3], roughness: .7 });
-      const torso = mesh(new THREE.CapsuleGeometry(.17, .38, 4, 10), vest, c); torso.position.y = .42;
-      const head = mesh(new THREE.SphereGeometry(.11, 12, 10), skin, c); head.position.y = .84;
-      const cap = mesh(new THREE.SphereGeometry(.115, 12, 8, 0, TAU, 0, Math.PI / 2), std({ color: "#ffffff" }), c); cap.position.y = .87;
+      /* vitorlázó: sötét vízálló dzseki, rajta élénk mentőmellény, karok a kötélen, sapka napellenzővel, napszemüveg */
+      const jacket = std({ color: "#20252c", roughness: .8 });
+      const torso = mesh(new THREE.CapsuleGeometry(.14, .36, 4, 10), jacket, c); torso.position.y = .42;
+      const vestM = mesh(new THREE.CapsuleGeometry(.155, .2, 4, 10), vest, c); vestM.position.y = .5; vestM.scale.set(1, 1, .9);
+      [-1, 1].forEach((sd) => { const arm = mesh(new THREE.CapsuleGeometry(.045, .32, 3, 6), jacket, c); arm.position.set(sd * .17, .52, .1); arm.rotation.set(1.0, 0, -sd * .25); const hand = mesh(new THREE.SphereGeometry(.04, 8, 6), skin, c); hand.position.set(sd * .2, .4, .27); });
+      const neck = mesh(new THREE.CylinderGeometry(.045, .05, .07, 8), skin, c); neck.position.y = .74;
+      const head = mesh(new THREE.SphereGeometry(.1, 12, 10), skin, c); head.position.y = .84; head.scale.set(.95, 1.05, 1);
+      const cap = mesh(new THREE.SphereGeometry(.105, 12, 8, 0, TAU, 0, Math.PI / 2), std({ color: "#ffffff" }), c); cap.position.y = .87;
+      const visor = mesh(new THREE.BoxGeometry(.14, .012, .1), std({ color: "#0b2f5e" }), c); visor.position.set(0, .875, .11);
+      const shades = mesh(new THREE.BoxGeometry(.15, .03, .02), std({ color: "#0d0f12", roughness: .1, metalness: .6 }), c); shades.position.set(0, .845, .095);
       const legs = mesh(new THREE.CapsuleGeometry(.08, .55, 3, 8), std({ color: "#2b3445" }), c); legs.position.set(0, .18, .0); legs.rotation.z = Math.PI / 2.4;
       body.add(c); crew.push({ g: c, z: -2.6 + k * .75, legs });
     }
@@ -1178,13 +1185,16 @@
     const crew = [];
     const skin = std({ color: "#d9a988", roughness: .7 });
     [[.3, "#e5262f"], [.38, "#0b2f5e"], [.47, "#e5262f"], [.56, "#0b2f5e"]].forEach(([u, c]) => { const g2 = new THREE.Group(); G.add(g2);
-      const v = std({ color: c, roughness: .75 });
-      const torso = mesh(new THREE.CapsuleGeometry(.19, .42, 4, 10), v, g2); torso.position.y = .5;
+      const v = std({ color: c, roughness: .75 }), jk = std({ color: "#1d2229", roughness: .8 });
+      const torso = mesh(new THREE.CapsuleGeometry(.16, .42, 4, 10), jk, g2); torso.position.y = .5;
+      const vest = mesh(new THREE.CapsuleGeometry(.175, .22, 4, 10), v, g2); vest.position.y = .6; vest.scale.set(1, 1, .9);
+      const neck = mesh(new THREE.CylinderGeometry(.05, .055, .08, 8), skin, g2); neck.position.y = .86;
+      const shades = mesh(new THREE.BoxGeometry(.17, .035, .02), std({ color: "#0d0f12", roughness: .1, metalness: .6 }), g2); shades.position.set(0, .99, .11);
       const head = mesh(new THREE.SphereGeometry(.12, 14, 10), skin, g2); head.position.y = .98;
       const cap = mesh(new THREE.SphereGeometry(.125, 14, 8, 0, TAU, 0, Math.PI / 2), std({ color: "#ffffff" }), g2); cap.position.y = 1.01;
       const visor = mesh(new THREE.BoxGeometry(.16, .015, .12), std({ color: "#0b2f5e" }), g2); visor.position.set(0, 1.0, .14);
       const legs = mesh(new THREE.CapsuleGeometry(.09, .5, 3, 8), std({ color: "#20252c" }), g2); legs.position.set(0, .14, .2); legs.rotation.x = Math.PI / 2;
-      const arm = mesh(new THREE.CapsuleGeometry(.055, .4, 3, 8), v, g2); arm.position.set(0, .6, .28); arm.rotation.x = 1.1;
+      [-1, 1].forEach((sd) => { const arm = mesh(new THREE.CapsuleGeometry(.05, .38, 3, 8), jk, g2); arm.position.set(sd * .16, .62, .22); arm.rotation.set(1.1, 0, -sd * .2); const hd = mesh(new THREE.SphereGeometry(.045, 8, 6), skin, g2); hd.position.set(sd * .19, .5, .42); });
       crew.push({ g: g2, u }); });
     return { G, wheels, instT, deckY, helm: new THREE.Vector3(hs.hb - .74, deckY, hs.z - .62), crew, sh };
   }
