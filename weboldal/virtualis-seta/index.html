@@ -9446,7 +9446,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     P.draw = () => {
       /* a sorok száma a gombok számától függ (a 3D-világokban akár 4 × 3 gomb) – a vászon és a tábla magassága ehhez igazodik */
       const it = items(), rows = Math.max(2, Math.ceil(it.length / 3)), bh = rows > 2 ? 150 : 212, ch = 40 + rows * bh + (rows - 1) * 16;
-      if (cv.height !== ch) { cv.height = ch; P.ch = ch; m.geometry.dispose(); m.geometry = new THREE.PlaneGeometry(.21, .21 * ch / CW); }
+      if (cv.height !== ch) { cv.height = ch; P.ch = ch; t.dispose(); m.geometry.dispose(); m.geometry = new THREE.PlaneGeometry(.21, .21 * ch / CW); }
       const CH = ch;
       const g = cv.getContext("2d"); g.clearRect(0, 0, CW, CH); P.btns = [];
       g.fillStyle = "rgba(9,34,70,.95)"; g.beginPath(); g.roundRect ? g.roundRect(6, 6, CW - 12, CH - 12, 46) : g.rect(6, 6, CW - 12, CH - 12); g.fill(); g.lineWidth = 7; g.strokeStyle = "#ffd166"; g.stroke();
@@ -9628,7 +9628,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "793749b4d0"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "202f5723a5"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 

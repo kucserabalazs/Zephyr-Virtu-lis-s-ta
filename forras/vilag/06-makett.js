@@ -111,6 +111,8 @@
       T.xr.extra.add(glow); W.objs.push(glow);
     });
     maqAvail();
+    /* esti fénygömbök a mennyezeti lámpák körül (csak életnagyságban) */
+    MAQ.lampHalo = [0, 1].map((lv) => { const pts = H.floors.filter((f) => f.lv === lv).map((f) => new THREE.Vector3((f.q[0] + f.q[2]) / 2, FLOOR_H - .32, (f.q[1] + f.q[3]) / 2)); const P = glowPoints(H.lv[lv], pts, .7, "#ffcf8a", .55); P.visible = false; return P; });
     /* életnagyságban a lakások neve lebeg a szobákban (rámutatva / csippentve: belépés vagy foglalás) */
     Object.values(MAQ.apts).forEach((A) => {
       const L = labelSprite([(A.no ? A.no + " · " : "") + A.name + " Apartman", A.lock ? "a tulajdonos lakása" : "csippents: fotók · foglalás"], { size: .9, fs: 50 });
@@ -204,7 +206,7 @@
     }
     MAQ.base.visible = !life;
     /* árnyékkamera a mérethez */
-    const sc = ENV.lights.sun.shadow.camera, half = life ? 34 : MAQ.R * s * 1.05 + .25;
+    const sc = ENV.lights.sun.shadow.camera, half = life ? 20 : MAQ.R * s * 1.05 + .25;
     sc.left = -half; sc.right = half; sc.top = half; sc.bottom = -half; sc.near = .05; sc.far = life ? 160 : 40; sc.updateProjectionMatrix();
     MAQ.shadowD = life ? 70 : Math.max(3, half * 4);
     /* címkék mérete */
@@ -393,6 +395,7 @@
       if (A.lifeL) A.lifeL.visible = life && (A.lv === 0 || MAQ.upper);
     });
     MAQ.tp.forEach((m) => { m.visible = life; });
+    MAQ.lampHalo.forEach((P) => { P.visible = life; });
     MAQ.orbs.forEach((o) => { o.visible = life; if (life) o.material.rotation = Math.sin(W.t * 1.5) * .05; });
     if (life) MAQ.orbs.forEach((o, i) => { const k = (o.scale.x > .5 ? .55 : .42) * (1 + Math.sin(W.t * 2.2 + i) * .06); o.scale.set(k, k, 1); });
     if (!T.inVR && !life && !MAQ.drag && MAQ.auto !== false) MAQ.turn.rotation.y += dt * .04;
@@ -400,9 +403,9 @@
     if (Math.abs(MAQ.hour - MAQ.hourT) > 1e-3) { MAQ.hour += (MAQ.hourT - MAQ.hour) * Math.min(1, dt * 2.2); if (Math.abs(MAQ.hour - MAQ.hourT) < .004) { MAQ.hour = MAQ.hourT; envSetTime(MAQ.day, MAQ.hour, true); } MAQ.envT = (MAQ.envT || 0) + dt; if (MAQ.envT > .06) { MAQ.envT = 0; envSetTime(MAQ.day, MAQ.hour); } }
     /* nap (árnyékvető fény) a modell fölött */
     const sun = ENV.lights.sun, tg = sun.target; MAQ.holder.getWorldPosition(tg.position);
-    if (life) { const hw = headWorld(_q); tg.position.lerp(hw, .0).setY(tg.position.y); }
+    if (life) { const hw = headWorld(_q); tg.position.x = hw.x; tg.position.z = hw.z; }   /* életnagyságban az árnyék a környezetünkben a legélesebb */
     tg.updateMatrixWorld(); sun.position.copy(tg.position).addScaledVector(ENV.lights.sunDirW || _q2.set(0, 1, 0), MAQ.shadowD || 4);
-    const sig = [MAQ.turn.rotation.y.toFixed(3), MAQ.s.toFixed(5), MAQ.hour.toFixed(3), MAQ.roofOn, MAQ.upper, MAQ.mode, MAQ.table.position.y.toFixed(2), MAQ.holder.position.z.toFixed(3)].join("|");
+    const sig = [MAQ.turn.rotation.y.toFixed(3), MAQ.s.toFixed(5), MAQ.hour.toFixed(3), MAQ.roofOn, MAQ.upper, MAQ.mode, MAQ.table.position.y.toFixed(2), MAQ.holder.position.z.toFixed(3), MAQ.mode === "life" ? Math.round(_q.x * 2) + "," + Math.round(_q.z * 2) : ""].join("|");
     if (sig !== MAQ.shSig) { MAQ.shSig = sig; T.sceneEl.renderer.shadowMap.needsUpdate = true; }
     /* esti fények a házban */
     const ev = ENV.evening || 0; MAQ.H.glass.emissiveIntensity = ev * (life ? .12 : .55); MAQ.H.bulb.emissiveIntensity = ev * 2.4 * (.9 + .1 * Math.sin(W.t * 2)); MAQ.H.lampIn.emissiveIntensity = ev * 1.6;
