@@ -40,9 +40,17 @@
           const n = list.length, gap = 16, w = (PW - 80 - gap * (n - 1)) / n, y = PH - 150 - (row || 0) * 126, h = 110;
           list.forEach(([lbl, fn, on], i) => {
             const x = 40 + i * (w + gap), k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn });
-            g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 24) : g.rect(x, y, w, h);
-            g.fillStyle = on ? "#ffd166" : hov ? "rgba(255,255,255,.32)" : "rgba(255,255,255,.12)"; g.fill(); g.lineWidth = hov ? 5 : 2; g.strokeStyle = hov ? "#ffd166" : "rgba(255,255,255,.35)"; g.stroke();
-            g.fillStyle = on ? "#0b2f5e" : "#fff"; g.font = `700 ${lbl.length > 14 || n > 5 ? 28 : 38}px system-ui, sans-serif`; g.textAlign = "center"; g.fillText(lbl, x + w / 2, y + h / 2 + 2);
+            g.save(); g.shadowColor = "rgba(0,0,0,.35)"; g.shadowBlur = 14; g.shadowOffsetY = 5;
+            g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 26) : g.rect(x, y, w, h);
+            const gr = g.createLinearGradient(0, y, 0, y + h);
+            if (on || hov) { gr.addColorStop(0, "#ffe08a"); gr.addColorStop(1, "#f2b93b"); } else { gr.addColorStop(0, "rgba(255,255,255,.2)"); gr.addColorStop(1, "rgba(255,255,255,.07)"); }
+            g.fillStyle = gr; g.fill(); g.restore();
+            g.lineWidth = hov ? 5 : 2; g.strokeStyle = hov ? "#fff3c4" : "rgba(255,255,255,.35)"; g.stroke();
+            /* ha a felirat ikonnal kezdődik („🐟 Merülés”), az ikon nagyobban, fölötte */
+            const m = /^(\S{1,3})\s+(.+)$/.exec(lbl), icon = m && !/[A-Za-zÁ-ű0-9]/.test(m[1]) ? m[1] : null, txt = icon ? m[2] : lbl;
+            g.fillStyle = on || hov ? "#0b2f5e" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
+            if (icon) { g.font = "800 40px system-ui, sans-serif"; g.fillText(icon, x + w / 2, y + h * .34); g.font = `700 ${txt.length > 12 || n > 5 ? 25 : 30}px system-ui, sans-serif`; g.fillText(txt, x + w / 2, y + h * .74); }
+            else { g.font = `700 ${lbl.length > 14 || n > 5 ? 28 : 38}px system-ui, sans-serif`; g.fillText(lbl, x + w / 2, y + h / 2 + 2); }
           });
         }
       };

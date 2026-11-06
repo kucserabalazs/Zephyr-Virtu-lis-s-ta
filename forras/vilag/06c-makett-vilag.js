@@ -341,8 +341,8 @@
     [[0, 3], [1, 4], [2, 5]].forEach(([i, j]) => { const a = tops[i], b = tops[j]; if (!a || !b) return; let prev = a; for (let k = 1; k <= 20; k++) { const u = k / 20; const p = a.clone().lerp(b, u); p.y -= Math.sin(u * Math.PI) * .3; wire.push(rodGeom(prev, p, .005, 4)); prev = p; if (k % 2 === 1) bulbs.push(M4(p.x, p.y - .05, p.z)); } });
     mesh(mergeGeoms(wire), std({ color: "#202020" }), g);
     inst(new THREE.SphereGeometry(.035, 8, 6), bulbM, bulbs, g);
-    glowPoints(g, bulbs.map((m) => new THREE.Vector3().setFromMatrixPosition(m)), .09, "#ffb860", .9);
-    glowPoints(g, ENV.lanterns, .35, "#ffa040", 1);
+    glowPoints(g, bulbs.map((m) => new THREE.Vector3().setFromMatrixPosition(m)), .28, "#ffb860", .9);
+    glowPoints(g, ENV.lanterns, .9, "#ffa040", 1);
     ENV.glows.push({ mat: bulbM, k: 2.6, tw: 1 });
     /* levendulás ládák (tihanyi levendula) a korlát mentén */
     const boxM = std({ map: txPlanks("box", "#7f5a3a", "#9c7048", 4), roughness: .8 });
@@ -473,7 +473,7 @@
     mesh(mergeGeoms(lampP), std({ color: "#2a2e33", metalness: .5, roughness: .5 }), g);
     const lhM = std({ color: "#fff4d6", emissive: new THREE.Color("#ffc878"), emissiveIntensity: 0 });
     inst(new THREE.SphereGeometry(.18, 12, 8), lhM, lampH, g); ENV.glows.push({ mat: lhM, k: 2.4 });
-    glowPoints(g, lampH.map((m) => new THREE.Vector3().setFromMatrixPosition(m)), .9, "#ffb860", .8);
+    glowPoints(g, lampH.map((m) => new THREE.Vector3().setFromMatrixPosition(m)), 2.2, "#ffb860", .8);
     /* a déli láthatár közeli fasora: a parti fák mögötti település (gyűrű) */
     return g;
   }
