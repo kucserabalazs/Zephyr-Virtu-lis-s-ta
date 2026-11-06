@@ -86,8 +86,8 @@
         void main(){
           vec3 d = normalize(vW - uC); float up = max(d.y, 0.);
           vec2 q = vW.xz * .8 + vec2(uT * .25, uT * .18); float n = vn(q) * .6 + vn(q * 2.3 - uT * .3) * .4;
-          float win = smoothstep(.62, .78, up + (n - .5) * .08);                     /* Snell-ablak: kb. 97°-os kúp */
-          vec3 inside = mix(vec3(.55, .82, .8), uSky, .45) * (.55 + .7 * uDay) + vec3(1., .96, .85) * pow(n, 6.) * 1.6 * uDay;
+          float win = smoothstep(.7, .8, up + (n - .5) * .1);                       /* Snell-ablak: kb. 97°-os kúp */
+          vec3 inside = mix(vec3(.4, .7, .68), uSky, .3) * (.45 + .45 * uDay) * (.8 + .4 * n) + vec3(1., .96, .85) * pow(n, 7.) * 1.1 * uDay;
           vec3 outside = vec3(.12, .36, .36) * (.5 + .5 * uDay) + vec3(.4, .7, .65) * pow(n, 4.) * .35 * uDay;
           vec3 col = mix(outside, inside, win);
           float dist = length(vW - uC); col = mix(col, vec3(.13, .38, .37) * (.35 + .65 * uDay), smoothstep(6., 38., dist));
@@ -108,21 +108,19 @@
         void main(){
           vec2 p = vW.xz;
           float grain = h2(floor(p * 60.)) * .08 + h2(floor(p * 9.)) * .06;
-          vec3 sand = vec3(.62, .58, .46) * (.86 + grain) * (.8 + .2 * vN.y);
+          vec3 sand = vec3(.5, .47, .37) * (.86 + grain) * (.8 + .2 * vN.y);
           float c = pow(1. - clamp(caust(p * 1.3) * 1.6, 0., 1.), 5.) + pow(1. - clamp(caust(p * 2.1 + 3.) * 1.6, 0., 1.), 5.) * .6;
-          vec3 col = sand * (.35 + .5 * uDay) + vec3(.9, 1., .85) * c * .55 * uDay;
-          float dist = length(vW - uC); col = mix(col, vec3(.11, .33, .33) * (.35 + .65 * uDay), smoothstep(2., 30., dist));
+          vec3 col = sand * (.3 + .45 * uDay) + vec3(.85, 1., .82) * c * .32 * uDay;
+          float dist = length(vW - uC); col = mix(col, vec3(.11, .33, .33) * (.35 + .65 * uDay), smoothstep(1., 20., dist));
           gl_FragColor = vec4(col, 1.);
           #include <colorspace_fragment>
         }` });
     W.disposables.push(bedM); const bm = mesh(bed, bedM, g); bm.position.set(0, UW_BOT, UW_Z); UW.bed = bm;
     UW.mats = [sU, bU];
     /* cölöpök a fenékig (algásan), a nád szára a fenékből */
-    const posts = [], algae = [];
-    for (let i = 0; i < 8; i++) { const a = (i + .5) / 8 * TAU; posts.push(M4(Math.cos(a) * (DECK_R - .25), (UW_BOT + WATER_Y) / 2 - .4, Math.sin(a) * (DECK_R - .25))); }
-    for (let z = DECK_R + 1; z < SHORE_Z; z += 2.4) [-1.05, 1.05].forEach((x) => posts.push(M4(x, (UW_BOT + WATER_Y) / 2 - .4, z)));
-    inst(new THREE.CylinderGeometry(.13, .16, WATER_Y - UW_BOT + .4, 10), std({ color: "#3e3a2a", roughness: 1 }), posts, g);
-    posts.forEach((m) => { const p = new THREE.Vector3().setFromMatrixPosition(m); for (let k = 0; k < 10; k++) { const a = rand() * TAU; algae.push(M4(p.x + Math.cos(a) * .16, UW_BOT + rr(.2, 2.4), p.z + Math.sin(a) * .16, rand() * TAU, 0, 0, 1, rr(.6, 1.4), 1)); } });
+    /* algák a cölöpökön (a cölöpök maguk a stéghez tartoznak, a fenékig érnek) */
+    const algae = [];
+    (ENV.postPos || []).forEach((p) => { for (let k = 0; k < 10; k++) { const a = rand() * TAU; algae.push(M4(p.x + Math.cos(a) * .17, UW_BOT + rr(.1, 2.2), p.z + Math.sin(a) * .17, rand() * TAU, 0, 0, 1, rr(.6, 1.4), 1)); } });
     const strip = new THREE.PlaneGeometry(.06, .5, 1, 6); strip.translate(0, .25, 0);
     const weed = (c) => { const m = std({ color: c, roughness: .8, side: THREE.DoubleSide }); m.onBeforeCompile = (sh) => { sh.uniforms.uWT = ENV.wt; sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nuniform float uWT;").replace("#include <begin_vertex>", `#include <begin_vertex>
       { vec3 w0 = vec3(0.);
@@ -233,8 +231,8 @@
       if (MAQ.mode === "life") { MAQ.mode = "table"; MAQ.s = MAQ.sT = 1 / 40; MAQ.roofOn = false; applyPlacement(true); lifeTargets(false); }
       if (!UW.g) buildUnderwater(ENV.site);
       MAQ.dive = true; UW.g.visible = true; setDiveLook(true);
-      const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceYaw(Math.atan2(-fw.x, -fw.z));
-      placeUser(site.localToWorld(new THREE.Vector3(0, UW_BOT + .05, UW_Z + 5.5)), -1);
+      const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceTo(Math.atan2(-fw.x, -fw.z));
+      placeUser(site.localToWorld(new THREE.Vector3(.5, UW_BOT + .05, UW_Z + 2.2)), -1);
       wristRedraw(); W.panelDirty = 1;
     });
   }
@@ -243,15 +241,17 @@
     fadeThen(() => {
       MAQ.dive = false; UW.g.visible = false; setDiveLook(false); showTip(null);
       const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p);
-      const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceYaw(Math.atan2(-fw.x, -fw.z));
+      const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceTo(Math.atan2(-fw.x, -fw.z));
       placeUser(site.localToWorld(new THREE.Vector3(0, 0, USER_Z)), -1);
       wristRedraw(); W.panelDirty = 1;
     });
   }
   function setDiveLook(on) {
     const sc = T.sceneEl.object3D;
-    if (on) { UW.fogWas = sc.fog || null; sc.fog = new THREE.FogExp2(0x2a7470, .085); AU.set("water", .06, .5); AU.set("wind", 0, .5); if (AU.water) AU.water.f.frequency.setTargetAtTime(260, T.ac().currentTime, .3); }
-    else { sc.fog = UW.fogWas || null; AU.set("water", .03, .5); AU.set("wind", .012, .5); if (AU.water) AU.water.f.frequency.setTargetAtTime(700, T.ac().currentTime, .3); }
+    /* a köd miatt az anyagokat újra kell fordítani (egyszer, az áttűnés alatt) */
+    const recompile = () => W.root && W.root.traverse((o) => { const m = o.material; if (!m) return; (Array.isArray(m) ? m : [m]).forEach((q) => { q.needsUpdate = true; }); });
+    if (on) { UW.fogWas = sc.fog || null; sc.fog = new THREE.FogExp2(0x2a7470, .1); recompile(); AU.set("water", .06, .5); AU.set("wind", 0, .5); if (AU.water) AU.water.f.frequency.setTargetAtTime(260, T.ac().currentTime, .3); }
+    else { sc.fog = UW.fogWas || null; recompile(); AU.set("water", .03, .5); AU.set("wind", .012, .5); if (AU.water) AU.water.f.frequency.setTargetAtTime(700, T.ac().currentTime, .3); }
     [ENV.sky, ENV.pano, ENV.trees, ENV.water].forEach((m) => { if (m) m.visible = !on; });
     (ENV.lmk || []).forEach(() => {});
   }

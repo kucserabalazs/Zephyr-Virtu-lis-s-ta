@@ -35,6 +35,8 @@
       case "vcm": m = std({ vertexColors: true, roughness: .3, metalness: .6 }); break;
       default: m = std({ color: key.split("|")[0], roughness: key.includes("|m") ? .3 : .75, metalness: key.includes("|m") ? .6 : 0, flatShading: key.includes("|f") });
     }
+    /* belső felületek: kevesebb környezeti fény (különben életnagyságban kifehérednek a szobák) */
+    if (/plasterIn|parquet|tiles|stone|vc$/.test(key)) m.envMapIntensity = .35;
     return HX[key] = m;
   }
   /* UV a világkoordinátából (méterben, a domináns normál szerint) – így a textúrák minden dobozon egyforma léptékűek */

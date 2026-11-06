@@ -27,7 +27,10 @@
   const EYE2D = 1.6;
   const _q = new THREE.Vector3(), _q2 = new THREE.Vector3(), _q3 = new THREE.Vector3();
 
-  function headWorld(v) { v = v || new THREE.Vector3(); try { if (T.inVR) T.sceneEl.renderer.xr.getCamera().getWorldPosition(v); else T.camObj().getWorldPosition(v); } catch (e) { v.set(0, 1.6, 0); } return v; }
+  /* a fej helye és iránya a világban: az A-Frame kamerája (VR-ben a three.js ide másolja a fej pózát a rig-en belül) – így a rig mozgatása/forgatása után is pontos */
+  function headWorld(v) { v = v || new THREE.Vector3(); try { T.camObj().updateWorldMatrix(true, false); T.camObj().getWorldPosition(v); } catch (e) { v.set(0, 1.6, 0); } return v; }
+  function headYaw() { const d = new THREE.Vector3(); try { T.camObj().updateWorldMatrix(true, false); T.camObj().getWorldDirection(d); } catch (e) { return 0; } return Math.atan2(-d.x, -d.z); }
+  function faceTo(target) { const rig = T.rig.object3D; if (!T.inVR) { faceYaw(target); return; } rig.rotation.y += wrapA(target - headYaw()); rig.updateMatrixWorld(true); }
 
   function buildMaquette() {
     const root = W.root;
@@ -38,7 +41,7 @@
     buildMagicWorld(root, floorY);
     const env = ENV.env, site = ENV.site;
     /* elhelyezés: a felhasználó a stég déli részén áll (site: 0, 0, 0,95), a tó (345°) felé néz */
-    const yaw = T.camYaw(); env.rotation.y = yaw - 15 * D2R; env.position.set(0, floorY, 0); env.updateMatrixWorld(true);
+    const yaw = T.inVR ? headYaw() : T.camYaw(); env.rotation.y = yaw - 15 * D2R; env.position.set(0, floorY, 0); env.updateMatrixWorld(true);
     const h = headWorld(new THREE.Vector3()), p = site.localToWorld(new THREE.Vector3(0, 0, USER_Z));
     env.position.x += h.x - p.x; env.position.z += h.z - p.z; env.updateMatrixWorld(true);
     MAQ.floorY = floorY;
@@ -94,6 +97,13 @@
       T.xr.extra.add(glow); W.objs.push(glow);
     });
     maqAvail();
+    /* életnagyságban a lakások neve lebeg a szobákban (rámutatva / csippentve: belépés vagy foglalás) */
+    Object.values(MAQ.apts).forEach((A) => {
+      const L = labelSprite([(A.no ? A.no + " · " : "") + A.name + " Apartman", A.lock ? "a tulajdonos lakása" : "csippents: fotók · foglalás"], { size: .9, fs: 50 });
+      L.position.set((A.bb[0] + A.bb[2]) / 2, 2.25, (A.bb[1] + A.bb[3]) / 2); H.lv[A.lv].add(L); L.visible = false; L.material.depthTest = true; L.renderOrder = 8; A.lifeL = L;
+      L.userData.xr = { hover: (on) => L.scale.multiplyScalar(on ? 1.1 : 1 / 1.1), click: () => maqSelect(A, true) };
+      T.xr.extra.add(L); W.objs.push(L);
+    });
     /* ---------- életnagyságban: 360°-os fotópontok és lépés (teleport) ---------- */
     MAQ.orbs = [];
     const orbTex = canvasTex(256, 256, (g) => { const gr = g.createRadialGradient(128, 128, 10, 128, 128, 120); gr.addColorStop(0, "rgba(255,240,200,1)"); gr.addColorStop(.35, "rgba(255,209,102,.9)"); gr.addColorStop(1, "rgba(255,180,60,0)"); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
@@ -115,7 +125,9 @@
     T.xr.extra.add(ENV.telHit); W.objs.push(ENV.telHit);
 
     /* ---------- fény, árnyék ---------- */
-    const r = T.sceneEl.renderer; MAQ.shadowWas = r.shadowMap.enabled; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+    const r = T.sceneEl.renderer; MAQ.shadowWas = r.shadowMap.enabled; r.shadowMap.enabled = true; r.shadowMap.type = T.inVR ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
+    /* az árnyéktérkép csak akkor számolódik újra, ha valami változott (nap, méret, forgatás, tető…) – Quest 2-n ez sokat számít */
+    MAQ.shadowAuto = r.shadowMap.autoUpdate; r.shadowMap.autoUpdate = false; r.shadowMap.needsUpdate = true; MAQ.shSig = "";
     MAQ.envWas = T.sceneEl.object3D.environment || null;
     const sun = ENV.lights.sun; sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -.0005; sun.shadow.normalBias = .02;
 
@@ -135,7 +147,7 @@
     if (!T.inVR) { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.62; }
     audioStart({ water: .03, wind: .012 });
     W.onClose = () => {
-      try { T.sceneEl.renderer.shadowMap.enabled = MAQ.shadowWas; T.sceneEl.object3D.environment = MAQ.envWas; } catch (e) {}
+      try { const rr2 = T.sceneEl.renderer; rr2.shadowMap.enabled = MAQ.shadowWas; rr2.shadowMap.autoUpdate = MAQ.shadowAuto !== false; T.sceneEl.object3D.environment = MAQ.envWas; } catch (e) {}
       try { const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p); if (T.inVR) rg.rotation.y = MAQ.rig0.ry; } catch (e) {}
       showTip(null); uwDispose(); envDispose(); MAQ.card = null; MAQ.sightL = null;
     };
@@ -192,8 +204,8 @@
       MAQ.mode = "life"; MAQ.s = MAQ.sT = 1; MAQ.roofOn = true; MAQ.upper = true; MAQ.level = 0; maqDeselect(); applyPlacement(true); lifeTargets(true);
       const site = ENV.site; site.updateMatrixWorld(true);
       /* nézés a ház felé (site +z) */
-      const fw = new THREE.Vector3(0, 0, 1).transformDirection(site.matrixWorld); faceYaw(Math.atan2(-fw.x, -fw.z));
-      const target = site.localToWorld(new THREE.Vector3(LIFE_POS.x + 2.0, 0, LIFE_POS.z - 3.6));
+      const fw = new THREE.Vector3(0, 0, 1).transformDirection(site.matrixWorld); faceTo(Math.atan2(-fw.x, -fw.z));
+      const target = site.localToWorld(new THREE.Vector3(LIFE_POS.x + 2.0, 0, LIFE_POS.z - 1.3));
       placeUser(target, 0);
       wristRedraw(); W.panelDirty = 1;
     });
@@ -203,7 +215,7 @@
     fadeThen(() => {
       MAQ.mode = "table"; MAQ.s = MAQ.sT = 1 / 40; MAQ.roofOn = false; MAQ.level = 0; applyPlacement(true); lifeTargets(false);
       const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p);
-      const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceYaw(Math.atan2(-fw.x, -fw.z));
+      const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceTo(Math.atan2(-fw.x, -fw.z));
       placeUser(site.localToWorld(new THREE.Vector3(0, 0, USER_Z)), -1);
       MAQ.turn.rotation.y = Math.PI + .35; wristRedraw(); W.panelDirty = 1;
     });
@@ -254,12 +266,12 @@
     A.label.visible = !!on || MAQ.sel === A;
   }
   function placeFacing(obj, dist, dy, side) {
-    const hw = headWorld(new THREE.Vector3()), yaw = T.camYaw() + (side || 0);
+    const hw = headWorld(new THREE.Vector3()), yaw = (T.inVR ? headYaw() : T.camYaw()) + (side || 0);
     obj.position.set(hw.x - Math.sin(yaw) * dist, hw.y + dy, hw.z - Math.cos(yaw) * dist);
     obj.lookAt(hw.x, obj.position.y, hw.z);
   }
-  function maqSelect(A) {
-    if (MAQ.mode === "life") return;
+  function maqSelect(A, force) {
+    if (MAQ.mode === "life" && !force) return;
     if (MAQ.sel && MAQ.sel !== A && MAQ.sel.label) MAQ.sel.label.visible = false;
     MAQ.sel = A; maqHover(A, true);
     if (MAQ.card) { T.xr.extra.delete(MAQ.card); W.objs = W.objs.filter((o) => o !== MAQ.card); if (MAQ.card.parent) MAQ.card.parent.remove(MAQ.card); MAQ.card = null; }
@@ -353,6 +365,7 @@
       if (A.free === true) A.gm.color.set("#3fb37f"); else if (A.free === false) A.gm.color.set("#e5262f"); else A.gm.color.copy(A.col);
       A.gm.opacity += (tgt - A.gm.opacity) * Math.min(1, dt * 8); A.glow.visible = show;
       if (A.label && life) A.label.visible = false;
+      if (A.lifeL) A.lifeL.visible = life && (A.lv === 0 || MAQ.upper);
     });
     MAQ.tp.forEach((m) => { m.visible = life; });
     MAQ.orbs.forEach((o) => { o.visible = life; if (life) o.material.rotation = Math.sin(W.t * 1.5) * .05; });
@@ -364,6 +377,8 @@
     const sun = ENV.lights.sun, tg = sun.target; MAQ.holder.getWorldPosition(tg.position);
     if (life) { const hw = headWorld(_q); tg.position.lerp(hw, .0).setY(tg.position.y); }
     tg.updateMatrixWorld(); sun.position.copy(tg.position).addScaledVector(ENV.lights.sunDirW || _q2.set(0, 1, 0), MAQ.shadowD || 4);
+    const sig = [MAQ.turn.rotation.y.toFixed(3), MAQ.s.toFixed(5), MAQ.hour.toFixed(3), MAQ.roofOn, MAQ.upper, MAQ.mode, MAQ.table.position.y.toFixed(2), MAQ.holder.position.z.toFixed(3)].join("|");
+    if (sig !== MAQ.shSig) { MAQ.shSig = sig; T.sceneEl.renderer.shadowMap.needsUpdate = true; }
     /* esti fények a házban */
     const ev = ENV.evening || 0; MAQ.H.glass.emissiveIntensity = ev * (life ? .12 : .55); MAQ.H.bulb.emissiveIntensity = ev * 2.4 * (.9 + .1 * Math.sin(W.t * 2)); MAQ.H.lampIn.emissiveIntensity = ev * 1.6;
     if (MAQ.H.sign) MAQ.H.sign.material.emissiveIntensity = ev * .9;

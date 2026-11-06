@@ -297,9 +297,12 @@
     const deck = mesh(top, deckMat, g); deck.receiveShadow = true; ENV.deckTop = deck;
     /* cölöpök a vízben */
     const postMat = std({ color: "#4a3626", roughness: .9 });
-    const posts = []; for (let i = 0; i < N; i++) { const a = (i + .5) / N * TAU; posts.push(M4(Math.cos(a) * (DECK_R - .25), WATER_Y - .9, Math.sin(a) * (DECK_R - .25))); }
-    [[0, 0], [2.4, 0], [-2.4, 0], [0, 2.4], [0, -2.4]].forEach(([x, z]) => posts.push(M4(x, WATER_Y - .9, z)));
-    inst(new THREE.CylinderGeometry(.13, .15, 2.2, 10), postMat, posts, g);
+    /* a cölöpök a tó fenekéig érnek (a merülésnél látszanak) */
+    const PH = -.05 - UW_BOT, PY = (-.05 + UW_BOT) / 2;
+    const posts = []; for (let i = 0; i < N; i++) { const a = (i + .5) / N * TAU; posts.push(M4(Math.cos(a) * (DECK_R - .25), PY, Math.sin(a) * (DECK_R - .25))); }
+    [[0, 0], [2.4, 0], [-2.4, 0], [0, 2.4], [0, -2.4]].forEach(([x, z]) => posts.push(M4(x, PY, z)));
+    inst(new THREE.CylinderGeometry(.13, .16, PH, 10), postMat, posts, g);
+    ENV.postPos = posts.map((m) => new THREE.Vector3().setFromMatrixPosition(m));
     /* korlát: alacsony fa korlát a pallónál nyitva (dél felé) */
     const rail = [], railMat = std({ color: "#7a5538", roughness: .7 });
     for (let i = 0; i < N; i++) {
@@ -385,7 +388,7 @@
     const wTop = new THREE.BoxGeometry(2.2, .12, SHORE_Z + 2 - DECK_R + .3);
     { const p = wTop.attributes.position, uv = wTop.attributes.uv; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / 2, p.getZ(i) / 2); }
     const wk = mesh(wTop, wM, g); wk.position.set(0, -.06, (DECK_R + SHORE_Z + 2) / 2 - .15); wk.receiveShadow = true;
-    for (let z = DECK_R + 1; z < SHORE_Z; z += 2.4) { walk.push([new THREE.CylinderGeometry(.1, .12, 1.8, 8), M4(-1.05, WATER_Y - .7, z)]); walk.push([new THREE.CylinderGeometry(.1, .12, 1.8, 8), M4(1.05, WATER_Y - .7, z)]); }
+    for (let z = DECK_R + 1; z < SHORE_Z; z += 2.4) [-1.05, 1.05].forEach((x) => { walk.push([new THREE.CylinderGeometry(.1, .12, .0 - UW_BOT, 8), M4(x, UW_BOT / 2, z)]); ENV.postPos.push(new THREE.Vector3(x, 0, z)); });
     /* kötélkorlát + kis oszlopok a palló mentén, napelemes lámpácskák */
     const ropePts = [], plamps = [];
     for (let z = DECK_R + .3; z < SHORE_Z; z += 3) [-1.05, 1.05].forEach((x) => { walk.push([new THREE.CylinderGeometry(.05, .06, .9, 8), M4(x, .45, z)]); plamps.push(M4(x, .93, z)); ropePts.push([x, z]); });
