@@ -2631,7 +2631,10 @@
     const st = canvasTex(256, 16, (gg, w, h) => { const gr = gg.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, "rgba(255,255,255,0)"); gr.addColorStop(.85, "rgba(220,235,255,.8)"); gr.addColorStop(1, "rgba(255,255,255,1)"); gg.fillStyle = gr; gg.fillRect(0, 6, w, 4); });
     L.star = mesh(new THREE.PlaneGeometry(70, 2.2), basic({ map: st, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }), ENV.env); L.star.visible = false; L.star.renderOrder = -15;
     /* reggeli pára: lágy, áttetsző sávok a víz fölött */
-    const mt = canvasTex(512, 128, (gg, w, h) => { for (let k = 0; k < 60; k++) { const x = rand() * w, y = h * rr(.3, .7), r = rr(30, 90); const gr = gg.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, "rgba(255,255,255,.35)"); gr.addColorStop(1, "rgba(255,255,255,0)"); gg.fillStyle = gr; gg.fillRect(x - r, y - r, 2 * r, 2 * r); } });
+    const mt = canvasTex(512, 128, (gg, w, h) => { for (let k = 0; k < 60; k++) { const x = rand() * w, y = h * rr(.3, .7), r = rr(30, 90); const gr = gg.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, "rgba(255,255,255,.35)"); gr.addColorStop(1, "rgba(255,255,255,0)"); gg.fillStyle = gr; gg.fillRect(x - r, y - r, 2 * r, 2 * r); }
+      /* lágy szélek: a sáv széle felé elhalványul (különben téglalap rajzolódna ki) */
+      gg.globalCompositeOperation = "destination-in"; const mx = gg.createLinearGradient(0, 0, w, 0); mx.addColorStop(0, "rgba(0,0,0,0)"); mx.addColorStop(.25, "rgba(0,0,0,1)"); mx.addColorStop(.75, "rgba(0,0,0,1)"); mx.addColorStop(1, "rgba(0,0,0,0)"); gg.fillStyle = mx; gg.fillRect(0, 0, w, h);
+      const my = gg.createLinearGradient(0, 0, 0, h); my.addColorStop(0, "rgba(0,0,0,0)"); my.addColorStop(.4, "rgba(0,0,0,1)"); my.addColorStop(.6, "rgba(0,0,0,1)"); my.addColorStop(1, "rgba(0,0,0,0)"); gg.fillStyle = my; gg.fillRect(0, 0, w, h); gg.globalCompositeOperation = "source-over"; });
     L.mist = [];
     for (let k = 0; k < 10; k++) { const a = rr(-1.6, 1.6), d = rr(25, 140); const m = mesh(new THREE.PlaneGeometry(rr(60, 120), rr(4, 8)), basic({ map: mt, transparent: true, depthWrite: false, opacity: 0, fog: false }), site);
       m.position.set(Math.sin(a) * d, WATER_Y + rr(.6, 2.2), -Math.cos(a) * d); m.rotation.y = -a; m.renderOrder = 3; m.visible = false; L.mist.push(m); }
