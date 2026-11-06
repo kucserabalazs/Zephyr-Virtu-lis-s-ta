@@ -247,6 +247,10 @@
     box("terrace", 0, -.06, -1.45, OUT_W, 0, 0, 0);
     box("terrace", 0, -.18, -1.45, OUT_W, 0, 0, 1); box("plaster", 0, -.24, -1.45, OUT_W, -.18, 0, 1);
     railing(box, 0, -1.45, OUT_W, -1.4, 1); railing(box, 0, -1.45, .05, 0, 1); railing(box, OUT_W - .05, -1.45, OUT_W, 0, 1);
+    /* teraszbútor a fotók szerint: a Korvett teraszán kis asztal fekete székekkel, a Fregatt erkélyén asztal két székkel */
+    const tset = (cx, cz, lv, n) => { box("#9aa0a6", cx - .35, .72, cz - .35, cx + .35, .75, cz + .35, lv); box("#2b2f36|m", cx - .02, 0, cz - .02, cx + .02, .72, cz + .02, lv);
+      [[-.65, 0, Math.PI / 2], [.65, 0, -Math.PI / 2], [0, -.65, 0]].slice(0, n).forEach(([dx, dz, r]) => chair(add, cx + dx, cz + dz, r, lv, "#2b2f36")); };
+    tset(4.4, -.75, 0, 3); tset(1.6, -.75, 1, 2);
     /* hátul: a Schooner terasza, a Kadett emeleti fa terasza oszlopokon, csigalépcsővel */
     box("terrace", 0, -.04, Z_END, OUT_W, .02, Z_END + 2.9, 0);
     box("terrace", 0, -.2, Z_END, OUT_W, 0, Z_END + 3.3, 1);
