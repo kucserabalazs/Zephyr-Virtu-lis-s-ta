@@ -1748,5 +1748,18 @@
  "{#}. pálya: Nagy ív": "第 {#} 赛道：大弧线",
  "RAJT! Nagy ív – irány az {#}. bója.": "起航！大弧线——前往第 {#} 浮标。",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "抢航！请掉头，重新越过起航线。",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ 起航正常——前往第 {#} 浮标"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ 起航正常——前往第 {#} 浮标",
+ "⬒ Felül": "⬒ 俯视",
+ "Elöl": "正面",
+ "Hátul": "背面",
+ "◧ Bal": "◧ 左侧",
+ "Jobb ◨": "右侧 ◨",
+ "◈ Ferde": "◈ 斜视",
+ "＋ Közelebb": "＋ 拉近",
+ "－ Távolabb": "－ 拉远",
+ "Húzd az ujjad: körbenézel": "拖动手指：环顾四周",
+ "két ujjal: közelítés": "双指：缩放",
+ "koppints egy lakásra": "点按一个公寓",
+ "☰ Menü": "☰ 菜单",
+ "▾ Menü elrejtése": "▾ 隐藏菜单"
 }

@@ -1748,5 +1748,18 @@
  "{#}. pálya: Nagy ív": "Lintasan {#}: Lengkung lebar",
  "RAJT! Nagy ív – irány az {#}. bója.": "START! Lengkung lebar – menuju pelampung {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Start terlalu cepat! Putar balik dan lewati garis start lagi.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Start bersih – menuju pelampung {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Start bersih – menuju pelampung {#}",
+ "⬒ Felül": "⬒ Atas",
+ "Elöl": "Depan",
+ "Hátul": "Belakang",
+ "◧ Bal": "◧ Kiri",
+ "Jobb ◨": "Kanan ◨",
+ "◈ Ferde": "◈ Miring",
+ "＋ Közelebb": "＋ Lebih dekat",
+ "－ Távolabb": "－ Lebih jauh",
+ "Húzd az ujjad: körbenézel": "Geser jari: lihat sekeliling",
+ "két ujjal: közelítés": "dua jari: zoom",
+ "koppints egy lakásra": "ketuk sebuah apartemen",
+ "☰ Menü": "☰ Menu",
+ "▾ Menü elrejtése": "▾ Sembunyikan menu"
 }

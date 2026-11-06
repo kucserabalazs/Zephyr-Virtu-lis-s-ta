@@ -1750,5 +1750,18 @@
  "{#}. pálya: Nagy ív": "Baan {#}: Grote boog",
  "RAJT! Nagy ív – irány az {#}. bója.": "START! Grote boog – op naar boei {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Valse start! Keer om en kruis de startlijn opnieuw.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Goede start – op naar boei {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Goede start – op naar boei {#}",
+ "⬒ Felül": "⬒ Boven",
+ "Elöl": "Voor",
+ "Hátul": "Achter",
+ "◧ Bal": "◧ Links",
+ "Jobb ◨": "Rechts ◨",
+ "◈ Ferde": "◈ Schuin",
+ "＋ Közelebb": "＋ Dichterbij",
+ "－ Távolabb": "－ Verder",
+ "Húzd az ujjad: körbenézel": "Sleep met je vinger: kijk rond",
+ "két ujjal: közelítés": "twee vingers: zoomen",
+ "koppints egy lakásra": "tik op een appartement",
+ "☰ Menü": "☰ Menu",
+ "▾ Menü elrejtése": "▾ Menu verbergen"
 }

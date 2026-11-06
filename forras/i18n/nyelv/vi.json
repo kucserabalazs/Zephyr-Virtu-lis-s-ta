@@ -1748,5 +1748,18 @@
  "{#}. pálya: Nagy ív": "Đường đua {#}: Vòng cung lớn",
  "RAJT! Nagy ív – irány az {#}. bója.": "XUẤT PHÁT! Vòng cung lớn – tới phao {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Xuất phát sớm! Quay lại và vượt vạch xuất phát lần nữa.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Xuất phát hợp lệ – tới phao {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Xuất phát hợp lệ – tới phao {#}",
+ "⬒ Felül": "⬒ Từ trên",
+ "Elöl": "Trước",
+ "Hátul": "Sau",
+ "◧ Bal": "◧ Trái",
+ "Jobb ◨": "Phải ◨",
+ "◈ Ferde": "◈ Góc nghiêng",
+ "＋ Közelebb": "＋ Gần hơn",
+ "－ Távolabb": "－ Xa hơn",
+ "Húzd az ujjad: körbenézel": "Kéo ngón tay: nhìn quanh",
+ "két ujjal: közelítés": "hai ngón: thu phóng",
+ "koppints egy lakásra": "chạm vào một căn hộ",
+ "☰ Menü": "☰ Menu",
+ "▾ Menü elrejtése": "▾ Ẩn menu"
 }

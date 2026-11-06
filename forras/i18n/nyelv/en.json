@@ -1750,5 +1750,18 @@
  "{#}. pálya: Nagy ív": "Course {#}: Wide arc",
  "RAJT! Nagy ív – irány az {#}. bója.": "START! Wide arc – head for buoy {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Early start! Turn back and cross the start line again.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Clean start – head for buoy {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Clean start – head for buoy {#}",
+ "⬒ Felül": "⬒ Top",
+ "Elöl": "Front",
+ "Hátul": "Back",
+ "◧ Bal": "◧ Left",
+ "Jobb ◨": "Right ◨",
+ "◈ Ferde": "◈ Angled",
+ "＋ Közelebb": "＋ Closer",
+ "－ Távolabb": "－ Farther",
+ "Húzd az ujjad: körbenézel": "Drag your finger: look around",
+ "két ujjal: közelítés": "two fingers: zoom",
+ "koppints egy lakásra": "tap an apartment",
+ "☰ Menü": "☰ Menu",
+ "▾ Menü elrejtése": "▾ Hide menu"
 }

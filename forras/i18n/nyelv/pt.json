@@ -1750,5 +1750,18 @@
  "{#}. pálya: Nagy ív": "Percurso {#}: Grande arco",
  "RAJT! Nagy ív – irány az {#}. bója.": "PARTIDA! Grande arco – rumo à boia {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Partida antecipada! Volte e cruze de novo a linha de partida.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Partida limpa – rumo à boia {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Partida limpa – rumo à boia {#}",
+ "⬒ Felül": "⬒ Cima",
+ "Elöl": "Frente",
+ "Hátul": "Trás",
+ "◧ Bal": "◧ Esquerda",
+ "Jobb ◨": "Direita ◨",
+ "◈ Ferde": "◈ Oblíqua",
+ "＋ Közelebb": "＋ Mais perto",
+ "－ Távolabb": "－ Mais longe",
+ "Húzd az ujjad: körbenézel": "Arraste o dedo: olhe à volta",
+ "két ujjal: közelítés": "dois dedos: zoom",
+ "koppints egy lakásra": "toque num apartamento",
+ "☰ Menü": "☰ Menu",
+ "▾ Menü elrejtése": "▾ Ocultar menu"
 }

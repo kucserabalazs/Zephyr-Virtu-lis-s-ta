@@ -1750,5 +1750,18 @@
  "{#}. pálya: Nagy ív": "Trať {#}: Veľký oblúk",
  "RAJT! Nagy ív – irány az {#}. bója.": "ŠTART! Veľký oblúk – na {#}. bóju.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Predčasný štart! Otoč sa a prejdi štartovú čiaru znova.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Čistý štart – na {#}. bóju"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Čistý štart – na {#}. bóju",
+ "⬒ Felül": "⬒ Zhora",
+ "Elöl": "Spredu",
+ "Hátul": "Zozadu",
+ "◧ Bal": "◧ Vľavo",
+ "Jobb ◨": "Vpravo ◨",
+ "◈ Ferde": "◈ Šikmo",
+ "＋ Közelebb": "＋ Bližšie",
+ "－ Távolabb": "－ Ďalej",
+ "Húzd az ujjad: körbenézel": "Ťahaj prstom: rozhliadni sa",
+ "két ujjal: közelítés": "dva prsty: priblíženie",
+ "koppints egy lakásra": "ťukni na apartmán",
+ "☰ Menü": "☰ Menu",
+ "▾ Menü elrejtése": "▾ Skryť menu"
 }

@@ -1748,5 +1748,18 @@
  "{#}. pálya: Nagy ív": "コース {#}：大きな弧",
  "RAJT! Nagy ív – irány az {#}. bója.": "スタート！大きな弧 – ブイ {#} へ。",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "フライング！引き返してスタートラインをもう一度越えて。",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ 正しいスタート – ブイ {#} へ"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ 正しいスタート – ブイ {#} へ",
+ "⬒ Felül": "⬒ 真上",
+ "Elöl": "正面",
+ "Hátul": "背面",
+ "◧ Bal": "◧ 左",
+ "Jobb ◨": "右 ◨",
+ "◈ Ferde": "◈ 斜め",
+ "＋ Közelebb": "＋ 近づく",
+ "－ Távolabb": "－ 離れる",
+ "Húzd az ujjad: körbenézel": "指でドラッグ：見回す",
+ "két ujjal: közelítés": "2本指：ズーム",
+ "koppints egy lakásra": "アパートをタップ",
+ "☰ Menü": "☰ メニュー",
+ "▾ Menü elrejtése": "▾ メニューを隠す"
 }

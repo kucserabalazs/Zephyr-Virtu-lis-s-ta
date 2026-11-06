@@ -1748,5 +1748,18 @@
  "{#}. pálya: Nagy ív": "{#}. parkur: Büyük yay",
  "RAJT! Nagy ív – irány az {#}. bója.": "START! Büyük yay – {#}. şamandıraya.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Erken start! Geri dön ve start çizgisini yeniden geç.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Temiz start – {#}. şamandıraya"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Temiz start – {#}. şamandıraya",
+ "⬒ Felül": "⬒ Üstten",
+ "Elöl": "Ön",
+ "Hátul": "Arka",
+ "◧ Bal": "◧ Sol",
+ "Jobb ◨": "Sağ ◨",
+ "◈ Ferde": "◈ Açılı",
+ "＋ Közelebb": "＋ Yaklaş",
+ "－ Távolabb": "－ Uzaklaş",
+ "Húzd az ujjad: körbenézel": "Parmağını sürükle: etrafa bak",
+ "két ujjal: közelítés": "iki parmak: yakınlaştır",
+ "koppints egy lakásra": "bir daireye dokun",
+ "☰ Menü": "☰ Menü",
+ "▾ Menü elrejtése": "▾ Menüyü gizle"
 }

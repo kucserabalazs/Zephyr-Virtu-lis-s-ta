@@ -1748,5 +1748,18 @@
  "{#}. pálya: Nagy ív": "المسار {#}: قوس كبير",
  "RAJT! Nagy ív – irány az {#}. bója.": "انطلق! قوس كبير – نحو العوامة {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "انطلاق مبكر! استدر واعبر خط الانطلاق من جديد.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ انطلاق صحيح – نحو العوامة {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ انطلاق صحيح – نحو العوامة {#}",
+ "⬒ Felül": "⬒ من الأعلى",
+ "Elöl": "أمام",
+ "Hátul": "خلف",
+ "◧ Bal": "◧ يسار",
+ "Jobb ◨": "يمين ◨",
+ "◈ Ferde": "◈ مائل",
+ "＋ Közelebb": "＋ أقرب",
+ "－ Távolabb": "－ أبعد",
+ "Húzd az ujjad: körbenézel": "اسحب بإصبعك: انظر حولك",
+ "két ujjal: közelítés": "إصبعان: تكبير",
+ "koppints egy lakásra": "انقر على شقة",
+ "☰ Menü": "☰ القائمة",
+ "▾ Menü elrejtése": "▾ إخفاء القائمة"
 }

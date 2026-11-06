@@ -1750,5 +1750,18 @@
  "{#}. pálya: Nagy ív": "Trasa {#}: Duży łuk",
  "RAJT! Nagy ív – irány az {#}. bója.": "START! Duży łuk – płyń do boi {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Falstart! Zawróć i przetnij linię startu jeszcze raz.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Czysty start – płyń do boi {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Czysty start – płyń do boi {#}",
+ "⬒ Felül": "⬒ Z góry",
+ "Elöl": "Przód",
+ "Hátul": "Tył",
+ "◧ Bal": "◧ Lewo",
+ "Jobb ◨": "Prawo ◨",
+ "◈ Ferde": "◈ Ukośnie",
+ "＋ Közelebb": "＋ Bliżej",
+ "－ Távolabb": "－ Dalej",
+ "Húzd az ujjad: körbenézel": "Przeciągnij palcem: rozglądaj się",
+ "két ujjal: közelítés": "dwa palce: przybliżenie",
+ "koppints egy lakásra": "dotknij apartamentu",
+ "☰ Menü": "☰ Menu",
+ "▾ Menü elrejtése": "▾ Ukryj menu"
 }

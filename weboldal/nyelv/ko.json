@@ -1748,5 +1748,18 @@
  "{#}. pálya: Nagy ív": "{#}번 코스: 큰 원호",
  "RAJT! Nagy ív – irány az {#}. bója.": "출발! 큰 원호 – {#}번 부표로.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "부정 출발! 돌아가서 출발선을 다시 통과하세요.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ 정상 출발 – {#}번 부표로"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ 정상 출발 – {#}번 부표로",
+ "⬒ Felül": "⬒ 위에서",
+ "Elöl": "정면",
+ "Hátul": "뒤",
+ "◧ Bal": "◧ 왼쪽",
+ "Jobb ◨": "오른쪽 ◨",
+ "◈ Ferde": "◈ 비스듬히",
+ "＋ Közelebb": "＋ 가까이",
+ "－ Távolabb": "－ 멀리",
+ "Húzd az ujjad: körbenézel": "손가락으로 끌기: 둘러보기",
+ "két ujjal: közelítés": "두 손가락: 확대/축소",
+ "koppints egy lakásra": "아파트를 탭하세요",
+ "☰ Menü": "☰ 메뉴",
+ "▾ Menü elrejtése": "▾ 메뉴 숨기기"
 }

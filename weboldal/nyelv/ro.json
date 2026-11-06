@@ -1750,5 +1750,18 @@
  "{#}. pálya: Nagy ív": "Traseul {#}: Arc mare",
  "RAJT! Nagy ív – irány az {#}. bója.": "START! Arc mare – spre geamandura {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Start prematur! Întoarce-te și trece din nou linia de start.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Start corect – spre geamandura {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Start corect – spre geamandura {#}",
+ "⬒ Felül": "⬒ De sus",
+ "Elöl": "Față",
+ "Hátul": "Spate",
+ "◧ Bal": "◧ Stânga",
+ "Jobb ◨": "Dreapta ◨",
+ "◈ Ferde": "◈ Oblic",
+ "＋ Közelebb": "＋ Mai aproape",
+ "－ Távolabb": "－ Mai departe",
+ "Húzd az ujjad: körbenézel": "Trage cu degetul: privește în jur",
+ "két ujjal: közelítés": "două degete: zoom",
+ "koppints egy lakásra": "atinge un apartament",
+ "☰ Menü": "☰ Meniu",
+ "▾ Menü elrejtése": "▾ Ascunde meniul"
 }

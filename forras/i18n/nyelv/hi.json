@@ -1748,5 +1748,18 @@
  "{#}. pálya: Nagy ív": "कोर्स {#}: बड़ा मोड़",
  "RAJT! Nagy ív – irány az {#}. bója.": "शुरू! बड़ा मोड़ – बॉय {#} की ओर।",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "जल्दी शुरुआत! वापस मुड़ें और शुरुआती रेखा फिर से पार करें।",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ सही शुरुआत – बॉय {#} की ओर"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ सही शुरुआत – बॉय {#} की ओर",
+ "⬒ Felül": "⬒ ऊपर से",
+ "Elöl": "सामने",
+ "Hátul": "पीछे",
+ "◧ Bal": "◧ बाएँ",
+ "Jobb ◨": "दाएँ ◨",
+ "◈ Ferde": "◈ तिरछा",
+ "＋ Közelebb": "＋ पास",
+ "－ Távolabb": "－ दूर",
+ "Húzd az ujjad: körbenézel": "उंगली खींचें: चारों ओर देखें",
+ "két ujjal: közelítés": "दो उंगलियाँ: ज़ूम",
+ "koppints egy lakásra": "किसी अपार्टमेंट पर टैप करें",
+ "☰ Menü": "☰ मेनू",
+ "▾ Menü elrejtése": "▾ मेनू छिपाएँ"
 }

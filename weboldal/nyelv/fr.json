@@ -1750,5 +1750,18 @@
  "{#}. pálya: Nagy ív": "Parcours {#} : Grand arc",
  "RAJT! Nagy ív – irány az {#}. bója.": "DÉPART ! Grand arc – cap sur la bouée {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Départ anticipé ! Faites demi-tour et recoupez la ligne de départ.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Départ régulier – cap sur la bouée {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Départ régulier – cap sur la bouée {#}",
+ "⬒ Felül": "⬒ Dessus",
+ "Elöl": "Face",
+ "Hátul": "Arrière",
+ "◧ Bal": "◧ Gauche",
+ "Jobb ◨": "Droite ◨",
+ "◈ Ferde": "◈ Oblique",
+ "＋ Közelebb": "＋ Plus près",
+ "－ Távolabb": "－ Plus loin",
+ "Húzd az ujjad: körbenézel": "Glissez le doigt : regardez autour",
+ "két ujjal: közelítés": "deux doigts : zoom",
+ "koppints egy lakásra": "touchez un appartement",
+ "☰ Menü": "☰ Menu",
+ "▾ Menü elrejtése": "▾ Masquer le menu"
 }

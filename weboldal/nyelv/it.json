@@ -1750,5 +1750,18 @@
  "{#}. pálya: Nagy ív": "Percorso {#}: Grande arco",
  "RAJT! Nagy ív – irány az {#}. bója.": "VIA! Grande arco – verso la boa {#}.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Partenza anticipata! Torna indietro e riattraversa la linea di partenza.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Partenza regolare – verso la boa {#}"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Partenza regolare – verso la boa {#}",
+ "⬒ Felül": "⬒ Dall'alto",
+ "Elöl": "Fronte",
+ "Hátul": "Retro",
+ "◧ Bal": "◧ Sinistra",
+ "Jobb ◨": "Destra ◨",
+ "◈ Ferde": "◈ Obliqua",
+ "＋ Közelebb": "＋ Più vicino",
+ "－ Távolabb": "－ Più lontano",
+ "Húzd az ujjad: körbenézel": "Trascina il dito: guarda intorno",
+ "két ujjal: közelítés": "due dita: zoom",
+ "koppints egy lakásra": "tocca un appartamento",
+ "☰ Menü": "☰ Menu",
+ "▾ Menü elrejtése": "▾ Nascondi menu"
 }

@@ -1750,5 +1750,18 @@
  "{#}. pálya: Nagy ív": "Staza {#}: Veliki luk",
  "RAJT! Nagy ív – irány az {#}. bója.": "START! Veliki luk – prema {#}. plutači.",
  "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon.": "Prerani start! Okreni se i ponovo prijeđi startnu liniju.",
- "✓ Szabályos rajt – irány az {#}. bója": "✓ Čist start – prema {#}. plutači"
+ "✓ Szabályos rajt – irány az {#}. bója": "✓ Čist start – prema {#}. plutači",
+ "⬒ Felül": "⬒ Odozgo",
+ "Elöl": "Sprijeda",
+ "Hátul": "Straga",
+ "◧ Bal": "◧ Lijevo",
+ "Jobb ◨": "Desno ◨",
+ "◈ Ferde": "◈ Koso",
+ "＋ Közelebb": "＋ Bliže",
+ "－ Távolabb": "－ Dalje",
+ "Húzd az ujjad: körbenézel": "Povuci prstom: razgledaj",
+ "két ujjal: közelítés": "dva prsta: zumiranje",
+ "koppints egy lakásra": "dodirni apartman",
+ "☰ Menü": "☰ Izbornik",
+ "▾ Menü elrejtése": "▾ Sakrij izbornik"
 }

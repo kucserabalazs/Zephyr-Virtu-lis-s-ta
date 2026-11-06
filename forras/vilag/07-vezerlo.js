@@ -97,10 +97,18 @@
       @media (max-width:600px){#worldHud .wh-steer .wh-b{min-width:64px;padding:14px 14px;font-size:20px}#worldHud .wh-steer .wh-b.wh-x{font-size:14px;padding:12px 10px}}
       #worldHud .wh-hint{font:600 15px/1.4 inherit;background:rgba(7,28,58,.7);padding:8px 14px;border-radius:12px;text-align:center}
       @media (max-width:600px){#worldHud .wh-t{font-size:19px}#worldHud .wh-s{font-size:16px}}
+      #worldHud .wh-tog{pointer-events:auto;font:800 17px/1 inherit;padding:12px 18px;border-radius:999px;border:2px solid rgba(255,209,102,.9);background:rgba(7,28,58,.88);color:#ffd166;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+      #worldHud.wh-min .wh-card,#worldHud.wh-min .wh-hint,#worldHud.wh-min .wh-btns:not(.wh-steer){display:none}
+      @media (max-width:700px),(max-height:520px){#worldHud .wh-btns{gap:7px;max-height:38vh;overflow-y:auto;pointer-events:auto;-webkit-overflow-scrolling:touch}#worldHud .wh-b{font-size:15px;padding:10px 12px;min-width:0;border-radius:13px}#worldHud .wh-hint{font-size:13px;padding:6px 10px}#worldHud .wh-card{padding:9px 13px}#worldHud .wh-back{font-size:16px;padding:11px 15px}}
     </style><div class="wh-top"><button type="button" class="wh-back">‹ Vissza a sétához</button><div class="wh-card"><div class="wh-t"></div><div class="wh-s"></div><ul class="wh-list"></ul></div></div>
-    <div class="wh-bot"><div class="wh-btns"></div><div class="wh-hint"></div></div>`;
+    <div class="wh-bot"><button type="button" class="wh-tog"></button><div class="wh-btns"></div><div class="wh-hint"></div></div>`;
     document.body.appendChild(el);
     el.querySelector(".wh-back").addEventListener("click", () => W.close());
+    /* összecsukható menü (mobilon alapból összecsukva, hogy a jelenet látsszon); az állapotot megjegyezzük */
+    { const tog = el.querySelector(".wh-tog"); let min; try { min = localStorage.getItem("zephyr-hud-min"); } catch (e) {}
+      min = min == null ? (innerWidth < 700 || innerHeight < 520) : min === "1";
+      const upd = () => { el.classList.toggle("wh-min", min); tog.textContent = min ? "☰ Menü" : "▾ Menü elrejtése"; };
+      tog.addEventListener("click", () => { min = !min; try { localStorage.setItem("zephyr-hud-min", min ? "1" : "0"); } catch (e) {} upd(); }); upd(); }
     let lastBtns = "";
     const H = {
       el,
@@ -110,9 +118,9 @@
           list(a) { el.querySelector(".wh-list").innerHTML = a.map((x) => `<li>${x}</li>`).join(""); },
           hint(t) { el.querySelector(".wh-hint").textContent = t; },
           buttons(list) {
-            const key = list.map((x) => x[0]).join("|"); if (key === lastBtns) return; lastBtns = key;
+            const key = list.map((x) => x[0] + (x[2] ? "*" : "")).join("|"); if (key === lastBtns) return; lastBtns = key;
             const box = el.querySelector(".wh-btns"); box.className = "wh-btns"; box.innerHTML = "";
-            list.forEach(([lbl, fn]) => { const b = document.createElement("button"); b.type = "button"; b.className = "wh-b"; b.textContent = lbl; b.addEventListener("click", () => { fn(); H.draw(); }); box.appendChild(b); });
+            list.forEach(([lbl, fn, on]) => { const b = document.createElement("button"); b.type = "button"; b.className = "wh-b" + (on ? " on" : ""); b.textContent = lbl; b.addEventListener("click", () => { fn(); H.draw(); }); box.appendChild(b); });
           },
           steer(extra, onCenter) {   /* extra: további gombok a kormány mellé ([felirat, függvény]); onCenter: az „egyenesbe” saját kezelője */
             const key = "steer|" + (extra || []).map((x) => x[0]).join("|"); if (lastBtns === key) return; lastBtns = key;

@@ -1782,12 +1782,14 @@
     const rig = T.rig.object3D;
     Object.keys(MAQ).forEach((k) => delete MAQ[k]);   /* tiszta lap minden megnyitáskor */
     MAQ.rig0 = { p: rig.position.clone(), ry: rig.rotation.y };
+    Object.assign(ORB, { az: .35, el: .62, d: 1.7, azT: .35, elT: .62, dT: 1.7, on: false }); ORB.pts.clear();
     { const r0 = T.sceneEl.renderer; MAQ.shadowWas = r0.shadowMap.enabled; MAQ.shadowType = r0.shadowMap.type; MAQ.shadowAuto = r0.shadowMap.autoUpdate; MAQ.envWas = T.sceneEl.object3D.environment || null; MAQ.envIntWas = T.sceneEl.object3D.environmentIntensity; }
     /* az A-Frame alapfényei (erős szórt fény) kikapcsolva – a makett-világban a napszak saját fényei világítanak */
     MAQ.sceneLights = []; T.sceneEl.object3D.children.forEach((o) => { if (o.isLight && o.visible) { o.visible = false; MAQ.sceneLights.push(o); } });
     T.sceneEl.object3D.traverse((o) => { if (o.isLight && o.visible && !MAQ.sceneLights.includes(o) && (!W.root || !W.root.getObjectById(o.id))) { o.visible = false; MAQ.sceneLights.push(o); } });
     /* a bezárás-kezelő legelöl: ha a felépítés közben hiba lenne, akkor is minden visszaáll */
     W.onClose = () => {
+      try { orbDetach(); } catch (e) {}
       try { const rr2 = T.sceneEl.renderer; rr2.shadowMap.enabled = MAQ.shadowWas; rr2.shadowMap.type = MAQ.shadowType; rr2.shadowMap.autoUpdate = MAQ.shadowAuto !== false; T.sceneEl.object3D.environment = MAQ.envWas; if (MAQ.envIntWas != null) T.sceneEl.object3D.environmentIntensity = MAQ.envIntWas; } catch (e) {}
       try { const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p); if (T.inVR) rg.rotation.y = MAQ.rig0.ry; } catch (e) {}
       (MAQ.sceneLights || []).forEach((o) => { o.visible = true; });
@@ -1924,7 +1926,7 @@
       placeFacing(hc, 1.0, .12, 0); MAQ.help = hc; MAQ.helpT = 25;
       hc.userData.xr = { click: () => { hc.visible = false; T.xr.extra.delete(hc); } }; T.xr.extra.add(hc); W.objs.push(hc);
     }
-    W.maq = { MAQ, ENV, BJ, goLife, goTable, bjStart, bjNext, setPreset, stepScale, nudgeHour, toggleSights };   /* tesztekhez */
+    W.maq = { MAQ, ORB, orbView, ENV, BJ, goLife, goTable, bjStart, bjNext, setPreset, stepScale, nudgeHour, toggleSights };   /* tesztekhez */
     return { tick: maqTick, panel: maqPanel, hud: maqHud, wrist: maqWrist };
   }
   function sunTimesOf(ymd) {
@@ -2110,6 +2112,55 @@
   }
 
   /* ---------- képkocka ---------- */
+
+  /* ---------- KÖRBENÉZŐ KAMERA (2D: mobil / gép, 2026. nov. 6.) ----------
+     Asztali (makett) módban a kamera a makett körül kering: egy ujjal húzva körbe-forog és fel-le billen,
+     két ujjal csippentve (vagy görgővel) közelít/távolodik. Nézet-gombok: Felül · Elöl · Hátul · Bal · Jobb · Ferde.
+     Az irányok a maketthez kötöttek (az „Elöl” mindig az utcafront), a váltás simán úszik át. */
+  const ORB = { az: .35, el: .62, d: 1.7, azT: .35, elT: .62, dT: 1.7, on: false, pts: new Map(), moved: 0 };
+  const ORB_VIEWS = { top: [0, 1.555, 1.75], front: [0, .3, 1.55], back: [Math.PI, .3, 1.55], left: [-Math.PI / 2, .3, 1.55], right: [Math.PI / 2, .3, 1.55], iso: [.7, .6, 1.7] };
+  function orbView(k) { const v = ORB_VIEWS[k]; if (!v) return; MAQ.auto = false; MAQ.spinV = 0; let a = v[0]; while (a - ORB.az > Math.PI) a -= TAU; while (a - ORB.az < -Math.PI) a += TAU; ORB.azT = a; ORB.elT = v[1]; ORB.dT = v[2]; MAQ.view = k; W.panelDirty = 1; }
+  function orbLC(en) { try { T.cam.setAttribute("look-controls", "enabled", en); } catch (e) {} }
+  function orbAttach() {
+    if (ORB.cv || T.inVR) return; const cv = T.sceneEl.canvas; if (!cv) return; ORB.cv = cv;
+    const P = ORB.pts, act = () => ORB.on && !T.inVR && MAQ.mode !== "life";
+    const dist2 = () => { const a = [...P.values()]; return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); };
+    ORB.h = {
+      down: (e) => { if (!act()) return; P.set(e.pointerId, { x: e.clientX, y: e.clientY }); ORB.moved = 0; if (P.size === 2) ORB.pd = dist2(); },
+      move: (e) => { if (!act() || !P.has(e.pointerId)) return; const q = P.get(e.pointerId), dx = e.clientX - q.x, dy = e.clientY - q.y;
+        if (P.size === 1) { ORB.moved += Math.abs(dx) + Math.abs(dy); if (ORB.moved > 6) { const k = 4.2 / Math.max(320, Math.min(innerWidth, innerHeight)); ORB.azT -= dx * k; ORB.elT = clamp(ORB.elT + dy * k, .06, 1.555); MAQ.auto = false; MAQ.view = null; } }
+        q.x = e.clientX; q.y = e.clientY;
+        if (P.size === 2) { const d = dist2(); if (ORB.pd > 10) ORB.dT = clamp(ORB.dT * ORB.pd / Math.max(10, d), .55, 7); ORB.pd = d; ORB.moved = 99; MAQ.view = null; } },
+      up: (e) => { P.delete(e.pointerId); if (P.size < 2) ORB.pd = 0; },
+      wheel: (e) => { if (!act()) return; e.preventDefault(); ORB.dT = clamp(ORB.dT * Math.exp(e.deltaY * .0012), .55, 7); MAQ.view = null; },
+      /* húzás után ne válasszon ki lakást a felengedés */
+      click: (e) => { if (act() && ORB.moved > 6) { e.stopImmediatePropagation(); e.preventDefault(); } }
+    };
+    cv.addEventListener("pointerdown", ORB.h.down); addEventListener("pointermove", ORB.h.move); addEventListener("pointerup", ORB.h.up); addEventListener("pointercancel", ORB.h.up);
+    cv.addEventListener("wheel", ORB.h.wheel, { passive: false }); cv.addEventListener("click", ORB.h.click, true);
+    cv.style.touchAction = "none";
+  }
+  function orbDetach() {
+    if (!ORB.cv) return; const cv = ORB.cv, h = ORB.h;
+    cv.removeEventListener("pointerdown", h.down); removeEventListener("pointermove", h.move); removeEventListener("pointerup", h.up); removeEventListener("pointercancel", h.up);
+    cv.removeEventListener("wheel", h.wheel); cv.removeEventListener("click", h.click, true); ORB.cv = null; ORB.pts.clear(); orbLC(true);
+  }
+  const _oT = new THREE.Vector3(), _oH = new THREE.Vector3(), _oE = new THREE.Vector3(), _oW = new THREE.Vector3();
+  function orbTick(dt) {
+    const want = !T.inVR && MAQ.mode !== "life" && !MAQ.fading;
+    if (want !== ORB.on) { ORB.on = want; orbLC(!want); if (want) { orbAttach(); ORB.az = ORB.azT; ORB.el = ORB.elT; ORB.d = ORB.dT; } }
+    if (!ORB.on) return;
+    const k = Math.min(1, dt * 5); ORB.az += (ORB.azT - ORB.az) * k; ORB.el += (ORB.elT - ORB.el) * k; ORB.d = Math.exp(lerp(Math.log(ORB.d), Math.log(ORB.dT), k));
+    MAQ.holder.getWorldPosition(_oT); _oT.y -= 1.2 * MAQ.s;   /* a ház közepe felé (a talapzat fölött) */
+    MAQ.turn.updateMatrixWorld(true);
+    _oH.set(Math.sin(ORB.az), 0, -Math.cos(ORB.az)).transformDirection(MAQ.turn.matrixWorld); _oH.y = 0; _oH.normalize();
+    const asp = innerWidth / Math.max(1, innerHeight), R = Math.max(.2, MAQ.R * MAQ.s), D = ORB.d * R * (asp < 1 ? lerp(Math.min(1.45, 1 / Math.sqrt(asp) * .85), .82, clamp((ORB.el - 1.1) / .4, 0, 1)) : 1), ce = Math.cos(ORB.el), se = Math.sin(ORB.el);
+    _oE.copy(_oT).addScaledVector(_oH, ce * D); _oE.y += se * D;
+    const rg = T.rig.object3D, cam = T.cam.object3D;
+    rg.rotation.set(0, Math.atan2(_oH.x, _oH.z), 0); cam.rotation.set(-ORB.el, 0, 0);
+    rg.updateMatrixWorld(true); headWorld(_oW); rg.position.add(_oE.sub(_oW));
+    try { const cm = T.sceneEl.camera; const nr = clamp(D * .02, .01, .06); if (cm && Math.abs(cm.near - nr) > .002) { cm.near = nr; cm.updateProjectionMatrix(); } } catch (e) {}
+  }
   function maqTick(dt) {
     const life = MAQ.mode === "life";
     /* méret simítása */
@@ -2169,6 +2220,7 @@
     MAQ.orbs.forEach((o) => { o.visible = life; if (life) o.material.rotation = Math.sin(W.t * 1.5) * .05; });
     if (life) MAQ.orbs.forEach((o, i) => { const k = (o.scale.x > .38 ? .42 : .3) * (1 + Math.sin(W.t * 2.2 + i) * .06); o.scale.set(k, k, 1); });
     if (!T.inVR && !life && !MAQ.drag && MAQ.auto !== false) MAQ.turn.rotation.y += dt * .04;
+    orbTick(dt);
     /* napszak: az óra simán halad a cél felé */
     if (Math.abs(MAQ.hour - MAQ.hourT) > 1e-3) { MAQ.hour += (MAQ.hourT - MAQ.hour) * Math.min(1, dt * 2.2); if (Math.abs(MAQ.hour - MAQ.hourT) < .004) { MAQ.hour = MAQ.hourT; envSetTime(MAQ.day, MAQ.hour, true); } MAQ.envT = (MAQ.envT || 0) + dt; if (MAQ.envT > .06) { MAQ.envT = 0; envSetTime(MAQ.day, MAQ.hour); } }
     /* nap (árnyékvető fény) a modell fölött */
@@ -2231,11 +2283,12 @@
   /* ---------- 2D kezelőfelület ---------- */
   function maqHud(H) {
     const life = MAQ.mode === "life";
-    H.title(life ? "A Zephyr ház – életnagyságban" : "A ház makettje · " + SCALE_TXT(MAQ.s), life ? "Koppints a földre: odalépsz · a fénylő 360° gömbök a valódi fotók" : "A Balaton partján, Zamárdiban · koppints egy lakásra: belépés vagy foglalás");
+    H.title(life ? "A Zephyr ház – életnagyságban" : "A ház makettje · " + SCALE_TXT(MAQ.s), life ? "Koppints a földre: odalépsz · a fénylő 360° gömbök a valódi fotók" : "Húzd az ujjad: körbenézel · két ujjal: közelítés · koppints egy lakásra");
     if (life) H.buttons([[MAQ.level ? "⬇ Földszint" : "⬆ Emelet", () => goLevel(MAQ.level ? 0 : 1)], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▣ Vissza a maketthez", () => goTable()],
       ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🎬 Jelenet", () => bjNext()]]);
-    else H.buttons([["＋ Nagyobb", () => stepScale(1)], ["－ Kisebb", () => stepScale(-1)], ["🚶 Életnagyság", () => goLife()], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], [MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }],
-      ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], ["⟲", () => { MAQ.auto = false; MAQ.turn.rotation.y -= .4; }], ["⟳", () => { MAQ.auto = false; MAQ.turn.rotation.y += .4; }], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🎬 Jelenet", () => bjNext()]]);
+    else H.buttons([["⬒ Felül", () => orbView("top"), MAQ.view === "top"], ["Elöl", () => orbView("front"), MAQ.view === "front"], ["Hátul", () => orbView("back"), MAQ.view === "back"], ["◧ Bal", () => orbView("left"), MAQ.view === "left"], ["Jobb ◨", () => orbView("right"), MAQ.view === "right"], ["◈ Ferde", () => orbView("iso"), MAQ.view === "iso"],
+      ["＋ Közelebb", () => { ORB.dT = clamp(ORB.dT / 1.35, .55, 7); }], ["－ Távolabb", () => { ORB.dT = clamp(ORB.dT * 1.35, .55, 7); }], ["＋ Nagyobb", () => stepScale(1)], ["－ Kisebb", () => stepScale(-1)], ["🚶 Életnagyság", () => goLife()], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], [MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }],
+      ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🎬 Jelenet", () => bjNext()]]);
     H.hint(`${dayHu(MAQ.day)} ${hhmm(MAQ.hour)} · ${PRESETS[MAQ.preset][0]} · ${sunLine()}${MAQ.dates && !life ? " · zöld = szabad, piros = foglalt" : ""}${BJ.cur ? " · 🎬 " + BJ.cur.name : ""}`);
   }
 
@@ -4288,10 +4341,18 @@
       @media (max-width:600px){#worldHud .wh-steer .wh-b{min-width:64px;padding:14px 14px;font-size:20px}#worldHud .wh-steer .wh-b.wh-x{font-size:14px;padding:12px 10px}}
       #worldHud .wh-hint{font:600 15px/1.4 inherit;background:rgba(7,28,58,.7);padding:8px 14px;border-radius:12px;text-align:center}
       @media (max-width:600px){#worldHud .wh-t{font-size:19px}#worldHud .wh-s{font-size:16px}}
+      #worldHud .wh-tog{pointer-events:auto;font:800 17px/1 inherit;padding:12px 18px;border-radius:999px;border:2px solid rgba(255,209,102,.9);background:rgba(7,28,58,.88);color:#ffd166;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+      #worldHud.wh-min .wh-card,#worldHud.wh-min .wh-hint,#worldHud.wh-min .wh-btns:not(.wh-steer){display:none}
+      @media (max-width:700px),(max-height:520px){#worldHud .wh-btns{gap:7px;max-height:38vh;overflow-y:auto;pointer-events:auto;-webkit-overflow-scrolling:touch}#worldHud .wh-b{font-size:15px;padding:10px 12px;min-width:0;border-radius:13px}#worldHud .wh-hint{font-size:13px;padding:6px 10px}#worldHud .wh-card{padding:9px 13px}#worldHud .wh-back{font-size:16px;padding:11px 15px}}
     </style><div class="wh-top"><button type="button" class="wh-back">‹ Vissza a sétához</button><div class="wh-card"><div class="wh-t"></div><div class="wh-s"></div><ul class="wh-list"></ul></div></div>
-    <div class="wh-bot"><div class="wh-btns"></div><div class="wh-hint"></div></div>`;
+    <div class="wh-bot"><button type="button" class="wh-tog"></button><div class="wh-btns"></div><div class="wh-hint"></div></div>`;
     document.body.appendChild(el);
     el.querySelector(".wh-back").addEventListener("click", () => W.close());
+    /* összecsukható menü (mobilon alapból összecsukva, hogy a jelenet látsszon); az állapotot megjegyezzük */
+    { const tog = el.querySelector(".wh-tog"); let min; try { min = localStorage.getItem("zephyr-hud-min"); } catch (e) {}
+      min = min == null ? (innerWidth < 700 || innerHeight < 520) : min === "1";
+      const upd = () => { el.classList.toggle("wh-min", min); tog.textContent = min ? "☰ Menü" : "▾ Menü elrejtése"; };
+      tog.addEventListener("click", () => { min = !min; try { localStorage.setItem("zephyr-hud-min", min ? "1" : "0"); } catch (e) {} upd(); }); upd(); }
     let lastBtns = "";
     const H = {
       el,
@@ -4301,9 +4362,9 @@
           list(a) { el.querySelector(".wh-list").innerHTML = a.map((x) => `<li>${x}</li>`).join(""); },
           hint(t) { el.querySelector(".wh-hint").textContent = t; },
           buttons(list) {
-            const key = list.map((x) => x[0]).join("|"); if (key === lastBtns) return; lastBtns = key;
+            const key = list.map((x) => x[0] + (x[2] ? "*" : "")).join("|"); if (key === lastBtns) return; lastBtns = key;
             const box = el.querySelector(".wh-btns"); box.className = "wh-btns"; box.innerHTML = "";
-            list.forEach(([lbl, fn]) => { const b = document.createElement("button"); b.type = "button"; b.className = "wh-b"; b.textContent = lbl; b.addEventListener("click", () => { fn(); H.draw(); }); box.appendChild(b); });
+            list.forEach(([lbl, fn, on]) => { const b = document.createElement("button"); b.type = "button"; b.className = "wh-b" + (on ? " on" : ""); b.textContent = lbl; b.addEventListener("click", () => { fn(); H.draw(); }); box.appendChild(b); });
           },
           steer(extra, onCenter) {   /* extra: további gombok a kormány mellé ([felirat, függvény]); onCenter: az „egyenesbe” saját kezelője */
             const key = "steer|" + (extra || []).map((x) => x[0]).join("|"); if (lastBtns === key) return; lastBtns = key;
