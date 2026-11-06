@@ -1817,6 +1817,7 @@
     const rig = T.rig.object3D;
     Object.keys(MAQ).forEach((k) => delete MAQ[k]);   /* tiszta lap minden megnyitáskor */
     MAQ.rig0 = { p: rig.position.clone(), ry: rig.rotation.y };
+    FLY.fx = null; FLY.v.set(0, 0, 0); FLY.tgt = null;
     Object.assign(ORB, { az: .35, el: .62, d: 1.7, azT: .35, elT: .62, dT: 1.7, on: false }); ORB.pts.clear();
     { const r0 = T.sceneEl.renderer; MAQ.shadowWas = r0.shadowMap.enabled; MAQ.shadowType = r0.shadowMap.type; MAQ.shadowAuto = r0.shadowMap.autoUpdate; MAQ.envWas = T.sceneEl.object3D.environment || null; MAQ.envIntWas = T.sceneEl.object3D.environmentIntensity; }
     /* az A-Frame alapfényei (erős szórt fény) kikapcsolva – a makett-világban a napszak saját fényei világítanak */
@@ -2011,6 +2012,7 @@
   function goLife() {
     if (MAQ.mode === "life" || MAQ.fading) return;
     fadeThen(() => {
+      if (MAQ.fly) { MAQ.fly = false; MAQ.landing = 0; flyFx(false); }
       MAQ.mode = "life"; MAQ.s = MAQ.sT = 1; MAQ.roofOn = true; MAQ.upper = true; MAQ.level = 0; maqDeselect(); applyPlacement(true); lifeTargets(true);
       const site = ENV.site; site.updateMatrixWorld(true);
       /* nézés a ház felé (site +z) */
@@ -2023,6 +2025,7 @@
   function goTable() {
     if (MAQ.mode !== "life" || MAQ.fading) return;
     fadeThen(() => {
+      if (MAQ.fly) { MAQ.fly = false; MAQ.landing = 0; flyFx(false); }
       MAQ.mode = "table"; MAQ.s = MAQ.sT = 1 / 40; MAQ.roofOn = false; MAQ.level = 0; applyPlacement(true); lifeTargets(false);
       const rg = T.rig.object3D; rg.position.copy(MAQ.rig0.p);
       const site = ENV.site; const fw = new THREE.Vector3(0, 0, -1).transformDirection(site.matrixWorld); faceTo(Math.atan2(-fw.x, -fw.z));
@@ -2039,7 +2042,7 @@
     if (lvl >= 0) MAQ.level = lvl;
     if (W.panel && !W.panelHidden) setTimeout(() => { try { if (W.active) W.togglePanel(), W.togglePanel(); } catch (e) {} }, 30);
   }
-  function teleport(pt, lvl) { if (MAQ.mode !== "life") return; placeUser(pt, lvl); try { flap(.03); } catch (e) {} wristRedraw(); }
+  function teleport(pt, lvl) { if (MAQ.mode !== "life" || MAQ.fly) return; placeUser(pt, lvl); try { flap(.03); } catch (e) {} wristRedraw(); }
   function goLevel(lvl) {
     if (MAQ.mode !== "life") return; const hw = headWorld(new THREE.Vector3()); const y = MAQ.model.localToWorld(new THREE.Vector3(0, lvl ? FLOOR_H : 0, 0)).y;
     placeUser(new THREE.Vector3(hw.x, y, hw.z), lvl); wristRedraw(); W.panelDirty = 1;
@@ -2196,6 +2199,68 @@
     rg.updateMatrixWorld(true); headWorld(_oW); rg.position.add(_oE.sub(_oW));
     try { const cm = T.sceneEl.camera; const nr = clamp(D * .02, .01, .06); if (cm && Math.abs(cm.near - nr) > .002) { cm.near = nr; cm.updateProjectionMatrix(); } } catch (e) {}
   }
+
+  /* ---------- REPÜLÉS („jetpack”, 2026. nov. 6., a tulajdonos ötlete) ----------
+     VR-ben (csak kézzel): a csuklómenüben „🚀 Repülés”. Csippents, és told el a kezed abba az irányba, amerre repülni szeretnél
+     (fel, le, előre, oldalra) – mint egy láthatatlan botkormány: minél messzebb a kezed a csippentés helyétől, annál gyorsabb.
+     Elengedve finoman lelassulsz és lebegsz. Lefelé nézve a lábad mellett lángol a két fúvóka, füstcsíkot húz, zúg a hajtómű.
+     Asztali (makett) módban ugyanez kicsiben: a makett fölé emelkedhetsz és körberepülheted. Gépen/mobilon életnagyságban gombokkal.
+     „🛬 Leszállás”: lassan visszaereszkedsz a földre. */
+  const FLY = { v: new THREE.Vector3(), tgt: null, anc: {}, thr: 0, fx: null };
+  function toggleFly(on) {
+    MAQ.fly = on == null ? !MAQ.fly : !!on; FLY.v.set(0, 0, 0); FLY.anc = {}; FLY.tgt = null;
+    if (MAQ.fly) { MAQ.flyGround = T.rig.object3D.position.y; MAQ.landing = 0; flyFx(true); } else MAQ.landing = 1;
+    try { flap(.05); } catch (e) {} wristRedraw(); W.panelDirty = 1;
+  }
+  function flyFx(on) {
+    if (!FLY.fx) {
+      const ft = canvasTex(64, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h * .2, 2, w / 2, h * .35, h * .7); gr.addColorStop(0, "rgba(255,255,235,1)"); gr.addColorStop(.25, "rgba(255,190,80,.95)"); gr.addColorStop(.6, "rgba(255,90,20,.5)"); gr.addColorStop(1, "rgba(120,20,0,0)"); g.fillStyle = gr; g.beginPath(); g.ellipse(w / 2, h * .42, w * .42, h * .5, 0, 0, Math.PI * 2); g.fill(); });
+      const fm = new THREE.SpriteMaterial({ map: ft, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }); W.disposables.push(fm);
+      const nz = std({ color: "#c9ced4", metalness: .9, roughness: .25 }), tank = std({ color: "#c62828", metalness: .4, roughness: .35 });
+      const grp = new THREE.Group(); W.root.add(grp); W.objs.push(grp);
+      const parts = [-1, 1].map((sd) => { const t2 = mesh(new THREE.CapsuleGeometry(.07, .32, 6, 14), tank, grp); const n2 = mesh(new THREE.CylinderGeometry(.045, .07, .1, 14), nz, grp); const f = new THREE.Sprite(fm); f.center.set(.5, 1); grp.add(f); return { sd, t2, n2, f }; });
+      const N = 120, pg = new THREE.BufferGeometry(); pg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3)); const pm = new THREE.PointsMaterial({ color: "#d8d8d8", size: .22, transparent: true, opacity: .35, depthWrite: false }); W.disposables.push(pg, pm);
+      const pts = new THREE.Points(pg, pm); pts.frustumCulled = false; W.root.add(pts); W.objs.push(pts);
+      FLY.fx = { grp, parts, pts, pg, sm: [], k: 0, N };
+    }
+    FLY.fx.grp.visible = on; FLY.fx.pts.visible = on;
+  }
+  const _fh = new THREE.Vector3(), _fd = new THREE.Vector3(), _fr = new THREE.Vector3(), _fp = new THREE.Vector3();
+  function flyTick(dt) {
+    const rg = T.rig.object3D, life = MAQ.mode === "life", X = T.xr, pl = X.pinch || {};
+    if (!MAQ.fly && !MAQ.landing) return;
+    const sc = life ? 1 : MAQ.s * 40;   /* asztali módban kicsiben */
+    let want = _fp.set(0, 0, 0), active = false;
+    if (MAQ.fly && T.inVR) {
+      ["right", "left"].forEach((h) => { const S0 = X.src && X.src[h]; const p = S0 && (S0.tip || S0.o); if (!p) return;
+        if (pl[h] && !(pl.left && pl.right)) { const loc = rg.worldToLocal(p.clone()); if (!FLY.anc[h]) FLY.anc[h] = loc.clone();
+          const d = loc.sub(FLY.anc[h]); const L2 = d.length(); if (L2 > .025) { d.multiplyScalar((L2 - .025) / L2).applyQuaternion(rg.quaternion); want.addScaledVector(d, life ? 26 : 3.2 * sc); active = true; }
+          if (X.press) X.press[h] = null;   /* repülés közben a csippentés nem kattint */ }
+        else FLY.anc[h] = null; });
+      const cap = life ? 10 : 1.4 * sc; if (want.length() > cap) want.setLength(cap);
+      FLY.v.lerp(want, Math.min(1, dt * (active ? 3 : 1.2)));
+    } else if (MAQ.fly && FLY.tgt) {   /* gépen/mobilon: a gombok egy-egy célpontot adnak, oda siklik */
+      _fd.subVectors(FLY.tgt, rg.position); const L2 = _fd.length(); if (L2 < .05) FLY.tgt = null; else { FLY.v.copy(_fd).multiplyScalar(Math.min(2.2, 6 / Math.max(L2, .5))); active = true; }
+    } else FLY.v.multiplyScalar(Math.pow(.3, dt));
+    if (MAQ.landing) { FLY.v.set(0, 0, 0); const gy = MAQ.flyGround == null ? rg.position.y : MAQ.flyGround; rg.position.y += Math.max(-3 * dt, gy - rg.position.y); if (Math.abs(rg.position.y - gy) < .01) { rg.position.y = gy; MAQ.landing = 0; flyFx(false); } }
+    rg.position.addScaledVector(FLY.v, dt);
+    const gy = MAQ.flyGround == null ? 0 : MAQ.flyGround; rg.position.y = clamp(rg.position.y, gy, gy + (life ? 45 : 3));
+    /* látvány és hang: fúvókák a lábad mellett, láng a tolóerővel, füstcsík */
+    const thr = MAQ.fly ? clamp(.25 + FLY.v.length() / (life ? 6 : 1), .25, 1.3) : 0; FLY.thr += (thr - FLY.thr) * Math.min(1, dt * 4);
+    try { AU.set("rush", FLY.thr * .07, .2); } catch (e) {}
+    if (FLY.fx && FLY.fx.grp.visible) { const F = FLY.fx; headWorld(_fh); const yaw = headYaw(); _fd.set(-Math.sin(yaw), 0, -Math.cos(yaw)); _fr.set(-_fd.z, 0, _fd.x);
+      const k = life ? 1 : Math.max(.08, sc);
+      F.parts.forEach((q) => { const base = _fp.copy(_fh).addScaledVector(_fr, q.sd * .17 * k).addScaledVector(_fd, -.16 * k); base.y -= .62 * k;
+        q.t2.position.copy(base); q.t2.scale.setScalar(k); q.n2.position.copy(base).y -= .27 * k; q.n2.scale.setScalar(k);
+        const fl = FLY.thr * (.85 + Math.random() * .3); q.f.position.copy(base).y -= .31 * k; q.f.scale.set(.2 * k * fl, .7 * k * fl, 1); q.f.material.opacity = Math.min(1, FLY.thr * 1.2);
+        if (Math.random() < dt * 40 * FLY.thr) { F.sm[F.k] = { p: base.clone().setY(base.y - .5 * k), v: new THREE.Vector3((Math.random() - .5) * .4, -1.2 - Math.random(), (Math.random() - .5) * .4).multiplyScalar(k), t: 0 }; F.k = (F.k + 1) % F.N; } });
+      const a = F.pg.attributes.position.array; for (let i = 0; i < F.N; i++) { const q = F.sm[i]; if (!q || q.t > 1.6) { a[i * 3 + 1] = -9999; continue; } q.t += dt; q.p.addScaledVector(q.v, dt); q.v.multiplyScalar(Math.pow(.4, dt)); a[i * 3] = q.p.x; a[i * 3 + 1] = q.p.y; a[i * 3 + 2] = q.p.z; } F.pg.attributes.position.needsUpdate = true; F.pts.material.size = .22 * k; }
+  }
+  function flyStep(kind) {   /* gépen/mobilon: ⬆ fel, ⬇ le, ⇧ előre (a nézés irányába) */
+    if (!MAQ.fly) toggleFly(true); const rg = T.rig.object3D; const base = FLY.tgt ? FLY.tgt.clone() : rg.position.clone();
+    if (kind === "up") base.y += 3; else if (kind === "down") base.y -= 3; else { const yaw = headYaw(); base.x += -Math.sin(yaw) * 6; base.z += -Math.cos(yaw) * 6; }
+    FLY.tgt = base;
+  }
   function maqTick(dt) {
     const life = MAQ.mode === "life";
     /* méret simítása */
@@ -2204,7 +2269,7 @@
     const tWant = !life && MAQ.s <= 1 / 30 ? 0 : -1.0; MAQ.table.position.y += (tWant - MAQ.table.position.y) * Math.min(1, dt * 5); MAQ.table.visible = MAQ.table.position.y > -.95;
     /* két kézzel nagyítás: csippents mindkét kezeddel, és húzd szét / össze */
     const X = T.xr, pl = X.pinch || {};
-    if (T.inVR && pl.left && pl.right && X.src.left && X.src.right && X.src.left.o && X.src.right.o) {
+    if (T.inVR && !MAQ.fly && pl.left && pl.right && X.src.left && X.src.right && X.src.left.o && X.src.right.o) {
       const d = X.src.left.o.distanceTo(X.src.right.o);
       if (!MAQ.two) { MAQ.two = { d0: Math.max(.05, d), s0: life ? 1 / 8 : MAQ.s }; MAQ.drag = null; }
       else { const want = MAQ.two.s0 * Math.pow(d / MAQ.two.d0, 1.6);
@@ -2214,7 +2279,7 @@
     } else MAQ.two = null;
     /* KÉZZEL FORGATÁS (2026. nov. 6.): nyúlj a makett fölé (vagy a talapzat széléhez), csippents, és húzd körbe a kezed – a makett vele fordul,
        mint egy forgótányér; elengedve kicsit tovább pörög és lelassul. Két kézzel továbbra is nagyítás. */
-    if (T.inVR && !life && !MAQ.two) {
+    if (T.inVR && !life && !MAQ.two && !MAQ.fly) {
       const cw = MAQ.holder.getWorldPosition(_q4), Rw = Math.max(.25, MAQ.R * MAQ.s * 1.15);
       ["right", "left"].forEach((h) => {
         const S0 = X.src && X.src[h]; if (!S0) return; const p = S0.tip || S0.o; if (!p) return;
@@ -2255,7 +2320,7 @@
     MAQ.orbs.forEach((o) => { o.visible = life; if (life) o.material.rotation = Math.sin(W.t * 1.5) * .05; });
     if (life) MAQ.orbs.forEach((o, i) => { const k = (o.scale.x > .38 ? .42 : .3) * (1 + Math.sin(W.t * 2.2 + i) * .06); o.scale.set(k, k, 1); });
     if (!T.inVR && !life && !MAQ.drag && MAQ.auto !== false) MAQ.turn.rotation.y += dt * .04;
-    orbTick(dt);
+    orbTick(dt); flyTick(dt);
     /* napszak: az óra simán halad a cél felé */
     if (Math.abs(MAQ.hour - MAQ.hourT) > 1e-3) { MAQ.hour += (MAQ.hourT - MAQ.hour) * Math.min(1, dt * 2.2); if (Math.abs(MAQ.hour - MAQ.hourT) < .004) { MAQ.hour = MAQ.hourT; envSetTime(MAQ.day, MAQ.hour, true); } MAQ.envT = (MAQ.envT || 0) + dt; if (MAQ.envT > .06) { MAQ.envT = 0; envSetTime(MAQ.day, MAQ.hour); } }
     /* nap (árnyékvető fény) a modell fölött */
@@ -2294,14 +2359,14 @@
     const scene = ["🎬", "Jelenetek", [["▸", BJ.cur ? "Következő" : "Jelenet most", () => bjNext()]].concat(EV_LIST.map(([id, ic, n]) => [ic, n, () => bjStart(id), BJ.curId === id && !!BJ.cur]))];
     if (life) return [
       ["🏢", "Szintek", [["⬆", "Emelet", () => goLevel(1), MAQ.level === 1], ["⬇", "Földszint", () => goLevel(0), MAQ.level === 0], ["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }]]],
-      ["▣", "Vissza a maketthez", () => goTable()], sunMenu,
+      ["🚀", MAQ.fly ? "Leszállás" : "Repülés", () => toggleFly(), !!MAQ.fly], ["▣", "Vissza a maketthez", () => goTable()], sunMenu,
       ["📅", "Foglalás", () => W.close(() => { try { T.book(null); } catch (e) {} })], scene,
       ["🔭", MAQ.sights ? "Feliratok ki" : "Látnivalók", () => toggleSights()], turnMenu, back];
     return [
       ["🔍", "Méret", [["＋", "Nagyobb", () => stepScale(1)], ["－", "Kisebb", () => stepScale(-1)], ["🚶", "Életnagyság", () => goLife()], ["🧭", "Valódi irány", () => { MAQ.auto = false; MAQ.turn.rotation.y = 0; }]].concat(
         SCALES.slice(0, -1).map((v) => ["▫", SCALE_TXT(v), () => setScale(v, true), Math.abs(MAQ.sT - v) < 1e-4]))],
       ["🏠", "Nézet", [["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▤", MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }], ["🔭", MAQ.sights ? "Feliratok ki" : "Látnivalók", () => toggleSights()]]],
-      ["🚶", "Életnagyság", () => goLife()], sunMenu, scene, turnMenu, ["☰", "Nagy panel", () => W.togglePanel()], back];
+      ["🚀", MAQ.fly ? "Leszállás" : "Fölé repülök", () => toggleFly(), !!MAQ.fly], ["🚶", "Életnagyság", () => goLife()], sunMenu, scene, turnMenu, ["☰", "Nagy panel", () => W.togglePanel()], back];
   }
   /* ---------- nagy lebegő panel (VR) ---------- */
   function maqPanel(P) {
@@ -2312,15 +2377,15 @@
     P.row(2, `${dayHu(MAQ.day)} ${hhmm(MAQ.hour)} · ${PRESETS[MAQ.preset][0]} – ${sunLine()}`, "#7fd3ff");
     P.row(3, BJ.cur ? "🎬 Most: " + BJ.cur.name + " – nézz körül!" : "⛵ Körülötted verseny a bója körül · időnként jelenet", "#c9a24a");
     P.buttons([["◂☀ Korábban", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["Később ☀▸", () => nudgeHour(.5)], [MAQ.sights ? "🔭 Feliratok ki" : "🔭 Látnivalók", () => toggleSights()], ["🎬 Jelenet", () => bjNext()]], 1);
-    if (life) P.buttons([[MAQ.level ? "⬇ Földszint" : "⬆ Emelet", () => goLevel(MAQ.level ? 0 : 1)], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▣ Makett", () => goTable()], ["‹ Vissza", () => W.close()]]);
+    if (life) P.buttons([[MAQ.level ? "⬇ Földszint" : "⬆ Emelet", () => goLevel(MAQ.level ? 0 : 1)], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], [MAQ.fly ? "🛬 Leszállás" : "🚀 Repülés", () => toggleFly()], ["▣ Makett", () => goTable()], ["‹ Vissza", () => W.close()]]);
     else P.buttons([["＋ Nagyobb", () => stepScale(1)], ["－ Kisebb", () => stepScale(-1)], ["🚶 Életnagyság", () => goLife()], [MAQ.roofOn ? "⌂ Tető le" : "⌂ Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], [MAQ.upper ? "▤ Emelet ki" : "▤ Emelet be", () => { MAQ.upper = !MAQ.upper; }], ["‹ Vissza", () => W.close()]]);
   }
   /* ---------- 2D kezelőfelület ---------- */
   function maqHud(H) {
     const life = MAQ.mode === "life";
     H.title(life ? "A Zephyr ház – életnagyságban" : "A ház makettje · " + SCALE_TXT(MAQ.s), life ? "Koppints a földre: odalépsz · a fénylő 360° gömbök a valódi fotók" : "Húzd az ujjad: körbenézel · két ujjal: közelítés · koppints egy lakásra");
-    if (life) H.buttons([[MAQ.level ? "⬇ Földszint" : "⬆ Emelet", () => goLevel(MAQ.level ? 0 : 1)], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▣ Vissza a maketthez", () => goTable()],
-      ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🎬 Jelenet", () => bjNext()]]);
+    if (life) H.buttons([[MAQ.fly ? "🛬 Leszállás" : "🚀 Repülés", () => toggleFly(), !!MAQ.fly]].concat(MAQ.fly ? [["⬆ Fel", () => flyStep("up")], ["⇧ Előre", () => flyStep("fwd")], ["⬇ Le", () => flyStep("down")]] : []).concat([[MAQ.level ? "⬇ Földszint" : "⬆ Emelet", () => goLevel(MAQ.level ? 0 : 1)], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], ["▣ Vissza a maketthez", () => goTable()],
+      ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🎬 Jelenet", () => bjNext()]]));
     else H.buttons([["⬒ Felül", () => orbView("top"), MAQ.view === "top"], ["Elöl", () => orbView("front"), MAQ.view === "front"], ["Hátul", () => orbView("back"), MAQ.view === "back"], ["◧ Bal", () => orbView("left"), MAQ.view === "left"], ["Jobb ◨", () => orbView("right"), MAQ.view === "right"], ["◈ Ferde", () => orbView("iso"), MAQ.view === "iso"],
       ["＋ Közelebb", () => { ORB.dT = clamp(ORB.dT / 1.35, .55, 7); }], ["－ Távolabb", () => { ORB.dT = clamp(ORB.dT * 1.35, .55, 7); }], ["＋ Nagyobb", () => stepScale(1)], ["－ Kisebb", () => stepScale(-1)], ["🚶 Életnagyság", () => goLife()], [MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }], [MAQ.upper ? "Emelet ki" : "Emelet be", () => { MAQ.upper = !MAQ.upper; }],
       ["◂☀", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["☀▸", () => nudgeHour(.5)], [MAQ.sights ? "🔭 ki" : "🔭 Látnivalók", () => toggleSights()], ["🎬 Jelenet", () => bjNext()]]);
