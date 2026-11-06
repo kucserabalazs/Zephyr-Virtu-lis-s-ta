@@ -1386,7 +1386,7 @@
     S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; const want = S.grab && S.grab.w === w ? .55 : (VRR.wHover ? .25 : 0) + (!S.everGrab && S.st === "pre" && w.sd < 0 ? .25 + .25 * Math.sin(W.t * 4) : 0); w.gripM.emissiveIntensity += (want - w.gripM.emissiveIntensity) * Math.min(1, dt * 8); });
     if (S.grab) S.everGrab = true;
     if (S.helpL) { S.helpL.visible = T.inVR && !S.everGrab && S.st !== "done"; }   /* (2D-ben billentyű/gomb kormányoz – ott nem kell) */
-    if (S.msgL) { const on = S.msgT > 0 && !!S.msg && !(S.st === "pre" && S.t < -38); S.msgL.visible = on;
+    if (S.msgL) { const on = S.msgT > 0 && !!S.msg && S.st !== "done" && !(S.st === "pre" && S.t < -38); S.msgL.visible = on;
       if (on) { const m = S.msg; let k = m.indexOf(" – "), L; if (k > 0) L = [m.slice(0, k), m.slice(k + 3)]; else if ((k = m.indexOf("! ")) > 0) L = [m.slice(0, k + 1), m.slice(k + 2)]; else L = [m, ""]; S.msgL.userData.set(L); } }   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
     /* fizika (a vitorlázás modellje, a nagyobb hajóhoz igazítva) */
     /* a szél lassan leng (±7°) – mint a Balatonon; a pálya ugyanaz marad */
