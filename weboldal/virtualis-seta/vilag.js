@@ -1251,7 +1251,7 @@
   /* --------------------------------------------------------------- kormány */
   const _wv = new THREE.Vector3();
   function wheelAngleOf(w, p) {   /* a kéz/sugár pontja a kerék síkjában: óramutató szerinti szög a kormányos szemszögéből */
-    const lp = w.wheel.worldToLocal(_wv.copy(p)); return Math.atan2(lp.x, lp.y);
+    const lp = w.wheel.worldToLocal(_wv.copy(p)); return Math.atan2(-lp.x, lp.y);   /* a kormányos felől nézve jobbra = a hajó helyi −x */
   }
   function vrGrab(w, src, key, ray) {
     let p = null; if (ray) { const pl = new THREE.Plane(); const n = new THREE.Vector3(0, 0, 1).transformDirection(w.wheel.matrixWorld); const c = w.wheel.getWorldPosition(new THREE.Vector3()); pl.setFromNormalAndCoplanarPoint(n, c); p = new THREE.Ray(src.o, src.d).intersectPlane(pl, new THREE.Vector3()); }
@@ -1273,13 +1273,13 @@
     if (T.inVR && X && X.src) {
       ["right", "left"].forEach((h) => { const s0 = X.src[h]; if (!s0 || !s0.tip) return;
         if (S.grab && S.grab.key === h && !S.grab.ray) { if (!pl[h]) { S.grab = null; return; } const a = wheelAngleOf(S.grab.w, s0.tip); S.wa = clamp(S.wa + wrapA(a - S.grab.a), -WA_MAX, WA_MAX); S.grab.a = a; return; }
-        if (!S.grab && pl[h]) S.ck.wheels.forEach((w) => { const lp = w.wheel.worldToLocal(_wv.copy(s0.tip)); const r = Math.hypot(lp.x, lp.y); if (Math.abs(lp.z) < .2 && r > .3 && r < .95) { S.grab = { w, a: Math.atan2(lp.x, lp.y), key: h, ray: false }; try { flap(.02); } catch (e) {} } });
+        if (!S.grab && pl[h]) S.ck.wheels.forEach((w) => { const lp = w.wheel.worldToLocal(_wv.copy(s0.tip)); const r = Math.hypot(lp.x, lp.y); if (Math.abs(lp.z) < .2 && r > .3 && r < .95) { S.grab = { w, a: Math.atan2(-lp.x, lp.y), key: h, ray: false }; try { flap(.02); } catch (e) {} } });
       });
     }
     const k = SAIL.keys; if (k.L || k.R) S.wa = clamp(S.wa + ((k.R ? 1 : 0) - (k.L ? 1 : 0)) * dt * 2.4, -WA_MAX, WA_MAX);
     else if (!S.grab) S.wa *= Math.pow(.7, dt);   /* elengedve a kerék lassan visszatér (a legénység segít) */
     S.del = S.wa / WA_MAX * .55;
-    S.ck.wheels.forEach((w) => { w.spin.rotation.z = -S.wa; });
+    S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; });   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
     /* fizika (a vitorlázás modellje, a nagyobb hajóhoz igazítva) */
     const twa = Math.abs(wrapA(S.wf - S.b)) * R2D;
     const spin = twa > 120 && S.st === "race";
@@ -3570,8 +3570,14 @@
     const head = new THREE.Group(); root.add(head);
     const skull = mesh(new THREE.SphereGeometry(1.1, 18, 14), skin, head); skull.scale.set(1.15, .9, 1.9); skull.position.z = .9; head.scale.setScalar(1.35);
     /* gallér: tüskés fodor a fej mögött */ for (let k = 0; k < 9; k++) { const a = (k / 8 - .5) * 2.6; const fr = mesh(new THREE.ConeGeometry(.16, 1.1, 5), finM, head); fr.position.set(Math.sin(a) * 1.0, .2 + Math.cos(a) * .7, -.3); fr.rotation.set(-1.2, 0, -a * .9); }
-    const jaw = new THREE.Group(); head.add(jaw); jaw.position.set(0, -.35, .2); const jm = mesh(new THREE.SphereGeometry(.95, 16, 10), skin, jaw); jm.scale.set(.9, .45, 1.7); jm.position.z = .9;
-    const toothM = std({ color: "#f6f1df", roughness: .4 }); for (let k = 0; k < 12; k++) { const a = (k / 11 - .5) * 2.2; const tt = mesh(new THREE.ConeGeometry(.07, .3, 5), toothM, head); tt.position.set(Math.sin(a) * .75, -.32, .9 + Math.cos(a) * 1.25); tt.rotation.x = Math.PI; }
+    /* hosszú, sárkányszerű pofa orrlyukakkal és szemöldökívvel – így a fej oldalról és szemből is egyértelmű */
+    const snout = mesh(new THREE.CylinderGeometry(.42, .75, 1.6, 14), skin, head); snout.rotation.x = Math.PI / 2; snout.position.set(0, .05, 2.1); snout.scale.set(1.15, 1, .8);
+    const nose = mesh(new THREE.SphereGeometry(.45, 14, 10), skin, head); nose.position.set(0, .08, 2.85); nose.scale.set(1.1, .75, .8);
+    [-1, 1].forEach((sd) => { const n2 = mesh(new THREE.SphereGeometry(.07, 8, 6), std({ color: "#0d1a12" }), head); n2.position.set(sd * .2, .3, 3.08);
+      const brow = mesh(new THREE.ConeGeometry(.22, .7, 6), spineM, head); brow.position.set(sd * .55, .62, 1.45); brow.rotation.set(-1.3, 0, sd * .5); });
+    const tongue = mesh(new THREE.BoxGeometry(.18, .04, 1.4), std({ color: "#b8323a", roughness: .5 }), head); tongue.position.set(0, -.42, 2.0);
+    const jaw = new THREE.Group(); head.add(jaw); jaw.position.set(0, -.35, .2); const jm = mesh(new THREE.SphereGeometry(.95, 16, 10), skin, jaw); jm.scale.set(.85, .4, 2.6); jm.position.z = 1.5;
+    const toothM = std({ color: "#f6f1df", roughness: .4 }); for (let k = 0; k < 12; k++) { const a = (k / 11 - .5) * 2.2; const tt = mesh(new THREE.ConeGeometry(.07, .3, 5), toothM, head); tt.position.set(Math.sin(a) * .62, -.3, 1.4 + Math.cos(a) * 1.5); tt.rotation.x = Math.PI; }
     const eyeM = std({ color: "#ffe14a", emissive: new THREE.Color("#ffb400"), emissiveIntensity: 1.6, roughness: .2 }); [-1, 1].forEach((sd) => { const e = mesh(new THREE.SphereGeometry(.2, 12, 10), eyeM, head); e.position.set(sd * .62, .38, 1.6); const pu = mesh(new THREE.SphereGeometry(.08, 8, 6), std({ color: "#111" }), head); pu.position.set(sd * .68, .4, 1.76); pu.scale.set(.5, 1.4, .5);
       const horn = mesh(new THREE.ConeGeometry(.16, 1.1, 8), toothM, head); horn.position.set(sd * .45, .9, .2); horn.rotation.set(-.9, 0, -sd * .3); });
     const rings = ringPool(root, 14);

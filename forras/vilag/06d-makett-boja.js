@@ -292,8 +292,14 @@
     const head = new THREE.Group(); root.add(head);
     const skull = mesh(new THREE.SphereGeometry(1.1, 18, 14), skin, head); skull.scale.set(1.15, .9, 1.9); skull.position.z = .9; head.scale.setScalar(1.35);
     /* gallér: tüskés fodor a fej mögött */ for (let k = 0; k < 9; k++) { const a = (k / 8 - .5) * 2.6; const fr = mesh(new THREE.ConeGeometry(.16, 1.1, 5), finM, head); fr.position.set(Math.sin(a) * 1.0, .2 + Math.cos(a) * .7, -.3); fr.rotation.set(-1.2, 0, -a * .9); }
-    const jaw = new THREE.Group(); head.add(jaw); jaw.position.set(0, -.35, .2); const jm = mesh(new THREE.SphereGeometry(.95, 16, 10), skin, jaw); jm.scale.set(.9, .45, 1.7); jm.position.z = .9;
-    const toothM = std({ color: "#f6f1df", roughness: .4 }); for (let k = 0; k < 12; k++) { const a = (k / 11 - .5) * 2.2; const tt = mesh(new THREE.ConeGeometry(.07, .3, 5), toothM, head); tt.position.set(Math.sin(a) * .75, -.32, .9 + Math.cos(a) * 1.25); tt.rotation.x = Math.PI; }
+    /* hosszú, sárkányszerű pofa orrlyukakkal és szemöldökívvel – így a fej oldalról és szemből is egyértelmű */
+    const snout = mesh(new THREE.CylinderGeometry(.42, .75, 1.6, 14), skin, head); snout.rotation.x = Math.PI / 2; snout.position.set(0, .05, 2.1); snout.scale.set(1.15, 1, .8);
+    const nose = mesh(new THREE.SphereGeometry(.45, 14, 10), skin, head); nose.position.set(0, .08, 2.85); nose.scale.set(1.1, .75, .8);
+    [-1, 1].forEach((sd) => { const n2 = mesh(new THREE.SphereGeometry(.07, 8, 6), std({ color: "#0d1a12" }), head); n2.position.set(sd * .2, .3, 3.08);
+      const brow = mesh(new THREE.ConeGeometry(.22, .7, 6), spineM, head); brow.position.set(sd * .55, .62, 1.45); brow.rotation.set(-1.3, 0, sd * .5); });
+    const tongue = mesh(new THREE.BoxGeometry(.18, .04, 1.4), std({ color: "#b8323a", roughness: .5 }), head); tongue.position.set(0, -.42, 2.0);
+    const jaw = new THREE.Group(); head.add(jaw); jaw.position.set(0, -.35, .2); const jm = mesh(new THREE.SphereGeometry(.95, 16, 10), skin, jaw); jm.scale.set(.85, .4, 2.6); jm.position.z = 1.5;
+    const toothM = std({ color: "#f6f1df", roughness: .4 }); for (let k = 0; k < 12; k++) { const a = (k / 11 - .5) * 2.2; const tt = mesh(new THREE.ConeGeometry(.07, .3, 5), toothM, head); tt.position.set(Math.sin(a) * .62, -.3, 1.4 + Math.cos(a) * 1.5); tt.rotation.x = Math.PI; }
     const eyeM = std({ color: "#ffe14a", emissive: new THREE.Color("#ffb400"), emissiveIntensity: 1.6, roughness: .2 }); [-1, 1].forEach((sd) => { const e = mesh(new THREE.SphereGeometry(.2, 12, 10), eyeM, head); e.position.set(sd * .62, .38, 1.6); const pu = mesh(new THREE.SphereGeometry(.08, 8, 6), std({ color: "#111" }), head); pu.position.set(sd * .68, .4, 1.76); pu.scale.set(.5, 1.4, .5);
       const horn = mesh(new THREE.ConeGeometry(.16, 1.1, 8), toothM, head); horn.position.set(sd * .45, .9, .2); horn.rotation.set(-.9, 0, -sd * .3); });
     const rings = ringPool(root, 14);

@@ -185,7 +185,7 @@
   /* --------------------------------------------------------------- kormány */
   const _wv = new THREE.Vector3();
   function wheelAngleOf(w, p) {   /* a kéz/sugár pontja a kerék síkjában: óramutató szerinti szög a kormányos szemszögéből */
-    const lp = w.wheel.worldToLocal(_wv.copy(p)); return Math.atan2(lp.x, lp.y);
+    const lp = w.wheel.worldToLocal(_wv.copy(p)); return Math.atan2(-lp.x, lp.y);   /* a kormányos felől nézve jobbra = a hajó helyi −x */
   }
   function vrGrab(w, src, key, ray) {
     let p = null; if (ray) { const pl = new THREE.Plane(); const n = new THREE.Vector3(0, 0, 1).transformDirection(w.wheel.matrixWorld); const c = w.wheel.getWorldPosition(new THREE.Vector3()); pl.setFromNormalAndCoplanarPoint(n, c); p = new THREE.Ray(src.o, src.d).intersectPlane(pl, new THREE.Vector3()); }
@@ -207,13 +207,13 @@
     if (T.inVR && X && X.src) {
       ["right", "left"].forEach((h) => { const s0 = X.src[h]; if (!s0 || !s0.tip) return;
         if (S.grab && S.grab.key === h && !S.grab.ray) { if (!pl[h]) { S.grab = null; return; } const a = wheelAngleOf(S.grab.w, s0.tip); S.wa = clamp(S.wa + wrapA(a - S.grab.a), -WA_MAX, WA_MAX); S.grab.a = a; return; }
-        if (!S.grab && pl[h]) S.ck.wheels.forEach((w) => { const lp = w.wheel.worldToLocal(_wv.copy(s0.tip)); const r = Math.hypot(lp.x, lp.y); if (Math.abs(lp.z) < .2 && r > .3 && r < .95) { S.grab = { w, a: Math.atan2(lp.x, lp.y), key: h, ray: false }; try { flap(.02); } catch (e) {} } });
+        if (!S.grab && pl[h]) S.ck.wheels.forEach((w) => { const lp = w.wheel.worldToLocal(_wv.copy(s0.tip)); const r = Math.hypot(lp.x, lp.y); if (Math.abs(lp.z) < .2 && r > .3 && r < .95) { S.grab = { w, a: Math.atan2(-lp.x, lp.y), key: h, ray: false }; try { flap(.02); } catch (e) {} } });
       });
     }
     const k = SAIL.keys; if (k.L || k.R) S.wa = clamp(S.wa + ((k.R ? 1 : 0) - (k.L ? 1 : 0)) * dt * 2.4, -WA_MAX, WA_MAX);
     else if (!S.grab) S.wa *= Math.pow(.7, dt);   /* elengedve a kerék lassan visszatér (a legénység segít) */
     S.del = S.wa / WA_MAX * .55;
-    S.ck.wheels.forEach((w) => { w.spin.rotation.z = -S.wa; });
+    S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; });   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
     /* fizika (a vitorlázás modellje, a nagyobb hajóhoz igazítva) */
     const twa = Math.abs(wrapA(S.wf - S.b)) * R2D;
     const spin = twa > 120 && S.st === "race";
