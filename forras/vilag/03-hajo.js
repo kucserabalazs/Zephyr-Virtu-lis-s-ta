@@ -407,6 +407,9 @@
       const f = mesh(new THREE.PlaneGeometry(.9, .62, 6, 1), basic({ map: ft, side: THREE.DoubleSide }), g);
       f.position.set(.45, 6.5 - i * .85, -.5); f.visible = i !== 0; flags.push(f);
     });
+    /* X lobogó (egyéni visszahívás – korai rajt): fehér alapon kék kereszt; alapból lent */
+    { const xt = canvasTex(128, 96, (gg) => { gg.fillStyle = "#ffffff"; gg.fillRect(0, 0, 128, 96); gg.fillStyle = "#1f4fbf"; gg.fillRect(52, 0, 24, 96); gg.fillRect(0, 36, 128, 24); });
+      const f = mesh(new THREE.PlaneGeometry(.9, .62, 6, 1), basic({ map: xt, side: THREE.DoubleSide }), g); f.position.set(.45, 7.35, -.5); f.visible = false; flags.push(f); }
     g.userData.flags = flags;
     return g;
   }

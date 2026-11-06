@@ -93,7 +93,7 @@
     const g = new THREE.Group(); site.add(g); g.position.y = WATER_Y; BJ.race = g;
     /* a hátszeles kapu két sárga bójája és egy messzi rendezőhajó (a pálya „háttere”) */
     [[-230, -20], [-230, 20]].forEach(([f, r]) => { const b = makeBuoy("#ffd166", 2.1); b.position.copy(RP(f, r)); g.add(b); });
-    const cb = makeCommittee(); cb.position.copy(RP(-150, 70)); cb.rotation.y = Math.PI / 2 + .3; g.add(cb); cb.userData.flags.forEach((f, i) => { f.visible = i !== 0; });
+    const cb = makeCommittee(); cb.position.copy(RP(-150, 70)); cb.rotation.y = Math.PI / 2 + .3; g.add(cb); cb.userData.flags.forEach((f, i) => { f.visible = i === 1 || i === 2; });
     const pick = [0, 1, 2, 4, 6, 7];   /* a regatta hajói közül hat (a Zephyr is köztük) */
     BJ.boats = pick.map((bi, i) => {
       const b = BOATS[bi], bg = makeBoat(Object.assign({ detail: 0, crew: 3 }, b)); g.add(bg);
