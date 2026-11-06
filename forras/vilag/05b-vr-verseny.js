@@ -72,7 +72,7 @@
       const dome = mesh(new THREE.SphereGeometry(.1, 20, 12, 0, TAU, 0, Math.PI / 2), std({ color: "#20303e", roughness: .05, metalness: .3, transparent: true, opacity: .75 }), ped); dome.position.set(0, 1.13, -.05);
       const card = mesh(new THREE.CylinderGeometry(.085, .085, .02, 24), std({ color: "#f2e6c8", roughness: .5 }), ped); card.position.set(0, 1.14, -.05);
       /* a műszerkijelző a talapzat tetején, a kormányos felé döntve (élő adatok) */
-      const scr = mesh(new THREE.PlaneGeometry(.24, .24), basic({ map: instT }), ped); scr.position.set(0, 1.1, -.18); scr.rotation.set(-.55, Math.PI, 0);
+      const scr = mesh(new THREE.PlaneGeometry(.34, .34), basic({ map: instT }), ped); scr.position.set(0, 1.2, -.2); scr.rotation.set(-.5, Math.PI, 0);   /* nagyobb kijelző: bója-irány, távolság, sebesség, kis pályatérkép */
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
       const [gb, mb] = rodGeom(new THREE.Vector3(-.22, 0, .25), new THREE.Vector3(-.22, .95, .1), .016, 8); mesh(gb, chrome, ped).applyMatrix4(mb);
       const [gb2, mb2] = rodGeom(new THREE.Vector3(.22, 0, .25), new THREE.Vector3(.22, .95, .1), .016, 8); mesh(gb2, chrome, ped).applyMatrix4(mb2);
@@ -389,6 +389,14 @@
     g.fillStyle = "#e9f6ff"; g.font = "800 64px system-ui"; g.fillText(`${Math.round(dist)} m`, w / 2, 360);
     g.fillStyle = "#7fd3ff"; g.font = "600 30px system-ui"; g.fillText(`${(S.v / KN).toFixed(1)} csomó · szél ${Math.round(S.awa)}°`, w / 2, 420);
     g.fillStyle = S.twa < 38 ? "#ff6a5a" : "#9fe0a0"; g.fillText(S.twa < 38 ? "TÚL KÖZEL A SZÉLHEZ – esd le!" : S.twa > 150 ? "hátszél" : S.twa > 110 ? "bővszél" : S.twa > 60 ? "félszél" : "cirkálás", w / 2, 470);
+    /* kis pályatérkép a jobb felső sarokban: bóják, rajtvonal, a hajók (te: piros), orr felé forgatva */
+    { const cx = 420, cy = 95, R2 = 80; g.save(); g.beginPath(); g.arc(cx, cy, R2, 0, TAU); g.fillStyle = "#0c1622"; g.fill(); g.strokeStyle = "#2a4256"; g.lineWidth = 3; g.stroke(); g.clip();
+      const pts = S.marks.concat([S.C.line.a, S.C.line.b]); let span = 60; pts.forEach((q) => { span = Math.max(span, Math.hypot(q.x - S.x, q.z - S.z)); }); const k = (R2 - 10) / Math.min(span, 420);
+      const P2 = (x, z) => { const dx = x - S.x, dz = z - S.z, c = Math.cos(-S.b), s2 = Math.sin(-S.b); return [cx + (dx * c - dz * s2) * k, cy + (dx * s2 + dz * c) * k]; };
+      const la = P2(S.C.line.a.x, S.C.line.a.z), lb = P2(S.C.line.b.x, S.C.line.b.z); g.strokeStyle = "#ffd166"; g.lineWidth = 2; g.beginPath(); g.moveTo(la[0], la[1]); g.lineTo(lb[0], lb[1]); g.stroke();
+      S.marks.forEach((q, i) => { const [x, y] = P2(q.x, q.z); g.fillStyle = i === S.next ? "#ffd166" : i < S.next ? "#5a6a78" : "#ff7a00"; g.beginPath(); g.arc(x, y, i === S.next ? 7 : 5, 0, TAU); g.fill(); });
+      S.riv.forEach((r) => { const [x, y] = P2(r.x, r.z); g.fillStyle = "#e9f6ff"; g.beginPath(); g.arc(x, y, 4, 0, TAU); g.fill(); });
+      g.fillStyle = "#ff5a4a"; g.beginPath(); g.moveTo(cx, cy - 9); g.lineTo(cx + 6, cy + 6); g.lineTo(cx - 6, cy + 6); g.closePath(); g.fill(); g.restore(); }
     t.needsUpdate = true;
     const m = S.mastT, g2 = m._canvas.getContext("2d"); g2.fillStyle = "#06090d"; g2.fillRect(0, 0, 1024, 256);
     const cell = (x, lbl, val) => { g2.fillStyle = "#7fd3ff"; g2.font = "600 30px system-ui"; g2.textAlign = "center"; g2.fillText(lbl, x + 170, 52); g2.fillStyle = "#e9f6ff"; g2.font = "800 110px system-ui"; g2.fillText(val, x + 170, 180); };
