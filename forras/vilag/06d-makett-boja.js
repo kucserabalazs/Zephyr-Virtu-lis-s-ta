@@ -114,7 +114,6 @@
   function raceTick(dt) {
     if (!BJ.boats) return;
     const t = W.t;
-    BJ.lodT = (BJ.lodT || 0) - dt; if (BJ.lodT < 0) { BJ.lodT = .35; const co = T.cam && T.cam.object3D; BJ.boats.forEach((st) => lodApply(st.g, co)); }
     BJ.boats.forEach((st) => {
       const L = RLEGS[st.leg], df = L.f - st.f, dr = L.r - st.r, dist = Math.hypot(df, dr);
       const brg = Math.atan2(dr, df);
@@ -151,7 +150,7 @@
       const heel = clamp(Math.sin(clamp(twa, 0, 180) * D2R) ** 1.4 * (st.v / 3.4) * 20 * (1 - st.spin * .6), 0, 24) * D2R;
       S.heel = -S.side * heel; S.pitch = Math.sin(t * 1.3 + st.ph) * .025;
       /* távol (> 140 m) ritkábban frissítjük a vitorlákat – Quest 2-n sokat számít */
-      const far = Math.hypot(st.f, st.r) > 140; st.uT = (st.uT || 0) + dt; if (!far || st.uT > .2) { st.g.userData.update(st.uT); st.uT = 0; }
+      st.g.userData.update(dt);
       st.wk.push(p.x, p.z, Math.atan2(dirW.x, dirW.z), st.v, dt, .04);
     });
     /* zászlók lobogása, habgyűrű */

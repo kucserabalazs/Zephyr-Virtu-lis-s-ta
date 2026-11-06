@@ -679,7 +679,6 @@
   const _v3a = new THREE.Vector3(), _v3b = new THREE.Vector3();
   function lifeTick(dt) {
     const L = ENV.life; if (!L) return; const t = W.t;
-    L.lodT = (L.lodT || 0) - dt; if (L.lodT < 0) { L.lodT = .4; const co = T.cam && T.cam.object3D; L.boats.forEach((b) => { if (b.near) lodApply(b.g, co); }); }
     L.swans.forEach((s) => { s.a += s.sp * dt; const x = s.cx + Math.cos(s.a) * s.r, z = s.cz + Math.sin(s.a) * s.r * .8;
       s.g.position.set(x, WATER_Y - .02 + Math.sin(t * 1.3 + s.ph) * .02, z); s.g.rotation.y = Math.atan2(-Math.sin(s.a) * s.sp, -(Math.cos(s.a) * s.sp * .8)) + Math.PI;
       s.g.rotation.z = Math.sin(t * 1.1 + s.ph) * .03; });

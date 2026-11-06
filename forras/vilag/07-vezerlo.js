@@ -167,6 +167,9 @@
     saved = { rigY: T.rig.object3D.rotation.y, pitch: lc0 && lc0.pitchObject ? lc0.pitchObject.rotation.x : 0, yaw: lc0 && lc0.yawObject ? lc0.yawObject.rotation.y : 0, skyVis: sky.object3D.visible, spotsVis: T.spots.object3D.visible, clip: T.sceneEl.renderer.localClippingEnabled, scene: T.current,
       skyDepth: sm ? sm.material.depthTest : true, skyOrder: sm ? sm.renderOrder : 0 };
     W.kind = kind; W.active = true; W.t = 0; W.upd = []; W.objs = []; W.disposables = [];
+    /* mélységpontosság: a séta kamerája near=0,005 / far=10000 – ezzel a távoli part, hajók, fák „villognak” (z-fighting).
+       A 3D világokban near=0,06, far=4000: a kéz és a kormány így is rendben látszik, a háttér pedig stabil. */
+    { const ca = T.cam.getAttribute("camera") || {}; saved.camNear = ca.near != null ? ca.near : .005; saved.camFar = ca.far != null ? ca.far : 10000; T.cam.setAttribute("camera", { near: .06, far: 4000 }); const cm = T.sceneEl.camera; if (cm) { cm.near = .06; cm.far = 4000; cm.updateProjectionMatrix(); } }
     T.setBusy(true);
     const root = new THREE.Group(); root.name = "zephyr-world"; T.sceneEl.object3D.add(root); W.root = root;
     T.spots.object3D.visible = false; if (T.sky2) T.sky2.object3D.visible = false;
@@ -234,6 +237,7 @@
     const sky = T.sky, sm = sky && sky.getObject3D("mesh");
     if (saved) {
       sky.object3D.visible = true; T.spots.object3D.visible = true;
+      if (saved.camNear != null) { T.cam.setAttribute("camera", { near: saved.camNear, far: saved.camFar }); const cm = T.sceneEl.camera; if (cm) { cm.near = saved.camNear; cm.far = saved.camFar; cm.updateProjectionMatrix(); } }
       if (sm) { sm.material.depthTest = saved.skyDepth; sm.material.depthWrite = true; sm.renderOrder = saved.skyOrder; sm.material.needsUpdate = true; }
       T.sceneEl.renderer.localClippingEnabled = saved.clip;
       if (!T.inVR) { T.rig.object3D.rotation.y = saved.rigY; const lc1 = T.cam.components["look-controls"]; if (lc1 && lc1.pitchObject) { lc1.pitchObject.rotation.x = saved.pitch; lc1.yawObject.rotation.y = saved.yaw; } }

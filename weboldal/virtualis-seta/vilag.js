@@ -1371,7 +1371,6 @@
   function vrTick(dt) {
     const S = VRR, C = S.C;
     if (S.ensign) { const pa = S.ensign.geometry.attributes.position, b0 = S.ensign.userData.base, t = W.t; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 9 - t * 7) * .05 * x / .6; } pa.needsUpdate = true; }
-    S.lodT = (S.lodT || 0) - dt; if (S.lodT < 0 && S.riv) { S.lodT = .4; const co = T.cam && T.cam.object3D; S.riv.forEach((r) => r.g && lodApply(r.g, co)); }
     /* közvetlen kézi fogás: csippentés a kerék pereme mellett (a kéz a kerék síkjában, a peremtől 18 cm-en belül) */
     const X = T.xr, pl = (X && X.pinch) || {};
     if (T.inVR && X && X.src) {
@@ -1509,7 +1508,7 @@
     OS.side = (wfv[0] * Xv[0] + wfv[1] * Xv[1]) > 0 ? -1 : 1; OS.boom = clamp((twa - 28) * .78, 7, 82) * D2R * OS.side; OS.jib = clamp((twa - 28) * .55, 8, 52) * D2R; OS.luff = clamp(1 - (twa - 18) / 18, 0, 1);
     OS.spin += ((spin ? 1 : 0) - OS.spin) * Math.min(1, dt * .35);
     OS.heel = -OS.side * clamp(Math.sin(twa * D2R) ** 1.4 * 18, 0, 22) * D2R * (1 - OS.spin * .6); OS.pitch = Math.sin(W.t * 1.2 + r.ph) * .025;
-    const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.uT = (r.uT || 0) + dt; if (d2 < 160 || r.uT > .2) { r.g.userData.update(r.uT); r.uT = 0; }
+    const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.g.userData.update(dt);   /* minden képkockán, távol is (ne „ugráljon” a vitorla) */
     r.wk.push(r.x, r.z, r.g.rotation.y, r.v, dt, .05);
     /* névtábla a hajó fölött (helyezéssel), 25–220 m között látszik */
     r.lbl.visible = d2 > 25 && d2 < 220; if (r.lbl.visible) { r.lbl.position.set(r.x, 22 + Math.sin(W.t + r.i) * .3, r.z); const k = clamp(d2 * .03, 2.5, 7); r.lbl.scale.set(k, k * .32, 1); r.lbl.userData.set([r.o.name, r.fin ? `befutott: ${S.res.findIndex((q) => q.n === r.o.name) + 1}.` : `${Math.round(d2)} m · ${r.next < S.marks.length ? (r.next + 1) + '. bója felé' : 'a befutó felé'}`]); }
@@ -3256,7 +3255,6 @@
   const _v3a = new THREE.Vector3(), _v3b = new THREE.Vector3();
   function lifeTick(dt) {
     const L = ENV.life; if (!L) return; const t = W.t;
-    L.lodT = (L.lodT || 0) - dt; if (L.lodT < 0) { L.lodT = .4; const co = T.cam && T.cam.object3D; L.boats.forEach((b) => { if (b.near) lodApply(b.g, co); }); }
     L.swans.forEach((s) => { s.a += s.sp * dt; const x = s.cx + Math.cos(s.a) * s.r, z = s.cz + Math.sin(s.a) * s.r * .8;
       s.g.position.set(x, WATER_Y - .02 + Math.sin(t * 1.3 + s.ph) * .02, z); s.g.rotation.y = Math.atan2(-Math.sin(s.a) * s.sp, -(Math.cos(s.a) * s.sp * .8)) + Math.PI;
       s.g.rotation.z = Math.sin(t * 1.1 + s.ph) * .03; });
@@ -3550,7 +3548,6 @@
   function raceTick(dt) {
     if (!BJ.boats) return;
     const t = W.t;
-    BJ.lodT = (BJ.lodT || 0) - dt; if (BJ.lodT < 0) { BJ.lodT = .35; const co = T.cam && T.cam.object3D; BJ.boats.forEach((st) => lodApply(st.g, co)); }
     BJ.boats.forEach((st) => {
       const L = RLEGS[st.leg], df = L.f - st.f, dr = L.r - st.r, dist = Math.hypot(df, dr);
       const brg = Math.atan2(dr, df);
@@ -3587,7 +3584,7 @@
       const heel = clamp(Math.sin(clamp(twa, 0, 180) * D2R) ** 1.4 * (st.v / 3.4) * 20 * (1 - st.spin * .6), 0, 24) * D2R;
       S.heel = -S.side * heel; S.pitch = Math.sin(t * 1.3 + st.ph) * .025;
       /* távol (> 140 m) ritkábban frissítjük a vitorlákat – Quest 2-n sokat számít */
-      const far = Math.hypot(st.f, st.r) > 140; st.uT = (st.uT || 0) + dt; if (!far || st.uT > .2) { st.g.userData.update(st.uT); st.uT = 0; }
+      st.g.userData.update(dt);
       st.wk.push(p.x, p.z, Math.atan2(dirW.x, dirW.z), st.v, dt, .04);
     });
     /* zászlók lobogása, habgyűrű */
@@ -4191,6 +4188,9 @@
     saved = { rigY: T.rig.object3D.rotation.y, pitch: lc0 && lc0.pitchObject ? lc0.pitchObject.rotation.x : 0, yaw: lc0 && lc0.yawObject ? lc0.yawObject.rotation.y : 0, skyVis: sky.object3D.visible, spotsVis: T.spots.object3D.visible, clip: T.sceneEl.renderer.localClippingEnabled, scene: T.current,
       skyDepth: sm ? sm.material.depthTest : true, skyOrder: sm ? sm.renderOrder : 0 };
     W.kind = kind; W.active = true; W.t = 0; W.upd = []; W.objs = []; W.disposables = [];
+    /* mélységpontosság: a séta kamerája near=0,005 / far=10000 – ezzel a távoli part, hajók, fák „villognak” (z-fighting).
+       A 3D világokban near=0,06, far=4000: a kéz és a kormány így is rendben látszik, a háttér pedig stabil. */
+    { const ca = T.cam.getAttribute("camera") || {}; saved.camNear = ca.near != null ? ca.near : .005; saved.camFar = ca.far != null ? ca.far : 10000; T.cam.setAttribute("camera", { near: .06, far: 4000 }); const cm = T.sceneEl.camera; if (cm) { cm.near = .06; cm.far = 4000; cm.updateProjectionMatrix(); } }
     T.setBusy(true);
     const root = new THREE.Group(); root.name = "zephyr-world"; T.sceneEl.object3D.add(root); W.root = root;
     T.spots.object3D.visible = false; if (T.sky2) T.sky2.object3D.visible = false;
@@ -4258,6 +4258,7 @@
     const sky = T.sky, sm = sky && sky.getObject3D("mesh");
     if (saved) {
       sky.object3D.visible = true; T.spots.object3D.visible = true;
+      if (saved.camNear != null) { T.cam.setAttribute("camera", { near: saved.camNear, far: saved.camFar }); const cm = T.sceneEl.camera; if (cm) { cm.near = saved.camNear; cm.far = saved.camFar; cm.updateProjectionMatrix(); } }
       if (sm) { sm.material.depthTest = saved.skyDepth; sm.material.depthWrite = true; sm.renderOrder = saved.skyOrder; sm.material.needsUpdate = true; }
       T.sceneEl.renderer.localClippingEnabled = saved.clip;
       if (!T.inVR) { T.rig.object3D.rotation.y = saved.rigY; const lc1 = T.cam.components["look-controls"]; if (lc1 && lc1.pitchObject) { lc1.pitchObject.rotation.x = saved.pitch; lc1.yawObject.rotation.y = saved.yaw; } }

@@ -279,7 +279,6 @@
   function vrTick(dt) {
     const S = VRR, C = S.C;
     if (S.ensign) { const pa = S.ensign.geometry.attributes.position, b0 = S.ensign.userData.base, t = W.t; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 9 - t * 7) * .05 * x / .6; } pa.needsUpdate = true; }
-    S.lodT = (S.lodT || 0) - dt; if (S.lodT < 0 && S.riv) { S.lodT = .4; const co = T.cam && T.cam.object3D; S.riv.forEach((r) => r.g && lodApply(r.g, co)); }
     /* közvetlen kézi fogás: csippentés a kerék pereme mellett (a kéz a kerék síkjában, a peremtől 18 cm-en belül) */
     const X = T.xr, pl = (X && X.pinch) || {};
     if (T.inVR && X && X.src) {
@@ -417,7 +416,7 @@
     OS.side = (wfv[0] * Xv[0] + wfv[1] * Xv[1]) > 0 ? -1 : 1; OS.boom = clamp((twa - 28) * .78, 7, 82) * D2R * OS.side; OS.jib = clamp((twa - 28) * .55, 8, 52) * D2R; OS.luff = clamp(1 - (twa - 18) / 18, 0, 1);
     OS.spin += ((spin ? 1 : 0) - OS.spin) * Math.min(1, dt * .35);
     OS.heel = -OS.side * clamp(Math.sin(twa * D2R) ** 1.4 * 18, 0, 22) * D2R * (1 - OS.spin * .6); OS.pitch = Math.sin(W.t * 1.2 + r.ph) * .025;
-    const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.uT = (r.uT || 0) + dt; if (d2 < 160 || r.uT > .2) { r.g.userData.update(r.uT); r.uT = 0; }
+    const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.g.userData.update(dt);   /* minden képkockán, távol is (ne „ugráljon” a vitorla) */
     r.wk.push(r.x, r.z, r.g.rotation.y, r.v, dt, .05);
     /* névtábla a hajó fölött (helyezéssel), 25–220 m között látszik */
     r.lbl.visible = d2 > 25 && d2 < 220; if (r.lbl.visible) { r.lbl.position.set(r.x, 22 + Math.sin(W.t + r.i) * .3, r.z); const k = clamp(d2 * .03, 2.5, 7); r.lbl.scale.set(k, k * .32, 1); r.lbl.userData.set([r.o.name, r.fin ? `befutott: ${S.res.findIndex((q) => q.n === r.o.name) + 1}.` : `${Math.round(d2)} m · ${r.next < S.marks.length ? (r.next + 1) + '. bója felé' : 'a befutó felé'}`]); }
