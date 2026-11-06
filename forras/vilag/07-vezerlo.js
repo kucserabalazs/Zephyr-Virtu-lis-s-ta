@@ -69,6 +69,7 @@
     const yaw = T.camYaw(), hy = T.headY();
     let a = yaw + (W.kind === "maquette" ? .62 : .55), d = W.kind === "sail" ? .85 : 1.05, y = hy - .25;
     if (W.kind === "sail") { a = yaw + .62; y = hy - .38; }
+    if (W.kind === "race") { a = yaw - .75; d = 1.1; y = hy - .15; }   /* a verseny panelje balra-előre, hogy a kormány és az orr szabad maradjon */
     P.m.position.set(-Math.sin(a) * d, y, -Math.cos(a) * d);
     P.m.rotation.set(-.2, a, 0, "YXZ");
     T.sceneEl.object3D.add(P.m);
@@ -175,7 +176,7 @@
       return;
     }
     sky.object3D.visible = false;
-    safe(() => { W.spec = kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
+    safe(() => { W.spec = kind === "race" ? buildVRace() : kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
   };
   function finishOpen() {
     document.body.classList.add("world-on");
