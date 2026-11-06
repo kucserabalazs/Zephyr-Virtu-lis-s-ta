@@ -232,8 +232,13 @@
     });
     /* fedett bejáró a lépcsővel (földszint), emeleti folyosó/terasz */
     box("hallTile", WALL, 0, Z_HALL, OUT_W - WALL, .03, Z_B - PART, 0);   /* nagy szürke lapok (a fotó szerint) */
-    for (let k = 0; k < 15; k++) box("#d7d3cb", WALL, 0, Z_B - PART - .3 - k * .26, WALL + 1.0, .19 * (k + 1), Z_B - PART - k * .26, 0);
-    box("steel", WALL + 1.0, .9, Z_HALL + .2, WALL + 1.04, .94, Z_B - PART - .2, 0);   /* kapaszkodó */
+    /* a lépcső a fotó szerint: szürke fém lépcsőfokok nyitott homlokkal, oldalt fém korlát */
+    { const n = 15, zt = Z_B - PART, dz = .26;
+      for (let k = 0; k < n; k++) box("#8f969c|m", WALL + .02, .19 * (k + 1) - .05, zt - .3 - k * dz, WALL + 1.0, .19 * (k + 1), zt - k * dz, 0);
+      const zb = zt - n * dz, a0 = new THREE.Vector3(WALL + 1.02, 0, zt), a1 = new THREE.Vector3(WALL + 1.02, .19 * n, zb);
+      const [g1, m1] = rodGeom(a0, a1, .035, 6); add("#8f969c|m", g1, m1, 0);
+      const [g2, m2] = rodGeom(a0.clone().setY(.95), a1.clone().setY(.19 * n + .95), .022, 6); add("steel", g2, m2, 0);
+      for (let k = 0; k <= n; k += 2) { const z = zt - k * dz, y = .19 * k; box("steel", WALL + 1.01, y, z - .01, WALL + 1.03, y + .95, z + .01, 0); } }
     box("terrace", WALL + 1.1, 0, Z_HALL, OUT_W - WALL, .04, Z_B - PART, 1);
     box("rail", WALL + 1.1, .04, Z_HALL + .02, OUT_W - WALL, 1.04, Z_HALL + .05, 1); box("steel", WALL + 1.1, 1.04, Z_HALL + .01, OUT_W - WALL, 1.08, Z_HALL + .06, 1);
     /* fali lámpák a bejárónál, házjel */

@@ -1191,8 +1191,8 @@
     const orbTex = canvasTex(256, 256, (g) => { const gr = g.createRadialGradient(128, 128, 10, 128, 128, 120); gr.addColorStop(0, "rgba(255,240,200,1)"); gr.addColorStop(.35, "rgba(255,209,102,.9)"); gr.addColorStop(1, "rgba(255,180,60,0)"); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
       g.fillStyle = "#0b2f5e"; g.font = "800 92px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("360°", 128, 132); });
     H.spots.forEach((sp) => {
-      const o = new THREE.Sprite(basic({ map: orbTex, transparent: true, depthWrite: false })); o.scale.set(.42, .42, 1); o.position.set(sp.x, 1.45, sp.z); H.lv[sp.lv].add(o); o.visible = false; o.renderOrder = 6;
-      o.userData.xr = { hover: (on) => { o.scale.setScalar(on ? .55 : .42); if (on) showTip(o, "📷 " + sp.n + " – valódi 360°-os fotó", "Csippents rá: belépsz a fotóba"); else showTip(null); }, click: () => { W.close(() => T.go(sp.id)); } };
+      const o = new THREE.Sprite(basic({ map: orbTex, transparent: true, depthWrite: false })); o.scale.set(.3, .3, 1); o.position.set(sp.x, 1.35, sp.z); H.lv[sp.lv].add(o); o.visible = false; o.renderOrder = 6;
+      o.userData.xr = { hover: (on) => { o.scale.setScalar(on ? .42 : .3); if (on) showTip(o, "📷 " + sp.n + " – valódi 360°-os fotó", "Csippents rá: belépsz a fotóba"); else showTip(null); }, click: () => { W.close(() => T.go(sp.id)); } };
       T.xr.extra.add(o); W.objs.push(o); MAQ.orbs.push(o);
     });
     /* teleport-felületek: a telek, a két szint padlója (a ház alapterületén + teraszok) és a part */
@@ -1463,7 +1463,7 @@
     MAQ.tp.forEach((m) => { m.visible = life; });
     MAQ.lampHalo.forEach((P) => { P.visible = life; });
     MAQ.orbs.forEach((o) => { o.visible = life; if (life) o.material.rotation = Math.sin(W.t * 1.5) * .05; });
-    if (life) MAQ.orbs.forEach((o, i) => { const k = (o.scale.x > .5 ? .55 : .42) * (1 + Math.sin(W.t * 2.2 + i) * .06); o.scale.set(k, k, 1); });
+    if (life) MAQ.orbs.forEach((o, i) => { const k = (o.scale.x > .38 ? .42 : .3) * (1 + Math.sin(W.t * 2.2 + i) * .06); o.scale.set(k, k, 1); });
     if (!T.inVR && !life && !MAQ.drag && MAQ.auto !== false) MAQ.turn.rotation.y += dt * .04;
     /* napszak: az óra simán halad a cél felé */
     if (Math.abs(MAQ.hour - MAQ.hourT) > 1e-3) { MAQ.hour += (MAQ.hourT - MAQ.hour) * Math.min(1, dt * 2.2); if (Math.abs(MAQ.hour - MAQ.hourT) < .004) { MAQ.hour = MAQ.hourT; envSetTime(MAQ.day, MAQ.hour, true); } MAQ.envT = (MAQ.envT || 0) + dt; if (MAQ.envT > .06) { MAQ.envT = 0; envSetTime(MAQ.day, MAQ.hour); } }
@@ -1770,8 +1770,13 @@
     });
     /* fedett bejáró a lépcsővel (földszint), emeleti folyosó/terasz */
     box("hallTile", WALL, 0, Z_HALL, OUT_W - WALL, .03, Z_B - PART, 0);   /* nagy szürke lapok (a fotó szerint) */
-    for (let k = 0; k < 15; k++) box("#d7d3cb", WALL, 0, Z_B - PART - .3 - k * .26, WALL + 1.0, .19 * (k + 1), Z_B - PART - k * .26, 0);
-    box("steel", WALL + 1.0, .9, Z_HALL + .2, WALL + 1.04, .94, Z_B - PART - .2, 0);   /* kapaszkodó */
+    /* a lépcső a fotó szerint: szürke fém lépcsőfokok nyitott homlokkal, oldalt fém korlát */
+    { const n = 15, zt = Z_B - PART, dz = .26;
+      for (let k = 0; k < n; k++) box("#8f969c|m", WALL + .02, .19 * (k + 1) - .05, zt - .3 - k * dz, WALL + 1.0, .19 * (k + 1), zt - k * dz, 0);
+      const zb = zt - n * dz, a0 = new THREE.Vector3(WALL + 1.02, 0, zt), a1 = new THREE.Vector3(WALL + 1.02, .19 * n, zb);
+      const [g1, m1] = rodGeom(a0, a1, .035, 6); add("#8f969c|m", g1, m1, 0);
+      const [g2, m2] = rodGeom(a0.clone().setY(.95), a1.clone().setY(.19 * n + .95), .022, 6); add("steel", g2, m2, 0);
+      for (let k = 0; k <= n; k += 2) { const z = zt - k * dz, y = .19 * k; box("steel", WALL + 1.01, y, z - .01, WALL + 1.03, y + .95, z + .01, 0); } }
     box("terrace", WALL + 1.1, 0, Z_HALL, OUT_W - WALL, .04, Z_B - PART, 1);
     box("rail", WALL + 1.1, .04, Z_HALL + .02, OUT_W - WALL, 1.04, Z_HALL + .05, 1); box("steel", WALL + 1.1, 1.04, Z_HALL + .01, OUT_W - WALL, 1.08, Z_HALL + .06, 1);
     /* fali lámpák a bejárónál, házjel */
