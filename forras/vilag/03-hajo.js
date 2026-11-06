@@ -320,15 +320,16 @@
       if (!spinM) return; spinM.visible = S.spin > .02; if (!spinM.visible) { jibM.visible = true; return; }
       jibM.visible = S.spin < .6;
       const pa = spinG.attributes.position.array, { nu, nv } = spinG.userData, side = S.side, k0 = S.spin;
-      const tack = _a.set(0, hullShape(1).sheer + .15, HULL.L / 2 + .8);
-      const head = _b.set(0, mastBase + mastH * .96, mastZ + .3);
-      const clew = _c.set(side * 3.4 * k0, hullShape(.5).sheer + 1.4, -.6);
+      /* nagy, kerek spinakker: a tack az orrsudár végén, a clew messze hátszél felé – a vitorla az orr előtt duzzad */
+      const tack = _a.set(0, hullShape(1).sheer + .5, HULL.L / 2 + 2.1);
+      const head = _b.set(0, mastBase + mastH * .97, mastZ + .45);
+      const clew = _c.set(side * 5.4 * k0, hullShape(.5).sheer + 1.3, 1.6);
       for (let j = 0; j <= nv; j++) { const v = j / nv;
         for (let i = 0; i <= nu; i++) { const u = i / nu, k = (j * (nu + 1) + i) * 3;
           const lx = tack.x + (head.x - tack.x) * v, ly = tack.y + (head.y - tack.y) * v, lz = tack.z + (head.z - tack.z) * v;
           const ex = clew.x + (head.x - clew.x) * v, ey = clew.y + (head.y - clew.y) * v, ez = clew.z + (head.z - clew.z) * v;
-          const bulge = 2.3 * k0 * Math.sin(Math.PI * u) * Math.sin(Math.PI * Math.min(1, v * 1.15 + .05));
-          pa[k] = lx + (ex - lx) * u + side * bulge * .55; pa[k + 1] = ly + (ey - ly) * u + bulge * .1; pa[k + 2] = lz + (ez - lz) * u + bulge * .95;
+          const bulge = 4.4 * k0 * Math.pow(Math.sin(Math.PI * u), .8) * Math.pow(Math.sin(Math.PI * Math.min(1, v * 1.05 + .06)), .65) * (1 + .03 * Math.sin(W.t * 3.1 + v * 6));
+          pa[k] = lx + (ex - lx) * u + side * bulge * .7; pa[k + 1] = ly + (ey - ly) * u + bulge * .14; pa[k + 2] = lz + (ez - lz) * u + bulge * 1.05;
         } }
       spinG.attributes.position.needsUpdate = true; spinG.computeVertexNormals();
     }
