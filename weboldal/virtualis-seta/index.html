@@ -13691,7 +13691,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     const SANS = "Manrope, Arial, sans-serif", SER = 'Georgia, "Times New Roman", serif', TAU = Math.PI * 2;
     const KEY = "zephyr-sakk";
     const VAL = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
-    const NAME = { p: "gyalog (evezős csónak)", n: "huszár (lófejes hajó)", b: "futó (versenyvitorlás)", r: "bástya (világítótorony)", q: "vezér (szkúner)", k: "király (háromárbócos)" };
+    const NAME = { p: "gyalog (evezős csónak)", n: "huszár (lófejes viking hajó)", b: "futó (versenyjacht)", r: "bástya (világítótorony)", q: "vezér (fregatt)", k: "király (háromárbócos)" };
     /* mezőtáblák (világos szemszögéből, a8 = 0 … h1 = 63) */
     const PST = {
       p: [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -13779,29 +13779,63 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (!any) return inCheck(s, s.turn) ? -100000 + ply : 0;
       return best;
     }
-    function think(s, level) {   /* level: 0 könnyű, 1 közepes, 2 nehéz */
-      const ms = legal(s); if (!ms.length) return null;
-      const budget = [140, 380, 900][level], maxD = [1, 3, 5][level]; deadline = performance.now() + budget; nodes = 0; stop = false;
+    /* 24 nehézségi szint: a keresési mélység, az idő és a „hibázási kedv” szintenként fokozatosan változik */
+    function lvlCfg(l) { l = Math.max(1, Math.min(24, l | 0)); return { d: Math.min(7, 1 + Math.floor((l + 1) / 4)), ms: Math.round(90 + l * l * 4.5), noise: Math.max(0, 300 - l * 14), bl: Math.max(0, .42 - l * .02) }; }
+    function think(s, level) {
+      const cf = lvlCfg(level), ms = legal(s); if (!ms.length) return null;
+      deadline = performance.now() + cf.ms; nodes = 0; stop = false;
       let order = ms.slice().sort((x, y) => mvv(y) - mvv(x)), best = order[0], scores = [];
-      for (let d = 1; d <= maxD; d++) {
+      for (let d = 1; d <= cf.d; d++) {
         let a = -1e9, cur = null; const sc = [];
         for (const m of order) { const v = -negamax(apply(s, m), d - 1, -1e9, -a, 1); if (stop) break; sc.push([m, v]); if (v > a) { a = v; cur = m; } }
         if (stop && d > 1) break; if (cur) { best = cur; scores = sc; order = [cur].concat(order.filter((m) => m !== cur)); }
         if (performance.now() > deadline) break;
       }
-      if (level === 0 && scores.length > 2) {   /* könnyű szinten néha nem a legjobbat lépi */
-        scores.sort((x, y) => y[1] - x[1]); const top = scores.filter((q) => q[1] > scores[0][1] - 90); best = top[Math.floor(Math.random() * top.length)][0];
+      /* alacsonyabb szinteken néha nem a legjobbat lépi (de csak a „nem sokkal rosszabb” lépések közül választ) */
+      if (cf.noise > 0 && scores.length > 2 && Math.random() < Math.min(1, cf.bl * 2)) {
+        scores.sort((x, y) => y[1] - x[1]); const top = scores.filter((q) => q[1] > scores[0][1] - cf.noise && q[1] > -50000); if (top.length) best = top[Math.floor(Math.random() * top.length)][0];
       }
       return best;
     }
+    /* a gép a háttérben (Web Worker) gondolkodik – így a magas szinteken sem akad meg a kép és az animáció */
+    let AIW = null, aiSeq = 0; const aiCb = {};
+    function aiWorker() {
+      if (AIW !== null) return AIW;
+      try {
+        const src = [
+          "const VAL=" + JSON.stringify(VAL) + ",PST=" + JSON.stringify(PST) + ";",
+          "const isW=" + isW + ",colorOf=" + colorOf + ",rc=" + rc + ",idx=" + idx + ",on=" + on + ";",
+          "const KD=" + JSON.stringify(KD) + ",ND=" + JSON.stringify(ND) + ",BD=" + JSON.stringify(BD) + ",RD=" + JSON.stringify(RD) + ";",
+          "const clone=" + clone + ",kingSq=" + kingSq + ",inCheck=" + inCheck + ",mvv=" + mvv + ";",
+          String(lvlCfg), String(attacked), String(pseudo), String(apply), String(legal), String(evaluate), String(quiesce), String(negamax), String(think),
+          "let nodes=0,deadline=0,stop=false;",
+          "onmessage=(e)=>{const d=e.data;let m=null;try{m=think(d.s,d.l);}catch(x){}postMessage({id:d.id,m:m});};"
+        ].join("\n");
+        AIW = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+        AIW.onmessage = (e) => { const f = aiCb[e.data.id]; delete aiCb[e.data.id]; if (f) f(e.data.m); };
+        AIW.onerror = () => { AIW = false; Object.keys(aiCb).forEach((k) => { const f = aiCb[k]; delete aiCb[k]; try { f(null, true); } catch (x) {} }); };
+      } catch (e) { AIW = false; }
+      return AIW;
+    }
+    function thinkAsync(st, l, cb) {
+      const sync = () => setTimeout(() => cb(think(st, l)), 0);
+      const w = aiWorker(); if (!w) return sync();
+      const id = ++aiSeq; aiCb[id] = (m, failed) => { if (failed) sync(); else cb(m); }; w.postMessage({ id, s: st, l });
+      setTimeout(() => { if (aiCb[id]) { delete aiCb[id]; sync(); } }, lvlCfg(l).ms + 5000);
+    }
+    const RANKS = ["Hajósinas", "Matróz", "Kormányos", "Fedélzetmester", "Kapitány", "Admirális"];
+    const rankOf = (l) => RANKS[Math.min(5, Math.floor((l - 1) / 4))];
     /* --------------- játékállapot --------------- */
-    const S = { s: initial(), hist: [], keys: [], sel: -1, moves: [], last: null, anim: null, sink: [], capW: [], capB: [], st: "play", msg: "", lvl: 1, human: "w", two: false, thinking: false, promo: null, ripples: [], btn: [], t: 0, hint: null, menu: false, flip: false, endT: 0, conf: [] };
-    function save() { try { localStorage.setItem(KEY, JSON.stringify({ s: S.s, hist: S.hist, keys: S.keys, capW: S.capW, capB: S.capB, lvl: S.lvl, human: S.human, two: S.two, last: S.last, st: S.st, msg: S.msg })); } catch (e) {} }
-    function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && v.s && v.s.b && v.s.b.length === 64) { Object.assign(S, { s: v.s, hist: v.hist || [], keys: v.keys || [], capW: v.capW || [], capB: v.capB || [], lvl: v.lvl == null ? 1 : v.lvl, human: v.human || "w", two: !!v.two, last: v.last || null, st: v.st || "play", msg: v.msg || "" }); return true; } } catch (e) {} return false; }
-    function newGame() { Object.assign(S, { s: initial(), hist: [], keys: [], sel: -1, moves: [], last: null, anim: null, sink: [], capW: [], capB: [], st: "play", hint: null, promo: null, conf: [], endT: 0 }); S.keys.push(posKey(S.s)); status(); save(); maybeAI(); }
+    const S = { s: initial(), hist: [], keys: [], sel: -1, moves: [], last: null, anim: null, sink: [], capW: [], capB: [], st: "play", msg: "", lvl: 1, maxLvl: 1, human: "w", two: false, thinking: false, promo: null, ripples: [], btn: [], t: 0, hint: null, menu: null, flip: false, endT: 0, conf: [], fx: [], shake: 0, won: false };
+    function save() { try { localStorage.setItem(KEY, JSON.stringify({ s: S.s, hist: S.hist, keys: S.keys, capW: S.capW, capB: S.capB, lvl: S.lvl, maxLvl: S.maxLvl, ver: 2, won: S.won, human: S.human, two: S.two, last: S.last, st: S.st, msg: S.msg })); } catch (e) {} }
+    function load() { try { const v = JSON.parse(localStorage.getItem(KEY) || "null"); if (v && v.s && v.s.b && v.s.b.length === 64) { Object.assign(S, { s: v.s, hist: v.hist || [], keys: v.keys || [], capW: v.capW || [], capB: v.capB || [], lvl: v.ver === 2 ? Math.max(1, Math.min(24, v.lvl | 0)) : [3, 8, 14][v.lvl == null ? 1 : v.lvl] || 3, human: v.human || "w", two: !!v.two, last: v.last || null, st: v.st || "play", msg: v.msg || "", won: !!v.won });
+        S.maxLvl = Math.max(S.lvl, Math.min(24, (v.maxLvl | 0) || S.lvl)); return true; } } catch (e) {} return false; }
+    function newGame() { Object.assign(S, { s: initial(), hist: [], keys: [], sel: -1, moves: [], last: null, anim: null, sink: [], capW: [], capB: [], st: "play", hint: null, promo: null, conf: [], endT: 0, fx: [], won: false, menu: null }); S.keys.push(posKey(S.s)); status(); save(); maybeAI(); }
     function status() {
       const s = S.s, ms = legal(s), chk = inCheck(s, s.turn), side = s.turn === "w" ? "Világos" : "Sötét";
-      if (!ms.length) { S.st = "over"; S.endT = S.t; if (chk) { const youWin = !S.two && s.turn !== S.human; S.msg = S.two ? `Sakk-matt! ${s.turn === "w" ? "Sötét" : "Világos"} nyert.` : youWin ? "Sakk-matt – GYŐZTÉL!" : "Sakk-matt – most a gép nyert."; if (S.two || youWin) { gmSnd.win(); confetti(); } } else S.msg = "Patt – döntetlen."; return; }
+      if (!ms.length) { S.st = "over"; S.endT = S.t; if (chk) { const youWin = !S.two && s.turn !== S.human; S.msg = S.two ? `Sakk-matt! ${s.turn === "w" ? "Sötét" : "Világos"} nyert.` : youWin ? "Sakk-matt – GYŐZTÉL!" : "Sakk-matt – most a gép nyert."; S.won = youWin;
+          if (youWin && S.lvl >= S.maxLvl && S.maxLvl < 24) S.maxLvl = S.lvl + 1;   /* győzelem: megnyílik a következő szint */
+          if (S.two || youWin) { gmSnd.win(); confetti(); } } else S.msg = "Patt – döntetlen."; return; }
       const rep = S.keys.filter((k) => k === S.keys[S.keys.length - 1]).length >= 3;
       if (rep) { S.st = "over"; S.msg = "Háromszori ismétlés – döntetlen."; return; }
       if (s.half >= 100) { S.st = "over"; S.msg = "50 lépés ütés és gyalogmozgás nélkül – döntetlen."; return; }
@@ -13815,11 +13849,14 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       S.hist.push({ s: before, capW: S.capW.slice(), capB: S.capB.slice(), last: S.last });
       S.s = apply(before, m); S.keys.push(posKey(S.s));
       /* animáció: a hajó átsiklik (huszár: ugrik), a leütött hajó elsüllyed */
-      S.anim = { m, t: 0, dur: m.p.toLowerCase() === "n" ? .62 : .5 + Math.min(.35, Math.hypot((m.t >> 3) - (m.f >> 3), (m.t & 7) - (m.f & 7)) * .05) };
-      if (m.c !== ".") { const at = m.ep ? m.t + (before.turn === "w" ? 8 : -8) : m.t; S.sink.push({ p: m.c, sq: at, t: -S.anim.dur * .7 }); (isW(m.c) ? S.capW : S.capB).push(m.c); }
+      const dur = m.p.toLowerCase() === "n" ? .62 : .5 + Math.min(.35, Math.hypot((m.t >> 3) - (m.f >> 3), (m.t & 7) - (m.f & 7)) * .05);
+      /* ütés: előbb ágyúcsata (két sortűz), a megtalált hajó kigyullad és elsüllyed – a támadó csak utána hajózik be a helyére */
+      const cap = m.c !== ".", bt = cap ? 2.1 : 0, wait = cap ? 1.7 : 0;
+      S.anim = { m, t: 0, dur, bt, wait, total: bt + wait + dur, shots: 0 };
+      if (cap) { const at = m.ep ? m.t + (before.turn === "w" ? 8 : -8) : m.t; S.anim.at = at; S.sink.push({ p: m.c, sq: at, t: -bt, fire: 0 }); (isW(m.c) ? S.capW : S.capB).push(m.c); }
       if (m.castle) { const row = before.turn === "w" ? 7 : 0; S.anim.rook = m.castle === "K" ? { f: idx(row, 7), t: idx(row, 5) } : { f: idx(row, 0), t: idx(row, 3) }; }
       S.last = { f: m.f, t: m.t }; S.sel = -1; S.moves = []; S.hint = null;
-      gmSnd.splash(m.c !== "." ? .22 : .1);
+      if (m.c === ".") gmSnd.splash(.1);
       status(); save();
       if (S.st === "play" && inCheck(S.s, S.s.turn)) setTimeout(() => { try { fxTone(880, 660, .25, .05, "triangle"); } catch (e) {} }, 500);
       if (!fromAI) maybeAI();
@@ -13831,29 +13868,35 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       setTimeout(() => {
         /* csak akkor lép, ha közben nem változott az állás (pl. visszalépés), és tényleg a gép jön */
         if (S.two || S.s.turn === S.human || S.hist.length !== ply || S.st !== "play") { S.thinking = false; return; }
-        const m = think(S.s, S.lvl);
-        const wait = () => { if (S.anim) return setTimeout(wait, 60); S.thinking = false; if (m && S.st === "play" && S.hist.length === ply) doMove(m, true); else status(); };
-        wait();
+        thinkAsync(S.s, S.lvl, (m) => {
+          const wait = () => { if (S.anim) return setTimeout(wait, 60); S.thinking = false; if (m && S.st === "play" && S.hist.length === ply && S.s.turn !== S.human && !S.two) doMove(m, true); else status(); };
+          wait();
+        });
       }, 380);
     }
     function undo() {
       if (S.thinking || !S.hist.length) return;
       const n = S.two ? 1 : Math.min(S.hist.length, S.s.turn === S.human ? 2 : 1);
       for (let k = 0; k < n; k++) { const h = S.hist.pop(); S.s = h.s; S.capW = h.capW; S.capB = h.capB; S.last = h.last; S.keys.pop(); }
-      S.sel = -1; S.moves = []; S.anim = null; S.sink = []; S.conf = []; status(); save(); maybeAI();
+      S.sel = -1; S.moves = []; S.anim = null; S.sink = []; S.conf = []; S.fx = []; S.menu = null; status(); save(); maybeAI();
     }
-    function hint() { if (S.st !== "play" || S.thinking || (!S.two && S.s.turn !== S.human)) return; const m = think(S.s, 1); if (m) { S.hint = { f: m.f, t: m.t, t0: S.t }; S.msg = `💡 ${NAME[m.p.toLowerCase()].split(" ")[0]} · ${sqName(m.f)} → ${sqName(m.t)}`; } }
+    function hint() { if (S.st !== "play" || S.thinking || S.hinting || (!S.two && S.s.turn !== S.human)) return; S.hinting = true; S.msg = "💡 Gondolkodom…"; const ply = S.hist.length;
+      thinkAsync(S.s, 20, (m) => { S.hinting = false; if (m && S.hist.length === ply) { S.hint = { f: m.f, t: m.t, t0: S.t }; S.msg = `💡 ${NAME[m.p.toLowerCase()].split(" ")[0]} · ${sqName(m.f)} → ${sqName(m.t)}`; } else status(); }); }
     if (!load()) { S.keys.push(posKey(S.s)); status(); } else { status(); }
     S.flip = !S.two && S.human === "b"; setTimeout(maybeAI, 600);
-    if (/sakkteszt/.test(location.hash + location.search)) window.__chess = { S, legal, apply, think, doMove, hitSq: (x, y) => hitSq(x, y), sqXY: (i) => sqXY(i) };   /* fejlesztői teszt: #sakkteszt */
-    /* --------------- elrendezés --------------- */
+    if (/sakkteszt/.test(location.hash + location.search)) window.__chess = { S, legal, apply, think, thinkAsync, lvlCfg, doMove, hitSq: (x, y) => hitSq(x, y), sqXY: (i) => sqXY(i) };   /* fejlesztői teszt: #sakkteszt */
+    /* --------------- elrendezés: a tábla kitölti a rendelkezésre álló teret --------------- */
     let L = null;
     function layout(W, H) {
-      const ph = W < 640, top = GM_TOP + (ph ? 34 : 40), bot = ph ? 128 : 84;
-      const avail = Math.min(W - (ph ? 22 : 60), H - top - bot - 46);
-      const frame = Math.max(14, Math.round(avail * .055)), sq = Math.floor((avail - 2 * frame) / 8);
-      const bw = sq * 8 + 2 * frame, bx = Math.round(W / 2 - bw / 2), by = Math.round(top + 22 + Math.max(0, (H - top - bot - 46 - bw) / 2));
-      L = { ph, sq, frame, bx, by, x0: bx + frame, y0: by + frame, bw, W, H, bot };
+      const ph = W < 700, land = W > H * 1.12;
+      const pillInHd = W >= 700;   /* széles képernyőn az állapotsor a fejléc mellé kerül (nem vesz el sort a táblától) */
+      const top = pillInHd ? GM_TOP : GM_TOP + 40, bot = ph ? 60 : 64;
+      const capW = land ? Math.min(150, Math.max(54, (W - (H - top - bot)) / 2 - 8)) : 0, capH = land ? 0 : Math.max(20, Math.min(38, W * .06));
+      const availW = land ? W - 2 * capW - 8 : W - 6, availH = H - top - bot - 2 * capH - 4;
+      const avail = Math.max(160, Math.min(availW, availH));
+      const frame = Math.max(10, Math.round(avail * .036)), sq = Math.floor((avail - 2 * frame) / 8);
+      const bw = sq * 8 + 2 * frame, bx = Math.round(W / 2 - bw / 2), by = Math.round(top + capH + 2 + Math.max(0, (availH - bw) / 2));
+      L = { ph, land, sq, frame, bx, by, x0: bx + frame, y0: by + frame, bw, W, H, bot, capW, capH, top, pillInHd };
       return L;
     }
     const sqXY = (i) => { const r = i >> 3, c = i & 7, rr2 = S.flip ? 7 - r : r, cc = S.flip ? 7 - c : c; return [L.x0 + cc * L.sq + L.sq / 2, L.y0 + rr2 * L.sq + L.sq / 2]; };
@@ -13891,183 +13934,409 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       /* finom sötét rács a mezők között (bója-kötélnek tűnő vonal) */
       g.strokeStyle = "rgba(255,255,255,.12)"; g.lineWidth = 1; for (let k = 1; k < 8; k++) { g.beginPath(); g.moveTo(x0 + k * sq, y0); g.lineTo(x0 + k * sq, y0 + 8 * sq); g.moveTo(x0, y0 + k * sq); g.lineTo(x0 + 8 * sq, y0 + k * sq); g.stroke(); }
     }
-    /* --------------- rajz: a hajók --------------- */
-    const COL = { w: { hull: "#f6f1e3", hull2: "#d9d0b8", sail: "#fdfbf3", sail2: "#ddd7c6", trim: "#c99a2e", deck: "#c79a62", flag: "#c62828" }, b: { hull: "#16365f", hull2: "#0b1f3a", sail: "#a3232f", sail2: "#6e1520", trim: "#d6ad52", deck: "#8a6238", flag: "#f2c94c" } };
-    function hullPath(g, L2, B2, dir) {   /* felülnézeti hajótest: orr a „dir” irányba (−1 = fel, +1 = le) */
-      g.beginPath(); g.moveTo(0, dir * L2 * .55); g.bezierCurveTo(B2 * .55, dir * L2 * .35, B2 * .6, -dir * L2 * .25, B2 * .42, -dir * L2 * .45); g.lineTo(-B2 * .42, -dir * L2 * .45); g.bezierCurveTo(-B2 * .6, -dir * L2 * .25, -B2 * .55, dir * L2 * .35, 0, dir * L2 * .55); g.closePath();
+    /* --------------- rajz: a hajók (oldalnézet, nagy és részletes; minden hajó árbócán a saját sakkjele) ---------------
+       A világos flotta orra jobbra, a sötété balra néz – két szembenálló hajóhad. A hajó a mező alsó harmadában úszik,
+       a vitorlák a fölötte lévő mezőbe is benyúlnak (mint egy valódi kikötőben). */
+    const COL = {
+      w: { hull: "#f6efdc", hull2: "#d8cba9", hullD: "#a99677", sail: "#fffdf6", sail2: "#e0d7c2", seam: "rgba(120,100,70,.22)", trim: "#c99a2e", deck: "#c0925a", wl: "#8a2323", flagF: "#fffaf0", flagG: "#13305a", acc: "#c62828", acc2: "#1f5fa8", wood: "#6b4526", rope: "#5c4632" },
+      b: { hull: "#22477a", hull2: "#132c52", hullD: "#08162b", sail: "#b9303c", sail2: "#6e1520", seam: "rgba(0,0,0,.22)", trim: "#e3bb5c", deck: "#7a5634", wl: "#0e1216", flagF: "#132c52", flagG: "#ffd166", acc: "#f2c94c", acc2: "#e8e3d6", wood: "#3e2a18", rope: "#2a1f16" }
+    };
+    const GLY = { p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚" };
+    const GLYF = '"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","DejaVu Sans",serif';
+    /* zászló a sakkjellel: x,y a rúd csúcsa; aft: merre lobog (−1 balra, +1 jobbra) */
+    function glyphFlag(g, x, y, fw, fh, C, gl, t, aft, pole) {
+      fw *= 1.35; fh *= 1.35; y -= fh * .15;
+      if (pole) { g.strokeStyle = C.wood; g.lineWidth = Math.max(1, fh * .09); g.beginPath(); g.moveTo(x, y + pole); g.lineTo(x, y - fh * .08); g.stroke(); }
+      g.fillStyle = C.trim; g.beginPath(); g.arc(x, y - fh * .1, Math.max(1.2, fh * .11), 0, TAU); g.fill();
+      const wv = (u) => Math.sin(u * 4.6 - t * 5.5 + x * .07) * fh * .1 * u;
+      g.beginPath(); g.moveTo(x, y); for (let u = .2; u <= 1.001; u += .2) g.lineTo(x + aft * fw * u, y + wv(u)); for (let u = 1; u >= -.001; u -= .2) g.lineTo(x + aft * fw * u, y + fh + wv(u)); g.closePath();
+      g.fillStyle = C.flagF; g.fill(); g.strokeStyle = C.trim; g.lineWidth = Math.max(.8, fh * .07); g.stroke();
+      g.save(); g.fillStyle = C.flagG; g.font = `${Math.round(fh * 1.02)}px ${GLYF}`; g.textAlign = "center"; g.textBaseline = "middle";
+      g.translate(x + aft * fw * .52, y + fh * .54 + wv(.52)); g.fillText(gl + "︎", 0, 0); g.restore();
     }
-    function sailTri(g, x0, yb, h, w, col, col2, lean) { const gr = g.createLinearGradient(x0, yb - h, x0 + w, yb); gr.addColorStop(0, col); gr.addColorStop(1, col2); g.fillStyle = gr; g.beginPath(); g.moveTo(x0, yb); g.quadraticCurveTo(x0 + w * .55 + (lean || 0), yb - h * .45, x0 + (lean || 0) * .3, yb - h); g.lineTo(x0 + w, yb); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.18)"; g.lineWidth = .8; g.stroke(); }
-    function drawPiece(g, p, x, y, s, t, opt) {
-      opt = opt || {}; const w = isW(p), C = COL[w ? "w" : "b"], tp = p.toLowerCase(), dir = (w ? -1 : 1) * (S.flip && !opt.icon ? -1 : 1), bob = Math.sin(t * 1.8 + x * .05 + y * .03) * s * .02;
-      g.save(); g.translate(x, y + bob); if (opt.rot) g.rotate(opt.rot); if (opt.sc) g.scale(opt.sc, opt.sc); if (opt.alpha != null) g.globalAlpha = opt.alpha;
-      /* árnyék és vízgyűrű */
-      if (!opt.icon) { g.fillStyle = "rgba(8,30,40,.28)"; g.beginPath(); g.ellipse(s * .04, s * .1, s * .36, s * .17, 0, 0, TAU); g.fill(); g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = Math.max(1, s * .02); g.beginPath(); g.ellipse(0, s * .06, s * (.34 + .03 * Math.sin(t * 2 + x)), s * .14, 0, 0, TAU); g.stroke(); }
-      const trimLine = () => { g.strokeStyle = C.trim; g.lineWidth = Math.max(1, s * .025); g.stroke(); };
-      if (tp === "p") {   /* evezős csónak */
-        const Lh = s * .62, Bh = s * .3, ph = Math.sin(t * 3 + x) * .35;
-        g.strokeStyle = "#8a5a2a"; g.lineWidth = Math.max(1.2, s * .03); [-1, 1].forEach((sd) => { g.save(); g.rotate(sd * ph * .5); g.beginPath(); g.moveTo(sd * Bh * .3, 0); g.lineTo(sd * s * .38, dir * s * .04); g.stroke(); g.fillStyle = "#a8763e"; g.beginPath(); g.ellipse(sd * s * .37, dir * s * .04, s * .05, s * .02, 0, 0, TAU); g.fill(); g.restore(); });
-        g.save(); g.scale(1, .82); hullPath(g, Lh, Bh, dir); g.fillStyle = C.hull; g.fill(); trimLine(); g.restore();
-        g.fillStyle = C.deck; g.beginPath(); g.ellipse(0, 0, Bh * .33, Lh * .3, 0, 0, TAU); g.fill();
-        g.fillStyle = "rgba(0,0,0,.25)"; g.fillRect(-Bh * .33, -s * .015, Bh * .66, s * .03);
-        g.fillStyle = w ? "#1f5fa8" : "#f2b233"; g.beginPath(); g.arc(0, -dir * s * .04, s * .07, 0, TAU); g.fill();   /* az evezős */
-        g.fillStyle = "#e8c4a0"; g.beginPath(); g.arc(0, -dir * s * .04 - s * .05, s * .045, 0, TAU); g.fill();
-      } else if (tp === "r") {   /* világítótorony sziklaszigeten */
-        g.fillStyle = "#6f6a60"; [[-.2, .08, .2], [.18, .1, .18], [0, .14, .24], [-.05, .02, .2]].forEach(([dx, dy, r]) => { g.beginPath(); g.ellipse(dx * s, dy * s, r * s, r * s * .55, 0, 0, TAU); g.fill(); });
-        g.fillStyle = "#8d877b"; [[-.12, .02, .12], [.1, .05, .1]].forEach(([dx, dy, r]) => { g.beginPath(); g.ellipse(dx * s, dy * s, r * s, r * s * .5, 0, 0, TAU); g.fill(); });
-        const tb = s * .06, tt = -s * .62, wb = s * .17, wt = s * .11;
-        g.save(); g.beginPath(); g.moveTo(-wb, tb); g.lineTo(-wt, tt); g.lineTo(wt, tt); g.lineTo(wb, tb); g.closePath(); g.clip();
-        for (let k = 0; k < 5; k++) { g.fillStyle = k % 2 ? (w ? "#fdfbf3" : "#1d2f4d") : (w ? "#c62828" : "#a3232f"); g.fillRect(-wb, tb - (k + 1) * (tb - tt) / 5, wb * 2, (tb - tt) / 5 + 1); }
-        const sh = g.createLinearGradient(-wb, 0, wb, 0); sh.addColorStop(0, "rgba(0,0,0,.25)"); sh.addColorStop(.4, "rgba(255,255,255,.15)"); sh.addColorStop(1, "rgba(0,0,0,.3)"); g.fillStyle = sh; g.fillRect(-wb, tt, wb * 2, tb - tt); g.restore();
-        g.fillStyle = C.trim; g.fillRect(-wt * 1.35, tt - s * .03, wt * 2.7, s * .035);
-        g.strokeStyle = C.trim; g.lineWidth = Math.max(1, s * .015); for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(k * wt * .6, tt - s * .03); g.lineTo(k * wt * .6, tt - s * .08); g.stroke(); }
-        const lit = .55 + .45 * Math.max(0, Math.sin(t * 2.4 + (w ? 0 : 1.7)));
-        g.fillStyle = `rgba(255,${200 + 40 * lit},${90 + 60 * lit},1)`; g.fillRect(-wt * .8, tt - s * .16, wt * 1.6, s * .11);
-        g.fillStyle = w ? "#3a3f46" : "#2a2e33"; g.beginPath(); g.moveTo(-wt, tt - s * .16); g.lineTo(0, tt - s * .26); g.lineTo(wt, tt - s * .16); g.closePath(); g.fill();
-        if (!opt.icon) { const a = t * 1.6 + (w ? 0 : 2); g.save(); g.globalCompositeOperation = "lighter"; const bg = g.createRadialGradient(0, tt - s * .1, 0, 0, tt - s * .1, s * .7); bg.addColorStop(0, `rgba(255,236,170,${.45 * lit})`); bg.addColorStop(1, "rgba(255,236,170,0)"); g.fillStyle = bg;
-          g.beginPath(); g.moveTo(0, tt - s * .1); g.arc(0, tt - s * .1, s * .7, a - .25, a + .25); g.closePath(); g.fill(); g.beginPath(); g.moveTo(0, tt - s * .1); g.arc(0, tt - s * .1, s * .7, a + Math.PI - .25, a + Math.PI + .25); g.closePath(); g.fill(); g.restore(); }
-      } else {
-        /* vitorlás hajók: test felülnézetben, árboc(ok) és vitorlák oldalnézetben fölötte */
-        const Lh = s * ({ n: .66, b: .62, q: .82, k: .92 }[tp]), Bh = s * ({ n: .3, b: .22, q: .32, k: .38 }[tp]);
-        g.save(); g.scale(1, .72); hullPath(g, Lh, Bh, dir); const hg = g.createLinearGradient(-Bh, 0, Bh, 0); hg.addColorStop(0, C.hull2); hg.addColorStop(.45, C.hull); hg.addColorStop(1, C.hull2); g.fillStyle = hg; g.fill(); trimLine(); g.restore();
-        g.fillStyle = C.deck; g.save(); g.scale(1, .72); hullPath(g, Lh * .8, Bh * .7, dir); g.fill(); g.restore();
-        if (tp === "n") {   /* lófejes hajó: előbb az árboc és a csíkos vitorla, aztán (elöl) a nagy, faragott lófej az orron */
-          /* árboc és csíkos négyszögvitorla */
-          const mh = s * .62; g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1.5, s * .03); g.beginPath(); g.moveTo(0, s * .02); g.lineTo(0, -mh); g.stroke();
-          const sw = s * .36, sy = -mh + s * .06, shh = s * .38, bil = Math.sin(t * 1.5 + x) * s * .015;
-          for (let k = 0; k < 4; k++) { g.fillStyle = k % 2 ? C.sail : (w ? "#c62828" : "#f2c94c"); g.beginPath(); g.moveTo(-sw / 2 + k * sw / 4, sy); g.lineTo(-sw / 2 + (k + 1) * sw / 4, sy); g.lineTo(-sw / 2 + (k + 1) * sw / 4 + bil, sy + shh); g.lineTo(-sw / 2 + k * sw / 4 + bil, sy + shh); g.closePath(); g.fill(); }
-          g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1, s * .02); g.beginPath(); g.moveTo(-sw / 2 - s * .03, sy); g.lineTo(sw / 2 + s * .03, sy); g.stroke();
-          /* a faragott lófej – nagy, hogy messziről is „ló” legyen */
-          g.save(); g.translate(0, dir * Lh * .4 * .72 - s * .02); const hs = s * .5, fx = w ? 1 : -1;
-          g.fillStyle = w ? "#e9dcc0" : "#6b4a2a"; g.beginPath(); g.moveTo(-hs * .18, hs * .35); g.bezierCurveTo(-hs * .3 * fx, -hs * .2, -hs * .1 * fx, -hs * .7, hs * .25 * fx, -hs * .75); g.lineTo(hs * .55 * fx, -hs * .55); g.quadraticCurveTo(hs * .62 * fx, -hs * .42, hs * .48 * fx, -hs * .36); g.lineTo(hs * .2 * fx, -hs * .4); g.bezierCurveTo(hs * .1 * fx, -hs * .1, hs * .25 * fx, hs * .15, hs * .18, hs * .35); g.closePath(); g.fill();
-          g.strokeStyle = C.trim; g.lineWidth = Math.max(1, s * .02); g.stroke();
-          g.fillStyle = w ? "#c99a2e" : "#2a1a0e"; for (let k = 0; k < 4; k++) { g.beginPath(); g.ellipse((-hs * .12 - k * hs * .02) * fx, -hs * (.62 - k * .17), hs * .07, hs * .04, .5 * fx, 0, TAU); g.fill(); }   /* sörény */
-          g.beginPath(); g.moveTo(hs * .12 * fx, -hs * .72); g.lineTo(hs * .05 * fx, -hs * .92); g.lineTo(hs * .22 * fx, -hs * .76); g.fill();   /* fül */
-          g.fillStyle = "#111"; g.beginPath(); g.arc(hs * .26 * fx, -hs * .6, Math.max(1, hs * .045), 0, TAU); g.fill();
-          g.restore();
-        } else if (tp === "b") {   /* karcsú versenyvitorlás, magas, hegyes „süveg” vitorlával */
-          const mh = s * .78; g.strokeStyle = "#9aa3ab"; g.lineWidth = Math.max(1.2, s * .022); g.beginPath(); g.moveTo(0, s * .03); g.lineTo(0, -mh); g.stroke();
-          const bw2 = s * .2, gr = g.createLinearGradient(-bw2, -mh, bw2, 0); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr;
-          g.beginPath(); g.moveTo(-bw2, -s * .02); g.quadraticCurveTo(-bw2 * .9, -mh * .55, 0, -mh); g.quadraticCurveTo(bw2 * .9, -mh * .55, bw2, -s * .02); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = .8; g.stroke();
-          g.save(); g.clip(); g.strokeStyle = C.trim; g.lineWidth = Math.max(2, s * .05); g.beginPath(); g.moveTo(-bw2, -mh * .25); g.lineTo(bw2, -mh * .6); g.stroke(); g.restore();   /* átlós sáv – a futó „átlója” */
-          g.fillStyle = C.flag; g.beginPath(); g.moveTo(0, -mh); g.lineTo(s * .12, -mh + s * .03); g.lineTo(0, -mh + s * .06); g.fill();
-        } else if (tp === "q") {   /* kétárbócos szkúner, koronás lobogóval */
-          const m1 = s * .78, m2 = s * .66; g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1.5, s * .028);
-          [[-s * .1, m2], [s * .1, m1]].forEach(([mx, mh]) => { g.beginPath(); g.moveTo(mx, s * .02); g.lineTo(mx, -mh); g.stroke(); });
-          const gaff = (mx, mh, w2) => { const gr = g.createLinearGradient(mx - w2, -mh, mx, 0); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr; g.beginPath(); g.moveTo(mx, -s * .05); g.lineTo(mx, -mh * .92); g.lineTo(mx - w2, -mh * .78); g.lineTo(mx - w2 * 1.05, -s * .06); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = .8; g.stroke(); };
-          gaff(s * .1, m1, s * .2); gaff(-s * .1, m2, s * .18);
-          sailTri(g, s * .12, -s * .05, m1 * .7, s * .2, C.sail, C.sail2, 0);   /* orrvitorla */
-          /* korona a fő árboc tetején */
-          g.fillStyle = C.trim; g.save(); g.translate(s * .1, -m1 - s * .05); const cw = s * .09; g.beginPath(); g.moveTo(-cw, cw * .5); g.lineTo(-cw, -cw * .2); g.lineTo(-cw * .5, cw * .15); g.lineTo(0, -cw * .55); g.lineTo(cw * .5, cw * .15); g.lineTo(cw, -cw * .2); g.lineTo(cw, cw * .5); g.closePath(); g.fill(); g.restore();
-          g.fillStyle = C.flag; g.beginPath(); g.moveTo(-s * .1, -m2); g.lineTo(-s * .24 + Math.sin(t * 4) * s * .01, -m2 + s * .03); g.lineTo(-s * .1, -m2 + s * .06); g.fill();
-        } else if (tp === "k") {   /* háromárbócos, keresztvitorlákkal, korona + kereszt */
-          const ms2 = [[-s * .16, s * .66], [0, s * .86], [s * .16, s * .62]];
-          g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1.6, s * .03); ms2.forEach(([mx, mh]) => { g.beginPath(); g.moveTo(mx, s * .02); g.lineTo(mx, -mh); g.stroke(); });
-          ms2.forEach(([mx, mh], mi) => { const n = mi === 1 ? 3 : 2; for (let k = 0; k < n; k++) { const y1 = -mh * (.18 + k * .27), hh = mh * .22, ww = s * (.17 - k * .03) * (mi === 1 ? 1.15 : 1), bil = Math.sin(t * 1.4 + k + mi) * s * .01;
-            const gr = g.createLinearGradient(mx, y1 - hh, mx, y1); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr; g.beginPath(); g.moveTo(mx - ww, y1 - hh); g.lineTo(mx + ww, y1 - hh); g.quadraticCurveTo(mx + ww * 1.08 + bil, y1 - hh / 2, mx + ww, y1); g.lineTo(mx - ww, y1); g.quadraticCurveTo(mx - ww * .92 + bil, y1 - hh / 2, mx - ww, y1 - hh); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = .8; g.stroke();
-            g.strokeStyle = "#5b3a22"; g.lineWidth = Math.max(1, s * .015); g.beginPath(); g.moveTo(mx - ww * 1.08, y1 - hh); g.lineTo(mx + ww * 1.08, y1 - hh); g.stroke(); } });
-          /* korona és kereszt a fő árboc csúcsán, lobogó */
-          g.fillStyle = C.trim; g.save(); g.translate(0, -s * .9); const cw = s * .11; g.beginPath(); g.moveTo(-cw, cw * .45); g.lineTo(-cw, -cw * .25); g.lineTo(-cw * .5, cw * .1); g.lineTo(0, -cw * .55); g.lineTo(cw * .5, cw * .1); g.lineTo(cw, -cw * .25); g.lineTo(cw, cw * .45); g.closePath(); g.fill();
-          g.fillRect(-cw * .12, -cw * 1.25, cw * .24, cw * .75); g.fillRect(-cw * .38, -cw * 1.05, cw * .76, cw * .2); g.restore();
-          g.fillStyle = C.flag; g.beginPath(); g.moveTo(s * .16, -s * .62); g.lineTo(s * .32 + Math.sin(t * 4) * s * .015, -s * .58); g.lineTo(s * .16, -s * .54); g.fill();
-        }
-      }
+    /* hajótest oldalnézetben: x előre (orr +), y lefelé, a vízvonal y = 0 */
+    function hullSide(g, Lh, h, C, o) {
+      o = o || {}; const st = o.stern || 1, bow = o.bow || 1.3;
+      const P = () => { g.beginPath(); g.moveTo(-Lh * .5, -h * st); g.quadraticCurveTo(-Lh * .53, h * .2, -Lh * .38, h * .44); g.quadraticCurveTo(Lh * .04, h * .66, Lh * .34, h * .38); g.quadraticCurveTo(Lh * .5, h * .12, Lh * .55, -h * bow); g.quadraticCurveTo(Lh * .12, -h * .8, -Lh * .5, -h * st); g.closePath(); };
+      P(); const gr = g.createLinearGradient(0, -h * Math.max(st, bow), 0, h * .6); gr.addColorStop(0, C.hull); gr.addColorStop(.55, C.hull2); gr.addColorStop(1, C.hullD); g.fillStyle = gr; g.fill();
+      g.save(); P(); g.clip();
+      g.fillStyle = C.wl; g.fillRect(-Lh, -h * .04, Lh * 2, h * 2);   /* vízvonal alatti festés */
+      g.strokeStyle = "rgba(0,0,0,.13)"; g.lineWidth = Math.max(.6, h * .045);
+      for (let k = 1; k <= 3; k++) { const yy = -h * (1 - k * .26); g.beginPath(); g.moveTo(-Lh * .56, yy - h * .04 * (st - 1) * 3); g.quadraticCurveTo(Lh * .1, yy + h * .1, Lh * .6, yy - h * (bow - 1) * (1.2 - k * .3)); g.stroke(); }   /* palánkok */
+      const sh = g.createLinearGradient(-Lh * .5, 0, Lh * .5, 0); sh.addColorStop(0, "rgba(0,0,0,.18)"); sh.addColorStop(.35, "rgba(255,255,255,.12)"); sh.addColorStop(1, "rgba(0,0,0,.12)"); g.fillStyle = sh; g.fillRect(-Lh, -h * 2, Lh * 2, h * 3);
+      if (o.ports) { const [n, rows] = o.ports; for (let r = 0; r < rows; r++) for (let k = 0; k < n; k++) { const px = -Lh * .3 + k * Lh * .6 / Math.max(1, n - 1), py = -h * (.62 - r * .3) - h * .05; g.fillStyle = C.trim; g.fillRect(px - h * .13, py - h * .11, h * .26, h * .22); g.fillStyle = "#14100c"; g.fillRect(px - h * .09, py - h * .07, h * .18, h * .14); } }
       g.restore();
+      g.strokeStyle = C.trim; g.lineWidth = Math.max(1, h * .11); g.beginPath(); g.moveTo(-Lh * .5, -h * st * .86); g.quadraticCurveTo(Lh * .12, -h * .72, Lh * .52, -h * bow * .78); g.stroke();   /* aranycsík */
+      P(); g.strokeStyle = "rgba(0,0,0,.4)"; g.lineWidth = Math.max(.8, h * .05); g.stroke();
+      if (o.stern > 1.2) { g.fillStyle = C.trim; for (let k = 0; k < 3; k++) { g.fillRect(-Lh * .5 + h * .12, -h * st + h * (.22 + k * .2), h * .2, h * .12); } }   /* tatablakok */
+    }
+    /* keresztvitorla (domború), háromszög- és gaffvitorla */
+    function sqSail(g, xm, y1, y2, w, C, bil) {
+      const gr = g.createLinearGradient(xm, y1, xm + w * .3, y2); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr;
+      g.beginPath(); g.moveTo(xm - w / 2, y1); g.lineTo(xm + w / 2, y1); g.quadraticCurveTo(xm + w * .58 + bil, (y1 + y2) / 2, xm + w * .52, y2); g.quadraticCurveTo(xm, y2 - (y2 - y1) * .14, xm - w * .52, y2); g.quadraticCurveTo(xm - w * .46 + bil, (y1 + y2) / 2, xm - w / 2, y1); g.closePath(); g.fill();
+      g.strokeStyle = C.seam; g.lineWidth = .8; g.stroke(); for (let k = 1; k < 3; k++) { const xx = xm - w / 2 + k * w / 3; g.beginPath(); g.moveTo(xx, y1); g.quadraticCurveTo(xx + bil * .6, (y1 + y2) / 2, xx, y2 - (y2 - y1) * .06); g.stroke(); }
+      g.strokeStyle = C.wood; g.lineWidth = Math.max(1, w * .045); g.beginPath(); g.moveTo(xm - w * .56, y1); g.lineTo(xm + w * .56, y1); g.stroke();   /* vitorlarúd */
+    }
+    function triSail(g, xm, yTop, yBot, w, C, belly, aft) {   /* aft: −1 = az árboc mögött (fővitorla) */
+      const gr = g.createLinearGradient(xm, yTop, xm + aft * w, yBot); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr;
+      g.beginPath(); g.moveTo(xm, yTop); g.lineTo(xm, yBot); g.lineTo(xm + aft * w, yBot); g.quadraticCurveTo(xm + aft * w * (.55 + belly), (yTop + yBot) * .55, xm, yTop); g.closePath(); g.fill();
+      g.strokeStyle = C.seam; g.lineWidth = .8; g.stroke();
+      for (let k = 1; k < 4; k++) { const yy = yTop + (yBot - yTop) * k / 4, ww = w * k / 4 * 1.05; g.beginPath(); g.moveTo(xm, yy); g.lineTo(xm + aft * ww, yy + (yBot - yTop) * .02); g.stroke(); }   /* lécek */
+    }
+    function crown(g, x, y, cw, C, cross) {
+      g.fillStyle = C.trim; g.beginPath(); g.moveTo(-cw + x, y + cw * .45); g.lineTo(-cw + x, y - cw * .3); g.lineTo(-cw * .5 + x, y + cw * .08); g.lineTo(x, y - cw * .6); g.lineTo(cw * .5 + x, y + cw * .08); g.lineTo(cw + x, y - cw * .3); g.lineTo(cw + x, y + cw * .45); g.closePath(); g.fill();
+      g.strokeStyle = "rgba(0,0,0,.35)"; g.lineWidth = Math.max(.6, cw * .08); g.stroke();
+      g.fillStyle = "#e23b3b"; [-.5, 0, .5].forEach((k) => { g.beginPath(); g.arc(x + k * cw, y + cw * .2, cw * .12, 0, TAU); g.fill(); });
+      if (cross) { g.fillStyle = C.trim; g.fillRect(x - cw * .12, y - cw * 1.35, cw * .24, cw * .8); g.fillRect(x - cw * .38, y - cw * 1.12, cw * .76, cw * .22); }
+    }
+    const rig = (g, C, pts, lw) => { g.strokeStyle = C.rope; g.lineWidth = lw; g.globalAlpha *= .75; g.beginPath(); pts.forEach(([a, b]) => { g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); }); g.stroke(); g.globalAlpha /= .75; };
+    /* p: bábu, (x, y): a mező közepe, s: mezőméret */
+    function drawPiece(g, p, x, y, s, t, opt) {
+      opt = opt || {}; const w = isW(p), C = COL[w ? "w" : "b"], tp = p.toLowerCase(), dir = w ? 1 : -1;
+      const bob = opt.icon ? 0 : Math.sin(t * 1.7 + x * .05 + y * .03) * s * .012, roll = opt.icon ? 0 : Math.sin(t * 1.3 + x * .02) * .025;
+      const wy = y + s * (opt.icon ? .2 : .3);   /* vízvonal */
+      g.save(); g.translate(x, wy + bob); if (opt.rot) g.rotate(opt.rot); if (opt.sc) g.scale(opt.sc, opt.sc); if (opt.alpha != null) g.globalAlpha *= opt.alpha; g.rotate(roll);
+      /* víz: árnyék, orrhullám, fodor */
+      if (!opt.icon && !opt.noWater) {
+        g.fillStyle = "rgba(6,28,40,.3)"; g.beginPath(); g.ellipse(0, s * .03, s * .44, s * .07, 0, 0, TAU); g.fill();
+        g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = Math.max(1, s * .016); g.beginPath(); g.ellipse(0, s * .02, s * (.42 + .02 * Math.sin(t * 2 + x)), s * .055, 0, 0, TAU); g.stroke();
+      }
+      const lw = Math.max(.7, s * .009), u = s;
+      g.save(); g.scale(dir, 1);   /* innentől x előre mutat */
+      if (tp === "p") {   /* evezős csónak evezőssel */
+        const Lh = u * .6, h = u * .085, ph = Math.sin(t * 3.2 + x * .1);
+        g.strokeStyle = C.wood; g.lineWidth = Math.max(1.2, u * .022); g.beginPath(); g.moveTo(-u * .02, -u * .17); g.lineTo(-u * .2 + ph * u * .1, u * .03); g.stroke();
+        g.fillStyle = C.wood; g.beginPath(); g.ellipse(-u * .2 + ph * u * .1, u * .03, u * .055, u * .018, -.3, 0, TAU); g.fill();
+        hullSide(g, Lh, h, C, { stern: 1.05, bow: 1.45 });
+        g.fillStyle = w ? "#1f5fa8" : "#f2b233"; g.beginPath(); g.ellipse(-u * .02, -u * .17, u * .055, u * .075, 0, 0, TAU); g.fill();   /* evezős */
+        g.fillStyle = "#e8c4a0"; g.beginPath(); g.arc(-u * .01, -u * .27, u * .042, 0, TAU); g.fill();
+        g.fillStyle = w ? "#c62828" : "#13305a"; g.beginPath(); g.arc(-u * .01, -u * .295, u * .044, Math.PI, 0); g.fill();
+        g.strokeStyle = C.wood; g.lineWidth = Math.max(1.2, u * .022); g.beginPath(); g.moveTo(-u * .01, -u * .17); g.lineTo(u * .2 - ph * u * .08, u * .02); g.stroke();
+        g.restore(); glyphFlag(g, -dir * u * .27, -u * .5, u * .2, u * .14, C, GLY.p, t, -dir, u * .44);
+      } else if (tp === "n") {   /* viking hajó faragott lófejjel, pajzsokkal, csíkos négyszögvitorlával */
+        const Lh = u * .84, h = u * .11;
+        g.strokeStyle = C.wood; g.lineWidth = Math.max(1.6, u * .026); g.beginPath(); g.moveTo(0, -h); g.lineTo(0, -u * .82); g.stroke();
+        rig(g, C, [[[0, -u * .8], [Lh * .48, -h * 1.2]], [[0, -u * .8], [-Lh * .45, -h]]], lw);
+        const bil = Math.sin(t * 1.5 + x) * u * .012, y1 = -u * .74, y2 = -u * .28, sw = u * .46;
+        g.save(); g.beginPath(); g.moveTo(-sw / 2, y1); g.lineTo(sw / 2, y1); g.quadraticCurveTo(sw * .6 + bil, (y1 + y2) / 2, sw * .52, y2); g.quadraticCurveTo(0, y2 - u * .05, -sw * .52, y2); g.quadraticCurveTo(-sw * .44 + bil, (y1 + y2) / 2, -sw / 2, y1); g.closePath(); g.clip();
+        for (let k = 0; k < 5; k++) { g.fillStyle = k % 2 ? C.sail : C.acc; g.fillRect(-sw / 2 - u * .05 + k * sw * 1.1 / 5, y1 - 2, sw * 1.1 / 5 + 1, y2 - y1 + u * .1); }
+        const sg = g.createLinearGradient(-sw / 2, 0, sw / 2, 0); sg.addColorStop(0, "rgba(0,0,0,.2)"); sg.addColorStop(.5, "rgba(255,255,255,.1)"); sg.addColorStop(1, "rgba(0,0,0,.25)"); g.fillStyle = sg; g.fillRect(-sw, y1 - 2, sw * 2, y2 - y1 + u * .1); g.restore();
+        g.strokeStyle = C.wood; g.lineWidth = Math.max(1, u * .02); g.beginPath(); g.moveTo(-sw * .56, y1); g.lineTo(sw * .56, y1); g.stroke();
+        hullSide(g, Lh, h, C, { stern: 1.6, bow: 1.6 });
+        /* farvég: felcsavarodó „farok” */
+        g.strokeStyle = C.hull2; g.lineWidth = Math.max(2, u * .035); g.beginPath(); g.moveTo(-Lh * .5, -h * 1.5); g.quadraticCurveTo(-Lh * .6, -u * .32, -Lh * .5, -u * .36); g.quadraticCurveTo(-Lh * .42, -u * .37, -Lh * .45, -u * .3); g.stroke();
+        /* pajzsok a perem mentén */
+        for (let k = 0; k < 6; k++) { const px = -Lh * .33 + k * Lh * .13, py = -h * .95; g.fillStyle = k % 2 ? C.acc : C.acc2; g.beginPath(); g.arc(px, py, u * .036, 0, TAU); g.fill(); g.strokeStyle = C.trim; g.lineWidth = Math.max(.8, u * .009); g.stroke(); g.fillStyle = C.trim; g.beginPath(); g.arc(px, py, u * .011, 0, TAU); g.fill(); }
+        /* a nagy faragott lófej az orron – messziről is „ló” */
+        g.save(); g.translate(Lh * .55, -h * 1.6); const hs = u * .36;
+        g.fillStyle = w ? "#efe3c6" : "#5e3f22";
+        g.beginPath(); g.moveTo(-hs * .08, hs * .05); g.bezierCurveTo(-hs * .14, -hs * .35, -hs * .02, -hs * .7, hs * .2, -hs * .82); g.bezierCurveTo(hs * .3, -hs * .86, hs * .42, -hs * .78, hs * .58, -hs * .62);
+        g.quadraticCurveTo(hs * .7, -hs * .52, hs * .62, -hs * .44); g.quadraticCurveTo(hs * .5, -hs * .4, hs * .36, -hs * .48); g.bezierCurveTo(hs * .22, -hs * .34, hs * .2, -hs * .12, hs * .12, hs * .05); g.closePath(); g.fill();
+        g.strokeStyle = C.trim; g.lineWidth = Math.max(1, u * .012); g.stroke();
+        g.fillStyle = w ? "#c99a2e" : "#1e120a"; for (let k = 0; k < 5; k++) { g.beginPath(); g.ellipse(-hs * .06 + k * hs * .03, -hs * (.18 + k * .14), hs * .07, hs * .035, -.7, 0, TAU); g.fill(); }   /* sörény */
+        g.beginPath(); g.moveTo(hs * .16, -hs * .8); g.lineTo(hs * .12, -hs * 1.02); g.lineTo(hs * .28, -hs * .84); g.closePath(); g.fill();   /* fül */
+        g.fillStyle = "#111"; g.beginPath(); g.arc(hs * .34, -hs * .66, Math.max(1, hs * .045), 0, TAU); g.fill(); g.beginPath(); g.arc(hs * .6, -hs * .5, Math.max(.8, hs * .025), 0, TAU); g.fill();   /* szem, orrlyuk */
+        g.restore();
+        g.restore(); glyphFlag(g, 0, -u * .94, u * .22, u * .15, C, GLY.n, t, -dir, u * .14);
+      } else if (tp === "b") {   /* karcsú versenyjacht, magas „püspöksüveg” fővitorlával és átlós sávval */
+        const Lh = u * .86, h = u * .07, mx = u * .06, mt = -u * 1.0;
+        hullSide(g, Lh, h, C, { stern: .85, bow: 1.15 });
+        g.strokeStyle = "#a9b2ba"; g.lineWidth = Math.max(1.2, u * .016); g.beginPath(); g.moveTo(mx, -h); g.lineTo(mx, mt); g.stroke();
+        rig(g, C, [[[mx, mt], [Lh * .5, -h * 1.1]], [[mx, mt], [-Lh * .48, -h * .9]], [[mx, mt * .5], [mx + u * .08, -h]]], lw);
+        triSail(g, mx + u * .015, mt * .78, -h * 1.15, Lh * .36, C, .0, 1);   /* orrvitorla */
+        const sw = Lh * .44, yT = mt + u * .02, yB = -h * 1.6;
+        g.save(); const gr = g.createLinearGradient(mx, yT, mx - sw, yB); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr;
+        g.beginPath(); g.moveTo(mx, yT); g.lineTo(mx, yB); g.lineTo(mx - sw, yB); g.bezierCurveTo(mx - sw * 1.02, yB + (yT - yB) * .45, mx - sw * .55, yT + (yB - yT) * .12, mx, yT); g.closePath(); g.fill(); g.strokeStyle = C.seam; g.lineWidth = .8; g.stroke();
+        g.clip(); g.strokeStyle = C.trim; g.lineWidth = Math.max(2.5, u * .055); g.beginPath(); g.moveTo(mx - sw * 1.1, yB + (yT - yB) * .2); g.lineTo(mx + u * .02, yB + (yT - yB) * .62); g.stroke();
+        g.strokeStyle = C.acc; g.lineWidth = Math.max(1, u * .016); g.beginPath(); g.moveTo(mx - sw * 1.1, yB + (yT - yB) * .14); g.lineTo(mx + u * .02, yB + (yT - yB) * .56); g.stroke();
+        g.strokeStyle = C.seam; g.lineWidth = .8; for (let k = 1; k < 5; k++) { const yy = yB + (yT - yB) * k / 5; g.beginPath(); g.moveTo(mx, yy); g.lineTo(mx - sw * (1 - k / 5) * 1.1, yy); g.stroke(); }
+        g.restore();
+        g.strokeStyle = "#a9b2ba"; g.lineWidth = Math.max(1, u * .014); g.beginPath(); g.moveTo(mx, yB); g.lineTo(mx - sw * 1.02, yB); g.stroke();   /* bumm */
+        g.fillStyle = w ? "#1f5fa8" : "#f2b233"; g.beginPath(); g.arc(-Lh * .32, -h * 1.5, u * .03, 0, TAU); g.fill();   /* kormányos */
+        g.restore(); glyphFlag(g, dir * mx, mt - u * .02, u * .2, u * .14, C, GLY.b, t, -dir, u * .06);
+      } else if (tp === "r") {   /* világítótorony sziklaszigeten, bástyafokos erkéllyel (mint a bástya) */
+        g.restore();
+        g.fillStyle = "#5f5a52"; [[-.26, .0, .22], [.22, .01, .2], [0, .03, .3], [-.08, -.05, .2], [.12, -.04, .16]].forEach(([dx, dy, r]) => { g.beginPath(); g.ellipse(dx * u, dy * u, r * u, r * u * .42, 0, 0, TAU); g.fill(); });
+        g.fillStyle = "#8d877b"; [[-.16, -.07, .12], [.1, -.06, .1], [.26, -.02, .07]].forEach(([dx, dy, r]) => { g.beginPath(); g.ellipse(dx * u, dy * u, r * u, r * u * .45, 0, 0, TAU); g.fill(); });
+        g.fillStyle = "rgba(60,120,60,.6)"; g.beginPath(); g.ellipse(-u * .2, -u * .08, u * .07, u * .025, 0, 0, TAU); g.fill();
+        const tb = -u * .06, tt = -u * .64, wb = u * .16, wt = u * .105;
+        g.save(); g.beginPath(); g.moveTo(-wb, tb); g.lineTo(-wt, tt); g.lineTo(wt, tt); g.lineTo(wb, tb); g.closePath(); g.clip();
+        for (let k = 0; k < 6; k++) { g.fillStyle = k % 2 ? (w ? "#fdfbf3" : "#22477a") : (w ? "#c62828" : "#b9303c"); g.fillRect(-wb, tb - (k + 1) * (tb - tt) / 6, wb * 2, (tb - tt) / 6 + 1); }
+        const sh = g.createLinearGradient(-wb, 0, wb, 0); sh.addColorStop(0, "rgba(0,0,0,.3)"); sh.addColorStop(.38, "rgba(255,255,255,.18)"); sh.addColorStop(1, "rgba(0,0,0,.35)"); g.fillStyle = sh; g.fillRect(-wb, tt, wb * 2, tb - tt);
+        g.fillStyle = "#2a2e33"; g.fillRect(-u * .03, tb - u * .1, u * .06, u * .1); g.fillRect(-u * .018, tt + u * .14, u * .036, u * .05); g.fillRect(-u * .018, tt + u * .3, u * .036, u * .05);   /* ajtó, ablakok */
+        g.restore();
+        /* erkély bástyafokokkal */
+        const gy = tt - u * .02; g.fillStyle = C.trim; g.fillRect(-wt * 1.6, gy - u * .035, wt * 3.2, u * .05);
+        g.fillStyle = w ? "#ece5d2" : "#1c3a66"; for (let k = 0; k < 5; k++) g.fillRect(-wt * 1.6 + k * wt * 3.2 / 4.5, gy - u * .1, wt * 3.2 / 9, u * .07);
+        g.strokeStyle = "rgba(0,0,0,.35)"; g.lineWidth = .8; g.strokeRect(-wt * 1.6, gy - u * .035, wt * 3.2, u * .05);
+        const lit = .55 + .45 * Math.max(0, Math.sin(t * 2.4 + (w ? 0 : 1.7))), ly = gy - u * .1;
+        g.fillStyle = `rgba(255,${205 + 40 * lit},${110 + 60 * lit},1)`; g.fillRect(-wt * .75, ly - u * .12, wt * 1.5, u * .12);
+        g.strokeStyle = "#2a2e33"; g.lineWidth = Math.max(.8, u * .01); for (let k = -1; k <= 1; k++) { g.beginPath(); g.moveTo(k * wt * .5, ly); g.lineTo(k * wt * .5, ly - u * .12); g.stroke(); }
+        g.fillStyle = "#30353b"; g.beginPath(); g.moveTo(-wt * .95, ly - u * .12); g.quadraticCurveTo(0, ly - u * .27, wt * .95, ly - u * .12); g.closePath(); g.fill();
+        if (!opt.icon) { const a = t * 1.6 + (w ? 0 : 2), cy = ly - u * .06; g.save(); g.globalCompositeOperation = "lighter"; const bg = g.createRadialGradient(0, cy, 0, 0, cy, u * .9); bg.addColorStop(0, `rgba(255,236,170,${.4 * lit})`); bg.addColorStop(1, "rgba(255,236,170,0)"); g.fillStyle = bg;
+          [a, a + Math.PI].forEach((aa) => { g.beginPath(); g.moveTo(0, cy); g.arc(0, cy, u * .9, aa - .2, aa + .2); g.closePath(); g.fill(); }); g.restore(); }
+        glyphFlag(g, 0, ly - u * .34, u * .2, u * .14, C, GLY.r, t, -dir, u * .12);
+      } else if (tp === "q") {   /* fregatt: két árboc keresztvitorlákkal, orrvitorlák, ágyúnyílások, korona */
+        const Lh = u * .9, h = u * .13, fm = [u * .2, -u * .88], mm = [-u * .1, -u * 1.0];
+        g.strokeStyle = C.wood; g.lineWidth = Math.max(1, u * .014); g.beginPath(); g.moveTo(Lh * .5, -h * 1.2); g.lineTo(Lh * .72, -h * 2.2); g.stroke();   /* orrárboc */
+        [fm, mm].forEach(([mx, mt]) => { g.lineWidth = Math.max(1.6, u * .024); g.beginPath(); g.moveTo(mx, -h); g.lineTo(mx, mt); g.stroke(); });
+        rig(g, C, [[[fm[0], fm[1]], [Lh * .72, -h * 2.2]], [[mm[0], mm[1]], [fm[0], fm[1] * .8]], [[mm[0], mm[1]], [-Lh * .5, -h * 1.2]]], lw);
+        triSail(g, Lh * .5, fm[1] * .82, -h * 1.6, Lh * .26, C, .05, 1);
+        const bil = Math.sin(t * 1.4 + x) * u * .01;
+        [[fm, .27], [mm, .32]].forEach(([[mx, mt], sw]) => { sqSail(g, mx, mt * .52, mt * .27, u * sw, C, bil); sqSail(g, mx, mt * .84, mt * .56, u * sw * .8, C, bil); });
+        /* gaffvitorla a fő árboc mögött */
+        const gr = g.createLinearGradient(mm[0], mm[1], mm[0] - u * .3, 0); gr.addColorStop(0, C.sail); gr.addColorStop(1, C.sail2); g.fillStyle = gr;
+        g.beginPath(); g.moveTo(mm[0], mm[1] * .5); g.lineTo(mm[0] - u * .3, mm[1] * .38); g.lineTo(mm[0] - u * .3, -h * 1.6); g.lineTo(mm[0], -h * 1.4); g.closePath(); g.fill(); g.strokeStyle = C.seam; g.lineWidth = .8; g.stroke();
+        hullSide(g, Lh, h, C, { stern: 1.35, bow: 1.4, ports: [5, 1] });
+        g.restore();
+        crown(g, dir * mm[0], mm[1] - u * .04, u * .07, C, false);
+        glyphFlag(g, dir * fm[0], fm[1] - u * .02, u * .21, u * .15, C, GLY.q, t, -dir, u * .05);
+      } else if (tp === "k") {   /* háromárbócos sorhajó: magas tatfelépítmény, két ágyúsor, korona kereszttel, királyi lobogó */
+        const Lh = u * .98, h = u * .16, ms2 = [[u * .27, -u * .9], [0, -u * 1.08], [-u * .26, -u * .84]];
+        g.strokeStyle = C.wood; g.lineWidth = Math.max(1, u * .015); g.beginPath(); g.moveTo(Lh * .5, -h * 1.1); g.lineTo(Lh * .74, -h * 1.9); g.stroke();
+        ms2.forEach(([mx, mt]) => { g.lineWidth = Math.max(1.8, u * .026); g.beginPath(); g.moveTo(mx, -h); g.lineTo(mx, mt); g.stroke(); });
+        rig(g, C, [[[ms2[0][0], ms2[0][1]], [Lh * .74, -h * 1.9]], [[ms2[1][0], ms2[1][1]], [ms2[0][0], ms2[0][1] * .82]], [[ms2[1][0], ms2[1][1]], [ms2[2][0], ms2[2][1] * .85]], [[ms2[2][0], ms2[2][1]], [-Lh * .5, -h * 1.5]]], lw);
+        triSail(g, Lh * .5, ms2[0][1] * .78, -h * 1.5, Lh * .25, C, .05, 1);
+        const bil = Math.sin(t * 1.3 + x) * u * .01;
+        ms2.forEach(([mx, mt], mi) => { const sw = u * (mi === 1 ? .3 : .25), n = mi === 1 ? 3 : 2; for (let k = 0; k < n; k++) { const a1 = .3 + k * .25, a2 = a1 + .22; sqSail(g, mx, mt * (a2 + .02), mt * a1, sw * (1 - k * .15), C, bil); } });
+        hullSide(g, Lh, h, C, { stern: 1.65, bow: 1.3, ports: [6, 2] });
+        /* tatfelépítmény korlátja és lámpása */
+        g.strokeStyle = C.trim; g.lineWidth = Math.max(1, u * .012); g.beginPath(); g.moveTo(-Lh * .5, -h * 1.65 - u * .025); g.lineTo(-Lh * .28, -h * 1.35 - u * .025); g.stroke();
+        g.fillStyle = "#ffd98a"; g.beginPath(); g.arc(-Lh * .5, -h * 1.85, u * .022, 0, TAU); g.fill();
+        g.restore();
+        crown(g, 0, ms2[1][1] - u * .05, u * .085, C, true);
+        glyphFlag(g, dir * ms2[2][0], ms2[2][1] - u * .02, u * .25, u * .17, C, GLY.k, t, -dir, u * .05);
+        g.strokeStyle = C.acc; g.lineWidth = Math.max(1, u * .01); g.beginPath(); g.moveTo(dir * ms2[0][0], ms2[0][1]); for (let k = 1; k <= 6; k++) g.lineTo(dir * ms2[0][0] - dir * k * u * .03, ms2[0][1] + Math.sin(k - t * 6) * u * .01); g.stroke();   /* hosszú zászlószalag */
+      } else g.restore();
+      g.restore();
+    }
+    /* --------------- csata-effektek --------------- */
+    const FX = (o) => { S.fx.push(Object.assign({ t: 0 }, o)); };
+    const boom = (k) => { try { fxBurst(160, .55, .13 * k, "lowpass", 1); fxTone(110, 40, .4, .07 * k, "sawtooth"); } catch (e) {} };
+    function fire(A, n, mode) {   /* sortűz: mode = miss (a támadó mellé lő), ret (a megtámadott visszalő, mellé), hit, big */
+      const ret = mode === "ret", [ax, ay] = sqXY(A.m.f), [tx, ty] = sqXY(A.at), s = L.sq;
+      const [x0, y0, x1, y1] = ret ? [tx, ty, ax, ay] : [ax, ay, tx, ty], shooter = ret ? A.m.c : A.m.p, w = isW(shooter), dir = x1 >= x0 ? 1 : -1;
+      const nb = mode === "big" ? 4 : 3;
+      for (let b = 0; b < nb; b++) {
+        const mx = x0 + dir * s * (.12 + b * .1) - dir * s * .1, my = y0 + s * (.2 - b * .015), dl = b * .07;
+        FX({ k: "flash", x: mx, y: my, life: .2, r: s * .32, t: -dl });
+        for (let i = 0; i < 4; i++) FX({ k: "smoke", x: mx, y: my, vx: dir * s * (.3 + Math.random() * .7), vy: -s * (.05 + Math.random() * .3), life: 1.3 + Math.random(), r: s * (.045 + Math.random() * .05), g: w ? 235 : 205, t: -dl });
+        const miss = mode === "miss" || ret, ex = x1 + (miss ? dir * s * (.35 + Math.random() * .25) * (ret ? 1 : -1) * (Math.random() < .5 ? 1 : -1) : (Math.random() - .5) * s * .25), ey = y1 + s * (miss ? .25 + Math.random() * .15 : .12);
+        FX({ k: "ball", x0: mx, y0: my, x1: ex, y1: ey, life: .45 + b * .04, arc: s * (.45 + Math.hypot(x1 - x0, y1 - y0) / s * .14), n, mode: miss ? "miss" : mode, last: b === nb - 1, t: -dl });
+      }
+      boom(mode === "big" ? 1.1 : .8); setTimeout(() => boom(.6), 70); if (ret) A.recoilT = 1; else A.recoil = 1;
+    }
+    function geyser(x, y) { const s = L.sq; gmSnd.splash(.2); S.ripples.push({ x, y, t: 0, k: 1.2 });
+      for (let k = 0; k < 18; k++) { const a = -Math.PI / 2 + (Math.random() - .5) * .7, v = s * (1.6 + Math.random() * 1.6); S.drops = S.drops || []; S.drops.push({ x: x + (Math.random() - .5) * s * .1, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, r: s * (.02 + Math.random() * .03) }); } }
+    function impact(x, y, q, pw) {
+      pw = pw || 1; const s = L.sq; boom(1.2 * Math.min(1.5, pw)); gmSnd.splash(.22); S.shake = Math.max(S.shake, .25 * pw); if (q) q.fire = 1; if (q && pw >= 2) q.blast = 1;
+      FX({ k: "flash", x, y, life: .3 + .2 * pw, r: s * .55 * pw, hot: 1 }); if (pw >= 2) FX({ k: "shock", x, y, life: .6, r: s * 1.6 });
+      for (let i = 0; i < 10 * pw; i++) { const a = -Math.PI * Math.random(), v = s * (1 + Math.random() * 2.2); FX({ k: "spark", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: .5 + Math.random() * .4 }); }
+      for (let i = 0; i < 4 * pw; i++) { const a = -Math.PI * (.15 + Math.random() * .7), v = s * (.8 + Math.random() * 1.4); FX({ k: "debris", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rot: Math.random() * TAU, vr: (Math.random() - .5) * 12, wy: y + s * (.22 + Math.random() * .2), life: 3.2, len: s * (.06 + Math.random() * .08) }); }
+      for (let i = 0; i < 6; i++) FX({ k: "smoke", x: x + (Math.random() - .5) * s * .3, y, vx: (Math.random() - .5) * s * .4, vy: -s * (.3 + Math.random() * .4), life: 1.6 + Math.random(), r: s * (.1 + Math.random() * .1), g: 70 });
+      S.drops = S.drops || []; for (let k = 0; k < 14; k++) { const a = Math.random() * TAU, v = (.6 + Math.random()) * s * 1.6; S.drops.push({ x, y, vx: Math.cos(a) * v * .6, vy: -Math.abs(Math.sin(a)) * v - s, t: 0, r: s * (.02 + Math.random() * .025) }); }
     }
     /* --------------- képkocka --------------- */
     function step(dt) {
-      S.t += dt;
-      if (S.anim) { S.anim.t += dt; if (S.anim.t >= S.anim.dur) { const [x, y] = sqXY(S.anim.m.t); S.ripples.push({ x, y, t: 0, k: S.anim.m.p.toLowerCase() === "n" ? 1.6 : 1 }); S.anim = null; maybeAI(); } }
-      S.sink.forEach((q) => { q.t += dt; if (q.t > 0 && !q.rip) { q.rip = 1; const [x, y] = sqXY(q.sq); S.ripples.push({ x, y, t: 0, k: 1.8 }); gmSnd.splash(.25);
-        S.drops = S.drops || []; for (let k = 0; k < 16; k++) { const a = Math.random() * TAU, v = (.6 + Math.random()) * L.sq * 1.6; S.drops.push({ x, y, vx: Math.cos(a) * v * .6, vy: -Math.abs(Math.sin(a)) * v - L.sq, t: 0, r: L.sq * (.02 + Math.random() * .025) }); } } }); S.sink = S.sink.filter((q) => q.t < 1.6);
-      (S.drops || []).forEach((d) => { d.t += dt; d.x += d.vx * dt; d.y += d.vy * dt; d.vy += L.sq * 9 * dt; }); if (S.drops) S.drops = S.drops.filter((d) => d.t < .9);
+      S.t += dt; if (!L) return; const s = L.sq;
+      const A = S.anim;
+      if (A) { A.t += dt; A.recoil = Math.max(0, (A.recoil || 0) - dt * 4); A.recoilT = Math.max(0, (A.recoilT || 0) - dt * 4);
+        /* a csata menete: 1. sortűz (célt téveszt, vízoszlop) → a megtámadott visszalő (mellé) → 2. sortűz (talál, tűz) → 3. sortűz (nagy robbanás) */
+        if (A.bt) { const sch = [[.25, () => fire(A, 1, "miss")], [.85, () => fire(A, 2, "ret")], [1.3, () => fire(A, 3, "hit")], [1.7, () => fire(A, 4, "big")]];
+          while (A.shots < sch.length && A.t > sch[A.shots][0]) { sch[A.shots][1](); A.shots++; } }
+        if (A.t >= A.total) { const [x, y] = sqXY(A.m.t); S.ripples.push({ x, y: y + s * .22, t: 0, k: A.m.p.toLowerCase() === "n" ? 1.6 : 1 }); S.anim = null; maybeAI(); } }
+      S.fx.forEach((f) => { f.t += dt;
+        if (f.k === "ball" && !f.hit && f.t >= f.life) { f.hit = 1; const q = S.sink.find((z) => A && z.sq === A.at);
+          if (f.mode === "miss") geyser(f.x1, f.y1); else impact(f.x1, f.y1, q, f.mode === "big" && f.last ? 2 : f.last ? 1 : .5); }
+        if (f.t < 0) return;
+        if (f.k === "smoke") { f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= Math.pow(.4, dt); f.vy *= Math.pow(.5, dt); }
+        if (f.k === "spark") { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += s * 6 * dt; }
+        if (f.k === "debris") { f.x += f.vx * dt; if (f.y < f.wy || f.vy < 0) { f.y += f.vy * dt; f.vy += s * 7 * dt; f.rot += f.vr * dt; } else { f.y = f.wy + Math.sin(S.t * 2 + f.x) * s * .01; f.vx *= Math.pow(.3, dt); f.vr *= Math.pow(.1, dt); f.rot += f.vr * dt; } }
+        if (f.k === "fire") { f.y -= s * .5 * dt; f.x += Math.sin(f.t * 9 + f.ph) * s * .1 * dt; }
+        if (f.k === "bub") { f.y -= s * .35 * dt; f.x += Math.sin(f.t * 7 + f.ph) * s * .05 * dt; } });
+      S.fx = S.fx.filter((f) => f.t < f.life || (f.k === "ball" && !f.hit));
+      S.shake = Math.max(0, S.shake - dt);
+      /* „operatőr”: ütéskor a nézet ráközelít a csatára, a süllyedés végéig ott marad, aztán visszaúszik */
+      { const C2 = S.cam || (S.cam = { z: 1, x: 0, y: 0, lb: 0 }); const bcx = L.bx + L.bw / 2, bcy = L.by + L.bw / 2; let tz = 1, tx2 = bcx, ty2 = bcy, lb = 0;
+        if (A && A.bt && A.t < A.bt + A.wait + .15) { const [ax, ay] = sqXY(A.m.f), [qx, qy] = sqXY(A.at), d = Math.hypot(qx - ax, qy - ay);
+          tz = Math.max(1.25, Math.min(2.6, L.bw * .7 / (d + s * 1.9))); tx2 = (ax + qx) / 2; ty2 = (ay + qy) / 2 - s * .15; lb = 1;
+          const hw = L.bw / 2 / tz; tx2 = Math.max(L.bx + hw, Math.min(L.bx + L.bw - hw, tx2)); ty2 = Math.max(L.by + hw, Math.min(L.by + L.bw - hw, ty2)); }
+        if (!C2.init) { C2.init = 1; C2.x = bcx; C2.y = bcy; }
+        const kz = Math.min(1, dt * (tz > C2.z ? 3.2 : 2.2)); C2.z += (tz - C2.z) * kz; C2.x += (tx2 - C2.x) * kz; C2.y += (ty2 - C2.y) * kz; C2.lb += (lb - C2.lb) * Math.min(1, dt * 3); }
+      S.sink.forEach((q) => { q.t += dt; const [x, y] = sqXY(q.sq);
+        if (q.fire && Math.random() < dt * 30) { FX({ k: "fire", x: x + (Math.random() - .5) * s * .5, y: y + s * (.05 - Math.random() * .3) + Math.max(0, q.t) * s * .2, life: .5 + Math.random() * .4, r: s * (.04 + Math.random() * .05), ph: Math.random() * 9 });
+          if (Math.random() < .18) FX({ k: "smoke", x: x + (Math.random() - .5) * s * .4, y: y - s * .2, vx: (Math.random() - .5) * s * .2, vy: -s * (.3 + Math.random() * .3), life: 1.8, r: s * (.08 + Math.random() * .08), g: 55 }); }
+        if (q.t > .6 && q.t < 2.4 && Math.random() < dt * 22) FX({ k: "bub", x: x + (Math.random() - .5) * s * .5, y: y + s * .3, life: .7, r: s * (.015 + Math.random() * .02), ph: Math.random() * 9 });
+        if (q.t > 1.1 && q.fire) q.fire = 0;   /* a víz eloltja a tüzet */
+        if (q.t > 0 && !q.rip) { q.rip = 1; S.ripples.push({ x, y: y + s * .3, t: 0, k: 1.8 }); }
+        if (q.t > 1.7 && !q.rip2) { q.rip2 = 1; S.ripples.push({ x, y: y + s * .3, t: 0, k: 2.4 }); gmSnd.splash(.18); } });
+      S.sink = S.sink.filter((q) => q.t < 3.2);
+      (S.drops || []).forEach((d) => { d.t += dt; d.x += d.vx * dt; d.y += d.vy * dt; d.vy += s * 9 * dt; }); if (S.drops) S.drops = S.drops.filter((d) => d.t < .9);
       S.ripples.forEach((r) => { r.t += dt; }); S.ripples = S.ripples.filter((r) => r.t < 1.4);
       S.conf.forEach((c) => { c.x += c.vx * dt; c.y += c.vy * dt; c.r += c.vr * dt; }); S.conf = S.conf.filter((c) => c.y < 1.2);
     }
+    /* süllyedő hajó: megdől, ég, aztán az orra az ég felé fordul és a tat felől elmerül; a víz alatti rész nem látszik */
+    function drawSinking(g, q, x, y, s, t) {
+      const k = Math.max(0, q.t), w = isW(q.p), sg = w ? 1 : -1, wy = y + s * .3, e = (v) => v * v * (3 - 2 * v);
+      let rot = 0, dy = 0, piv = 0;
+      if (k < .55) { rot = -sg * .32 * e(k / .55); dy = s * .03 * k; } else { const u2 = Math.min(1, (k - .55) / 1.5); rot = -sg * (.32 + .95 * e(u2)); dy = s * .03 * .55 + u2 * u2 * s * 1.15; piv = -sg * s * .25; }
+      if (k > 2.1) return;
+      g.save(); g.beginPath(); g.rect(x - s * 3, wy - s * 3, s * 6, s * 3 + s * .015); g.clip();
+      g.translate(x + piv, wy + dy); g.rotate(rot); g.translate(-piv, -s * .3);
+      drawPiece(g, q.p, 0, 0, s, t, { noWater: 1 });
+      g.restore();
+      /* örvény és sötét folt a víz alatt */
+      if (k > .7) { const a = Math.min(1, (k - .7) / .5) * Math.max(0, 1 - (k - 1.8) / .4); g.strokeStyle = `rgba(255,255,255,${.5 * a})`; g.lineWidth = Math.max(1, s * .015);
+        for (let r = 0; r < 3; r++) { g.beginPath(); g.ellipse(x, wy, s * (.12 + r * .12), s * (.03 + r * .03), 0, t * (3 - r) , t * (3 - r) + 4.6); g.stroke(); } }
+    }
+    /* --------------- gombsor és menük (lenyíló) --------------- */
+    const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, r) : g.rect(x, y, w, h); };
+    function btn(g, id, x, y, w, h, lb, st) {
+      st = st || {}; rr(g, x, y, w, h, Math.min(h / 2, 16)); g.fillStyle = st.gold ? "#f2b233" : st.on ? "#ffd166" : "rgba(7,29,56,.9)"; g.fill();
+      if (!st.gold && !st.on) { g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = 1; g.stroke(); }
+      g.fillStyle = st.gold || st.on ? "#14202a" : st.dim ? "rgba(255,255,255,.35)" : "#fff"; g.font = `800 ${st.fs || (L.ph ? 15 : 16)}px ${SANS}`; g.textAlign = st.left ? "left" : "center"; g.textBaseline = "middle";
+      g.fillText(lb, st.left ? x + 16 : x + w / 2, y + h / 2 + .5); S.btn.push({ id, x, y, w, h });
+    }
+    const OPP = [["opp_w", "♙ Világossal a gép ellen", () => !S.two && S.human === "w"], ["opp_b", "♟ Sötéttel a gép ellen", () => !S.two && S.human === "b"], ["opp_2", "👥 Két játékos egy eszközön", () => S.two]];
+    function drawBar(g, W, H) {
+      const bh = L.ph ? 46 : 48, y = H - bh - 8, gap = 8;
+      const items = [["menu", S.menu === "main" ? "✕ Menü" : "☰ Menü ▾", L.ph ? 104 : 130], ["lvlm", `🎖 ${S.lvl}. szint ▾`, L.ph ? 124 : 170], ["undo", "↶", 52], ["hint", "💡", 52]];
+      const tot = items.reduce((a, q) => a + q[2], 0) + gap * (items.length - 1); let x = W / 2 - tot / 2;
+      items.forEach(([id, lb, w]) => { btn(g, id, x, y, w, bh, lb, { on: (id === "menu" && S.menu === "main") || (id === "lvlm" && S.menu === "lvl") }); x += w + gap; });
+      return y;
+    }
+    function drawMenu(g, W, H, barY) {
+      if (!S.menu) return;
+      g.fillStyle = "rgba(4,16,32,.35)"; g.fillRect(0, 0, W, barY - 6);
+      if (S.menu === "main") {
+        const rows = [["new", "⚓ Új játék"], ["undo", "↶ Visszalépés"], ["hint", "💡 Ötlet a következő lépéshez"], ["lvlm", `🎖 Nehézségi szint: ${S.lvl}/24 ▸`]].concat(OPP.map((o) => [o[0], (o[2]() ? "✓ " : "   ") + o[1]])).concat([["flip", "⇅ Tábla forgatása"], ["legend", "❔ Melyik hajó melyik bábu?"]]);
+        const pw = Math.min(W - 20, 380), rh = L.ph ? 44 : 46, ph2 = rows.length * (rh + 6) + 18, px = W / 2 - pw / 2, py = barY - ph2 - 8;
+        rr(g, px, py, pw, ph2, 20); g.fillStyle = "rgba(7,29,56,.97)"; g.fill(); g.strokeStyle = "rgba(242,178,51,.8)"; g.lineWidth = 2; g.stroke();
+        rows.forEach(([id, lb], k) => btn(g, id, px + 9, py + 9 + k * (rh + 6), pw - 18, rh, lb, { left: true, gold: id === "new" }));
+      } else if (S.menu === "lvl") {
+        const cols = L.ph ? 4 : 6, rows = Math.ceil(24 / cols), pw = Math.min(W - 16, cols * 96 + 30), cw = (pw - 30 - (cols - 1) * 8) / cols, ch = Math.min(70, cw * .78);
+        const ph2 = 76 + rows * (ch + 8) + 14, px = W / 2 - pw / 2, py = Math.max(GM_TOP, barY - ph2 - 8);
+        rr(g, px, py, pw, ph2, 20); g.fillStyle = "rgba(7,29,56,.97)"; g.fill(); g.strokeStyle = "rgba(242,178,51,.8)"; g.lineWidth = 2; g.stroke();
+        g.fillStyle = "#ffd166"; g.font = `800 ${L.ph ? 16 : 18}px ${SANS}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(`Nehézségi szint – elérve: ${S.maxLvl}/24`, W / 2, py + 24);
+        g.fillStyle = "rgba(255,255,255,.75)"; g.font = `600 ${L.ph ? 12 : 13}px ${SANS}`; if (L.ph) { g.fillText("Győzelemmel nyílik a következő", W / 2, py + 44); g.fillText("bármelyik elért szintet választhatod", W / 2, py + 59); } else g.fillText("Győzelemmel nyílik a következő · bármelyik elért szintet választhatod", W / 2, py + 48);
+        for (let l = 1; l <= 24; l++) { const c = (l - 1) % cols, r = Math.floor((l - 1) / cols), x = px + 15 + c * (cw + 8), y = py + 72 + r * (ch + 8), open = l <= S.maxLvl, cur = l === S.lvl;
+          rr(g, x, y, cw, ch, 12); g.fillStyle = cur ? "#ffd166" : open ? "rgba(255,255,255,.1)" : "rgba(255,255,255,.03)"; g.fill(); g.strokeStyle = cur ? "#ffd166" : "rgba(255,255,255,.18)"; g.lineWidth = 1; g.stroke();
+          g.fillStyle = cur ? "#14202a" : open ? "#fff" : "rgba(255,255,255,.3)"; g.font = `800 ${Math.round(ch * .36)}px ${SANS}`; g.fillText(open ? String(l) : "🔒", x + cw / 2, y + ch * .38);
+          g.font = `700 ${Math.max(9, Math.round(ch * .15))}px ${SANS}`; g.fillStyle = cur ? "#14202a" : open ? "rgba(255,230,170,.9)" : "rgba(255,255,255,.25)"; g.fillText(rankOf(l), x + cw / 2, y + ch * .76);
+          if (open) S.btn.push({ id: "L" + l, x, y, w: cw, h: ch }); }
+      } else if (S.menu === "legend") {
+        const pw = Math.min(W - 16, 560), ph2 = Math.min(H - GM_TOP - 80, pw * 1.05), px = W / 2 - pw / 2, py = Math.max(GM_TOP, barY - ph2 - 8);
+        rr(g, px, py, pw, ph2, 20); g.fillStyle = "rgba(7,29,56,.97)"; g.fill(); g.strokeStyle = "rgba(242,178,51,.8)"; g.lineWidth = 2; g.stroke();
+        g.fillStyle = "#ffd166"; g.font = `800 ${L.ph ? 16 : 19}px ${SANS}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("A hajók és a bábuk", W / 2, py + 24);
+        const list = [["k", "Király", "háromárbócos sorhajó, korona kereszttel"], ["q", "Vezér", "fregatt koronával"], ["r", "Bástya", "világítótorony bástyafokos erkéllyel"], ["b", "Futó", "versenyjacht hegyes vitorlával"], ["n", "Huszár", "viking hajó lófejjel"], ["p", "Gyalog", "evezős csónak"]];
+        const rh = (ph2 - 56) / 6, ss = Math.min((rh - 8) / 1.25, 84);
+        list.forEach(([tp, n1, n2], k) => { const yy = py + 48 + k * rh, wy2 = yy + rh - 4 - ss * .2; drawPiece(g, tp.toUpperCase(), px + 12 + ss * .5, wy2, ss, S.t, { icon: 1 }); drawPiece(g, tp, px + 18 + ss * 1.5, wy2, ss, S.t, { icon: 1 });
+          g.textAlign = "left"; g.fillStyle = "#fff"; g.font = `800 ${L.ph ? 15 : 18}px ${SANS}`; g.fillText(GLY[tp] + "\uFE0E", px + 30 + ss * 2, yy + rh * .38); g.fillText(n1, px + 30 + ss * 2 + (L.ph ? 20 : 24), yy + rh * .38); g.fillStyle = "rgba(255,255,255,.75)"; g.font = `600 ${L.ph ? 12 : 14}px ${SANS}`; g.fillText(n2, px + 30 + ss * 2, yy + rh * .68); });
+        S.btn.push({ id: "close", x: px, y: py, w: pw, h: ph2 });
+      }
+    }
     function draw(g, W, H, t) {
-      layout(W, H);
+      layout(W, H); S.btn = [];
       lakeBg(g, W, H, t, false);
-      /* élet a ponton körül: két tőkés réce úszik el a ponton előtt, nyomukban kis hullám */
-      [[0, 1], [1, .82]].forEach(([k, sc]) => { const span = W + 120, x = ((t * (18 + k * 6) + k * 260) % span) - 60, y = L.by + L.bw + 16 + k * 10, s2 = Math.max(8, L.sq * .22) * sc;
-        if (y > H - (L.ph ? 130 : 80)) return; g.save(); g.translate(x, y);
-        g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = 1; g.beginPath(); g.moveTo(-s2 * 3, s2 * .35); g.lineTo(-s2 * .8, s2 * .3); g.stroke();
-        g.fillStyle = k ? "#8a6a4a" : "#6b5a48"; g.beginPath(); g.ellipse(0, 0, s2, s2 * .45, 0, 0, TAU); g.fill();
-        g.fillStyle = k ? "#7a5a3a" : "#1f6b3a"; g.beginPath(); g.arc(s2 * .8, -s2 * .45, s2 * .32, 0, TAU); g.fill();
-        g.fillStyle = "#f2b233"; g.beginPath(); g.moveTo(s2 * 1.08, -s2 * .45); g.lineTo(s2 * 1.4, -s2 * .38); g.lineTo(s2 * 1.08, -s2 * .32); g.fill();
-        if (!k) { g.fillStyle = "#fff"; g.fillRect(s2 * .55, -s2 * .2, s2 * .3, s2 * .06); }
-        g.restore(); });
+      g.save(); if (S.shake > 0) g.translate((Math.random() - .5) * S.shake * 14, (Math.random() - .5) * S.shake * 10);
+      const CM = S.cam; if (CM && CM.z > 1.002) { g.translate(L.bx + L.bw / 2, L.by + L.bw / 2); g.scale(CM.z, CM.z); g.translate(-CM.x, -CM.y); }
       drawPontoon(g, t); drawWater(g, t);
       const { sq } = L;
-      /* utolsó lépés, kijelölés, ötlet, sakk */
       const tint = (i, col) => { const [x, y] = sqXY(i); g.fillStyle = col; g.fillRect(x - sq / 2, y - sq / 2, sq, sq); };
       if (S.last) { tint(S.last.f, "rgba(255,209,102,.28)"); tint(S.last.t, "rgba(255,209,102,.38)"); }
       if (S.hint && S.t - S.hint.t0 < 6) { const k = .4 + .3 * Math.sin(S.t * 6); tint(S.hint.f, `rgba(127,211,255,${k})`); tint(S.hint.t, `rgba(127,211,255,${k})`); }
-      if (S.st !== "over" || inCheck(S.s, S.s.turn)) { if (inCheck(S.s, S.s.turn)) { const [x, y] = sqXY(kingSq(S.s, S.s.turn)); const k = .5 + .5 * Math.sin(S.t * 6); const gr = g.createRadialGradient(x, y, sq * .1, x, y, sq * .62); gr.addColorStop(0, `rgba(255,60,60,${.55 * k + .2})`); gr.addColorStop(1, "rgba(255,60,60,0)"); g.fillStyle = gr; g.fillRect(x - sq * .62, y - sq * .62, sq * 1.24, sq * 1.24); } }
+      if (inCheck(S.s, S.s.turn)) { const [x, y] = sqXY(kingSq(S.s, S.s.turn)); const k = .5 + .5 * Math.sin(S.t * 6); const gr = g.createRadialGradient(x, y, sq * .1, x, y, sq * .62); gr.addColorStop(0, `rgba(255,60,60,${.55 * k + .2})`); gr.addColorStop(1, "rgba(255,60,60,0)"); g.fillStyle = gr; g.fillRect(x - sq * .62, y - sq * .62, sq * 1.24, sq * 1.24); }
       if (S.sel >= 0) { const [x, y] = sqXY(S.sel); g.strokeStyle = "#ffd166"; g.lineWidth = Math.max(2, sq * .06); g.strokeRect(x - sq / 2 + 2, y - sq / 2 + 2, sq - 4, sq - 4); }
       S.moves.forEach((m) => { const [x, y] = sqXY(m.t); const cap = m.c !== "."; g.strokeStyle = cap ? "rgba(255,90,80,.95)" : "rgba(255,255,255,.85)"; g.lineWidth = Math.max(2, sq * .055);
-        g.beginPath(); g.arc(x, y, sq * (cap ? .42 : .17 + .02 * Math.sin(S.t * 5)), 0, TAU); g.stroke(); if (!cap) { g.fillStyle = "rgba(255,255,255,.25)"; g.fill(); } });
-      /* fröccsenő vízcseppek ütéskor */
-      (S.drops || []).forEach((d) => { g.fillStyle = `rgba(235,250,255,${Math.max(0, 1 - d.t / .9)})`; g.beginPath(); g.arc(d.x, d.y, d.r, 0, TAU); g.fill(); });
-      /* hullámgyűrűk */
-      S.ripples.forEach((r) => { const k = r.t / 1.4; g.strokeStyle = `rgba(255,255,255,${(1 - k) * .8})`; g.lineWidth = Math.max(1, sq * .04 * (1 - k)); g.beginPath(); g.ellipse(r.x, r.y + sq * .06, sq * (.2 + k * .6) * r.k, sq * (.08 + k * .25) * r.k, 0, 0, TAU); g.stroke(); });
-      /* a bábuk soronként felülről lefelé (az elöl lévők takarják a hátsókat); a mozgó hajó külön */
+        g.beginPath(); g.arc(x, y, sq * (cap ? .44 : .16 + .02 * Math.sin(S.t * 5)), 0, TAU); g.stroke(); if (!cap) { g.fillStyle = "rgba(255,255,255,.25)"; g.fill(); } });
+      S.ripples.forEach((r) => { const k = r.t / 1.4; g.strokeStyle = `rgba(255,255,255,${(1 - k) * .8})`; g.lineWidth = Math.max(1, sq * .04 * (1 - k)); g.beginPath(); g.ellipse(r.x, r.y, sq * (.2 + k * .6) * r.k, sq * (.06 + k * .2) * r.k, 0, 0, TAU); g.stroke(); });
+      /* úszó roncsdarabok (a hajók alatt) */
+      S.fx.forEach((f) => { if (f.k !== "debris") return; const a = Math.min(1, (f.life - f.t) / .6); g.save(); g.translate(f.x, f.y); g.rotate(f.rot); g.globalAlpha = a; g.fillStyle = "#6b4526"; g.fillRect(-f.len / 2, -f.len * .14, f.len, f.len * .28); g.fillStyle = "rgba(0,0,0,.3)"; g.fillRect(-f.len / 2, f.len * .04, f.len, f.len * .1); g.restore(); });
+      /* a bábuk soronként felülről lefelé; a mozgó és a süllyedő hajó külön */
       const A = S.anim, moving = A ? A.m.t : -1, rookMoving = A && A.rook ? A.rook.t : -1;
-      const order = []; for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const i = S.flip ? idx(7 - r, 7 - c) : idx(r, c); order.push(i); }
-      const sinkAt = new Set(S.sink.filter((q) => q.t <= 0).map((q) => q.sq));
-      order.forEach((i) => {
-        const p = S.s.b[i];
-        S.sink.forEach((q) => { if (q.sq === i) { const [x, y] = sqXY(i); if (q.t <= 0) drawPiece(g, q.p, x, y + sq * .08, sq * 1.18, t); else { const k = q.t / 1.6; drawPiece(g, q.p, x, y + sq * .08 + sq * .25 * k, sq * 1.18, t, { rot: (isW(q.p) ? .9 : -.9) * k, sc: 1 - .35 * k, alpha: 1 - k });
-          for (let b = 0; b < 4; b++) { g.fillStyle = `rgba(255,255,255,${(1 - k) * .8})`; g.beginPath(); g.arc(x + Math.sin(b * 2.1 + q.t * 4) * sq * .2, y - k * sq * .5 - b * sq * .08, sq * .03, 0, TAU); g.fill(); } } } });
-        if (p === "." || i === moving || i === rookMoving) return;
-        const [x, y] = sqXY(i); drawPiece(g, p, x, y + sq * .08, sq * 1.18, t);
-      });
-      if (A) { const k = Math.min(1, A.t / A.dur), e = k * k * (3 - 2 * k), [x0, y0] = sqXY(A.m.f), [x1, y1] = sqXY(A.m.t), hop = A.m.p.toLowerCase() === "n" ? Math.sin(k * Math.PI) * sq * .55 : 0;
-        const px = x0 + (x1 - x0) * e, py = y0 + (y1 - y0) * e - hop;
-        if (A.m.p.toLowerCase() !== "n" && A.m.p.toLowerCase() !== "r") { g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = Math.max(1, sq * .05); g.beginPath(); g.moveTo(x0 + (x1 - x0) * Math.max(0, e - .35), y0 + (y1 - y0) * Math.max(0, e - .35)); g.lineTo(px, py); g.stroke(); }   /* nyomhullám */
-        drawPiece(g, A.m.promo && k > .9 ? A.m.promo : A.m.p, px, py + sq * .08, sq * 1.18, t, { sc: 1 + hop / sq * .25 });
-        if (A.rook) { const [rx0, ry0] = sqXY(A.rook.f), [rx1, ry1] = sqXY(A.rook.t); drawPiece(g, S.s.b[A.rook.t], rx0 + (rx1 - rx0) * e, ry0 + (ry1 - ry0) * e + sq * .08, sq * 1.18, t); } }
-      /* leütött hajók a tábla két oldalán */
-      const capRow = (list, y) => { const s2 = Math.min(sq * .55, (L.bw - 20) / Math.max(8, list.length)); list.slice().sort((a, b) => VAL[b.toLowerCase()] - VAL[a.toLowerCase()]).forEach((p, k) => drawPiece(g, p, L.bx + 10 + s2 * .5 + k * s2 * .9, y, s2, t, { icon: 1 })); };
-      capRow(S.flip ? S.capB : S.capW, L.by - sq * .32); capRow(S.flip ? S.capW : S.capB, L.by + L.bw + sq * .45);
-      /* anyagi előny a leütött hajók mellett (+3 = egy huszárnyi előny) */
-      { const sum = (l) => l.reduce((t2, p) => t2 + VAL[p.toLowerCase()], 0), d = (sum(S.capB) - sum(S.capW)) / 100;   /* világos előnye: amit sötéttől levett, mínusz amit elvesztett */
-        if (Math.abs(d) >= 1) { const topIsW = !S.flip, wy = topIsW ? L.by + L.bw + sq * .45 : L.by - sq * .32, by3 = topIsW ? L.by - sq * .32 : L.by + L.bw + sq * .45;
-          g.fillStyle = "#ffd166"; g.font = `800 ${Math.max(13, sq * .3)}px ${SANS}`; g.textAlign = "right"; g.textBaseline = "middle"; g.fillText("+" + Math.round(Math.abs(d)), L.bx + L.bw - 8, d > 0 ? wy : by3); } }
-      /* állapotsor */
-      const sy = L.by - (L.ph ? 30 : 34) - sq * .1; g.font = `800 ${L.ph ? 16 : 19}px ${SANS}`; const tw = Math.min(W - 20, g.measureText(S.msg).width + 40);
-      g.fillStyle = "rgba(7,29,56,.82)"; g.beginPath(); g.roundRect ? g.roundRect(W / 2 - tw / 2, sy - 18, tw, 34, 17) : g.rect(W / 2 - tw / 2, sy - 18, tw, 34); g.fill();
-      g.fillStyle = /SAKK|matt|GYŐZ/.test(S.msg) ? "#ffd166" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(S.thinking ? S.msg.replace(/…$/, "") + ".".repeat(1 + Math.floor(S.t * 3) % 3) : S.msg, W / 2, sy);
-      /* gombok */
-      S.btn = []; const by2 = H - (L.ph ? 118 : 70), labels = [["new", "Új játék"], ["undo", "↶ Vissza"], ["hint", "💡 Ötlet"], ["lvl", "Szint: " + ["Könnyű", "Közepes", "Nehéz"][S.lvl]], ["col", S.two ? "2 játékos" : "Szín: " + (S.human === "w" ? "világos" : "sötét")], ["flip", "⇅ Forgat"]];
-      const perRow = L.ph ? 3 : 6, bw = Math.min(170, (W - 20 - (perRow - 1) * 8) / perRow), bh = L.ph ? 44 : 46;
-      labels.forEach(([id, lb], k) => { const row = Math.floor(k / perRow), col = k % perRow, rowN = Math.min(perRow, labels.length - row * perRow), x = W / 2 - (rowN * bw + (rowN - 1) * 8) / 2 + col * (bw + 8), y = by2 + row * (bh + 8);
-        g.fillStyle = id === "new" ? "#f2b233" : "rgba(7,29,56,.85)"; g.beginPath(); g.roundRect ? g.roundRect(x, y, bw, bh, bh / 2) : g.rect(x, y, bw, bh); g.fill(); if (id !== "new") { g.strokeStyle = "rgba(255,255,255,.22)"; g.lineWidth = 1; g.stroke(); }
-        g.fillStyle = id === "new" ? "#14202a" : "#fff"; g.font = `800 ${L.ph ? 14 : 16}px ${SANS}`; g.fillText(lb, x + bw / 2, y + bh / 2 + .5); S.btn.push({ id, x, y, w: bw, h: bh }); });
+      const sinkSq = new Set(S.sink.map((q) => q.sq));
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) { const i = S.flip ? idx(7 - r, 7 - c) : idx(r, c), [x, y] = sqXY(i);
+          S.sink.forEach((q) => { if (q.sq === i) { if (q.t <= 0) drawPiece(g, q.p, x, y, sq, t); else drawSinking(g, q, x, y, sq, t); } });
+          const p = S.s.b[i]; if (p === "." || i === moving || i === rookMoving) continue; if (sinkSq.has(i) && A) continue;
+          drawPiece(g, p, x, y, sq, t, { sc: S.sel === i ? 1.06 : 1 }); }
+        /* a mozgó hajó a saját sorában rajzolódik (a takarás helyes marad) */
+        if (A) { const [x0, y0] = sqXY(A.m.f), [x1, y1] = sqXY(A.m.t), mvT = A.t - A.bt - A.wait, k = Math.max(0, Math.min(1, mvT / A.dur)), e = k * k * (3 - 2 * k);
+          const py = y0 + (y1 - y0) * e, rowNow = Math.round((py - L.y0 - sq / 2) / sq);
+          if (rowNow === r) { const hop = A.m.p.toLowerCase() === "n" ? Math.sin(k * Math.PI) * sq * .55 : 0, dirx = x1 >= x0 ? 1 : -1, rec = (A.recoil || 0) * sq * .05 * -dirx;
+            const px = x0 + (x1 - x0) * e + rec, pyy = py - hop;
+            if (k > 0 && k < 1 && A.m.p.toLowerCase() !== "n" && A.m.p.toLowerCase() !== "r") { g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = Math.max(1, sq * .05); g.beginPath(); g.moveTo(x0 + (x1 - x0) * Math.max(0, e - .35), y0 + (y1 - y0) * Math.max(0, e - .35) + sq * .3); g.lineTo(px, pyy + sq * .3); g.stroke(); }
+            drawPiece(g, A.m.promo && k > .9 ? A.m.promo : A.m.p, px, pyy, sq, t, { sc: 1 + hop / sq * .25 }); }
+          if (A.rook) { const [rx0, ry0] = sqXY(A.rook.f), [rx1, ry1] = sqXY(A.rook.t); if (Math.round((ry0 - L.y0 - sq / 2) / sq) === r) drawPiece(g, S.s.b[A.rook.t], rx0 + (rx1 - rx0) * e, ry0 + (ry1 - ry0) * e, sq, t); } }
+      }
+      /* lángok, füst, szikrák, ágyúgolyók, torkolattűz, buborékok */
+      S.fx.forEach((f) => { if (f.t < 0) return; const a = Math.max(0, 1 - f.t / f.life);
+        if (f.k === "shock") { const r = f.r * (.2 + f.t / f.life); g.strokeStyle = `rgba(255,240,200,${a * .8})`; g.lineWidth = Math.max(2, L.sq * .06 * a); g.beginPath(); g.ellipse(f.x, f.y, r, r * .45, 0, 0, TAU); g.stroke(); }
+        else if (f.k === "smoke") { const r = f.r * (1 + f.t * 1.1); g.fillStyle = `rgba(${f.g},${f.g},${f.g + 5},${(f.g < 120 ? .26 : .3) * a})`; g.beginPath(); g.arc(f.x, f.y, r, 0, TAU); g.fill(); }
+        else if (f.k === "fire") { const r = f.r * (1 - f.t / f.life * .6); const gr = g.createRadialGradient(f.x, f.y, 0, f.x, f.y, r * 1.6); gr.addColorStop(0, `rgba(255,240,170,${a})`); gr.addColorStop(.4, `rgba(255,140,30,${a * .9})`); gr.addColorStop(1, "rgba(200,40,10,0)"); g.fillStyle = gr; g.beginPath(); g.arc(f.x, f.y, r * 1.6, 0, TAU); g.fill(); }
+        else if (f.k === "spark") { g.fillStyle = `rgba(255,${180 + 60 * a},80,${a})`; g.beginPath(); g.arc(f.x, f.y, Math.max(1, L.sq * .018), 0, TAU); g.fill(); }
+        else if (f.k === "flash") { const r = f.r * (.6 + f.t / f.life * .8); const gr = g.createRadialGradient(f.x, f.y, 0, f.x, f.y, r); gr.addColorStop(0, `rgba(255,255,230,${a})`); gr.addColorStop(.35, `rgba(255,${f.hot ? 150 : 200},60,${a * .85})`); gr.addColorStop(1, "rgba(255,90,20,0)"); g.save(); g.globalCompositeOperation = "lighter"; g.fillStyle = gr; g.beginPath(); g.arc(f.x, f.y, r, 0, TAU); g.fill(); g.restore(); }
+        else if (f.k === "ball" && !f.hit) { const u2 = Math.min(1, f.t / f.life), bx = f.x0 + (f.x1 - f.x0) * u2, by = f.y0 + (f.y1 - f.y0) * u2 - Math.sin(u2 * Math.PI) * f.arc; g.fillStyle = "#111"; g.beginPath(); g.arc(bx, by, Math.max(2, L.sq * .035), 0, TAU); g.fill(); g.strokeStyle = "rgba(255,200,120,.5)"; g.lineWidth = 1; g.beginPath(); g.arc(bx, by, Math.max(2, L.sq * .035) + 1, 0, TAU); g.stroke(); }
+        else if (f.k === "bub") { g.strokeStyle = `rgba(230,250,255,${a * .9})`; g.lineWidth = 1; g.beginPath(); g.arc(f.x, f.y, f.r, 0, TAU); g.stroke(); } });
+      (S.drops || []).forEach((d) => { g.fillStyle = `rgba(235,250,255,${Math.max(0, 1 - d.t / .9)})`; g.beginPath(); g.arc(d.x, d.y, d.r, 0, TAU); g.fill(); });
+      g.restore();
+      /* mozis keret a csata idejére: sötétülő szélek, fekete sávok, felirat */
+      if (CM && CM.lb > .02) { const a = CM.lb; const vg = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.max(W, H) * .75); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, `rgba(0,0,0,${.55 * a})`); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+        const bh = H * .07 * a; g.fillStyle = "#000"; g.fillRect(0, 0, W, bh); g.fillRect(0, H - bh, W, bh);
+        if (A && A.bt) { const nm = (p2) => { const q = NAME[p2.toLowerCase()].split(" ")[0]; return q[0].toUpperCase() + q.slice(1); }, yb = bh + (L.ph ? 64 : 40); g.font = `800 ${L.ph ? 18 : 24}px ${SER}`; g.textBaseline = "middle"; g.fillStyle = `rgba(255,209,102,${a})`;
+          g.textAlign = "center"; g.fillText("⚔", W / 2, yb); g.textAlign = "right"; g.fillText(nm(A.m.p), W / 2 - 22, yb); g.textAlign = "left"; g.fillText(nm(A.m.c), W / 2 + 22, yb); } }
+      /* leütött hajók: álló képernyőn a tábla fölött/alatt, fekvőn a két oldalán */
+      const sorted = (l) => l.slice().sort((a, b) => VAL[b.toLowerCase()] - VAL[a.toLowerCase()]);
+      const capTop = S.flip ? S.capB : S.capW, capBot = S.flip ? S.capW : S.capB;
+      if (L.land) { const s2 = Math.min(L.capW * .62, L.bw / 9); [[capTop, L.bx - L.capW / 2 - 4], [capBot, L.bx + L.bw + L.capW / 2 + 4]].forEach(([l, cx], side) => { sorted(l).forEach((p, k) => { const col = k >= 8 ? 1 : 0, kk = k % 8; drawPiece(g, p, cx + (col ? (side ? 1 : -1) * s2 * .55 : (side ? -1 : 1) * s2 * .25 * (l.length > 8)), (side ? L.by + L.bw - s2 * .9 - kk * s2 * .95 : L.by + s2 * .4 + kk * s2 * .95), s2, t, { icon: 1 }); }); }); }
+      else { const s2 = Math.min(L.capH * 1.25, (L.bw - 20) / 9); [[capTop, L.by - L.capH * .62], [capBot, L.by + L.bw + L.capH * .3]].forEach(([l, y]) => sorted(l).forEach((p, k) => drawPiece(g, p, L.bx + 10 + s2 * .5 + k * s2 * .62, y - s2 * .2, s2, t, { icon: 1 }))); }
+      { const sum = (l) => l.reduce((t2, p) => t2 + VAL[p.toLowerCase()], 0), d = (sum(S.capB) - sum(S.capW)) / 100;
+        if (Math.abs(d) >= 1) { const wBot = !S.flip; g.fillStyle = "#ffd166"; g.font = `800 ${Math.max(13, sq * .28)}px ${SANS}`; g.textAlign = "right"; g.textBaseline = "middle";
+          const yy = (d > 0) === wBot ? (L.land ? L.by + L.bw + 4 - sq * .1 : L.by + L.bw + L.capH * .5) : (L.land ? L.by - 4 + sq * .1 : L.by - L.capH * .5); g.fillText("+" + Math.round(Math.abs(d)), L.land ? L.bx + L.bw + L.capW - 6 : L.bx + L.bw - 6, yy); } }
+      /* állapotsor: széles képernyőn a fejléc mellett, keskenyen alatta */
+      { const txt = S.thinking ? S.msg.replace(/…$/, "") + ".".repeat(1 + Math.floor(S.t * 3) % 3) : S.msg; g.font = `800 ${L.ph ? 15 : 18}px ${SANS}`;
+        const x0 = L.pillInHd ? GM_HD.right + 12 : 10, x1 = W - 10, tw = Math.min(x1 - x0, g.measureText(txt).width + 36), cx = L.pillInHd ? Math.max(x0 + tw / 2, W / 2) : W / 2, cy = L.pillInHd ? (GM_HD.top + GM_HD.bottom) / 2 : GM_TOP + 16;
+        rr(g, cx - tw / 2, cy - 17, tw, 34, 17); g.fillStyle = "rgba(7,29,56,.86)"; g.fill();
+        g.fillStyle = /SAKK|matt|GYŐZ/.test(S.msg) ? "#ffd166" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(txt, cx, cy + .5); }
       /* átváltozás: válassz hajót */
-      if (S.promo) { const w = S.promo.m.p === "P", pw = Math.min(W - 30, sq * 5.6), ph2 = sq * 2.5, px = W / 2 - pw / 2, py = L.by + L.bw / 2 - ph2 / 2;
-        g.fillStyle = "rgba(7,29,56,.94)"; g.beginPath(); g.roundRect ? g.roundRect(px, py, pw, ph2, 18) : g.rect(px, py, pw, ph2); g.fill(); g.strokeStyle = "#f2b233"; g.lineWidth = 2; g.stroke();
-        g.fillStyle = "#ffd166"; g.font = `800 ${L.ph ? 14 : 17}px ${SANS}`; g.fillText("Mivé változzon az evezős csónak?", W / 2, py + 22);
-        S.promoBtn = []; "qrbn".split("").forEach((pr, k) => { const cx = px + pw * (k + .5) / 4, cy = py + ph2 * .66; g.fillStyle = "rgba(255,255,255,.08)"; g.beginPath(); g.arc(cx, cy, sq * .55, 0, TAU); g.fill(); drawPiece(g, w ? pr.toUpperCase() : pr, cx, cy + sq * .15, sq * .95, t, { icon: 1 }); S.promoBtn.push({ pr, x: cx - sq * .55, y: cy - sq * .7, w: sq * 1.1, h: sq * 1.3 }); }); }
-      /* vége: panel + jelzőzászló-konfetti */
-      if (S.st === "over") { const pw = Math.min(W - 40, 420), ph2 = 128, px = W / 2 - pw / 2, py = L.by + L.bw * .38;
-        g.fillStyle = "rgba(7,29,56,.92)"; g.beginPath(); g.roundRect ? g.roundRect(px, py, pw, ph2, 20) : g.rect(px, py, pw, ph2); g.fill(); g.strokeStyle = "rgba(242,178,51,.7)"; g.lineWidth = 2; g.stroke();
-        g.fillStyle = "#ffd166"; g.font = `800 ${L.ph ? 18 : 22}px ${SANS}`; g.fillText(S.msg, W / 2, py + 40);
-        g.fillStyle = "#fff"; g.font = `600 ${L.ph ? 13 : 15}px ${SANS}`; g.fillText("Új játék: a sárga gomb · vagy lépj vissza és próbáld újra", W / 2, py + 82); }
+      if (S.promo) { const w = S.promo.m.p === "P", pw = Math.min(W - 30, sq * 5.6), ph2 = sq * 2.6, px = W / 2 - pw / 2, py = L.by + L.bw / 2 - ph2 / 2;
+        rr(g, px, py, pw, ph2, 18); g.fillStyle = "rgba(7,29,56,.95)"; g.fill(); g.strokeStyle = "#f2b233"; g.lineWidth = 2; g.stroke();
+        g.fillStyle = "#ffd166"; g.font = `800 ${L.ph ? 14 : 17}px ${SANS}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Mivé változzon az evezős csónak?", W / 2, py + 22);
+        S.promoBtn = []; "qrbn".split("").forEach((pr, k) => { const cx = px + pw * (k + .5) / 4, cy = py + ph2 * .6; g.fillStyle = "rgba(255,255,255,.08)"; g.beginPath(); g.arc(cx, cy, sq * .6, 0, TAU); g.fill(); drawPiece(g, w ? pr.toUpperCase() : pr, cx, cy - sq * .1, sq * 1.05, t, { icon: 1 }); S.promoBtn.push({ pr, x: cx - sq * .6, y: cy - sq * .8, w: sq * 1.2, h: sq * 1.4 }); }); }
+      const barY = drawBar(g, W, H);
+      /* vége: panel a lehetőségekkel (tovább / maradok / visszább) */
+      if (S.st === "over" && !S.anim && !S.menu) { const pw = Math.min(W - 30, 440), opts = [];
+        if (!S.two) { if (S.won && S.lvl < 24) opts.push(["next", `▲ Tovább: ${S.lvl + 1}. szint`, 1]); opts.push(["same", S.won ? "↻ Maradok ezen a szinten" : "↻ Újra ezen a szinten"]); if (S.lvl > 1) opts.push(["easier", `▼ Könnyebb: ${S.lvl - 1}. szint`]); if (!S.won) opts.push(["undo", "↶ Visszalépés és újrapróbálás"]); }
+        else opts.push(["new", "⚓ Új játék", 1]);
+        const bh = 44, ph2 = 92 + opts.length * (bh + 8), px = W / 2 - pw / 2, py = Math.max(L.by + 10, L.by + L.bw / 2 - ph2 / 2);
+        rr(g, px, py, pw, ph2, 20); g.fillStyle = "rgba(7,29,56,.94)"; g.fill(); g.strokeStyle = "rgba(242,178,51,.8)"; g.lineWidth = 2; g.stroke();
+        g.fillStyle = "#ffd166"; g.font = `800 ${L.ph ? 18 : 22}px ${SANS}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(S.msg, W / 2, py + 32);
+        g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 ${L.ph ? 13 : 14}px ${SANS}`; g.fillText(S.two ? "Két játékos" : `${S.lvl}. szint · ${rankOf(S.lvl)}${S.won && S.lvl >= 24 ? " · a legmagasabb szint – gratulálok, Admirális!" : ""}`, W / 2, py + 62);
+        opts.forEach(([id, lb, gold], k) => btn(g, id, px + 16, py + 82 + k * (bh + 8), pw - 32, bh, lb, { gold })); }
+      drawMenu(g, W, H, barY);
       S.conf.forEach((c) => { g.save(); g.translate(c.x * W, c.y * H); g.rotate(c.r); const cs = [["#ffffff", "#1747a6"], ["#d8261c", "#d8261c"], ["#f7c51e", "#1747a6"], ["#1747a6", "#ffffff"]][c.f]; g.fillStyle = cs[0]; g.fillRect(-7, -5, 7, 10); g.fillStyle = cs[1]; g.fillRect(0, -5, 7, 10); g.restore(); });
     }
     const inR = (b, x, y) => b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+    const setLvl = (l) => { S.lvl = Math.max(1, Math.min(S.maxLvl, l)); S.menu = null; newGame(); };
     return {
       title: "Vitorlás sakk",
-      help: "A bábuk hajók: evezős csónak = gyalog, lófejes hajó = huszár, hegyes vitorlás = futó, világítótorony = bástya, szkúner koronával = vezér, háromárbócos = király. Koppints a hajódra, majd a gyűrűs mezőre.",
+      help: "Minden hajó árbócán ott a saját sakkjele: evezős csónak = gyalog, lófejes viking hajó = huszár, versenyjacht = futó, világítótorony = bástya, fregatt = vezér, háromárbócos = király. Koppints a hajódra, majd a gyűrűs mezőre. A ☰ Menüben: új játék, szín, jelmagyarázat; a 🎖 gombbal szintet választasz.",
       step, draw,
       down(x, y, W, H) {
         if (!L) return;
         if (S.promo) { for (const b of S.promoBtn || []) if (inR(b, x, y)) { const m = S.promo.list.find((q) => q.promo.toLowerCase() === b.pr); S.promo = null; if (m) doMove(m); return; } S.promo = null; return; }
-        for (const b of S.btn) if (inR(b, x, y)) { gmSnd.click();
-          if (b.id === "new") newGame(); else if (b.id === "undo") undo(); else if (b.id === "hint") hint();
-          else if (b.id === "lvl") { S.lvl = (S.lvl + 1) % 3; save(); }
-          else if (b.id === "col") { if (S.two) { S.two = false; S.human = "w"; } else if (S.human === "w") S.human = "b"; else S.two = true; S.flip = !S.two && S.human === "b"; save(); status(); maybeAI(); }
-          else if (b.id === "flip") S.flip = !S.flip;
+        for (let k = S.btn.length - 1; k >= 0; k--) { const b = S.btn[k]; if (!inR(b, x, y)) continue; gmSnd.click(); const id = b.id;
+          if (id === "menu") { S.menu = S.menu === "main" ? null : "main"; return; }
+          if (id === "lvlm") { S.menu = S.menu === "lvl" ? null : "lvl"; return; }
+          if (id === "legend" || id === "close") { S.menu = id === "legend" ? "legend" : null; return; }
+          if (id[0] === "L" && /^L\d+$/.test(id)) { setLvl(+id.slice(1)); return; }
+          S.menu = null;
+          if (id === "new") newGame(); else if (id === "undo") undo(); else if (id === "hint") hint();
+          else if (id === "next") setLvl(S.lvl + 1); else if (id === "same") setLvl(S.lvl); else if (id === "easier") setLvl(S.lvl - 1);
+          else if (id.startsWith("opp_")) { if (id === "opp_2") S.two = true; else { S.two = false; S.human = id === "opp_w" ? "w" : "b"; } S.flip = !S.two && S.human === "b"; save(); status(); maybeAI(); }
+          else if (id === "flip") S.flip = !S.flip;
           return; }
+        if (S.menu) { S.menu = null; return; }
         if (S.st !== "play" || S.anim || S.thinking || (!S.two && S.s.turn !== S.human)) return;
         const i = hitSq(x, y); if (i < 0) { S.sel = -1; S.moves = []; return; }
         const tgt = S.moves.filter((m) => m.t === i);
@@ -14076,7 +14345,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         if (p !== "." && colorOf(p) === S.s.turn) { S.sel = i; S.moves = legal(S.s).filter((m) => m.f === i); gmSnd.pop(); S.msg = `${NAME[p.toLowerCase()][0].toUpperCase() + NAME[p.toLowerCase()].slice(1)} – ${S.moves.length ? S.moves.length + " lehetséges lépés" : "nem léphet"}`; }
         else { S.sel = -1; S.moves = []; status(); }
       },
-      key(k, down) { if (!down) return; if (k === "u" || k === "Backspace") undo(); if (k === "n") newGame(); }
+      key(k, down) { if (!down) return; if (k === "u" || k === "Backspace") undo(); if (k === "n") newGame(); if (k === "Escape") S.menu = null; }
     };
   }
 
