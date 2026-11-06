@@ -24,6 +24,7 @@
   /* ------------------------------------------------------------------ segédek: anyagok, geometriák */
   const std = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ roughness: .6, metalness: 0 }, o)); W.disposables.push(m); return m; };
   const basic = (o) => { const m = new THREE.MeshBasicMaterial(o); W.disposables.push(m); return m; };
+  const sprM = (o) => { const m = new THREE.SpriteMaterial(o); W.disposables.push(m); return m; };   /* Sprite-hoz: így fordul a néző felé */
   const mesh = (g, m, parent) => { const x = new THREE.Mesh(g, m); W.disposables.push(g); if (parent) parent.add(x); return x; };
   function canvasTex(w, h, draw, opt) {
     const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); draw(g, w, h);

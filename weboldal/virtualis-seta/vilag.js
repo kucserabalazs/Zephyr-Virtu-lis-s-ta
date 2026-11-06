@@ -24,6 +24,7 @@
   /* ------------------------------------------------------------------ segédek: anyagok, geometriák */
   const std = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ roughness: .6, metalness: 0 }, o)); W.disposables.push(m); return m; };
   const basic = (o) => { const m = new THREE.MeshBasicMaterial(o); W.disposables.push(m); return m; };
+  const sprM = (o) => { const m = new THREE.SpriteMaterial(o); W.disposables.push(m); return m; };   /* Sprite-hoz: így fordul a néző felé */
   const mesh = (g, m, parent) => { const x = new THREE.Mesh(g, m); W.disposables.push(g); if (parent) parent.add(x); return x; };
   function canvasTex(w, h, draw, opt) {
     const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d"); draw(g, w, h);
@@ -1696,7 +1697,7 @@
     const orbTex = canvasTex(256, 256, (g) => { const gr = g.createRadialGradient(128, 128, 10, 128, 128, 120); gr.addColorStop(0, "rgba(255,240,200,1)"); gr.addColorStop(.35, "rgba(255,209,102,.9)"); gr.addColorStop(1, "rgba(255,180,60,0)"); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
       g.fillStyle = "#0b2f5e"; g.font = "800 92px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("360°", 128, 132); });
     H.spots.forEach((sp) => {
-      const o = new THREE.Sprite(basic({ map: orbTex, transparent: true, depthWrite: false })); o.scale.set(.3, .3, 1); o.position.set(sp.x, 1.35, sp.z); H.lv[sp.lv].add(o); o.visible = false; o.renderOrder = 6;
+      const o = new THREE.Sprite(sprM({ map: orbTex, transparent: true, depthWrite: false })); o.scale.set(.3, .3, 1); o.position.set(sp.x, 1.35, sp.z); H.lv[sp.lv].add(o); o.visible = false; o.renderOrder = 6;
       o.userData.xr = { hover: (on) => { o.scale.setScalar(on ? .42 : .3); if (on) showTip(o, "📷 " + sp.n + " – valódi 360°-os fotó", "Csippents rá: belépsz a fotóba"); else showTip(null); }, click: () => { W.close(() => T.go(sp.id)); } };
       T.xr.extra.add(o); W.objs.push(o); MAQ.orbs.push(o);
     });
@@ -3626,7 +3627,7 @@
   /* füst: puha, átlátszó gömbsprite-ok (közös készlet) */
   function smokePool(parent, n, col) {
     const tex = canvasTex(64, 64, (gg) => { const gr = gg.createRadialGradient(32, 32, 2, 32, 32, 30); gr.addColorStop(0, "rgba(255,255,255,.85)"); gr.addColorStop(1, "rgba(255,255,255,0)"); gg.fillStyle = gr; gg.fillRect(0, 0, 64, 64); });
-    const list = []; for (let i = 0; i < n; i++) { const s = new THREE.Sprite(basic({ map: tex, transparent: true, depthWrite: false, color: col || "#5a5a5a", opacity: 0, fog: true })); s.visible = false; parent.add(s); list.push({ s, t: 99, v: new THREE.Vector3() }); }
+    const list = []; for (let i = 0; i < n; i++) { const s = new THREE.Sprite(sprM({ map: tex, transparent: true, depthWrite: false, color: col || "#5a5a5a", opacity: 0, fog: true })); s.visible = false; parent.add(s); list.push({ s, t: 99, v: new THREE.Vector3() }); }
     let k = 0;
     return { emit(p, v, size) { const q = list[k++ % n]; q.s.position.copy(p); q.v.copy(v); q.t = 0; q.size = size || 2; q.s.visible = true; },
       tick(dt) { list.forEach((q) => { if (q.t > 8) { q.s.visible = false; return; } q.t += dt; q.s.position.addScaledVector(q.v, dt); q.v.multiplyScalar(1 - dt * .15); const k2 = q.t / 8; q.s.material.opacity = (1 - k2) * .55; q.s.scale.setScalar(q.size * (1 + q.t * .8)); }); },
