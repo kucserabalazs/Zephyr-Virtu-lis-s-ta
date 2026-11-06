@@ -329,3 +329,8 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
 - Mért: 40°→10°, 50°→16° (lökésben 19°), 60–75°→12–13°, 90°→10°, 110° spi→10°, 130°→4°, 150–175°→0 ± ringás.
 - 02-kornyezet.js: egy elszabadult csere 728 ezer sorra duzzasztotta – helyreállítva, új fragment shader egyszer beillesztve.
 - Következő: Titanic törlés, hattyúk, hal, hajók/díszlet, makett parkoló, jetpack, sakk.
+
+## 23:40 – Makett mobil + sakk (commitok 6352f54 és utána)
+- Makett 2D: körbenéző kamera (ORB a 06-makett.js-ben), nézetgombok, összecsukható HUD minden világban (07-vezerlo.js .wh-tog, localStorage zephyr-hud-min).
+- Sakk (virtualis-seta-forras.html gameChess): lvlCfg 1–24, thinkAsync Web Workerrel, RANKS, S.maxLvl, menük S.menu main/lvl/legend, drawBar/drawMenu, új drawPiece (oldalnézet, glyphFlag), csata: fire/impact/geyser, S.cam ráközelítés + mozis keret, drawSinking. Fordítás: /home/claude/t/tr_chess2.py.
+- Hátra: szebb hajótestek a versenyen (felhasználó kérte 23:00), Titanic törlés, hattyúk, hal, díszlet, makett parkoló, jetpack.
