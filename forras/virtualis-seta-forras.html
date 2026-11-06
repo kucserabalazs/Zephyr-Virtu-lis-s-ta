@@ -8401,7 +8401,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if ($("btnWorld")) return;
     const b = document.createElement("button"); b.type = "button"; b.id = "btnWorld"; b.className = "vr-btn world-btn";
     b.innerHTML = `<svg viewBox="0 0 48 30" aria-hidden="true"><path d="M24 2v22M24 3l13 19H24M24 7 12 22h12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M4 25c5 3 10 3 15 0s10-3 15 0 8 3 11 1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span>3D</span>`;
-    b.title = "Virtuális világ: regatta, vitorlázás, a ház makettje"; b.setAttribute("aria-label", "Virtuális világ");
+    b.title = "Virtuális világ: vitorlásverseny, a ház makettje"; b.setAttribute("aria-label", "Virtuális világ");
     b.addEventListener("click", () => { if (walking) { stopWalk(); return; } if (!busy) worldChooser(); });
     document.body.appendChild(b);
   }
