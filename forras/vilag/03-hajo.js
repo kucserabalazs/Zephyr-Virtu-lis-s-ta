@@ -123,6 +123,19 @@
     g.setIndex(idx); g.userData = { nu, nv }; W.disposables.push(g); return g;
   }
   const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _n = new THREE.Vector3(), _p = new THREE.Vector3();
+  /* részlet-LOD: a messziről már pixelnyinél is kisebb alkatrészek (csörlők, fejek, sapkák, kötélzet-szerelvények) nem rajzolódnak –
+     egy hajó ~49 rajzhívásából távolról ~12 marad. Csak a láthatóságot kapcsolja; amit más rejtett el, azt nem hozza vissza. */
+  const _lodV = new THREE.Vector3(), _lodC = new THREE.Vector3(), _lodS = new THREE.Vector3();
+  function lodInit(g) {
+    const L = []; g.traverse((o) => { if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const r = o.geometry.boundingSphere.radius * Math.max(o.scale.x, o.scale.y, o.scale.z); if (r < .45) L.push({ o, r, hid: false }); });
+    g.userData.lod = L; return L;
+  }
+  function lodApply(g, camObj) {
+    const L = g.userData.lod || lodInit(g); if (!camObj) return;
+    g.getWorldPosition(_lodV); g.getWorldScale(_lodS); camObj.getWorldPosition(_lodC);
+    const k = _lodS.x / Math.max(.05, _lodV.distanceTo(_lodC));
+    for (let i = 0; i < L.length; i++) { const p = L[i], show = p.r * k > .0035; if (!show && p.o.visible) { p.o.visible = false; p.hid = true; } else if (show && p.hid) { p.o.visible = true; p.hid = false; } }
+  }
   function makeBoat(o) {
     o = Object.assign({ detail: 0, hull: "#eeeeea", boot: "#1d3a8a", stripe: "#1d3a8a", main: "#f4f2ea", jib: "#efeee6", num: "HUN 1", crew: 3, spin: ["#e5262f", "#ffffff", "#1f5fa8"], deckCol: "#e6e7e6" }, o);
     const G = new THREE.Group(), body = new THREE.Group(); G.add(body);   /* body: dőlés + bólintás */

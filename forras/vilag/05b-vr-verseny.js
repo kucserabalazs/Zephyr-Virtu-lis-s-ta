@@ -235,6 +235,7 @@
   /* --------------------------------------------------------------- képkocka */
   function vrTick(dt) {
     const S = VRR, C = S.C;
+    S.lodT = (S.lodT || 0) - dt; if (S.lodT < 0 && S.riv) { S.lodT = .4; const co = T.cam && T.cam.object3D; S.riv.forEach((r) => r.g && lodApply(r.g, co)); }
     /* közvetlen kézi fogás: csippentés a kerék pereme mellett (a kéz a kerék síkjában, a peremtől 18 cm-en belül) */
     const X = T.xr, pl = (X && X.pinch) || {};
     if (T.inVR && X && X.src) {

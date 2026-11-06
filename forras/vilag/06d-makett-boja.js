@@ -111,6 +111,7 @@
   function raceTick(dt) {
     if (!BJ.boats) return;
     const t = W.t;
+    BJ.lodT = (BJ.lodT || 0) - dt; if (BJ.lodT < 0) { BJ.lodT = .35; const co = T.cam && T.cam.object3D; BJ.boats.forEach((st) => lodApply(st.g, co)); }
     BJ.boats.forEach((st) => {
       const L = RLEGS[st.leg], df = L.f - st.f, dr = L.r - st.r, dist = Math.hypot(df, dr);
       const brg = Math.atan2(dr, df);

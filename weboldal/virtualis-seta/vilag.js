@@ -449,6 +449,19 @@
     g.setIndex(idx); g.userData = { nu, nv }; W.disposables.push(g); return g;
   }
   const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _n = new THREE.Vector3(), _p = new THREE.Vector3();
+  /* részlet-LOD: a messziről már pixelnyinél is kisebb alkatrészek (csörlők, fejek, sapkák, kötélzet-szerelvények) nem rajzolódnak –
+     egy hajó ~49 rajzhívásából távolról ~12 marad. Csak a láthatóságot kapcsolja; amit más rejtett el, azt nem hozza vissza. */
+  const _lodV = new THREE.Vector3(), _lodC = new THREE.Vector3(), _lodS = new THREE.Vector3();
+  function lodInit(g) {
+    const L = []; g.traverse((o) => { if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const r = o.geometry.boundingSphere.radius * Math.max(o.scale.x, o.scale.y, o.scale.z); if (r < .45) L.push({ o, r, hid: false }); });
+    g.userData.lod = L; return L;
+  }
+  function lodApply(g, camObj) {
+    const L = g.userData.lod || lodInit(g); if (!camObj) return;
+    g.getWorldPosition(_lodV); g.getWorldScale(_lodS); camObj.getWorldPosition(_lodC);
+    const k = _lodS.x / Math.max(.05, _lodV.distanceTo(_lodC));
+    for (let i = 0; i < L.length; i++) { const p = L[i], show = p.r * k > .0035; if (!show && p.o.visible) { p.o.visible = false; p.hid = true; } else if (show && p.hid) { p.o.visible = true; p.hid = false; } }
+  }
   function makeBoat(o) {
     o = Object.assign({ detail: 0, hull: "#eeeeea", boot: "#1d3a8a", stripe: "#1d3a8a", main: "#f4f2ea", jib: "#efeee6", num: "HUN 1", crew: 3, spin: ["#e5262f", "#ffffff", "#1f5fa8"], deckCol: "#e6e7e6" }, o);
     const G = new THREE.Group(), body = new THREE.Group(); G.add(body);   /* body: dőlés + bólintás */
@@ -1309,6 +1322,7 @@
   /* --------------------------------------------------------------- képkocka */
   function vrTick(dt) {
     const S = VRR, C = S.C;
+    S.lodT = (S.lodT || 0) - dt; if (S.lodT < 0 && S.riv) { S.lodT = .4; const co = T.cam && T.cam.object3D; S.riv.forEach((r) => r.g && lodApply(r.g, co)); }
     /* közvetlen kézi fogás: csippentés a kerék pereme mellett (a kéz a kerék síkjában, a peremtől 18 cm-en belül) */
     const X = T.xr, pl = (X && X.pinch) || {};
     if (T.inVR && X && X.src) {
@@ -3183,6 +3197,7 @@
   const _v3a = new THREE.Vector3(), _v3b = new THREE.Vector3();
   function lifeTick(dt) {
     const L = ENV.life; if (!L) return; const t = W.t;
+    L.lodT = (L.lodT || 0) - dt; if (L.lodT < 0) { L.lodT = .4; const co = T.cam && T.cam.object3D; L.boats.forEach((b) => { if (b.near) lodApply(b.g, co); }); }
     L.swans.forEach((s) => { s.a += s.sp * dt; const x = s.cx + Math.cos(s.a) * s.r, z = s.cz + Math.sin(s.a) * s.r * .8;
       s.g.position.set(x, WATER_Y - .02 + Math.sin(t * 1.3 + s.ph) * .02, z); s.g.rotation.y = Math.atan2(-Math.sin(s.a) * s.sp, -(Math.cos(s.a) * s.sp * .8)) + Math.PI;
       s.g.rotation.z = Math.sin(t * 1.1 + s.ph) * .03; });
@@ -3473,6 +3488,7 @@
   function raceTick(dt) {
     if (!BJ.boats) return;
     const t = W.t;
+    BJ.lodT = (BJ.lodT || 0) - dt; if (BJ.lodT < 0) { BJ.lodT = .35; const co = T.cam && T.cam.object3D; BJ.boats.forEach((st) => lodApply(st.g, co)); }
     BJ.boats.forEach((st) => {
       const L = RLEGS[st.leg], df = L.f - st.f, dr = L.r - st.r, dist = Math.hypot(df, dr);
       const brg = Math.atan2(dr, df);
