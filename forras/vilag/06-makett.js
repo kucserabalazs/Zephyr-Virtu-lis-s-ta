@@ -233,7 +233,7 @@
       const site = ENV.site; site.updateMatrixWorld(true);
       /* nézés a ház felé (site +z) */
       const fw = new THREE.Vector3(0, 0, 1).transformDirection(site.matrixWorld); faceTo(Math.atan2(-fw.x, -fw.z));
-      const target = site.localToWorld(new THREE.Vector3(LIFE_POS.x + 2.0, 0, LIFE_POS.z - 1.3));
+      const target = site.localToWorld(new THREE.Vector3(LIFE_POS.x + 3.0, 0, LIFE_POS.z - 6.2));   /* az utcán, a kerítés előtt: az egész homlokzat látszik */
       placeUser(target, 0);
       wristRedraw(); W.panelDirty = 1;
     });
