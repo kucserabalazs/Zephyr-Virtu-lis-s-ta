@@ -102,6 +102,7 @@
       T.xr.extra.add(hit); W.objs.push(hit);
       return st;
     });
+    BJ.gulls = makeGulls(g);   /* sirályok köröznek a bója fölött */
     BJ.t = 0; BJ.next = 22; BJ.cur = null; BJ.queue = []; BJ.events = {};
     return g;
   }
@@ -149,6 +150,7 @@
     });
     /* zászlók lobogása, habgyűrű */
     (BJ.flags || []).forEach((F) => { const a = F.geo.attributes.position.array, b = F.base; for (let i = 0; i < a.length; i += 3) { const u = b[i] / F.w; a[i + 2] = b[i + 2] + Math.sin(t * 6.5 - b[i] * 5 + F.ph) * .1 * u + Math.sin(t * 11 - b[i] * 9) * .025 * u; a[i + 1] = b[i + 1] - u * u * .05; } F.geo.attributes.position.needsUpdate = true; });
+    if (BJ.gulls) BJ.gulls.tick(dt, 0, 40);
     if (BJ.foam) { BJ.foam.material.opacity = .45 + .25 * Math.sin(t * 1.3); BJ.foam.material.map.offset.x = t * .01; }
   }
 

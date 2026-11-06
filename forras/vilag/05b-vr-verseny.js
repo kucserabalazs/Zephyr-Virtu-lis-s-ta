@@ -138,7 +138,9 @@
     root.position.set(-hw.x, -(hw.y + eye), -hw.z); root.updateMatrixWorld(true);
     VRR.wake = makeWake(env, 1.2);
     /* ellenfelek (ugyanakkora hajók) */
-    VRR.riv = VR_RIV.map((o, i) => { const g = makeBoat(Object.assign({ detail: 0, crew: 3 }, o)); g.scale.setScalar(VR_SC * .96); env.add(g); const wk = makeWake(env, 1.1); return { o, g, wk, i }; });
+    VRR.riv = VR_RIV.map((o, i) => { const g = makeBoat(Object.assign({ detail: 0, crew: 3 }, o)); g.scale.setScalar(VR_SC * .96); env.add(g); const wk = makeWake(env, 1.1);
+      const lbl = labelSprite([o.name, o.num], { size: 4.2, fs: 60, w: 620 }); env.add(lbl); return { o, g, wk, i, lbl }; });
+    VRR.podium = labelSprite(["", "", "", "", ""], { size: 2.4, fs: 56, w: 900 }); root.add(VRR.podium); VRR.podium.visible = false;
     /* bóják, rendezőhajó, rajt-bója, a következő bója jelzőoszlopa */
     VRR.markG = new THREE.Group(); env.add(VRR.markG);
     VRR.cb = makeCommittee(); VRR.cb.scale.setScalar(1.2); env.add(VRR.cb);
@@ -181,6 +183,7 @@
     const back = (d, s) => ({ x: -C.u[0] * d + C.c[0] * s, z: -C.u[1] * d + C.c[1] * s });
     const p0 = back(95, 6); Object.assign(VRR, { x: p0.x, z: p0.z, b: C.wf + Math.PI * .5 - .3, v: 2.5, del: 0, wa: 0, heel: 0, lastSide: 0, tackT: 0, next: 0, t: -45, st: "pre", horns: {}, fin: null, msg: "Rajt 45 mp múlva – állj be a vonal mögé!", msgT: 6, res: [], pen: 0, doneT: 0, prevSide: null });
     VRR.riv.forEach((r, i) => { const p = back(80 + i * 12, -24 + i * 22); Object.assign(r, { x: p.x, z: p.z, b: C.wf + (i % 2 ? 1 : -1) * Math.PI * .45, v: 2.4, next: 0, tack: i % 2 ? 1 : -1, lastTack: 0, fin: null, skill: .93 + Math.min(.12, lvl * .018) + i * .01, ph: rand() * 9 }); });
+    if (VRR.podium) VRR.podium.visible = false;
     W.panelDirty = 1;
   }
   /* --------------------------------------------------------------- kormány */
@@ -316,11 +319,17 @@
     OS.heel = -OS.side * clamp(Math.sin(twa * D2R) ** 1.4 * 18, 0, 22) * D2R * (1 - OS.spin * .6); OS.pitch = Math.sin(W.t * 1.2 + r.ph) * .025;
     const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.uT = (r.uT || 0) + dt; if (d2 < 160 || r.uT > .2) { r.g.userData.update(r.uT); r.uT = 0; }
     r.wk.push(r.x, r.z, r.g.rotation.y, r.v, dt, .05);
+    /* névtábla a hajó fölött (helyezéssel), 25–220 m között látszik */
+    r.lbl.visible = d2 > 25 && d2 < 220; if (r.lbl.visible) { r.lbl.position.set(r.x, 22 + Math.sin(W.t + r.i) * .3, r.z); const k = clamp(d2 * .03, 2.5, 7); r.lbl.scale.set(k, k * .32, 1); r.lbl.userData.set([r.o.name, r.fin ? `befutott: ${S.res.findIndex((q) => q.n === r.o.name) + 1}.` : `${Math.round(d2)} m · ${r.next < S.marks.length ? (r.next + 1) + '. bója felé' : 'a befutó felé'}`]); }
   }
   function vrFinish() {
     const S = VRR, me = S.res.findIndex((q) => q.me);
     const best = S.best[S.lvl]; if (me >= 0 && (!best || S.res[me].t < best)) { S.best[S.lvl] = S.res[me].t; try { localStorage.setItem("zephyr-vr-verseny", JSON.stringify(S.best)); } catch (e) {} }
     S.st = "done"; S.msg = me === 0 ? "🏆 GYŐZELEM!" : `${me + 1}. hely`; S.msgT = 999; W.panelDirty = 1;
+    /* eredménytábla a kormány fölött, előtted */
+    S.podium.userData.set([me === 0 ? "🏆 GYŐZELEM!" : `${me + 1}. hely`].concat(S.res.map((q, i) => `${i + 1}. ${q.n} – ${mmss(q.t)}`))); S.podium.visible = true;
+    { const c = T.camObj(), hw = new THREE.Vector3(), q = new THREE.Quaternion(); c.getWorldPosition(hw); c.getWorldQuaternion(q); const fw = new THREE.Vector3(0, 0, -1).applyQuaternion(q); fw.y = 0; if (fw.lengthSq() < 1e-4) fw.set(0, 0, -1); fw.normalize();
+      const p = hw.clone().addScaledVector(fw, 2.6); p.y = hw.y + .1; W.root.updateMatrixWorld(true); S.podium.position.copy(W.root.worldToLocal(p)); }
     if (me === 0) { [0, 400, 800].forEach((d) => setTimeout(() => horn(.35, .12), d)); }
   }
   const mmss = (t) => { const s = Math.max(0, Math.abs(t)); return `${t < 0 ? "−" : ""}${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`; };
