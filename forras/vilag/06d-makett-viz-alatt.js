@@ -162,7 +162,7 @@
       T.xr.extra.add(im); W.objs.push(im);
       const o = { key, F, im, list }; UW.fish.push(o); return o;
     };
-    mk("kusz", 160, [.08, 14]); mk("keszeg", 10, [.06, 5]); mk("ponty", 4, [.05, 3.2]); mk("fogas", 3, [.05, 4]); mk("csuka", 1, [.04, 3]); mk("harcsa", 1, [.06, 1.6]); mk("angolna", 2, [.35, 5]);
+    mk("kusz", 220, [.08, 14]); mk("keszeg", 10, [.06, 5]); mk("ponty", 4, [.05, 3.2]); mk("fogas", 3, [.05, 4]); mk("csuka", 1, [.04, 3]); mk("harcsa", 1, [.06, 1.6]); mk("angolna", 2, [.35, 5]);
     /* buborékok és lebegő szemcsék */
     const mkPts = (n, size, col, alpha) => { const ge = new THREE.BufferGeometry(), a = new Float32Array(n * 3), ph = new Float32Array(n); for (let i = 0; i < n; i++) { a[i * 3] = rr(-8, 8); a[i * 3 + 1] = UW_BOT + rand() * 3.2; a[i * 3 + 2] = UW_Z + rr(-8, 8); ph[i] = rand() * 100; }
       ge.setAttribute("position", new THREE.BufferAttribute(a, 3)); ge.setAttribute("ph", new THREE.BufferAttribute(ph, 1));
@@ -197,7 +197,7 @@
       const F = o.F, big = F.len > .3, n = o.list.length;
       o.list.forEach((f, i) => {
         if (o.key === "kusz") {
-          _fw.copy(cen).add(_tv.set(Math.sin(i * 2.1 + t * .5) * 1.4, Math.sin(i * 1.3 + t * .7) * .5, Math.cos(i * 1.7 + t * .4) * 1.4)).sub(f.p);
+          _fw.copy(cen).add(_tv.set(Math.sin(i * 2.1 + t * .5) * .85, Math.sin(i * 1.3 + t * .7) * .35, Math.cos(i * 1.7 + t * .4) * .85)).sub(f.p);
           /* a kezed / fejed közelében szétrebbennek */
           const dc = f.p.distanceTo(camL); if (dc < 1.0) _fw.addScaledVector(_tv.copy(f.p).sub(camL).normalize(), 6 * (1 - dc));
           f.v.addScaledVector(_fw, dt * 1.6); const sp = f.v.length(), mx = 1.3; if (sp > mx) f.v.multiplyScalar(mx / sp);

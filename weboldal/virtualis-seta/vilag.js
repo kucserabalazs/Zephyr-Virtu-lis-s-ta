@@ -1684,6 +1684,13 @@
         pane(o.a + .05, o.b - .05, o.y0 + .05, top - .05, "glass");
         pane(o.a, o.a + .06, o.y0, top, "frame"); pane(o.b - .06, o.b, o.y0, top, "frame"); pane(o.a, o.b, top - .06, top, "frame"); pane(o.a, o.b, o.y0, o.y0 + .06, "frame");
         if (o.b - o.a > 1.0) pane((o.a + o.b) / 2 - .03, (o.a + o.b) / 2 + .03, o.y0, top, "frame");
+        /* függöny két oldalt és karnis (csak a teljes magasságú falnál) */
+        if (vis === "tall") {
+          const inn = (a, b, y0, y1, d, mk) => { if (side === "W") box(mk, WALL + .02, y0, a, WALL + .02 + d, y1, b, lv, vis); else if (side === "E") box(mk, OUT_W - WALL - .02 - d, y0, a, OUT_W - WALL - .02, y1, b, lv, vis);
+            else if (side === "N") box(mk, a, y0, WALL + .02, b, y1, WALL + .02 + d, lv, vis); else box(mk, a, y0, Z_END - WALL - .02 - d, b, y1, Z_END - WALL - .02, lv, vis); };
+          inn(o.a - .3, o.b + .3, 2.38, 2.41, .03, "#8a8f96|m");
+          for (let k = 0; k < 3; k++) { const f = k * .1; inn(o.a - .28 + f, o.a - .2 + f, .05, 2.36, .05 + (k % 2) * .03, "#ebe2cf"); inn(o.b + .2 - f - .08 + .08 - .08, o.b + .28 - f, .05, 2.36, .05 + (k % 2) * .03, "#ebe2cf"); }
+        }
         if (o.kind === "win") { const sx = .06; if (side === "W") box("#d9d4c8", -sx, o.y0 - .05, o.a - .03, WALL, o.y0, o.b + .03, lv, vis); else if (side === "E") box("#d9d4c8", OUT_W - WALL, o.y0 - .05, o.a - .03, OUT_W + sx, o.y0, o.b + .03, lv, vis);
           else if (side === "N") box("#d9d4c8", o.a - .03, o.y0 - .05, -sx, o.b + .03, o.y0, WALL, lv, vis); else box("#d9d4c8", o.a - .03, o.y0 - .05, Z_END - WALL, o.b + .03, o.y0, Z_END + sx, lv, vis); }
       });
@@ -2292,7 +2299,7 @@
     const hitT = mesh(new THREE.BoxGeometry(.7, 1.6, .7), basic({ visible: false }), tel); hitT.position.y = .8;
     ENV.telHit = hitT;
     /* zászlórúd a stég bejáratánál: lobogó magyar zászló és a Zephyr fecskefarkú zászlaja – a szél (ÉNy) felől délkelet felé leng */
-    { const pole = new THREE.Group(); g.add(pole); pole.position.set(1.6, 0, DECK_R - .5);
+    { const pole = new THREE.Group(); g.add(pole); pole.position.set(3.75, 0, 3.75);
       mesh(new THREE.CylinderGeometry(.035, .05, 6.2, 10), std({ color: "#e9ecef", roughness: .3, metalness: .6 }), pole).position.y = 3.1;
       mesh(new THREE.SphereGeometry(.07, 12, 8), std({ color: "#c9a24a", roughness: .3, metalness: .9 }), pole).position.y = 6.25;
       const flag = (draw, w, h, y, swallow) => {
@@ -2523,7 +2530,11 @@
     /* vitorlások a tavon (a regatta hajói) */
     /* egy részletes vitorlás (lobogó vitorla, legénység) közelebb, a többi egyszerűsített a távolban */
     { const b = BOATS[2 % BOATS.length]; const g = makeBoat(Object.assign({ detail: 0, crew: 2 }, b)); ENV.env.add(g);
-      L.boats.push({ g, x: -60, z: -110, b: 1.2, v: 2.5, wp: null, ph: rand() * 9, wk: makeWake(ENV.env, .55), near: 1 }); }
+      L.boats.push({ g, x: -60, z: -110, b: 1.2, v: 2.5, wp: null, ph: rand() * 9, wk: makeWake(ENV.env, .55), near: 1 });
+      /* rámutatva: „Vitorlázz vele!” – csippentésre átvisz a vitorlázás világába */
+      const hit = mesh(new THREE.BoxGeometry(5, 14, 11), basic({ visible: false }), g); hit.position.y = 6;
+      hit.userData.xr = { hover: (on) => { try { if (on) showTip(g, "⛵ Vitorlázz a Balatonon!", "Csippents rá: a kormányrúdhoz ülsz"); else showTip(null); } catch (e) {} }, click: () => { setTimeout(() => W.open("sail"), 30); } };
+      T.xr.extra.add(hit); W.objs.push(hit); }
     [["#f4f2ea", "#ffffff"], ["#e9e4d4", "#1d3a8a"], ["#f6f4ec", "#c62828"], ["#ffffff", "#2b2f36"], ["#f2efe4", "#e9ecef"]].forEach(([sc, hc]) => {
       const g = makeFarBoat(sc, hc); ENV.env.add(g); const a = rr(-1.3, 1.1), d = rr(260, 1100);
       L.boats.push({ g, x: Math.sin(a) * d, z: -Math.cos(a) * d - 60, b: rr(0, TAU), v: 2.5, wp: null, ph: rand() * 9, far: 1 });
@@ -2550,6 +2561,14 @@
     for (let i = 0; i < M; i++) { const a = rand() * TAU, r = Math.sqrt(rand()) * 3.2; dp[i * 3] = Math.cos(a) * r; dp[i * 3 + 1] = rr(.3, 2.6); dp[i * 3 + 2] = Math.sin(a) * r; dph[i] = rand() * 100; }
     dust.setAttribute("position", new THREE.BufferAttribute(dp, 3)); dust.setAttribute("ph", new THREE.BufferAttribute(dph, 1));
     const dM = ffM.clone(); dM.uniforms = { uT: ffM.uniforms.uT, uA: { value: .5 }, uC: { value: new THREE.Color("#ffd98a") }, uS: { value: 26 } }; W.disposables.push(dust, dM);
+    /* hullócsillag: hosszú, elvékonyodó fénycsík */
+    const st = canvasTex(256, 16, (gg, w, h) => { const gr = gg.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, "rgba(255,255,255,0)"); gr.addColorStop(.85, "rgba(220,235,255,.8)"); gr.addColorStop(1, "rgba(255,255,255,1)"); gg.fillStyle = gr; gg.fillRect(0, 6, w, 4); });
+    L.star = mesh(new THREE.PlaneGeometry(70, 2.2), basic({ map: st, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, side: THREE.DoubleSide }), ENV.env); L.star.visible = false; L.star.renderOrder = -15;
+    /* reggeli pára: lágy, áttetsző sávok a víz fölött */
+    const mt = canvasTex(512, 128, (gg, w, h) => { for (let k = 0; k < 60; k++) { const x = rand() * w, y = h * rr(.3, .7), r = rr(30, 90); const gr = gg.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, "rgba(255,255,255,.35)"); gr.addColorStop(1, "rgba(255,255,255,0)"); gg.fillStyle = gr; gg.fillRect(x - r, y - r, 2 * r, 2 * r); } });
+    L.mist = [];
+    for (let k = 0; k < 10; k++) { const a = rr(-1.6, 1.6), d = rr(25, 140); const m = mesh(new THREE.PlaneGeometry(rr(60, 120), rr(4, 8)), basic({ map: mt, transparent: true, depthWrite: false, opacity: 0, fog: false }), site);
+      m.position.set(Math.sin(a) * d, WATER_Y + rr(.6, 2.2), -Math.cos(a) * d); m.lookAt(0, m.position.y, 0); m.renderOrder = 3; m.visible = false; L.mist.push(m); }
     const dpp = new THREE.Points(dust, dM); dpp.frustumCulled = false; site.add(dpp); L.dust = dM;
   }
   const _v3a = new THREE.Vector3(), _v3b = new THREE.Vector3();
@@ -2575,6 +2594,14 @@
       o.g.userData.update(dt); o.wk.push(o.x, o.z, o.g.rotation.y, o.v, dt, WATER_Y + .05);
     });
     L.ferry.tick(dt); L.ferry.g.position.y += WATER_Y;
+    L.hornT = (L.hornT == null ? rr(30, 70) : L.hornT) - dt; if (L.hornT < 0) { L.hornT = rr(70, 140); try { const a = T.ac(); if (a) horn(1.6, .035); } catch (e) {} }
+    /* hullócsillag éjjel */
+    if ((ENV.night || 0) > .6) { L.starT = (L.starT == null ? 6 : L.starT) - dt;
+      if (L.starT < 0 && !L.star.visible) { L.starT = rr(9, 22); const a = rr(-2.4, 2.4), e = rr(25, 55) * D2R, R = 900; L.star.position.set(Math.sin(a) * Math.cos(e) * R, Math.sin(e) * R, -Math.cos(a) * Math.cos(e) * R); L.star.lookAt(0, 0, 0); L.star.rotateZ(rr(-1, 1)); L.star.visible = true; L.star.userData.t = 0; } }
+    if (L.star.visible) { const u = (L.star.userData.t += dt); L.star.translateX(dt * 260); L.star.material.opacity = Math.sin(Math.min(1, u / .9) * Math.PI); if (u > .9) L.star.visible = false; }
+    /* reggeli pára a víz fölött (hajnalban, kora reggel) */
+    const hr = ENV.sunInfo ? ENV.sunInfo.el : 30, morning = (ENV.morning || 0);
+    L.mist.forEach((m, i) => { m.material.opacity = morning * .35 * (.7 + .3 * Math.sin(t * .1 + i)); m.visible = morning > .01; m.position.x += Math.sin(t * .05 + i) * dt * .3; });
     L.gulls.tick(dt, 0, -10);
     /* hal kiugrik, gyűrűk a vízen */
     L.fish.forEach((f) => {
@@ -2663,6 +2690,7 @@
     ENV.sunInfo = p;
     const s = skyAt(p.el), day = smooth(clamp((p.el + 4) / 12, 0, 1)), night = 1 - smooth(clamp((p.el + 9) / 8, 0, 1)), gold = smooth(clamp((p.el + 2) / 5, 0, 1)) * (1 - smooth(clamp((p.el - 8) / 14, 0, 1)));
     ENV.dayK = day; ENV.night = night; ENV.gold = gold;
+    ENV.morning = hour < 11 ? smooth(clamp((p.el + 4) / 4, 0, 1)) * (1 - smooth(clamp((p.el - 6) / 14, 0, 1))) : 0;
     const sd = dirFromAzEl(p.az, p.el), sdC = dirFromAzEl(p.az, Math.max(p.el, -3));
     /* a hold: a nappal ellentétes égrészen, kb. 25° magasan (egyszerűsítve) */
     const md = dirFromAzEl((p.az + 160) % 360, 28);
@@ -2886,7 +2914,7 @@
       T.xr.extra.add(im); W.objs.push(im);
       const o = { key, F, im, list }; UW.fish.push(o); return o;
     };
-    mk("kusz", 160, [.08, 14]); mk("keszeg", 10, [.06, 5]); mk("ponty", 4, [.05, 3.2]); mk("fogas", 3, [.05, 4]); mk("csuka", 1, [.04, 3]); mk("harcsa", 1, [.06, 1.6]); mk("angolna", 2, [.35, 5]);
+    mk("kusz", 220, [.08, 14]); mk("keszeg", 10, [.06, 5]); mk("ponty", 4, [.05, 3.2]); mk("fogas", 3, [.05, 4]); mk("csuka", 1, [.04, 3]); mk("harcsa", 1, [.06, 1.6]); mk("angolna", 2, [.35, 5]);
     /* buborékok és lebegő szemcsék */
     const mkPts = (n, size, col, alpha) => { const ge = new THREE.BufferGeometry(), a = new Float32Array(n * 3), ph = new Float32Array(n); for (let i = 0; i < n; i++) { a[i * 3] = rr(-8, 8); a[i * 3 + 1] = UW_BOT + rand() * 3.2; a[i * 3 + 2] = UW_Z + rr(-8, 8); ph[i] = rand() * 100; }
       ge.setAttribute("position", new THREE.BufferAttribute(a, 3)); ge.setAttribute("ph", new THREE.BufferAttribute(ph, 1));
@@ -2921,7 +2949,7 @@
       const F = o.F, big = F.len > .3, n = o.list.length;
       o.list.forEach((f, i) => {
         if (o.key === "kusz") {
-          _fw.copy(cen).add(_tv.set(Math.sin(i * 2.1 + t * .5) * 1.4, Math.sin(i * 1.3 + t * .7) * .5, Math.cos(i * 1.7 + t * .4) * 1.4)).sub(f.p);
+          _fw.copy(cen).add(_tv.set(Math.sin(i * 2.1 + t * .5) * .85, Math.sin(i * 1.3 + t * .7) * .35, Math.cos(i * 1.7 + t * .4) * .85)).sub(f.p);
           /* a kezed / fejed közelében szétrebbennek */
           const dc = f.p.distanceTo(camL); if (dc < 1.0) _fw.addScaledVector(_tv.copy(f.p).sub(camL).normalize(), 6 * (1 - dc));
           f.v.addScaledVector(_fw, dt * 1.6); const sp = f.v.length(), mx = 1.3; if (sp > mx) f.v.multiplyScalar(mx / sp);
