@@ -8530,9 +8530,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     g.fillText("ZEPHYR", 50, 62);
     g.fillStyle = "#fff"; g.font = "600 36px system-ui, sans-serif";
     const sc = SCENES[current] || {}, grp = GROUPS.find((q) => q.id === sc.g);
-    { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 680) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 250, 56); }
+    const zw = window.ZephyrWorld && ZephyrWorld.active ? ZephyrWorld.kind : null;   /* 3D világban a világ neve áll fejlécben, nem a séta utolsó helye */
+    if (zw) { g.fillText(zw === "race" ? "Vitorlásverseny – a kormánynál" : "A ház makettje", 250, 56); txt(g, "3D világ · a valódi fotókhoz: vissza a sétához", 250, 99, { fs: 21, w: 600, c: "rgba(191,240,213,.85)" }); }
+    else { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 680) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 250, 56); }
     /* hitelességi pecsét: a vendég tudja, hogy valódi fényképet lát, nem látványtervet */
-    txt(g, ["korvett", "dingi", "fregatt", "kaloz", "schooner", "kadett"].includes((SCENES[current] || {}).g) ? "✓ Valódi 360°-os fénykép a szobáról – nem látványterv" : "✓ Valódi 360°-os fénykép – nem látványterv", 250, 99, { fs: 21, w: 600, c: "rgba(191,240,213,.85)" });
+    if (!zw) txt(g, ["korvett", "dingi", "fregatt", "kaloz", "schooner", "kadett"].includes((SCENES[current] || {}).g) ? "✓ Valódi 360°-os fénykép a szobáról – nem látványterv" : "✓ Valódi 360°-os fénykép – nem látványterv", 250, 99, { fs: 21, w: 600, c: "rgba(191,240,213,.85)" });
     btn(g, VW - 120, 26, 76, 72, "✕", () => vrClose(), { round: 36 });
     btn(g, VW - 330, 26, 106, 72, vr8k() ? "8K" : "4K", () => { vr8k(!vr8k()); if (vr8k()) hiRes(current); else hiDrop(); vrDraw(); }, { round: 36, fs: 30, on: vr8k() });
     if (VRS.page !== "main") btn(g, VW - 212, 26, 76, 72, "‹", () => { VRS.page = "main"; vrDraw(); vrPlace(); }, { round: 36 });
