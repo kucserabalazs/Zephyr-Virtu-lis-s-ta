@@ -129,6 +129,7 @@
   /* --------------------------------------------------------------- felépítés */
   function buildVRace() {
     const root = W.root;
+    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, lblAr: 0 });   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
     makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
