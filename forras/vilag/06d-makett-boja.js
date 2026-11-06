@@ -232,7 +232,12 @@
     /* árbocok, kötélzet */
     parts.push([CY(.12, .16, 22, 6), "#5b3a22", M4(L * .36, 13, 0)], [CY(.12, .16, 20, 6), "#5b3a22", M4(-L * .38, 11, 0)]);
     [[L / 2 + 1.5, 3.4, L * .36, 23.5], [L * .36, 23.5, -L * .38, 20.5], [-L * .38, 20.5, -L / 2, 3.4]].forEach(([x0, y0, x1, y1]) => { const [gg, mm] = rodGeom(new THREE.Vector3(x0, y0, 0), new THREE.Vector3(x1, y1, 0), .03, 4); parts.push([gg.applyMatrix4(mm), "#c8c8c8"]); });
+    /* horgonyok az orr két oldalán, tatzászló, fedélzeti korlátok */
+    [-1, 1].forEach((sd) => parts.push([BX(.9, 1.2, .1), "#2a2c30", M4(L / 2 - 4, 2.0, sd * (B / 2 + .06)), "m"], [BX(1.4, .25, .1), "#2a2c30", M4(L / 2 - 4, 1.3, sd * (B / 2 + .06)), "m"]));
+    parts.push([CY(.06, .06, 4, 6), "#5b3a22", M4(-L / 2 + .5, 5.4, 0)]);
+    [[L * .67, 6.25, B - 1.2], [L * .53, 8.25, B - 2.0]].forEach(([len, y, w]) => [-1, 1].forEach((sd) => parts.push([BX(len, .05, .05), "#f4f1e6", M4(-1, y + .55, sd * w / 2)]))); 
     const M = vcGroup(parts, ship);
+    const sflag = mesh(new THREE.PlaneGeometry(2.2, 1.4), std({ map: canvasTex(128, 80, (gg, w, h) => { gg.fillStyle = "#c8102e"; gg.fillRect(0, 0, w, h); gg.fillStyle = "#012169"; gg.fillRect(0, 0, w * .45, h * .5); gg.strokeStyle = "#fff"; gg.lineWidth = 4; gg.strokeRect(2, 2, w * .45 - 2, h * .5 - 2); }), side: THREE.DoubleSide }), ship); sflag.position.set(-L / 2 - .6, 6.6, 0); sflag.rotation.y = Math.PI / 2;
     /* ablaksorok (éjjel világítanak): egy csíkos textúra a fekete testen és a felépítményen */
     const winT = canvasTex(1024, 64, (gg, w, h) => { gg.clearRect(0, 0, w, h); for (let r = 0; r < 2; r++) for (let x = 6; x < w; x += 15) { gg.fillStyle = "#ffe08a"; gg.beginPath(); gg.arc(x, 18 + r * 26, 4.5, 0, TAU); gg.fill(); } });
     const winM = basic({ map: winT, transparent: true, depthWrite: false, color: "#6a5a3a" });
@@ -246,7 +251,7 @@
     const smoke = smokePool(root, 50, "#4a4a4a"), rings = ringPool(root, 10);
     const lifeboats = boatsP.slice(0, 8).map((p) => { const b = new THREE.Group(); root.add(b); vcGroup([[BX(4.2, .7, 1.4), "#f7f7f2"], [BX(4.25, .12, 1.45), "#c0392b", M4(0, .2, 0)], [BX(.5, .5, .5), "#ff8a3a", M4(-.8, .55, 0)], [BX(.5, .5, .5), "#3a5ca8", M4(.4, .55, 0)], [BX(.5, .5, .5), "#e8e2cf", M4(1.4, .55, 0)]], b); b.visible = false; return { g: b, p0: p, v: new THREE.Vector3() }; });
     /* útvonal: balról jobbra, 170 m-re előttünk; a jéghegy az út közepén */
-    const F0 = -175, RB = 25;
+    const F0 = -135, RB = 25;   /* 135 m-re előttünk – életnagyságban is lenyűgöző, de nem nyomasztó */
     const st = { t: 0, x: -300, phase: "sail", hit: 0, sink: 0, lit: 0 };
     root.userData.tip = ["🚢 Titanic", "Jéghegy előttünk!"];
     return { name: "A Titanic és a jéghegy", root,
@@ -261,8 +266,10 @@
           st.sink += dt;
           /* orr-előre süllyed: dőlés, majd a tat a magasba emelkedik, végül eltűnik */
           const k = clamp(st.sink / 70, 0, 1);
-          ship.rotation.z = -smooth(clamp(k * 1.3, 0, 1)) * .42; ship.rotation.x = Math.sin(st.sink * .3) * .02 + k * .06;
-          ship.position.y = -smooth(clamp((k - .55) / .45, 0, 1)) * 34 - k * 3;
+          /* a klasszikus kép: előbb az orr merül, a hajó megdől, majd a tat szinte függőlegesen az ég felé emelkedik, és a hajó lecsúszik a mélybe */
+          const k1 = smooth(clamp(k / .5, 0, 1)), k2 = smooth(clamp((k - .5) / .3, 0, 1)), k3 = smooth(clamp((k - .78) / .22, 0, 1));
+          ship.rotation.z = -(k1 * .22 + k2 * .78); ship.rotation.x = Math.sin(st.sink * .3) * .02 + k1 * .07;
+          ship.position.y = -k1 * 3.2 - k2 * 9 - k3 * 48;
           lifeboats.forEach((q, i) => { const tl = st.sink - 4 - i * 2.2; if (tl < 0) return; if (!q.g.visible) { q.g.visible = true; q.g.position.copy(q.p0).applyMatrix4(ship.matrixWorld); root.worldToLocal(q.g.position); q.v.set(0, 0, Math.sign(q.p0.z) * 2.2); }
             q.g.position.y += (0 - q.g.position.y) * Math.min(1, dt * .9); q.g.position.addScaledVector(q.v, dt * clamp((tl - 2) / 3, 0, 1)); q.g.rotation.z = Math.sin(st.t * 1.4 + i) * .05; q.g.rotation.y = Math.PI / 2; });
           if (Math.random() < dt * 6 && ship.position.y > -20) { const p = RP(F0, st.x + rr(-L / 2, 0)); rings.emit(p.x, p.z, rr(2, 5), 4); }
