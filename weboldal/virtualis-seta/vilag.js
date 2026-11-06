@@ -3470,7 +3470,10 @@
     const lampM = std({ color: "#fff6dd", emissive: new THREE.Color("#ffcf7a"), emissiveIntensity: 0, roughness: .3 }); const lamp = mesh(new THREE.SphereGeometry(.08, 14, 10), lampM, pole); lamp.position.y = 5.26; ENV.glows.push({ mat: lampM, k: 3 });
     BJ.flags = [];
     const flag = (draw, w, h, y) => { const geo = new THREE.PlaneGeometry(w, h, 12, 2); geo.translate(w / 2, 0, 0); const t2 = canvasTex(256, Math.round(256 * h / w), draw);
-      const f = mesh(geo, std({ map: t2, side: THREE.DoubleSide, roughness: .8 }), pole); f.position.y = y; f.rotation.y = Math.PI / 2 + .3; f.castShadow = true;
+      const f = mesh(geo, std({ map: t2, side: THREE.FrontSide, roughness: .8, alphaTest: .5 }), pole); f.position.y = y; f.rotation.y = Math.PI / 2 + .3; f.castShadow = true;
+      /* hátoldal külön, tükrözött textúrával – így a felirat hátulról sem fordított (ZEPHYR, nem „ЯYHPEZ”) */
+      const t3 = t2.clone(); t3.wrapS = THREE.RepeatWrapping; t3.repeat.x = -1; t3.offset.x = 1; t3.needsUpdate = true;
+      mesh(geo, std({ map: t3, side: THREE.BackSide, roughness: .8, alphaTest: .5 }), f);
       const base = Float32Array.from(geo.attributes.position.array); BJ.flags.push({ geo, base, w, ph: rand() * 9 }); return f; };
     flag((gg, w, h) => { ["#ce2939", "#ffffff", "#477050"].forEach((c, i) => { gg.fillStyle = c; gg.fillRect(0, i * h / 3, w, h / 3 + 1); }); }, 1.2, .8, 4.75);
     flag((gg, w, h) => { gg.fillStyle = "#0b2f5e"; gg.beginPath(); gg.moveTo(0, 0); gg.lineTo(w, 0); gg.lineTo(w * .78, h / 2); gg.lineTo(w, h); gg.lineTo(0, h); gg.fill(); gg.fillStyle = "#ffd166"; gg.font = "800 46px Georgia, serif"; gg.textBaseline = "middle"; gg.fillText("ZEPHYR", 14, h / 2 + 2); }, 1.3, .55, 3.95);
@@ -3501,7 +3504,7 @@
   const RF = new THREE.Vector3(0, 0, 1), RRv = new THREE.Vector3(-1, 0, 0);   /* szél felé (a part) és jobbra */
   const RP = (f, r, v) => (v || new THREE.Vector3()).set(0, 0, 0).addScaledVector(RF, f).addScaledVector(RRv, r);
   /* a pálya: a mi bójánk a szél felőli jel (f = 0); 230 m-rel a nyílt víz felé a hátszeles kapu. Bójakerülés bal kézzel (a bója a hajó bal oldalán marad). */
-  const RLEGS = [{ id: "W1", f: -2, r: 8, rad: 7, up: true }, { id: "W2", f: 9, r: -3, rad: 6 }, { id: "L1", f: -232, r: -14, rad: 12 }, { id: "L2", f: -240, r: 4, rad: 10 }];
+  const RLEGS = [{ id: "W1", f: -3, r: 14, rad: 5, up: true }, { id: "W2", f: 14, r: -5, rad: 5 }, { id: "L1", f: -232, r: -14, rad: 12 }, { id: "L2", f: -240, r: 4, rad: 10 }];
   function buildBuoyRace(site) {
     const g = new THREE.Group(); site.add(g); g.position.y = WATER_Y; BJ.race = g;
     /* a hátszeles kapu két sárga bójája és egy messzi rendezőhajó (a pálya „háttere”) */
@@ -3543,6 +3546,7 @@
         if (t - st.lastTack > 9 && ((st.tack > 0 && brg < 0 && brg >= other - 3 * D2R) || (st.tack < 0 && brg > 0 && brg <= other + 3 * D2R) || (Math.abs(st.r) > 110 && Math.sign(st.r) === st.tack))) { st.tack = -st.tack; want = st.tack * 150 * D2R; st.lastTack = t; }
       }
       /* egymás és a mi bójánk kerülése */
+      { const db = Math.hypot(st.f, st.r); if (db < 13) want += (Math.atan2(-st.r, -st.f) > st.hd ? -1 : 1) * .7 * (1 - db / 13); }   /* a bóját (rajta állsz!) 10 m-nél közelebb nem súrolják */
       BJ.boats.forEach((o) => { if (o === st) return; const ddf = o.f - st.f, ddr = o.r - st.r, d = Math.hypot(ddf, ddr); if (d < 16) want += (Math.atan2(ddr, ddf) > st.hd ? -1 : 1) * .3 * (1 - d / 16); });
       { const d0 = Math.hypot(st.f, st.r); if (d0 < 9) want += (Math.atan2(-st.r, -st.f) > st.hd ? -1 : 1) * .6 * (1 - d0 / 9); }
       st.hd += clamp(wrapA(want - st.hd), -.35 * dt, .35 * dt);
@@ -3551,6 +3555,7 @@
       const vt = polar(twa, st.spin > .5) * KN * st.b.skill;
       st.v += (vt - st.v) * Math.min(1, dt / 6);
       st.f += Math.cos(st.hd) * st.v * dt; st.r += Math.sin(st.hd) * st.v * dt;
+      { const d0 = Math.hypot(st.f, st.r), RM = 9.5; if (d0 < RM) { const k = RM / Math.max(d0, .01); st.f *= k; st.r *= k; } }   /* kemény határ: a hajótest sosem ér a bójához (rajta állsz) */
       if (dist < L.rad) { st.leg = (st.leg + 1) % RLEGS.length; if (st.leg === 0) st.laps++; if (L.id === "W2" && Math.hypot(st.f, st.r) < 30) try { winch(); } catch (e) {} }
       /* megjelenítés (a regatta világ hajóival azonos módon) */
       const p = RP(st.f, st.r, _rv), dirW = RP(Math.cos(st.hd), Math.sin(st.hd), _rv2);
