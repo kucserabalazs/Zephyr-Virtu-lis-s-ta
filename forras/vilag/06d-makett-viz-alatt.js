@@ -124,6 +124,9 @@
           #include <colorspace_fragment>
         }` });
     W.disposables.push(bedM); const bm = mesh(bed, bedM, g); bm.position.set(0, UW_BOT, UW_Z); UW.bed = bm;
+    /* a fenéken is lehet „úszni”: csippents a homokra, és odasiklasz */
+    bm.userData.xr = { click: (hit) => { if (MAQ.dive && hit && hit.point && !MAQ.fading) { placeUser(hit.point.clone().setY(hit.point.y + .05), -1); try { bubbleSnd(); } catch (e) {} } } };
+    T.xr.extra.add(bm); W.objs.push(bm);
     UW.mats = [sU, bU];
     /* cölöpök a fenékig (algásan), a nád szára a fenékből */
     /* algák a cölöpökön (a cölöpök maguk a stéghez tartoznak, a fenékig érnek) */

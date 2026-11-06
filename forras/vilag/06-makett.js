@@ -451,7 +451,7 @@
   function maqPanel(P) {
     const life = MAQ.mode === "life";
     if (MAQ.dive) { P.title("Merülés a Balatonba", "A stég előtt, 1,6 m mélyen · a Balaton élővilága");
-      P.row(0, "Mutass egy halra: kiírja a nevét", "#ffffff"); P.row(1, "Küsz, dévérkeszeg, ponty, fogassüllő, csuka, harcsa, angolna", "#ffd166");
+      P.row(0, "Mutass egy halra: kiírja a nevét · csippents a homokra: odaúszol", "#ffffff"); P.row(1, "Küsz, dévérkeszeg, ponty, fogassüllő, csuka, harcsa, angolna", "#ffd166");
       P.row(2, `${dayHu(MAQ.day)} ${hhmm(MAQ.hour)} · ${PRESETS[MAQ.preset][0]}`, "#7fd3ff"); P.row(3, "Közel menve a küszraj szétrebben", "#c9a24a");
       P.buttons([["◂☀ Korábban", () => nudgeHour(-.5)], ["◐ " + PRESETS[(MAQ.preset + 1) % PRESETS.length][0], () => setPreset(MAQ.preset + 1)], ["Később ☀▸", () => nudgeHour(.5)]], 1);
       P.buttons([["🌊 Fel a stégre", () => goSurface()], ["‹ Vissza a sétához", () => W.close()]]); return; }
