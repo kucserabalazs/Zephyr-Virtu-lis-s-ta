@@ -1,0 +1,424 @@
+<title>Zephyr átmenet-választó</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,500;1,9..144,700&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Elrendezés: fent (telefonon) vagy balra (gépen) a 360°-os néző, mellette a választható átmenetek listája.
+   Egyetlen, szándékosan sötét világ (esti tó), hogy a fotók ragyogjanak; a kiemelés a Zephyr piros genoa-színe és sárgaréz. */
+:root {
+  --ej: #0b1621;          /* esti tó – háttér */
+  --ej-2: #122230;        /* panel */
+  --ej-3: #1a3043;        /* kártya kiemelve */
+  --vonal: #2a4357;
+  --szoveg: #eef3f6;
+  --halvany: #a8bccb;
+  --genoa: #e2483d;       /* a Zephyr piros genoája */
+  --sargarez: #d8b46a;    /* hajóvasalat */
+  --font-cim: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-test: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--ej); color: var(--szoveg); font-family: var(--font-test); font-size: 17px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ej); }
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 380px; height: 100%; }
+.nezo { position: relative; min-width: 0; background: #000; overflow: hidden; touch-action: none; cursor: grab; }
+.nezo:active { cursor: grabbing; }
+canvas { display: block; width: 100%; height: 100%; }
+.felirat { position: absolute; left: max(14px, env(safe-area-inset-left, 0px)); top: 14px; right: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none; }
+.chip { background: rgba(11, 22, 33, .72); backdrop-filter: blur(6px); border: 1px solid rgba(216, 180, 106, .35); border-radius: 999px; padding: 6px 14px; font-size: 15px; font-weight: 600; }
+.chip b { color: var(--sargarez); font-weight: 700; }
+.nagyfelirat { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); font-family: var(--font-cim); font-style: italic; font-weight: 700; font-size: clamp(28px, 5vw, 54px); text-align: center; text-shadow: 0 2px 18px rgba(0, 0, 0, .8); pointer-events: none; opacity: 0; transition: opacity .35s; padding-inline: 16px; text-wrap: balance; }
+.nagyfelirat.lat { opacity: 1; }
+.ajto { position: absolute; width: 66px; height: 66px; margin: -33px 0 0 -33px; border-radius: 50%; border: 3px solid var(--szoveg); background: rgba(226, 72, 61, .88); color: #fff; display: grid; place-items: center; cursor: pointer; box-shadow: 0 0 0 6px rgba(226, 72, 61, .28), 0 6px 18px rgba(0, 0, 0, .5); animation: lukt 1.8s ease-in-out infinite; }
+.ajto svg { width: 30px; height: 30px; }
+.ajto span { position: absolute; top: 74px; white-space: nowrap; font-size: 14px; font-weight: 700; background: rgba(11, 22, 33, .8); padding: 4px 10px; border-radius: 8px; }
+@keyframes lukt { 50% { box-shadow: 0 0 0 12px rgba(226, 72, 61, .12), 0 6px 18px rgba(0, 0, 0, .5); } }
+.vezer { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 14px max(14px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); background: linear-gradient(transparent, rgba(0, 0, 0, .55)); }
+button { font: inherit; color: inherit; }
+.gomb { border: 0; border-radius: 12px; padding: 13px 20px; font-weight: 700; font-size: 17px; cursor: pointer; background: var(--genoa); color: #fff; display: inline-flex; gap: 8px; align-items: center; min-height: 52px; }
+.gomb.masod { background: rgba(18, 34, 48, .9); border: 1px solid var(--vonal); }
+.gomb:focus-visible, .kartya:focus-visible, .seb button:focus-visible { outline: 3px solid var(--sargarez); outline-offset: 2px; }
+.gomb[disabled] { opacity: .5; cursor: default; }
+.panel { background: var(--ej-2); border-left: 1px solid var(--vonal); overflow-y: auto; padding-block: 18px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; grid-auto-rows: max-content; gap: 14px; align-content: start; min-width: 0; }
+h1 { font-family: var(--font-cim); font-style: italic; font-weight: 700; font-size: 30px; line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 em { color: var(--sargarez); font-style: italic; }
+.bev { color: var(--halvany); margin: 0; font-size: 16px; }
+.seb { display: flex; gap: 0; border: 1px solid var(--vonal); border-radius: 12px; overflow: hidden; }
+.seb button { flex: 1; border: 0; background: transparent; padding: 11px 6px; font-weight: 600; cursor: pointer; font-size: 15px; }
+.seb button[aria-pressed="true"] { background: var(--ej-3); color: var(--sargarez); }
+.cimke { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--halvany); font-weight: 700; margin: 4px 0 -6px; }
+.lista { display: grid; gap: 10px; }
+.kartya { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; text-align: left; border: 1px solid var(--vonal); background: transparent; border-radius: 14px; padding: 14px; cursor: pointer; }
+.kartya[aria-pressed="true"] { background: var(--ej-3); border-color: var(--sargarez); }
+.kartya .sz { font-family: var(--font-cim); font-style: italic; font-weight: 700; font-size: 22px; color: var(--sargarez); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.kartya .nev { font-weight: 700; font-size: 18px; line-height: 1.25; }
+.kartya .le { grid-column: 2 / 4; color: var(--halvany); font-size: 15px; }
+.kartya .ido { font-size: 13px; color: var(--halvany); white-space: nowrap; padding-top: 3px; font-variant-numeric: tabular-nums; }
+.csillag { grid-column: 2 / 4; justify-self: start; border: 1px solid var(--vonal); background: transparent; border-radius: 999px; padding: 6px 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+.csillag[aria-pressed="true"] { border-color: var(--sargarez); color: var(--sargarez); background: rgba(216, 180, 106, .1); }
+.jelenleg { font-size: 12px; font-weight: 700; color: var(--ej); background: var(--halvany); border-radius: 6px; padding: 1px 7px; margin-left: 6px; vertical-align: 2px; }
+.kedv { border: 1px dashed var(--sargarez); border-radius: 14px; padding: 14px; display: grid; gap: 8px; }
+.kedv p { margin: 0; color: var(--halvany); font-size: 15px; }
+.kedv strong { color: var(--szoveg); }
+.betolt { position: absolute; inset: 0; display: grid; place-items: center; background: var(--ej); font-weight: 600; color: var(--halvany); }
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 58vh auto; height: auto; }
+  .panel { border-left: 0; border-top: 1px solid var(--vonal); overflow: visible; }
+  .nezo { height: 58vh; }
+  h1 { font-size: 27px; }
+}
+@media (prefers-reduced-motion: reduce) { .ajto { animation: none; } }
+</style>
+
+<div class="app">
+  <div class="nezo" id="nezo">
+    <canvas id="vaszon" aria-label="360°-os nézet a Zephyr Apartmanból"></canvas>
+    <div class="felirat"><span class="chip" id="hely">Napozóstég</span><span class="chip">Átmenet: <b id="valasztott">–</b></span></div>
+    <button class="ajto" id="ajto" type="button" aria-label="Tovább a következő helyszínre"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg><span id="ajtonev">Utca</span></button>
+    <div class="nagyfelirat" id="nagy"></div>
+    <div class="vezer">
+      <button class="gomb" id="tovabb" type="button">▶ Tovább a választott átmenettel</button>
+      <button class="gomb masod" id="sorban" type="button">Mind sorban</button>
+    </div>
+    <div class="betolt" id="betolt">A Zephyr panorámái töltődnek…</div>
+  </div>
+
+  <aside class="panel">
+    <h1>Válassz <em>átmenetet</em> a séta helyszínei közé</h1>
+    <p class="bev">Valódi panorámák a sétából: stég → utca → kapu → lépcsőház → Dingi terasz → Dingi előtér. Válassz egy átmenetet, aztán koppints a piros nyílra vagy a <b>Tovább</b> gombra. Ujjal vagy egérrel körbe is nézhetsz.</p>
+    <div class="cimke" id="sebcimke">Sebesség</div>
+    <div class="seb" role="group" aria-labelledby="sebcimke">
+      <button type="button" data-seb="1.5">Lassabb</button>
+      <button type="button" data-seb="1" aria-pressed="true">Normál</button>
+      <button type="button" data-seb="0.7">Gyorsabb</button>
+    </div>
+    <div class="cimke">Átmenetek</div>
+    <div class="lista" id="lista"></div>
+    <div class="kedv">
+      <p><strong>Kedvenceid:</strong> <span id="kedvlista">még nincs – a ☆ gombbal jelölheted meg őket.</span></p>
+      <p>Írd meg a chatben, melyik tetszett (akár kettőt is, például „4-es és 6-os keverve”), és azt építem be a sétába, a VR-módba is.</p>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+"use strict";
+/* ---- Helyszínek a sétából (a fotón belüli x/y a valódi nyilak helye) ---- */
+const HELY = [
+  { id: "steg",          nev: "Napozóstég",      s: .60, ki: { x: .62,  y: .64, nev: "Utca" } },
+  { id: "utca",          nev: "Utca",            s: .241, ki: { x: .233, y: .542, nev: "Kapu" } },
+  { id: "kapu",          nev: "Kapu",            s: .331, ki: { x: .268, y: .563, nev: "A lépcsőháznál" } },
+  { id: "oldal-bejaro",  nev: "A lépcsőháznál",  s: .362, ki: { x: .475, y: .58,  nev: "Dingi terasz" } },
+  { id: "fedett-bejaro", nev: "Dingi terasz",    s: .815, ki: { x: .752, y: .60,  nev: "Dingi előtér" } },
+  { id: "dingi-eloter",  nev: "Dingi előtér",    s: .711, ki: { x: .29,  y: .60,  nev: "Vissza a stégre" } }
+];
+/* ---- Átmenetek ---- */
+const ATM = [
+  { nev: "A mostani lágy átmenet", le: "Ami most a sétában van: kis fordulás és ráközelítés, enyhe elmosás, áttűnés.", ido: 0.9, jelenleg: true },
+  { nev: "Sima áttűnés", le: "Klasszikus, nyugodt képváltás, mozgás nélkül.", ido: 0.9 },
+  { nev: "Belépés a nyílon át", le: "A nyíl felé fordul, előrelép a mozgás irányába, és már az új helyen lép tovább. Olyan, mintha odasétálnál.", ido: 1.5 },
+  { nev: "Napfény-átjáró", le: "A nyílból meleg, aranyló fény árad, elborítja a képet, és az új helyszín a fényből tűnik elő.", ido: 1.8 },
+  { nev: "Kerek kapu", le: "A nyílnál kör alakú, aranyszegélyű kapu nyílik, benne már az új helyszín, és kitágul körülötted.", ido: 1.7 },
+  { nev: "Kis bolygó", le: "A kép kis bolygóvá gömbölyödik, megfordul, és az új helyszín bolygójáról bomlik ki. Látványos, ünnepi.", ido: 2.9 },
+  { nev: "Balatoni hullám", le: "A nyílból körkörös hullámok futnak szét, mint a vízen, és a hullámok mögül az új kép tisztul ki.", ido: 1.9 },
+  { nev: "Élességváltás", le: "Mint egy filmkameránál: a kép elhomályosul, majd az új helyszín élesedik ki.", ido: 1.3 },
+  { nev: "Mozis elsötétítés", le: "Rövid elsötétülés, majd világosodás. Ünnepélyes, filmes hatás.", ido: 1.3 },
+  { nev: "Söprés a haladás irányába", le: "Az új kép a nyíl felől söpri le a régit, a határon finom fénycsíkkal.", ido: 1.5 }
+];
+
+/* ---- WebGL: a panorámát közvetlenül a gömbi (equirektangulárisan tárolt) képből rajzoljuk ---- */
+const cv = document.getElementById("vaszon");
+const gl = cv.getContext("webgl2", { antialias: false, premultipliedAlpha: false });
+const VS = `#version 300 es
+in vec2 p; out vec2 vp; void main(){ vp = p; gl_Position = vec4(p, 0., 1.); }`;
+const FS = `#version 300 es
+precision highp float;
+in vec2 vp; out vec4 o;
+uniform sampler2D tA, tB;
+uniform vec2 res;
+uniform float yaw, pitch, fovA, fovB, proj, ofsB, mixv, blurA, blurB, zbA, zbB, glow, dark, rip, ripT, portalR, wipe, hasB;
+uniform int maskMode;
+uniform vec3 door;
+const float PI = 3.14159265;
+vec3 rotY(vec3 d, float o){ float c = cos(o), s = sin(o); return vec3(d.x*c - d.z*s, d.y, d.z*c + d.x*s); }
+vec4 eq(sampler2D t, vec3 d){
+  d = normalize(d);
+  vec2 uv = vec2(.5 + atan(d.x, -d.z) / (2.*PI), .5 + asin(clamp(d.y, -1., 1.)) / PI);
+  vec2 dx = dFdx(uv), dy = dFdy(uv); dx.x -= round(dx.x); dy.x -= round(dy.x);
+  return textureGrad(t, uv, dx, dy);
+}
+vec3 ray(vec2 q, float fov, vec3 f, vec3 r, vec3 u){
+  float a = res.x / res.y;
+  vec2 pr = q * vec2(a, 1.) * tan(min(fov, 2.75) * .5);
+  vec3 dr = normalize(f + pr.x*r + pr.y*u);
+  vec2 s = q * vec2(a, 1.) * 2. * tan(fov * .25);
+  float s2 = dot(s, s);
+  vec3 ds = normalize(4.*s.x*r + 4.*s.y*u + (4. - s2)*f);
+  return normalize(mix(dr, ds, proj));
+}
+vec3 ripple(vec3 d){
+  if (rip <= 0.) return d;
+  float th = acos(clamp(dot(normalize(d), door), -1., 1.));
+  vec3 t = normalize(door - d * dot(door, d) + 1e-5);
+  return normalize(d + t * rip * sin(th * 34. - ripT * 9.) * exp(-th * 1.2));
+}
+vec3 samp(sampler2D t, vec3 d, float ofs, float blur, float zb, vec3 f, vec3 r, vec3 u){
+  d = rotY(d, ofs);
+  vec3 ff = rotY(f, ofs);
+  if (blur <= 0. && zb <= 0.) return eq(t, d).rgb;
+  vec3 acc = vec3(0.); float n = 0.;
+  vec3 t1 = normalize(cross(d, abs(d.y) < .95 ? vec3(0,1,0) : vec3(1,0,0))), t2 = cross(d, t1);
+  for (int i = 0; i < 12; i++) {
+    float fi = float(i);
+    float ang = fi * 2.39996, rad = sqrt((fi + .5) / 12.);
+    vec3 dd = d + (t1 * cos(ang) + t2 * sin(ang)) * rad * blur;
+    dd = normalize(mix(dd, ff, fi / 11. * zb));
+    acc += eq(t, dd).rgb; n += 1.;
+  }
+  return acc / n;
+}
+void main(){
+  vec2 q = vp;
+  vec3 f = vec3(sin(yaw)*cos(pitch), sin(pitch), -cos(yaw)*cos(pitch));
+  vec3 r = vec3(cos(yaw), 0., sin(yaw));
+  vec3 u = cross(r, f);
+  vec3 dA = ripple(ray(q, fovA, f, r, u));
+  vec3 col = samp(tA, dA, 0., blurA, zbA, f, r, u);
+  if (hasB > .5) {
+    vec3 dB = ripple(ray(q, fovB, f, r, u));
+    float m = mixv;
+    if (maskMode == 1) { float th = acos(clamp(dot(dA, door), -1., 1.)); m = 1. - smoothstep(portalR - .06, portalR, th); }
+    if (maskMode == 2) m = smoothstep(wipe - .18, wipe + .18, q.x);
+    if (m > .001) col = mix(col, samp(tB, dB, ofsB, blurB, zbB, f, r, u), m);
+    if (maskMode == 1 && portalR > .001 && portalR < 3.1) { float th = acos(clamp(dot(dA, door), -1., 1.)); col += vec3(1., .78, .38) * exp(-pow((th - portalR) / .028, 2.)) * .95; }
+    if (maskMode == 2) col += vec3(1., .86, .55) * exp(-pow((q.x - wipe) / .035, 2.)) * .55;
+  }
+  if (glow > 0.) { float th = acos(clamp(dot(dA, door), -1., 1.)); col = mix(col, vec3(1., .93, .8), clamp(glow * (.5 + .5 * exp(-th*th*2.5)), 0., .94)); }
+  if (dark > 0.) { float vg = length(q * vec2(res.x/res.y, 1.)) * .5; col *= (1. - dark) * (1. - clamp(vg * dark, 0., 1.)); }
+  o = vec4(col, 1.);
+}`;
+function shader(t, s) { const h = gl.createShader(t); gl.shaderSource(h, s); gl.compileShader(h); if (!gl.getShaderParameter(h, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(h)); return h; }
+const prog = gl.createProgram(); gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog); gl.useProgram(prog);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const U = {}; ["tA", "tB", "res", "yaw", "pitch", "fovA", "fovB", "proj", "ofsB", "mixv", "blurA", "blurB", "zbA", "zbB", "glow", "dark", "rip", "ripT", "portalR", "wipe", "hasB", "maskMode", "door"].forEach((n) => U[n] = gl.getUniformLocation(prog, n));
+gl.uniform1i(U.tA, 0); gl.uniform1i(U.tB, 1);
+
+/* ---- Állapot ---- */
+const F0 = () => (innerWidth < 860 ? 1.35 : 1.25);   // függőleges látószög (radián)
+const S = { i: 0, yaw: 0, pitch: 0, fovA: 1.25, fovB: 1.25, proj: 0, ofsB: 0, mixv: 0, blurA: 0, blurB: 0, zbA: 0, zbB: 0, glow: 0, dark: 0, rip: 0, ripT: 0, portalR: 0, wipe: 1.4, hasB: 0, maskMode: 0, door: [0, 0, -1] };
+let fut = false, seb = 1, valaszt = 2;
+const tex = {};
+function yawOf(x) { return (x - .5) * 2 * Math.PI; }
+function pitchOf(y) { return (.5 - y) * Math.PI; }
+function dirOf(yw, pt) { return [Math.sin(yw) * Math.cos(pt), Math.sin(pt), -Math.cos(yw) * Math.cos(pt)]; }
+function load(id) {
+  if (tex[id]) return tex[id];
+  return tex[id] = new Promise((ok, hiba) => {
+    const im = new Image(); im.decoding = "async";
+    im.onload = () => {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, im);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      const an = gl.getExtension("EXT_texture_filter_anisotropic"); if (an) gl.texParameterf(gl.TEXTURE_2D, an.TEXTURE_MAX_ANISOTROPY_EXT, 8);
+      ok(t);
+    };
+    im.onerror = hiba; im.src = "img/" + id + ".jpg";
+  });
+}
+let tA = null, tB = null;
+function rajz() {
+  const dpr = Math.min(devicePixelRatio || 1, 1.6), w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  gl.viewport(0, 0, w, h);
+  if (tA) {
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tA);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tB || tA);
+    gl.uniform2f(U.res, w, h);
+    ["yaw", "pitch", "fovA", "fovB", "proj", "ofsB", "mixv", "blurA", "blurB", "zbA", "zbB", "glow", "dark", "rip", "ripT", "portalR", "wipe", "hasB"].forEach((k) => gl.uniform1f(U[k], S[k]));
+    gl.uniform1i(U.maskMode, S.maskMode); gl.uniform3fv(U.door, S.door);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  ajtoHely();
+  requestAnimationFrame(rajz);
+}
+/* ---- A piros nyíl a képen (a valódi ajtó/átjáró helyén) ---- */
+const ajto = document.getElementById("ajto");
+function ajtoHely() {
+  const h = HELY[S.i], k = h.ki;
+  if (fut || !tA) { ajto.hidden = true; return; }
+  const d = dirOf(yawOf(k.x), pitchOf(k.y));
+  const f = dirOf(S.yaw, S.pitch), r = [Math.cos(S.yaw), 0, Math.sin(S.yaw)];
+  const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+  const z = d[0] * f[0] + d[1] * f[1] + d[2] * f[2];
+  if (z < .15) { ajto.hidden = true; return; }
+  const t = Math.tan(S.fovA / 2), a = cv.clientWidth / cv.clientHeight;
+  const x = (d[0] * r[0] + d[1] * r[1] + d[2] * r[2]) / z / t / a, y = (d[0] * u[0] + d[1] * u[1] + d[2] * u[2]) / z / t;
+  if (Math.abs(x) > 1.05 || Math.abs(y) > 1.05) { ajto.hidden = true; return; }
+  ajto.hidden = false;
+  ajto.style.left = ((x + 1) / 2 * cv.clientWidth) + "px";
+  ajto.style.top = ((1 - y) / 2 * cv.clientHeight) + "px";
+}
+/* ---- Időzítés ---- */
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ease = (k) => k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+const easeOut = (k) => 1 - Math.pow(1 - k, 3);
+const easeIn = (k) => k * k * k;
+const sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const bell = (k) => Math.sin(Math.PI * Math.min(1, Math.max(0, k)));
+function anim(ms, fn) { ms *= seb; return new Promise((ok) => { const t0 = performance.now(); const lep = (t) => { const k = Math.min(1, (t - t0) / ms); fn(k); k < 1 ? requestAnimationFrame(lep) : ok(); }; requestAnimationFrame(lep); }); }
+const varj = (ms) => new Promise((ok) => setTimeout(ok, ms * seb));
+function szogKul(a, b) { let d = (b - a) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; }
+async function fordul(yw, pt, ms, resz = 1) {
+  const y0 = S.yaw, p0 = S.pitch, dy = szogKul(y0, yw) * resz, dp = (pt - p0) * resz;
+  await anim(ms, (k) => { const e = ease(k); S.yaw = y0 + dy * e; S.pitch = p0 + dp * e; });
+}
+function alap() { const F = F0(); Object.assign(S, { fovA: F, fovB: F, proj: 0, mixv: 0, blurA: 0, blurB: 0, zbA: 0, zbB: 0, glow: 0, dark: 0, rip: 0, portalR: 0, wipe: 1.4, hasB: 0, maskMode: 0, ofsB: 0 }); }
+
+/* ---- Az átmenetek koreográfiája ---- */
+async function megy(mod) {
+  if (fut || !tA) return; fut = true; gombok();
+  const A = HELY[S.i], Bi = (S.i + 1) % HELY.length, B = HELY[Bi], k = A.ki;
+  const dYaw = yawOf(k.x), dPitch = pitchOf(k.y);
+  S.door = dirOf(dYaw, dPitch);
+  const tBp = load(B.id); load(HELY[(Bi + 1) % HELY.length].id);
+  const F = F0();
+  const kesz = async () => { try { tB = await tBp; } catch (e) { tB = tA; } };
+  const indulB = () => { S.ofsB = yawOf(B.s) - S.yaw; S.hasB = 1; };
+  const nezPitch = Math.max(-.35, Math.min(.35, dPitch * .6));
+  if (reduce) mod = 1;
+  switch (mod) {
+    case 0: { // a mostani: 300 ms előrelépés (55%-os fordulás, FOV −14%, enyhe elmosás), 560 ms áttűnés
+      const y0 = S.yaw, dT = Math.max(-.6, Math.min(.6, szogKul(y0, dYaw))) * .55;
+      await anim(300, (q) => { const e = q * q; S.yaw = y0 + dT * ease(q); S.fovA = F * (1 - .14 * e); S.blurA = .0035 * e; });
+      await kesz(); indulB(); const Fz = S.fovA;
+      await anim(560, (q) => { const s = ease(q); S.mixv = s; S.fovA = S.fovB = Fz + (F - Fz) * ease(Math.max(0, (q - .15) / .85)); S.blurB = .0035 * (1 - s); S.blurA = .0035; });
+      break;
+    }
+    case 1: await kesz(); indulB(); await anim(900, (q) => { S.mixv = ease(q); }); break;
+    case 2: { // belépés: odafordul, előrelép (zoom + sugaras elmosás), az új kép már közelről érkezik és tovább „lép”
+      await fordul(dYaw, nezPitch, 520); await kesz(); indulB();
+      await anim(1000, (q) => {
+        S.fovA = F * (1 - .36 * easeIn(Math.min(1, q * 1.25)));
+        S.zbA = .22 * sstep(.1, .6, q);
+        S.mixv = sstep(.32, .72, q);
+        S.fovB = F * (1.3 - .3 * easeOut(sstep(.32, 1, q)));
+        S.zbB = .18 * (1 - sstep(.45, .95, q));
+      });
+      break;
+    }
+    case 3: { // napfény-átjáró
+      await fordul(dYaw, nezPitch, 480); await kesz(); indulB();
+      await anim(1350, (q) => {
+        S.glow = q < .5 ? easeIn(q / .5) : 1 - easeOut((q - .5) / .5);
+        S.fovA = F * (1 - .12 * easeIn(Math.min(1, q * 2)));
+        S.mixv = sstep(.44, .56, q);
+        S.fovB = F * (1.08 - .08 * easeOut(sstep(.5, 1, q)));
+        S.door = dirOf(dYaw, dPitch);
+      });
+      break;
+    }
+    case 4: { // kerek kapu
+      await fordul(dYaw, dPitch * .85, 500); await kesz(); S.ofsB = yawOf(B.s) - dYaw; S.hasB = 1; S.maskMode = 1;
+      await anim(1200, (q) => { S.portalR = 3.2 * Math.pow(ease(q), 1.6); S.fovA = S.fovB = F * (1 - .1 * bell(q)); });
+      S.maskMode = 0; S.mixv = 1; S.portalR = 0;
+      break;
+    }
+    case 5: { // kis bolygó
+      const y0 = S.yaw, p0 = S.pitch;
+      await anim(1050, (q) => { const e = ease(q); S.pitch = p0 + (-Math.PI / 2 - p0) * e; S.proj = e; S.fovA = S.fovB = F + (4.7 - F) * e; S.yaw = y0 + .7 * e; });
+      await kesz(); const yEnd = S.yaw + 1.4; S.ofsB = yawOf(B.s) - yEnd; S.hasB = 1;
+      const y1 = S.yaw;
+      await anim(750, (q) => { S.mixv = ease(q); S.yaw = y1 + .7 * q; });
+      const y2 = S.yaw;
+      await anim(1100, (q) => { const e = ease(q); S.pitch = -Math.PI / 2 * (1 - e); S.proj = 1 - e; S.fovA = S.fovB = 4.7 + (F - 4.7) * e; S.yaw = y2 + .7 * e; });
+      break;
+    }
+    case 6: { // balatoni hullám
+      await fordul(dYaw, nezPitch, 420); await kesz(); indulB();
+      await anim(1500, (q) => { S.rip = .035 * bell(q); S.ripT = q * 7; S.mixv = sstep(.35, .65, q); S.fovA = S.fovB = F * (1 - .06 * bell(q)); });
+      break;
+    }
+    case 7: { // élességváltás
+      await kesz(); indulB();
+      await anim(1300, (q) => { S.blurA = .045 * sstep(0, .5, q); S.blurB = .045 * (1 - sstep(.5, 1, q)); S.mixv = sstep(.42, .58, q); S.fovA = S.fovB = F * (1 - .05 * q); });
+      break;
+    }
+    case 8: { // mozis elsötétítés
+      await anim(560, (q) => { S.dark = ease(q); }); await kesz(); indulB(); S.mixv = 1;
+      await varj(140); await anim(600, (q) => { S.dark = 1 - ease(q); });
+      break;
+    }
+    case 9: { // söprés
+      await fordul(dYaw, nezPitch, 420); await kesz(); indulB(); S.maskMode = 2;
+      await anim(1050, (q) => { S.wipe = 1.4 - 2.8 * ease(q); S.fovA = S.fovB = F * (1 - .07 * bell(q)); S.zbA = .05 * bell(q); });
+      S.maskMode = 0; S.mixv = 1;
+      break;
+    }
+  }
+  /* csere: az új kép lesz az alap, a nézési irány folytonos marad */
+  S.yaw += S.ofsB; tA = tB; tB = null; S.i = Bi; alap();
+  S.pitch = Math.max(-.6, Math.min(.6, S.pitch));
+  await anim(500, (() => { const p0 = S.pitch; return (q) => { S.pitch = p0 * (1 - ease(q)); }; })());
+  helyKiir(); fut = false; gombok();
+}
+
+/* ---- Felület ---- */
+const lista = document.getElementById("lista");
+let kedv = new Set();
+try { kedv = new Set(JSON.parse(localStorage.getItem("zephyr-atmenet-kedv") || "[]")); } catch (e) {}
+function kedvMent() { try { localStorage.setItem("zephyr-atmenet-kedv", JSON.stringify([...kedv])); } catch (e) {} kedvKiir(); }
+function kedvKiir() { const v = [...kedv].sort((a, b) => a - b).map((i) => `${i + 1}. ${ATM[i].nev}`); document.getElementById("kedvlista").textContent = v.length ? v.join(", ") : "még nincs – a ☆ gombbal jelölheted meg őket."; }
+ATM.forEach((a, i) => {
+  const d = document.createElement("div"); d.className = "kartya"; d.tabIndex = 0; d.setAttribute("role", "button"); d.id = "atm-" + i;
+  d.innerHTML = `<span class="sz">${i + 1}</span><span class="nev">${a.nev}${a.jelenleg ? '<span class="jelenleg">most ez van</span>' : ""}</span><span class="ido">${a.ido.toFixed(1).replace(".", ",")} mp</span><span class="le">${a.le}</span><button type="button" class="csillag" aria-pressed="false">☆ Kedvenc</button>`;
+  const cs = d.querySelector(".csillag");
+  const csAll = () => { const on = kedv.has(i); cs.setAttribute("aria-pressed", on); cs.textContent = on ? "★ Kedvenc" : "☆ Kedvenc"; };
+  cs.addEventListener("click", (e) => { e.stopPropagation(); kedv.has(i) ? kedv.delete(i) : kedv.add(i); csAll(); kedvMent(); });
+  csAll();
+  const val = () => { valaszt = i; jelol(); megy(i); if (innerWidth < 860) document.getElementById("nezo").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); };
+  d.addEventListener("click", val); d.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); val(); } });
+  lista.appendChild(d);
+});
+function jelol() { ATM.forEach((a, i) => document.getElementById("atm-" + i).setAttribute("aria-pressed", i === valaszt)); document.getElementById("valasztott").textContent = `${valaszt + 1}. ${ATM[valaszt].nev}`; }
+function helyKiir() { const h = HELY[S.i]; document.getElementById("hely").textContent = h.nev; document.getElementById("ajtonev").textContent = h.ki.nev; }
+function gombok() { document.getElementById("tovabb").disabled = fut; document.getElementById("sorban").disabled = fut; }
+document.querySelectorAll(".seb button").forEach((b) => b.addEventListener("click", () => { seb = +b.dataset.seb; document.querySelectorAll(".seb button").forEach((x) => x.setAttribute("aria-pressed", x === b)); }));
+document.getElementById("tovabb").addEventListener("click", () => megy(valaszt));
+ajto.addEventListener("click", () => megy(valaszt));
+const nagy = document.getElementById("nagy");
+document.getElementById("sorban").addEventListener("click", async () => {
+  if (fut) return;
+  for (let i = 0; i < ATM.length; i++) {
+    valaszt = i; jelol();
+    nagy.textContent = `${i + 1}. ${ATM[i].nev}`; nagy.classList.add("lat");
+    await varj(1300); nagy.classList.remove("lat"); await varj(250);
+    await megy(i); await varj(900);
+  }
+});
+/* körbenézés húzással */
+const nezo = document.getElementById("nezo"); let huz = null;
+nezo.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; huz = { x: e.clientX, y: e.clientY, yaw: S.yaw, pitch: S.pitch }; nezo.setPointerCapture(e.pointerId); });
+nezo.addEventListener("pointermove", (e) => { if (!huz || fut) return; const k = S.fovA / cv.clientHeight; S.yaw = huz.yaw - (e.clientX - huz.x) * k; S.pitch = Math.max(-1.3, Math.min(1.3, huz.pitch + (e.clientY - huz.y) * k)); });
+nezo.addEventListener("pointerup", () => { huz = null; });
+nezo.addEventListener("pointercancel", () => { huz = null; });
+addEventListener("keydown", (e) => { if (fut) return; if (e.key === "ArrowLeft") S.yaw -= .12; if (e.key === "ArrowRight") S.yaw += .12; });
+
+/* indulás */
+jelol(); helyKiir(); alap();
+load(HELY[0].id).then((t) => {
+  tA = t; S.yaw = yawOf(HELY[0].s); S.pitch = -.05;
+  document.getElementById("betolt").hidden = true;
+  load(HELY[1].id);
+}).catch(() => { document.getElementById("betolt").textContent = "A panorámát nem sikerült betölteni. Frissítsd az oldalt."; });
+requestAnimationFrame(rajz);
+})();
+</script>

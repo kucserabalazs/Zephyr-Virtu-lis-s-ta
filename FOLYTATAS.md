@@ -343,3 +343,12 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
 - 06-makett.js: FLY (toggleFly, flyTick, flyStep) – jetpack VR-ben csippentős botkormánnyal, gépen gombokkal.
 - 05b: kormány v3 (S.grabs két kéz, one-euro szűrő, curl/pinch fogás, engedékeny elengedés, v²-es visszaközpontosítás, WA_MAX .9π), S.rgrab a sugaras fogáshoz. Teszt: /home/claude/t/vrwheel3.py.
 - Bejárás: WS.spin alapból be (spinV migráció), xrSpinTick előjel megfordítva (kéz jobbra → nézet jobbra), simítás.
+
+## 27. Mesebeli kapuk az apartmanok bejáratánál (2026. nov. 8. hajnal)
+- **Elfogadott próba (a tulajdonos: „Tökéletes, pont az, amit szeretnék”)**: `forras/kapuk/kapu-proba.html` (+ `img/kapu7-iv.jpg`, `kapu7-atjaro.jpg`, `kapu7-vilag.jpg`), élő próba: claude.ai/artifact/VSobf8xWqAxKXzckPW6R1w. A Dingi terasz → Dingi előtér (és vissza) a 7-es Balatoni Dimenziókapuval.
+- **Menet (~6 mp)**: a séta piros nyila (Apartman 2 · Dingi tábla) koppintásra elfordulva fényponttá zsugorodik (0,6 mp) → vízgyűrű (1 mp) → az arany kapuív felragyogva kinyílik, benne örvénylő átjáró, szikrák → lassú ráközelítés → berepülés az örvénybe → rövid aranyló felvillanás → **rögtön az apartman belseje** (a teljes képernyős mesevilágot a tulajdonos kérésére KIVETTÜK, a táj csak a kapu belsejében látszik). Hang: csengők, suhanás, megérkezés (WebAudio). Lassítva / Átugrás gomb. Technika: WebGL2, panoráma közvetlenül equirect-ből, a kapuív additív (fekete háttér), az átjáró körmaszkos örvény, pont-szikrák shaderben.
+- **Kapuk hozzárendelése (a tulajdonos diktálása szerint; ? = megerősítendő)**: 1 Legendás Szigetkapu – Korvett?; 2 Csillagkapu Vortex – Schooner?; 3 Higanytükör – Fregatt; 6 Időörvény – Kalóz; 7 Balatoni Dimenziókapu – Dingi; 13 Elemi Őtök – stégről vissza a házhoz; 14 Tükörvilág – háztól ki a stégre?; 15 Holografikus – Kadett; 20 Életfa – a Zephyr bejárati kapuja (be és ki). Befelé és kifelé ugyanaz a kapu.
+- **Képek kapunként (ChatGPT-vel)**: 1) a kapu magában, fekete háttér, szemből, négyzetes; 2) a kapu belseje (kör alakú átjáró) fekete háttér előtt; (3) mesevilág már nem kell.
+- VR-ben is a teljes 6 mp-es változat (a tulajdonos vállalja), mellé „Kényelmes mód” kapcsoló alapból kikapcsolva (javaslat, jóváhagyásra vár).
+- Átmenet-választó bemutató (10 átmenet a helyszínek közé): `forras/kapuk/atmenet-valaszto.html`, claude.ai/artifact/EE8K9CJCrL6veS3gB5qnwp – a tulajdonos még nem választott.
+- **Következő lépés**: a többi 8 kapu képei → beépítés a sétába (2D + VR) a fenti hozzárendelés szerint.

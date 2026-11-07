@@ -1,0 +1,352 @@
+<title>Dingi kapu – próba</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,600;1,9..144,700&family=Figtree:wght@500;600;700&display=swap">
+<style>
+/* Egyetlen teljes képernyős 360°-os néző; alul nagy, jól olvasható vezérlősáv. Szándékosan sötét, egyetlen világ. */
+:root {
+  --ej: #070d14;
+  --sav: rgba(7, 13, 20, .78);
+  --vonal: rgba(232, 196, 120, .35);
+  --szoveg: #f3f1ea;
+  --halvany: #c5c9cc;
+  --arany: #e8c478;
+  --genoa: #e2483d;
+  --font-cim: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-test: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--ej); color: var(--szoveg); font-family: var(--font-test); font-size: 17px; overflow: hidden; }
+.nezo { position: fixed; inset: 0; touch-action: none; cursor: grab; background: #000; }
+.nezo:active { cursor: grabbing; }
+canvas { display: block; width: 100%; height: 100%; }
+.fent { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: max(14px, env(safe-area-inset-left, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none; }
+.chip { background: var(--sav); backdrop-filter: blur(6px); border: 1px solid var(--vonal); border-radius: 999px; padding: 7px 15px; font-weight: 600; font-size: 16px; }
+.chip b { color: var(--arany); }
+/* a séta saját piros nyila (ugyanaz a rajz: sötét kör, fehér perem, piros korong, fehér csúcs) */
+.nyil { position: fixed; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 6px solid rgba(255, 255, 255, .97); background: radial-gradient(circle, #e2483d 0 66%, rgba(12, 26, 38, .78) 67%); box-shadow: 0 4px 14px rgba(0, 0, 0, .55); cursor: pointer; display: grid; place-items: center; padding: 0; transform-origin: 50% 50%; }
+.nyil svg { width: 40px; height: 40px; margin-top: -4px; }
+.nyil:focus-visible { outline: 3px solid var(--arany); outline-offset: 4px; }
+.nyilcimke { position: fixed; transform: translate(-50%, 0); margin-top: 50px; background: linear-gradient(#fff, #e8eef5); color: #0b2f5e; border: 3px solid #0b2f5e; border-radius: 14px 14px 6px 6px; padding: 5px 14px; text-align: center; pointer-events: none; white-space: nowrap; font-weight: 800; line-height: 1.15; box-shadow: 0 3px 10px rgba(0, 0, 0, .35); }
+.nyilcimke b { display: block; font-size: 15px; font-weight: 700; }
+.nyilcimke span { font-size: 18px; }
+.lent { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 14px max(14px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); background: linear-gradient(transparent, rgba(0, 0, 0, .6)); }
+button { font: inherit; color: inherit; }
+.gomb { border: 0; border-radius: 12px; padding: 12px 18px; min-height: 52px; font-weight: 700; font-size: 17px; cursor: pointer; background: var(--sav); border: 1px solid var(--vonal); display: inline-flex; align-items: center; gap: 8px; }
+.gomb.fo { background: var(--genoa); border-color: transparent; color: #fff; }
+.gomb[aria-pressed="true"] { color: var(--arany); border-color: var(--arany); }
+.gomb:focus-visible { outline: 3px solid var(--arany); outline-offset: 2px; }
+.betolt { position: fixed; inset: 0; display: grid; place-items: center; background: var(--ej); color: var(--halvany); font-weight: 600; text-align: center; padding: 24px; }
+.betolt b { display: block; font-family: var(--font-cim); font-style: italic; font-size: 30px; color: var(--arany); margin-bottom: 8px; }
+</style>
+
+<div class="nezo" id="nezo"><canvas id="v" aria-label="360°-os nézet: Dingi terasz és előtér"></canvas></div>
+<div class="fent"><span class="chip" id="hely">Dingi terasz</span><span class="chip">Kapu: <b>7. Balatoni Dimenziókapu</b></span></div>
+<button class="nyil" id="pont" type="button" aria-label="Belépés a Dingi apartmanba"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"/></svg></button>
+<div class="nyilcimke" id="cimke"><b>Apartman 2</b><span>Dingi</span></div>
+<div class="lent">
+  <button class="gomb fo" id="nyit" type="button">✦ Kapu megnyitása</button>
+  <button class="gomb" id="lassu" type="button" aria-pressed="false">Lassítva</button>
+  <button class="gomb" id="hang" type="button" aria-pressed="true">♪ Hang</button>
+  <button class="gomb" id="ugras" type="button" hidden>Átugrás ▸</button>
+</div>
+<div class="betolt" id="betolt"><div><b>Balatoni Dimenziókapu</b>A kapu és a panorámák töltődnek…</div></div>
+
+<script>
+(() => {
+"use strict";
+const HELY = {
+  terasz: { kep: "fedett-bejaro", nev: "Dingi terasz", s: .815, ajto: { x: .752, y: .60 }, cel: "eloter", cimke: ["Apartman 2", "Dingi"] },
+  eloter: { kep: "dingi-eloter", nev: "Dingi előtér", s: .711, ajto: { x: .29, y: .60 }, cel: "terasz", erk: .78, cimke: ["Dingi terasz", "Ki a teraszra"] }
+};
+HELY.terasz.erk = .79;   // érkezési nézési irány a teraszon (kifelé jövet)
+const cv = document.getElementById("v");
+const gl = cv.getContext("webgl2", { antialias: true, premultipliedAlpha: false, alpha: false });
+if (!gl) { document.getElementById("betolt").innerHTML = "<div><b>Hiba</b>Ez a böngésző nem támogatja a WebGL2-t.</div>"; return; }
+
+/* ---------- shaderek ---------- */
+const VQ = `#version 300 es
+in vec2 p; uniform vec2 c, hs; out vec2 uv; out vec2 nd;
+void main(){ vec2 q = c + p * hs; nd = q; uv = p * .5 + .5; gl_Position = vec4(q, 0., 1.); }`;
+const FPANO = `#version 300 es
+precision highp float; in vec2 uv; in vec2 nd; out vec4 o;
+uniform sampler2D tA, tB; uniform vec2 res; uniform float yaw, pitch, fov, mixv, ofsB, gain;
+const float PI = 3.14159265;
+vec3 rotY(vec3 d, float a){ float c = cos(a), s = sin(a); return vec3(d.x*c - d.z*s, d.y, d.z*c + d.x*s); }
+vec3 eq(sampler2D t, vec3 d){ vec2 u = vec2(.5 + atan(d.x, -d.z)/(2.*PI), .5 + asin(clamp(d.y,-1.,1.))/PI); vec2 dx = dFdx(u), dy = dFdy(u); dx.x -= round(dx.x); dy.x -= round(dy.x); return textureGrad(t, u, dx, dy).rgb; }
+void main(){
+  vec3 f = vec3(sin(yaw)*cos(pitch), sin(pitch), -cos(yaw)*cos(pitch)), r = vec3(cos(yaw), 0., sin(yaw)), u = cross(r, f);
+  vec2 q = nd * vec2(res.x/res.y, 1.) * tan(fov*.5);
+  vec3 d = normalize(f + q.x*r + q.y*u);
+  vec3 col = eq(tA, d);
+  if (mixv > 0.) col = mix(col, eq(tB, rotY(d, ofsB)), mixv);
+  o = vec4(col * gain, 1.);
+}`;
+const FQ = `#version 300 es
+precision highp float; in vec2 uv; in vec2 nd; out vec4 o;
+uniform sampler2D t; uniform int mode; uniform float a, rot, swirl, time, cutY, zoom, gain, ringR; uniform vec2 res; uniform vec3 col;
+const float PI = 3.14159265;
+void main(){
+  vec2 p = uv * 2. - 1.;
+  if (mode == 0) { o = vec4(texture(t, uv).rgb * a * gain, 1.); return; }                         /* kapuív – additív, fekete háttér */
+  if (mode == 1) {                                                                                 /* átjáró – örvénylő kör */
+    float r = length(p);
+    float ang = rot + swirl * pow(max(0., 1. - r), 2.);
+    vec2 q = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * p;
+    q /= zoom;
+    vec3 c = texture(t, q * .5 + .5).rgb;
+    c += vec3(1., .85, .55) * pow(max(0., 1. - r), 3.) * .35 * gain;
+    float m = 1. - smoothstep(.9, .985, r);
+    m *= smoothstep(cutY - .012, cutY + .012, nd.y);
+    o = vec4(c * gain, m * a); return;
+  }
+  if (mode == 2) {                                                                                 /* mesevilág – teljes képernyő */
+    float sa = res.x / res.y, ia = 1672. / 940.;
+    vec2 s = sa > ia ? vec2(1., ia / sa) : vec2(sa / ia, 1.);
+    vec2 q = (uv - .5) * s / zoom + .5;
+    o = vec4(texture(t, q).rgb * gain, a); return;
+  }
+  if (mode == 3) {                                                                                 /* fénypont */
+    float r = length(p);
+    float core = exp(-r*r*55.), halo = exp(-r*r*7.) * .55, ring = exp(-pow((r - .55) / .05, 2.)) * .18;
+    float ang = atan(p.y, p.x) + rot;
+    float star = pow(abs(cos(ang * 2.)), 40.) * exp(-r * 4.) * .9 + pow(abs(cos(ang * 2. + .785)), 60.) * exp(-r * 7.) * .5;
+    vec3 c = vec3(1., .97, .88) * core * 1.6 + vec3(1., .78, .38) * (halo + star) + vec3(.45, .7, 1.) * ring;
+    o = vec4(c * a, 1.); return;
+  }
+  if (mode == 4) { o = vec4(col * a, 1.); return; }                                                /* fényvillanás – additív */
+  if (mode == 5) {                                                                                 /* vízgyűrű */
+    float r = length(p);
+    float w = sin(r * 60. - time * 14.) * .5 + .5;
+    float ring = exp(-pow((r - ringR) / .035, 2.)) * 1.2 + exp(-pow((r - ringR * .82) / .02, 2.)) * .35 * w;
+    float inner = smoothstep(ringR, 0., r) * .18 * w;
+    vec3 c = mix(vec3(.45, .75, 1.), vec3(1., .8, .45), .55 + .45 * sin(atan(p.y, p.x) * 3. + time * 3.)) * (ring + inner);
+    o = vec4(c * a, 1.); return;
+  }
+}`;
+const VP = `#version 300 es
+uniform vec2 c; uniform float R, time, burst, asp, dpr, n; out vec4 col; out float al;
+float h(float x){ return fract(sin(x * 127.1 + 311.7) * 43758.5453); }
+void main(){
+  float i = float(gl_VertexID);
+  float a = h(i) * 6.2832 + time * (.15 + h(i + 1.) * .5) * (h(i + 2.) > .5 ? 1. : -1.);
+  float r = R * (.62 + h(i + 3.) * .42) * (1. + burst * (.5 + h(i + 4.) * 2.5));
+  float rise = h(i + 5.) > .55 ? fract(time * (.06 + h(i + 6.) * .12) + h(i + 7.)) : 0.;
+  vec2 q = c + vec2(cos(a) * r / asp, sin(a) * r * .92 + rise * R * .9);
+  gl_Position = vec4(q, 0., 1.);
+  gl_PointSize = (1.6 + h(i + 8.) * 4.2) * dpr * (1. + burst * .6);
+  col = h(i + 9.) > .72 ? vec4(.55, .78, 1., 1.) : vec4(1., .8, .42, 1.);
+  al = (.35 + .65 * (.5 + .5 * sin(time * (3. + h(i + 10.) * 9.) + i))) * (1. - rise * .9) * step(i, n);
+}`;
+const FPT = `#version 300 es
+precision highp float; in vec4 col; in float al; uniform float a; out vec4 o;
+void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); float g = exp(-d * 3.5) + exp(-d * 18.) ; o = vec4(col.rgb * g * al * a, 1.); }`;
+function sh(t, s) { const x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; }
+function prog(v, f, names) { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, v)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, f)); gl.linkProgram(p); const u = {}; names.forEach((n) => u[n] = gl.getUniformLocation(p, n)); return { p, u }; }
+const PP = prog(VQ, FPANO, ["c", "hs", "tA", "tB", "res", "yaw", "pitch", "fov", "mixv", "ofsB", "gain"]);
+const PQ = prog(VQ, FQ, ["c", "hs", "t", "mode", "a", "rot", "swirl", "time", "cutY", "zoom", "gain", "ringR", "res", "col"]);
+const PT = prog(VP, FPT, ["c", "R", "time", "burst", "asp", "dpr", "n", "a"]);
+const qb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, qb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+[PP, PQ].forEach((P) => { const l = gl.getAttribLocation(P.p, "p"); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 2, gl.FLOAT, false, 0, 0); });
+const vaoP = gl.createVertexArray();
+
+/* ---------- képek ---------- */
+const T = {};
+function kep(nev, mip) {
+  return new Promise((ok, hiba) => {
+    const im = new Image(); im.decoding = "async";
+    im.onload = () => {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, im); gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, mip ? gl.REPEAT : gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      const an = gl.getExtension("EXT_texture_filter_anisotropic"); if (an) gl.texParameterf(gl.TEXTURE_2D, an.TEXTURE_MAX_ANISOTROPY_EXT, 8);
+      T[nev] = t; ok(t);
+    };
+    im.onerror = hiba; im.src = "img/" + nev + ".jpg";
+  });
+}
+
+/* ---------- állapot ---------- */
+const F0 = () => (innerWidth < innerHeight ? 1.45 : 1.2);
+const S = { hol: "terasz", yaw: 0, pitch: -.05, fov: 1.2, fut: false, t: 0, lassu: 1 };
+const yawOf = (x) => (x - .5) * 2 * Math.PI, pitchOf = (y) => (.5 - y) * Math.PI;
+const dirOf = (yw, pt) => [Math.sin(yw) * Math.cos(pt), Math.sin(pt), -Math.cos(yw) * Math.cos(pt)];
+function vetit(d, yaw, pitch, fov) {
+  const f = dirOf(yaw, pitch), r = [Math.cos(yaw), 0, Math.sin(yaw)];
+  const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+  const z = d[0] * f[0] + d[1] * f[1] + d[2] * f[2]; if (z < .05) return null;
+  const tn = Math.tan(fov / 2), a = cv.width / cv.height;
+  return [(d[0] * r[0] + d[1] * r[1] + d[2] * r[2]) / z / tn / a, (d[0] * u[0] + d[1] * u[1] + d[2] * u[2]) / z / tn];
+}
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ss = (a, b, x) => { const t = cl((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const easeIO = (k) => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const easeO = (k) => 1 - Math.pow(1 - k, 3);
+function szog(a, b) { let d = (b - a) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; }
+const ELO = .6;          // a nyíl fényponttá zsugorodik
+const HOSSZ = 5.5 + ELO;   // a jelenet teljes hossza (mp) – a felhasználó storyboardja szerint ~6 mp
+
+/* ---------- a kapus jelenet egy pillanata (t mp-nél) ---------- */
+let menet = null;   // { A, B, y0, p0, dYaw, dPitch, ofsB }
+function pillanat(t0) {
+  const m = menet, F = F0(), t = t0 - ELO;
+  const kp = { orb: 0, ring: 0, ringR: 0, arch: 0, archGain: 1, portal: 0, scale: 1, flash: 0, world: 0, worldZoom: 1, burst: 0, sparks: 0, mixB: 0, gain: 1 };
+  /* kamera: 0–1,1 mp odafordul a fényponthoz; 1,8–3,6 lassan közelít */
+  const k1 = easeIO(ss(-.2, 1.1, t));
+  S.yaw = m.y0 + szog(m.y0, m.dYaw) * k1; S.pitch = m.p0 + (m.dPitch * .55 - m.p0) * k1;
+  S.fov = F * (1 - .2 * easeIO(ss(1.8, 3.7, t)));
+  /* 0–1,0: vízgyűrű a fénypontból */
+  kp.orb = ss(-ELO * .75, -.05, t) * (1 - ss(.15, .7, t));
+  kp.ring = ss(.05, .35, t) * (1 - ss(1.25, 1.75, t)); kp.ringR = .25 + .72 * easeO(ss(.05, 1.05, t));
+  /* 1,0–2,0: a kapu megnyílik (kinő a gyűrűből, felragyog) */
+  kp.arch = ss(.85, 1.6, t); kp.archGain = 1 + 1.4 * Math.exp(-Math.pow((t - 1.35) / .28, 2));
+  kp.scale = .62 + .38 * easeO(ss(.85, 2.0, t));
+  kp.portal = ss(1.15, 2.05, t);
+  kp.sparks = ss(.3, 1.4, t);
+  /* 3,5–4,6: berepülés a kapuba és fénykitörés */
+  const k4 = ss(3.45, 4.55, t);
+  kp.scale *= 1 + Math.pow(k4, 2.4) * 9;
+  kp.burst = ss(3.6, 4.4, t);
+  kp.flash = .85 * Math.exp(-Math.pow((t - 4.3) / .2, 2));
+  /* 4,1–5,8: átsuhanás a mesevilágon */
+  kp.world = 0;   /* a mesevilág csak a kapu belsejében látszik; berepülés után rögtön az apartman jön */
+  kp.worldZoom = 1.02 + .16 * ss(4.1, 5.85, t);
+  /* 4,5-től: már az új helyszín (a mesevilág mögött), 5,2–6,2 megérkezés */
+  kp.uj = t >= 4.3;
+  if (kp.uj) {
+    const k6 = easeO(ss(4.3, HOSSZ - ELO, t));
+    S.yaw = m.yB; S.pitch = 0;
+    S.fov = F * (.86 + .14 * k6);
+    kp.arch = 0; kp.portal = 0; kp.sparks = 1 - ss(4.4, 5.3, t); kp.burst = 1;
+  }
+  return kp;
+}
+
+/* ---------- rajzolás ---------- */
+let utolso = performance.now(), ido = 0;
+function rajz(most) {
+  const dt = Math.min(.05, (most - utolso) / 1000); utolso = most; ido += dt;
+  const dpr = Math.min(devicePixelRatio || 1, 1.75), w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  gl.viewport(0, 0, w, h);
+  if (S.fut) { S.t += dt / S.lassu; if (S.t >= HOSSZ) vege(); }
+  const H = HELY[S.hol];
+  let kp = null;
+  if (S.fut && menet) kp = pillanat(S.t);
+  const aktHely = kp && kp.uj ? HELY[H.cel] : H;
+  if (!T[aktHely.kep]) { requestAnimationFrame(rajz); return; }
+  /* panoráma */
+  gl.disable(gl.BLEND); gl.useProgram(PP.p); gl.bindVertexArray(vao);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, T[aktHely.kep]); gl.uniform1i(PP.u.tA, 0); gl.uniform1i(PP.u.tB, 0);
+  gl.uniform2f(PP.u.c, 0, 0); gl.uniform2f(PP.u.hs, 1, 1); gl.uniform2f(PP.u.res, w, h);
+  gl.uniform1f(PP.u.yaw, S.yaw); gl.uniform1f(PP.u.pitch, S.pitch); gl.uniform1f(PP.u.fov, S.fov); gl.uniform1f(PP.u.mixv, 0); gl.uniform1f(PP.u.ofsB, 0);
+  gl.uniform1f(PP.u.gain, kp ? 1 - .25 * kp.arch * (1 - (kp.uj ? 1 : 0)) : 1);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  if (kp) document.getElementById("hely").textContent = aktHely.nev;
+  /* a kapu helye a képernyőn */
+  const aj = aktHely.ajto, d = dirOf(yawOf(aj.x), pitchOf(aj.y));
+  const sp = vetit(d, S.yaw, S.pitch, S.fov);
+  const asp = w / h, tf = Math.tan(S.fov / 2);
+  gl.useProgram(PQ.p); gl.uniform2f(PQ.u.res, w, h); gl.uniform1f(PQ.u.time, ido);
+  const quad = (mode, c, hs, tex, set) => { gl.uniform1i(PQ.u.mode, mode); gl.uniform2f(PQ.u.c, c[0], c[1]); gl.uniform2f(PQ.u.hs, hs[0], hs[1]); if (tex) { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(PQ.u.t, 1); } set && set(); gl.drawArrays(gl.TRIANGLES, 0, 6); };
+  gl.enable(gl.BLEND);
+  if (!kp) {
+    /* nyugalmi állapot: lebegő fénypont az ajtó előtt */
+    helyezPont(sp, 1);
+  } else {
+    helyezPont(S.t < ELO ? sp : null, 1 - Math.pow(Math.min(1, S.t / ELO), 1.6));
+    if (!kp.uj && sp) {
+      const hsY = Math.tan(.47) / tf * kp.scale, hs = [hsY / asp, hsY];
+      const pc = [sp[0], sp[1] - .16 * hsY];   // az átjáró középpontja a kapuív nyílásában
+      if (kp.orb > 0) { gl.blendFunc(gl.ONE, gl.ONE); const R = Math.tan(.075) / tf * (1 + kp.ring * 1.5); quad(3, sp, [R / asp, R], null, () => { gl.uniform1f(PQ.u.a, kp.orb); gl.uniform1f(PQ.u.rot, ido * .35); }); }
+      if (kp.ring > 0) { gl.blendFunc(gl.ONE, gl.ONE); const R = .66 * hsY; quad(5, pc, [R / asp, R], null, () => { gl.uniform1f(PQ.u.a, kp.ring); gl.uniform1f(PQ.u.ringR, kp.ringR); }); }
+      if (kp.portal > 0) {
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); const R = .68 * hsY;
+        quad(1, pc, [R / asp, R], T["kapu7-atjaro"], () => { gl.uniform1f(PQ.u.a, kp.portal); gl.uniform1f(PQ.u.rot, -ido * .22 - (S.t - ELO) * .15); gl.uniform1f(PQ.u.swirl, 1.6 + kp.burst * 5); gl.uniform1f(PQ.u.zoom, 1 + .18 * ss(2, 4.4, S.t - ELO)); gl.uniform1f(PQ.u.gain, 1 + kp.burst * .8); gl.uniform1f(PQ.u.cutY, sp[1] - .66 * hsY); });
+      }
+      if (kp.arch > 0) { gl.blendFunc(gl.ONE, gl.ONE); quad(0, sp, hs, T["kapu7-iv"], () => { gl.uniform1f(PQ.u.a, kp.arch); gl.uniform1f(PQ.u.gain, kp.archGain); }); }
+      if (kp.sparks > 0) szikra(pc, .72 * hsY, kp.sparks, kp.burst, 320, asp, dpr);
+    } else if (kp.uj && kp.sparks > 0) szikra([0, 0], .9, kp.sparks * .8, 1.6, 320, asp, dpr);
+    if (kp.world > 0) { gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); quad(2, [0, 0], [1, 1], T["kapu7-vilag"], () => { gl.uniform1f(PQ.u.a, kp.world); gl.uniform1f(PQ.u.zoom, kp.worldZoom); gl.uniform1f(PQ.u.gain, 1 + .25 * (1 - ss(4.3, 5, S.t - ELO))); }); }
+    if (kp.flash > .002) { gl.blendFunc(gl.ONE, gl.ONE); quad(4, [0, 0], [1, 1], null, () => { gl.uniform1f(PQ.u.a, kp.flash); gl.uniform3f(PQ.u.col, 1, .9, .72); }); }
+  }
+  requestAnimationFrame(rajz);
+}
+function szikra(c, R, a, burst, n, asp, dpr) {
+  gl.blendFunc(gl.ONE, gl.ONE); gl.useProgram(PT.p); gl.bindVertexArray(vaoP);
+  gl.uniform2f(PT.u.c, c[0], c[1]); gl.uniform1f(PT.u.R, R); gl.uniform1f(PT.u.time, ido); gl.uniform1f(PT.u.burst, burst); gl.uniform1f(PT.u.asp, asp); gl.uniform1f(PT.u.dpr, dpr); gl.uniform1f(PT.u.n, n); gl.uniform1f(PT.u.a, a);
+  gl.drawArrays(gl.POINTS, 0, n);
+  gl.useProgram(PQ.p); gl.bindVertexArray(vao);
+}
+/* a fénypont koppintható gombja és felirata */
+const pont = document.getElementById("pont"), cimke = document.getElementById("cimke");
+function helyezPont(sp, k) {
+  const lat = sp && Math.abs(sp[0]) < 1 && Math.abs(sp[1]) < 1;
+  pont.hidden = cimke.hidden = !lat;
+  if (!lat) return;
+  const x = (sp[0] + 1) / 2 * cv.clientWidth, y = (1 - sp[1]) / 2 * cv.clientHeight;
+  pont.style.left = cimke.style.left = x + "px"; pont.style.top = cimke.style.top = y + "px";
+  pont.style.transform = k < 1 ? `scale(${Math.max(.02, k)}) rotate(${(1 - k) * 160}deg)` : "";
+  pont.style.opacity = k < 1 ? Math.min(1, k * 1.6) : "";
+  cimke.style.opacity = k < 1 ? Math.max(0, k * 2 - 1) : "";
+}
+function kiir() { const H = HELY[S.hol]; document.getElementById("hely").textContent = H.nev; cimke.innerHTML = `<b>${H.cimke[0]}</b><span>${H.cimke[1]}</span>`; pont.setAttribute("aria-label", H.cimke[0] + " – a kapu megnyitása"); }
+
+/* ---------- indítás, vége, átugrás ---------- */
+function indit() {
+  if (S.fut) return;
+  const H = HELY[S.hol], B = HELY[H.cel];
+  menet = { y0: S.yaw, p0: S.pitch, dYaw: yawOf(H.ajto.x), dPitch: pitchOf(H.ajto.y), yB: yawOf(B.erk) };
+  S.t = 0; S.fut = true; gombok(); hangIndit();
+}
+function vege() {
+  const H = HELY[S.hol]; S.hol = H.cel; S.fut = false; S.yaw = menet.yB; S.pitch = 0; S.fov = F0(); menet = null; kiir(); gombok();
+}
+function gombok() { document.getElementById("nyit").disabled = S.fut; document.getElementById("ugras").hidden = !S.fut; }
+document.getElementById("nyit").addEventListener("click", indit);
+pont.addEventListener("click", indit);
+document.getElementById("ugras").addEventListener("click", () => { if (S.fut) { hangAll(); vege(); } });
+document.getElementById("lassu").addEventListener("click", (e) => { S.lassu = S.lassu === 1 ? 2.2 : 1; e.currentTarget.setAttribute("aria-pressed", S.lassu > 1); });
+
+/* ---------- hang: csengő csillogás, suhanás, megérkezés (a böngészőben szintetizálva) ---------- */
+let AC = null, hangBe = true, hangok = [];
+document.getElementById("hang").addEventListener("click", (e) => { hangBe = !hangBe; e.currentTarget.setAttribute("aria-pressed", hangBe); if (!hangBe) hangAll(); });
+function hangAll() { hangok.forEach((n) => { try { n.stop(); } catch (e) {} }); hangok = []; }
+function hangIndit() {
+  if (!hangBe) return;
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch (e) { return; }
+  const L = S.lassu, t0 = AC.currentTime + ELO * L, out = AC.createGain(); out.gain.value = .5;
+  const dl = AC.createDelay(1); dl.delayTime.value = .23; const fb = AC.createGain(); fb.gain.value = .38; dl.connect(fb); fb.connect(dl); dl.connect(out); out.connect(AC.destination);
+  const csengo = (t, fr, v = .14, len = 2.2) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = "sine"; o.frequency.value = fr; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0005, t + len); o.connect(g); g.connect(out); g.connect(dl); o.start(t); o.stop(t + len + .1); hangok.push(o); };
+  const sk = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.5, 1567.98];
+  for (let i = 0; i < 9; i++) csengo(t0 + (.05 + i * .11) * L, sk[i], .1);                                  // gyűrű kialakul
+  [783.99, 1046.5, 1318.5, 1567.98].forEach((f) => csengo(t0 + 1.25 * L, f, .09, 3));                      // kapu felragyog
+  for (let i = 0; i < 14; i++) csengo(t0 + (2 + Math.random() * 1.5) * L, sk[Math.floor(Math.random() * 9)] * 2, .035, 1.2);   // szikrák
+  /* suhanás: szűrt zaj */
+  const nb = AC.createBuffer(1, AC.sampleRate * 2.5, AC.sampleRate), ch = nb.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+  const ns = AC.createBufferSource(); ns.buffer = nb; const bp = AC.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.4; const ng = AC.createGain();
+  const ts = t0 + 3.4 * L; bp.frequency.setValueAtTime(300, ts); bp.frequency.exponentialRampToValueAtTime(3200, ts + 1 * L); bp.frequency.exponentialRampToValueAtTime(600, ts + 2.2 * L);
+  ng.gain.setValueAtTime(0, ts); ng.gain.linearRampToValueAtTime(.32, ts + .9 * L); ng.gain.linearRampToValueAtTime(0, ts + 2.3 * L);
+  ns.connect(bp); bp.connect(ng); ng.connect(out); ns.start(ts); ns.stop(ts + 2.4 * L); hangok.push(ns);
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => csengo(t0 + (4.35 + i * .07) * L, f, .1, 3.5));         // megérkezés
+}
+
+/* ---------- körbenézés ---------- */
+const nezo = document.getElementById("nezo"); let huz = null;
+nezo.addEventListener("pointerdown", (e) => { if (S.fut) return; huz = { x: e.clientX, y: e.clientY, yaw: S.yaw, pitch: S.pitch }; nezo.setPointerCapture(e.pointerId); });
+nezo.addEventListener("pointermove", (e) => { if (!huz) return; const k = S.fov / cv.clientHeight; S.yaw = huz.yaw - (e.clientX - huz.x) * k; S.pitch = cl(huz.pitch + (e.clientY - huz.y) * k, -1.2, 1.2); });
+const el = () => { huz = null; }; nezo.addEventListener("pointerup", el); nezo.addEventListener("pointercancel", el);
+addEventListener("keydown", (e) => { if (e.key === "Enter" && !S.fut) indit(); });
+
+/* betöltés */
+kiir(); gombok();
+Promise.all([kep("fedett-bejaro", true), kep("kapu7-iv"), kep("kapu7-atjaro"), kep("dingi-eloter", true)]).then(() => {
+  S.yaw = yawOf(.70); S.pitch = -.08; S.fov = F0();
+  document.getElementById("betolt").hidden = true;
+}).catch(() => { document.getElementById("betolt").innerHTML = "<div><b>Hiba</b>A képeket nem sikerült betölteni. Frissítsd az oldalt.</div>"; });
+requestAnimationFrame(rajz);
+})();
+</script>
