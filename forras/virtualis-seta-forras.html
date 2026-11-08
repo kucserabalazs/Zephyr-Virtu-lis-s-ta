@@ -8483,17 +8483,45 @@ void main(){
   gl_FragColor = vec4(mix(vec3(.45, .75, 1.), vec3(1., .8, .45), .55 + .45 * sin(atan(p.y, p.x) * 3. + time * 3.)) * (ring + inner) * a, 0.);
 }`;
   /* a magyar keret: átlátszó hátterű kép, körbe rajzolódva jelenik meg (rev), a rajzoló él aranyosan izzik */
-  const GFK = `precision highp float; varying vec2 vUv;
-uniform sampler2D t; uniform float a, rev, gain, refl;
+  /* a magyar keret ÜVEGBŐL (tulajdonos kérése): a mögötte lévő tér kissé torzulva, színezve átlátszik rajta (a panorámát
+     a nézési irányból mintázzuk, a minta domborulata szerint megtörve), a díszítés halványan „beleégetve”, élein csillanás */
+  const GFK = `precision highp float; varying vec2 vUv; varying vec3 vW;
+uniform sampler2D t, tS; uniform vec3 fR, fU; uniform float a, rev, gain, refl, glass, sSrgb, time;
+vec3 toSrgb(vec3 c){ return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.)), vec3(1. / 2.4)) - .055, step(vec3(.0031308), c)); }
+vec3 sky(vec3 e){
+  float x = atan(e.z, e.x) / 6.2831853, y = acos(clamp(e.y, -1., 1.)) / 3.14159265;
+  vec2 uA = vec2(fract(x), 1. - y), uB = vec2(fract(x + .5) - .5, 1. - y);
+  vec2 gA = dFdx(uA), gB = dFdx(uB), hA = dFdy(uA), hB = dFdy(uB);
+  bool useB = abs(gA.x) + abs(hA.x) > abs(gB.x) + abs(hB.x);
+  vec3 c = textureGrad(tS, uA, useB ? gB : gA, useB ? hB : hA).rgb;
+  return sSrgb > .5 ? toSrgb(c) : c;
+}
+float L(vec2 u){ vec4 q = texture2D(t, u); return dot(q.rgb, vec3(.299, .587, .114)) + q.a * .15; }
 void main(){
-  vec2 p = vUv * 2. - 1.; float r = length(p);
-  float an = abs(atan(p.x, p.y)) / 3.14159265;               // 0 felül, 1 alul – mindkét irányban egyszerre rajzolódik
-  float vis = 1. - smoothstep(rev - .035, rev + .005, an);
   vec4 k = texture2D(t, vUv);
-  float edge = exp(-pow((an - rev) / .014, 2.)) * k.a * step(.001, rev) * (1. - step(.999, rev));
-  vec3 c = k.rgb * gain * vis + vec3(1., .78, .4) * edge * .75;
+  if (k.a < .003) discard;
+  vec3 c;
+  if (glass > .5) {
+    /* domborulat a minta fényességéből → törés és csillanás */
+    float e = 1.6 / 1024.;
+    vec2 g = vec2(L(vUv + vec2(e, 0.)) - L(vUv - vec2(e, 0.)), L(vUv + vec2(0., e)) - L(vUv - vec2(0., e)));
+    vec3 d = normalize(vW - cameraPosition);
+    vec3 rd = normalize(d - (fR * g.x + fU * g.y) * 1.6);
+    vec3 bg = sky(rd);
+    float kl = dot(k.rgb, vec3(.299, .587, .114));
+    vec3 tint = mix(vec3(1.), normalize(k.rgb + .02) * 1.6, .6);               // az üveg színe a minta színéből
+    float slope = length(g) * 9.;
+    float spec = smoothstep(.45, 1.5, slope) * .22 + pow(kl, 4.) * .18;          // élek és kiemelkedő részek csillanása
+    float sweep = exp(-pow((vUv.x + vUv.y - (fract(time * .12) * 3. - .5)) / .09, 2.)) * .16;   // lassan átfutó fény az üvegen
+    float edgeDark = 1. - smoothstep(.5, 1.6, slope) * .35;                      // az üveg élei a töréstől sötétebbek
+    c = bg * tint * .64 * edgeDark + k.rgb * .5 + vec3(1., .97, .9) * (spec + sweep * smoothstep(.15, .5, kl));
+    c *= gain;
+  } else {
+    float kl = dot(k.rgb, vec3(.299, .587, .114));
+    c = mix(vec3(kl), k.rgb, .7) * .86 * gain;
+  }
   float ra = refl > 0. ? refl * (1. - smoothstep(.0, .6, vUv.y)) : 1.;      // tükörkép: a padló közelében erősebb
-  gl_FragColor = vec4(c * a * ra, k.a * vis * a * ra);
+  gl_FragColor = vec4(c * a * ra, k.a * a * ra);
 }`;
   /* a kapu világa: ablak egy másik világra. A nézési irány és a kapu tengelye közti szög szerint vetül, így a gyűrűn
      áthaladva folytonosan körbevesz. thMax: a kép körének látószöge; disc=1: a kapu korongja (íriszmaszkkal), 0: körülöttünk */
@@ -8567,10 +8595,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const orb = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GF, uniforms: fxU() })), 66, .1);
     const viewU = () => U({ t: null, t2: null, ax: new THREE.Vector3(0, 0, -1), rx: new THREE.Vector3(1, 0, 0), ux: new THREE.Vector3(0, 1, 0), thMax: 1, rB: .95, a: 0, gain: 1, time: 0, rot: 0, iris: 0, disc: 1, swirl: 0, glint: 1, kDest: 0, dYaw: 0, dSrgb: 1 });
     const portal = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFV, uniforms: viewU() })), 62, .7);
-    const frame = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFK, uniforms: U({ t: null, a: 0, rev: 0, gain: 1, refl: 0 }) })), 63, 1);
+    const frame = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFK, uniforms: U({ t: null, tS: null, fR: new THREE.Vector3(1, 0, 0), fU: new THREE.Vector3(0, 1, 0), a: 0, rev: 0, gain: 1, refl: 0, glass: 1, sSrgb: 1, time: 0 }) })), 63, 1);
     /* a keret halvány tükörképe a padlón (fényes járólap / terasz) */
-    const mirror = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFK, side: THREE.DoubleSide, uniforms: U({ t: null, a: 0, rev: 1, gain: 1, refl: .1 }) })), 56, 1);
+    const mirror = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFK, side: THREE.DoubleSide, uniforms: U({ t: null, tS: null, fR: new THREE.Vector3(1, 0, 0), fU: new THREE.Vector3(0, 1, 0), a: 0, rev: 1, gain: 1, refl: .1, glass: 0, sSrgb: 1, time: 0 }) })), 56, 1);
     mirror.visible = false; sceneEl.object3D.add(mirror);
+    frame.userData.r = new THREE.Vector3(); frame.userData.u = new THREE.Vector3();
     const N = 360, gp = new THREE.BufferGeometry(), idx = new Float32Array(N);
     for (let k = 0; k < N; k++) idx[k] = k;
     gp.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3)); gp.setAttribute("i", new THREE.BufferAttribute(idx, 1));
@@ -8760,7 +8789,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
             const s = HG * open; M.mirror.scale.set(s, -s, s); M.mirror.rotation.z += 0;
             setU(M.mirror, { t: fr, a: frameA * (1 - kA * 2), gain: fGain, refl: .13 });
           }
-          setU(M.frame, { t: fr, a: fr ? frameA : 0, rev, gain: fGain }); M.frame.visible = showGate && frameA > 0 && !!fr; M.frame.rotation.z = frameRot;
+          M.frame.rotation.z = frameRot; M.frame.updateMatrixWorld(true);
+          const fe = M.frame.matrixWorld.elements;
+          setU(M.frame, { t: fr, tS: skyTex, sSrgb: skyTex && skyTex.colorSpace === THREE.SRGBColorSpace ? 1 : 0, fR: M.frame.userData.r.set(fe[0], fe[1], fe[2]).normalize(), fU: M.frame.userData.u.set(fe[4], fe[5], fe[6]).normalize(), a: fr ? frameA : 0, rev, gain: fGain, time: clock, glass: skyTex ? 1 : 0 });
+          M.frame.visible = showGate && frameA > 0 && !!fr;
           M.ring.visible = false;
           viewSet(M.portal, { a: inn ? 1 : 0, thMax, iris, gain: 1.04, rot: innerRot, swirl: 0, glint: 1 - kDest, t2: tex, kDest: tex ? kDest : 0, dYaw: dRot, dSrgb: tex && tex.colorSpace === THREE.SRGBColorSpace ? 1 : 0 }); M.portal.visible = showGate && iris > 0 && !!inn;
           M.world.visible = false;
