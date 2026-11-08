@@ -8873,6 +8873,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     d = document.createElement("div"); d.id = "worldPick"; d.className = "world-pick"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Virtuális világ");
     d.innerHTML = `<div class="wp-card"><button type="button" class="wp-x" aria-label="Bezárás">✕</button><h2>Virtuális világ</h2>
       <button type="button" data-w="race"><b>⛵ Vitorlásverseny – a kormánynál</b><span>A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél</span></button>
+      <button type="button" data-w="chess"><b>♞ Vitorlás sakk – életnagyságban</b><span>A tábla maga a Balaton naplementében, a bábuk igazi hajók · parancsnoki híd, stég, hőlégballon</span></button>
       <button type="button" data-w="maquette"><b>🏠 A ház makettje a regatta-bóján</b><span>A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig</span></button>
       <p>VR szemüvegben a legszebb (Meta Quest: „VR” gomb). Itt egérrel/ujjal nézel körbe.</p></div>`;
     d.addEventListener("click", (e) => { const t = e.target.closest("[data-w]"); if (t) { d.remove(); openWorld(t.dataset.w); } else if (e.target === d || e.target.closest(".wp-x")) d.remove(); });
@@ -9304,6 +9305,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function pWorld(g) {
     /* 2026. nov. 6.: a tulajdonos kérésére VR-ben csak két világ marad – a vitorlásverseny a kormánynál és a makett */
     const items = [["race", "⛵  Vitorlásverseny – a kormánynál", "A 15 méteres Zephyr kormánykerekénél állsz: fogd meg és forgasd! Rajt, bójakerülés bal kéz felől, három ellenfél, futamonként új pálya."],
+                   ["chess", "♞  Vitorlás sakk", "A sakktábla a Balaton naplementében, a bábuk életnagyságú hajók. Parancsnoki hídról, stégről, hőlégballonból nézed."],
                    ["maquette", "🏠  A ház makettje", "Egy regatta-bóján a Balaton közepén: körülötted verseny, időnként tengeri szörny, helikopter… Két kézzel széthúzva életnagyságú lesz."]];
     items.forEach(([k, t, d], i) => {
       const y = 140 + i * 228;
@@ -10047,7 +10049,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       /* húzás közben (pl. kormányrúd, makett forgatása) a fogott tárgy kapja a mozgást */
       const dr = XRP.drag[key];
       if (dr && dr.h.drag) dr.h.drag(S0, key);
-      _rc.set(o, d); _rc.far = 80;
+      _rc.set(o, d); _rc.far = (window.ZephyrWorld && ZephyrWorld.active && ZephyrWorld.rayFar) || 80;
       let hit = null, tgt = null;
       try { _rc.camera = sceneEl.renderer.xr.getCamera(); } catch (e) {}
       const tg = key === "left" ? targets.filter((o) => o !== XRP.wrist && !(XRP.wristP && o === XRP.wristP.m)) : targets;
@@ -10123,7 +10125,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     let it = null;
     if (world && ZephyrWorld.spec && ZephyrWorld.spec.wrist) { try { it = ZephyrWorld.spec.wrist(); } catch (e) {} }
     if (!it && world) it = [["☰", "Panel", () => ZephyrWorld.togglePanel()], ["🧭", "Forgás", [["↺", "Balra 45°", () => vrTurn(TURN)], ["↻", "Jobbra 45°", () => vrTurn(-TURN)], ["⤾", "Megfordulok", () => vrTurn(Math.PI)]]],
-      ["⛵", "3D világ", [["🏠", "Makett", () => openWorld("maquette")], ["⛵", "Vitorlásverseny", () => openWorld("race")]]],
+      ["⛵", "3D világ", [["🏠", "Makett", () => openWorld("maquette")], ["⛵", "Vitorlásverseny", () => openWorld("race")], ["♞", "Vitorlás sakk", () => openWorld("chess")]]],
       ["‹", "A sétához", () => ZephyrWorld.close()], ["❔", "Súgó", () => { ZephyrWorld.close(() => vrOpen("help")); }], ["✕", "Kilépés", () => vrEndSession()]];
     if (!it) {
       const pg = (p, f) => () => { if (f) f(); vrOpen(p); VRS.page = p; vrDraw(); vrPlace(); };
@@ -10133,7 +10135,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         ["🏠", "Lakások", apts],
         ["📅", "Foglalás", [["📅", "Időpont és foglalás", pg("book", () => vrBookInit())], ["🗺", "Melyik lakás hol van", pg("map")], ["❔", "Hogyan foglalok?", pg("help")]]],
         ["☀", "Napállás", pg("sun", () => sunSet(true))],
-        ["⛵", "3D világ", [["🏠", "A ház makettje", () => openWorld("maquette")], ["⛵", "Vitorlásverseny", () => openWorld("race")]]],
+        ["⛵", "3D világ", [["🏠", "A ház makettje", () => openWorld("maquette")], ["⛵", "Vitorlásverseny", () => openWorld("race")], ["♞", "Vitorlás sakk", () => openWorld("chess")]]],
         ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)], ["☰", "Nagy menü", () => vrToggle()],
         ["❔", "Súgó", pg("help")], ["✕", "Kilépés", () => vrEndSession()]];
     }
@@ -10143,7 +10145,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function sceneGroup() { const sc = SCENES[current]; return sc ? sc.g : null; }
   function watchContext() {
     const W = window.ZephyrWorld;
-    if (W && W.active) { const M = W.maq && W.maq.MAQ; if (W.kind === "maquette" && M) return M.mode === "life" ? "A ház életnagyságban" : "A ház makettje"; return W.kind === "race" ? "Vitorlásverseny" : W.kind === "sail" ? "Vitorlázás" : W.kind === "regatta" ? "Regatta" : "3D világ"; }
+    if (W && W.active) { const M = W.maq && W.maq.MAQ; if (W.kind === "maquette" && M) return M.mode === "life" ? "A ház életnagyságban" : "A ház makettje"; return W.kind === "race" ? "Vitorlásverseny" : W.kind === "chess" ? "Vitorlás sakk" : W.kind === "sail" ? "Vitorlázás" : W.kind === "regatta" ? "Regatta" : "3D világ"; }
     const sc = SCENES[current]; const g = sc && GROUPS.find((q) => q.id === sc.g); return sc ? ((g && g.no ? g.name + " · " : "") + sc.n) : "Zephyr";
   }
   function watchNorthYaw() {
@@ -10864,7 +10866,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "a8eb5c2ed9"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "a9749441d1"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
