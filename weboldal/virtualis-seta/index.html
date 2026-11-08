@@ -8477,6 +8477,17 @@ void main(){
     gl_FragColor = vec4((vec3(1., .97, .88) * core * 1.6 + vec3(1., .78, .38) * (halo + star) + vec3(.45, .7, 1.) * ring) * a, 0.); return;
   }
   if (mode == 4) { gl_FragColor = vec4(col * a, 0.); return; }
+  if (mode == 6) {                                                           /* a kapu fénye a padlón */
+    float l = exp(-r * r * 3.4) * (1. - smoothstep(.75, 1., r));
+    float an = atan(p.y, p.x);
+    vec3 cc = mix(vec3(1., .76, .4), vec3(.45, .7, 1.), .35 + .25 * sin(time * .8 + an * 2.));
+    gl_FragColor = vec4(cc * l * (.85 + .15 * sin(time * 3.1)) * a, 0.); return;
+  }
+  if (mode == 7) {                                                           /* derengés a kapu mögött (a falon) */
+    float l = (exp(-pow((r - .56) / .26, 2.)) * .8 + exp(-r * r * 2.2) * .25) * (1. - smoothstep(.85, 1., r));
+    vec3 cc = mix(vec3(1., .8, .45), vec3(.5, .72, 1.), .5 + .5 * sin(atan(p.y, p.x) * 2. + time * .6));
+    gl_FragColor = vec4(cc * l * a, 0.); return;
+  }
   float w = sin(r * 60. - time * 14.) * .5 + .5;
   float ring = exp(-pow((r - ringR) / .035, 2.)) * 1.2 + exp(-pow((r - ringR * .82) / .02, 2.)) * .35 * w;
   float inner = smoothstep(ringR, 0., r) * .18 * w;
@@ -8484,7 +8495,7 @@ void main(){
 }`;
   /* a magyar keret: átlátszó hátterű kép, körbe rajzolódva jelenik meg (rev), a rajzoló él aranyosan izzik */
   const GFK = `precision highp float; varying vec2 vUv;
-uniform sampler2D t; uniform float a, rev, gain;
+uniform sampler2D t; uniform float a, rev, gain, refl;
 void main(){
   vec2 p = vUv * 2. - 1.; float r = length(p);
   float an = abs(atan(p.x, p.y)) / 3.14159265;               // 0 felül, 1 alul – mindkét irányban egyszerre rajzolódik
@@ -8492,7 +8503,8 @@ void main(){
   vec4 k = texture2D(t, vUv);
   float edge = exp(-pow((an - rev) / .014, 2.)) * k.a * step(.001, rev) * (1. - step(.999, rev));
   vec3 c = k.rgb * gain * vis + vec3(1., .78, .4) * edge * .75;
-  gl_FragColor = vec4(c * a, k.a * vis * a);
+  float ra = refl > 0. ? refl * (1. - smoothstep(.0, .6, vUv.y)) : 1.;      // tükörkép: a padló közelében erősebb
+  gl_FragColor = vec4(c * a * ra, k.a * vis * a * ra);
 }`;
   /* a kapu világa: ablak egy másik világra. A nézési irány és a kapu tengelye közti szög szerint vetül, így a gyűrűn
      áthaladva folytonosan körbevesz. thMax: a kép körének látószöge; disc=1: a kapu korongja (íriszmaszkkal), 0: körülöttünk */
@@ -8566,13 +8578,21 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const orb = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GF, uniforms: fxU() })), 66, .1);
     const viewU = () => U({ t: null, t2: null, ax: new THREE.Vector3(0, 0, -1), rx: new THREE.Vector3(1, 0, 0), ux: new THREE.Vector3(0, 1, 0), thMax: 1, rB: .95, a: 0, gain: 1, time: 0, rot: 0, iris: 0, disc: 1, swirl: 0, glint: 1, kDest: 0, dYaw: 0, dSrgb: 1 });
     const portal = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFV, uniforms: viewU() })), 62, .7);
-    const frame = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFK, uniforms: U({ t: null, a: 0, rev: 0, gain: 1 }) })), 63, 1);
+    const frame = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFK, uniforms: U({ t: null, a: 0, rev: 0, gain: 1, refl: 0 }) })), 63, 1);
+    /* a keret halvány tükörképe a padlón (fényes járólap / terasz) */
+    const mirror = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFK, side: THREE.DoubleSide, uniforms: U({ t: null, a: 0, rev: 1, gain: 1, refl: .1 }) })), 56, 1);
+    mirror.visible = false; sceneEl.object3D.add(mirror);
     const N = 360, gp = new THREE.BufferGeometry(), idx = new Float32Array(N);
     for (let k = 0; k < N; k++) idx[k] = k;
     gp.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3)); gp.setAttribute("i", new THREE.BufferAttribute(idx, 1));
     const sparks = new THREE.Points(gp, new THREE.ShaderMaterial(pm({ vertexShader: GPV, fragmentShader: GPF, uniforms: U({ time: 0, burst: 0, R: .82, n: N, dpr: 1, a: 0 }) })));
     sparks.renderOrder = 64; sparks.frustumCulled = false;
-    grp.add(ring, portal, frame, sparks);
+    const halo = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GF, uniforms: Object.assign(fxU(), { mode: { value: 7 } }) })), 60, 1.9);
+    halo.position.z = -.03;
+    grp.add(halo, ring, portal, frame, sparks);
+    /* a padlón: a nyílnál szétfutó vízgyűrű és a kapu alatti fénytócsa (vízszintes lapok) */
+    const flo = (mode, ro) => { const me = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GF, uniforms: Object.assign(fxU(), { mode: { value: mode } }) })), ro, 1); me.rotation.x = -Math.PI / 2; me.visible = false; sceneEl.object3D.add(me); return me; };
+    const fring = flo(5, 58), pool = flo(6, 57);
     const orbG = new THREE.Group(); orbG.add(orb); sceneEl.object3D.add(orbG);
     /* a kapun túli világ, amikor már körülvesz (a kamerára tett gömb belseje), és egy finom aranyló fény az áthaladáskor */
     const world = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 40), new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFV, side: THREE.BackSide, uniforms: Object.assign(viewU(), { disc: { value: 0 } }) })));
@@ -8581,7 +8601,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     flash.renderOrder = 990; flash.frustumCulled = false; flash.visible = false;
     sceneEl.object3D.add(grp);
     const co = camObj() || cam.object3D; co.add(world); co.add(flash);
-    GM = { grp, ring, portal, frame, orb, orbG, sparks, world, flash };
+    GM = { grp, ring, portal, frame, orb, orbG, sparks, world, flash, halo, fring, pool, mirror };
     return GM;
   }
 
@@ -8633,20 +8653,22 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     Array.from(spots.children).forEach((e) => { const ar = e._arr; if (ar && ar[0] === g.via && !arrow) arrow = e; else e.object3D.visible = false; });
     const arrowScale = arrow ? arrow.object3D.scale.x : 1;
     /* a kapu tengelye a világban (a nyíl iránya) és a hozzá tartozó jobbra/fel irány */
-    /* a fénypont a nyílnál születik; a kapu nyílás közben szemmagasság felé emelkedik, hogy egyenesen belesétálhassunk */
+    /* valódi térbe illesztés: a nyíl a padlón van, az ajtó előtt. A panoráma kb. 1,6 m magasról készült, így a nyíl
+       lefelé nézési szögéből kiadódik a távolsága; a kapu ott áll az ajtóban, ajtónyi méretben, függőlegesen, a közepe
+       1,2 m magasan – a fénypont a padlón születik, onnan emelkedik fel és nő ki a keret. */
+    const CAM_H = 1.6, GATE_H = 1.15, HG = 1.08;                                // HG: a keret fél mérete méterben
     const axA = (arrow ? arrow.object3D.position.clone() : (() => { const p = dirFrom(spot.x, spot.y, 1); return new THREE.Vector3(p.x, p.y, p.z); })()).normalize();
     const dYaw = Math.atan2(-axA.x, -axA.z), aPitch = Math.asin(Math.max(-1, Math.min(1, axA.y)));
-    const gPitch = Math.max(-.12, Math.min(.1, aPitch * .3));
-    const axG = new THREE.Vector3(-Math.sin(dYaw) * Math.cos(gPitch), Math.sin(gPitch), -Math.cos(dYaw) * Math.cos(gPitch));
+    const dH = aPitch < -.06 ? Math.min(6, Math.max(1.8, CAM_H / Math.tan(-aPitch) * .55)) : 3.2;   // a nyilak a padló fölött ülnek: a valódi ajtó kb. fele ilyen messze van
+    const hd = new THREE.Vector3(-Math.sin(dYaw), 0, -Math.cos(dYaw));
+    const relF = hd.clone().multiplyScalar(dH).setY(-CAM_H), relG = hd.clone().multiplyScalar(dH).setY(GATE_H - CAM_H);
+    const relP = new THREE.Vector3(), axG = relG.clone().normalize();
     const ax = axA.clone(), rx = new THREE.Vector3(), ux = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
-    const setAxis = (k) => { ax.copy(axA).lerp(axG, k).normalize(); rx.crossVectors(ax, UP).normalize(); ux.crossVectors(rx, ax).normalize(); };
-    setAxis(0);
+    const setAxisV = (v) => { ax.copy(v).normalize(); rx.crossVectors(ax, UP).normalize(); ux.crossVectors(rx, ax).normalize(); };
+    setAxisV(relF);
     if (!inVR && lc && lc.yawObject) { rig.object3D.rotation.y += lc.yawObject.rotation.y; lc.yawObject.rotation.y = 0; }
     const y0 = rig.object3D.rotation.y, p0 = lc && lc.pitchObject ? lc.pitchObject.rotation.x : 0;
-    /* a kapu látószöge: fekvő képernyőn és VR-ben ~27°, álló telefonon akkora, hogy a szélessége kiférjen */
-    let hA = .47;
-    if (!inVR && c && c.aspect < 1.15) hA = Math.min(hA, Math.atan(Math.tan(c.fov * R / 2) * c.aspect * .9));
-    const D = 6, H0 = D * Math.tan(hA), TH_W = 70 * R;
+    const TH_W = 70 * R, gp = new THREE.Vector3();
     M.portal.scale.setScalar(G.rp);
     M.grp.visible = true; M.flash.visible = true; M.world.visible = false;
     document.body.classList.add("gate-on");
@@ -8670,9 +8692,14 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           if (T > .7 && !(fr && inn) && T < 4.6) T = .7;
           if (T >= 2.8 && !texDone) T = 2.8;                                   // az átsejléshez már a célhelyszín képe kell
           const t = T;
-          const kRise = easeIO(ss(.3, 1.7, t));
-          if (!switched) setAxis(kRise);
-          const curPitch = aPitch + (gPitch - aPitch) * kRise;
+          const kRise = easeIO(ss(.35, 1.45, t));
+          /* közeledéskor a kapu közepe szemmagasságba ér, hogy egyenesen átléphessünk rajta */
+          const kA = ss(3.15, 4.75, t), kAs = kA * kA * (3 - 2 * kA);
+          relP.copy(relF).lerp(relG, kRise); relP.y += (0 - relP.y) * kAs;
+          const dist0 = relP.length();
+          const dist = dist0 - (dist0 + 1) * (kAs * .35 + Math.pow(kA, 2.2) * .65);
+          if (!switched) setAxisV(relP);
+          const curPitch = Math.asin(Math.max(-1, Math.min(1, ax.y)));
           /* 1. a nyíl fényponttá zsugorodik */
           if (arrow) {
             const k = Math.max(0, Math.min(1, (t + ELO) / ELO)), s = 1 - Math.pow(k, 1.6);
@@ -8702,9 +8729,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           const innerRot = -(-1.4 * twist + clock * .06);                         // ellenkező irány = jobbra
           /* a kapu világában átsejlik a célhelyszín (az apartman belseje), mielőtt a gyűrű odaér */
           const kDest = ss(2.75, 3.95, t);
-          /* közeledés: a kapu felénk jön és átfut rajtunk (távolság D → −1 m) */
-          const kA = ss(3.15, 4.75, t), dist = D - (D + 1) * (kA * kA * (3 - 2 * kA) * .35 + Math.pow(kA, 2.2) * .65);
-          const Rw = G.rp * H0 * open;                                          // a korong sugara méterben
+          const Rw = G.rp * HG * open;                                          // a korong sugara méterben
           const alpha = dist > .02 ? Math.atan(Rw / dist) : Math.PI / 2;        // a korong látószöge
           const thMax = Math.min(alpha / .985, TH_W);                           // amíg kicsi, a teljes kép belefér; utána „ablak”
           const glow = .22 * Math.exp(-Math.pow((t - 4.55) / .2, 2));
@@ -8728,17 +8753,32 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           const showGate = !switched && dist > .02;
           M.grp.visible = showGate;
           M.grp.position.copy(cp).addScaledVector(ax, Math.max(.03, dist));
-          M.grp.lookAt(cp);
-          M.grp.scale.setScalar(H0 * open);
-          /* a panoráma kissé elhalványul, amíg a kapu nyitva */
-          mesh.material.color.setScalar(switched ? 1 : 1 - .22 * frameA);
+          M.grp.position.y += Math.sin(clock * 1.25) * .012 * kRise * (1 - kA);    // alig érezhető lebegés
+          gp.copy(M.grp.position);
+          M.grp.lookAt(cp.x, gp.y + (cp.y - gp.y) * kAs, cp.z);                  // függőlegesen áll; közeledéskor felénk fordul
+          M.grp.scale.setScalar(HG * open);
+          /* a környezet alig sötétedik – a kapu fénye világít rá (padló, fal) */
+          mesh.material.color.setScalar(switched ? 1 : 1 - .07 * frameA);
+          M.halo.visible = showGate && frameA > 0; setU(M.halo, { a: frameA * .42 * (1 - kA * .6) * (1 + .4 * (fGain - 1)), time: clock });
+          M.pool.visible = showGate && frameA > 0; M.pool.position.set(gp.x, cp.y - CAM_H + .01, gp.z); M.pool.scale.setScalar(1.55 * Math.max(.1, open));
+          setU(M.pool, { a: frameA * .7 * (1 - kAs * .85), time: clock });
+          /* tükörkép: a kapu síkja a padlóra tükrözve */
+          const fy = cp.y - CAM_H;
+          M.mirror.visible = showGate && frameA > 0 && !!fr && kA < .5;
+          if (M.mirror.visible) {
+            M.grp.updateMatrixWorld(true);
+            M.mirror.position.set(gp.x, 2 * fy - gp.y, gp.z); M.mirror.quaternion.copy(M.grp.quaternion);
+            const s = HG * open; M.mirror.scale.set(s, -s, s); M.mirror.rotation.z += 0;
+            setU(M.mirror, { t: fr, a: frameA * (1 - kA * 2), gain: fGain, refl: .13 });
+          }
           setU(M.frame, { t: fr, a: fr ? frameA : 0, rev, gain: fGain }); M.frame.visible = showGate && frameA > 0 && !!fr; M.frame.rotation.z = frameRot;
-          M.ring.scale.setScalar(.74 / Math.max(.05, open));
+          M.ring.visible = false;
           viewSet(M.portal, { a: inn ? 1 : 0, thMax, iris, gain: 1.04, rot: innerRot, swirl: 0, glint: 1 - kDest, t2: tex, kDest: tex ? kDest : 0, dYaw: dRot, dSrgb: tex && tex.colorSpace === THREE.SRGBColorSpace ? 1 : 0 }); M.portal.visible = showGate && iris > 0 && !!inn;
           M.world.visible = false;
-          M.ring.visible = ringA > 0 && showGate; setU(M.ring, { a: ringA, ringR, time: clock });
-          M.orb.visible = orb > 0; setU(M.orb, { a: orb, rot: clock * .35 }); M.orb.scale.setScalar(Math.tan(.075) * D * (1 + ringA * 1.5));
-          M.orbG.position.copy(cp).addScaledVector(ax, D); M.orbG.lookAt(cp);
+          /* a fénypont a padlón, a nyíl helyén; körülötte a padlón fut szét a vízgyűrű */
+          M.fring.visible = ringA > 0 && showGate; M.fring.position.copy(cp).add(relF).setY(cp.y - CAM_H + .015); M.fring.scale.setScalar(1.45); setU(M.fring, { a: ringA, ringR, time: clock });
+          M.orb.visible = orb > 0; setU(M.orb, { a: orb, rot: clock * .35 }); M.orb.scale.setScalar(.34 * (1 + ringA * 1.2));
+          M.orbG.position.copy(cp).add(relF).setY(cp.y - CAM_H + .25); M.orbG.lookAt(cp);
           const sp = ss(.4, 1.5, t) * (1 - ss(4.3, 4.7, t));
           M.sparks.visible = sp > 0 && showGate; setU(M.sparks, { a: sp, burst: ss(3.3, 4.4, t) * .8, time: clock, R: .82, dpr: inVR ? 2 : Math.min(devicePixelRatio || 1, 1.75) });
           setU(M.flash, { a: glow > .002 ? glow : 0 });
@@ -8750,7 +8790,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         })(performance.now());
       });
     } finally {
-      M.grp.visible = false; M.orb.visible = false; M.flash.visible = false; M.world.visible = false; setU(M.flash, { a: 0 });
+      M.grp.visible = false; M.orb.visible = false; M.flash.visible = false; M.fring.visible = false; M.pool.visible = false; M.mirror.visible = false; M.world.visible = false; setU(M.flash, { a: 0 });
       mesh.material.color.setScalar(1);
       if (c) { c.fov = F0; c.updateProjectionMatrix(); }
       if (cam && !walking) cam.setAttribute("camera", "fov", F0);
