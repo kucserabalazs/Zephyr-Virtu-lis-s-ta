@@ -138,7 +138,7 @@
     };
     flashMsg(T.inVR ? "Üdv a fedélzeten! Mutass egy hajódra, csippents, majd a célmezőre." : "Üdv a fedélzeten! Kattints egy hajódra, majd a célmezőre.");
     setTimeout(maybeAI, 900);
-    W.chess = { GS, CS, CE, goView, onSquare, doMove, newGame, undo, finishAnim };   /* (tesztekhez) */
+    W.chess = { GS, CS, CE, goView, onSquare, doMove, newGame, undo, finishAnim, place: (x, y, z, pitch) => { CS.orbit = null; placeUser({ p: V3(x, y, z) }); const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject && pitch != null) lc.pitchObject.rotation.x = pitch; } };   /* (tesztekhez) */
     return { tick: chessTick, panel: chessPanel, hud: chessHud, wrist: chessWrist };
   }
 

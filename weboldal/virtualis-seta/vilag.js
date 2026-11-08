@@ -4993,7 +4993,7 @@
   function patchWater(wm) {
     const mat = wm.userData.mat, U = mat.uniforms;
     const data = new Uint8Array(64 * 4), tex = new THREE.DataTexture(data, 8, 8, THREE.RGBAFormat); tex.magFilter = tex.minFilter = THREE.NearestFilter; tex.needsUpdate = true; W.disposables.push(tex);
-    U.uHL = { value: tex }; U.uLSq = { value: new THREE.Color(.46, .6, .5) }; U.uDSq = { value: new THREE.Color(.025, .05, .13) }; U.uPulse = { value: 0 };
+    U.uHL = { value: tex }; U.uLSq = { value: new THREE.Color(.33, .56, .5) }; U.uDSq = { value: new THREE.Color(.025, .05, .13) }; U.uPulse = { value: 0 };
     const damp = `float bDamp(vec2 q){ return 1. - .66 * (1. - smoothstep(${BH.toFixed(1)}, ${(BH + 14).toFixed(1)}, max(abs(q.x), abs(q.y)))); }\n`;
     mat.vertexShader = mat.vertexShader.replace("void main(){", damp + "void main(){").replace("vec3 disp = vec3(0.);", "fadeD *= bDamp(w); vec3 disp = vec3(0.);");
     const BASE = "vec3 base = mix(uDeep, uShallow, clamp(.35 + crest * 1.6 + n.x * .8, 0., 1.)) * (1. - gust * .16) * uLight;";
@@ -5008,7 +5008,7 @@
             vec2 cell = floor(bq), fr = fract(bq) - .5; float lt = 1. - mod(cell.x + cell.y, 2.);
             float shade = clamp(.62 + crest * 2.4 + n.x * 1.1, .2, 1.45);
             vec3 sqc = mix(uDSq, uLSq, lt) * shade * uLight;
-            float cau = lt * pow(vn(vW * 1.25 + vec2(uT * .35, -uT * .27)) * vn(vW * 1.7 - vec2(uT * .3, uT * .22)) * 1.9, 2.2) * .3;
+            float cau = lt * pow(vn(vW * 1.25 + vec2(uT * .35, -uT * .27)) * vn(vW * 1.7 - vec2(uT * .3, uT * .22)) * 1.9, 2.2) * .2;
             base = mix(base, sqc + cau * vec3(1., .86, .62), .88);
             float edge = max(abs(fr.x), abs(fr.y));
             base *= 1. - .3 * smoothstep(.46, .5, edge);
@@ -5616,7 +5616,7 @@
     };
     flashMsg(T.inVR ? "Üdv a fedélzeten! Mutass egy hajódra, csippents, majd a célmezőre." : "Üdv a fedélzeten! Kattints egy hajódra, majd a célmezőre.");
     setTimeout(maybeAI, 900);
-    W.chess = { GS, CS, CE, goView, onSquare, doMove, newGame, undo, finishAnim };   /* (tesztekhez) */
+    W.chess = { GS, CS, CE, goView, onSquare, doMove, newGame, undo, finishAnim, place: (x, y, z, pitch) => { CS.orbit = null; placeUser({ p: V3(x, y, z) }); const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject && pitch != null) lc.pitchObject.rotation.x = pitch; } };   /* (tesztekhez) */
     return { tick: chessTick, panel: chessPanel, hud: chessHud, wrist: chessWrist };
   }
 

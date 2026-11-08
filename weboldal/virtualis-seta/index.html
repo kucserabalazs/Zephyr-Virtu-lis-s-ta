@@ -10866,7 +10866,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "a9749441d1"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "fffe9b1a39"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
@@ -12470,7 +12470,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     { id: "ring", n: "Mentőöv-célbadobás", d: "Dobd a mentőövet a sodródó bójákra!", c: "#f2b233" },
     { id: "race", n: "Vitorlás-regatta", d: "Versenyezz 3 hajóval a Balatonon, a stég előtt!", c: "#6a1b9a" },
     { id: "mahj", n: "Vitorlás mahjong", d: "Párosítsd a szabad lapokat: az apartmanok hajói, Tihany, Badacsony, Zamárdi és a Zephyr-embléma!", c: "#0f7a6c" },
-    { id: "chess", n: "Vitorlás sakk", d: "Sakk a Balaton vizén: csónak, lófejes hajó, versenyvitorlás, világítótorony, szkúner és háromárbócos – a gép ellen vagy ketten!", c: "#1f5fa8" }
+    { id: "chess", n: "Vitorlás sakk", d: "Luxus tengerészeti sakk: ezüst és arany figurák – kikötőbak, csikóhal, kormánykerék, világítótorony, királynő, kapitány – a gép ellen vagy ketten!", c: "#1f5fa8" }
   ];
   let gmEl = null, gmCv = null, gmG = null, gmRaf = 0, gmGame = null, gmLast = 0, gmInput = 0, gmDock = null;
   const gmGiven = () => { try { const v = JSON.parse(localStorage.getItem(GM_KEY) || "null"); return !!(v && v.d === new Date().toDateString() && v.given); } catch (e) { return false; } };
