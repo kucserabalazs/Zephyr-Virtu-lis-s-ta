@@ -8689,11 +8689,17 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           /* időzítés */
           const orb = ss(-ELO * .75, -.05, t) * (1 - ss(.2, .75, t));
           const ringA = ss(.05, .35, t) * (1 - ss(1.2, 1.8, t)), ringR = .25 + .72 * easeO(ss(.05, 1.1, t));
-          const rev = easeIO(ss(.55, 1.55, t));                                   // a keret körbe rajzolódik
-          const frameA = ss(.5, .7, t);
-          const fGain = 1 + .55 * Math.exp(-Math.pow((t - 1.6) / .3, 2));         // kirajzolódás után egy fényhullám
-          const iris = easeO(ss(1.35, 2.35, t));                                  // a világ írisszerűen kinyílik
-          const open = .9 + .1 * easeO(ss(.55, 1.8, t));
+          /* a fénypontból azonnal, egészében nő ki a keret (nem rajzolódik körbe), közben balra tekeredik;
+             a belső kép vele szemben jobbra tekeredik, és így forog tovább lassan az egész folyamat alatt */
+          const rev = 1;
+          const kOpen = ss(.42, 1.4, t), oB = (k) => 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2);   // lágy túllendülés
+          const frameA = ss(.4, .58, t);
+          const fGain = 1 + .5 * Math.exp(-Math.pow((t - 1.4) / .28, 2));         // megérkezéskor egy fényhullám
+          const iris = easeO(ss(.7, 1.6, t));                                     // a belső kép a kerettel együtt nyílik
+          const open = .05 + .95 * oB(kOpen);
+          const twist = 1 - easeO(kOpen);                                         // 1 → 0 a megjelenés alatt
+          const frameRot = -1.15 * twist + clock * .045;                          // + irány = balra (óramutatóval szemben)
+          const innerRot = -(-1.4 * twist + clock * .06);                         // ellenkező irány = jobbra
           /* a kapu világában átsejlik a célhelyszín (az apartman belseje), mielőtt a gyűrű odaér */
           const kDest = ss(2.75, 3.95, t);
           /* közeledés: a kapu felénk jön és átfut rajtunk (távolság D → −1 m) */
@@ -8726,8 +8732,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           M.grp.scale.setScalar(H0 * open);
           /* a panoráma kissé elhalványul, amíg a kapu nyitva */
           mesh.material.color.setScalar(switched ? 1 : 1 - .22 * frameA);
-          setU(M.frame, { t: fr, a: fr ? frameA : 0, rev, gain: fGain }); M.frame.visible = showGate && frameA > 0 && !!fr;
-          viewSet(M.portal, { a: inn ? 1 : 0, thMax, iris, gain: 1.04, rot: -clock * .035, swirl: 0, glint: 1 - kDest, t2: tex, kDest: tex ? kDest : 0, dYaw: dRot, dSrgb: tex && tex.colorSpace === THREE.SRGBColorSpace ? 1 : 0 }); M.portal.visible = showGate && iris > 0 && !!inn;
+          setU(M.frame, { t: fr, a: fr ? frameA : 0, rev, gain: fGain }); M.frame.visible = showGate && frameA > 0 && !!fr; M.frame.rotation.z = frameRot;
+          M.ring.scale.setScalar(.74 / Math.max(.05, open));
+          viewSet(M.portal, { a: inn ? 1 : 0, thMax, iris, gain: 1.04, rot: innerRot, swirl: 0, glint: 1 - kDest, t2: tex, kDest: tex ? kDest : 0, dYaw: dRot, dSrgb: tex && tex.colorSpace === THREE.SRGBColorSpace ? 1 : 0 }); M.portal.visible = showGate && iris > 0 && !!inn;
           M.world.visible = false;
           M.ring.visible = ringA > 0 && showGate; setU(M.ring, { a: ringA, ringR, time: clock });
           M.orb.visible = orb > 0; setU(M.orb, { a: orb, rot: clock * .35 }); M.orb.scale.setScalar(Math.tan(.075) * D * (1 + ringA * 1.5));
