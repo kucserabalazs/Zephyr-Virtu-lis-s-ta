@@ -3070,7 +3070,7 @@ const SCENES = {
   "kapu":           { g: "haz", n: "Kapu", s: .331, m: [1.5, 26.75], t: [[.52, .49, "Kerti csap"]], l: [["oldal-bejaro", .268, .563, "Apartmanok, parkoló, grill, SUP, kerékpár", 0, "combo:bed,parking,grill,sup,bike"], ["utca", .752, .599, "Kilépés az utcára", 0, "exit"], ["korvett-terasz", .427, .554, "Korvett Apartman terasz", -45, "apt1"]] },
   "oldal-bejaro":   { g: "haz", n: "A lépcsőháznál", s: .362, m: [1.5, 18.9], fov: 1.2,
                       sign: [.355, .589, [["hatso-lepcso", "Kert és parkoló", 0, ["parking", "grill", "sup", "bike"]], ["schooner-terasz2", "Schooner", 0, ["bed"], [5]], ["fedett-bejaro", "Korvett · Dingi", 90, ["bed"], [1, 2]], ["folyoso-fregatt", "Fregatt · Kalóz", 45, ["bed", "stairs"], [3, 4], "up"]]],
-                      l: [["kapu", .76, .6, "Kapu felé", 0, "gate"]], pl: [["hatso-lepcso", .245, .575, "Tovább hátra: kert, parkoló, Schooner, Kadett", 0, "combo:parking,grill|sup,bike"], ["fedett-bejaro", .475, .58, "Jobbra a lépcsőház: Korvett, Dingi, fel a Fregatt és Kalóz apartmanokhoz", 90, "stairs"]], wl: [["hatso-lepcso", .245, .575, ""], ["schooner-terasz2", .273, .575, ""], ["fedett-bejaro", .475, .58, ""], ["lepcsohaz", .53, .55, ""]] },
+                      l: [["kapu", .76, .6, "Kapu felé", 0, "gate"]], pl: [["hatso-lepcso", .245, .575, "Tovább hátra: kert, parkoló, Schooner, Kadett", 0, "combo:parking,grill|sup,bike"], ["fedett-bejaro", .462, .6, "Előre a fedett terasz: Korvett, Dingi", 0, "combo:apt1,apt2"], ["folyoso-fregatt", .506, .56, "Lépcső fel a Fregatt és a Kalóz apartmanhoz", 0, "combo:stairs,apt3,apt4", "up"]], wl: [["hatso-lepcso", .245, .575, ""], ["schooner-terasz2", .273, .575, ""], ["fedett-bejaro", .475, .58, ""], ["lepcsohaz", .53, .55, ""]] },
   "fedett-bejaro":  { g: "haz", nomap: 1, n: "Dingi Terasz", s: .815, m: [5.6, 18.9], t: [[.055, .555, "Mentőmellények"]], l: [["dingi-eloter", .752, .6, "Apartman 2\nDingi", 0, "apt2"], ["korvett-eloszoba", .234, .581, "Apartman 1\nKorvett", 0, "apt1"], ["oldal-bejaro", .489, .546, "Ki", 0, "exit"], ["emelet", .921, .562, "Lépcső fel a Kalóz és Fregatt apartmanokhoz", 55, "combo:stairs,apt3,apt4"]] },
   "lepcsohaz":      { g: "haz", nomap: 1, n: "Lépcső", s: .72, m: [7.53, 18.89], l: [["emelet", .775, .47, "Fel az emeletre"], ["fedett-bejaro", .9, .62, "Lépcsőház"]] },
   "emelet":         { g: "haz", nomap: 1, n: "Lépcső teteje", s: .3, m: [9.34, 18.95], up: 1, l: [["folyoso-fregatt", .291, .531, "Kalóz Apartman terasz"], ["fedett-bejaro", .5, .85, "Le"], ["kaloz-bejarat", .43, .516, "Kalóz · Apartman 4", 0, "apt4"], ["fregatt-bejarat", .237, .531, "Fregatt · Apartman 3", -90, "apt3"]] },
@@ -8413,8 +8413,16 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if ((from === "utca" && to === "kapu") || (from === "kapu" && to === "utca")) return { no: 20, to, via: to };
     if (from === "steg" && to === "utca") { const r = stegReturn && SCENES[stegReturn] ? stegReturn : "utca"; return { no: 13, to: r, via: "utca", look: r === "utca" ? .233 : SCENES[r].s }; }
     if (from === "utca" && to === "strand-ut1") return { no: 14, to: "steg", via: "strand-ut1", look: SCENES.steg.s };
-    if (a.g !== b.g) { const no = GATE_APT[b.g] || GATE_APT[a.g]; if (no) return { no, to, via: to }; }
+    const ia = aptInside(from), ib = aptInside(to);
+    if (ia !== ib) { const no = GATE_APT[ib] || GATE_APT[ia]; if (no) return { no, to, via: to }; }
     return null;
+  }
+  /* bent vagyunk-e egy apartmanban (és melyikben). A lakások terasza KINT van: a kapu és az üdvözlés a lakás ajtajánál
+     történik (pl. a Korvett hátsó bejárata a teraszról), nem a teraszra lépéskor. Új terasz-jelenetnél ide kell felvenni. */
+  function aptInside(id) {
+    const s = SCENES[id]; if (!s || id === "korvett-terasz" || id === "schooner-terasz2") return null;
+    const g = GROUPS.find((x) => x.id === s.g);
+    return g && g.no ? g.id : null;
   }
   /* a nyíl helye a panorámán (x, y 0–1): a nyilak, a telefonos nyilak és az irányjelző tábla sorai közül */
   function gateSpot(from, to) {
@@ -11708,6 +11716,12 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
   function updateUI(id) {
     const sc = SCENES[id];
+    /* üdvözlés belépéskor / búcsú kilépéskor: a lakás AJTAJÁN át (a terasz kint számít) */
+    const ins = aptInside(id);
+    if (ins !== updateUI.ins) {
+      if (updateUI.ins !== undefined && !walking && !EDIT) { if (ins) greet(true, (GROUPS.find((x) => x.id === ins) || {}).name); else greet(false); }
+      updateUI.ins = ins;
+    }
     try { stegDock(id === "steg"); } catch (e) {}
     $("privNote").hidden = !sc.priv;
     const g = GROUPS.find((x) => x.id === sc.g);
@@ -11715,7 +11729,6 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     $("unitName").textContent = isSite(g) ? g.name : `${g.no} · ${g.name}`;
     if (currentGroup !== g.id) {
       const prevG = GROUPS.find((x) => x.id === currentGroup), wasApt = !!(prevG && prevG.no), isApt = !!g.no;
-      if (currentGroup && !walking && !EDIT) { if (isApt) greet(true, g.name); else if (wasApt) greet(false); }
       currentGroup = g.id;
       syncStrandMap(g.id);
       buildStrip(g.id);
