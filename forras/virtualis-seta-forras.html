@@ -8478,7 +8478,19 @@ void main(){
   /* a kapu világa: ablak egy másik világra. A nézési irány és a kapu tengelye közti szög szerint vetül, így a gyűrűn
      áthaladva folytonosan körbevesz. thMax: a kép körének látószöge; disc=1: a kapu korongja (íriszmaszkkal), 0: körülöttünk */
   const GFV = `precision highp float; varying vec2 vUv; varying vec3 vW;
-uniform sampler2D t; uniform vec3 ax, rx, ux; uniform float thMax, rB, a, gain, time, rot, iris, disc, swirl, glint;
+uniform sampler2D t, t2; uniform vec3 ax, rx, ux; uniform float thMax, rB, a, gain, time, rot, iris, disc, swirl, glint, kDest, dYaw, dSrgb;
+vec3 toSrgb(vec3 c){ return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.)), vec3(1. / 2.4)) - .055, step(vec3(.0031308), c)); }
+/* a célhelyszín panorámája abban az irányban, amerre átlépés után ez a képpont néz (dYaw: a rig elfordulása a cserénél) */
+vec3 dest(vec3 d){
+  float cs = cos(dYaw), sn = sin(dYaw);
+  vec3 e = vec3(cs * d.x + sn * d.z, d.y, -sn * d.x + cs * d.z);
+  float x = atan(e.z, e.x) / 6.2831853, y = acos(clamp(e.y, -1., 1.)) / 3.14159265;
+  vec2 uA = vec2(fract(x), 1. - y), uB = vec2(fract(x + .5) - .5, 1. - y);
+  vec2 gA = dFdx(uA), gB = dFdx(uB), hA = dFdy(uA), hB = dFdy(uB);
+  bool useB = abs(gA.x) + abs(hA.x) > abs(gB.x) + abs(hB.x);
+  vec3 c = textureGrad(t2, uA, useB ? gB : gA, useB ? hB : hA).rgb;
+  return dSrgb > .5 ? toSrgb(c) : c;
+}
 void main(){
   vec3 d = normalize(vW - cameraPosition);
   float th = acos(clamp(dot(d, ax), -1., 1.));
@@ -8493,6 +8505,13 @@ void main(){
   float s = fract(time * .14) * 3.2 - 1.6;
   c += vec3(1., .92, .75) * glint * .16 * exp(-pow((q.x * .7 + q.y * .7 - s) / .12, 2.)) * edge;
   c += vec3(1., .86, .6) * pow(max(0., 1. - rr), 4.) * .08 * glint;
+  /* átsejlés: középről kifelé tűnik át a kapu világa a célhelyszínbe, a határon aranyló derengés */
+  vec3 g0 = vec3(0.);
+  if (kDest > .001) {
+    float kk = clamp(kDest * 1.7 - rr * .7, 0., 1.), ks = kk * kk * (3. - 2. * kk);
+    c = mix(c * gain, dest(d), ks) / max(gain, .001);
+    g0 = vec3(1., .82, .5) * exp(-pow((kk - .5) / .18, 2.)) * .22 * (1. - step(.999, kDest));
+  }
   float m = 1.;
   vec3 g = vec3(0.);
   if (disc > .5) {
@@ -8500,7 +8519,7 @@ void main(){
     m = (1. - smoothstep(.985, 1., r)) * (1. - smoothstep(iris - .06, iris, r));
     g = vec3(1., .85, .55) * exp(-pow((r - iris) / .035, 2.)) * (1. - step(.999, iris)) * step(.001, iris) * 1.3;
   }
-  gl_FragColor = vec4((c * gain * m + g) * a, m * a);
+  gl_FragColor = vec4((c * gain * m + g + g0 * m) * a, m * a);
 }`;
   const GPV = `attribute float i; uniform float time, burst, R, n, dpr; varying vec4 col; varying float al;
 float h(float x){ return fract(sin(x * 127.1 + 311.7) * 43758.5453); }
@@ -8526,7 +8545,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const fxU = () => U({ mode: 3, a: 0, rot: 0, time: 0, ringR: .3, col: new THREE.Vector3(1, .9, .72) });
     const ring = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GF, uniforms: Object.assign(fxU(), { mode: { value: 5 } }) })), 61, .74);
     const orb = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GF, uniforms: fxU() })), 66, .1);
-    const viewU = () => U({ t: null, ax: new THREE.Vector3(0, 0, -1), rx: new THREE.Vector3(1, 0, 0), ux: new THREE.Vector3(0, 1, 0), thMax: 1, rB: .95, a: 0, gain: 1, time: 0, rot: 0, iris: 0, disc: 1, swirl: 0, glint: 1 });
+    const viewU = () => U({ t: null, t2: null, ax: new THREE.Vector3(0, 0, -1), rx: new THREE.Vector3(1, 0, 0), ux: new THREE.Vector3(0, 1, 0), thMax: 1, rB: .95, a: 0, gain: 1, time: 0, rot: 0, iris: 0, disc: 1, swirl: 0, glint: 1, kDest: 0, dYaw: 0, dSrgb: 1 });
     const portal = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFV, uniforms: viewU() })), 62, .7);
     const frame = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFK, uniforms: U({ t: null, a: 0, rev: 0, gain: 1 }) })), 63, 1);
     const N = 360, gp = new THREE.BufferGeometry(), idx = new Float32Array(N);
@@ -8613,7 +8632,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     M.grp.visible = true; M.flash.visible = true; M.world.visible = false;
     document.body.classList.add("gate-on");
     gateSound(); gateSkip = false; gateSkipBtn(true);
-    const ELO = .6, SW = 4.75, END = 6.5;   // ELO: a nyíl zsugorodása; SW: helyszíncsere (a kép mögött); END: vége
+    const ELO = .6, END = 5.9;   // ELO: a nyíl zsugorodása; a helyszíncsere abban a pillanatban, amikor a gyűrű átfut rajtunk; END: vége
     const ss = (a, b, x) => { const k = Math.max(0, Math.min(1, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
     const easeIO = (k) => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, easeO = (k) => 1 - Math.pow(1 - k, 3);
     const wrap = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
@@ -8627,10 +8646,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           const dt = Math.min(.05, (now - last) / 1000); last = now; clock += dt;
           T += dt;
           if (window.__gateFreeze != null) T = window.__gateFreeze;   // csak teszteléshez
-          if (gateSkip && T < SW - .05) { T = SW - .05; gateSkip = false; }
+          if (gateSkip && T < 4.2) { T = 4.2; gateSkip = false; }
           /* várunk a képekre: a kapu csak betöltött képekkel nyílik, a csere csak betöltött panorámával */
-          if (T > .7 && !(fr && inn) && T < SW) T = .7;
-          if (T >= SW && !texDone) T = SW;
+          if (T > .7 && !(fr && inn) && T < 4.6) T = .7;
+          if (T >= 2.8 && !texDone) T = 2.8;                                   // az átsejléshez már a célhelyszín képe kell
           const t = T;
           const kRise = easeIO(ss(.3, 1.7, t));
           if (!switched) setAxis(kRise);
@@ -8656,37 +8675,32 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           const fGain = 1 + .55 * Math.exp(-Math.pow((t - 1.6) / .3, 2));         // kirajzolódás után egy fényhullám
           const iris = easeO(ss(1.35, 2.35, t));                                  // a világ írisszerűen kinyílik
           const open = .9 + .1 * easeO(ss(.55, 1.8, t));
+          /* a kapu világában átsejlik a célhelyszín (az apartman belseje), mielőtt a gyűrű odaér */
+          const kDest = ss(2.75, 3.95, t);
           /* közeledés: a kapu felénk jön és átfut rajtunk (távolság D → −1 m) */
-          const kA = ss(3.0, 4.6, t), dist = D - (D + 1) * (kA * kA * (3 - 2 * kA) * .35 + Math.pow(kA, 2.2) * .65);
+          const kA = ss(3.15, 4.75, t), dist = D - (D + 1) * (kA * kA * (3 - 2 * kA) * .35 + Math.pow(kA, 2.2) * .65);
           const Rw = G.rp * H0 * open;                                          // a korong sugara méterben
           const alpha = dist > .02 ? Math.atan(Rw / dist) : Math.PI / 2;        // a korong látószöge
           const thMax = Math.min(alpha / .985, TH_W);                           // amíg kicsi, a teljes kép belefér; utána „ablak”
-          if (!inside && dist < .5) inside = true;                              // áthaladtunk: a világ körülvesz
-          /* belépés a képbe: tovább „sétálunk” bele (nagyít), és átsejlik az apartman */
-          const kIn = ss(4.5, 6.3, t), thIn = TH_W * (1 + 1.5 * easeIO(kIn));   // a kép egyre közelebb jön: belesétálunk
-          const worldA = inside ? 1 - ss(5.15, 6.4, t) : 0;
-          const glow = .32 * Math.exp(-Math.pow((t - 4.35) / .22, 2));
-          /* csere: az új helyszín a kép mögött; a képet a kamerához rögzítjük, hogy a forgatás ne látsszon */
-          if (t >= SW && !switched && tex && inside) {
-            switched = true;
-            const cobj0 = camObj(); if (cobj0) { cobj0.updateWorldMatrix(true, false); cobj0.getWorldQuaternion(q0); }
+          const glow = .22 * Math.exp(-Math.pow((t - 4.55) / .2, 2));
+          /* a rig elfordulása a cserénél: átlépés után az érkezési irányba nézünk; a kapuban már ez a nézet sejlik át */
+          const Ty = yawFor(look != null ? look : (sc.s ?? .75)) * R, dRot = switched ? 0 : wrap(Ty - camYaw());
+          /* csere: amikor a gyűrű átfut rajtunk – a kapuban látott kép és az új panoráma pontosan egybeesik */
+          if (dist < .35 && !switched && tex) {
+            switched = true; inside = true;
             const old = skyTex;
             mesh.material.map = tex; mesh.material.needsUpdate = true; skyTex = tex;
-            const Ty = yawFor(look != null ? look : (sc.s ?? .75)) * R;
-            if (inVR) rig.object3D.rotation.y += Ty - camYaw();
-            else { rig.object3D.rotation.y = Ty; if (lc && lc.yawObject) { lc.yawObject.rotation.y = 0; lc.pitchObject.rotation.x = 0; } }
-            if (cobj0) { cobj0.updateWorldMatrix(true, false); cobj0.getWorldQuaternion(q1); qd.copy(q1).multiply(q0.clone().invert()); ax.applyQuaternion(qd); rx.applyQuaternion(qd); ux.applyQuaternion(qd); }
+            rig.object3D.rotation.y += dRot;
             if (old && old !== tex) old.dispose();
             if (cube3d) setTimeout(() => cube3d && cube3d.env(tex), 60);
             editSel = null; buildSpots(id); spots.object3D.visible = true;
             Array.from(spots.children).forEach((e) => { e.object3D.visible = false; });
             current = id;
-            if (!inVR && c) { c.fov = F0 * .88; c.updateProjectionMatrix(); }
           }
           /* elhelyezés: a kapu a tengelyen, a kamerától dist távolságra, felénk fordítva */
           const cobj = camObj();
           if (cobj) cobj.getWorldPosition(cp); else cp.set(0, 0, 0);
-          const showGate = !inside && dist > .02;
+          const showGate = !switched && dist > .02;
           M.grp.visible = showGate;
           M.grp.position.copy(cp).addScaledVector(ax, Math.max(.03, dist));
           M.grp.lookAt(cp);
@@ -8694,18 +8708,17 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           /* a panoráma kissé elhalványul, amíg a kapu nyitva */
           mesh.material.color.setScalar(switched ? 1 : 1 - .22 * frameA);
           setU(M.frame, { t: fr, a: fr ? frameA : 0, rev, gain: fGain }); M.frame.visible = showGate && frameA > 0 && !!fr;
-          viewSet(M.portal, { a: inn ? 1 : 0, thMax, iris, gain: 1.04, rot: -clock * .035, swirl: .35 * ss(3.6, 4.5, t), glint: 1 }); M.portal.visible = showGate && iris > 0 && !!inn;
-          M.world.visible = inside && worldA > .001 && !!inn;
-          viewSet(M.world, { a: worldA, thMax: Math.max(thMax, thIn), gain: 1.04, rot: -clock * .035, swirl: .35 * (1 - ss(4.6, 5.6, t)), glint: 1 - kIn * .6 });
+          viewSet(M.portal, { a: inn ? 1 : 0, thMax, iris, gain: 1.04, rot: -clock * .035, swirl: 0, glint: 1 - kDest, t2: tex, kDest: tex ? kDest : 0, dYaw: dRot, dSrgb: tex && tex.colorSpace === THREE.SRGBColorSpace ? 1 : 0 }); M.portal.visible = showGate && iris > 0 && !!inn;
+          M.world.visible = false;
           M.ring.visible = ringA > 0 && showGate; setU(M.ring, { a: ringA, ringR, time: clock });
           M.orb.visible = orb > 0; setU(M.orb, { a: orb, rot: clock * .35 }); M.orb.scale.setScalar(Math.tan(.075) * D * (1 + ringA * 1.5));
           M.orbG.position.copy(cp).addScaledVector(ax, D); M.orbG.lookAt(cp);
-          const sp = ss(.4, 1.5, t);
+          const sp = ss(.4, 1.5, t) * (1 - ss(4.3, 4.7, t));
           M.sparks.visible = sp > 0 && showGate; setU(M.sparks, { a: sp, burst: ss(3.3, 4.4, t) * .8, time: clock, R: .82, dpr: inVR ? 2 : Math.min(devicePixelRatio || 1, 1.75) });
           setU(M.flash, { a: glow > .002 ? glow : 0 });
           /* megérkezés (2D): a nézet lágyan kitágul */
-          if (switched && !inVR && c) { const k6 = easeO(ss(SW, END, t)); c.fov = F0 * (.88 + .12 * k6); c.updateProjectionMatrix(); }
-          if (switched && t > 5.6) Array.from(spots.children).forEach((e) => { e.object3D.visible = true; });
+          if (switched && !inVR && c) { const k6 = easeO(ss(4.6, END, t)); c.fov = F0 * (.88 + .12 * k6); c.updateProjectionMatrix(); }
+          if (switched && t > 5.3) Array.from(spots.children).forEach((e) => { e.object3D.visible = true; });
           if (t >= END && (switched || texDone)) return done();
           xrRaf(frame);
         })(performance.now());

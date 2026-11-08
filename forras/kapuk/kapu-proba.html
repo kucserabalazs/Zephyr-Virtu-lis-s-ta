@@ -1,7 +1,13 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Dingi kapu – próba</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,600;1,9..144,700&family=Figtree:wght@500;600;700&display=swap">
 <style>
+[hidden] { display: none !important; }
 /* Egyetlen teljes képernyős 360°-os néző; alul nagy, jól olvasható vezérlősáv. Szándékosan sötét, egyetlen világ. */
 :root {
   --ej: #070d14;
@@ -165,7 +171,7 @@ function kep(nev, mip) {
       const an = gl.getExtension("EXT_texture_filter_anisotropic"); if (an) gl.texParameterf(gl.TEXTURE_2D, an.TEXTURE_MAX_ANISOTROPY_EXT, 8);
       T[nev] = t; ok(t);
     };
-    im.onerror = hiba; im.src = "img/" + nev + ".jpg";
+    im.onerror = hiba; im.src = (nev.startsWith("kapu") ? "img/" : "../../weboldal/virtualis-seta/img/") + nev + ".jpg";   /* a panorámák a séta képei közül */
   });
 }
 
@@ -350,3 +356,5 @@ Promise.all([kep("fedett-bejaro", true), kep("kapu7-iv"), kep("kapu7-atjaro"), k
 requestAnimationFrame(rajz);
 })();
 </script>
+
+</html>
