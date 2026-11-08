@@ -561,6 +561,8 @@ body.walk-on .walk-bar { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); 
 .gate-skip { position: fixed; z-index: 60; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); min-height: 48px; padding: 10px 22px; border-radius: 999px; border: 1px solid rgba(232,196,120,.55); background: rgba(7,13,20,.72); color: #f3f1ea; font: 700 17px/1 Manrope, system-ui, sans-serif; cursor: pointer; backdrop-filter: blur(6px); }
 .gate-skip:focus-visible { outline: 3px solid #e8c478; outline-offset: 3px; }
 .gate-skip[hidden] { display: none; }
+/* a kapus átmenet alatt a kezelőfelület elhalványul, hogy csak a kapu látsszon */
+body.gate-on > *:not(#stage):not(#gateSkip):not(script) { opacity: 0 !important; pointer-events: none !important; transition: opacity .6s ease; }
 .vr-btn:hover, .vr-btn:focus-visible { background: linear-gradient(180deg, rgba(30,84,150,.95), rgba(12,44,90,.95)); outline: none; transform: translateY(-1px); }
 body.walk-on .vr-btn, body.in-vr .vr-btn, body.world-on .vr-btn { display: none; }
 #btnVR { top: calc(144px + env(safe-area-inset-top, 0px)); }
@@ -8396,24 +8398,27 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
 
   /* ---------- Mesebeli kapuk (2026-11): kör alakú, magyar motívumos kapu az apartmanok bejáratánál ----------
-     A séta piros nyila fényponttá zsugorodik → vízgyűrű → kinyílik a kapu (magyar keret + örvénylő belső világ, szikrák)
-     → lassú ráközelítés → berepülés → aranyló felvillanás → már az új helyszín látszik. ~6 mp, befelé és kifelé ugyanaz.
-     2D-ben a nézet a kapu felé fordul és ráközelít; VR-ben (a tulajdonos kérésére a teljes jelenet) a fej nem fordul,
-     a kapu ott nyílik, ahol a nyíl volt. Képek: img/kapu/kNN-keret.jpg (fekete hátterű gyűrű), kNN-belso.jpg (belső világ). */
+     A megnyomott piros nyíl fényponttá zsugorodik → vízgyűrű → a magyar keret körbe rajzolódva megjelenik → közepén
+     írisszerűen kinyílik a kapu saját világa (élő, csillanó kép) → a kapu felénk jön, a gyűrű átfut rajtunk, a kép
+     betölti az egész látóteret → belépünk a képbe, és a képen át fokozatosan átsejlik, majd megjelenik az apartman.
+     A belső világ „ablak”: a nézési irány szerint vetül (nem egy lapos kép), ezért áthaladáskor folytonosan körbevesz.
+     2D-ben a nézet a kapu felé fordul; VR-ben a fej nem fordul, a kapu a nyíl helyén nyílik (teljes jelenet, a tulajdonos
+     kérésére). Képek: img/kapu/kNN-keret.webp (átlátszó hátterű gyűrű), kNN-belso.jpg (a kapu világa). */
+  /* rp: a belső kép sugara a keret felméretéhez képest (a keret belső pereme alá nyúlik, így nincs rés); rB: a belső kép körének sugara */
   const GATE = {
-    1:  { n: "Legendás Szigetkapu", hole: .55 },
-    2:  { n: "Csillagkapu", hole: .6 },
-    3:  { n: "Higanytükör", hole: .6 },
-    6:  { n: "Időörvény", hole: .59 },
-    7:  { n: "Balatoni Dimenziókapu", hole: .6 },
-    13: { n: "Elemi Őtök", hole: .6 },
-    14: { n: "Tükörvilág", hole: .6 },
-    15: { n: "Holografikus kapu", hole: .6 },
-    20: { n: "Életfa kapu", hole: .57 }
+    1:  { n: "Legendás Szigetkapu", rp: .625, rB: .946 },
+    2:  { n: "Csillagkapu", rp: .7375, rB: .96 },
+    3:  { n: "Higanytükör", rp: .727, rB: .968 },
+    6:  { n: "Időörvény", rp: .7105, rB: .974 },
+    7:  { n: "Balatoni Dimenziókapu", rp: .7375, rB: .948 },
+    13: { n: "Elemi Őtök", rp: .691, rB: .98 },
+    14: { n: "Tükörvilág", rp: .715, rB: .982 },
+    15: { n: "Holografikus kapu", rp: .712, rB: .95 },
+    20: { n: "Életfa kapu", rp: .658, rB: .981 }
   };
   const GATE_APT = { korvett: 1, schooner: 2, fregatt: 3, kaloz: 6, dingi: 7, kadett: 15 };
   const gateKey = (no) => "k" + String(no).padStart(2, "0");
-  /* melyik kapu nyílik from → to lépésnél (null: nincs kapu) */
+  /* melyik kapu nyílik from → to lépésnél (null: nincs kapu); via: a nyíl, amit megnyomnak */
   function gateFor(from, to) {
     const a = SCENES[from], b = SCENES[to]; if (!a || !b || from === to) return null;
     if ((from === "utca" && to === "kapu") || (from === "kapu" && to === "utca")) return { no: 20, to, via: to };
@@ -8430,51 +8435,83 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (sc.sign && sc.sign[2] && sc.sign[2].some((r) => r[0] === to)) return { x: sc.sign[0], y: sc.sign[1] };
     return null;
   }
+  const gateMotionOk = () => !matchMedia("(prefers-reduced-motion: reduce)").matches;
   const GTEX = {};
-  function gateTex(name) {
-    if (GTEX[name]) return GTEX[name];
-    GTEX[name] = new Promise((ok) => {
-      new THREE.TextureLoader().load(`img/kapu/${name}.jpg`, (t) => {
-        t.colorSpace = THREE.NoColorSpace; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = true;
+  function gateTex(file) {
+    if (GTEX[file]) return GTEX[file];
+    GTEX[file] = new Promise((ok) => {
+      new THREE.TextureLoader().load(`img/kapu/${file}`, (t) => {
+        t.colorSpace = THREE.NoColorSpace; t.premultiplyAlpha = false; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.generateMipmaps = true;
         try { t.anisotropy = Math.min(8, sceneEl.renderer.capabilities.getMaxAnisotropy()); } catch (e) {}
         ok(t);
-      }, undefined, () => { delete GTEX[name]; ok(null); });
+      }, undefined, () => { delete GTEX[file]; ok(null); });
     });
-    return GTEX[name];
+    return GTEX[file];
   }
-  /* a jelenet kapus nyilainak képei előre (alacsony prioritással) */
+  /* a jelenet kapus nyilainak képei előre (kis késleltetéssel, hogy a panoráma töltődjön előbb) */
   function gatePrefetch(id) {
     const sc = SCENES[id]; if (!sc || flat) return;
     const seen = {};
-    (sc.l || []).concat(sc.pl || [], sc.wl || []).forEach((l) => { const g = gateFor(id, l[0]); if (g && !seen[g.no]) { seen[g.no] = 1; setTimeout(() => { gateTex(gateKey(g.no) + "-keret"); gateTex(gateKey(g.no) + "-belso"); }, 900); } });
+    (sc.l || []).concat(sc.pl || [], sc.wl || []).forEach((l) => { const g = gateFor(id, l[0]); if (g && !seen[g.no]) { seen[g.no] = 1; setTimeout(() => { gateTex(gateKey(g.no) + "-keret.webp"); gateTex(gateKey(g.no) + "-belso.jpg"); }, 900); } });
   }
 
   /* ---- a kapu 3D elemei (egyszer készülnek, újrahasznosítva) ---- */
-  const GV = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`;
+  const GV = `varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
+  /* fénypont, vízgyűrű, felvillanás */
   const GF = `precision highp float; varying vec2 vUv;
-uniform sampler2D t; uniform int mode; uniform float a, rot, swirl, time, zoom, gain, ringR; uniform vec3 col;
+uniform int mode; uniform float a, rot, time, ringR; uniform vec3 col;
 void main(){
   vec2 p = vUv * 2. - 1.; float r = length(p);
-  if (mode == 0) { gl_FragColor = vec4(texture2D(t, vUv).rgb * a * gain, 1.); return; }                     /* magyar keret – additív, fekete háttér */
-  if (mode == 1) {                                                                                           /* belső világ – örvénylő kör */
-    float ang = rot + swirl * pow(max(0., 1. - r), 2.);
-    vec2 q = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * p; q /= zoom;
-    vec3 c = texture2D(t, q * .5 + .5).rgb + vec3(1., .85, .55) * pow(max(0., 1. - r), 3.) * .35 * gain;
-    gl_FragColor = vec4(c * gain, (1. - smoothstep(.9, .985, r)) * a); return;
-  }
-  if (mode == 3) {                                                                                           /* fénypont */
+  if (mode == 3) {
     float core = exp(-r*r*55.), halo = exp(-r*r*7.) * .55, ring = exp(-pow((r - .55) / .05, 2.)) * .18;
     float an = atan(p.y, p.x) + rot;
     float star = pow(abs(cos(an * 2.)), 40.) * exp(-r * 4.) * .9 + pow(abs(cos(an * 2. + .785)), 60.) * exp(-r * 7.) * .5;
-    gl_FragColor = vec4((vec3(1., .97, .88) * core * 1.6 + vec3(1., .78, .38) * (halo + star) + vec3(.45, .7, 1.) * ring) * a, 1.); return;
+    gl_FragColor = vec4((vec3(1., .97, .88) * core * 1.6 + vec3(1., .78, .38) * (halo + star) + vec3(.45, .7, 1.) * ring) * a, 0.); return;
   }
-  if (mode == 4) { gl_FragColor = vec4(col * a, 1.); return; }                                               /* felvillanás */
-  if (mode == 5) {                                                                                           /* vízgyűrű */
-    float w = sin(r * 60. - time * 14.) * .5 + .5;
-    float ring = exp(-pow((r - ringR) / .035, 2.)) * 1.2 + exp(-pow((r - ringR * .82) / .02, 2.)) * .35 * w;
-    float inner = smoothstep(ringR, 0., r) * .18 * w;
-    gl_FragColor = vec4(mix(vec3(.45, .75, 1.), vec3(1., .8, .45), .55 + .45 * sin(atan(p.y, p.x) * 3. + time * 3.)) * (ring + inner) * a, 1.); return;
+  if (mode == 4) { gl_FragColor = vec4(col * a, 0.); return; }
+  float w = sin(r * 60. - time * 14.) * .5 + .5;
+  float ring = exp(-pow((r - ringR) / .035, 2.)) * 1.2 + exp(-pow((r - ringR * .82) / .02, 2.)) * .35 * w;
+  float inner = smoothstep(ringR, 0., r) * .18 * w;
+  gl_FragColor = vec4(mix(vec3(.45, .75, 1.), vec3(1., .8, .45), .55 + .45 * sin(atan(p.y, p.x) * 3. + time * 3.)) * (ring + inner) * a, 0.);
+}`;
+  /* a magyar keret: átlátszó hátterű kép, körbe rajzolódva jelenik meg (rev), a rajzoló él aranyosan izzik */
+  const GFK = `precision highp float; varying vec2 vUv;
+uniform sampler2D t; uniform float a, rev, gain;
+void main(){
+  vec2 p = vUv * 2. - 1.; float r = length(p);
+  float an = abs(atan(p.x, p.y)) / 3.14159265;               // 0 felül, 1 alul – mindkét irányban egyszerre rajzolódik
+  float vis = 1. - smoothstep(rev - .035, rev + .005, an);
+  vec4 k = texture2D(t, vUv);
+  float edge = exp(-pow((an - rev) / .014, 2.)) * k.a * step(.001, rev) * (1. - step(.999, rev));
+  vec3 c = k.rgb * gain * vis + vec3(1., .78, .4) * edge * .75;
+  gl_FragColor = vec4(c * a, k.a * vis * a);
+}`;
+  /* a kapu világa: ablak egy másik világra. A nézési irány és a kapu tengelye közti szög szerint vetül, így a gyűrűn
+     áthaladva folytonosan körbevesz. thMax: a kép körének látószöge; disc=1: a kapu korongja (íriszmaszkkal), 0: körülöttünk */
+  const GFV = `precision highp float; varying vec2 vUv; varying vec3 vW;
+uniform sampler2D t; uniform vec3 ax, rx, ux; uniform float thMax, rB, a, gain, time, rot, iris, disc, swirl, glint;
+void main(){
+  vec3 d = normalize(vW - cameraPosition);
+  float th = acos(clamp(dot(d, ax), -1., 1.));
+  vec2 pp = vec2(dot(d, rx), dot(d, ux)); float l = length(pp); pp = l > 1e-5 ? pp / l : vec2(0.);
+  float rr = th / thMax;
+  float ang = rot + swirl * pow(max(0., 1. - rr), 2.);
+  vec2 q = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * pp * rr;
+  vec3 c = texture2D(t, .5 + .5 * q * rB).rgb;
+  float edge = 1. - smoothstep(.985, 1.05, rr);
+  c *= edge;
+  /* élő fény: lassan átfutó csillanás és finom ragyogás középen */
+  float s = fract(time * .14) * 3.2 - 1.6;
+  c += vec3(1., .92, .75) * glint * .16 * exp(-pow((q.x * .7 + q.y * .7 - s) / .12, 2.)) * edge;
+  c += vec3(1., .86, .6) * pow(max(0., 1. - rr), 4.) * .08 * glint;
+  float m = 1.;
+  vec3 g = vec3(0.);
+  if (disc > .5) {
+    vec2 p = vUv * 2. - 1.; float r = length(p);
+    m = (1. - smoothstep(.985, 1., r)) * (1. - smoothstep(iris - .06, iris, r));
+    g = vec3(1., .85, .55) * exp(-pow((r - iris) / .035, 2.)) * (1. - step(.999, iris)) * step(.001, iris) * 1.3;
   }
+  gl_FragColor = vec4((c * gain * m + g) * a, m * a);
 }`;
   const GPV = `attribute float i; uniform float time, burst, R, n, dpr; varying vec4 col; varying float al;
 float h(float x){ return fract(sin(x * 127.1 + 311.7) * 43758.5453); }
@@ -8482,43 +8519,46 @@ void main(){
   float a = h(i) * 6.2832 + time * (.15 + h(i + 1.) * .5) * (h(i + 2.) > .5 ? 1. : -1.);
   float r = R * (.62 + h(i + 3.) * .42) * (1. + burst * (.5 + h(i + 4.) * 2.5));
   float rise = h(i + 5.) > .55 ? fract(time * (.06 + h(i + 6.) * .12) + h(i + 7.)) : 0.;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(cos(a) * r, sin(a) * r * .92 + rise * R * .9, 0., 1.);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(cos(a) * r, sin(a) * r * .92 + rise * R * .9, (h(i + 11.) - .5) * .25 * R, 1.);
   gl_PointSize = (1.6 + h(i + 8.) * 4.2) * dpr * (1. + burst * .6);
   col = h(i + 9.) > .72 ? vec4(.55, .78, 1., 1.) : vec4(1., .8, .42, 1.);
   al = (.35 + .65 * (.5 + .5 * sin(time * (3. + h(i + 10.) * 9.) + i))) * (1. - rise * .9) * step(i, n);
 }`;
   const GPF = `precision highp float; varying vec4 col; varying float al; uniform float a;
-void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor = vec4(col.rgb * (exp(-d * 3.5) + exp(-d * 18.)) * al * a, 1.); }`;
+void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor = vec4(col.rgb * (exp(-d * 3.5) + exp(-d * 18.)) * al * a, 0.); }`;
   let GM = null;
   function gateMeshes() {
     if (GM) return GM;
-    const grp = new THREE.Group(); grp.visible = false; grp.frustumCulled = false;
-    const mk = (mode, add, ro, half) => {
-      const m = new THREE.ShaderMaterial({ vertexShader: GV, fragmentShader: GF, transparent: true, depthTest: false, depthWrite: false,
-        blending: add ? THREE.AdditiveBlending : THREE.NormalBlending,
-        uniforms: { t: { value: null }, mode: { value: mode }, a: { value: 0 }, rot: { value: 0 }, swirl: { value: 0 }, time: { value: 0 }, zoom: { value: 1 }, gain: { value: 1 }, ringR: { value: .3 }, col: { value: new THREE.Vector3(1, .9, .72) } } });
-      if (add) { m.blendSrc = THREE.OneFactor; m.blendDst = THREE.OneFactor; m.blending = THREE.CustomBlending; m.blendEquation = THREE.AddEquation; }
-      const me = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), m); me.renderOrder = ro; me.frustumCulled = false; me.scale.setScalar(half); return me;
-    };
-    const ring = mk(5, true, 61, .66), portal = mk(1, false, 62, .6), frame = mk(0, true, 63, 1), orb = mk(3, true, 65, .1);
-    const N = 320, gp = new THREE.BufferGeometry(), idx = new Float32Array(N);
+    /* előszorzott keverés: szín + háttér·(1−alfa); a fénylő elemek alfa=0-val tisztán hozzáadódnak */
+    const pm = (o) => Object.assign({ transparent: true, depthTest: false, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor }, o);
+    const U = (o) => { const u = {}; for (const k in o) u[k] = { value: o[k] }; return u; };
+    const grp = new THREE.Group(); grp.visible = false;
+    const quad = (mat, ro, half) => { const me = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); me.renderOrder = ro; me.frustumCulled = false; me.scale.setScalar(half); return me; };
+    const fxU = () => U({ mode: 3, a: 0, rot: 0, time: 0, ringR: .3, col: new THREE.Vector3(1, .9, .72) });
+    const ring = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GF, uniforms: Object.assign(fxU(), { mode: { value: 5 } }) })), 61, .74);
+    const orb = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GF, uniforms: fxU() })), 66, .1);
+    const viewU = () => U({ t: null, ax: new THREE.Vector3(0, 0, -1), rx: new THREE.Vector3(1, 0, 0), ux: new THREE.Vector3(0, 1, 0), thMax: 1, rB: .95, a: 0, gain: 1, time: 0, rot: 0, iris: 0, disc: 1, swirl: 0, glint: 1 });
+    const portal = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFV, uniforms: viewU() })), 62, .7);
+    const frame = quad(new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFK, uniforms: U({ t: null, a: 0, rev: 0, gain: 1 }) })), 63, 1);
+    const N = 360, gp = new THREE.BufferGeometry(), idx = new Float32Array(N);
     for (let k = 0; k < N; k++) idx[k] = k;
     gp.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3)); gp.setAttribute("i", new THREE.BufferAttribute(idx, 1));
-    const pm = new THREE.ShaderMaterial({ vertexShader: GPV, fragmentShader: GPF, transparent: true, depthTest: false, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
-      uniforms: { time: { value: 0 }, burst: { value: 0 }, R: { value: .72 }, n: { value: N }, dpr: { value: 1 }, a: { value: 0 } } });
-    const sparks = new THREE.Points(gp, pm); sparks.renderOrder = 64; sparks.frustumCulled = false;
-    grp.add(ring, portal, frame, sparks, orb);
-    /* felvillanás: a kamerára tett gömb belseje (2D-ben és VR-ben is betölti a látóteret) */
-    const fm = new THREE.ShaderMaterial({ vertexShader: GV, fragmentShader: GF, transparent: true, depthTest: false, depthWrite: false, side: THREE.BackSide, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
-      uniforms: { t: { value: null }, mode: { value: 4 }, a: { value: 0 }, rot: { value: 0 }, swirl: { value: 0 }, time: { value: 0 }, zoom: { value: 1 }, gain: { value: 1 }, ringR: { value: 0 }, col: { value: new THREE.Vector3(1, .9, .72) } } });
-    const flash = new THREE.Mesh(new THREE.SphereGeometry(.9, 16, 12), fm); flash.renderOrder = 990; flash.frustumCulled = false; flash.visible = false;
+    const sparks = new THREE.Points(gp, new THREE.ShaderMaterial(pm({ vertexShader: GPV, fragmentShader: GPF, uniforms: U({ time: 0, burst: 0, R: .82, n: N, dpr: 1, a: 0 }) })));
+    sparks.renderOrder = 64; sparks.frustumCulled = false;
+    grp.add(ring, portal, frame, sparks);
+    const orbG = new THREE.Group(); orbG.add(orb); sceneEl.object3D.add(orbG);
+    /* a kapun túli világ, amikor már körülvesz (a kamerára tett gömb belseje), és egy finom aranyló fény az áthaladáskor */
+    const world = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 40), new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GFV, side: THREE.BackSide, uniforms: Object.assign(viewU(), { disc: { value: 0 } }) })));
+    world.renderOrder = 980; world.frustumCulled = false; world.visible = false;
+    const flash = new THREE.Mesh(new THREE.SphereGeometry(.9, 16, 12), new THREE.ShaderMaterial(pm({ vertexShader: GV, fragmentShader: GF, side: THREE.BackSide, uniforms: Object.assign(fxU(), { mode: { value: 4 } }) })));
+    flash.renderOrder = 990; flash.frustumCulled = false; flash.visible = false;
     sceneEl.object3D.add(grp);
-    try { (camObj() || cam.object3D).add(flash); } catch (e) {}
-    GM = { grp, ring, portal, frame, orb, sparks, flash };
+    const co = camObj() || cam.object3D; co.add(world); co.add(flash);
+    GM = { grp, ring, portal, frame, orb, orbG, sparks, world, flash };
     return GM;
   }
 
-  /* ---- hang: csengők, suhanás, megérkezés (ugyanaz, mint a próbán, a séta hangkimenetén) ---- */
+  /* ---- hang: csengők a megnyíláskor, suhanás az áthaladáskor, lágy akkord a megérkezéskor ---- */
   function gateSound() {
     const A = ac(); if (!A) return;
     try {
@@ -8526,14 +8566,14 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const dl = A.createDelay(1); dl.delayTime.value = .23; const fb = A.createGain(); fb.gain.value = .38; dl.connect(fb); fb.connect(dl); dl.connect(out); out.connect(outBus());
       const bell = (t, fr, v = .14, len = 2.2) => { const o = A.createOscillator(), g = A.createGain(); o.type = "sine"; o.frequency.value = fr; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0008, t + len); o.connect(g); g.connect(out); g.connect(dl); o.start(t); o.stop(t + len + .05); };
       const sk = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.5, 1567.98];
-      for (let k = 0; k < 9; k++) bell(t0 + .05 + k * .11, sk[k], .1);
-      [783.99, 1046.5, 1318.5, 1567.98].forEach((f) => bell(t0 + 1.25, f, .09, 3));
-      for (let k = 0; k < 14; k++) bell(t0 + 2 + Math.random() * 1.5, sk[Math.floor(Math.random() * 9)] * 2, .035, 1.2);
-      const ns = A.createBufferSource(); ns.buffer = noiseBuf(2.5); const bp = A.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.4; const ng = A.createGain();
-      const ts = t0 + 3.4; bp.frequency.setValueAtTime(300, ts); bp.frequency.exponentialRampToValueAtTime(3200, ts + 1); bp.frequency.exponentialRampToValueAtTime(600, ts + 2.2);
-      ng.gain.setValueAtTime(0, ts); ng.gain.linearRampToValueAtTime(.32, ts + .9); ng.gain.linearRampToValueAtTime(0, ts + 2.3);
-      ns.connect(bp); bp.connect(ng); ng.connect(out); ns.start(ts); ns.stop(ts + 2.4);
-      [523.25, 659.25, 783.99, 1046.5].forEach((f, k) => bell(t0 + 4.35 + k * .07, f, .1, 3.5));
+      for (let k = 0; k < 9; k++) bell(t0 + .75 + k * .1, sk[k], .09);
+      [783.99, 1046.5, 1318.5, 1567.98].forEach((f) => bell(t0 + 1.7, f, .08, 3));
+      for (let k = 0; k < 12; k++) bell(t0 + 2.1 + Math.random() * 1.2, sk[Math.floor(Math.random() * 9)] * 2, .03, 1.2);
+      const ns = A.createBufferSource(); ns.buffer = noiseBuf(3); const bp = A.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.2; const ng = A.createGain();
+      const ts = t0 + 3.1; bp.frequency.setValueAtTime(260, ts); bp.frequency.exponentialRampToValueAtTime(2800, ts + 1.35); bp.frequency.exponentialRampToValueAtTime(500, ts + 2.6);
+      ng.gain.setValueAtTime(0, ts); ng.gain.linearRampToValueAtTime(.3, ts + 1.3); ng.gain.linearRampToValueAtTime(0, ts + 2.7);
+      ns.connect(bp); bp.connect(ng); ng.connect(out); ns.start(ts); ns.stop(ts + 2.8);
+      [392, 523.25, 659.25, 783.99, 1046.5].forEach((f, k) => bell(t0 + 4.9 + k * .09, f, .075, 4));
     } catch (e) {}
   }
 
@@ -8546,7 +8586,6 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       b.hidden = false;
     } else if (b) b.hidden = true;
   }
-  const gateMotionOk = () => !matchMedia("(prefers-reduced-motion: reduce)").matches;
   async function gateTo(g, lookX) {
     const id = g.to, sc = SCENES[id], G = GATE[g.no];
     if (!sc || !G || busy || walking || flat || EDIT) return false;
@@ -8557,111 +8596,143 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const R = Math.PI / 180, lc = cam.components["look-controls"], c = camObj(), F0 = deviceFov();
     const look = g.look != null ? g.look : lookX;
     const texP = loadTexture(id);
-    const frP = gateTex(gateKey(g.no) + "-keret"), inP = gateTex(gateKey(g.no) + "-belso");
     let tex = null, texDone = false, fr = null, inn = null;
     texP.then((t) => { tex = t; texDone = true; }, () => { texDone = true; });
-    Promise.all([frP, inP]).then(([a, b]) => { fr = a; inn = b; });
+    Promise.all([gateTex(gateKey(g.no) + "-keret.webp"), gateTex(gateKey(g.no) + "-belso.jpg")]).then(([a, b]) => { fr = a; inn = b; });
     hiDrop();
     const M = gateMeshes();
-    /* a nyíl (amit megnyomtak) marad és fényponttá zsugorodik, a többi eltűnik */
+    /* a megnyomott nyíl marad és fényponttá zsugorodik, a többi eltűnik */
     let arrow = null;
-    Array.from(spots.children).forEach((e) => { const ar = e._arr; const mine = ar && ar[0] === g.via; if (mine && !arrow) arrow = e; else e.object3D.visible = false; });
+    Array.from(spots.children).forEach((e) => { const ar = e._arr; if (ar && ar[0] === g.via && !arrow) arrow = e; else e.object3D.visible = false; });
     const arrowScale = arrow ? arrow.object3D.scale.x : 1;
-    /* a kapu iránya a világban */
-    const dv = arrow ? arrow.object3D.position.clone() : (() => { const p = dirFrom(spot.x, spot.y, 1); return new THREE.Vector3(p.x, p.y, p.z); })();
-    dv.normalize();
-    const dYaw = Math.atan2(-dv.x, -dv.z), dPitch = Math.asin(Math.max(-1, Math.min(1, dv.y)));
+    /* a kapu tengelye a világban (a nyíl iránya) és a hozzá tartozó jobbra/fel irány */
+    /* a fénypont a nyílnál születik; a kapu nyílás közben szemmagasság felé emelkedik, hogy egyenesen belesétálhassunk */
+    const axA = (arrow ? arrow.object3D.position.clone() : (() => { const p = dirFrom(spot.x, spot.y, 1); return new THREE.Vector3(p.x, p.y, p.z); })()).normalize();
+    const dYaw = Math.atan2(-axA.x, -axA.z), aPitch = Math.asin(Math.max(-1, Math.min(1, axA.y)));
+    const gPitch = Math.max(-.12, Math.min(.1, aPitch * .3));
+    const axG = new THREE.Vector3(-Math.sin(dYaw) * Math.cos(gPitch), Math.sin(gPitch), -Math.cos(dYaw) * Math.cos(gPitch));
+    const ax = axA.clone(), rx = new THREE.Vector3(), ux = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
+    const setAxis = (k) => { ax.copy(axA).lerp(axG, k).normalize(); rx.crossVectors(ax, UP).normalize(); ux.crossVectors(rx, ax).normalize(); };
+    setAxis(0);
     if (!inVR && lc && lc.yawObject) { rig.object3D.rotation.y += lc.yawObject.rotation.y; lc.yawObject.rotation.y = 0; }
     const y0 = rig.object3D.rotation.y, p0 = lc && lc.pitchObject ? lc.pitchObject.rotation.x : 0;
-    const D = 6, H0 = D * Math.tan(.47);
-    M.portal.scale.setScalar(G.hole * 1.03);
-    M.grp.visible = true; M.flash.visible = true;
+    /* a kapu látószöge: fekvő képernyőn és VR-ben ~27°, álló telefonon akkora, hogy a szélessége kiférjen */
+    let hA = .47;
+    if (!inVR && c && c.aspect < 1.15) hA = Math.min(hA, Math.atan(Math.tan(c.fov * R / 2) * c.aspect * .9));
+    const D = 6, H0 = D * Math.tan(hA), TH_W = 70 * R;
+    M.portal.scale.setScalar(G.rp);
+    M.grp.visible = true; M.flash.visible = true; M.world.visible = false;
+    document.body.classList.add("gate-on");
     gateSound(); gateSkip = false; gateSkipBtn(true);
-    const ELO = .6, END = 5.5;   // ELO: a nyíl zsugorodása; a jelenet (a nyíl után) 5,5 mp
+    const ELO = .6, SW = 4.75, END = 6.5;   // ELO: a nyíl zsugorodása; SW: helyszíncsere (a kép mögött); END: vége
     const ss = (a, b, x) => { const k = Math.max(0, Math.min(1, (x - a) / (b - a))); return k * k * (3 - 2 * k); };
     const easeIO = (k) => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, easeO = (k) => 1 - Math.pow(1 - k, 3);
     const wrap = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
-    const cp = new THREE.Vector3(), fwd = new THREE.Vector3();
-    let T = -ELO, last = performance.now(), clock = 0, switched = false;
+    const cp = new THREE.Vector3(), q0 = new THREE.Quaternion(), q1 = new THREE.Quaternion(), qd = new THREE.Quaternion();
+    let T = -ELO, last = performance.now(), clock = 0, switched = false, inside = false;
     const setU = (me, o) => { const u = me.material.uniforms; for (const k in o) u[k].value = o[k]; };
+    const viewSet = (me, o) => setU(me, Object.assign({ t: inn, ax, rx, ux, rB: G.rB * .985, time: clock }, o));
     try {
       await new Promise((done) => {
         (function frame(now) {
           const dt = Math.min(.05, (now - last) / 1000); last = now; clock += dt;
           T += dt;
-          if (gateSkip && T < 4.25) { T = 4.25; gateSkip = false; }
-          /* várunk a képekre: a kapu csak betöltött kerettel nyílik, a csere csak betöltött panorámával */
-          if (T > .8 && !(fr && inn) && T < 4.3) T = .8;
-          if (T >= 4.3 && !texDone) T = 4.3;
+          if (window.__gateFreeze != null) T = window.__gateFreeze;   // csak teszteléshez
+          if (gateSkip && T < SW - .05) { T = SW - .05; gateSkip = false; }
+          /* várunk a képekre: a kapu csak betöltött képekkel nyílik, a csere csak betöltött panorámával */
+          if (T > .7 && !(fr && inn) && T < SW) T = .7;
+          if (T >= SW && !texDone) T = SW;
           const t = T;
+          const kRise = easeIO(ss(.3, 1.7, t));
+          if (!switched) setAxis(kRise);
+          const curPitch = aPitch + (gPitch - aPitch) * kRise;
           /* 1. a nyíl fényponttá zsugorodik */
           if (arrow) {
             const k = Math.max(0, Math.min(1, (t + ELO) / ELO)), s = 1 - Math.pow(k, 1.6);
             arrow.object3D.visible = s > .02 && !switched;
             arrow.object3D.scale.setScalar(arrowScale * Math.max(.02, s)); arrow.object3D.rotation.z = (1 - s) * 160 * R;
           }
-          /* kamera (csak 2D): odafordul, majd lassan ráközelít */
+          /* kamera (csak 2D): odafordul, majd egyenesen a kapu közepébe néz és kissé ráközelít */
           if (!inVR && !switched) {
-            const k1 = easeIO(ss(-.2, 1.1, t));
+            const k1 = easeIO(ss(-.25, 1.4, t));
             rig.object3D.rotation.y = y0 + wrap(dYaw - y0) * k1;
-            if (lc && lc.pitchObject) lc.pitchObject.rotation.x = p0 + (dPitch * .55 - p0) * k1;
-            if (c) { c.fov = F0 * (1 - .2 * easeIO(ss(1.8, 3.7, t))); c.updateProjectionMatrix(); }
+            if (lc && lc.pitchObject) lc.pitchObject.rotation.x = p0 + (curPitch - p0) * k1;
+            if (c) { c.fov = F0 * (1 - .12 * easeIO(ss(1.9, 3.3, t))); c.updateProjectionMatrix(); }
           }
-          const orb = ss(-ELO * .75, -.05, t) * (1 - ss(.15, .7, t));
-          const ringA = ss(.05, .35, t) * (1 - ss(1.25, 1.75, t)), ringR = .25 + .72 * easeO(ss(.05, 1.05, t));
-          let arch = ss(.85, 1.6, t), portal = ss(1.15, 2.05, t), sparks = ss(.3, 1.4, t);
-          const archGain = 1 + 1.4 * Math.exp(-Math.pow((t - 1.35) / .28, 2));
-          const open = .62 + .38 * easeO(ss(.85, 2.0, t));
-          const k4 = ss(3.45, 4.55, t), fly = 1 + Math.pow(k4, 2.4) * 9, burst = ss(3.6, 4.4, t);
-          const flash = .85 * Math.exp(-Math.pow((t - 4.3) / .2, 2));
-          /* csere: az új helyszín a felvillanás csúcsán */
-          if (t >= 4.3 && !switched && tex) {
+          /* időzítés */
+          const orb = ss(-ELO * .75, -.05, t) * (1 - ss(.2, .75, t));
+          const ringA = ss(.05, .35, t) * (1 - ss(1.2, 1.8, t)), ringR = .25 + .72 * easeO(ss(.05, 1.1, t));
+          const rev = easeIO(ss(.55, 1.55, t));                                   // a keret körbe rajzolódik
+          const frameA = ss(.5, .7, t);
+          const fGain = 1 + .55 * Math.exp(-Math.pow((t - 1.6) / .3, 2));         // kirajzolódás után egy fényhullám
+          const iris = easeO(ss(1.35, 2.35, t));                                  // a világ írisszerűen kinyílik
+          const open = .9 + .1 * easeO(ss(.55, 1.8, t));
+          /* közeledés: a kapu felénk jön és átfut rajtunk (távolság D → −1 m) */
+          const kA = ss(3.0, 4.6, t), dist = D - (D + 1) * (kA * kA * (3 - 2 * kA) * .35 + Math.pow(kA, 2.2) * .65);
+          const Rw = G.rp * H0 * open;                                          // a korong sugara méterben
+          const alpha = dist > .02 ? Math.atan(Rw / dist) : Math.PI / 2;        // a korong látószöge
+          const thMax = Math.min(alpha / .985, TH_W);                           // amíg kicsi, a teljes kép belefér; utána „ablak”
+          if (!inside && dist < .5) inside = true;                              // áthaladtunk: a világ körülvesz
+          /* belépés a képbe: tovább „sétálunk” bele (nagyít), és átsejlik az apartman */
+          const kIn = ss(4.5, 6.3, t), thIn = TH_W * (1 + 1.5 * easeIO(kIn));   // a kép egyre közelebb jön: belesétálunk
+          const worldA = inside ? 1 - ss(5.15, 6.4, t) : 0;
+          const glow = .32 * Math.exp(-Math.pow((t - 4.35) / .22, 2));
+          /* csere: az új helyszín a kép mögött; a képet a kamerához rögzítjük, hogy a forgatás ne látsszon */
+          if (t >= SW && !switched && tex && inside) {
             switched = true;
+            const cobj0 = camObj(); if (cobj0) { cobj0.updateWorldMatrix(true, false); cobj0.getWorldQuaternion(q0); }
             const old = skyTex;
             mesh.material.map = tex; mesh.material.needsUpdate = true; skyTex = tex;
             const Ty = yawFor(look != null ? look : (sc.s ?? .75)) * R;
             if (inVR) rig.object3D.rotation.y += Ty - camYaw();
             else { rig.object3D.rotation.y = Ty; if (lc && lc.yawObject) { lc.yawObject.rotation.y = 0; lc.pitchObject.rotation.x = 0; } }
+            if (cobj0) { cobj0.updateWorldMatrix(true, false); cobj0.getWorldQuaternion(q1); qd.copy(q1).multiply(q0.clone().invert()); ax.applyQuaternion(qd); rx.applyQuaternion(qd); ux.applyQuaternion(qd); }
             if (old && old !== tex) old.dispose();
             if (cube3d) setTimeout(() => cube3d && cube3d.env(tex), 60);
             editSel = null; buildSpots(id); spots.object3D.visible = true;
             Array.from(spots.children).forEach((e) => { e.object3D.visible = false; });
-            current = id; updateUI(id); renderEdit();
+            current = id;
+            if (!inVR && c) { c.fov = F0 * .88; c.updateProjectionMatrix(); }
           }
-          if (switched) { arch = 0; portal = 0; sparks = 1 - ss(4.4, 5.3, t); }
-          /* elhelyezés: a kapu a nyíl irányában, a kamerától D távolságra; berepüléskor közelebb jön */
+          /* elhelyezés: a kapu a tengelyen, a kamerától dist távolságra, felénk fordítva */
           const cobj = camObj();
           if (cobj) cobj.getWorldPosition(cp); else cp.set(0, 0, 0);
-          if (switched) { if (cobj) cobj.getWorldDirection(fwd); else fwd.set(0, 0, -1); }
-          const dir = switched ? fwd : dv;
-          M.grp.position.copy(cp).addScaledVector(dir, D / (switched ? 1 : fly));
+          const showGate = !inside && dist > .02;
+          M.grp.visible = showGate;
+          M.grp.position.copy(cp).addScaledVector(ax, Math.max(.03, dist));
           M.grp.lookAt(cp);
           M.grp.scale.setScalar(H0 * open);
-          /* a panoráma enyhén elsötétül, amíg a kapu nyitva */
-          mesh.material.color.setScalar(switched ? 1 : 1 - .25 * arch);
-          if (!switched) { setU(M.frame, { t: fr, a: fr ? arch : 0, gain: archGain }); setU(M.portal, { t: inn, a: inn ? portal : 0, rot: -clock * .22 - t * .15, swirl: 1.6 + burst * 5, zoom: 1 + .18 * ss(2, 4.4, t), gain: 1 + burst * .6 }); }
-          M.frame.visible = !switched && arch > 0; M.portal.visible = !switched && portal > 0;
-          M.ring.visible = ringA > 0 && !switched; setU(M.ring, { a: ringA, ringR, time: clock });
-          M.orb.visible = orb > 0 && !switched; setU(M.orb, { a: orb, rot: clock * .35 }); M.orb.scale.setScalar(Math.tan(.075) * D * (1 + ringA * 1.5) / (H0 * open));
-          M.sparks.visible = sparks > 0; setU(M.sparks, { a: sparks * (switched ? .8 : 1), burst: switched ? 1.6 : burst, time: clock, R: switched ? .9 : .72, dpr: inVR ? 2 : Math.min(devicePixelRatio || 1, 1.75) });
-          setU(M.flash, { a: flash > .002 ? flash : 0 });
-          /* megérkezés (2D): enyhe kitágulás */
-          if (switched && !inVR && c) { const k6 = easeO(ss(4.3, END, t)); c.fov = F0 * (.86 + .14 * k6); c.updateProjectionMatrix(); }
+          /* a panoráma kissé elhalványul, amíg a kapu nyitva */
+          mesh.material.color.setScalar(switched ? 1 : 1 - .22 * frameA);
+          setU(M.frame, { t: fr, a: fr ? frameA : 0, rev, gain: fGain }); M.frame.visible = showGate && frameA > 0 && !!fr;
+          viewSet(M.portal, { a: inn ? 1 : 0, thMax, iris, gain: 1.04, rot: -clock * .035, swirl: .35 * ss(3.6, 4.5, t), glint: 1 }); M.portal.visible = showGate && iris > 0 && !!inn;
+          M.world.visible = inside && worldA > .001 && !!inn;
+          viewSet(M.world, { a: worldA, thMax: Math.max(thMax, thIn), gain: 1.04, rot: -clock * .035, swirl: .35 * (1 - ss(4.6, 5.6, t)), glint: 1 - kIn * .6 });
+          M.ring.visible = ringA > 0 && showGate; setU(M.ring, { a: ringA, ringR, time: clock });
+          M.orb.visible = orb > 0; setU(M.orb, { a: orb, rot: clock * .35 }); M.orb.scale.setScalar(Math.tan(.075) * D * (1 + ringA * 1.5));
+          M.orbG.position.copy(cp).addScaledVector(ax, D); M.orbG.lookAt(cp);
+          const sp = ss(.4, 1.5, t);
+          M.sparks.visible = sp > 0 && showGate; setU(M.sparks, { a: sp, burst: ss(3.3, 4.4, t) * .8, time: clock, R: .82, dpr: inVR ? 2 : Math.min(devicePixelRatio || 1, 1.75) });
+          setU(M.flash, { a: glow > .002 ? glow : 0 });
+          /* megérkezés (2D): a nézet lágyan kitágul */
+          if (switched && !inVR && c) { const k6 = easeO(ss(SW, END, t)); c.fov = F0 * (.88 + .12 * k6); c.updateProjectionMatrix(); }
+          if (switched && t > 5.6) Array.from(spots.children).forEach((e) => { e.object3D.visible = true; });
           if (t >= END && (switched || texDone)) return done();
           xrRaf(frame);
         })(performance.now());
       });
     } finally {
-      M.grp.visible = false; M.flash.visible = false; setU(M.flash, { a: 0 });
+      M.grp.visible = false; M.orb.visible = false; M.flash.visible = false; M.world.visible = false; setU(M.flash, { a: 0 });
       mesh.material.color.setScalar(1);
       if (c) { c.fov = F0; c.updateProjectionMatrix(); }
       if (cam && !walking) cam.setAttribute("camera", "fov", F0);
-      gateSkipBtn(false);
+      gateSkipBtn(false); document.body.classList.remove("gate-on");
       if (current === id) { Array.from(spots.children).forEach((e) => { e.object3D.visible = true; }); }
       else if (arrow) { arrow.object3D.scale.setScalar(arrowScale); arrow.object3D.rotation.z = 0; Array.from(spots.children).forEach((e) => { e.object3D.visible = true; }); }
       busy = false;
     }
     if (current !== id) return false;
+    updateUI(id); renderEdit();
     sc.l.concat(sc.wl || []).forEach((l) => isVisible(l[0]) && preload(l[0]));
     if (!EDIT) { try { history.replaceState(null, "", "#" + id); } catch (e) {} }
     hiRes(id);
