@@ -9313,7 +9313,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     /* fejléc: arany vitorlás-embléma, függőleges elválasztó, kis arany felirat + a hely neve */
     zIcon(g, "sail", 76, 62, 60, ZT.soft, 2.2); g.fillStyle = "rgba(228,187,99,.55)"; g.fillRect(124, 26, 2, 72);
     g.fillStyle = ZT.soft; g.font = ZT.font(700, 21); g.textBaseline = "middle"; g.textAlign = "left";
-    try { g.letterSpacing = "3px"; } catch (e) {} g.fillText(zw ? "ZEPHYR WORLDS" : "ZEPHYR EXPLORE  ·  " + real, 146, 40); try { g.letterSpacing = "0px"; } catch (e) {}
+    try { g.letterSpacing = "3px"; } catch (e) {} g.fillText(zw ? "ZEPHYR WORLDS" : "ZEPHYR EXPLORE · " + real, 146, 40); try { g.letterSpacing = "0px"; } catch (e) {}
     g.fillStyle = ZT.text; g.font = ZT.font(650, 40);
     if (zw) g.fillText(zw === "race" ? "Vitorlásverseny – a kormánynál" : zw === "chess" ? "Vitorlás sakk" : "A ház makettje", 146, 84);
     else { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 680) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 146, 84); }
@@ -11031,7 +11031,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function smPalm() {
     const chip = smChip(); if (!inVR) { chip.visible = false; return; }
     const now = performance.now(), dt = Math.min(.1, (now - (SM.last || now)) / 1000); SM.last = now; SM.cool = Math.max(0, SM.cool - dt);
-    const L = XRP.src.left, h = headPos(_smV1 || (_smV1 = new THREE.Vector3()));
+    const L = XRP.fakeL || XRP.src.left, h = headPos(_smV1 || (_smV1 = new THREE.Vector3()));   /* fakeL: tesztekhez */
     let ok = false;
     if (L && L.hand && L.palmUp && L.palmC && !(XRP.pinch && XRP.pinch.left) && !smIsOpen() && !SM.cool) {
       const to = (_smV2 || (_smV2 = new THREE.Vector3())).copy(L.palmC).sub(h), dist = to.length(); to.normalize();
@@ -11086,7 +11086,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
 
   /* ---------- Híd a „Virtuális világ” modulhoz (vilag.js – csak megnyitáskor töltődik be) ---------- */
-  window.ZephyrTour = { vrn: VRN, vrt: VRT, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
+  window.ZephyrTour = { _t: { smPalm: () => smPalm(), SM, spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
     get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
