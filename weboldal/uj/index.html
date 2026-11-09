@@ -1649,6 +1649,11 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
 .zbl-pr { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
 .zbl-pr b { font: 800 20px/1.1 Inter, sans-serif; color: #07182C; }
 .zbl-pr small { color: #5b6b7c; font-size: 13px; }
+.zbl-c.priv { background: #F4F6F9; border-style: dashed; box-shadow: none; }
+.zbl-c.priv:hover { transform: none; box-shadow: none; }
+.zbl-ph-priv { display: grid; place-items: center; background: linear-gradient(160deg, #102A44, #07182C) !important; }
+.zbl-lock { width: 64px; height: 64px; fill: none; stroke: #E4BB63; stroke-width: 2.4; stroke-linecap: round; }
+.zbl-c.priv .zbl-pr small { font-size: 14px; line-height: 1.35; color: #4a5a6c; }
 .zbl-act { display: flex; gap: 8px; padding: 8px 14px 14px; margin-top: auto; }
 .zbl-act button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; text-align: center; min-height: 46px; padding: 10px 8px; border-radius: 12px; font: 650 15px/1.15 Inter, sans-serif; }
 .zbl-act .zbl-360 { background: #EAF0F6; color: #0B2F5E; }
@@ -4514,7 +4519,9 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
             <span class="zbl-t"><b class="zbl-nm">${esc(a.name)}</b><span class="zbl-cap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.9.2 5 2.4 5 5.8"/></svg>legfeljebb ${a.cap} fő</span><span class="zbl-pr">${price}</span></span></button>
           <div class="zbl-act">${ph ? `<button type="button" class="zbl-360" data-pano="${ph}">Megnézem 360°-ban</button>` : ""}${!s2.down && dated ? `<button type="button" class="zbl-pick" data-float="${a.id}" data-pick="1" aria-pressed="${on}">${on ? "✓ Kiválasztva" : "Kiválasztom"}</button>` : `<button type="button" class="zbl-pick ghost" data-float="${a.id}">${dated ? "Naptár ›" : "Szabad napok ›"}</button>`}</div></div>`; }).join("");
       return `<section class="zbl"><div class="zbl-hd"><div><h3 class="zfl-h">Apartmanjaink</h3><p class="zbl-tip">${dated ? "Felül azok, amelyek erre az időszakra szabadok és elfértek bennük. Nagyobb társaság több apartmant is kijelölhet." : "Add meg az időpontot – utána a teljes árat látod. Egy kártyára koppintva az apartman saját naptára nyílik."}</p></div>${tog}</div>
-        <div class="zbl-grid">${cards}</div></section>
+        <div class="zbl-grid">${cards}${cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zbl-c priv" style="--ac:#f08a24" aria-disabled="true" title="A Kadett saját használatú – nem foglalható, nem látogatható">
+          <span class="zbl-ph zbl-ph-priv"><i class="zbl-no">6</i><svg class="zbl-lock" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 22v-6a9 9 0 0 1 18 0v6"/><rect x="11" y="22" width="26" height="19" rx="4"/><circle cx="24" cy="31" r="2.6"/></svg><em class="zbl-tag">Privát</em></span>
+          <span class="zbl-t"><b class="zbl-nm">Kadett</b><span class="zbl-cap">Hátsó, emelet · legfeljebb 4 fő</span><span class="zbl-pr"><small>Saját használatú lakás – nem foglalható, és a sétában sem látogatható.</small></span></span></div>`}</div></section>
       <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · ${capTotal()} férőhely / ${need()} fő${err ? `<br><small class="zfb-selerr">${esc(err)}</small>` : ""}` : dated ? "Jelölj ki egy vagy több apartmant" : "Előbb add meg az időpontot"}</span><button type="button" class="zfb-btn" data-next="3" ${!sel.length || err ? "disabled" : ""}>Tovább az adatokhoz ›</button></div>
       <button type="button" class="zfb-apt-link" data-owner="1">Tulajdonosi belépés ›</button>`;
     }

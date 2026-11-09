@@ -1680,6 +1680,11 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
 .zbl-pr { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
 .zbl-pr b { font: 800 20px/1.1 Inter, sans-serif; color: #07182C; }
 .zbl-pr small { color: #5b6b7c; font-size: 13px; }
+.zbl-c.priv { background: #F4F6F9; border-style: dashed; box-shadow: none; }
+.zbl-c.priv:hover { transform: none; box-shadow: none; }
+.zbl-ph-priv { display: grid; place-items: center; background: linear-gradient(160deg, #102A44, #07182C) !important; }
+.zbl-lock { width: 64px; height: 64px; fill: none; stroke: #E4BB63; stroke-width: 2.4; stroke-linecap: round; }
+.zbl-c.priv .zbl-pr small { font-size: 14px; line-height: 1.35; color: #4a5a6c; }
 .zbl-act { display: flex; gap: 8px; padding: 8px 14px 14px; margin-top: auto; }
 .zbl-act button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; text-align: center; min-height: 46px; padding: 10px 8px; border-radius: 12px; font: 650 15px/1.15 Inter, sans-serif; }
 .zbl-act .zbl-360 { background: #EAF0F6; color: #0B2F5E; }
@@ -2600,7 +2605,9 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
             <span class="zbl-t"><b class="zbl-nm">${esc(a.name)}</b><span class="zbl-cap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.9.2 5 2.4 5 5.8"/></svg>legfeljebb ${a.cap} fő</span><span class="zbl-pr">${price}</span></span></button>
           <div class="zbl-act">${ph ? `<button type="button" class="zbl-360" data-pano="${ph}">Megnézem 360°-ban</button>` : ""}${!s2.down && dated ? `<button type="button" class="zbl-pick" data-float="${a.id}" data-pick="1" aria-pressed="${on}">${on ? "✓ Kiválasztva" : "Kiválasztom"}</button>` : `<button type="button" class="zbl-pick ghost" data-float="${a.id}">${dated ? "Naptár ›" : "Szabad napok ›"}</button>`}</div></div>`; }).join("");
       return `<section class="zbl"><div class="zbl-hd"><div><h3 class="zfl-h">Apartmanjaink</h3><p class="zbl-tip">${dated ? "Felül azok, amelyek erre az időszakra szabadok és elfértek bennük. Nagyobb társaság több apartmant is kijelölhet." : "Add meg az időpontot – utána a teljes árat látod. Egy kártyára koppintva az apartman saját naptára nyílik."}</p></div>${tog}</div>
-        <div class="zbl-grid">${cards}</div></section>
+        <div class="zbl-grid">${cards}${cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zbl-c priv" style="--ac:#f08a24" aria-disabled="true" title="A Kadett saját használatú – nem foglalható, nem látogatható">
+          <span class="zbl-ph zbl-ph-priv"><i class="zbl-no">6</i><svg class="zbl-lock" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 22v-6a9 9 0 0 1 18 0v6"/><rect x="11" y="22" width="26" height="19" rx="4"/><circle cx="24" cy="31" r="2.6"/></svg><em class="zbl-tag">Privát</em></span>
+          <span class="zbl-t"><b class="zbl-nm">Kadett</b><span class="zbl-cap">Hátsó, emelet · legfeljebb 4 fő</span><span class="zbl-pr"><small>Saját használatú lakás – nem foglalható, és a sétában sem látogatható.</small></span></span></div>`}</div></section>
       <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · ${capTotal()} férőhely / ${need()} fő${err ? `<br><small class="zfb-selerr">${esc(err)}</small>` : ""}` : dated ? "Jelölj ki egy vagy több apartmant" : "Előbb add meg az időpontot"}</span><button type="button" class="zfb-btn" data-next="3" ${!sel.length || err ? "disabled" : ""}>Tovább az adatokhoz ›</button></div>
       <button type="button" class="zfb-apt-link" data-owner="1">Tulajdonosi belépés ›</button>`;
     }
@@ -9802,9 +9809,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     });
   }
   function pPlaces(g) {
-    const tabs = GROUPS.filter((q) => !q.hidden && !q.lock);
+    const tabs = GROUPS.filter((q) => !q.hidden);
     const tw = (VW - 80 - (tabs.length - 1) * 10) / tabs.length;
-    tabs.forEach((q, i) => btn(g, 40 + i * (tw + 10), 140, tw, 80, q.no ? q.name : q.name.split(" ")[0], () => { VRS.list = { g: q.id, off: 0 }; vrDraw(); }, { on: VRS.list.g === q.id, fs: 30 }));
+    tabs.forEach((q, i) => btn(g, 40 + i * (tw + 10), 140, tw, 80, q.no ? q.name : q.name.split(" ")[0], () => { if (!q.lock) { VRS.list = { g: q.id, off: 0 }; vrDraw(); } }, { on: VRS.list.g === q.id, off: !!q.lock, fs: tabs.length > 8 ? 24 : 30 }));
     const ids = Object.keys(SCENES).filter((k) => SCENES[k].g === VRS.list.g && isVisible(k));
     const per = 8, off = Math.min(VRS.list.off, Math.max(0, ids.length - per));
     const cw = (VW - 80 - 30) / 2, ch = 104;
@@ -9933,15 +9940,24 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
   function pApts(g) {
     /* VR 2.0: apartmanonként egy nagy kártya (belépés a szobába) + mellette „Eszközjegyzék” gomb (VR-es tárgylista, nov. 9.) */
-    const A = GROUPS.filter((q) => q.no && !q.lock && !q.hidden);
+    const A = GROUPS.filter((q) => q.no && !q.hidden);
     const cw = (VW - 80 - 30) / 2, ch = 150, iw = 150;
     A.forEach((q, i) => {
       const x = 40 + (i % 2) * (cw + 30), y = 150 + Math.floor(i / 2) * (ch + 22);
+      if (q.lock) {   /* Kadett: a ház része, de saját használatú – nem látogatható, nem foglalható */
+        btn(g, x, y, cw, ch, `${q.no} · ${q.name}`, () => {}, { off: true, sub: "Privát · saját használatú, nem látogatható", fs: 34 });
+        vInvLock(g, x + cw - 70, y + ch / 2, 46); return;
+      }
       btn(g, x, y, cw - iw - 12, ch, `${q.no} · ${q.name}`, () => { vrClose(); go(q.entry, false); }, { on: (SCENES[current] || {}).g === q.id, sub: q.where || q.sub, fs: 34 });
       btn(g, x + cw - iw, y, iw, ch, "", () => { VRS.inv = { gid: q.id, cat: "all", off: 0, sel: null }; VRS.page = "inv"; vrDraw(); });
       const hv = VRS.btns.length - 1 === VRS.hover; vInvGlyph(g, x + cw - iw / 2, y + 56, 52, hv ? "#FFF6E0" : ZT.soft);
       txt(g, "Eszközök", x + cw - iw / 2, y + 116, { a: "center", fs: 24, w: 650, c: hv ? "#FFF6E0" : ZT.sub });
     });
+  }
+  function vInvLock(g, cx, cy, s) {
+    g.save(); g.translate(cx, cy); g.strokeStyle = "rgba(228,187,99,.8)"; g.fillStyle = "rgba(228,187,99,.8)"; g.lineWidth = 4; g.lineCap = "round";
+    g.beginPath(); g.arc(0, -s * .12, s * .22, Math.PI, 0); g.lineTo(s * .22, 0); g.moveTo(-s * .22, 0); g.lineTo(-s * .22, -s * .12); g.stroke();
+    rr(g, -s * .32, -s * .02, s * .64, s * .46, 6); g.fill(); g.restore();
   }
   /* kis „jegyzék” ikon: lap + három sor + pipa */
   function vInvGlyph(g, cx, cy, s, col) {
@@ -10173,7 +10189,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const fr = bkFreeAptsNow(B), need = bkNeed(B);
     txt(g, `${vHu(B.ci)} → ${vHu(B.co)} · ${vT(vDiff(B.ci, B.co) + " éj")} · ${B.adults} felnőtt${B.children ? " + " + B.children + " gyermek" : ""}`, 44, 215, { fs: 30, w: 700, c: "#ffd166" });
     if (!fr.length) { txt(g, "Erre az időszakra már nincs szabad apartman.", VW / 2, 420, { a: "center", fs: 34 }); }
-    const cw = (VW - 80 - 24) / 2, ch = fr.length > 4 ? 120 : 150;
+    const cw = (VW - 80 - 24) / 2, ch = fr.length + 1 > 4 ? 120 : 150;
+    { /* a Kadett is látszik – a ház része, de saját használatú: mindig „foglalt”, nem választható */
+      const i = fr.length, x = 40 + (i % 2) * (cw + 24), y = 248 + Math.floor(i / 2) * (ch + 12);
+      btn(g, x, y, cw, ch, "6 · Kadett", () => {}, { off: true, sub: "Privát · saját használatú, nem foglalható", fs: 32 }); vInvLock(g, x + cw - 60, y + ch / 2 - 8, 44);
+    }
     fr.forEach((a, i) => {
       const x = 40 + (i % 2) * (cw + 24), y = 248 + Math.floor(i / 2) * (ch + 12), on = B.sel.includes(a.id);
       const pr = ZephyrBooking.vr.price({ ci: B.ci, co: B.co, apts: [a.id], adults: 0 });
@@ -10296,8 +10316,17 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const c = document.createElement("canvas"); c.width = 512; c.height = 150; const g = c.getContext("2d");
     g.beginPath(); g.roundRect ? g.roundRect(6, 6, 500, 138, 40) : g.rect(6, 6, 500, 138); g.fillStyle = "rgba(7,24,44,.9)"; g.fill(); g.lineWidth = on || hov ? 5 : 2; g.strokeStyle = on ? ZT.gold : hov ? "#F0CC7A" : "rgba(221,232,242,.35)"; g.stroke();
     g.fillStyle = on ? ZT.soft : "#fff"; g.font = ZT.font(750, 50); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText((on ? "✓ " : "") + a.no + " · " + a.name, 256, 54);
-    g.fillStyle = ZT.sub; g.font = ZT.font(600, 32); g.fillText(a.cap + " fő", 256, 108);
+    g.fillStyle = a.priv ? "#ff9a8f" : ZT.sub; g.font = ZT.font(600, 32); g.fillText(a.priv ? "Privát · nem foglalható" : a.cap + " fő", 256, 108);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  }
+  let _bxLock = null;
+  function bxLock() {
+    if (_bxLock) return _bxLock;
+    const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d");
+    g.strokeStyle = "#E4BB63"; g.lineWidth = 14; g.lineCap = "round"; g.beginPath(); g.arc(128, 104, 42, Math.PI, 0); g.lineTo(170, 128); g.moveTo(86, 128); g.lineTo(86, 104); g.stroke();
+    g.fillStyle = "#E4BB63"; g.beginPath(); g.roundRect ? g.roundRect(64, 124, 128, 96, 18) : g.rect(64, 124, 128, 96); g.fill();
+    g.fillStyle = "#15283f"; g.beginPath(); g.arc(128, 162, 13, 0, Math.PI * 2); g.fill(); g.fillRect(122, 168, 12, 26);
+    _bxLock = new THREE.CanvasTexture(c); _bxLock.colorSpace = THREE.SRGBColorSpace; return _bxLock;
   }
   function bxClear() { if (BX.g) { BX.orbs.forEach((o) => { if (o.hit) XRP.extra.delete(o.hit); if (o.lbl) o.lbl.material.map.dispose(); }); if (BX.g.parent) BX.g.parent.remove(BX.g); } BX.g = null; BX.orbs = []; BX.key = ""; }
   function bxBuild(B) {
@@ -10306,10 +10335,17 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     BX.g = new THREE.Group(); BX.g.name = "bx-orbs"; sceneEl.object3D.add(BX.g);
     const P = VRS.panel.object3D; P.updateMatrixWorld(true); const pc = P.getWorldPosition(new THREE.Vector3()), q = P.getWorldQuaternion(new THREE.Quaternion());
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(q); right.y = 0; right.normalize(); const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(q); fwd.y = 0; fwd.normalize();
-    const n = fr.length, R = .16;
-    fr.forEach((a, i) => {
+    const KAD = { id: "kadett", no: 6, name: "Kadett", cap: 4, priv: 1 }, all = fr.concat([KAD]);
+    const n = all.length, R = .16;
+    all.forEach((a, i) => {
       const u = n === 1 ? 0 : (i / (n - 1) - .5), pos = pc.clone().addScaledVector(right, u * Math.min(1.25, .34 * n)).addScaledVector(fwd, Math.abs(u) * .25).add(new THREE.Vector3(0, .5 + .06 * Math.cos(u * Math.PI), 0));
       const og = new THREE.Group(); og.position.copy(pos); BX.g.add(og);
+      if (a.priv) {   /* Kadett: saját használatú – sötét, zárt gömb lakattal, nem választható, belenézni sem lehet */
+        og.add(new THREE.Mesh(new THREE.SphereGeometry(R * .9, 32, 20), new THREE.MeshBasicMaterial({ color: 0x15283f, transparent: true, opacity: .9 })));
+        const lk = new THREE.Mesh(new THREE.PlaneGeometry(R * 1.1, R * 1.1), new THREE.MeshBasicMaterial({ map: bxLock(), transparent: true, depthWrite: false })); og.add(lk);
+        const lbl = new THREE.Mesh(new THREE.PlaneGeometry(.26, .26 * 150 / 512), new THREE.MeshBasicMaterial({ map: bxLabel(a, false, false), transparent: true, depthWrite: false })); lbl.position.y = -R - .07; og.add(lbl);
+        BX.orbs.push({ a, og, lbl, lk, base: pos.clone(), hot: 0, priv: 1, ph: Math.random() * 6 }); return;
+      }
       const inner = new THREE.Mesh(new THREE.SphereGeometry(R, 40, 24), new THREE.MeshBasicMaterial({ map: bxTex(a.id), side: THREE.BackSide, transparent: true, opacity: .98 })); og.add(inner);
       const shell = new THREE.Mesh(new THREE.SphereGeometry(R * 1.02, 40, 24), new THREE.MeshBasicMaterial({ color: 0xdfefff, transparent: true, opacity: .1, depthWrite: false })); og.add(shell);
       const ring = new THREE.Mesh(new THREE.TorusGeometry(R * 1.08, .004, 8, 64), new THREE.MeshBasicMaterial({ color: 0xE4BB63, transparent: true, opacity: .55 })); ring.rotation.x = Math.PI / 2; og.add(ring);
@@ -10329,6 +10365,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const key = B.ci + B.co + bkFreeAptsNow(B).map((a) => a.id).join(",");
     if (!BX.g || BX.key !== key) bxBuild(B);
     BX.orbs.forEach((o) => {
+      if (o.priv) { o.og.position.copy(o.base); o.og.position.y += Math.sin(t * 1.3 + o.ph) * .012; o.lk.lookAt(h); o.lbl.lookAt(h); return; }
       const on = B.sel.includes(o.a.id); if (on !== o.on) { o.on = on; o.lbl.material.map.dispose(); o.lbl.material.map = bxLabel(o.a, on, o.hov); }
       o.hot += ((o.hov ? 1 : 0) - o.hot) * .15;
       const toHead = h.clone().sub(o.base).normalize();
@@ -12979,7 +13016,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (!pick && apts.some((a) => a.id === g)) { openBinder(g); return; }
     let el = $("invPick"); if (el) { el.remove(); return; }
     el = document.createElement("div"); el.id = "invPick"; el.className = "inv-pick"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Melyik apartman eszközkészletét nézed?");
-    el.innerHTML = `<div class="inv-card"><h3>Inventory · eszközkészlet</h3><p>Melyik apartmanét nézed meg?</p><div class="inv-list">${apts.map((a) => `<button type="button" data-inv="${a.id}"><b>${a.no}</b>${a.name}</button>`).join("")}</div><button type="button" class="inv-x" aria-label="Bezárás">×</button></div>`;
+    el.innerHTML = `<div class="inv-card"><h3>Inventory · eszközkészlet</h3><p>Melyik apartmanét nézed meg?</p><div class="inv-list">${apts.map((a) => `<button type="button" data-inv="${a.id}"><b>${a.no}</b>${a.name}</button>`).join("")}${GROUPS.filter((x) => x.no && x.lock).map((a) => `<button type="button" disabled title="Saját használatú lakás – privát"><b>${a.no}</b>${a.name} · privát</button>`).join("")}</div><button type="button" class="inv-x" aria-label="Bezárás">×</button></div>`;
     document.body.appendChild(el);
     el.addEventListener("click", (e) => { const b = e.target.closest("[data-inv]"); if (b) { el.remove(); openBinder(b.dataset.inv, () => openInventory(true)); return; } if (e.target === el || e.target.closest(".inv-x")) el.remove(); });
   }
