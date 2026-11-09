@@ -62,10 +62,10 @@
   function signText() { const t = GS.st !== "play" ? GS.msg : GS.thinking ? "A gép gondolkodik…" : CE.inCheck(GS.s, GS.s.turn) ? "SAKK!" : GS.two ? (GS.s.turn === "w" ? "Világos jön" : "Sötét jön") : GS.s.turn === GS.human ? "Te jössz" : "A gép jön"; return t.length > 34 ? t.slice(0, 33) + "…" : t; }
   function chessPanel(P) {
     P.title(`Vitorlás sakk · ${GS.lvl}. szint – ${rankVR(GS.lvl)}`, headline());
-    if (GS.promo) { P.row(0, "A csónakod átért a túlsó partra – mivé váljon?", "#ffd166"); P.row(1, "Válassz egy hajót:", "#7fd3ff");
-      P.buttons([["⛵ Vezér", () => pickPromo("q")], ["🗼 Bástya", () => pickPromo("r")], ["⛵ Futó", () => pickPromo("b")], ["🐴 Huszár", () => pickPromo("n")]]); return; }
+    if (GS.promo) { P.row(0, "Mivé változzon a gyalog?", "#ffd166"); P.row(1, "Válassz egy figurát:", "#7fd3ff");
+      P.buttons([["👑 Vezér", () => pickPromo("q")], ["🗼 Bástya", () => pickPromo("r")], ["☸ Futó", () => pickPromo("b")], ["🐴 Huszár", () => pickPromo("n")]]); return; }
     const sp = GS.sel >= 0 ? GS.s.b[GS.sel] : null;
-    P.row(0, sp ? `${PAL[CE.isW(sp) ? "w" : "b"].name} ${NAMES[sp.toLowerCase()][0].toLowerCase()} (${NAMES[sp.toLowerCase()][1]}) · zöld = szabad, piros = ütés` : "Mutass egy hajódra a sugárral és csippents, aztán a célmezőre.", "#ffd166");
+    P.row(0, sp ? `${PAL[CE.isW(sp) ? "w" : "b"].name} ${NAMES[sp.toLowerCase()][0].toLowerCase()} (${NAMES[sp.toLowerCase()][1]}) · zöld = szabad, piros = ütés` : "Mutass egy figurádra a sugárral és csippents, aztán a célmezőre.", "#ffd166");
     P.row(1, `Leütve – világos: ${capStr(GS.capW)}   sötét: ${capStr(GS.capB)}`, "#c9a24a");
     P.row(2, `${VIEWS[CS.viewId || "bridge"][1]} · a stégre csippentve odalépsz`, "#7fd3ff");
     const mt = material();
@@ -76,10 +76,10 @@
   function chessHud(H) {
     H.title(`Vitorlás sakk · ${GS.lvl}. szint – ${rankVR(GS.lvl)}`, headline());
     H.list([`Leütve – világos: ${capStr(GS.capW)} · sötét: ${capStr(GS.capB)}`, `Nézőpont: ${VIEWS[CS.viewId || "bridge"][1]}`]);
-    if (GS.promo) { H.buttons([["Vezér (fregatt)", () => pickPromo("q")], ["Bástya (torony)", () => pickPromo("r")], ["Futó (jacht)", () => pickPromo("b")], ["Huszár (viking)", () => pickPromo("n")]]); }
+    if (GS.promo) { H.buttons([["vezér (királynő)", () => pickPromo("q")], ["bástya (világítótorony)", () => pickPromo("r")], ["futó (kormánykerék)", () => pickPromo("b")], ["huszár (csikóhal)", () => pickPromo("n")]]); }
     else H.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 2 játékos", toggleTwo], ["⇄ Színcsere", swapSide], [CS.noSign ? "🪧 Tábla be" : "🪧 Tábla ki", toggleSign]]
       .concat(VIEW_CYCLE.map((k) => [VIEWS[k][0] + " " + VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])));
-    H.hint("Húzással körbenézel · kattints egy hajódra, aztán a célmezőre · a stégre kattintva odalépsz");
+    H.hint("Húzással körbenézel · kattints egy figurádra, aztán a célmezőre · a stégre kattintva odalépsz");
   }
   function chessWrist() {
     return [["🔭", "Nézőpont", VIEW_CYCLE.map((k) => [VIEWS[k][0], VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])],
@@ -142,9 +142,9 @@
       try { if (CS.fadeM && CS.fadeM.parent) CS.fadeM.parent.remove(CS.fadeM); } catch (e) {}
       W.rayFar = null; GS.thinking = false; CS.anim = null;
     };
-    flashMsg(T.inVR ? "Üdv a fedélzeten! Mutass egy hajódra, csippents, majd a célmezőre." : "Üdv a fedélzeten! Kattints egy hajódra, majd a célmezőre.");
+    flashMsg(T.inVR ? "Üdv a fedélzeten! Mutass egy figurádra, csippents, majd a célmezőre." : "Üdv a fedélzeten! Kattints egy figurádra, majd a célmezőre.");
     setTimeout(maybeAI, 900);
-    W.chess = { GS, CS, CE, goView, onSquare, doMove, newGame, undo, finishAnim, place: (x, y, z, pitch) => { CS.orbit = null; chessPlace({ p: V3(x, y, z) }); const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject && pitch != null) lc.pitchObject.rotation.x = pitch; } };   /* (tesztekhez) */
+    W.chess = { GS, CS, CE, goView, onSquare, doMove, newGame, undo, finishAnim, syncPieces, gsStatus, hlPaint, place: (x, y, z, pitch) => { CS.orbit = null; chessPlace({ p: V3(x, y, z) }); const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject && pitch != null) lc.pitchObject.rotation.x = pitch; } };   /* (tesztekhez) */
     return { tick: chessTick, panel: chessPanel, hud: chessHud, wrist: chessWrist };
   }
 
@@ -168,17 +168,18 @@
     const list = CS.vis.filter(Boolean); if (CS.anim) { CS.anim.movers.forEach((q) => { if (!q.done) list.push(q.P); }); }
     list.forEach((P) => {
       const x = P.g.position.x, z = P.g.position.z, y = P.yaw; P.g.rotation.y = y;
-      if (P.t === "r") { /* szikla: nem ring */ }
-      else { const h = waveB(x, z), gx = (waveB(x + 1.2, z) - waveB(x - 1.2, z)) / 2.4, gz = (waveB(x, z + 1.6) - waveB(x, z - 1.6)) / 3.2;
+      { const h = waveB(x, z), gx = (waveB(x + 1.2, z) - waveB(x - 1.2, z)) / 2.4, gz = (waveB(x, z + 1.6) - waveB(x, z - 1.6)) / 3.2;
         const sx = gx * Math.cos(y) - gz * Math.sin(y), sz = gx * Math.sin(y) + gz * Math.cos(y);
-        P.body.position.y = h * .85; P.body.rotation.set(sz * .7, 0, -sx * .9 + (P.heel || 0), "YXZ"); }
+        const roy = ROYAL[P.t], bob = roy ? .35 : .85, tilt = roy ? .25 : .6, st = roy && P.moving ? Math.abs(Math.sin((P.step || 0) * Math.PI)) * .45 : 0;
+        P.body.position.y = h * bob + st; P.body.rotation.set(sz * .7 * tilt + (P.pitch || 0), 0, (-sx * .9) * tilt + (P.heel || 0), "YXZ"); }
+      figIdle(P, dt);
       if (P.rise != null) { P.rise += dt / 1.3; const s = smooth(Math.min(1, P.rise)); P.g.scale.setScalar(.2 + .8 * s); P.body.position.y -= (1 - s) * 7; if (P.rise >= 1) { P.rise = null; P.g.scale.setScalar(1); } }
       if (P.beam) P.beam.rotation.y += dt * .8;
       if (P.oars[0]) { P.ph += dt * (P.row > .3 ? 3.2 : .6); const sw = P.row > .3 ? Math.sin(P.ph) * .55 : Math.sin(P.ph) * .06, lf = P.row > .3 ? Math.cos(P.ph) * .14 : 0;
         P.oars.forEach((o, k) => { const sd = k ? 1 : -1; o.rotation.set(0, sd * sw, sd * (.28 + lf)); }); }
       if (P.boat && P.boat.userData.update) P.boat.userData.update(dt);
     });
-    if (CS.anim && CS.anim.victim && CS.anim.victim.g.parent && CS.anim.t < CS.anim.tSink) { const V = CS.anim.victim, h = waveB(V.g.position.x, V.g.position.z); V.body.position.y = h * .85; }
+    if (CS.anim && CS.anim.victim && CS.anim.victim.g.parent && CS.anim.t < CS.anim.tSink && !CS.anim.landed) { const V = CS.anim.victim, h = waveB(V.g.position.x, V.g.position.z); V.body.position.y = h * .85; }
     /* jelzőgyűrűk, kiválasztás */
     CS.rings.forEach((r, i) => { if (!r.visible) return; r.position.y = .22 + waveB(r.position.x, r.position.z); r.rotation.y = W.t * .4 + i; r.scale.setScalar(1 + .06 * Math.sin(W.t * 4 + i)); });
     if (CS.selRing.visible) { CS.selRing.position.y = .2 + waveB(CS.selRing.position.x, CS.selRing.position.z); CS.selRing.children[0].scale.setScalar(1 + .05 * Math.sin(W.t * 5)); }
@@ -202,7 +203,7 @@
   /* ------------------------------------------------------------------ SAKKMOTOR – a stégjáték (gameChess) szabályai és gépi ellenfele, változatlanul */
   const CE = (function () {
     const VAL = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
-    const NAME = { p: "gyalog (evezős csónak)", n: "huszár (lófejes viking hajó)", b: "futó (versenyjacht)", r: "bástya (világítótorony)", q: "vezér (fregatt)", k: "király (háromárbócos)" };
+    const NAME = { p: "gyalog (kikötőbak)", n: "huszár (csikóhal)", b: "futó (kormánykerék)", r: "bástya (világítótorony)", q: "vezér (királynő)", k: "király (kapitány)" };
     /* mezőtáblák (világos szemszögéből, a8 = 0 … h1 = 63) */
     const PST = {
       p: [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 25, 25, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0, -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0],

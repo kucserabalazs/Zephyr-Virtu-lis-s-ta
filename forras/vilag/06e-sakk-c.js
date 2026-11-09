@@ -31,13 +31,13 @@
   function patchWater(wm) {
     const mat = wm.userData.mat, U = mat.uniforms;
     const data = new Uint8Array(64 * 4), tex = new THREE.DataTexture(data, 8, 8, THREE.RGBAFormat); tex.magFilter = tex.minFilter = THREE.NearestFilter; tex.needsUpdate = true; W.disposables.push(tex);
-    U.uHL = { value: tex }; U.uLSq = { value: new THREE.Color(.33, .56, .5) }; U.uDSq = { value: new THREE.Color(.025, .05, .13) }; U.uPulse = { value: 0 };
+    U.uHL = { value: tex }; U.uLSq = { value: new THREE.Color(.78, .64, .44) }; U.uDSq = { value: new THREE.Color(.02, .045, .13) }; U.uPulse = { value: 0 }; U.uBoard = { value: boardTex() };
     const damp = `float bDamp(vec2 q){ return 1. - .66 * (1. - smoothstep(${BH.toFixed(1)}, ${(BH + 14).toFixed(1)}, max(abs(q.x), abs(q.y)))); }\n`;
     mat.vertexShader = mat.vertexShader.replace("void main(){", damp + "void main(){").replace("vec3 disp = vec3(0.);", "fadeD *= bDamp(w); vec3 disp = vec3(0.);");
     const BASE = "vec3 base = mix(uDeep, uShallow, clamp(.35 + crest * 1.6 + n.x * .8, 0., 1.)) * (1. - gust * .16) * uLight;";
     if (mat.fragmentShader.indexOf(BASE) < 0) console.warn("sakk: a víz árnyalója megváltozott");
     mat.fragmentShader = mat.fragmentShader
-      .replace("uniform vec4 uW[5];", "uniform vec4 uW[5]; uniform sampler2D uHL; uniform vec3 uLSq, uDSq; uniform float uPulse;")
+      .replace("uniform vec4 uW[5];", "uniform vec4 uW[5]; uniform sampler2D uHL, uBoard; uniform vec3 uLSq, uDSq; uniform float uPulse;")
       .replace("void main(){", damp + "void main(){")
       .replace("float px = length(fwidth(vW)) + 1e-4;", "fadeD *= bDamp(vW); float px = length(fwidth(vW)) + 1e-4;")
       .replace(BASE, BASE + `
@@ -49,11 +49,13 @@
             float cau = lt * pow(vn(vW * 1.25 + vec2(uT * .35, -uT * .27)) * vn(vW * 1.7 - vec2(uT * .3, uT * .22)) * 1.9, 2.2) * .2;
             base = mix(base, sqc + cau * vec3(1., .86, .62), .88);
             float edge = max(abs(fr.x), abs(fr.y));
-            base *= 1. - .3 * smoothstep(.46, .5, edge);
             vec4 hl = texture2D(uHL, (cell + .5) / 8.);
             float hp = hl.a > .99 ? (.55 + .45 * uPulse) : 1.;
             bHL = hl.rgb * hl.a * hp * (.38 + 1.0 * smoothstep(.34, .5, edge));
-          }`)
+          }
+          { vec2 bu = (vW + ${BF.toFixed(2)}) / ${(2 * BF).toFixed(2)};
+            if (bu.x > 0. && bu.x < 1. && bu.y > 0. && bu.y < 1.) { vec4 bd = texture2D(uBoard, bu); float gl = clamp(.8 + crest * 2.2 + n.x * .9, .45, 1.5);
+              vec3 bc = bd.rgb * gl * uLight * 1.15 + vec3(1., .85, .5) * pow(max(0., n.x + crest * 3.), 2.) * .35 * bd.a; base = mix(base, bc, bd.a); } }`)
       .replace("vec3 col = mix(base, sky, fres * .75);", "vec3 col = mix(base, sky, fres * .75 * (bq.x > 0. && bq.x < 8. && bq.y > 0. && bq.y < 8. ? .55 : 1.)); col += bHL;");
     mat.needsUpdate = true;
     U.uSkyH.value.setRGB(1.0, .6, .45); U.uSkyZ.value.setRGB(.33, .3, .55); U.uDeep.value.setRGB(.03, .05, .11); U.uShallow.value.setRGB(.13, .17, .25);
@@ -82,7 +84,7 @@
     const g = new THREE.SphereGeometry(.15, 5, 3); g.scale(1, .8, 1.9);
     const m = bobMat({ roughness: .35, metalness: .15 });
     const im = new THREE.InstancedMesh(g, m, pts.length); W.disposables.push(g);
-    const M = new THREE.Matrix4(), col = new THREE.Color(), cw = new THREE.Color("#f2ead6"), cg = new THREE.Color("#d9a83a"), cn = new THREE.Color("#183a6a");
+    const M = new THREE.Matrix4(), col = new THREE.Color(), cw = new THREE.Color("#e8c46a"), cg = new THREE.Color("#c99a2e"), cn = new THREE.Color("#183a6a");
     /* ax = 0: z-irányú sor az x = a vonalon; ax = 1: x-irányú sor a z = b vonalon. Minden 3. úszó arany, minden 9. tengerkék */
     pts.forEach(([a, b, ax], i) => { M.makeRotationY(ax ? Math.PI / 2 : 0); M.setPosition(a, .05, b); im.setMatrixAt(i, M); const n = Math.round(((ax ? a : b) + BH) / .9); im.setColorAt(i, n % 9 === 0 ? cn : n % 3 === 0 ? cg : cw); });
     im.instanceMatrix.needsUpdate = true; if (im.instanceColor) im.instanceColor.needsUpdate = true;

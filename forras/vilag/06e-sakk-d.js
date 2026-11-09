@@ -20,7 +20,7 @@
     if (s.half >= 100) { GS.st = "over"; GS.msg = "50 lépés ütés és gyalogmozgás nélkül – döntetlen."; return; }
     if (CE.insufficient(s)) { GS.st = "over"; GS.msg = "Kevés az anyag a matthoz – döntetlen."; return; }
     GS.st = "play";
-    GS.msg = chk ? "SAKK! " + (GS.two ? side + " jön." : s.turn === GS.human ? "Védd a király hajóját!" : "") : GS.two ? side + " jön." : s.turn === GS.human ? (T.inVR ? "Te jössz – mutass egy hajódra, és csippents." : "Te jössz – kattints egy hajódra.") : "A gép gondolkodik…";
+    GS.msg = chk ? "SAKK! " + (GS.two ? side + " jön." : s.turn === GS.human ? "Védd a királyod!" : "") : GS.two ? side + " jön." : s.turn === GS.human ? (T.inVR ? "Te jössz – mutass egy figurádra, és csippents." : "Te jössz – kattints egy figurádra.") : "A gép gondolkodik…";
   }
 
   /* ------------------------------------------------------------------ HAJÓK A TÁBLÁN */
@@ -29,8 +29,9 @@
   function makePiece(ch, sq) {
     const t = ch.toLowerCase(), c = CE.isW(ch) ? "w" : "b";
     const g = new THREE.Group(), body = new THREE.Group(); g.add(body); CS.pieceG.add(g);
-    const model = tplFor(t, c); body.add(model); model.scale.multiplyScalar(PSC);
-    const dim = ((CS.tpl[t + c] || model).userData.dim || [2.5, 6, 6]).map((v) => v * PSC);
+    const model = figTpl(t, c); body.add(model); model.scale.multiplyScalar(PSC);
+    const dim = (model.userData.dim || [4, 6, 4]).map((v) => v * PSC);
+    { const ru = model.getObjectByName("rune"); if (ru) { ru.material = ru.material.clone(); W.disposables.push(ru.material); } }
     g.position.set(sqX(sq), 0, sqZ(sq)); g.rotation.y = homeYaw(c);
     const hit = mesh(new THREE.BoxGeometry(dim[0] + .8, dim[1], Math.min(SQ - .4, dim[2])), basic({ visible: false }), g); hit.position.y = dim[1] / 2 - .3;
     const P = { ch, t, c, sq, g, body, model, hit, dim, yaw: homeYaw(c), heel: 0, ph: rand() * 9, beam: model.getObjectByName("beam"), oars: [model.getObjectByName("oarL"), model.getObjectByName("oarR")], row: 0, boat: model.userData.boat };
@@ -77,13 +78,13 @@
   /* ------------------------------------------------------------------ KEZELÉS: hajó kiválasztása, célmező */
   function onSquare(sq) {
     if (sq < 0) return;
-    if (CS.anim || GS.thinking) { flashMsg(GS.thinking ? "A gép még gondolkodik…" : "Várj, amíg a hajó célba ér…"); return; }
+    if (CS.anim || GS.thinking) { flashMsg(GS.thinking ? "A gép még gondolkodik…" : "Várj, amíg a figura célba ér…"); return; }
     if (GS.st !== "play") { flashMsg(GS.msg + " – új játszma a panelen."); return; }
     if (GS.promo) return;
     if (!GS.two && GS.s.turn !== GS.human) return;
     const tg = GS.sel >= 0 ? GS.moves.filter((m) => m.t === sq) : [];
     if (tg.length) {
-      if (tg.length > 1 && tg[0].promo) { GS.promo = tg; GS.msg = "Átváltozás: válassz hajót a panelen!"; if (T.inVR && W.panelHidden) W.togglePanel(); W.panelDirty = 1; snd("bell"); return; }
+      if (tg.length > 1 && tg[0].promo) { GS.promo = tg; GS.msg = "Átváltozás: válassz figurát a panelen!"; if (T.inVR && W.panelHidden) W.togglePanel(); W.panelDirty = 1; snd("bell"); return; }
       doMove(tg[0]); return;
     }
     const p = GS.s.b[sq];
@@ -202,14 +203,15 @@
     const movers = [{ P, path: pathFor(P, m.f, m.t), to: m.t }];
     if (m.castle) { const row = before.turn === "w" ? 7 : 0, rf = m.castle === "K" ? row * 8 + 7 : row * 8, rt = m.castle === "K" ? row * 8 + 5 : row * 8 + 3; const R = CS.vis[rf]; if (R) { CS.vis[rf] = null; movers.push({ P: R, path: pathFor(R, rf, rt), to: rt }); } }
     const A = { m, movers, victim, t: 0, promo: m.promo || null, fired: 0, hits: 0 };
-    movers.forEach((q) => { q.len = q.path.getLength(); q.dur = clamp(q.len / 6.5, 1.3, 4.4); q.y0 = q.P.yaw; q.y1 = yawOf(q.path.getTangentAt(0)); q.P.moving = true; });
+    /* a figurák nem fordulnak a menetirányba (arccal maradnak), csak dőlnek; a csikóhal ugrik */
+    if (victim && P.t === "n") movers[0].path = new THREE.LineCurve3(V3(sqX(m.f), 0, sqZ(m.f)), V3(sqX(m.t), 0, sqZ(m.t)));
+    movers.forEach((q) => { q.len = q.path.getLength(); q.dur = q.P.t === "n" ? (victim ? 1.5 : 1.25) : clamp(q.len / (ROYAL[q.P.t] ? 5.2 : 6.5), 1.3, 4.4); q.y0 = q.P.yaw; q.y1 = q.P.yaw; q.P.moving = true; });
     if (victim) {
-      const vp = V3(sqX(cap), 0, sqZ(cap)), ap = V3(sqX(m.f), 0, sqZ(m.f)), d = vp.clone().sub(ap);
-      const broad = "qk".includes(P.t);   /* a fregatt és a sorhajó oldalazva, teljes sortűzzel lő; a többi orral a cél felé */
-      const face = yawOf(d) + (broad ? (Math.sin(wrapA(yawOf(d) - P.yaw)) >= 0 ? -Math.PI / 2 : Math.PI / 2) : 0);
-      Object.assign(A, { vp, ap, broad, face, tFire: .75, tSink: 2.25, tSail: 3.9 });
+      const vp = V3(sqX(cap), 0, sqZ(cap)), ap = V3(sqX(m.f), 0, sqZ(m.f));
+      Object.assign(A, { vp, ap });
       victim.sinkRoll = rand() < .5 ? -1 : 1;
-    } else Object.assign(A, { tSail: .55 });
+      battleSetup(A, P, victim);
+    } else Object.assign(A, { tSail: .25 });
     A.tEnd = A.tSail + Math.max(...movers.map((q) => q.dur)) + .7;
     CS.anim = A; CS.hovL.visible = false;
     snd("creak");
@@ -217,46 +219,31 @@
   function animTick(dt) {
     const A = CS.anim; if (!A) return; A.t += dt;
     const M0 = A.movers[0];
-    if (A.victim) {
-      /* 1. fordulás tüzelési helyzetbe */
-      if (A.t < A.tFire) { const k = smooth(clamp(A.t / A.tFire, 0, 1)); M0.P.yaw = M0.y0 + wrapA(A.face - M0.y0) * k; }
-      /* 2. sortűz: három lövés */
-      const shots = A.broad ? 3 : 2;
-      while (A.fired < shots && A.t > A.tFire + A.fired * .28) {
-        const k = A.fired++, side = A.broad ? V3(Math.sin(A.face + Math.PI / 2), 0, Math.cos(A.face + Math.PI / 2)) : null;
-        let from = A.ap.clone(); from.y = A.broad ? 1.1 : 1.0;
-        if (A.broad) { const toV = A.vp.clone().sub(A.ap); const sd = Math.sign(side.dot(toV)) || 1; from.addScaledVector(side, sd * 1.4); from.add(V3(-Math.sin(A.face), 0, -Math.cos(A.face)).multiplyScalar((k - 1) * 1.8)); }
-        else from.add(A.vp.clone().sub(A.ap).normalize().multiplyScalar(2.6));
-        const to = A.vp.clone().add(V3(rr(-.8, .8), 1.4, rr(-.8, .8)));
-        shoot(from, to, () => { A.hits++; CS.fx.flash.emit(to, V3(0, 0, 0), 4, .35); for (let j = 0; j < 8; j++) CS.fx.spray.emit(to.clone(), V3(rr(-4, 4), rr(2, 6), rr(-4, 4)), rr(.3, .6), 1.2); snd("hit"); if (A.hits === 1) splashAt(A.vp.clone().add(V3(rr(-2.5, 2.5), 0, rr(-2.5, 2.5))), false); });
-      }
-      /* 3. a megtalált hajó ég, megdől és elsüllyed */
-      const V = A.victim;
-      if (A.hits > 0) { const pTop = V3(sqX(0), 0, 0); pTop.copy(A.vp); pTop.y = V.dim[1] * .45 - V.body.position.y * 0;
-        if (rand() < dt * 30) CS.fx.fire.emit(V3(A.vp.x + rr(-1.2, 1.2), rr(.8, 2.2) + V.body.position.y, A.vp.z + rr(-1.5, 1.5)), V3(rr(-.3, .3), rr(1, 2.5), rr(-.3, .3)), rr(1.2, 2.6), rr(.4, .8));
-        if (rand() < dt * 14) CS.fx.dsmoke.emit(V3(A.vp.x + rr(-1, 1), 2 + V.body.position.y, A.vp.z + rr(-1, 1)), V3(rr(-.4, .4), rr(1.5, 3), rr(-.4, .4)), rr(2, 3.5)); }
-      if (A.t > A.tSink) { const k = clamp((A.t - A.tSink) / 2.6, 0, 1); if (!A.sinkSnd) { A.sinkSnd = 1; snd("sink"); }
-        V.body.rotation.z = V.sinkRoll * smooth(Math.min(1, k * 1.6)) * 1.25; V.body.rotation.x = -k * .35; V.body.position.y = -Math.pow(k, 1.6) * (V.dim[1] + 3);
-        if (rand() < dt * 10) CS.fx.rings.emit(A.vp.x + rr(-1.5, 1.5), A.vp.z + rr(-1.5, 1.5), rr(1, 2.2), 2.2);
-        if (k >= 1 && V.g.parent) { dropPiece(V); } }
-    } else if (A.t < A.tSail) { const k = smooth(A.t / A.tSail); A.movers.forEach((q) => { q.P.yaw = q.y0 + wrapA(q.y1 - q.y0) * k; }); }
+    if (A.victim) battleTick(A, dt);
+    if (A.t < A.tSail) { const k = smooth(A.t / A.tSail); A.movers.forEach((q) => { q.P.yaw = q.y0 + wrapA(q.y1 - q.y0) * k; }); }
     /* 4. hajózás */
     A.movers.forEach((q, qi) => {
       const ts = A.tSail + (qi ? .25 : 0), k = clamp((A.t - ts) / q.dur, 0, 1);
-      if (A.t < ts) { if (A.victim && A.t > A.tSink + .6) { const kk = smooth(clamp((A.t - A.tSink - .6) / (ts - A.tSink - .6), 0, 1)); q.P.yaw = A.face + wrapA(q.y1 - A.face) * kk; } return; }
+      if (A.t < ts) return;
       if (k <= 0 || q.done) return;
-      const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, p = q.path.getPointAt(e), tg = q.path.getTangentAt(Math.min(.999, e));
-      q.P.g.position.set(p.x, 0, p.z);
-      const want = yawOf(tg), dy = wrapA(want - q.P.yaw); q.P.yaw += dy * Math.min(1, dt * 8);
+      const hop = q.P.t === "n", e = hop ? k : k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, p = q.path.getPointAt(e), tg = q.path.getTangentAt(Math.min(.999, e));
+      q.P.g.position.set(p.x, hop ? Math.sin(k * Math.PI) * (A.leap ? 11 : 4.5) : 0, p.z);
+      if (hop && !q.jumped) { q.jumped = 1; splashAt(q.path.getPointAt(0), false); snd("whoosh"); }
+      if (hop && A.leap && k > .96 && !A.landed) { A.landed = A.t; splashAt(A.vp, true); CS.fx.rings.emit(A.vp.x, A.vp.z, 7, 3.2); CS.fx.rings.emit(A.vp.x, A.vp.z, 4, 2.2); CS.fx.flash.emit(A.vp.clone().add(V3(0, 2, 0)), V3(0, 0, 0), 6, .3); for (let j = 0; j < 40; j++) { const a = rand() * TAU; CS.fx.spray.emit(V3(A.vp.x + Math.cos(a) * 2, .4, A.vp.z + Math.sin(a) * 2), V3(Math.cos(a) * rr(4, 9), rr(6, 14), Math.sin(a) * rr(4, 9)), rr(.6, 1.3), 1.8); } snd("hit"); snd("boom", .6); }
+      if (hop && k >= 1 && !q.landSpl) { q.landSpl = 1; if (!A.leap) splashAt(p, false); }
       const v = q.len / q.dur * (1 - Math.abs(2 * k - 1)) * 1.6;   /* pillanatnyi sebesség */
-      q.P.heel = clamp(-dy * 6, -.25, .25) + .05 * v / 6; q.P.row = v;
-      const wk = CS.wakes[qi]; if (wk) wk.push(p.x, p.z, q.P.yaw + Math.PI, v, dt, .06);
-      if (v > 2 && rand() < dt * 18) CS.fx.spray.emit(V3(p.x - Math.sin(q.P.yaw) * q.P.dim[2] * .45, .3, p.z - Math.cos(q.P.yaw) * q.P.dim[2] * .45), V3(rr(-1, 1), rr(1.5, 3), rr(-1, 1)), rr(.3, .6), .8);
-      if (k >= 1) { q.done = true; q.P.sq = q.to; CS.vis[q.to] = q.P; q.P.row = 0; }
+      /* dőlés a haladás irányába (a figura saját koordinátáiban) */
+      const cy = Math.cos(q.P.yaw), sy = Math.sin(q.P.yaw), lx = tg.x * cy - tg.z * sy, lz = tg.x * sy + tg.z * cy, lean = Math.min(1, v / 6) * (hop ? .05 : .13);
+      q.P.pitch = lz * lean; q.P.heel = -lx * lean; q.P.row = v; if (q.P.t === "b") q.P.spin = Math.max(q.P.spin || 0, 2.5);
+      if (ROYAL[q.P.t]) { q.P.step = (q.P.step || 0) + dt * 3.2; if (Math.floor(q.P.step) !== q.P.stepN) { q.P.stepN = Math.floor(q.P.step); CS.fx.rings.emit(p.x + rr(-.6, .6), p.z + rr(-.6, .6), 1.6, 1.8); }
+        if (rand() < dt * 40) CS.fx.flash.emit(V3(p.x + rr(-2, 2), rr(.2, 1.5), p.z + rr(-2, 2)), V3(0, rr(.6, 1.8), 0), rr(.3, .7), rr(.4, .8)); }
+      const wk = CS.wakes[qi], my = yawOf(tg); if (wk && !hop && !ROYAL[q.P.t]) wk.push(p.x, p.z, my + Math.PI, v, dt, .06);
+      if (!hop && !ROYAL[q.P.t] && v > 2 && rand() < dt * 18) CS.fx.spray.emit(V3(p.x + tg.x * q.P.dim[2] * .45, .3, p.z + tg.z * q.P.dim[2] * .45), V3(rr(-1, 1), rr(1.5, 3), rr(-1, 1)), rr(.3, .6), .8);
+      if (k >= 1) { q.done = true; q.P.sq = q.to; CS.vis[q.to] = q.P; q.P.row = 0; q.P.g.position.y = 0; }
     });
     /* 5. beállás alapirányba */
     const tSet = A.tSail + Math.max(...A.movers.map((q) => q.dur)) + .05;
-    if (A.t > tSet) { A.movers.forEach((q) => { q.P.yaw += wrapA(homeYaw(q.P.c) - q.P.yaw) * Math.min(1, dt * 5); q.P.heel *= 1 - Math.min(1, dt * 4); });
+    if (A.t > tSet) { A.movers.forEach((q) => { q.P.yaw += wrapA(homeYaw(q.P.c) - q.P.yaw) * Math.min(1, dt * 5); q.P.heel *= 1 - Math.min(1, dt * 4); q.P.pitch = (q.P.pitch || 0) * (1 - Math.min(1, dt * 4)); });
       if (A.promo && !A.promoDone) { A.promoDone = 1; promoteFx(M0.P, A.promo); } }
     if (A.t >= A.tEnd && (!A.victim || !A.victim.g.parent)) finishAnim(false);
   }
@@ -267,9 +254,9 @@
     splashAt(V3(sqX(sq), 0, sqZ(sq)), true); snd("fanfare");
   }
   function finishAnim(force) {
-    const A = CS.anim; if (!A) return; CS.anim = null;
+    const A = CS.anim; if (!A) return; CS.anim = null; battleEnd();
     if (A.victim && A.victim.g.parent) dropPiece(A.victim);
-    A.movers.forEach((q) => { q.P.moving = false; q.P.row = 0; q.P.heel = 0; if (!q.done) { q.P.g.position.set(sqX(q.to), 0, sqZ(q.to)); q.P.sq = q.to; CS.vis[q.to] = q.P; } q.P.yaw = homeYaw(q.P.c); });
+    A.movers.forEach((q) => { q.P.moving = false; q.P.row = 0; q.P.heel = 0; q.P.pitch = 0; q.P.g.position.y = 0; if (!q.done) { q.P.g.position.set(sqX(q.to), 0, sqZ(q.to)); q.P.sq = q.to; CS.vis[q.to] = q.P; } q.P.yaw = homeYaw(q.P.c); });
     if (A.promo && !A.promoDone) { A.promoDone = 1; const P = CS.vis[A.m.t]; if (P) promoteFx(P, A.promo); }
     syncPieces();
     if (GS.st === "play" && CE.inCheck(GS.s, GS.s.turn)) snd("bell");

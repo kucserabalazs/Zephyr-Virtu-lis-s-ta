@@ -1,9 +1,9 @@
   /* =====================================================================================================
      VITORLÁS SAKK – VR (2026. nov. 9.)
      A sakktábla maga a Balaton: 9 × 9 méteres vízmezők (világos: türkiz sekély víz, sötét: mélykék), a mezőket
-     úszó kötélsorok választják el, körben mahagóni–sárgaréz úszóstég. A bábuk életnagyságú hajók:
-       gyalog = evezős csónak evezőssel · huszár = lófejes viking hajó · futó = versenyjacht
-       bástya = világítótorony sziklaszigeten · vezér = kétárbócos fregatt · király = háromárbócos sorhajó
+     úszó kötélsorok választják el, körben mahagóni–sárgaréz úszóstég. A bábuk (nov. 9. hajnaltól) a tulajdonos
+     képének életnagyságú figurái – lásd 06e-sakk-f.js (kikötőbak, csikóhal, hajókormány, világítótorony, királynő,
+     kapitány; ezüst és arany, tengerkék zománccal). Az alábbi hajós készlet kódja megmaradt, de nem használt.
      Naplemente (a tulajdonos ChatGPT-képe: „Luxus tengerészeti sakk naplementében”).
      Nézőpontok: parancsnoki híd (saját oldal), stég (életnagyság), két oldaltorony, az ellenfél hídja,
      hőlégballon (madártávlat) és körrepülés a ballonnal; a stégre csippentve oda lépsz.
