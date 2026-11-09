@@ -25,7 +25,20 @@
     m.userData.xr = {
       hover: (on, h) => { P.uv = on && h && h.uv ? h.uv : null; },
       move: (h) => { P.uv = h && h.uv ? h.uv : null; },
-      click: (h) => { if (!h || !h.uv) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; const b = P.btns.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) { b.fn(); P.draw(); } }
+      click: (h) => { if (!h || !h.uv) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; const b = P.btns.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) { b.fn(); P.draw(); } },
+      /* ÁTHELYEZÉS (2026. nov. 9., a tulajdonos kérése: „mindig útban van”): a panel fejlécét megfogva (csippentve) bárhová húzható a térben;
+         a kéz előre-hátra mozdításával közelebb/távolabb tolható; elengedve ott marad, és a helyét világonként megjegyzi. */
+      down: (h, S0, key) => { if (!h || !h.uv || !S0 || !S0.o) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; if (y > 165 || x > PW - 250) return;
+        const hp = h.point.clone(), head = T.headPos ? T.headPos() : null; P.drag = { key, dist: h.distance, off: P.m.position.clone().sub(hp), hd0: head ? S0.o.distanceTo(head) : 0 };
+        if (T.xr.press) T.xr.press[key] = null; try { T.xr.pulse && T.xr.pulse(key, .4, 20); } catch (e) {} },
+      drag: (S0, key) => { const D = P.drag; if (!D || D.key !== key || !S0 || !S0.o || !S0.d) return; const head = T.headPos ? T.headPos() : null;
+        const dist = clamp(D.dist + (head ? (S0.o.distanceTo(head) - D.hd0) * 4 : 0), .35, 4.5); const tgt = S0.o.clone().addScaledVector(S0.d, dist).add(D.off);
+        P.m.position.lerp(tgt, .6); if (head) { const dx = P.m.position.x - head.x, dz = P.m.position.z - head.z; P.m.rotation.set(-.15, Math.atan2(-dx, -dz), 0, "YXZ"); } },
+      up: () => { if (!P.drag) return; P.drag = null; W.panelPos = W.panelPos || {};
+        /* a fejhez (és a nézési irányhoz) képest jegyezzük meg – így akkor is jó helyre kerül, ha közben a hajó / a nézőpont elmozdult */
+        const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw(), d = P.m.position.clone().sub(head).applyAxisAngle(new THREE.Vector3(0, 1, 0), -yaw);
+        W.panelPos[W.kind] = { rel: d.toArray(), r: wrapA(P.m.rotation.y - yaw) };
+        try { localStorage.setItem("zephyr-panelpos", JSON.stringify(W.panelPos)); } catch (e) {} }
     };
     T.xr.extra.add(m);
     /* összecsukott állapot: kis fül, rámutatva/csippentve újra kinyílik */
@@ -65,6 +78,11 @@
         }
       };
       if (W.spec && W.spec.panel) W.spec.panel(api);
+      /* fogantyú-jel a fejléc tetején (itt fogd meg a húzáshoz) és „⟲ ide” gomb (visszahívja magad elé) */
+      { g.fillStyle = "rgba(255,255,255,.55)"; for (let k = 0; k < 6; k++) for (let r2 = 0; r2 < 2; r2++) { g.beginPath(); g.arc(PW / 2 - 50 + k * 20, 20 + r2 * 14, 4.5, 0, TAU); g.fill(); }
+        const x = PW - 240, y = 22, w = 96, h = 78, k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn: () => { if (W.panelPos) delete W.panelPos[W.kind]; try { localStorage.setItem("zephyr-panelpos", JSON.stringify(W.panelPos || {})); } catch (e) {} placePanel(true); } });
+        g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 22) : g.rect(x, y, w, h); g.fillStyle = hov ? "#ffe08a" : "rgba(255,255,255,.14)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke();
+        g.fillStyle = hov ? "#0b2f5e" : "#fff"; g.font = "800 44px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("⟲", x + w / 2, y + h / 2 + 2); }
       /* összecsukó gomb a jobb felső sarokban – a panel egy kis „☰ Panel” fülre zsugorodik */
       { const x = PW - 132, y = 22, w = 96, h = 78, k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn: () => W.togglePanel() });
         g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 22) : g.rect(x, y, w, h); g.fillStyle = hov ? "#ffe08a" : "rgba(255,255,255,.14)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke();
@@ -84,8 +102,12 @@
     T.xr.extra.add(P.pill); P.pill.position.copy(P.m.position); P.pill.quaternion.copy(P.m.quaternion); P.pill.translateX(-.27); P.pill.translateY(.2);
     if (!P.pill.parent) T.sceneEl.object3D.add(P.pill);
   }
-  function placePanel() {
+  function placePanel(fresh) {
     const P = W.panel; if (!P) return;
+    if (!W.panelPos) { try { W.panelPos = JSON.parse(localStorage.getItem("zephyr-panelpos") || "{}"); } catch (e) { W.panelPos = {}; } }
+    const saved = !fresh && W.panelPos[W.kind];
+    if (saved && saved.rel) { const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw();
+      P.m.position.copy(head).add(new THREE.Vector3().fromArray(saved.rel).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)); P.m.rotation.set(-.15, saved.r + yaw, 0, "YXZ"); T.sceneEl.object3D.add(P.m); return; }
     const yaw = T.camYaw(), hy = T.headY();
     let a = yaw + (W.kind === "maquette" ? .62 : .55), d = W.kind === "sail" ? .85 : 1.05, y = hy - .25;
     if (W.kind === "chess") { a = yaw + .62; d = 1.0; y = hy - .3; }

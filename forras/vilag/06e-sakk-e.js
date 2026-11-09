@@ -42,7 +42,7 @@
   function goView(id, o, instant) {
     if (!CS.env) return;
     const run = () => {
-      CS.orbit = null; CS.viewId = id; const v = viewPoint(id, o);
+      CS.orbit = null; CS.cine = null; CS.viewId = id; const v = viewPoint(id, o);
       const psi = chessPlace(v);
       if (id === "orbit") CS.orbit = { th: v.th, psi };
       if (!T.inVR) { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = v.pitch; }
@@ -70,14 +70,14 @@
     P.row(2, `${VIEWS[CS.viewId || "bridge"][1]} · a stégre csippentve odalépsz`, "#7fd3ff");
     const mt = material();
     P.row(3, `Te: ${GS.two ? "két játékos" : GS.human === "w" ? "világos (gép ellen)" : "sötét (gép ellen)"} · anyag: ${mt === 0 ? "egyenlő" : (mt > 0 ? "világos +" : "sötét +") + Math.abs(mt)}`, "#ffffff");
-    P.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["🔭 Nézőpont", nextView], [CS.noSign ? "🪧 Tábla be" : "🪧 Tábla ki", toggleSign]], 1);
+    P.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["🔭 Nézőpont", nextView], [CS.noSign ? "🪧 Tábla be" : "🪧 Tábla ki", toggleSign], [cineOn() ? "🎬 Csatakamera ki" : "🎬 Csatakamera be", toggleCine]], 1);
     P.buttons([["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 Két játékos", toggleTwo]].concat(T.inVR ? [[inVRSeatRaw() ? "🧍 Álló" : "🪑 Ülő mód", toggleSeat]] : []).concat([["‹ Kilépés", () => W.close()]]), 0);
   }
   function chessHud(H) {
     H.title(`Vitorlás sakk · ${GS.lvl}. szint – ${rankVR(GS.lvl)}`, headline());
     H.list([`Leütve – világos: ${capStr(GS.capW)} · sötét: ${capStr(GS.capB)}`, `Nézőpont: ${VIEWS[CS.viewId || "bridge"][1]}`]);
     if (GS.promo) { H.buttons([["vezér (királynő)", () => pickPromo("q")], ["bástya (világítótorony)", () => pickPromo("r")], ["futó (kormánykerék)", () => pickPromo("b")], ["huszár (csikóhal)", () => pickPromo("n")]]); }
-    else H.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 2 játékos", toggleTwo], ["⇄ Színcsere", swapSide], [CS.noSign ? "🪧 Tábla be" : "🪧 Tábla ki", toggleSign]]
+    else H.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 2 játékos", toggleTwo], ["⇄ Színcsere", swapSide], [CS.noSign ? "🪧 Tábla be" : "🪧 Tábla ki", toggleSign], [cineOn() ? "🎬 Csatakamera ki" : "🎬 Csatakamera be", toggleCine]]
       .concat(VIEW_CYCLE.map((k) => [VIEWS[k][0] + " " + VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])));
     H.hint("Húzással körbenézel · kattints egy figurádra, aztán a célmezőre · a stégre kattintva odalépsz");
   }
@@ -85,7 +85,7 @@
     return [["🔭", "Nézőpont", VIEW_CYCLE.map((k) => [VIEWS[k][0], VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])],
       ["💡", "Ötlet", hint], ["↶", "Visszalépés", undo], ["♟", "Új játszma", newGame],
       ["📶", "Szint", [["−", "Könnyebb", () => setLvl(-1)], ["+", "Nehezebb", () => setLvl(1)]]],
-      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["🪧", CS.noSign ? "Tábla mutatása" : "Tábla elrejtése", toggleSign], ["🪑", inVRSeatRaw() ? "Álló mód" : "Ülő mód", toggleSeat], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
+      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["🪧", CS.noSign ? "Tábla mutatása" : "Tábla elrejtése", toggleSign], ["🎬", cineOn() ? "Csatakamera ki" : "Csatakamera be", toggleCine], ["🪑", inVRSeatRaw() ? "Álló mód" : "Ülő mód", toggleSeat], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
   }
 
   /* ------------------------------------------------------------------ FELÉPÍTÉS */
@@ -160,7 +160,7 @@
       CS.fadeM.visible = !!CS.fade; CS.fadeM.material.opacity = o; }
     /* körrepülés */
     if (CS.orbit && !CS.fade) { CS.orbit.th += dt * .05; const v = viewPoint("orbit", { th: CS.orbit.th }); chessPlace(v, CS.orbit.psi); }
-    animTick(dt); fxTick(dt);
+    animTick(dt); fxTick(dt); bfxTick(dt); cineTick(dt);
     /* részletesség: messziről (45 m fölött) a kötélzet, a zászlók és a lobogók nem rajzolódnak – Questen sok rajzolási hívást spórol */
     CS.lodT = (CS.lodT || 0) - dt; if (CS.lodT <= 0) { CS.lodT = .4; const cl = CS.env.worldToLocal(_hw.clone());
       CS.vis.concat(CS.anim ? CS.anim.movers.map((q) => q.P) : []).forEach((P) => { if (!P) return; const far = Math.hypot(P.g.position.x - cl.x, P.g.position.z - cl.z, cl.y) > 46; if (P.far !== far) { P.far = far; P.model.traverse((o) => { if (o.userData.lod) o.visible = !far; }); } }); }

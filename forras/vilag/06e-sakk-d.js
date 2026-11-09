@@ -153,7 +153,7 @@
         tick(dt, fn) { list.forEach((q) => { if (q.t > q.life) { q.s.visible = false; return; } q.t += dt; q.s.position.addScaledVector(q.v, dt); fn(q, q.t / q.life); }); }, clear() { list.forEach((q) => { q.t = 99; q.s.visible = false; }); } }; };
     const dropT = canvasTex(32, 64, (g) => { const gr = g.createRadialGradient(16, 40, 1, 16, 36, 22); gr.addColorStop(0, "rgba(255,255,255,.95)"); gr.addColorStop(1, "rgba(220,240,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, 32, 64); });
     CS.fx = { flash: spr(14, glowT, "#ffe0a0", true), fire: spr(60, glowT, "#ff8a2a", true), spray: spr(60, dropT, "#ffffff", false), smoke: smokePool(env, 50, "#d8d0c8"), dsmoke: smokePool(env, 60, "#3a3430"), rings: ringPool(env, 24) };
-    const ball = new THREE.SphereGeometry(.14, 10, 8); CS.balls = []; for (let i = 0; i < 6; i++) { const m = mesh(ball, std({ color: "#1a1a1a", metalness: .6, roughness: .4 }), env); m.visible = false; CS.balls.push({ m, t: 99, d: 1 }); }
+    const ball = new THREE.SphereGeometry(.3, 10, 8); CS.balls = []; for (let i = 0; i < 14; i++) { const m = mesh(ball, std({ color: "#1a1a1a", metalness: .6, roughness: .4 }), env); m.visible = false; CS.balls.push({ m, t: 99, d: 1 }); }
     /* tűzijáték (győzelem): pontfelhő */
     const N = 1400, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.BufferAttribute(col, 3));
     const pm = new THREE.PointsMaterial({ size: .55, map: glowT, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }); W.disposables.push(pm, g);
@@ -220,16 +220,16 @@
     const A = CS.anim; if (!A) return; A.t += dt;
     const M0 = A.movers[0];
     if (A.victim) battleTick(A, dt);
-    if (A.t < A.tSail) { const k = smooth(A.t / A.tSail); A.movers.forEach((q) => { q.P.yaw = q.y0 + wrapA(q.y1 - q.y0) * k; }); }
+    if (A.t < A.tSail) { const k = smooth(clamp(A.t / (A.tTurn || A.tSail), 0, 1)); A.movers.forEach((q) => { q.P.yaw = q.y0 + wrapA(q.y1 - q.y0) * k; }); }
     /* 4. hajózás */
     A.movers.forEach((q, qi) => {
       const ts = A.tSail + (qi ? .25 : 0), k = clamp((A.t - ts) / q.dur, 0, 1);
       if (A.t < ts) return;
       if (k <= 0 || q.done) return;
       const hop = q.P.t === "n", e = hop ? k : k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2, p = q.path.getPointAt(e), tg = q.path.getTangentAt(Math.min(.999, e));
-      q.P.g.position.set(p.x, hop ? Math.sin(k * Math.PI) * (A.leap ? 11 : 4.5) : 0, p.z);
+      q.P.g.position.set(p.x, hop ? Math.sin(k * Math.PI) * (A.leapH || (A.leap ? 11 : 4.5)) : 0, p.z);
       if (hop && !q.jumped) { q.jumped = 1; splashAt(q.path.getPointAt(0), false); snd("whoosh"); }
-      if (hop && A.leap && k > .96 && !A.landed) { A.landed = A.t; splashAt(A.vp, true); CS.fx.rings.emit(A.vp.x, A.vp.z, 7, 3.2); CS.fx.rings.emit(A.vp.x, A.vp.z, 4, 2.2); CS.fx.flash.emit(A.vp.clone().add(V3(0, 2, 0)), V3(0, 0, 0), 6, .3); for (let j = 0; j < 40; j++) { const a = rand() * TAU; CS.fx.spray.emit(V3(A.vp.x + Math.cos(a) * 2, .4, A.vp.z + Math.sin(a) * 2), V3(Math.cos(a) * rr(4, 9), rr(6, 14), Math.sin(a) * rr(4, 9)), rr(.6, 1.3), 1.8); } snd("hit"); snd("boom", .6); }
+      if (hop && A.leap && k > (A.leapH ? .995 : .96) && !A.landed) { A.landed = A.t; splashAt(A.vp, true); CS.fx.rings.emit(A.vp.x, A.vp.z, 7, 3.2); CS.fx.rings.emit(A.vp.x, A.vp.z, 4, 2.2); CS.fx.flash.emit(A.vp.clone().add(V3(0, 2, 0)), V3(0, 0, 0), 6, .3); for (let j = 0; j < 40; j++) { const a = rand() * TAU; CS.fx.spray.emit(V3(A.vp.x + Math.cos(a) * 2, .4, A.vp.z + Math.sin(a) * 2), V3(Math.cos(a) * rr(4, 9), rr(6, 14), Math.sin(a) * rr(4, 9)), rr(.6, 1.3), 1.8); } snd("hit"); snd("boom", .6); }
       if (hop && k >= 1 && !q.landSpl) { q.landSpl = 1; if (!A.leap) splashAt(p, false); }
       const v = q.len / q.dur * (1 - Math.abs(2 * k - 1)) * 1.6;   /* pillanatnyi sebesség */
       /* dőlés a haladás irányába (a figura saját koordinátáiban) */
@@ -241,6 +241,7 @@
       if (!hop && !ROYAL[q.P.t] && v > 2 && rand() < dt * 18) CS.fx.spray.emit(V3(p.x + tg.x * q.P.dim[2] * .45, .3, p.z + tg.z * q.P.dim[2] * .45), V3(rr(-1, 1), rr(1.5, 3), rr(-1, 1)), rr(.3, .6), .8);
       if (k >= 1) { q.done = true; q.P.sq = q.to; CS.vis[q.to] = q.P; q.P.row = 0; q.P.g.position.y = 0; }
     });
+    if (A.victim) battlePost(A, dt);
     /* 5. beállás alapirányba */
     const tSet = A.tSail + Math.max(...A.movers.map((q) => q.dur)) + .05;
     if (A.t > tSet) { A.movers.forEach((q) => { q.P.yaw += wrapA(homeYaw(q.P.c) - q.P.yaw) * Math.min(1, dt * 5); q.P.heel *= 1 - Math.min(1, dt * 4); q.P.pitch = (q.P.pitch || 0) * (1 - Math.min(1, dt * 4)); });
