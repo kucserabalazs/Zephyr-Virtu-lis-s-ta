@@ -398,3 +398,8 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
 - **Fordítás:** új szövegek 23 nyelven (`forras/i18n/munka/uj_szovegek_figurak.txt`).
 - **Tesztszkriptek (sandboxban):** `/home/claude/t/b1.py <p|n|b|r|q|k|gallery|board>` – csaták képkockánként (a világ saját tick-je leállítva, kézi 0,01 s-os léptetés).
 - **Hátra van:** Quest-próba (képkockaszám a csatáknál, a fénysugár/tölcsér átlátszóság), a tulajdonos visszajelzése a figurákról.
+
+## nov. 9. – VR-sakk új figurakészlet (ChatGPT-vel közösen)
+- Referenciakép: `forras/referencia/sakk-keszlet.jpg` (a tulajdonos képe). A ChatGPT (beépített böngésző, chatgpt.com, „Tervlapok készítése” beszélgetés) négynézetes tervlapot és szöveges műszaki leírást adott (király = 100 egység: gyalog 48, bástya 60, huszár 68, futó 78, vezér 90; színek: arany #D4A13A, elefántcsont #F3E8CF/#FFF9ED, tengerkék #102D50/#123B65, világítótorony #B83228, bőr #E8C4A5, haj #D9A23B, csőr #C85A27).
+- Kód: `forras/vilag/06e-sakk-g.js` – zBoat (díszhajótest), zDressBoat (arany perem, sávok, csigavonalak, horgonyok, oroszlánfej), zSailTex („Zephyr” felirat + embléma, arany horgony), zPawn/zRook/zKnight/zBishop/zQueen/zKing; ZU = .14 m/egység. Felülírja a FIGB/FIGS/FIGN-t (06e-sakk-f.js), a ROYAL üres (mind úszik). Teszt: /home/claude/t/zfig.py; `W.vchess` tesztexport.
+- Ütés-stílusok változatlanok (p lasszó, n ugrás, b örvény, r fénysugár, q tölcsér, k vihar+kraken) – később a háromárbócoshoz ágyúsortűz illene.
