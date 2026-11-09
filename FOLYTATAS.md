@@ -1,6 +1,24 @@
 # Zephyr Apartman – a projekt állása és folytatási útmutató
 
-Utolsó mentés: 2026. november 6. hajnal (a `main` ágon; lásd a 23. pontot – VR-javítások, forgás kézzel, teljes foglalás a VR-ben) · Ezt a fájlt olvasd el először egy új munkamenet elején.
+Utolsó mentés: 2026. november 9. (VR 2.0 folyamatban – lásd a 0. pontot); korábban: 2026. november 6. hajnal (a `main` ágon; lásd a 23. pontot – VR-javítások, forgás kézzel, teljes foglalás a VR-ben) · Ezt a fájlt olvasd el először egy új munkamenet elején.
+
+
+## 0. FOLYAMATBAN: ZEPHYR VR 2.0 – teljes újratervezés a ChatGPT-vel (2026. nov. 9.)
+**Mentés a régiről:** GitHub ág `mentes-regi-vr-2026-11-09` (visszaállítható). Terv és kutatás: `forras/referencia/vr2-terv.md`.
+ChatGPT-beszélgetés: „Designrendszer javaslat” (https://chatgpt.com/c/6af1a4dc-e6d4-83eb-ac5f-414ea34871bc) – design-rendszer neve: **Zephyr Nautical Horizon**
+(navy #0B2F5E, midnight #07182C, raise #102A44, arany #D4A13A, soft gold #E4BB63, Inter; a kiemelt gomb arany KONTÚR + fényudvar).
+Kész (main):
+- VR-útjelzők (ZEPHYR WAYPOINTS, `vrnBuild/vrnTick`): 0,6 m-es padlógyűrű a fotó padlóján (PANO_EYE 1,6 m), alacsony üvegcímke vékony összekötő vonallal, nincs nyíl, max 3 címke a nézési irányban, fókusz/rámutatás arany.
+- Érkezéskor a haladás irányába nézel (VR `faceTo` + `VRN.travelYaw`; go(): VR-ben faceTo(sc.s)).
+- Díszkapuk és dimenziókapu-effektus törölve (`GATES_ON = false`).
+- Fordulás: csippentés + oldalra rántás = 30° (WS.turnDeg), `snapBlink()` elsötétülés; a menüben ↺ ↻ gomb.
+- Tenyérmenü (`smPalm`): bal tenyér fel + ránézés → „Menü” korong arany ívvel → 0,8 s → menü 1,2 m-re; öv-gomb lenézve (`xrBar`). A karóra a Beállításokban visszakapcsolható (WS.watch).
+- VR-főmenü újrarajzolva (vrDraw/btn/pMain 2×3 + alsó sor), Beállítások oldal (`pSettings`), új súgó (zephyr-vr-help4), `zIcon()` vonalas ikonkészlet, Inter helyben (weboldal/*/fonts).
+- Látnivalók a horizonton (`LM_LIST`, `lmTick`) a strand/stég képein – irány és távolság a ház Google-pontjából (46,8893551; 17,9629734), adat: `forras/referencia/balaton/latnivalok.json` (forrásolt), partvonal: `balaton.geojson` (OSM, ODbL).
+- Makett: 4 autó egymás mellett keresztben, orral nyugatra (06b, SZ1 = 44).
+- 3D-világ panel (07-vezerlo) Nautical Glass + áthelyezhető; VR sakk új csatái + csatakamera.
+- Kezdőoldal: Nautical Horizon réteg (`kezdooldal-forras.html` </style> előtt), új nyitócím.
+Hátra: 2D séta újratervezése (ChatGPT 2D-terv), kezdőoldal további szekciói, fordítások (új kulcsok), térkép-oldal a valódi Balaton-partvonallal, IWER-teszt, összefoglaló.
 
 ## 1. Mi ez a projekt?
 A Zephyr Apartmanház (8621 Zamárdi, Gáspár András utca 58., tulajdonos: Kucsera Balázs) weboldalának megújítása:
