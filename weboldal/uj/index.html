@@ -1511,6 +1511,16 @@ body.zx .thumb span { font: 600 13px/1.25 Inter, sans-serif; white-space: normal
 body.zx .thumb[aria-current="true"] { border-color: #D4A13A; }
 /* bal alul kis, átlátszó alaprajz */
 body.zx .map { top: auto; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); left: max(76px, calc(env(safe-area-inset-left, 0px) + 76px)); width: 250px; max-height: 42vh; background: rgba(7,24,44,.55); border-radius: 14px; border-color: rgba(221,232,242,.25); }
+/* útjelzők 2D igazítása: alsó arany sáv */
+.zne-bar { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-width: calc(100vw - 24px); box-sizing: border-box;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px 10px 18px; border-radius: 18px; background: rgba(7,24,44,.92); border: 1.5px solid #D4A13A;
+  color: #fff; font: 500 15px/1.35 Inter, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.zne-bar b { color: #E4BB63; font-weight: 750; }
+.zne-bar .zne-msg { flex: 1 1 260px; color: #DDE8F2; }
+.zne-bar button { all: unset; cursor: pointer; padding: 9px 14px; border-radius: 999px; font: 700 14px/1 Inter, sans-serif; background: rgba(255,255,255,.12); color: #fff; }
+.zne-bar button.zne-ok { background: linear-gradient(180deg, #E8C26C, #D4A13A); color: #07182C; }
+.zne-bar button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+body.nav-edit .zx-book, body.nav-edit .hint { display: none !important; }
 /* arany Foglalás a felső menüsorban (nem takarja a kilátást) */
 .zx-book { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px; border-radius: 999px;
   font: 750 15px/1 Inter, sans-serif; color: #07182C; background: linear-gradient(180deg, #E8C26C, #D4A13A); box-shadow: 0 4px 14px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.5); white-space: nowrap; flex: none; }
@@ -4822,7 +4832,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   function tabs() {
     const n = A.data ? A.data.bookings.filter((b) => b.status === "pending").length : 0;
     const t = [["list", "Foglalások" + (n ? ` <em>${n}</em>` : "")], ["cal", "Naptár"], ["new", "Zárolás"], ["prog", "Programok"], ["settings", "Beállítások"]];
-    el.querySelector(".zad-tabs").innerHTML = A.data ? t.map(([k, l]) => `<button type="button" data-tab="${k}" class="${A.tab === k ? "on" : ""}">${l}</button>`).join("") + `<button type="button" data-reload="1" title="Frissítés" aria-label="Frissítés">⟳</button>` : "";
+    el.querySelector(".zad-tabs").innerHTML = A.data ? t.map(([k, l]) => `<button type="button" data-tab="${k}" class="${A.tab === k ? "on" : ""}">${l}</button>`).join("") + `<button type="button" data-navedit="1" title="A séta útjelzőinek igazítása 2D-ben (gépen, telefonon)">Útjelzők</button><button type="button" data-reload="1" title="Frissítés" aria-label="Frissítés">⟳</button>` : "";
   }
   function render() {
     tabs();
@@ -5139,6 +5149,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const b = e.target.closest("button"); if (!b || b.disabled) return;
     if (b.dataset.otpResend && A.otp) { try { const r = await call("login", { password: A.otp.pw }); A.otp.to = r.sent_to || A.otp.to; A.err = ""; A.msg = "Új kódot küldtünk."; } catch (x) { A.err = x.message; } render(); return; }
     if (b.dataset.tab) { if (A.tab === "settings") grabSettings(); A.tab = b.dataset.tab; A.err = ""; A.msg = ""; render(); el.querySelector(".zad-body").scrollTop = 0; if (A.tab === "prog" && !A.ev) loadEv(); return; }
+    if (b.dataset.navedit) { close(); setTimeout(() => window.dispatchEvent(new Event("zephyr-nav-edit")), 320); return; }
     if (b.dataset.reload) { if (A.tab === "prog") { A.ev = null; render(); return loadEv(); } return load(); }
     if (b.dataset.evimport) { A.busy = true; render(); try { const r = await call("ev_import", {}); A.feeds = r.feeds; A.ev = r.events; A.evUpd = r.updated; A.busy = false; flash(r.message); try { window.dispatchEvent(new Event("zephyr-events-changed")); } catch (z) {} } catch (x) { A.busy = false; A.err = x.message; render(); } return; }
     if (b.dataset.evnew) { A.evEdit = { cat: "egyeb" }; render(); el.querySelector(".zad-body").scrollTop = 0; return; }

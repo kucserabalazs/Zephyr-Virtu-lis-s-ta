@@ -441,3 +441,5 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
   (korábbi hiba: a 1,95× gyorsítás miatt hátszélben is ~26°-os „szembeszél” → lobogás). Belobogás csak túl élesen/fordulóban;
   buborék → teljes csapkodás, hátsó él rezgése, szélárnyékos génua összeesik; pillangó (génua rúddal kitolva) spinakker nélkül;
   szimmetrikus spinakker: rúd ⟂ látszólagos szél, luff curl ciklus, hátszélben a szél felőli oldalra (spinakkeres pillangó).
+- Útjelzők: VR-ben és 2D-ben KÜLÖN igazíthatók (localStorage „zephyr-nav-ov” = {vr, d2}; szerver: nav / nav2d, POST nav_save {mode:'vr'|'2d', nav}).
+  2D-ben: Tulajdonosi felület → „Útjelzők” gomb (vagy #utjelzok a link végén) → a narancs gyűrűt egérrel/ujjal húzni; alsó sáv: „Ennek a helynek: eredeti”, „Kész”.
