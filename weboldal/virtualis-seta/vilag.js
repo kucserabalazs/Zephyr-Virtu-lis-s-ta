@@ -2581,7 +2581,7 @@
     H.add = add; H.box = box;
 
     /* ------------------------------------------------ a telek: utca, járda, kerítés, előkert, parkoló, kert */
-    const SX0 = -3, SX1 = 13.5, SZ0 = -10, SZ1 = 40; H.site = { SX0, SX1, SZ0, SZ1 };
+    const SX0 = -3, SX1 = 13.5, SZ0 = -10, SZ1 = 44;   /* nov. 9.: a hátsó parkoló 4 keresztben álló autónak mélyebb lett */ H.site = { SX0, SX1, SZ0, SZ1 };
     /* utca (a valódi fotók szerint): világos, kopott aszfalt felfestés nélkül, előtte fehér zúzottkő sáv */
     box("road", SX0, 0, -9.2, SX1, .05, -4.4);
     box("gravel", SX0, 0, -4.4, SX1, .07, -2.7);
@@ -2605,14 +2605,15 @@
        • a parkoló nyugati szélén zöld belátásgátló kerítés, mögötte a Schooner kis kertje;
        • a kert nyugati felén a nádfonatos kerti konyha pavilonnal, előtte betonozott pihenőn a kő tűzrakóasztal (grillező) kőpadokkal,
          mellette két napozószék és a kerti zuhany; középen és keleten egy-egy pavilon asztallal, székekkel; a keleti sövénynél kerti csap és kuka. */
-    const PZ0 = Z_END + 3.3, PZ1 = PZ0 + 6.4, PX0 = 1.1, PX1 = 10.4;
+    const PZ0 = Z_END + 3.3, PZ1 = PZ0 + 10.4, PX0 = 1.1, PX1 = 10.4;
     box("brick", 6.3, .04, -2.7, 12.6, .065, PZ0);          /* behajtó a ház mellett */
     box("brick", PX1, .04, PZ0, 12.6, .065, PZ1 + 4.2);     /* behajtó a keleti sövény mentén, a kertig */
     box("grid", PX0, .04, PZ0, PX1, .062, PZ1);             /* gyephézagos parkoló */
     box("#9aa0a6", PX0 - .05, .04, PZ1 - .05, PX1, .075, PZ1 + .05); box("#9aa0a6", PX1 - .05, .04, PZ0, PX1 + .05, .075, PZ1 + 4.2);   /* szegélykő */
-    /* 2026. nov. 9. (tulajdonos): a parkolóban NEM két autó áll egymás mögött, hanem NÉGY autó EGYMÁS MELLETT – orral a ház felé */
-    { const slot = (PX1 - PX0) / 4; ["#eef0f2", "#4a5058", "#8a1f24", "#1f3a6a"].forEach((c, k) => car(add, c, PX0 + slot * (k + .5), (PZ0 + PZ1) / 2 + .2, 0));
-      for (let k = 0; k <= 4; k++) box("#e9ecef", PX0 + slot * k - .03, .062, PZ0 + .9, PX0 + slot * k + .03, .066, PZ1 - .3); }   /* parkolóhely-jelölés */
+    /* 2026. nov. 9. (tulajdonos, a parkoló 360°-os fotója szerint): NÉGY autó EGYMÁS MELLETT, mindegyik úgy, mint a fotón a fehér terepjáró –
+       keresztben, orral nyugatra (a zöld kerítés felé); az első, a fehér, a zárt terasz és a lépcső mellett, a többi mellette a kert felé. */
+    { const slot = 2.6; ["#eef0f2", "#4a5058", "#8a1f24", "#1f3a6a"].forEach((c, k) => car(add, c, PX0 + .45 + 2.15, PZ0 + .2 + slot * (k + .5), Math.PI / 2));
+      for (let k = 0; k <= 4; k++) box("#e9ecef", PX0 + .25, .062, PZ0 + .2 + slot * k - .03, PX0 + 5.3, .066, PZ0 + .2 + slot * k + .03); }   /* parkolóhely-jelölés */
     box("hedge", 12.6, .04, -2.7, 13.0, 1.75, SZ1);
     /* zöld belátásgátló kerítés a parkoló nyugati szélén és a Schooner-kert déli szélén */
     box("#4f6f5c", PX0 - .06, .04, PZ0, PX0, 1.75, PZ1); box("#4f6f5c", -.4, .04, PZ1 - .06, PX0, 1.75, PZ1);
