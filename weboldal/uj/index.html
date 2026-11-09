@@ -1652,6 +1652,14 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
 .zbl-c .zbl-orb { top: 0; right: auto; left: 25%; width: 50%; height: auto; aspect-ratio: 1; margin-top: 4.8%; }
 .zbl-c .zbl-orb em { bottom: -4px; font-size: 13px; padding: 4px 11px; }
 .zbl-ph-orb .zbl-tag { top: 10px; bottom: auto !important; }
+/* „ne legyen a gömb keretben, csak a gömb simán” (a tulajdonos, nov. 9.): nincs gyűrű, nincs sötét doboz, nincs felirat – csak a lebegő gömb puha árnyékkal */
+.zbl-ph-orb { background: transparent !important; }
+.zbl-ph-orb::before { display: none !important; }
+.zbl-ph-orb::after { background: radial-gradient(28% 6% at 50% 93%, rgba(7,24,44,.28), rgba(7,24,44,0) 70%) !important; }
+.zbl-c .zbl-orb { box-shadow: none !important; }
+.zbl-c .zbl-orb em { display: none; }
+.zbl-c .zbl-orb:hover, .zbl-c .zbl-orb:focus-visible { box-shadow: 0 0 28px 6px rgba(228,187,99,.45) !important; }
+.zbl-ph-orb .zbl-tag { background: rgba(7,24,44,.82); z-index: 4; }
 /* ===== ESZKÖZJEGYZÉK 2.0 – Nautical Horizon ===== */
 .zi2 { position: fixed; inset: 0; z-index: 2147482990; display: grid; place-items: center; font-family: Inter, system-ui, sans-serif; opacity: 0; transition: opacity .3s; }
 .zi2.on { opacity: 1; }
