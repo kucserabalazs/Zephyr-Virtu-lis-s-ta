@@ -1625,6 +1625,11 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
   body.zx .map { left: 10px; width: 200px; }
   .zx-book { min-height: 56px; padding: 0 24px; font-size: 18px; }
 }
+
+/* magyar tulipán a betöltőképernyőn – egyszeri vonalrajzolás (csökkentett mozgásnál statikus) */
+.loader-motif { display: block; width: 58px; height: 58px; margin: 0 auto 10px; fill: none; stroke: #D4A13A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 120; stroke-dashoffset: 120; animation: zmDraw .9s ease-out .2s forwards; }
+@keyframes zmDraw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .loader-motif { animation: none; stroke-dashoffset: 0; } }
 </style>
 
 <div id="stage"></div>
@@ -1734,6 +1739,7 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
 
 <div class="loader" id="loader">
   <div>
+    <svg class="loader-motif" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 26 C15 26 10 20 11 13 C17 13 21 17 24 20 C27 17 31 13 37 13 C38 20 33 26 24 26"/><path d="M17 13 Q20 9 24 5 Q28 9 31 13"/><path d="M24 26 V43"/><path d="M24 39 Q17 31 10 33 Q14 40 24 41"/><path d="M24 39 Q31 31 38 33 Q34 40 24 41"/></svg>
     <img class="loader-logo" src="img/zephyr-logo-s.png" alt="Zephyr Apartman">
     <small id="loaderText">Virtuális séta betöltése…</small>
     <div class="sea"><i class="boat"></i><i class="waves"></i></div>
@@ -9385,6 +9391,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const bg = g.createLinearGradient(0, 0, 0, VH); bg.addColorStop(0, "rgba(22,50,80,.90)"); bg.addColorStop(1, "rgba(8,26,46,.93)");
     rr(g, 4, 4, VW - 8, VH - 8, 40); g.fillStyle = bg; g.fill(); g.lineWidth = 2.5; g.strokeStyle = "rgba(221,232,242,.30)"; g.stroke();
     g.save(); rr(g, 4, 4, VW - 8, VH - 8, 40); g.clip(); const hi = g.createLinearGradient(0, 4, 0, 60); hi.addColorStop(0, "rgba(255,255,255,.12)"); hi.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = hi; g.fillRect(0, 0, VW, 60); g.restore();
+    /* magyar sarokdísz a két alsó sarokban – halványan, csak díszítés */
+    zMotif(g, "sarokdisz", 34, VH - 34, 52, "#E4BB63", .32, -Math.PI / 2); zMotif(g, "sarokdisz", VW - 34, VH - 34, 52, "#E4BB63", .32, Math.PI);
     const sc = SCENES[current] || {}, grp = GROUPS.find((q) => q.id === sc.g);
     const zw = window.ZephyrWorld && ZephyrWorld.active ? ZephyrWorld.kind : null;
     const real = ["korvett", "dingi", "fregatt", "kaloz", "schooner", "kadett"].includes(sc.g) ? "VALÓDI 360°-OS FÉNYKÉP A SZOBÁRÓL" : "VALÓDI 360°-OS FÉNYKÉP";
@@ -9401,7 +9409,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     g.font = ZT.font(600, 36);
     g.fillStyle = "rgba(221,232,242,.18)"; g.fillRect(40, 120, VW - 80, 2);
     if (VRS.page !== "book") { try { bkKeyboard(false); } catch (e) {} }
-    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld, help: pHelp, sun: pSun, set: pSettings, lake: pLake }[VRS.page] || pMain)(g);
+    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld, help: pHelp, sun: pSun, set: pSettings, lake: pLake, culture: pCulture }[VRS.page] || pMain)(g);
     if (VRS.tex) VRS.tex.needsUpdate = true;
   }
   /* gomb (VR 2.0): emelt sötét felület, rámutatva arany kontúr; „on” = elsődleges (arany); az elején álló emoji helyett
@@ -9477,7 +9485,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* rövid súgó: első VR-belépéskor magától, utána a menüből – nagy betűkkel, hogyan irányítasz kézzel és kontrollerrel */
   function pHelp(g) {
     /* VR 2.0 súgó (2026. nov. 9.): az új, egyszerű kézi kezelés – ikonokkal, nagy betűkkel */
-    txt(g, "Így irányítasz – csak a kezeddel", 52, 166, { fs: 40, w: 700, c: ZT.soft });
+    zMotif(g, "sziv", 76, 160, 44, ZT.soft, .9); txt(g, "Így irányítasz – csak a kezeddel", 112, 166, { fs: 40, w: 700, c: ZT.soft });
     const R = [["menu", "Menü: bal tenyér felfelé", "fordítsd a bal tenyered magad felé és nézz rá – a „Menü” korong megtelik, és előtted kinyílik a menü (lenézve a lábad előtt is van egy Menü gomb)"],
                ["pin", "Lépés: kis gyűrű a padlón", "ahová mehetsz, ott vékony gyűrű és kis címke van – mutass rá (arany lesz) és csippents"],
                ["turnR", "Fordulás: csippents és rántsd oldalra", "csippents a semmibe és rántsd a kezed balra vagy jobbra: 30°-ot fordulsz, egy pillanatra elsötétül – vagy fordulj meg magad"],
@@ -9500,7 +9508,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function pSun(g) {
     if (!SUN.ymd) SUN.ymd = sunDefaultDay();
     const I = sunInfo(), D = vPd(SUN.ymd);
-    txt(g, "☀ Merről süt a nap?", 60, 166, { fs: 42, w: 800, c: "#ffd166" });
+    zMotif(g, "napkorong", 84, 162, 50, ZT.soft, .95); txt(g, "Merről süt a nap?", 122, 166, { fs: 42, w: 800, c: ZT.soft });
     const row = (y, label, val, a, b, c2, d2) => { txt(g, label, 60, y + 44, { fs: 30, w: 600, c: "rgba(255,255,255,.8)" }); btn(g, 250, y, 110, 88, a[0], a[1], { fs: 30 }); btn(g, 372, y, 90, 88, b[0], b[1], { fs: 44 }); txt(g, val, 700, y + 44, { a: "center", fs: 38, w: 800 }); btn(g, 940, y, 90, 88, c2[0], c2[1], { fs: 44 }); btn(g, 1042, y, 110, 88, d2[0], d2[1], { fs: 30 }); };
     const day = (n) => () => { sunSet(true, vAdd(SUN.ymd, n)); vrDraw(); }, hr = (n) => () => { sunSet(true, null, SUN.h + n); vrDraw(); };
     row(200, "Nap", D.getFullYear() + ". " + HU_MON[D.getMonth()] + " " + D.getDate() + ".", ["−1 hó", day(-30)], ["−", day(-1)], ["+", day(1)], ["+1 hó", day(30)]);
@@ -9544,6 +9552,19 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       btn(g, VW / 2 + 20, VH - 110, 170, 80, "▼", () => { VRS.list.off = off + per; vrDraw(); }, { off: off + per >= ids.length });
     }
   }
+  /* ---------- ZEPHYR MAGYAR MOTIF (2026. nov. 9., a ChatGPT terve; a tulajdonos: „a szép magyar kultúra és szimbólumai finoman bukkanjanak fel”)
+     Hat arany vonalrajz 48×48-as rácson (stilizált népi tulipán, szív, rozmaringág, napkorong, virágos elválasztó, sarokdísz) – forrás:
+     forras/referencia/vr2/magyar-motif.svg. Egyszerre legfeljebb 1–2 látszik, sosem útjelzőn vagy gombon. ---------- */
+  const ZMOTIF = {"tulipan": ["M24 26 C15 26 10 20 11 13 C17 13 21 17 24 20 C27 17 31 13 37 13 C38 20 33 26 24 26", "M17 13 Q20 9 24 5 Q28 9 31 13", "M24 26 V43", "M24 39 Q17 31 10 33 Q14 40 24 41", "M24 39 Q31 31 38 33 Q34 40 24 41"], "sziv": ["M24 40 C17 33 9 27 9 18 C9 11 13 8 18 8 C21 8 23 10 24 13 C25 10 27 8 30 8 C35 8 39 11 39 18 C39 27 31 33 24 40 Z"], "rozmaring": ["M10 43 C15 29 24 17 37 7", "M15 33 C9 31 7 27 9 23 C14 25 17 28 18 29", "M20 26 C17 20 18 16 20 14 C23 18 23 20 23 22", "M25 20 C27 13 31 10 34 10 C34 15 31 17 28 18", "M31 14 C36 16 40 14 42 12 C38 9 36 9 33 10", "M12 39 C7 37 6 33 7 30 C11 32 13 35 14 37", "M18 31 C24 31 29 29 32 26 C26 24 23 25 20 27", "M26 23 C32 23 36 20 38 17 C33 16 30 17 28 19"], "napkorong": ["M33 24 A9 9 0 1 1 15 24 A9 9 0 1 1 33 24", "M24 5 V10 M24 38 V43 M5 24 H10 M38 24 H43", "M10.5 10.5 L14 14 M34 34 L37.5 37.5", "M10.5 37.5 L14 34 M34 14 L37.5 10.5"], "elvalaszto": ["M2 24 H14 M34 24 H46", "M24 29 V24", "M24 24 C18 24 17 20 18 16 C21 17 23 19 24 21 C25 19 27 17 30 16 C31 20 30 24 24 24", "M24 21 Q22 17 24 13 Q26 17 24 21", "M17 29 C18 25 21 25 24 27 M31 29 C30 25 27 25 24 27"], "sarokdisz": ["M4 44 V18 Q4 4 18 4 H44", "M10 42 V20 Q10 10 20 10 H42", "M10 32 C15 30 18 28 20 24", "M18 10 C20 16 25 18 31 17 C27 12 24 10 18 10", "M12 31 C15 33 18 37 18 40 C13 39 10 35 12 31", "M20 24 C25 24 28 28 31 28 C36 28 38 24 35 21 C31 18 28 22 30 24"]};
+  const ZMOTIF_P = {};
+  function zMotif(g, name, cx, cy, size, col, alpha, rot) {
+    const L = ZMOTIF[name]; if (!L) return; const P = ZMOTIF_P[name] || (ZMOTIF_P[name] = L.map((d) => new Path2D(d)));
+    g.save(); g.translate(cx, cy); if (rot) g.rotate(rot); g.scale(size / 48, size / 48); g.translate(-24, -24);
+    g.globalAlpha *= alpha == null ? 1 : alpha; g.strokeStyle = col || "#D4A13A"; g.lineWidth = 1.8 * Math.max(1, 48 / size * .9); g.lineCap = "round"; g.lineJoin = "round";
+    P.forEach((p) => g.stroke(p)); g.restore();
+  }
+  /* hiteles kulturális érdekességek (a ChatGPT gyűjtése, intézményi/önkormányzati források) – a Balaton-térképen koppintva */
+  const ZFACTS = [["Tihanyi apátság", "1055", "I. András király 1055-ben alapította a tihanyi bencés monostort. Az alapító királyt 1060-ban itt temették el.", "Tihanyi Bencés Apátság", "tulipan"], ["Tihanyi alapítólevél", "1055", "Az 1055-ös latin nyelvű alapítólevélben korai magyar szavak maradtak fenn – a magyar nyelvtörténet egyik legfontosabb emléke.", "Tihanyi Bencés Apátság", "tulipan"], ["Balatonfüredi Anna-bál", "1825", "Az első Anna-bált 1825. július 26-án rendezték a balatonfüredi Horváth-házban, Szentgyörgyi Horváth Anna Krisztina tiszteletére.", "Balatonfüred város", "sziv"], ["Balatonfüredi kőszínház", "1831", "Kisfaludy Sándor kezdeményezésére 1831-ben épült meg Balatonfüreden a Dunántúl első magyar nyelvű kőszínháza.", "Balatonfüred város", "rozmaring"], ["Kisfaludy gőzhajó", "1846", "A Balaton első gőzhajója, a Kisfaludy 1846. szeptember 21-én indult első útjára Balatonfüredről, Széchenyi István 55. születésnapján.", "Balatonfüred város", "napkorong"], ["Jókai Mór villája", "Balatonfüred", "Jókai Mór balatonfüredi villájában írta többek között Az arany ember című regényét. Ma emlékházként látogatható.", "Jókai Mór Emlékház", "rozmaring"], ["Tagore sétány", "1926", "Rabindranath Tagore Nobel-díjas indiai költőt 1926-ban Balatonfüreden gyógykezelték; emlékét a róla elnevezett sétány, emlékfája és szobra őrzi.", "Balatonfüred város", "napkorong"], ["Szamárkő, Zamárdi", "legenda", "A Szamárkőhöz régi helyi legenda kapcsolódik, amely egy szamár nyomával magyarázza a szikla nevét – néphagyomány, nem igazolt történelmi esemény.", "Zamárdi Önkormányzat", "sziv"]];
   /* BALATON-TÉRKÉP (VR 2.0, 2026. nov. 9. – hitelesség): a tó valódi partvonala (OpenStreetMap, © OSM-közreműködők, ODbL; egyszerűsítve),
      a Zephyr Apartmanház a Google Térkép-pontján, a látnivalók forrásolt koordinátákkal (forras/referencia/balaton/). Észak felül, méretarány-vonal,
      és ha a panoráma tájolása ismert, a Zephyrtől induló fénylő ék mutatja, merre nézel éppen. */
@@ -9574,7 +9595,24 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const nx = VW - 96, ny = 196; g.beginPath(); g.moveTo(nx, ny - 34); g.lineTo(nx + 15, ny + 10); g.lineTo(nx, ny); g.lineTo(nx - 15, ny + 10); g.closePath(); g.fillStyle = ZT.soft; g.fill(); txt(g, "É", nx, ny + 32, { a: "center", fs: 24, w: 800, c: ZT.soft });
     const km = 10, px10 = km / 111.32 / k * k * sc; const sx = 76, sy = VH - 112; g.fillStyle = "#fff"; g.fillRect(sx, sy, px10, 5); g.fillRect(sx, sy - 8, 3, 18); g.fillRect(sx + px10 - 3, sy - 8, 3, 18); txt(g, "10 km", sx + px10 + 14, sy + 3, { fs: 22, w: 600 });
     txt(g, "Partvonal: © OpenStreetMap-közreműködők (ODbL) · a Zephyr a Google Térkép szerinti helyén", VW - 60, VH - 108, { a: "right", fs: 18, w: 500, c: ZT.sub });
-    btn(g, VW / 2 - 200, VH - 84, 400, 64, "🗺 Házvázlat és alaprajz", () => { VRS.page = "map"; vrDraw(); }, { fs: 28 });
+    btn(g, VW / 2 - 420, VH - 84, 400, 64, "🗺 Házvázlat és alaprajz", () => { VRS.page = "map"; vrDraw(); }, { fs: 28 });
+    btn(g, VW / 2 + 20, VH - 84, 400, 64, "Balatoni kultúra", () => { VRS.page = "culture"; vrDraw(); }, { fs: 28, on: 1 });
+  }
+  /* BALATONI KULTÚRA (VR 2.0): nyolc hiteles érdekesség (évszám, két mondat, forrás), mindegyik mellett egy finom magyar motívum */
+  function pCulture(g) {
+    zMotif(g, "elvalaszto", VW / 2, 158, 64, ZT.gold, .9);
+    txt(g, "Balatoni kultúra – hiteles érdekességek", VW / 2, 196, { a: "center", fs: 34, w: 750, c: ZT.text });
+    const cw = (VW - 80 - 20) / 2, ch = 132;
+    ZFACTS.forEach(([t, yr, d, src, mo], i) => {
+      const x = 40 + (i % 2) * (cw + 20), y = 226 + Math.floor(i / 2) * (ch + 10);
+      rr(g, x, y, cw, ch, 20); g.fillStyle = "rgba(16,42,68,.9)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(221,232,242,.18)"; g.stroke();
+      zMotif(g, mo, x + 46, y + 50, 52, ZT.soft, .95);
+      txt(g, t, x + 88, y + 28, { fs: 25, w: 750 }); txt(g, yr, x + cw - 18, y + 28, { a: "right", fs: 22, w: 700, c: ZT.soft });
+      g.save(); g.font = ZT.font(500, 18); const ws = d.split(" "), ln = [""]; ws.forEach((w) => { const c2 = (ln[ln.length - 1] + " " + w).trim(); if (g.measureText(c2).width > cw - 110 && ln.length < 3) ln.push(w); else ln[ln.length - 1] = c2; }); g.restore();
+      ln.forEach((l2, k) => txt(g, l2, x + 88, y + 58 + k * 22, { fs: 18, w: 500, c: ZT.sub }));
+      txt(g, "Forrás: " + src, x + 88, y + ch - 12, { fs: 15, w: 600, c: "rgba(228,187,99,.75)" });
+    });
+    btn(g, VW / 2 - 200, VH - 70, 400, 56, "‹ Balaton-térkép", () => { VRS.page = "lake"; vrDraw(); }, { fs: 26 });
   }
   function pMap(g) {
     /* házvázlat: a csoport alaprajza (ha van) és a helyszínek pontjai méterben – rámutatva odaugrik */

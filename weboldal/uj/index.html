@@ -973,6 +973,10 @@ body { font: 500 18px/1.6 var(--body); }
 .zh-feats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 26px; color: #D9E7F4; font: 650 17px/1 var(--body); }
 .zh-feats span { display: inline-flex; align-items: center; gap: 9px; } .zh-feats svg { width: 22px; height: 22px; stroke: #E4BB63; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 700px) { .nav-logo img { height: 40px; } .nav-logo::after { display: none; } .zh-feats { display: none; } .sec-head .lead { font-size: 17px; } }
+
+/* Zephyr Magyar Motif: virágos elválasztó a szekciócímek alatt (finoman, a ChatGPT készletéből) */
+.sec-head h2::after { content: ""; display: block; width: 120px; height: 34px; margin: 12px 0 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%23D4A13A' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 24 H14 M34 24 H46'/%3E%3Cpath d='M24 29 V24'/%3E%3Cpath d='M24 24 C18 24 17 20 18 16 C21 17 23 19 24 21 C25 19 27 17 30 16 C31 20 30 24 24 24'/%3E%3Cpath d='M24 21 Q22 17 24 13 Q26 17 24 21'/%3E%3Cpath d='M17 29 C18 25 21 25 24 27 M31 29 C30 25 27 25 24 27'/%3E%3C/svg%3E") left center / 34px 34px no-repeat, linear-gradient(90deg, #D4A13A, rgba(212,161,58,0)) 40px 50% / 80px 2px no-repeat; opacity: .9; }
+.sec-dark .sec-head h2::after { opacity: 1; }
 </style>
 <style>
 /* foglalási ablak + tulajdonosi felület (a virtuális sétából) */
@@ -1590,6 +1594,11 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
   body.zx .map { left: 10px; width: 200px; }
   .zx-book { min-height: 56px; padding: 0 24px; font-size: 18px; }
 }
+
+/* magyar tulipán a betöltőképernyőn – egyszeri vonalrajzolás (csökkentett mozgásnál statikus) */
+.loader-motif { display: block; width: 58px; height: 58px; margin: 0 auto 10px; fill: none; stroke: #D4A13A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 120; stroke-dashoffset: 120; animation: zmDraw .9s ease-out .2s forwards; }
+@keyframes zmDraw { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .loader-motif { animation: none; stroke-dashoffset: 0; } }
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
