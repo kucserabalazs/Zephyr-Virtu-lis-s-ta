@@ -9901,7 +9901,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     btn(g, 290, yb, VW - 330, 80, B.sending ? "Küldés…" : (c.demo ? "Foglalás elküldése (bemutató mód)" : "Foglalás elküldése ✓"), async () => {
       if (B.sending) return; B.sending = true; B.err = ""; vrDraw();
       let r = null; try { r = await ZephyrBooking.vr.submit(bkQ(B), B.form); } catch (e) { r = { err: "Hiba történt a küldéskor – próbáld újra." }; } finally { B.sending = false; }
-      if (r && r.ok) { B.result = r; B.step = "done"; vrHaptic(null, .7, 60); try { sndNav(); } catch (e) {} }
+      if (r && r.ok) { B.result = r; B.step = "done"; vrHaptic(null, .7, 60); try { sndNav(); } catch (e) {} try { bxCelebrate(B); } catch (e) {} }
       else { B.err = (r && r.err) || "Hiba történt."; if (r && r.stale) { _bkReload(B); B.step = "date"; B.co = null; } else if (r && r.field) { B.field = r.field; B.errField = r.field; B.step = "data"; } }
       vrDraw(); vrPlace();
     }, { on: !B.sending, off: !!B.sending, fs: 32 });
@@ -9910,14 +9910,115 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
 
   /* 5. lépés – kész */
   function bkDone(g, B) {
-    const r = B.result || {}, c = bkCfg() || {};
-    txt(g, "⚓", VW / 2, 250, { a: "center", fs: 96 });
-    txt(g, r.demo ? "Így nézne ki a sikeres foglalás" : "Köszönjük! Foglalási kérésed megérkezett.", VW / 2, 360, { a: "center", fs: 42, w: 800, c: "#ffd166" });
-    txt(g, r.demo ? "Bemutató mód – a kérés nem lett elküldve." : "Foglalási azonosító: " + (r.ref || "–"), VW / 2, 425, { a: "center", fs: 34, w: 700 });
-    txt(g, `A napokat ideiglenesen lefoglaltuk. Hamarosan e-mailben visszaigazoljuk (${B.form.email || ""}),`, VW / 2, 500, { a: "center", fs: 26, w: 500 });
-    txt(g, "az előleg átutalásához szükséges adatokkal.", VW / 2, 536, { a: "center", fs: 26, w: 500 });
-    if (c.phone) txt(g, "Kérdés esetén: " + c.phone + " · " + (c.email || ""), VW / 2, 600, { a: "center", fs: 26, w: 600, c: "rgba(255,255,255,.8)" });
-    btn(g, VW / 2 - 300, VH - 140, 600, 96, "Vissza a sétához", () => { VRS.book = null; vrClose(); }, { on: 1, fs: 34 });
+    /* „HAJÓJEGY” (VR 2.0): a foglalási kérés adatai beszállókártyán, magyar tulipánnal – őszintén: a tulajdonos hagyja jóvá */
+    const r = B.result || {}, c = bkCfg() || {}, apts = (B.sel || []).map((id) => { const a = (c.apartments || []).find((q) => q.id === id); return a ? a.no + " · " + a.name : id; }).join(", ");
+    const x0 = 70, y0 = 140, W = VW - 140, H = 470;
+    rr(g, x0, y0, W, H, 30); const bg = g.createLinearGradient(x0, y0, x0 + W, y0 + H); bg.addColorStop(0, "#F7F2E6"); bg.addColorStop(1, "#EDE3CC"); g.fillStyle = bg; g.fill();
+    g.lineWidth = 3; g.strokeStyle = ZT.gold; g.stroke();
+    /* tépőél */
+    const cx = x0 + W * .7; g.save(); g.setLineDash([10, 10]); g.strokeStyle = "rgba(11,47,94,.35)"; g.lineWidth = 3; g.beginPath(); g.moveTo(cx, y0 + 24); g.lineTo(cx, y0 + H - 24); g.stroke(); g.restore();
+    [[cx, y0], [cx, y0 + H]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 22, 0, Math.PI * 2); g.fillStyle = "rgba(16,42,68,.97)"; g.fill(); });
+    zIcon(g, "sail", x0 + 56, y0 + 58, 56, ZT.navy, 2.4); txt(g, "ZEPHYR · HAJÓJEGY", x0 + 100, y0 + 50, { fs: 26, w: 800, c: "#9a7424" });
+    txt(g, r.demo ? "Így nézne ki a foglalási kérés" : "Foglalási kérésed úton van!", x0 + 40, y0 + 120, { fs: 44, w: 800, c: ZT.navy });
+    const row = (k, v, y) => { txt(g, k, x0 + 40, y, { fs: 22, w: 700, c: "#7a6a4a" }); txt(g, v, x0 + 40, y + 34, { fs: 32, w: 750, c: "#0B2F5E" }); };
+    row("ÉRKEZÉS", vHu(B.ci) + "  ·  15:00-tól", y0 + 180); row("TÁVOZÁS", vHu(B.co) + "  ·  10:00-ig", y0 + 262);
+    row("APARTMAN", apts || "–", y0 + 344); txt(g, `${vDiff(B.ci, B.co)} éj · ${B.adults} felnőtt${B.children ? " + " + B.children + " gyermek" : ""}`, x0 + 420, y0 + 214, { fs: 26, w: 650, c: "#40617A" });
+    txt(g, "AZONOSÍTÓ", cx + 40, y0 + 180, { fs: 22, w: 700, c: "#7a6a4a" }); txt(g, r.demo ? "BEMUTATÓ" : (r.ref || "–"), cx + 40, y0 + 216, { fs: 32, w: 800, c: ZT.navy });
+    zMotif(g, "tulipan", cx + (x0 + W - cx) / 2, y0 + 330, 120, "#B58A2E", .9);
+    txt(g, r.demo ? "Bemutató mód – a kérés nem lett elküldve." : `A tulajdonos hamarosan visszaigazolja e-mailben (${B.form.email || ""}) – addig a napokat fenntartjuk.`, VW / 2, y0 + H + 46, { a: "center", fs: 24, w: 600, c: ZT.text });
+    if (c.phone) txt(g, "Kérdés esetén: " + c.phone + " · " + (c.email || ""), VW / 2, y0 + H + 84, { a: "center", fs: 22, w: 500, c: ZT.sub });
+    btn(g, VW / 2 - 260, VH - 96, 520, 76, "Vissza a sétához", () => { VRS.book = null; vrClose(); }, { on: 1, fs: 32 });
+  }
+
+  /* ---------- ZEPHYR BOOKING EXPERIENCE – VR (2026. nov. 9., a tulajdonos: „a foglalás VR-ben legyen roppant látványos, felejthetetlen élmény”) ----------
+     • A „Melyik?” lépésnél a menüpanel fölött lebegő ÜVEGGÖMBÖK: mindegyikben az apartman VALÓDI 360°-os fotója – belenézhetsz, mint egy
+       hógömbbe. Rámutatva közelebb úszik és forog; csippentésre kiválasztod (arany gyűrű + pipa).
+     • A kérés elküldésekor a választott gömb odaúszik hozzád, kitágul és körülvesz – „beköltözöl” az apartmanba (valódi panoráma),
+       közben arany szikrák. Utána a panelen „hajójegy”. Őszintén: a kérést a tulajdonos hagyja jóvá. */
+  const BX_SCENE = { korvett: "korvett-nappali", dingi: "dingi-ulosarok", fregatt: "fregatt-nappali", kaloz: "kaloz-szoba", schooner: "schooner-nappali" };
+  const BX = { g: null, orbs: [], key: "", cel: null, tex: {} };
+  function bxTex(id) {
+    if (BX.tex[id]) return BX.tex[id];
+    const t = new THREE.TextureLoader().load("img/" + (BX_SCENE[id] || "korvett-nappali") + "-g.jpg"); t.colorSpace = THREE.SRGBColorSpace; return (BX.tex[id] = t);
+  }
+  function bxLabel(a, on, hov) {
+    const c = document.createElement("canvas"); c.width = 512; c.height = 150; const g = c.getContext("2d");
+    g.beginPath(); g.roundRect ? g.roundRect(6, 6, 500, 138, 40) : g.rect(6, 6, 500, 138); g.fillStyle = "rgba(7,24,44,.9)"; g.fill(); g.lineWidth = on || hov ? 5 : 2; g.strokeStyle = on ? ZT.gold : hov ? "#F0CC7A" : "rgba(221,232,242,.35)"; g.stroke();
+    g.fillStyle = on ? ZT.soft : "#fff"; g.font = ZT.font(750, 50); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText((on ? "✓ " : "") + a.no + " · " + a.name, 256, 54);
+    g.fillStyle = ZT.sub; g.font = ZT.font(600, 32); g.fillText(a.cap + " fő", 256, 108);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  }
+  function bxClear() { if (BX.g) { BX.orbs.forEach((o) => { if (o.hit) XRP.extra.delete(o.hit); if (o.lbl) o.lbl.material.map.dispose(); }); if (BX.g.parent) BX.g.parent.remove(BX.g); } BX.g = null; BX.orbs = []; BX.key = ""; }
+  function bxBuild(B) {
+    bxClear(); if (!VRS.panel) return;
+    const fr = bkFreeAptsNow(B); if (!fr.length) return;
+    BX.g = new THREE.Group(); BX.g.name = "bx-orbs"; sceneEl.object3D.add(BX.g);
+    const P = VRS.panel.object3D; P.updateMatrixWorld(true); const pc = P.getWorldPosition(new THREE.Vector3()), q = P.getWorldQuaternion(new THREE.Quaternion());
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(q); right.y = 0; right.normalize(); const fwd = new THREE.Vector3(0, 0, 1).applyQuaternion(q); fwd.y = 0; fwd.normalize();
+    const n = fr.length, R = .16;
+    fr.forEach((a, i) => {
+      const u = n === 1 ? 0 : (i / (n - 1) - .5), pos = pc.clone().addScaledVector(right, u * Math.min(1.25, .34 * n)).addScaledVector(fwd, Math.abs(u) * .25).add(new THREE.Vector3(0, .5 + .06 * Math.cos(u * Math.PI), 0));
+      const og = new THREE.Group(); og.position.copy(pos); BX.g.add(og);
+      const inner = new THREE.Mesh(new THREE.SphereGeometry(R, 40, 24), new THREE.MeshBasicMaterial({ map: bxTex(a.id), side: THREE.BackSide, transparent: true, opacity: .98 })); og.add(inner);
+      const shell = new THREE.Mesh(new THREE.SphereGeometry(R * 1.02, 40, 24), new THREE.MeshBasicMaterial({ color: 0xdfefff, transparent: true, opacity: .1, depthWrite: false })); og.add(shell);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(R * 1.08, .004, 8, 64), new THREE.MeshBasicMaterial({ color: 0xE4BB63, transparent: true, opacity: .55 })); ring.rotation.x = Math.PI / 2; og.add(ring);
+      const lbl = new THREE.Mesh(new THREE.PlaneGeometry(.26, .26 * 150 / 512), new THREE.MeshBasicMaterial({ map: bxLabel(a, B.sel.includes(a.id), false), transparent: true, depthWrite: false })); lbl.position.y = -R - .07; og.add(lbl);
+      const hit = new THREE.Mesh(new THREE.SphereGeometry(R * 1.35, 12, 8), new THREE.MeshBasicMaterial({ visible: false })); og.add(hit);
+      const o = { a, og, inner, ring, lbl, hit, base: pos.clone(), hot: 0, on: B.sel.includes(a.id), ph: Math.random() * 6 };
+      hit.userData.xr = { hover: (on) => { o.hov = on; o.lbl.material.map.dispose(); o.lbl.material.map = bxLabel(a, o.on, on); }, click: () => { const k = B.sel.indexOf(a.id); if (k >= 0) B.sel.splice(k, 1); else B.sel.push(a.id); B.err = ""; vrDraw(); try { sndNav(); } catch (e) {} } };
+      XRP.extra.add(hit); BX.orbs.push(o);
+    });
+    BX.key = B.ci + B.co + fr.map((a) => a.id).join(",");
+  }
+  function bxTick() {
+    const B = VRS.book, h = headPos(_bxH || (_bxH = new THREE.Vector3())), t = performance.now() / 1000;
+    if (BX.cel) return bxCelTick(h);
+    const want = inVR && VRS.panel && VRS.page === "book" && B && B.step === "apts";
+    if (!want) { if (BX.g) bxClear(); return; }
+    const key = B.ci + B.co + bkFreeAptsNow(B).map((a) => a.id).join(",");
+    if (!BX.g || BX.key !== key) bxBuild(B);
+    BX.orbs.forEach((o) => {
+      const on = B.sel.includes(o.a.id); if (on !== o.on) { o.on = on; o.lbl.material.map.dispose(); o.lbl.material.map = bxLabel(o.a, on, o.hov); }
+      o.hot += ((o.hov ? 1 : 0) - o.hot) * .15;
+      const toHead = h.clone().sub(o.base).normalize();
+      o.og.position.copy(o.base).addScaledVector(toHead, .12 * o.hot); o.og.position.y += Math.sin(t * 1.3 + o.ph) * .012;
+      o.og.scale.setScalar(1 + .25 * o.hot + (o.on ? .08 : 0));
+      o.inner.rotation.y += .002 + .006 * o.hot;
+      o.ring.material.color.set(o.on ? 0xE4BB63 : 0xdfe8f2); o.ring.material.opacity = o.on ? 1 : .45 + .4 * o.hot; o.ring.scale.setScalar(1 + (o.on ? .04 * Math.sin(t * 3) : 0));
+      o.lbl.lookAt(h);
+    });
+  }
+  let _bxH = null;
+  function bxCelebrate(B) {
+    if (!inVR || BX.cel || !B) return;
+    const id = (B.sel && B.sel[0]) || "korvett", sc = BX_SCENE[id] || "korvett-nappali";
+    let o = BX.orbs.find((q) => q.a.id === id);
+    if (!o) { const P = VRS.panel && VRS.panel.object3D; const pos = P ? P.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, .5, 0)) : headPos(new THREE.Vector3()).add(new THREE.Vector3(0, .3, -1));
+      if (!BX.g) { BX.g = new THREE.Group(); sceneEl.object3D.add(BX.g); }
+      const og = new THREE.Group(); og.position.copy(pos); BX.g.add(og); const inner = new THREE.Mesh(new THREE.SphereGeometry(.16, 48, 28), new THREE.MeshBasicMaterial({ map: bxTex(id), side: THREE.BackSide, transparent: true })); og.add(inner); o = { og, inner, a: { id } }; }
+    BX.orbs.forEach((q) => { if (q !== o) q.og.visible = false; if (q.hit) XRP.extra.delete(q.hit); });
+    if (o.lbl) o.lbl.visible = false; if (o.ring) o.ring.visible = false;
+    o.inner.material.depthTest = false; o.inner.renderOrder = 2000;
+    const N = 420, pos = new Float32Array(N * 3), g2 = new THREE.BufferGeometry(); g2.setAttribute("position", new THREE.BufferAttribute(pos, 3)); pos.fill(-999);
+    const c = document.createElement("canvas"); c.width = c.height = 64; const cg = c.getContext("2d"); const gr = cg.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, "rgba(255,240,200,1)"); gr.addColorStop(.35, "rgba(228,187,99,.9)"); gr.addColorStop(1, "rgba(212,161,58,0)"); cg.fillStyle = gr; cg.fillRect(0, 0, 64, 64);
+    const pm = new THREE.PointsMaterial({ size: .09, map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    const pts = new THREE.Points(g2, pm); pts.frustumCulled = false; sceneEl.object3D.add(pts);
+    BX.cel = { t0: performance.now(), o, sc, pts, pos, vel: [], N, bursts: 0, start: o.og.position.clone(), went: false };
+    try { sndNav(); } catch (e) {}
+  }
+  function bxCelTick(h) {
+    const C = BX.cel, t = (performance.now() - C.t0) / 1000, o = C.o;
+    if (t < 1.1) { const k = t / 1.1, e = k * k * (3 - 2 * k); o.og.position.lerpVectors(C.start, h, e); o.og.scale.setScalar(1 + e * 1.5); o.inner.rotation.y += .01; }
+    else if (t < 2.3) { const k = (t - 1.1) / 1.2, e = k * k; o.og.position.copy(h); o.og.scale.setScalar(2.5 + e * 60); }
+    else if (!C.went) { C.went = true; try { go(C.sc, false).then(() => { try { vrDraw(); } catch (e) {} }); } catch (e) {} }
+    if (t > 2.6) { const k = Math.min(1, (t - 2.6) / .9); o.inner.material.opacity = 1 - k; }
+    const hd = headDir(new THREE.Vector3()); hd.y = 0; if (hd.lengthSq() < 1e-6) hd.set(0, 0, -1); hd.normalize();
+    const want = Math.min(3, Math.floor((t - .9) / .55) + 1);
+    while (t > .9 && C.bursts < want) { const b = C.bursts++, side = new THREE.Vector3(-hd.z, 0, hd.x), ctr = h.clone().addScaledVector(hd, 3.2).addScaledVector(side, (b - 1) * 1.6).add(new THREE.Vector3(0, 1.2 + b * .2, 0));
+      for (let i = b * 140; i < (b + 1) * 140 && i < C.N; i++) { C.pos.set([ctr.x, ctr.y, ctr.z], i * 3); const a = Math.random() * Math.PI * 2, el = Math.acos(Math.random() * 2 - 1), sp = 1.4 + Math.random() * 1.2; C.vel[i] = new THREE.Vector3(Math.sin(el) * Math.cos(a) * sp, Math.cos(el) * sp + .6, Math.sin(el) * Math.sin(a) * sp); } }
+    for (let i = 0; i < C.N; i++) { const v = C.vel[i]; if (!v) continue; v.y -= .9 / 60; v.multiplyScalar(.985); C.pos[i * 3] += v.x / 60; C.pos[i * 3 + 1] += v.y / 60; C.pos[i * 3 + 2] += v.z / 60; }
+    C.pts.geometry.attributes.position.needsUpdate = true; C.pts.material.opacity = Math.max(0, 1 - Math.max(0, t - 3.4) / 1.6);
+    if (t > 5.2) { if (C.pts.parent) C.pts.parent.remove(C.pts); C.pts.geometry.dispose(); C.pts.material.dispose(); BX.cel = null; bxClear(); }
   }
 
   /* házirend / adatkezelés a VR-ben: a PDF előre elkészített oldalképei lapozhatóan */
@@ -10364,6 +10465,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (!XRP.on) return;
     try { vrnTick(); } catch (e) { console.warn('vrn', e); }
     try { lmTick(); } catch (e) { console.warn('lm', e); }
+    try { bxTick(); } catch (e) { if (!XRP.bxErr) { XRP.bxErr = 1; console.warn('bx', e); } }
     const r = sceneEl.renderer, frame = r.xr.getFrame && r.xr.getFrame(), ref = r.xr.getReferenceSpace && r.xr.getReferenceSpace();
     if (!frame || !ref) return;
     /* A kezek és a kontrollerek pozíciója a rig (a „játéktér”) koordinátáiban értendő – ugyanott, ahol az A-Frame a kézmodellt rajzolja.
@@ -11248,7 +11350,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
 
   /* ---------- Híd a „Virtuális világ” modulhoz (vilag.js – csak megnyitáskor töltődik be) ---------- */
-  window.ZephyrTour = { _t: { smPalm: () => smPalm(), SM, spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
+  window.ZephyrTour = { _t: { smPalm: () => smPalm(), SM, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
     get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
