@@ -1521,95 +1521,7 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
 @keyframes zmDraw { to { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) { .loader-motif { animation: none; stroke-dashoffset: 0; } }
 
-/* ===== ZEPHYR BOOKING 2.0 (2026. nov. 9., a ChatGPT-vel közös terv) – Nautical Horizon: Inter, nagyobb betűk, gyöngyház alap,
-   mélykék fejléc arany részletekkel, egyértelmű naptár-állapotok, „Foglalási kérelem” szóhasználat, jóváhagyásra váró állapot ===== */
-.zfb { --navy: #0B2F5E; --gold: #D4A13A; --ink: #102A44; --paper: #F7F9FC; --line: #D9E1EA; font-family: Inter, "Manrope", system-ui, sans-serif; }
-.zfb-card { border-radius: 22px; box-shadow: 0 30px 80px rgba(7,24,44,.45); border: 1px solid rgba(228,187,99,.35); }
-.zfb-hd { background: linear-gradient(135deg, #07182C, #0B2F5E 70%, #103e70); border-bottom: 2px solid #D4A13A; }
-.zfb-logo b { font: 800 22px/1 Inter, sans-serif; letter-spacing: .24em; }
-.zfb-steps li { font-size: 14px; } .zfb-steps li.on i { background: #D4A13A; color: #07182C; border-color: #D4A13A; } .zfb-steps li.done i { background: #2f8a5b; border-color: #2f8a5b; }
-.zfb-body { background: #F7F9FC; font-size: 17px; }
-.zfb-h { font: 780 28px/1.15 Inter, sans-serif; letter-spacing: -.02em; color: #0B2F5E; }
-.zfb-rules { display: flex; flex-wrap: wrap; gap: 8px 10px; list-style: none; padding: 0; margin: 4px 0 14px; }
-.zfb-rules li { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; border-radius: 10px; background: #fff; border: 1px solid #D9E1EA; font: 650 14.5px/1 Inter, sans-serif; color: #0B2F5E; }
-.zfb-rules svg { width: 18px; height: 18px; fill: none; stroke: #B58A2E; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.zfb-d { font-family: Inter, sans-serif !important; border-radius: 10px !important; }
-.zfb-btn { border-radius: 14px !important; font: 750 18px/1.1 Inter, sans-serif !important; min-height: 56px; }
-.zfb-btn:not(.ghost) { background: linear-gradient(180deg, #E8C26C, #D4A13A) !important; color: #07182C !important; box-shadow: 0 8px 22px rgba(212,161,58,.35) !important; }
-.zfb-btn.ghost { border: 2px solid #0B2F5E !important; color: #0B2F5E !important; background: #fff !important; }
-.zfb-apt b { font-family: Inter, sans-serif; letter-spacing: -.01em; }
-.zfb-status { display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: #FFF6E0; border: 1px solid #E4BB63; color: #5c4510; font-weight: 600; }
-.zfb-status i { width: 12px; height: 12px; border-radius: 50%; background: #D4A13A; box-shadow: 0 0 0 4px rgba(212,161,58,.25); animation: zfbPulse 1.6s ease-in-out infinite; }
-@keyframes zfbPulse { 50% { box-shadow: 0 0 0 8px rgba(212,161,58,0); } }
-@media (max-width: 700px) { .zfb-h { font-size: 24px; } .zfb-rules li { font-size: 13.5px; padding: 7px 10px; } }
-
-/* ===== BOOKING 2.0 – lista fotókkal, nézetváltó, rugalmas ±3 nap (nov. 9.) ===== */
-.zbl-hd { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-.zbl-tip { margin: 4px 0 0; color: #4a5a6c; font-size: 15px; max-width: 60ch; }
-.zbv { display: inline-flex; padding: 4px; border-radius: 999px; background: #EAF0F6; border: 1px solid #D5DFEA; }
-.zbv button { all: unset; cursor: pointer; padding: 9px 16px; border-radius: 999px; font: 650 14px/1 Inter, Manrope, sans-serif; color: #0B2F5E; }
-.zbv button[aria-selected="true"] { background: #0B2F5E; color: #fff; box-shadow: 0 0 0 2px #D4A13A; }
-.zbv button:focus-visible { outline: 3px solid #D4A13A; outline-offset: 2px; }
-.zbl { margin: 20px 0 6px; }
-.zbl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
-.zbl-c { display: flex; flex-direction: column; border-radius: 18px; background: #fff; border: 2px solid #E1E8F0; overflow: hidden; box-shadow: 0 8px 22px rgba(11,47,94,.08); transition: border-color .2s, box-shadow .2s, transform .2s; }
-.zbl-c:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(11,47,94,.14); }
-.zbl-c.sel { border-color: #D4A13A; box-shadow: 0 0 0 3px rgba(212,161,58,.35), 0 14px 30px rgba(11,47,94,.14); }
-.zbl-c.down { opacity: .62; filter: saturate(.4); }
-.zbl-main { all: unset; cursor: pointer; display: block; }
-.zbl-main:focus-visible { outline: 3px solid #D4A13A; outline-offset: -3px; }
-.zbl-ph { position: relative; display: block; aspect-ratio: 16 / 10; background: #0B2F5E center / 300% auto no-repeat; }
-.zbl-ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,24,44,0) 55%, rgba(7,24,44,.45)); }
-.zbl-no { position: absolute; left: 10px; top: 10px; z-index: 1; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: var(--ac); font: 800 17px/1 Inter, sans-serif; font-style: normal; box-shadow: 0 0 0 3px var(--ac); }
-.zbl-tag { position: absolute; right: 10px; bottom: 10px; z-index: 1; padding: 6px 10px; border-radius: 999px; background: rgba(7,24,44,.82); color: #fff; font: 650 13px/1.1 Inter, sans-serif; font-style: normal; }
-.zbl-tag.ok { background: #D4A13A; color: #07182C; }
-.zbl-t { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 4px; }
-.zbl-nm { font: 750 21px/1.15 Inter, Manrope, sans-serif; color: #0B2F5E; }
-.zbl-cap { display: flex; align-items: center; gap: 6px; color: #4a5a6c; font-size: 15px; }
-.zbl-cap svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; }
-.zbl-pr { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
-.zbl-pr b { font: 800 20px/1.1 Inter, sans-serif; color: #07182C; }
-.zbl-pr small { color: #5b6b7c; font-size: 13px; }
-.zbl-c.priv { background: #F4F6F9; border-style: dashed; box-shadow: none; }
-.zbl-c.priv:hover { transform: none; box-shadow: none; }
-.zbl-ph-priv { display: grid; place-items: center; background: linear-gradient(160deg, #102A44, #07182C) !important; }
-.zbl-lock { width: 64px; height: 64px; fill: none; stroke: #E4BB63; stroke-width: 2.4; stroke-linecap: round; }
-.zbl-c.priv .zbl-pr small { font-size: 14px; line-height: 1.35; color: #4a5a6c; }
-.zbl-act { display: flex; gap: 8px; padding: 8px 14px 14px; margin-top: auto; }
-.zbl-act button { all: unset; box-sizing: border-box; cursor: pointer; flex: 1; text-align: center; min-height: 46px; padding: 10px 8px; border-radius: 12px; font: 650 15px/1.15 Inter, sans-serif; }
-.zbl-act .zbl-360 { background: #EAF0F6; color: #0B2F5E; }
-.zbl-act .zbl-360:hover { background: #dce6f1; }
-.zbl-act .zbl-pick { background: #0B2F5E; color: #fff; box-shadow: inset 0 0 0 2px #D4A13A; }
-.zbl-act .zbl-pick[aria-pressed="true"] { background: #D4A13A; color: #07182C; }
-.zbl-act .zbl-pick.ghost { background: #fff; color: #0B2F5E; box-shadow: inset 0 0 0 2px #C9D6E4; }
-.zbl-act button:focus-visible { outline: 3px solid #D4A13A; outline-offset: 2px; }
-.zbf { margin: 4px 0 6px; display: flex; flex-direction: column; gap: 6px; }
-.zbf-h b { display: block; font: 750 15px/1.2 Inter, sans-serif; color: #0B2F5E; }
-.zbf-h small { color: #5b6b7c; font-size: 13px; }
-.zbf-o { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 0 8px; padding: 8px 10px; border-radius: 12px; background: #F4F7FB; border: 1.5px solid #E1E8F0; }
-.zbf-o:hover:not([disabled]) { border-color: #D4A13A; background: #fffaf0; }
-.zbf-o:focus-visible { outline: 3px solid #D4A13A; outline-offset: 2px; }
-.zbf-d { font: 650 14px/1.25 Inter, sans-serif; color: #07182C; }
-.zbf-p { font: 800 14px/1.25 Inter, sans-serif; color: #0B2F5E; text-align: right; }
-.zbf-o small { grid-column: 1 / 3; font-size: 12.5px; color: #5b6b7c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.zbf-o.cur { background: #0B2F5E; border-color: #0B2F5E; cursor: default; }
-.zbf-o.cur .zbf-d, .zbf-o.cur .zbf-p { color: #fff; } .zbf-o.cur small { color: #E4BB63; }
-.zbf-o.cheap:not(.cur) { border-color: #D4A13A; } .zbf-o.cheap:not(.cur) small { color: #8a5d0c; font-weight: 700; }
-.zbf-o.na { opacity: .55; cursor: default; } .zbf-o.na .zbf-p { color: #8a95a3; font-weight: 600; }
-.zfl-lake .zbl-hd { margin-bottom: 4px; } .zfl-lake .zbv { background: rgba(255,255,255,.7); }
-@media (max-width: 600px) { .zbl-grid { grid-template-columns: 1fr; } .zbl-nm { font-size: 20px; } .zbv button { padding: 9px 12px; } }
-/* olvashatóság (Gemini + ChatGPT átnézés, nov. 9.: a tulajdonos és sok vendég gyengén lát): nagyobb naptárbetűk, sötétebb jelmagyarázat */
-.zfb-wd span { font-size: 13px !important; color: #4a5a6c !important; }
-.zfb-d b { font-size: 17px !important; } .zfb-d small { font-size: 12px !important; color: #1d6b33 !important; }
-.zfb-legend { font-size: 15px !important; color: #33424f !important; gap: 10px 18px !important; }
-.zfb-legend i { width: 16px !important; height: 16px !important; }
-.zfb-rules li { font-size: 15px; }
-@media (max-width: 600px) { .zfb-d b { font-size: 18px !important; } .zfb-d small { font-size: 11.5px !important; } }
-/* ChatGPT-átnézés (nov. 9.) P1: nagyobb apró feliratok és bezárógombok */
 .thumb span { font-size: 14px !important; }
-.zfl-pr small { font-size: 13px !important; }
-.zfb-x { width: 48px !important; height: 48px !important; font-size: 30px !important; }
-.zad-st, .zad-tag, .zad-tabs button em { font-size: 13px !important; }
 /* ===== ESZKÖZJEGYZÉK 2.0 – Nautical Horizon ===== */
 .zi2 { position: fixed; inset: 0; z-index: 2147482990; display: grid; place-items: center; font-family: Inter, system-ui, sans-serif; opacity: 0; transition: opacity .3s; }
 .zi2.on { opacity: 1; }
@@ -3866,7 +3778,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   /* ---------- állapot ---------- */
   let el = null, cfg = null, st = null;
   /* menet: 1. időpont és létszám (a vendég szabadsága fix) → 2. az abban az időszakban szabad apartmanok → 3. adatok → 4. kész */
-  function reset(apt) { st = { step: 1, pre: apt || null, apt: null, apts: [], maps: {}, days: null, map: {}, ci: null, co: null, adults: 2, children: 0, month: 0, form: {}, result: null, loading: false, err: "", view: (() => { try { return localStorage.getItem("zephyr-bk-view") || "list"; } catch (e) { return "list"; } })() }; }
+  function reset(apt) { st = { step: 1, pre: apt || null, apt: null, apts: [], maps: {}, days: null, map: {}, ci: null, co: null, adults: 2, children: 0, month: 0, form: {}, result: null, loading: false, err: "" }; }
 
   /* visszalépés: bármelyik lépésből vissza oda, ahonnan a foglalást megnyitották (séta, játék, beállítások, kezdőoldal) */
   let backTo = null, histPushed = false, ignorePop = false;
@@ -4007,7 +3919,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   }
   function paint(html) { el.querySelector(".zfb-body").innerHTML = html; }
   function steps() {
-    const names = ["Időpont és apartman", "Adatok", "Kérelem"], cur = st.step <= 2 ? 1 : st.step - 1;   /* belső lépések: 1 (időpont + apartmanok a tavon), 3 adatok, 4 kész */
+    const names = ["Időpont és apartman", "Adatok", "Kész"], cur = st.step <= 2 ? 1 : st.step - 1;   /* belső lépések: 1 (időpont + apartmanok a tavon), 3 adatok, 4 kész */
     el.querySelector(".zfb-steps").innerHTML = names.map((n, i) => `<li class="${cur === i + 1 ? "on" : cur > i + 1 ? "done" : ""}"><i>${cur > i + 1 ? "✓" : i + 1}</i><span>${n}</span></li>`).join("");
   }
   const apt = () => cfg.apartments.find((a) => a.id === st.apt);
@@ -4055,46 +3967,6 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     }
     return null;
   }
-  /* ---------- ZEPHYR BOOKING 2.0 okos funkciói (nov. 9., a ChatGPT-vel közös UX-terv szerint) ----------
-     bestFor: egy időszakra a létszámhoz illő legkedvezőbb megoldás (egy apartman, vagy ha egy nem elég, a legolcsóbb kombináció);
-     flexOpts: rugalmas dátum ±3 nap, azonos éjszakaszámmal, a TELJES ár összevetésével. */
-  function priceFor(id, ci, co) { let n = 0; for (let d = ci; d < co; d = addD(d, 1)) n += ((st.maps[id] || {})[d] || {}).p || 0; return n; }
-  function bestFor(ci, co) {
-    const fa = freeApts(ci, co).filter((a) => !st.pre || a.id === st.pre), nd = st.adults + st.children; let best = null;
-    const N = fa.length;
-    for (let m = 1; m < (1 << N); m++) {
-      const as = fa.filter((_, i) => m & (1 << i)); if (as.length > Math.max(1, st.adults)) continue;
-      const cap = as.reduce((c, a) => c + a.cap, 0); if (cap < nd) continue;
-      const tot = as.reduce((c, a) => c + priceFor(a.id, ci, co), 0);
-      if (!best || as.length < best.as.length || (as.length === best.as.length && tot < best.tot)) best = { as, tot };
-    }
-    return best;
-  }
-  function flexOpts() {
-    if (!st.ci || !st.co) return [];
-    const n = diff(st.ci, st.co), min = addD(cfg.today, cfg.lead_days || 0), out = [];
-    for (let k = -3; k <= 3; k++) {
-      const ci = addD(st.ci, k), co = addD(ci, n); if (ci < min) continue;
-      const b = bestFor(ci, co); out.push({ k, ci, co, b });
-    }
-    const ok = out.filter((o) => o.b), lo = ok.length ? Math.min(...ok.map((o) => o.b.tot)) : 0;
-    const cur = out.find((o) => o.k === 0), ct = cur && cur.b ? cur.b.tot : Infinity;
-    out.forEach((o) => { o.cheap = !!o.b && o.k !== 0 && o.b.tot === lo && lo < ct; });
-    return out;
-  }
-  function flexHtml() {
-    const fo = flexOpts(); if (fo.length < 2) return "";
-    const c0 = fo.find((o) => o.k === 0), ct0 = c0 && c0.b ? c0.b.tot : 0;
-    const sh = (s) => { const d = pd(s); return HU_M[d.getMonth()].slice(0, 3) + ". " + d.getDate() + "."; };
-    return `<div class="zbf"><div class="zbf-h"><b>Rugalmas dátum · ±3 nap</b><small>${diff(st.ci, st.co)} éjszaka, teljes szállásdíj</small></div>
-      ${fo.map((o) => `<button type="button" class="zbf-o${o.k === 0 ? " cur" : ""}${o.b ? "" : " na"}${o.cheap ? " cheap" : ""}" ${o.b && o.k ? `data-near="${o.ci}|${o.co}"` : "disabled"}>
-        <span class="zbf-d">${sh(o.ci)} – ${sh(o.co)}</span><span class="zbf-p">${o.b ? money(o.b.tot) : "nincs elég hely"}</span>
-        <small>${o.k === 0 ? "a választott időszak" : o.cheap ? (ct0 ? "★ " + money(ct0 - o.b.tot) + "-tal olcsóbb" : "★ legkedvezőbb") : o.b ? o.b.as.map((a) => esc(a.name)).join(" + ") : ""}</small></button>`).join("")}</div>`;
-  }
-  /* valódi szobafotó a választáshoz (a séta 360°-os képeiből), és átjárás a sétába */
-  const BK_PHOTO = { korvett: "korvett-nappali", dingi: "dingi-ulosarok", fregatt: "fregatt-nappali", kaloz: "kaloz-szoba", schooner: "schooner-nappali" };
-  const BK_POS = { kaloz: "15% 50%" };
-  const bkImg = () => (location.pathname.indexOf("/virtualis-seta") >= 0 ? "img/" : "../virtualis-seta/img/");
   /* létszám elosztása: felnőttek, majd gyermekek körforgásban a szabad helyekre */
   function distrib() {
     const as = selApts(), out = as.map((a) => ({ apt: a.id, a, adults: 0, children: 0 }));
@@ -4431,25 +4303,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
         <span class="zfl-lab"><span class="zfl-nm">${esc(a.name)}</span><span class="zfl-cap">legfeljebb ${a.cap} fő</span><span class="zfl-pr">${price}</span><span class="zfl-st">${on ? "✓ Kiválasztva" : s2.down ? esc(s2.why) + " · naptár ›" : dated ? (s2.why ? esc(s2.why) : "Szabad · belépés ›") : "Naptár, belépés ›"}</span></span>
       </button>`; }).join("");
     const kad = cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zfl off" style="--ac:#f08a24" title="A Kadett saját használatú, nem foglalható"><span class="zfl-priv">Privát</span><span class="zfl-boat"><span class="zfl-bob">${shipArt("kadett", "#f08a24", 6)}</span></span><span class="zfl-wave"></span><span class="zfl-lab"><span class="zfl-nm">Kadett</span><span class="zfl-cap">legfeljebb 4 fő</span><span class="zfl-st">Privát · nem foglalható</span></span></div>`;
-    const tog = `<div class="zbv" role="tablist" aria-label="Nézet"><button type="button" role="tab" data-view="list" aria-selected="${st.view !== "ship"}">Lista, fotókkal</button><button type="button" role="tab" data-view="ship" aria-selected="${st.view === "ship"}">Hajós nézet</button></div>`;
-    if (st.view !== "ship") {
-      /* LISTA (alapértelmezett, a ChatGPT-vel közös terv szerint): valódi szobafotó, nagy név, létszám, a választott időszak teljes ára, állapot */
-      const order = cfg.apartments.slice().sort((x, y) => (dated ? (aptState(x).down ? 1 : 0) - (aptState(y).down ? 1 : 0) : 0));
-      const cards = order.map((a) => { const s2 = aptState(a), on = st.apts.includes(a.id), ph = BK_PHOTO[a.id];
-        const price = dated && !s2.down ? `<b>${money(aptTotal(a.id))}</b><small>${n} éjszaka</small>` : `<b>${money(a.price)}-tól</b><small>/ éj</small>`;
-        return `<div class="zbl-c${on ? " sel" : ""}${s2.down && dated ? " down" : ""}" style="--ac:${a.color}">
-          <button type="button" class="zbl-main" data-float="${a.id}" data-down="${s2.down ? 1 : ""}" aria-label="${esc(a.name)} – naptár és részletek">
-            <span class="zbl-ph"${ph ? ` style="background-image:url('${bkImg()}${ph}-g.jpg')${BK_POS[a.id] ? ";background-position:" + BK_POS[a.id] : ""}"` : ""}><i class="zbl-no">${a.no}</i>${s2.down && dated ? `<em class="zbl-tag">${esc(s2.why)}</em>` : on ? `<em class="zbl-tag ok">✓ Kiválasztva</em>` : ""}</span>
-            <span class="zbl-t"><b class="zbl-nm">${esc(a.name)}</b><span class="zbl-cap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.9.2 5 2.4 5 5.8"/></svg>legfeljebb ${a.cap} fő</span><span class="zbl-pr">${price}</span></span></button>
-          <div class="zbl-act">${ph ? `<button type="button" class="zbl-360" data-pano="${ph}">Megnézem 360°-ban</button>` : ""}${!s2.down && dated ? `<button type="button" class="zbl-pick" data-float="${a.id}" data-pick="1" aria-pressed="${on}">${on ? "✓ Kiválasztva" : "Kiválasztom"}</button>` : `<button type="button" class="zbl-pick ghost" data-float="${a.id}">${dated ? "Naptár ›" : "Szabad napok ›"}</button>`}</div></div>`; }).join("");
-      return `<section class="zbl"><div class="zbl-hd"><div><h3 class="zfl-h">Apartmanjaink</h3><p class="zbl-tip">${dated ? "Felül azok, amelyek erre az időszakra szabadok és elfértek bennük. Nagyobb társaság több apartmant is kijelölhet." : "Add meg az időpontot – utána a teljes árat látod. Egy kártyára koppintva az apartman saját naptára nyílik."}</p></div>${tog}</div>
-        <div class="zbl-grid">${cards}${cfg.apartments.some((a) => a.id === "kadett") ? "" : `<div class="zbl-c priv" style="--ac:#f08a24" aria-disabled="true" title="A Kadett saját használatú – nem foglalható, nem látogatható">
-          <span class="zbl-ph zbl-ph-priv"><i class="zbl-no">6</i><svg class="zbl-lock" viewBox="0 0 48 48" aria-hidden="true"><path d="M15 22v-6a9 9 0 0 1 18 0v6"/><rect x="11" y="22" width="26" height="19" rx="4"/><circle cx="24" cy="31" r="2.6"/></svg><em class="zbl-tag">Privát</em></span>
-          <span class="zbl-t"><b class="zbl-nm">Kadett</b><span class="zbl-cap">Hátsó, emelet · legfeljebb 4 fő</span><span class="zbl-pr"><small>Saját használatú lakás – nem foglalható, és a sétában sem látogatható.</small></span></span></div>`}</div></section>
-      <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · ${capTotal()} férőhely / ${need()} fő${err ? `<br><small class="zfb-selerr">${esc(err)}</small>` : ""}` : dated ? "Jelölj ki egy vagy több apartmant" : "Előbb add meg az időpontot"}</span><button type="button" class="zfb-btn" data-next="3" ${!sel.length || err ? "disabled" : ""}>Tovább az adatokhoz ›</button></div>
-      <button type="button" class="zfb-apt-link" data-owner="1">Tulajdonosi belépés ›</button>`;
-    }
-    return `<section class="zfl-lake"><div class="zbl-hd"><h3 class="zfl-h">Apartmanjaink a tavon</h3>${tog}</div><p class="zfl-tip">${dated ? "A felszínen maradtak szabadok erre az időszakra. Koppints egy hajóra, és belépsz az apartmanba; a kis karikával többet is kijelölhetsz egy foglaláshoz." : "Koppints egy hajóra: belépsz az apartmanba, és látod a saját naptárát, szabad napjait."}</p>
+    return `<section class="zfl-lake"><h3 class="zfl-h">Apartmanjaink a tavon</h3><p class="zfl-tip">${dated ? "A felszínen maradtak szabadok erre az időszakra. Koppints egy hajóra, és belépsz az apartmanba; a kis karikával többet is kijelölhetsz egy foglaláshoz." : "Koppints egy hajóra: belépsz az apartmanba, és látod a saját naptárát, szabad napjait."}</p>
       <div class="zfl-grid">${flo}${kad}</div></section>
       <div class="zfb-selbar${sel.length ? " on" : ""}"><span>${sel.length ? `<b>${sel.length} apartman</b> · ${sel.map((a) => esc(a.name)).join(" + ")} · ${capTotal()} férőhely / ${need()} fő${err ? `<br><small class="zfb-selerr">${esc(err)}</small>` : ""}` : dated ? "Válassz egy vagy több apartmant a tavon" : "Előbb add meg az időpontot"}</span><button type="button" class="zfb-btn" data-next="3" ${!sel.length || err ? "disabled" : ""}>Tovább az adatokhoz ›</button></div>
       <button type="button" class="zfb-apt-link" data-owner="1">Tulajdonosi belépés ›</button>`;
@@ -4504,8 +4358,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     return demoNote() + `<div class="zfb-cal-wrap">
       <div class="zfb-cal">
         <h2 class="zfb-h">Mikor jönnétek, hányan?</h2>
-        <ul class="zfb-rules" aria-label="Fontos tudnivalók"><li><svg viewBox="0 0 24 24"><path d="M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18"/></svg>Érkezés 15:00-tól</li><li><svg viewBox="0 0 24 24"><path d="M10 17l-5-5 5-5M5 12h11M14 4h5v16h-5"/></svg>Távozás 10:00-ig</li><li><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>SZÉP-kártya</li><li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Minden kérést a tulajdonos hagy jóvá</li></ul>
-        <p class="zfb-multi-tip">${pa ? `A(z) <b>${esc(pa.name)}</b> apartman szabad napjait látod. <button type="button" class="zfb-link" data-allapt="1">összes apartman naptára</button>` : "Add meg a szabadságod napjait és a létszámot – lent rögtön látod, melyik apartman szabad, elfértek-e benne, és mennyibe kerül."}</p>
+        <p class="zfb-multi-tip">${pa ? `A(z) <b>${esc(pa.name)}</b> apartman szabad napjait látod. <button type="button" class="zfb-link" data-allapt="1">összes apartman naptára</button>` : "Add meg a szabadságod napjait és a létszámot – lent a tavon csak azok az apartmanok maradnak a víz felszínén, amelyek akkor szabadok és elfértek bennük."}</p>
         <div class="zfb-mnav"><button type="button" data-m="-1" ${st.month <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><span>Válaszd ki az érkezés, majd a távozás napját</span><button type="button" data-m="1" ${st.month >= maxMonth ? "disabled" : ""} aria-label="Következő hónap">›</button></div>
         <div class="zfb-months">${months.join("")}</div>
         <div class="zfb-legend"><span><i class="lf"></i>${pa ? "szabad (ár / éj, ezer Ft)" : "van szabad apartman (legkedvezőbb ár / éj, ezer Ft)"}</span><span><i class="lb"></i>${pa ? "foglalt" : "minden apartman foglalt"}</span><span><i class="lo"></i>távozási nap – ${esc(cfg.checkin || "15:00")}-tól szabad</span><span><i class="ls"></i>kiválasztva</span></div>
@@ -4515,7 +4368,6 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
         ${stepper("adults", st.adults, 1, cap - st.children, "Felnőtt", "18 év felett")}
         ${stepper("children", st.children, 0, cap - st.adults, "Gyermek", "18 év alatt")}
         ${err ? `<p class="zfb-tip">${esc(err)}</p>${near ? `<button type="button" class="zfb-near" data-near="${near.ci}|${near.co}">Legközelebbi szabad időszak: <b>${huDate(near.ci)} – ${huDate(near.co)}</b> ›</button>` : ""}` : `<p class="zfb-ok">✓ ${fa.length} apartman szabad erre az időszakra</p>`}
-        ${st.ci && st.co ? flexHtml() : ""}
         ${st.ci ? `<button type="button" class="zfb-link" data-clear="1">dátumok törlése</button>` : ""}
       </aside></div>` + lakeHtml();
   }
@@ -4570,10 +4422,9 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     const r = st.result, q = quote(), a = apt();
     return `<div class="zfb-done">
       <div class="zfb-anchor" aria-hidden="true"><svg viewBox="0 0 220 120"><circle cx="180" cy="26" r="12" fill="#fff3c0"/><circle cx="180" cy="26" r="20" fill="#ffd978" opacity=".35"/><g class="dw" fill="none" stroke="#fff" stroke-width="1.6" opacity=".5"><path d="M-20 80 q 5 -3 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0"/><path d="M-20 96 q 5 -3 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0 t 10 0"/></g><g class="ds"><path d="M24 30v42" stroke="#e8edf2" stroke-width="1.6"/><path d="M25.5 32q14 14 15 38h-15z" fill="#fff"/><path d="M22.5 36q-11 12-12 34h12z" fill="#e5262f"/><path d="M4 72h42l-5 7H10z" fill="#fff"/><path d="M8 75h34" stroke="#e5262f" stroke-width="1.4"/><path d="M24 30l7 2-7 2z" fill="#e5262f"/></g><g class="dp"><path d="M20 0 l4 2 l-4 2 z" fill="#e5262f"/><path d="M37 0 l4 2 l-4 2 z" fill="#f2b233"/><path d="M54 0 l4 2 l-4 2 z" fill="#1f5fa8"/><path d="M71 0 l4 2 l-4 2 z" fill="#3fb37f"/><path d="M88 0 l4 2 l-4 2 z" fill="#e5262f"/><path d="M105 0 l4 2 l-4 2 z" fill="#f2b233"/><path d="M122 0 l4 2 l-4 2 z" fill="#1f5fa8"/><path d="M139 0 l4 2 l-4 2 z" fill="#3fb37f"/><path d="M156 0 l4 2 l-4 2 z" fill="#e5262f"/><path d="M173 0 l4 2 l-4 2 z" fill="#f2b233"/><path d="M190 0 l4 2 l-4 2 z" fill="#1f5fa8"/><path d="M207 0 l4 2 l-4 2 z" fill="#3fb37f"/></g></svg></div>
-      <h2>${cfg.demo ? "Így nézne ki az elküldött kérelem" : "Foglalási kérelmedet megkaptuk!"}</h2>
-      <p class="zfb-status"><i></i>Állapot: <b>jóváhagyásra vár</b> – a tulajdonos ellenőrzi, és e-mailben értesít a döntésről.</p>
+      <h2>${cfg.demo ? "Így nézne ki a sikeres foglalás" : "Köszönjük! Foglalási kérését megkaptuk."}</h2>
       ${cfg.demo ? `<p class="zfb-demo">Bemutató mód – a kérés nem lett elküldve.</p>` : `<p>Foglalási azonosító: <b>${esc(r.ref)}</b></p>`}
-      <p>A kiválasztott napokat addig ideiglenesen fenntartjuk. A visszaigazolást (az előleg átutalásához szükséges adatokkal) ide küldjük: <b>${esc(st.form.email)}</b>.</p>
+      <p>A kiválasztott napokat ideiglenesen lefoglaltuk. Hamarosan ellenőrizzük, és e-mailben (<b>${esc(st.form.email)}</b>) visszaigazoljuk az előleg átutalásához szükséges adatokkal.</p>
       <div class="zfb-done-sum">${chips(huDate(st.ci) + " – " + huDate(st.co), false)}${breakdown(q)}</div>
       <p class="zfb-fine">Kérdése van? Hívjon minket: <a href="tel:${esc(cfg.phone.replace(/\s/g, ""))}">${esc(cfg.phone)}</a> · <a href="mailto:${esc(cfg.email)}">${esc(cfg.email)}</a></p>
       <button type="button" class="zfb-btn" data-close="1">Bezárás</button></div>`;
@@ -4600,8 +4451,6 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     if (b.dataset.allapt) { st.pre = null; buildMap(); return render(); }
     if (b.dataset.lake) return toLake();
     if (b.dataset.goapt) return enterApt(b.dataset.goapt);
-    if (b.dataset.view) { st.view = b.dataset.view; try { localStorage.setItem("zephyr-bk-view", st.view); } catch (e2) {} return render(); }
-    if (b.dataset.pano) { const sc = b.dataset.pano; if (window.ZephyrTour && ZephyrTour.goScene) { close("noret"); setTimeout(() => ZephyrTour.goScene(sc), 60); } else location.href = "../virtualis-seta/?honnan=foglalas#" + sc; return; }
     if (b.dataset.float && !e.target.closest("[data-pick]")) return enterApt(b.dataset.float);
     if (b.dataset.float) {
       const id = b.dataset.float, dated = st.ci && st.co, down = !!b.dataset.down;
@@ -4927,7 +4776,7 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
       ${txt("season_from", "Szezon kezdete (hó-nap)", "05-15")}${txt("season_to", "Szezon vége (hó-nap)", "10-15")}
       ${num("min_nights", "Legalább", "éj", 1, 60)}${num("max_nights", "Legfeljebb", "éj", 1, 120)}
       ${num("lead_days", "Legkorábban érkezés előtt", "nappal", 0, 60)}${num("horizon_days", "Előre foglalható", "napra", 30, 420)}
-      ${txt("checkin", "Érkezés ettől", "15:00")}${txt("checkout", "Távozás eddig", "10:00")}
+      ${txt("checkin", "Érkezés ettől", "14:00")}${txt("checkout", "Távozás eddig", "10:00")}
       ${num("tax", "Idegenforgalmi adó / fő / éj", "Ft", 0, 100000)}${num("deposit_pct", "Előleg", "%", 0, 100)}
       ${num("pending_days", "Függő kérés lejár", "nap után", 1, 14)}${num("pay_days", "Utalási határidő", "nap", 1, 30)}
       </div></section>`;
