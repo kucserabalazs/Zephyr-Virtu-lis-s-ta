@@ -3086,7 +3086,7 @@ const SCENES = {
   "strand-lepcso":  { g: "strand", n: "Strand · lépcső a vízbe", s: .25, m: [79.6, 122.9], l: [], wl: [["strand-pallo", .25, .6, "Fel a pallóra"], ["strand-viz", .98, .6, "Úszás a nyílt víz felé"]] },
   "strand-viz":     { g: "strand", n: "Fürdés a nádas között", s: .27, m: [91.1, 121.7], l: [], wl: [["strand-lepcso", .73, .6, "Lépcső"], ["steg-viz", .26, .54, "Napozóstég", -45]] },
   "steg-viz":       { g: "strand", n: "Napozóstég a vízről", s: .7, m: [99.8, 115.5], l: [], wl: [["steg", .77, .62, "Fel a stégre"], ["strand-viz", .2, .62, "Strand"]] },
-  "steg":           { g: "strand", n: "Napozóstég", s: .6, m: [103.5, 111.9], l: [["utca", .62, .64, "Dimenziókapu az utcára", 0, "zephyr", "home"]], wl: [["steg-viz", .28, .66, "Le a vízbe"]] },
+  "steg":           { g: "strand", n: "Napozóstég", s: .6, m: [103.5, 111.9], l: [["utca", .1, .62, "Vissza a házhoz", 0, "zephyr", "home"]], wl: [["steg-viz", .28, .66, "Le a vízbe"]] },
   "kapu":           { g: "haz", n: "Kapu", s: .331, m: [1.5, 26.75], t: [[.52, .49, "Kerti csap"]], l: [["oldal-bejaro", .268, .563, "Apartmanok, parkoló, grill, SUP, kerékpár", 0, "combo:bed,parking,grill,sup,bike"], ["utca", .752, .599, "Kilépés az utcára", 0, "exit"], ["korvett-terasz", .427, .554, "Korvett Apartman terasz", -45, "apt1"]] },
   "oldal-bejaro":   { g: "haz", n: "A lépcsőháznál", s: .362, m: [1.5, 18.9], fov: 1.2,
                       sign: [.355, .589, [["hatso-lepcso", "Kert és parkoló", 0, ["parking", "grill", "sup", "bike"]], ["schooner-terasz2", "Schooner", 0, ["bed"], [5]], ["fedett-bejaro", "Korvett · Dingi", 90, ["bed"], [1, 2]], ["folyoso-fregatt", "Fregatt · Kalóz", 45, ["bed", "stairs"], [3, 4], "up"]]],
@@ -7619,7 +7619,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   /* ---------- Automatikus séta: a jelre kattintva képről képre elvisz a napozóstégig, a „Vissza” nyíl visszahoz ---------- */
   const WALKS = {
     steg: { name: "Séta a napozóstégig", path: ["utca", "strand-ut1", "strand-ut2", "strand-bejarat", "strand-part", "strand-pallo", "strand-lepcso", "strand-viz", "steg-viz", "steg"] },
-    home: { name: "Dimenziókapu az utcára", portal: "utca", look: .233 },
+    home: { name: "Vissza a házhoz", portal: "utca", look: .233 },
     up: { name: "Fel a Fregatt és a Kalóz apartmanhoz", mode: "foot", path: ["oldal-bejaro", "fedett-bejaro", "emelet", "folyoso-fregatt"] }
   };
   let walking = null;
@@ -8902,7 +8902,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     xrStart();   /* kéz vagy kontroller: sugár + csippentés/ravasz; ha egyik sincs, fejjel nézés (1,5 mp) */
     setTimeout(() => { if (inVR && !Object.keys(XRP.src).length) addGaze(); }, 1500);
     /* első alkalommal rövid súgó: hogyan mutass, csippents, fordulj */
-    let seen = false; try { seen = localStorage.getItem("zephyr-vr-help3") === "1"; } catch (e) {}
+    let seen = false; try { seen = localStorage.getItem("zephyr-vr-help4") === "1"; } catch (e) {}
     if (!seen) setTimeout(() => { if (inVR && !VRS.panel && !(window.ZephyrWorld && ZephyrWorld.active)) vrOpen("help"); }, 1200);
     vrAudio(true);
     if (current) hiRes(current);
@@ -9047,9 +9047,12 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const lblM = new THREE.MeshBasicMaterial({ map: lt, transparent: true, depthWrite: false, depthTest: false, fog: false }); mats.push(lblM);
       const lgeo = new THREE.PlaneGeometry(1, cvs.height / cvs.width); geos.push(lgeo);
       const lbl = new THREE.Mesh(lgeo, lblM); lbl.renderOrder = 990; m.add(lbl);
+      /* vékony összekötő vonal a gyűrű közepétől a címkéig (a ChatGPT látványterve szerint – egyértelmű, melyik címke melyik gyűrűé) */
+      const legM = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .7, depthWrite: false, depthTest: false, fog: false }); mats.push(legM);
+      const lgeo2 = new THREE.PlaneGeometry(1, 1).translate(0, .5, 0); geos.push(lgeo2); const leg = new THREE.Mesh(lgeo2, legM); leg.renderOrder = 985; m.add(leg);
       /* láthatatlan, bőkezű célterület (gyűrű + címke) */
       const hitM = new THREE.MeshBasicMaterial({ visible: false }); const hit = add(new THREE.CylinderGeometry(R * 1.6, R * 1.6, floor ? .9 : R * 3, 12), hitM); hit.position.y = floor ? .4 : 0;
-      const mkr = { link, to, m, ring, lbl, cvs, lt, tt, kind, fill, floor, dist, hot: 0, hotDrawn: false, vis: 1, t0: Math.random() * 6, hit,
+      const mkr = { link, to, m, ring, lbl, leg, cvs, lt, tt, kind, fill, floor, dist, hot: 0, hotDrawn: false, vis: 1, t0: Math.random() * 6, hit,
         dispose() { geos.forEach((g2) => g2.dispose()); mats.forEach((q) => { if (q.map && q.map !== T.ring) q.map.dispose(); q.dispose(); }); } };
       hit.userData.xr = {
         hover: (on, h2, key) => { VRN.hov[key || "x"] = on ? mkr : null; if (on) { try { xrPulse(XRP.src[key] && XRP.src[key].src, .25, 14); } catch (e) {} } },
@@ -9189,12 +9192,17 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const show = (ranked.includes(mk) || hot) && !menuOpen ? 1 : 0; mk.vis += (show - mk.vis) * .15;
       const dRing = Math.hypot(mk.m.position.x - h.x, mk.m.position.z - h.z);
       mk.ring.scale.setScalar((1 + Math.max(0, dRing - 2.5) * .16) * (1 + .06 * mk.hot));   /* messze kicsit nagyobb, hogy látható maradjon */ mk.ring.material.color.copy(white).lerp(gold, mk.hot);
+      /* fókusz: a nézési irányhoz legközelebbi (±20°) halványan aranyló; rámutatva teljesen arany */
+      const foc = ranked[0] === mk && ang(mk) < .35 ? 1 : 0; mk.foc = (mk.foc || 0) + (foc - (mk.foc || 0)) * .12;
+      const gl = Math.max(mk.hot, mk.foc * .6); mk.ring.material.color.copy(white).lerp(gold, gl);
       mk.ring.material.opacity = menuOpen ? .15 : (.55 + .35 * Math.max(mk.vis, mk.hot));
       /* állandó látószög: a címke mérete a távolsággal arányos (≈1,7°-os betűmagasság) */
       const d3 = Math.max(.8, mk.m.position.distanceTo(h)), W = .64 * d3 * (1 + .06 * mk.hot), Hh = W * mk.cvs.height / mk.cvs.width;
       mk.lbl.scale.set(W, W, 1); mk.lbl.material.opacity = mk.vis * (mk.dist < .8 && !hot ? 0 : 1); mk.lbl.visible = mk.lbl.material.opacity > .02;
-      mk.lbl.position.set(0, mk.floor ? .1 + Hh * .5 : -(.38 + Hh * .5), 0);
-      mk.lbl.rotation.set(0, Math.atan2(h.x - mk.m.position.x, h.z - mk.m.position.z), 0);
+      const legL = mk.floor ? Math.max(.22, Math.min(1.1, .17 * d3)) : .3, yaw = Math.atan2(h.x - mk.m.position.x, h.z - mk.m.position.z);
+      mk.lbl.position.set(0, mk.floor ? legL + Hh * .5 : -(.38 + Hh * .5), 0);
+      mk.lbl.rotation.set(0, yaw, 0);
+      mk.leg.visible = mk.floor && mk.lbl.visible; if (mk.leg.visible) { mk.leg.scale.set(.0028 * d3, legL - Hh * .18, 1); mk.leg.rotation.set(0, yaw, 0); mk.leg.material.opacity = .7 * mk.lbl.material.opacity; mk.leg.material.color.copy(white).lerp(gold, gl); }
     });
   }
   let _vrnH = null, _vrnF = null, _vrnGold = null, _vrnWhite = null;
@@ -9285,17 +9293,19 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     g.clearRect(0, 0, VW, VH);
     /* VR 2.0 „Nautical Glass” panel (2026. nov. 9., a ChatGPT-vel közös terv): sötét mélykék, világos felső perem, finom kontúr;
        arany csak a kiemelésen. Fejléc: kis arany felirat + a hely neve nagy fehér betűkkel. */
-    const bg = g.createLinearGradient(0, 0, 0, VH); bg.addColorStop(0, "rgba(16,42,68,.97)"); bg.addColorStop(1, "rgba(7,24,44,.97)");
+    const bg = g.createLinearGradient(0, 0, 0, VH); bg.addColorStop(0, "rgba(22,50,80,.90)"); bg.addColorStop(1, "rgba(8,26,46,.93)");
     rr(g, 4, 4, VW - 8, VH - 8, 40); g.fillStyle = bg; g.fill(); g.lineWidth = 2.5; g.strokeStyle = "rgba(221,232,242,.30)"; g.stroke();
     g.save(); rr(g, 4, 4, VW - 8, VH - 8, 40); g.clip(); const hi = g.createLinearGradient(0, 4, 0, 60); hi.addColorStop(0, "rgba(255,255,255,.12)"); hi.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = hi; g.fillRect(0, 0, VW, 60); g.restore();
     const sc = SCENES[current] || {}, grp = GROUPS.find((q) => q.id === sc.g);
     const zw = window.ZephyrWorld && ZephyrWorld.active ? ZephyrWorld.kind : null;
     const real = ["korvett", "dingi", "fregatt", "kaloz", "schooner", "kadett"].includes(sc.g) ? "VALÓDI 360°-OS FÉNYKÉP A SZOBÁRÓL" : "VALÓDI 360°-OS FÉNYKÉP";
-    g.fillStyle = ZT.soft; g.font = ZT.font(700, 22); g.textBaseline = "middle"; g.textAlign = "left";
-    try { g.letterSpacing = "3px"; } catch (e) {} g.fillText(zw ? "ZEPHYR WORLDS" : "ZEPHYR EXPLORE  ·  " + real, 52, 40); try { g.letterSpacing = "0px"; } catch (e) {}
+    /* fejléc: arany vitorlás-embléma, függőleges elválasztó, kis arany felirat + a hely neve */
+    zIcon(g, "sail", 76, 62, 60, ZT.soft, 2.2); g.fillStyle = "rgba(228,187,99,.55)"; g.fillRect(124, 26, 2, 72);
+    g.fillStyle = ZT.soft; g.font = ZT.font(700, 21); g.textBaseline = "middle"; g.textAlign = "left";
+    try { g.letterSpacing = "3px"; } catch (e) {} g.fillText(zw ? "ZEPHYR WORLDS" : "ZEPHYR EXPLORE  ·  " + real, 146, 40); try { g.letterSpacing = "0px"; } catch (e) {}
     g.fillStyle = ZT.text; g.font = ZT.font(650, 40);
-    if (zw) g.fillText(zw === "race" ? "Vitorlásverseny – a kormánynál" : zw === "chess" ? "Vitorlás sakk" : "A ház makettje", 52, 84);
-    else { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 760) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 52, 84); }
+    if (zw) g.fillText(zw === "race" ? "Vitorlásverseny – a kormánynál" : zw === "chess" ? "Vitorlás sakk" : "A ház makettje", 146, 84);
+    else { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 680) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 146, 84); }
     btn(g, VW - 116, 22, 84, 84, "✕", () => vrClose(), { round: 42 });
     btn(g, VW - 330, 22, 108, 84, vr8k() ? "8K" : "4K", () => { vr8k(!vr8k()); if (vr8k()) hiRes(current); else hiDrop(); vrDraw(); }, { round: 42, fs: 30, on: vr8k() });
     if (VRS.page !== "main") btn(g, VW - 214, 22, 84, 84, "‹", () => { VRS.page = "main"; vrDraw(); vrPlace(); }, { round: 42 });
@@ -9313,10 +9323,12 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const i = VRS.btns.length, hov = i === VRS.hover && !o.off;
     VRS.btns.push({ x, y, w, h, fn, off: !!o.off });
     rr(g, x, y, w, h, o.round || 26);
-    if (o.on) { const gg = g.createLinearGradient(0, y, 0, y + h); gg.addColorStop(0, hov ? "#F0CC7A" : ZT.soft); gg.addColorStop(1, hov ? ZT.soft : ZT.gold); g.fillStyle = gg; }
-    else g.fillStyle = o.off ? "rgba(255,255,255,.04)" : hov ? "rgba(36,72,110,.98)" : "rgba(16,42,68,.92)";
-    g.fill(); g.lineWidth = hov ? 5 : 2; g.strokeStyle = hov ? (o.on ? "#fff" : ZT.gold) : o.on ? "rgba(255,255,255,.4)" : "rgba(221,232,242,.24)"; g.stroke();
-    const fg = o.off ? "rgba(255,255,255,.35)" : o.on ? ZT.mid : ZT.text;
+    /* a ChatGPT látványterve szerint: sötét üveg csempe; a kiemelt („on”) és a rámutatott gomb ARANY KONTÚRT és meleg fényudvart kap, nem arany kitöltést */
+    const gg = g.createLinearGradient(0, y, 0, y + h); gg.addColorStop(0, o.off ? "rgba(255,255,255,.04)" : hov ? "rgba(40,74,108,.96)" : "rgba(26,56,88,.9)"); gg.addColorStop(1, o.off ? "rgba(255,255,255,.03)" : hov ? "rgba(24,52,82,.96)" : "rgba(14,36,60,.9)");
+    g.fillStyle = gg; g.fill();
+    if (o.on || hov) { g.save(); g.shadowColor = "rgba(228,187,99,.75)"; g.shadowBlur = hov ? 26 : 16; g.lineWidth = hov ? 5 : 3.5; g.strokeStyle = hov ? "#F0CC7A" : ZT.gold; g.stroke(); g.restore(); }
+    else { g.lineWidth = 2; g.strokeStyle = "rgba(221,232,242,.26)"; g.stroke(); }
+    const fg = o.off ? "rgba(255,255,255,.35)" : o.on || hov ? "#FFF6E0" : ZT.text;
     g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle";
     let lines = String(label).split("\n"); let ico = null;
     const m = lines[0].match(/^([\u2190-\u2BFF\u2600-\u27BF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDD00-\uDDFF])\uFE0F?\s*/);
@@ -9325,15 +9337,15 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     g.font = ZT.font(o.bold === false ? 500 : 650, fs);
     if (ico && (lines.length >= 1) && h >= 150 && !o.sub) {   /* ikon fölül */
       const isz = Math.min(64, h * .36), tot = isz + 14 + lines.length * fs * 1.15, y0 = y + (h - tot) / 2;
-      zIcon(g, ico, x + w / 2, y0 + isz / 2, isz, o.on ? ZT.mid : ZT.soft, 2.2);
+      zIcon(g, ico, x + w / 2, y0 + isz / 2, isz, ZT.soft, 2.2);
       lines.forEach((ln, k) => g.fillText(ln, x + w / 2, y0 + isz + 14 + fs * .6 + k * fs * 1.15));
     } else {
       const tw = Math.max(...lines.map((ln) => g.measureText(ln).width)), isz = ico ? Math.min(52, fs * 1.3) : 0, gap = ico && lines.length ? 16 : 0, cx = x + w / 2 + (isz + gap) / 2;
       const cy = y + (o.sub ? h * .4 : h / 2);
-      if (ico) zIcon(g, ico, cx - tw / 2 - gap - isz / 2, cy, isz, o.on ? ZT.mid : ZT.soft, 2.2);
+      if (ico) zIcon(g, ico, cx - tw / 2 - gap - isz / 2, cy, isz, ZT.soft, 2.2);
       lines.forEach((ln, k) => g.fillText(ln, ico ? cx : x + w / 2, cy + (k - (lines.length - 1) / 2) * fs * 1.15));
     }
-    if (o.sub) { g.font = ZT.font(500, 25); g.fillStyle = o.on ? "rgba(7,24,44,.85)" : ZT.sub; g.fillText(o.sub, x + w / 2, y + h - 32); }
+    if (o.sub) { g.font = ZT.font(500, 25); g.fillStyle = ZT.sub; g.fillText(o.sub, x + w / 2, y + h - 32); }
   }
   function txt(g, s, x, y, o) { o = o || {}; g.fillStyle = o.c || "#fff"; g.font = ZT.font(o.w || 600, o.fs || 34); g.textAlign = o.a || "left"; g.textBaseline = "middle"; g.fillText(s, x, y); }
 
@@ -9374,21 +9386,25 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
   /* rövid súgó: első VR-belépéskor magától, utána a menüből – nagy betűkkel, hogyan irányítasz kézzel és kontrollerrel */
   function pHelp(g) {
-    txt(g, "Így irányítasz", 60, 168, { fs: 44, w: 800, c: "#ffd166" });
-    /* 2026. nov. 6. (3. kör): a kéz fölötti „ököl + hüvelykujj” mozgás kikerült – a súgó az új, egyszerű kezelést mutatja */
-    const R = [["⌚", "Menü: érintsd meg az órádat", "a bal csuklódon karóra van – a jobb mutatóujjaddal megérintve (vagy rácsippentve, vagy 1 mp-ig ránézve) nyílik a nagy menü; újabb érintéssel vagy ✕-szel bezárul"],
-               ["☝", "A gombokat ujjal nyomd", "a jobb mutatóujjaddal, mint egy érintőképernyőt (vagy mutass rá és csippents)"],
-               ["👉", "Mutass + csippents = kattintás", "nyitott kézből sugár indul; hüvelyk- és mutatóujj összeér (kontroller: ravasz)"],
-               ["➜", "Lépés: fénylő gyűrű a padlón", "ahová mehetsz, ott arany gyűrű és névtábla van – mutass rá és csippents"],
-               ["↺", "Fordulás", "a látótered alján a ↺ ↻ gombbal, a csuklómenü „Mozgás” gombjaival, vagy egyszerűen fordulj meg"]];
+    /* VR 2.0 súgó (2026. nov. 9.): az új, egyszerű kézi kezelés – ikonokkal, nagy betűkkel */
+    txt(g, "Így irányítasz – csak a kezeddel", 52, 166, { fs: 40, w: 700, c: ZT.soft });
+    const R = [["menu", "Menü: bal tenyér felfelé", "fordítsd a bal tenyered magad felé és nézz rá – a „Menü” korong megtelik, és előtted kinyílik a menü (lenézve a lábad előtt is van egy Menü gomb)"],
+               ["pin", "Lépés: kis gyűrű a padlón", "ahová mehetsz, ott vékony gyűrű és kis címke van – mutass rá (arany lesz) és csippents"],
+               ["turnR", "Fordulás: csippents és rántsd oldalra", "csippents a semmibe és rántsd a kezed balra vagy jobbra: 30°-ot fordulsz, egy pillanatra elsötétül – vagy fordulj meg magad"],
+               ["eye", "Érkezéskor arra nézel, amerre mentél", "oda- és visszaúton is a haladás irányába fordul a kép"],
+               ["gear", "Beállítások", "fordulás szöge (30/45/90°), nagy kezelőfelület, zene – a menü Beállítások gombjában"]];
     R.forEach(([ic, t, d], i) => {
-      const y = 214 + i * 104;
-      rr(g, 40, y, VW - 80, 92, 20); g.fillStyle = "rgba(255,255,255,.08)"; g.fill();
-      txt(g, ic, 100, y + 46, { a: "center", fs: 50 });
-      txt(g, t, 170, y + 30, { fs: 34, w: 800 });
-      txt(g, d, 170, y + 68, { fs: 24, w: 500, c: "rgba(255,255,255,.8)" });
+      const y = 186 + i * 108;
+      rr(g, 40, y, VW - 80, 100, 22); g.fillStyle = "rgba(16,42,68,.9)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(221,232,242,.18)"; g.stroke();
+      g.beginPath(); g.arc(100, y + 47, 34, 0, Math.PI * 2); g.fillStyle = "rgba(212,161,58,.16)"; g.fill(); g.strokeStyle = ZT.gold; g.lineWidth = 2.5; g.stroke();
+      if (ic === "menu") { g.strokeStyle = ZT.soft; g.lineWidth = 5; g.lineCap = "round"; [-11, 0, 11].forEach((dy) => { g.beginPath(); g.moveTo(84, y + 47 + dy); g.lineTo(116, y + 47 + dy); g.stroke(); }); }
+      else zIcon(g, ic, 100, y + 47, 40, ZT.soft, 2.2);
+      txt(g, t, 160, y + 26, { fs: 31, w: 700 });
+      /* leírás két sorba tördelve */
+      g.save(); g.font = ZT.font(500, 21); const ws = d.split(" "), ln = [""]; ws.forEach((w) => { const c2 = (ln[ln.length - 1] + " " + w).trim(); if (g.measureText(c2).width > VW - 220 && ln.length < 2) ln.push(w); else ln[ln.length - 1] = c2; }); g.restore();
+      ln.forEach((l2, k) => txt(g, l2, 160, y + 58 + k * 26, { fs: 21, w: 500, c: ZT.sub }));
     });
-    btn(g, VW / 2 - 220, VH - 112, 440, 88, "Értem, mehet!", () => { try { localStorage.setItem("zephyr-vr-help3", "1"); } catch (e) {} vrClose(); }, { on: 1, fs: 36 });
+    btn(g, VW / 2 - 220, VH - 98, 440, 76, "Értem, mehet!", () => { try { localStorage.setItem("zephyr-vr-help4", "1"); } catch (e) {} vrClose(); }, { on: 1, fs: 36 });
   }
   /* napállás a VR-ben: nap és óra választása, az égen (vagy a falon át) ☀ jel mutatja az irányt */
   function pSun(g) {

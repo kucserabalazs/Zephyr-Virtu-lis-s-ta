@@ -6928,19 +6928,19 @@
     { const pc = document.createElement("canvas"); pc.width = 420; pc.height = 120; const pt = new THREE.CanvasTexture(pc); pt.colorSpace = THREE.SRGBColorSpace; W.disposables.push(pt);
       const pm = new THREE.Mesh(new THREE.PlaneGeometry(.21, .06), new THREE.MeshBasicMaterial({ map: pt, transparent: true, depthTest: false, depthWrite: false })); pm.renderOrder = 995; W.disposables.push(pm.geometry, pm.material);
       const pd = (hv) => { const g = pc.getContext("2d"); g.clearRect(0, 0, 420, 120); g.beginPath(); g.roundRect ? g.roundRect(4, 4, 412, 112, 56) : g.rect(4, 4, 412, 112); g.fillStyle = hv ? "#ffe08a" : "rgba(7,28,58,.9)"; g.fill(); g.lineWidth = 5; g.strokeStyle = "rgba(255,209,102,.9)"; g.stroke();
-        g.fillStyle = hv ? "#0b2f5e" : "#fff"; g.font = "800 50px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("☰ Panel", 210, 62); pt.needsUpdate = true; };
+        g.fillStyle = hv ? "#0b2f5e" : "#fff"; g.font = "800 50px Inter, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("☰ Panel", 210, 62); pt.needsUpdate = true; };
       pd(false); pm.visible = false;
       pm.userData.xr = { hover: (on) => pd(on), click: () => { W.togglePanel(); pd(false); } };
       P.pill = pm; }
     P.draw = () => {
       const g = cv.getContext("2d"); P.btns = []; g.clearRect(0, 0, PW, PH);
-      const bg = g.createLinearGradient(0, 0, 0, PH); bg.addColorStop(0, "rgba(14,52,98,.94)"); bg.addColorStop(1, "rgba(7,28,58,.94)");
-      g.beginPath(); g.roundRect ? g.roundRect(5, 5, PW - 10, PH - 10, 40) : g.rect(5, 5, PW - 10, PH - 10); g.fillStyle = bg; g.fill(); g.lineWidth = 6; g.strokeStyle = "rgba(255,209,102,.85)"; g.stroke();
+      const bg = g.createLinearGradient(0, 0, 0, PH); bg.addColorStop(0, "rgba(16,42,68,.97)"); bg.addColorStop(1, "rgba(7,24,44,.97)");   /* VR 2.0 „Nautical Glass” */
+      g.beginPath(); g.roundRect ? g.roundRect(5, 5, PW - 10, PH - 10, 40) : g.rect(5, 5, PW - 10, PH - 10); g.fillStyle = bg; g.fill(); g.lineWidth = 2.5; g.strokeStyle = "rgba(221,232,242,.30)"; g.stroke();
       let rowY = 0;
       /* hosszú szöveg: a betűméret addig csökken, amíg ki nem fér (ne lógjon ki a panelből) */
-      const fitFont = (wt, fs, min, t, maxW) => { g.font = `${wt} ${fs}px system-ui, sans-serif`; while (fs > min && g.measureText(t).width > maxW) { fs -= 2; g.font = `${wt} ${fs}px system-ui, sans-serif`; } };
+      const fitFont = (wt, fs, min, t, maxW) => { g.font = `${wt} ${fs}px Inter, system-ui, sans-serif`; while (fs > min && g.measureText(t).width > maxW) { fs -= 2; g.font = `${wt} ${fs}px Inter, system-ui, sans-serif`; } };
       const api = {
-        title(t, s) { g.fillStyle = "#ffd166"; g.textAlign = "left"; g.textBaseline = "middle"; fitFont(800, 50, 32, t, PW - 200); g.fillText(t, 44, 66); g.fillStyle = "#fff"; fitFont(600, 34, 22, s || "", PW - 88); g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
+        title(t, s) { g.fillStyle = "#E4BB63"; g.textAlign = "left"; g.textBaseline = "middle"; fitFont(750, 48, 32, t, PW - 200); g.fillText(t, 44, 66); g.fillStyle = "#fff"; fitFont(600, 34, 22, s || "", PW - 88); g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
         row(i, t, c, r) { const y = 210 + i * 66; g.fillStyle = c || "#fff"; g.beginPath(); g.arc(58, y, 11, 0, TAU); g.fill(); g.fillStyle = "#fff"; g.textAlign = "left"; fitFont(600, 36, 22, t, PW - 84 - (r ? 220 : 44)); g.fillText(t, 84, y); if (r) { g.textAlign = "right"; g.fillStyle = "#7fd3ff"; g.fillText(r, PW - 50, y); } rowY = y; },
         buttons(list, row) {
           const n = list.length, gap = 16, w = (PW - 80 - gap * (n - 1)) / n, y = PH - 150 - (row || 0) * 126, h = 110;
@@ -6949,14 +6949,14 @@
             g.save(); g.shadowColor = "rgba(0,0,0,.35)"; g.shadowBlur = 14; g.shadowOffsetY = 5;
             g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 26) : g.rect(x, y, w, h);
             const gr = g.createLinearGradient(0, y, 0, y + h);
-            if (on || hov) { gr.addColorStop(0, "#ffe08a"); gr.addColorStop(1, "#f2b93b"); } else { gr.addColorStop(0, "rgba(255,255,255,.2)"); gr.addColorStop(1, "rgba(255,255,255,.07)"); }
+            if (on) { gr.addColorStop(0, hov ? "#F0CC7A" : "#E4BB63"); gr.addColorStop(1, hov ? "#E4BB63" : "#D4A13A"); } else if (hov) { gr.addColorStop(0, "rgba(40,78,118,.98)"); gr.addColorStop(1, "rgba(28,60,96,.98)"); } else { gr.addColorStop(0, "rgba(20,48,78,.94)"); gr.addColorStop(1, "rgba(14,38,64,.94)"); }
             g.fillStyle = gr; g.fill(); g.restore();
-            g.lineWidth = hov ? 5 : 2; g.strokeStyle = hov ? "#fff3c4" : "rgba(255,255,255,.35)"; g.stroke();
+            g.lineWidth = hov ? 5 : 2; g.strokeStyle = hov ? (on ? "#fff" : "#D4A13A") : on ? "rgba(255,255,255,.4)" : "rgba(221,232,242,.24)"; g.stroke();
             /* ha a felirat ikonnal kezdődik („🐟 Merülés”), az ikon nagyobban, fölötte */
             const m = /^(\S{1,3})\s+(.+)$/.exec(lbl), icon = m && !/[A-Za-zÁ-ű0-9]/.test(m[1]) ? m[1] : null, txt = icon ? m[2] : lbl;
-            g.fillStyle = on || hov ? "#0b2f5e" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
-            if (icon) { g.font = "800 40px system-ui, sans-serif"; g.fillText(icon, x + w / 2, y + h * .34); g.font = `700 ${txt.length > 12 || n > 5 ? 25 : 30}px system-ui, sans-serif`; g.fillText(txt, x + w / 2, y + h * .74); }
-            else { g.font = `700 ${lbl.length > 14 || n > 5 ? 28 : 38}px system-ui, sans-serif`; g.fillText(lbl, x + w / 2, y + h / 2 + 2); }
+            g.fillStyle = on ? "#07182C" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
+            if (icon) { g.font = "800 40px Inter, system-ui, sans-serif"; g.fillText(icon, x + w / 2, y + h * .34); g.font = `700 ${txt.length > 12 || n > 5 ? 25 : 30}px Inter, system-ui, sans-serif`; g.fillText(txt, x + w / 2, y + h * .74); }
+            else { g.font = `700 ${lbl.length > 14 || n > 5 ? 28 : 38}px Inter, system-ui, sans-serif`; g.fillText(lbl, x + w / 2, y + h / 2 + 2); }
           });
         }
       };
@@ -6965,7 +6965,7 @@
       { g.fillStyle = "rgba(255,255,255,.55)"; for (let k = 0; k < 6; k++) for (let r2 = 0; r2 < 2; r2++) { g.beginPath(); g.arc(PW / 2 - 50 + k * 20, 20 + r2 * 14, 4.5, 0, TAU); g.fill(); }
         const x = PW - 240, y = 22, w = 96, h = 78, k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn: () => { if (W.panelPos) delete W.panelPos[W.kind]; try { localStorage.setItem("zephyr-panelpos", JSON.stringify(W.panelPos || {})); } catch (e) {} placePanel(true); } });
         g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 22) : g.rect(x, y, w, h); g.fillStyle = hov ? "#ffe08a" : "rgba(255,255,255,.14)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke();
-        g.fillStyle = hov ? "#0b2f5e" : "#fff"; g.font = "800 44px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("⟲", x + w / 2, y + h / 2 + 2); }
+        g.fillStyle = hov ? "#0b2f5e" : "#fff"; g.font = "800 44px Inter, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("⟲", x + w / 2, y + h / 2 + 2); }
       /* összecsukó gomb a jobb felső sarokban – a panel egy kis „☰ Panel” fülre zsugorodik */
       { const x = PW - 132, y = 22, w = 96, h = 78, k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn: () => W.togglePanel() });
         g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 22) : g.rect(x, y, w, h); g.fillStyle = hov ? "#ffe08a" : "rgba(255,255,255,.14)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke();
