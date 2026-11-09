@@ -49,7 +49,7 @@ function defaults() {
             array('id' => 'kaloz',    'name' => 'Kalóz',    'no' => 4, 'cap' => 2, 'price' => 22000, 'color' => '#9b6be2', 'active' => 1),
             array('id' => 'schooner', 'name' => 'Schooner', 'no' => 5, 'cap' => 4, 'price' => 32000, 'color' => '#2bb3c0', 'active' => 1),
         ),
-        'tax' => 600, 'deposit_pct' => 30, 'min_nights' => 2, 'max_nights' => 30, 'lead_days' => 1, 'horizon_days' => 400,
+        'tax' => 600, 'deposit_pct' => 30, 'min_nights' => 1, 'max_nights' => 30, 'lead_days' => 3, 'peak_from' => '07-15', 'horizon_days' => 400,
         'season_from' => '05-15', 'season_to' => '10-15', 'weekend_pct' => 0,
         'checkin' => '15:00', 'checkout' => '10:00',
         'phone' => '+36 20 536 3120', 'email' => 'kucserabalazs79@gmail.com', 'notify_email' => 'kucserabalazs79@gmail.com',
@@ -135,6 +135,11 @@ function db_load() {
     if (empty($db['settings']['ical_key'])) { $db['settings']['ical_key'] = bin2hex(random_bytes(12)); }
     if (!is_array($db['settings']['ical'])) { $db['settings']['ical'] = array(); }
     if (!is_array($db['settings']['ext_ignored'])) { $db['settings']['ext_ignored'] = array(); }
+    if (empty($db['settings']['mig_rules1109'])) {   /* egyszeri (2026. nov. 9.): a tulajdonos szabályai – 1 éjszaka is kérhető; szezonon kívül legalább 3 nappal előre, főszezonban (júl. 15-től zárásig) aznapra is */
+        if ((int) $db['settings']['min_nights'] === 2) { $db['settings']['min_nights'] = 1; }
+        if ((int) $db['settings']['lead_days'] < 3) { $db['settings']['lead_days'] = 3; }
+        $db['settings']['mig_rules1109'] = 1;
+    }
     if (empty($db['settings']['mig_ci15'])) {   /* egyszeri: érkezés 15:00-tól (a tulajdonos kérése) */
         if ($db['settings']['checkin'] === '14:00') { $db['settings']['checkin'] = '15:00'; }
         $db['settings']['mig_ci15'] = 1;
@@ -194,6 +199,11 @@ function apartments($s, $active = false) {
     foreach ($s['apartments'] as $a) { if ($active && empty($a['active'])) { continue; } $o[$a['id']] = $a; }
     return $o;
 }
+/* hány nappal előre kell foglalni: főszezonban (júl. 15-től a zárásig, amikor a tulajdonos helyben van) aznapra is, egyébként lead_days (alapból 3) */
+function lead_eff($s) {
+    $t = today(); $pf = isset($s['peak_from']) && $s['peak_from'] ? $s['peak_from'] : '07-15';
+    return (substr($t, 5) >= $pf && in_season($s, $t)) ? 0 : (int) $s['lead_days'];
+}
 function in_season($s, $ymd) {
     $f = $s['season_from']; $t = $s['season_to'];
     if (!$f || !$t) { return true; }
@@ -233,7 +243,7 @@ function busy_map($db, $apt, $from, $to, $exclude = '') {
 }
 function day_free($s, $d, $busy) {
     if (isset($busy[$d]) || !in_season($s, $d)) { return false; }
-    if ($d < add_days(today(), (int) $s['lead_days'])) { return false; }
+    if ($d < add_days(today(), lead_eff($s))) { return false; }
     if ($d > add_days(today(), (int) $s['horizon_days'])) { return false; }
     return true;
 }
@@ -1422,7 +1432,7 @@ case 'config':
     }
     $szep = array(); foreach (array('szep_otp' => 'OTP', 'szep_mbh' => 'MBH', 'szep_kh' => 'K&H') as $k => $n) { if ($s[$k]) { $szep[] = $n; } }
     out(array('demo' => false, 'today' => today(), 'tax' => (int) $s['tax'], 'deposit_pct' => (int) $s['deposit_pct'],
-        'min_nights' => (int) $s['min_nights'], 'max_nights' => (int) $s['max_nights'], 'lead_days' => (int) $s['lead_days'], 'horizon_days' => (int) $s['horizon_days'],
+        'min_nights' => (int) $s['min_nights'], 'max_nights' => (int) $s['max_nights'], 'lead_days' => lead_eff($s), 'horizon_days' => (int) $s['horizon_days'],
         'checkin' => $s['checkin'], 'checkout' => $s['checkout'], 'phone' => $s['phone'], 'email' => $s['email'], 'address' => $s['address'],
         'rules_url' => $s['rules_url'] !== '' ? $s['rules_url'] : '../Zephyr%20Apartman%20Kell%C3%A9kek/hazirend.pdf', 'privacy_url' => $s['privacy_url'] !== '' ? $s['privacy_url'] : '../Zephyr%20Apartman%20Kell%C3%A9kek/adatkezelesi-tajekoztato.pdf', 'apartments' => $apts,
         'ntak' => $s['ntak'], 'szep' => $szep, 'intl' => $s['bank_iban'] ? true : false));

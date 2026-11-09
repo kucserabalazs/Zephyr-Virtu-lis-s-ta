@@ -2000,7 +2000,7 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
   /* ---------- bemutató adatok (ha nincs szerver) ---------- */
   function demoConfig() {
     const t = new Date(); const today = ymd(t);
-    return { demo: true, today, tax: 600, deposit_pct: 30, min_nights: 2, max_nights: 30, lead_days: 0, horizon_days: 400, checkin: "14:00", checkout: "10:00", phone: "+36 20 536 3120", email: "info@balatoni-udules.hu", address: "8621 Zamárdi, Gáspár András utca 58.", rules_url: "../Zephyr%20Apartman%20Kell%C3%A9kek/hazirend.pdf", privacy_url: "../Zephyr%20Apartman%20Kell%C3%A9kek/adatkezelesi-tajekoztato.pdf", ntak: "MA22033593 / MA22033128", szep: ["OTP", "MBH", "K&H"], intl: true,
+    return { demo: true, today, tax: 600, deposit_pct: 30, min_nights: 1, max_nights: 30, lead_days: 3, horizon_days: 400, checkin: "15:00", checkout: "10:00", phone: "+36 20 536 3120", email: "info@balatoni-udules.hu", address: "8621 Zamárdi, Gáspár András utca 58.", rules_url: "../Zephyr%20Apartman%20Kell%C3%A9kek/hazirend.pdf", privacy_url: "../Zephyr%20Apartman%20Kell%C3%A9kek/adatkezelesi-tajekoztato.pdf", ntak: "MA22033593 / MA22033128", szep: ["OTP", "MBH", "K&H"], intl: true,
       apartments: [{ id: "korvett", name: "Korvett", no: 1, cap: 4, price: 30000, color: "#e2483d" }, { id: "dingi", name: "Dingi", no: 2, cap: 2, price: 22000, color: "#3fb37f" }, { id: "fregatt", name: "Fregatt", no: 3, cap: 4, price: 30000, color: "#3d8fe2" }, { id: "kaloz", name: "Kalóz", no: 4, cap: 2, price: 22000, color: "#9b6be2" }, { id: "schooner", name: "Schooner", no: 5, cap: 4, price: 32000, color: "#2bb3c0" }] };
   }
   function demoDays(cfg, apt) {
@@ -2427,14 +2427,14 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
       let cls = "zfb-d", dis = false;
       if (past || !x) { cls += " off"; dis = !(coOk); }
       else if (!free) { cls += " busy"; dis = !coOk; if (prev && prev.free && !(st.ci && !st.co)) cls += " half"; }
-      else if (prev && !prev.free && prev.d >= cfg.today && !(st.ci && !st.co)) cls += " outday";   /* távozási nap: délelőtt még az előző vendég, 14:00-tól újra szabad */
+      else if (prev && !prev.free && prev.d >= cfg.today && !(st.ci && !st.co)) cls += " outday";   /* távozási nap: délelőtt még az előző vendég, 15:00-tól újra szabad */
       if (st.ci === ds) cls += " ci"; if (st.co === ds) cls += " co";
       if (st.ci && st.co && ds > st.ci && ds < st.co) cls += " in";
       if (st.ci && !st.co && ds > st.ci) cls += coOk ? " can" : " cant";
       if (ds === cfg.today) cls += " today";
       if (st.ci && !st.co && ds > st.ci && !coOk) dis = !free;
       const price = x && free ? `<small>${Math.round(x.p / 1000)}e</small>` : "";
-      html += `<button type="button" class="${cls}" data-day="${ds}"${dis ? " disabled" : ""}${/ outday/.test(cls) ? ` title="Távozási nap: ${esc(cfg.checkin || "14:00")}-tól újra foglalható"` : ""} aria-label="${huDate(ds)}${free ? ", szabad" + (/ outday/.test(cls) ? " (távozási nap, " + (cfg.checkin || "14:00") + "-tól)" : "") + ", " + money(x.p) : ", foglalt"}"><b>${d}</b>${price}</button>`;
+      html += `<button type="button" class="${cls}" data-day="${ds}"${dis ? " disabled" : ""}${/ outday/.test(cls) ? ` title="Távozási nap: ${esc(cfg.checkin || "15:00")}-tól újra foglalható"` : ""} aria-label="${huDate(ds)}${free ? ", szabad" + (/ outday/.test(cls) ? " (távozási nap, " + (cfg.checkin || "15:00") + "-tól)" : "") + ", " + money(x.p) : ", foglalt"}"><b>${d}</b>${price}</button>`;
     }
     return html + `</div></div>`;
   }
@@ -2681,7 +2681,7 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
         <p class="zfb-multi-tip">${pa ? `A(z) <b>${esc(pa.name)}</b> apartman szabad napjait látod. <button type="button" class="zfb-link" data-allapt="1">összes apartman naptára</button>` : "Add meg a szabadságod napjait és a létszámot – lent rögtön látod, melyik apartman szabad, elfértek-e benne, és mennyibe kerül."}</p>
         <div class="zfb-mnav"><button type="button" data-m="-1" ${st.month <= 0 ? "disabled" : ""} aria-label="Előző hónap">‹</button><span>Válaszd ki az érkezés, majd a távozás napját</span><button type="button" data-m="1" ${st.month >= maxMonth ? "disabled" : ""} aria-label="Következő hónap">›</button></div>
         <div class="zfb-months">${months.join("")}</div>
-        <div class="zfb-legend"><span><i class="lf"></i>${pa ? "szabad (ár / éj, ezer Ft)" : "van szabad apartman (legkedvezőbb ár / éj, ezer Ft)"}</span><span><i class="lb"></i>${pa ? "foglalt" : "minden apartman foglalt"}</span><span><i class="lo"></i>távozási nap – ${esc(cfg.checkin || "14:00")}-tól szabad</span><span><i class="ls"></i>kiválasztva</span></div>
+        <div class="zfb-legend"><span><i class="lf"></i>${pa ? "szabad (ár / éj, ezer Ft)" : "van szabad apartman (legkedvezőbb ár / éj, ezer Ft)"}</span><span><i class="lb"></i>${pa ? "foglalt" : "minden apartman foglalt"}</span><span><i class="lo"></i>távozási nap – ${esc(cfg.checkin || "15:00")}-tól szabad</span><span><i class="ls"></i>kiválasztva</span></div>
       </div>
       <aside class="zfb-side">
         <div class="zfb-dates"><div><small>Érkezés</small><b>${st.ci ? huDate(st.ci) : "–"}</b><em>${esc(cfg.checkin)}-tól</em></div><div><small>Távozás</small><b>${st.co ? huDate(st.co) : "–"}</b><em>${esc(cfg.checkout)}-ig</em></div></div>
@@ -3100,7 +3100,7 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
       ${txt("season_from", "Szezon kezdete (hó-nap)", "05-15")}${txt("season_to", "Szezon vége (hó-nap)", "10-15")}
       ${num("min_nights", "Legalább", "éj", 1, 60)}${num("max_nights", "Legfeljebb", "éj", 1, 120)}
       ${num("lead_days", "Legkorábban érkezés előtt", "nappal", 0, 60)}${num("horizon_days", "Előre foglalható", "napra", 30, 420)}
-      ${txt("checkin", "Érkezés ettől", "14:00")}${txt("checkout", "Távozás eddig", "10:00")}
+      ${txt("checkin", "Érkezés ettől", "15:00")}${txt("checkout", "Távozás eddig", "10:00")}
       ${num("tax", "Idegenforgalmi adó / fő / éj", "Ft", 0, 100000)}${num("deposit_pct", "Előleg", "%", 0, 100)}
       ${num("pending_days", "Függő kérés lejár", "nap után", 1, 14)}${num("pay_days", "Utalási határidő", "nap", 1, 30)}
       </div></section>`;
