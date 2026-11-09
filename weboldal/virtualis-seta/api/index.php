@@ -1821,6 +1821,21 @@ case 'events_all':
     usort($list, function ($a, $b) { return strcmp($a['from'] . $a['time'], $b['from'] . $b['time']); });
     out(array('today' => today(), 'events' => $list, 'feeds' => isset($db['settings']['ev_feeds']) ? $db['settings']['ev_feeds'] : array(), 'updated' => isset($db['ev_sync']) ? $db['ev_sync'] : ''));
 
+case 'nav':   /* a VR-ben a tulajdonos által igazított útjelző-helyek (mindenkinek) – nyilvános, csak koordináták */
+    $db = db_load(); out(array('nav' => isset($db['nav']) && is_array($db['nav']) ? $db['nav'] : new stdClass()));
+case 'nav_save':   /* tulajdonos: útjelzők igazítása a VR-ben (jelenet → cél → [x, y] a panorámán) */
+    if ($method !== 'POST') { fail('POST kell.', 405); }
+    $db = db_load(); require_admin($db);
+    $in = isset($P['nav']) && is_array($P['nav']) ? $P['nav'] : array(); $o = array(); $n = 0;
+    foreach ($in as $sc => $tos) {
+        if (!is_string($sc) || !preg_match('/^[a-z0-9-]{1,48}$/', $sc) || !is_array($tos)) { continue; }
+        foreach ($tos as $to => $v) {
+            if (!is_string($to) || !preg_match('/^[a-z0-9-]{1,48}$/', $to) || !is_array($v) || count($v) !== 2) { continue; }
+            $x = (float) $v[0]; $y = (float) $v[1]; if ($x < 0 || $x > 1 || $y < 0 || $y > 1) { continue; }
+            $o[$sc][$to] = array(round($x, 4), round($y, 4)); if (++$n > 3000) { break 2; }
+        }
+    }
+    $db['nav'] = $o; db_save($db); out(array('ok' => true, 'n' => $n));
 case 'events_save':
     if ($method !== 'POST') { fail('POST kell.', 405); }
     $db = db_load(); require_admin($db);
