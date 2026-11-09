@@ -9757,8 +9757,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       ["Zene", [["Be", () => { try { if (!(typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused)) toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); }, typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused],
                 ["Ki", () => { try { if (typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused) toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); }, !(typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused)]]],
       ["Látnivalók a horizonton (strand, stég)", [["Be", () => { wsSet("lm", true); lmClear(); vrDraw(); }, WS.lm !== false], ["Ki", () => { wsSet("lm", false); lmClear(); vrDraw(); }, WS.lm === false]]],
-      ["Ünnepi effektek (tűzijáték, zászlók)", [["Be", () => { wsSet("fx", true); vrDraw(); }, WS.fx !== false], ["Ki", () => { wsSet("fx", false); vrDraw(); }, WS.fx === false]]],
-      ["Régi karóra-menü a csuklón", [["Be", () => { wsSet("watch", true); vrDraw(); }, !!WS.watch], ["Ki", () => { wsSet("watch", false); vrDraw(); }, !WS.watch]]]
+      ["Ünnepi effektek (tűzijáték, zászlók)", [["Be", () => { wsSet("fx", true); vrDraw(); }, WS.fx !== false], ["Ki", () => { wsSet("fx", false); vrDraw(); }, WS.fx === false]]]
     ];
     rows.forEach(([lab, opts], r) => {
       const y = 136 + r * 100; txt(g, lab, 60, y + 44, { fs: 31, w: 600 });
@@ -11495,7 +11494,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   const wEase = (k) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
   function xrWrist() {
     /* VR 2.0 (2026. nov. 9.): a karóra helyett TENYÉRMENÜ (smPalm) – az óra a Beállításokban visszakapcsolható */
-    if (!WS.watch) { const P0 = XRP.wristP; if (P0) { P0.g.visible = false; P0.m.visible = false; P0.open = false; } if (XRP.wrist) XRP.wrist.visible = false; smPalm(); return; }
+    if (true) {   /* a karóra-menü végleg kikerült (a tulajdonos, nov. 9.: „a tenyérmenü maradhat, az órásat dobjuk el”) – mindig a tenyérmenü */ const P0 = XRP.wristP; if (P0) { P0.g.visible = false; P0.m.visible = false; P0.open = false; } if (XRP.wrist) XRP.wrist.visible = false; smPalm(); return; }
     if (!_wq) { _wq = new THREE.Quaternion(); _wq2 = new THREE.Quaternion(); _wm = new THREE.Matrix4(); _wv = new THREE.Vector3(); _wv2 = new THREE.Vector3(); _wv3 = new THREE.Vector3(); _wv4 = new THREE.Vector3(); _wup = new THREE.Vector3(0, 1, 0); }
     const L = (XRP.seen && XRP.seen.left) ? XRP.src.left : (XRP.seen && XRP.seen.none) ? XRP.src.none : null;
     const P = xrWatch();
