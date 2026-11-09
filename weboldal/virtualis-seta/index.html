@@ -1726,6 +1726,11 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
 .zfb-legend i { width: 16px !important; height: 16px !important; }
 .zfb-rules li { font-size: 15px; }
 @media (max-width: 600px) { .zfb-d b { font-size: 18px !important; } .zfb-d small { font-size: 11.5px !important; } }
+/* ChatGPT-átnézés (nov. 9.) P1: nagyobb apró feliratok és bezárógombok */
+.thumb span { font-size: 14px !important; }
+.zfl-pr small { font-size: 13px !important; }
+.zfb-x { width: 48px !important; height: 48px !important; font-size: 30px !important; }
+.zad-st, .zad-tag, .zad-tabs button em { font-size: 13px !important; }
 /* ===== ESZKÖZJEGYZÉK 2.0 – Nautical Horizon ===== */
 .zi2 { position: fixed; inset: 0; z-index: 2147482990; display: grid; place-items: center; font-family: Inter, system-ui, sans-serif; opacity: 0; transition: opacity .3s; }
 .zi2.on { opacity: 1; }
@@ -1738,7 +1743,7 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
 .zi2-search { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; border-radius: 14px; background: #fff; color: #0B2F5E; }
 .zi2-search svg { width: 22px; height: 22px; fill: none; stroke: #0B2F5E; stroke-width: 2.2; stroke-linecap: round; flex: none; }
 .zi2-search input { all: unset; flex: 1; min-width: 0; font: 600 18px/1 Inter, sans-serif; color: #0B2F5E; }
-.zi2-x, .zi2-ret { all: unset; cursor: pointer; flex: none; height: 48px; min-width: 48px; padding: 0 14px; box-sizing: border-box; display: grid; place-items: center; border-radius: 14px; background: rgba(255,255,255,.12); font: 700 26px/1 Inter, sans-serif; color: #fff; }
+.zi2-x, .zi2-ret { all: unset; cursor: pointer; flex: none; height: 52px; min-width: 52px; padding: 0 14px; box-sizing: border-box; display: grid; place-items: center; border-radius: 14px; background: rgba(255,255,255,.12); font: 700 26px/1 Inter, sans-serif; color: #fff; }
 .zi2-ret { font-size: 17px; } .zi2-x:hover, .zi2-ret:hover { background: rgba(255,255,255,.24); }
 .zi2-cats { display: flex; gap: 8px; padding: 14px 18px 10px; overflow-x: auto; scrollbar-width: none; background: #fff; border-bottom: 1px solid #D9E1EA; }
 .zi2-cat { all: unset; cursor: pointer; flex: none; display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px; border-radius: 12px; border: 1.5px solid #D9E1EA; font: 650 16px/1 Inter, sans-serif; color: #0B2F5E; background: #fff; }
@@ -9763,13 +9768,14 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       ["Zene", [["Be", () => { try { if (!(typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused)) toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); }, typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused],
                 ["Ki", () => { try { if (typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused) toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); }, !(typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused)]]],
       ["Látnivalók a horizonton (strand, stég)", [["Be", () => { wsSet("lm", true); lmClear(); vrDraw(); }, WS.lm !== false], ["Ki", () => { wsSet("lm", false); lmClear(); vrDraw(); }, WS.lm === false]]],
+      ["Ünnepi effektek (tűzijáték, zászlók)", [["Be", () => { wsSet("fx", true); vrDraw(); }, WS.fx !== false], ["Ki", () => { wsSet("fx", false); vrDraw(); }, WS.fx === false]]],
       ["Régi karóra-menü a csuklón", [["Be", () => { wsSet("watch", true); vrDraw(); }, !!WS.watch], ["Ki", () => { wsSet("watch", false); vrDraw(); }, !WS.watch]]]
     ];
     rows.forEach(([lab, opts], r) => {
-      const y = 140 + r * 116; txt(g, lab, 60, y + 50, { fs: 32, w: 600 });
+      const y = 136 + r * 100; txt(g, lab, 60, y + 44, { fs: 31, w: 600 });
       const bw = 150, x0 = VW - 60 - opts.length * (bw + 14) + 14;
-      opts.forEach(([t, fn, on], k) => btn(g, x0 + k * (bw + 14), y + 12, bw, 78, t, fn, { on, fs: 30, round: 40 }));
-      if (r < rows.length - 1) { g.fillStyle = "rgba(221,232,242,.12)"; g.fillRect(60, y + 106, VW - 120, 2); }
+      opts.forEach(([t, fn, on], k) => btn(g, x0 + k * (bw + 14), y + 10, bw, 70, t, fn, { on, fs: 30, round: 36 }));
+      if (r < rows.length - 1) { g.fillStyle = "rgba(221,232,242,.12)"; g.fillRect(60, y + 92, VW - 120, 2); }
     });
   }
   /* rövid súgó: első VR-belépéskor magától, utána a menüből – nagy betűkkel, hogyan irányítasz kézzel és kontrollerrel */
@@ -10422,7 +10428,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     else if (!C.went) { C.went = true; try { go(C.sc, false).then(() => { try { vrDraw(); } catch (e) {} }); } catch (e) {} }
     if (t > 2.6) { const k = Math.min(1, (t - 2.6) / .9); o.inner.material.opacity = 1 - k; }
     const hd = headDir(new THREE.Vector3()); hd.y = 0; if (hd.lengthSq() < 1e-6) hd.set(0, 0, -1); hd.normalize();
-    const want = Math.min(6, Math.floor((t - .9) / .42) + 1);
+    const want = WS.fx === false ? 0 : Math.min(6, Math.floor((t - .9) / .42) + 1);
     while (t > .9 && C.bursts < want) { const b = C.bursts++, side = new THREE.Vector3(-hd.z, 0, hd.x), ctr = h.clone().addScaledVector(hd, 3.4 + (b % 2) * .8).addScaledVector(side, [-1.6, 1.4, 0, -.8, 1.9, .7][b] || 0).add(new THREE.Vector3(0, 1.1 + [0, .3, .6, .2, .5, .9][b], 0));
       try { fxTone(120 + b * 15, 60, .5, .08, "triangle"); } catch (e) {}
       for (let i = b * 140; i < (b + 1) * 140 && i < C.N; i++) { C.pos.set([ctr.x, ctr.y, ctr.z], i * 3); const a = Math.random() * Math.PI * 2, el = Math.acos(Math.random() * 2 - 1), sp = 1.4 + Math.random() * 1.2; C.vel[i] = new THREE.Vector3(Math.sin(el) * Math.cos(a) * sp, Math.cos(el) * sp + .6, Math.sin(el) * Math.sin(a) * sp); } }
@@ -10582,7 +10588,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const P = VRS.panel.object3D, PW = akPW(), PH = PW * VH / VW, key = B.step + "|" + PW;
     if (!AK.g || AK.panel !== P || AK.key !== key) {
       akClear(); AK.g = new THREE.Group(); AK.g.name = "arany-kikoto"; P.add(AK.g); AK.panel = P; AK.key = key; AK.t0 = performance.now();
-      AK.g.add(akGarland(PW, PH));
+      if (WS.fx !== false) AK.g.add(akGarland(PW, PH));   /* Beállítások → Ünnepi effektek: ki is kapcsolható (mozgásérzékenyeknek) */
       if (B.step === "date" || B.step === "sum") AK.g.add(AK.parts.book = akBook(PW, PH));
       if (B.step === "apts") { const T = akTable(); T.position.set(0, -PH / 2 - .34, .5); T.rotation.x = .08; AK.g.add(T); AK.parts.table = T; }
       if (B.step === "sum") { const Wg = akWheel(); Wg.position.set(0, -PH / 2 - .27, .26); Wg.rotation.x = -.55; AK.g.add(Wg); }
