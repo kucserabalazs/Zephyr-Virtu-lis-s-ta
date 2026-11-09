@@ -17,7 +17,7 @@ Kész (main):
 - Látnivalók a horizonton (`LM_LIST`, `lmTick`) a strand/stég képein – irány és távolság a ház Google-pontjából (46,8893551; 17,9629734), adat: `forras/referencia/balaton/latnivalok.json` (forrásolt), partvonal: `balaton.geojson` (OSM, ODbL).
 - Makett: 4 autó egymás mellett keresztben, orral nyugatra (06b, SZ1 = 44).
 - 3D-világ panel (07-vezerlo) Nautical Glass + áthelyezhető; VR sakk új csatái + csatakamera.
-- Kezdőoldal: Nautical Horizon réteg (`kezdooldal-forras.html` </style> előtt), új nyitócím.
+- Kezdőoldal: a nov. 9-i Nautical Horizon átalakítást a tulajdonos NEM kérte megtartani – visszaállítva a korábbi változatra (csak az érkezés 15:00 javítás maradt). A régi karóra-menü végleg kikerült (mindig tenyérmenü). A tulajdonos kifejezetten megtartja: VR 2.0 vezérlés, gyűrűs útjelzők, tenyérmenü, foglalás 3D-gömbjei, a naptár távozási-nap sarokszínezése.
 - Balaton-térkép a VR-menüben (`pLake`: valódi OSM-partvonal, 10 km-es lépték, nézési legyező) + „Balatoni kultúra” oldal (`pCulture`, 8 tény), magyar motívumkészlet (`ZMOTIF`/`zMotif`, `forras/referencia/vr2/magyar-motif.svg`), tulipános betöltő.
 - 2D séta: ZEPHYR EXPLORE felület (body.zx: fejléc, „Helyek” fiók jobbra, eszközoszlop, kis térkép, arany „Foglalás”), 2D-ben is a gyűrűs útjelzők (`NAV2D`).
 - VR-foglalás élmény: üveggömbök a szobák valódi 360°-os képével (`BX`, `bxBuild/bxTick`), elküldéskor a gömb kitágul és körülvesz (`bxCelebrate`), „HAJÓJEGY” – állapot: jóváhagyásra vár (a ChatGPT kérése: kérelem ≠ visszaigazolt foglalás).
