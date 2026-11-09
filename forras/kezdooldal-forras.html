@@ -893,6 +893,24 @@ html.logo-js .hero-cta { animation: none; opacity: 1; transform: none; margin-to
 html.logo-js .hero h1.hero-logo { translate: 0 -46px; }   /* a logó és a Zamárdi feljebb; az „Isten hozott!” a helyén marad */
 @media (max-width: 700px) { html.logo-js .hero h1.hero-logo { translate: 0 0; width: 76vw; margin: 0 0 4px 0; } html.logo-js .hero-in { padding-top: 132px; } .hero-scene .sc-txt { display: none; } .hero .place { font-size: 19px; } .hero .hello { margin-top: 14px; } }   /* telefon: a logó a fejléc alatt, a jelenet-felirat nem takarja */
 html.logo-anim.la-sink .hero .place, html.logo-anim.la-sink .hero .hello { transition: transform 2.2s cubic-bezier(.5,0,.8,.4), opacity 1.8s ease-in; transform: translateY(70px); opacity: 0; animation: none; }
+/* 360°-os üveggömb az apartmankártyákon (nov. 9.) */
+.apt { position: relative; }
+.apt-orb { position: absolute; z-index: 3; top: 12px; right: 12px; width: 96px; height: 96px; border-radius: 50%; display: block;
+  box-shadow: 0 10px 24px rgba(7,24,44,.45), 0 0 0 3px rgba(255,255,255,.85), 0 0 0 5px rgba(212,161,58,.9); transition: transform .35s cubic-bezier(.2,.8,.2,1.2), box-shadow .3s; animation: aptOrbBob 4.5s ease-in-out infinite; }
+.apt:nth-child(2n) .apt-orb { animation-delay: -1.6s; } .apt:nth-child(3n) .apt-orb { animation-delay: -3s; }
+.apt-orb-in { position: absolute; inset: 0; border-radius: 50%; background-repeat: repeat-x; background-size: 300% 150%; background-position: 0 55%; animation: aptOrbSpin 30s linear infinite; }
+.apt-orb-gl { position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.85) 0 7%, rgba(255,255,255,.25) 13%, rgba(255,255,255,0) 30%),
+              radial-gradient(circle at 70% 82%, rgba(255,255,255,.22) 0 8%, rgba(255,255,255,0) 22%),
+              radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 52%, rgba(7,24,44,.55) 100%);
+  box-shadow: inset 0 -8px 16px rgba(7,24,44,.45), inset 0 6px 10px rgba(255,255,255,.35); }
+.apt-orb em { position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%); padding: 3px 9px; border-radius: 999px; background: #0B2F5E; color: #E4BB63; font: 800 12px/1.2 var(--body, sans-serif); font-style: normal; letter-spacing: .04em; box-shadow: 0 0 0 2px #D4A13A; white-space: nowrap; }
+.apt-orb:hover, .apt-orb:focus-visible { transform: scale(1.18) translateY(-2px); box-shadow: 0 16px 32px rgba(7,24,44,.5), 0 0 0 3px #fff, 0 0 0 6px #D4A13A, 0 0 24px 6px rgba(228,187,99,.55); animation-play-state: paused; outline: none; }
+.apt-orb:hover .apt-orb-in { animation-duration: 9s; }
+@keyframes aptOrbSpin { from { background-position: 0 55%; } to { background-position: -300% 55%; } }
+@keyframes aptOrbBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@media (prefers-reduced-motion: reduce) { .apt-orb, .apt-orb-in { animation: none; } }
+@media (max-width: 600px) { .apt-orb { width: 80px; height: 80px; } }
 </style>
 <!--ZEPHYR-BOOKING-CSS-->
 
@@ -1339,12 +1357,15 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
   })();
 
   /* ---------------------------------------------------------------- apartmanok */
+  /* forgó 360°-os üveggömb az apartmanképek jobb felső sarkában (ugyanaz, mint a foglalási listában – a tulajdonos kérése, nov. 9.) */
+  const APT_ORB = { korvett: "korvett-nappali", dingi: "dingi-ulosarok", fregatt: "fregatt-nappali", kaloz: "kaloz-szoba", schooner: "schooner-nappali" };
   $("apts").innerHTML = APTS.map((a) => `
     <article class="apt${a.off ? " off" : ""}" style="--ac:${a.color}">
       <button type="button" class="apt-img" ${a.pics.length ? `data-gal="${a.id}"` : "disabled"} aria-label="${esc(a.name)} – képek megnézése">
         ${a.pics.length ? `<img src="${a.pics[0].th.replace("-k.jpg", ".jpg")}" alt="${esc(a.name)} apartman – ${esc(a.pics[0].cap)}" loading="lazy">` : `<span class="apt-ph"><svg><use href="#i-boat"/></svg></span>`}
         ${a.pics.length ? `<span class="apt-cnt"><svg><use href="#i-photo"/></svg>${a.pics.length} kép</span>` : ""}
       </button>
+      ${!a.off && APT_ORB[a.id] ? `<a class="apt-orb" href="${tourUrl(APT_ORB[a.id])}" aria-label="${esc(a.name)} – körülnézek 360°-ban" title="Körülnézek 360°-ban"><span class="apt-orb-in" style="background-image:url('../virtualis-seta/img/${APT_ORB[a.id]}-g.jpg')"></span><span class="apt-orb-gl"></span><em>360°</em></a>` : ""}
       <span class="apt-flag" aria-hidden="true">${a.no}</span>
       ${a.off ? `<span class="apt-badge">Jelenleg nem kiadó</span>` : ""}
       <div class="apt-body">
