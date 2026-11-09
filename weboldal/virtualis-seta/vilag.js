@@ -1335,6 +1335,7 @@
     const hp = CK2.helm.clone().multiplyScalar(1 / VR_SC); hp.x = -hp.x;   /* styrbord = a hajó helyi −x oldala */
     const eye = T.inVR ? 0 : 1.62;
     const hw = boat.localToWorld(hp.clone());
+    VRR.noSigns = (() => { try { return localStorage.getItem("zephyr-verseny-tablak") === "0"; } catch (e) { return false; } })();
     VRR.seated = (() => { try { return localStorage.getItem("zephyr-vr-ules") === "1"; } catch (e) { return false; } })();
     VRR.baseY = -(hw.y + eye); root.position.set(-hw.x, VRR.baseY - (VRR.seated && T.inVR ? .45 : 0), -hw.z); VRR.rootX = -hw.x; VRR.rootZ = -hw.z; VRR.helmL = hp.clone(); boat.updateMatrix(); VRR.helmRest = hp.clone().applyMatrix4(boat.matrix); root.updateMatrixWorld(true);   /* ülve a fedélzet 45 cm-rel lejjebb kerül – így ülve is a kerék fölött látsz */
     VRR.wake = makeWake(env, 1.2);
@@ -1455,7 +1456,7 @@
   function courseTick(dt, tgt, from, isGate, rounding) {
     const S = VRR, C = S.C, M = S.CM; if (!M) return;
     /* keringő nyilak + tábla a bója fölött */
-    M.orbit.visible = rounding && !S.fin; M.sign.visible = rounding && !S.fin;
+    M.orbit.visible = rounding && !S.fin; M.sign.visible = rounding && !S.fin && !S.noSigns;
     if (rounding) { M.orbit.position.set(tgt.x, 8 + Math.sin(W.t * 1.4) * .4, tgt.z); M.orbit.rotation.y += dt * .9;   /* +y körüli pozitív forgás = felülről nézve az óramutatóval ellentétes */
       M.heads.forEach((m, i) => { const a = i / 8 * TAU; m.position.set(Math.cos(a) * 9, 0, -Math.sin(a) * 9); const tg = new THREE.Vector3(-Math.sin(a), 0, -Math.cos(a)); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tg); m.scale.setScalar(1 + .15 * Math.sin(W.t * 4 + i)); });
       const d = Math.hypot(tgt.x - S.x, tgt.z - S.z), k = clamp(d * .13, 8, 55); M.sign.scale.set(k, k * 1.25, 1); M.sign.position.set(tgt.x, 18 + k * .75, tgt.z); M.orbit.scale.setScalar(clamp(d / 45, 1, 4.5)); M.orbit.position.y = 8 * clamp(d / 45, 1, 4.5);
@@ -1464,7 +1465,7 @@
       const app = Math.atan2(tgt.x - S.x, -(tgt.z - S.z)), ext = Math.atan2(nxt.x - tgt.x, -(nxt.z - tgt.z));
       drawRoundSign(M, wrapA(ext - app), S.next + 1, d); }
     /* kapu */
-    M.gate.visible = isGate && !S.fin;
+    M.gate.visible = isGate && !S.fin; if (M.gateL) M.gateL.visible = isGate && !S.fin && !S.noSigns;
     if (isGate) { const a = C.line.a, b = C.line.b, mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2, L = Math.hypot(b.x - a.x, b.z - a.z);
       M.posts[0].position.set(a.x, 25, a.z); M.posts[1].position.set(b.x, 25, b.z); M.posts.forEach((m) => { m.material.opacity = .55 + .3 * Math.sin(W.t * 3); });
       M.strip.position.set(mx, .12, mz); M.strip.scale.set(L, 1, 1); M.strip.rotation.z = -Math.atan2(b.z - a.z, b.x - a.x);
@@ -1889,18 +1890,20 @@
     P.row(3, S.best[S.lvl] ? `Legjobb időd ezen a pályán: ${mmss(S.best[S.lvl])}` : "Szél ellen nem lehet menni: cikcakkban (cirkálva) haladj!", "#c9a24a");
     if (S.st === "done") P.buttons([["↻ Újra", () => vrSetup(S.lvl)], ["Tovább ▸ " + (S.lvl + 1) + ". futam", () => vrSetup(S.lvl + 1)], ["‹ Vissza a sétához", () => W.close()]]);
     else P.buttons([["Egyenesbe", () => { S.wa = 0; }], ["↻ Újrakezdés", () => vrSetup(S.lvl)], [S.seated ? "🧍 Álló mód" : "🪑 Ülő mód", () => vrSeat()], ["‹ Vissza", () => W.close()]]);
+    P.buttons([[S.noSigns ? "🪧 Táblák mutatása" : "🪧 Táblák elrejtése", vrSigns]], 1);
   }
+  function vrSigns() { VRR.noSigns = !VRR.noSigns; try { localStorage.setItem("zephyr-verseny-tablak", VRR.noSigns ? "0" : "1"); } catch (e) {} W.panelDirty = 1; }
   function vrSeat() { VRR.seated = !VRR.seated; try { localStorage.setItem("zephyr-vr-ules", VRR.seated ? "1" : "0"); } catch (e) {} W.root.position.y = VRR.baseY - (VRR.seated && T.inVR ? .45 : 0); W.panelDirty = 1; }
   function vrWrist() {
     const S = VRR;
-    return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", "Következő futam", () => vrSetup(S.lvl + 1)], ["◂", "Előző futam", () => vrSetup(Math.max(1, S.lvl - 1))], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
+    return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", "Következő futam", () => vrSetup(S.lvl + 1)], ["◂", "Előző futam", () => vrSetup(Math.max(1, S.lvl - 1))], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
       ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
   }
   function vrHud(H) {
     const S = VRR;
     H.title(`Vitorlásverseny · ${S.lvl}. futam · ${S.C.name}`, `${S.msgT > 0 ? S.msg + " · " : ""}${S.st === "pre" ? "rajt " + mmss(-S.t) : "idő " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · ${S.next < S.marks.length ? (S.next + 1) + ". bója" : "befutó"}`);
     if (S.st === "done") H.steer([["↻ Újra", () => vrSetup(S.lvl)], ["Tovább ▸", () => vrSetup(S.lvl + 1)]], () => { S.wa = 0; });
-    else H.steer([["↻ Újrakezdés", () => vrSetup(S.lvl)]], () => { S.wa = 0; });
+    else H.steer([["↻ Újrakezdés", () => vrSetup(S.lvl)], [S.noSigns ? "🪧 Táblák" : "🪧 Táblák ✕", vrSigns]], () => { S.wa = 0; });
     H.hint("Kormány: ◀ ▶ gomb vagy ← → (A / D) · a sárga fényoszlop a következő bója · bal kéz felől kerüld");
   }
 
@@ -5231,17 +5234,17 @@
     /* fedélzet */
     const deckT = txPlanks("vsteak", "#c08a52", "#9a6a3c", 14); const dm = mesh(new THREE.BoxGeometry(6.4, .25, 5.6), std({ map: deckT, roughness: .45 }), G); dm.position.set(0, TOWER_Y - .12, 0);
     L.push([BX(6.5, .08, 5.7), br, M4(0, TOWER_Y - .27, 0), "m"]);
-    /* korlát: sárgaréz oszlopok, két rúd, elöl üvegfal (nem takar) */
+    /* korlát: sárgaréz oszlopok, két rúd – a tábla felé NINCS korlát (csak egy 8 cm-es sárgaréz élléc), így ülve is szabad a kilátás */
     const rail = (a, b) => { L.push(ROD(V3(a[0], TOWER_Y + 1.05, a[1]), V3(b[0], TOWER_Y + 1.05, b[1]), .035, br, "m"), ROD(V3(a[0], TOWER_Y + .55, a[1]), V3(b[0], TOWER_Y + .55, b[1]), .02, br, "m")); };
     const cr = [[-3.1, -2.7], [3.1, -2.7], [3.1, 2.7], [-3.1, 2.7]];
-    for (let k = 0; k < 4; k++) { const a = cr[k], b = cr[(k + 1) % 4]; if (k === 2) { rail(a, [1.4, 2.7]); rail([-1.4, 2.7], b); } else rail(a, b);
+    for (let k = 0; k < 4; k++) { const a = cr[k], b = cr[(k + 1) % 4]; if (k === 0) { L.push([BX(6.3, .08, .06), br, M4(0, TOWER_Y + .04, -2.78), "m"]); continue; } if (k === 2) { rail(a, [1.4, 2.7]); rail([-1.4, 2.7], b); } else rail(a, b);
       for (let f = 0; f <= 6; f++) { const px = lerp(a[0], b[0], f / 6), pz = lerp(a[1], b[1], f / 6); if (k === 2 && Math.abs(px) < 1.3) continue; L.push([CY(.03, .03, 1.05, 6), br, M4(px, TOWER_Y + .52, pz), "m"], [new THREE.SphereGeometry(.05, 8, 6), br, M4(px, TOWER_Y + 1.08, pz), "m"]); } }
     /* vitorlavászon árnyékoló, zászlórúd, távcső, hajóharang */
     [[-3, 2.6], [3, 2.6]].forEach(([px, pz]) => L.push([CY(.06, .06, 3.4, 8), "#f2efe6", M4(px, TOWER_Y + 1.7, pz)]));
     L.push([CY(.05, .07, 5.5, 8), "#f2efe6", M4(0, TOWER_Y + 2.75, 2.6)]);
-    L.push(ROD(V3(2.2, TOWER_Y, -1.6), V3(2.0, TOWER_Y + 1.25, -1.7), .03, br, "m"), ROD(V3(2.6, TOWER_Y, -1.9), V3(2.0, TOWER_Y + 1.25, -1.7), .03, br, "m"), ROD(V3(1.8, TOWER_Y, -1.9), V3(2.0, TOWER_Y + 1.25, -1.7), .03, br, "m"));
-    L.push([CY(.07, .1, 1.1, 12).rotateX(Math.PI / 2 - .12), br, M4(2.0, TOWER_Y + 1.35, -1.85), "m"]);
-    L.push([CY(.18, .26, .34, 14), br, M4(-2.4, TOWER_Y + 1.5, -2.4), "m"], [BX(.06, .5, .06), dark, M4(-2.4, TOWER_Y + 1.2, -2.6)], [BX(.5, .06, .06), dark, M4(-2.4, TOWER_Y + 1.72, -2.45)]);
+    L.push(ROD(V3(2.8, TOWER_Y, 2.0), V3(2.6, TOWER_Y + 1.25, 1.9), .03, br, "m"), ROD(V3(2.9, TOWER_Y, 1.6), V3(2.6, TOWER_Y + 1.25, 1.9), .03, br, "m"), ROD(V3(2.3, TOWER_Y, 1.7), V3(2.6, TOWER_Y + 1.25, 1.9), .03, br, "m"));   /* távcső + harang hátul, nem takarnak */
+    L.push([CY(.07, .1, 1.1, 12).rotateX(Math.PI / 2 - .12), br, M4(2.6, TOWER_Y + 1.35, 1.75), "m"]);
+    L.push([CY(.18, .26, .34, 14), br, M4(-2.6, TOWER_Y + 1.5, 2.2), "m"], [BX(.06, .5, .06), dark, M4(-2.6, TOWER_Y + 1.2, 2.4)], [BX(.5, .06, .06), dark, M4(-2.6, TOWER_Y + 1.72, 2.25)]);
     /* lámpások a korlát sarkain */
     cr.forEach(([px, pz]) => L.push([CY(.1, .12, .3, 8), "#ffd890", M4(px, TOWER_Y + 1.25, pz), "e"], [new THREE.ConeGeometry(.15, .16, 8), br, M4(px, TOWER_Y + 1.48, pz), "m"]));
     /* bejáró a stégre */
@@ -5584,27 +5587,33 @@
   const VIEW_CYCLE = ["bridge", "deck", "left", "enemy", "right", "balloon", "orbit"];
   const BALLOON_PARK = V3(-BH - 46, 26, -18);
   function viewPoint(id, o) {
-    const sd = (GS.two ? "w" : GS.human) === "w" ? 1 : -1, d = TOWER_D - 1.4;
+    const sd = (GS.two ? "w" : GS.human) === "w" ? 1 : -1, d = TOWER_D - 2.55;   /* a torony fedélzetének legelső pereme: előtted semmi */
     switch (id) {
       case "enemy": return { p: V3(0, TOWER_Y, -sd * d), pitch: -.3 };
       case "left": return { p: V3(-sd * d, TOWER_Y, 0), pitch: -.3 };
       case "right": return { p: V3(sd * d, TOWER_Y, 0), pitch: -.3 };
-      case "deck": return { p: V3(0, PONT_Y, sd * (BI + PONT * .6)), pitch: -.06 };
+      case "deck": return { p: V3(0, PONT_Y, sd * (BI + .12)), pitch: -.12 };   /* a stég belső élén, a kötél ELŐTT */
       case "walk": return { p: V3(o.x, PONT_Y, o.z), pitch: -.08 };
       case "balloon": return { p: V3(0, 44, sd * 46), pitch: -.92, balloon: true };
       case "orbit": { const th = o && o.th != null ? o.th : Math.atan2(0, sd); return { p: V3(Math.sin(th) * 66, 30, Math.cos(th) * 66), pitch: -.42, balloon: true, th }; }
       default: return { p: V3(0, TOWER_Y, sd * d), pitch: -.32 };
     }
   }
+  function inVRSeat() { if (CS.seat == null) { try { CS.seat = localStorage.getItem("zephyr-vr-ules") === "1"; } catch (e) { CS.seat = false; } } return !!(T.inVR && CS.seat); }
+  function toggleSeat() { CS.seat = !inVRSeatRaw(); try { localStorage.setItem("zephyr-vr-ules", CS.seat ? "1" : "0"); } catch (e) {} goView(CS.viewId || "bridge", null, true); W.panelDirty = 1; }
+  function inVRSeatRaw() { inVRSeat(); return !!CS.seat; }
+  function toggleSign() { CS.noSign = !CS.noSign; if (CS.sign) CS.sign.visible = !CS.noSign; try { localStorage.setItem("zephyr-sakk-tabla", CS.noSign ? "0" : "1"); } catch (e) {} W.panelDirty = 1; }
   function chessPlace(v, keepPsi) {
     const root = W.root; if (!root) return;
     const psi = keepPsi != null ? keepPsi : (T.camYaw ? T.camYaw() : 0), envYaw = Math.atan2(v.p.x, v.p.z), r = psi - envYaw;
     /* 2D-ben a ballonban a kosár pereme fölé, kicsit előre hajolva nézünk (VR-ben magad hajolsz ki) */
-    const pv = v.balloon && !T.inVR ? v.p.clone().add(V3(-Math.sin(envYaw) * 1.3, .45, -Math.cos(envYaw) * 1.3)) : v.p;
+    const pv = v.balloon ? v.p.clone().add(T.inVR ? V3(-Math.sin(envYaw) * .62, 0, -Math.cos(envYaw) * .62) : V3(-Math.sin(envYaw) * 1.3, .45, -Math.cos(envYaw) * 1.3)) : v.p;
+    /* ülő mód: VR-ben 45 cm-rel (ballonban 60) feljebb emel, hogy ülve se takarjon semmi */
+    const lift = inVRSeat() ? (v.balloon ? .6 : .45) : 0;
     const q = pv.clone().applyAxisAngle(V3(0, 1, 0), r);
     const hw = headWorld(new THREE.Vector3()), inVR = T.inVR;
     root.rotation.set(0, r, 0);
-    root.position.set(-q.x + (inVR ? hw.x : 0), inVR ? -pv.y : -(pv.y + 1.62), -q.z + (inVR ? hw.z : 0));
+    root.position.set(-q.x + (inVR ? hw.x : 0), inVR ? -pv.y - lift : -(pv.y + 1.62), -q.z + (inVR ? hw.z : 0));
     root.updateMatrixWorld(true);
     if (v.balloon) CS.balloon.position.copy(v.p); else if (!CS.orbit) CS.balloon.position.copy(BALLOON_PARK);
     if (v.balloon) CS.balloon.rotation.y = envYaw;
@@ -5643,14 +5652,14 @@
     P.row(2, `${VIEWS[CS.viewId || "bridge"][1]} · a stégre csippentve odalépsz`, "#7fd3ff");
     const mt = material();
     P.row(3, `Te: ${GS.two ? "két játékos" : GS.human === "w" ? "világos (gép ellen)" : "sötét (gép ellen)"} · anyag: ${mt === 0 ? "egyenlő" : (mt > 0 ? "világos +" : "sötét +") + Math.abs(mt)}`, "#ffffff");
-    P.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["🔭 Nézőpont", nextView]], 1);
-    P.buttons([["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 Két játékos", toggleTwo], ["‹ Kilépés", () => W.close()]], 0);
+    P.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["🔭 Nézőpont", nextView], [CS.noSign ? "🪧 Tábla be" : "🪧 Tábla ki", toggleSign]], 1);
+    P.buttons([["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 Két játékos", toggleTwo]].concat(T.inVR ? [[inVRSeatRaw() ? "🧍 Álló" : "🪑 Ülő mód", toggleSeat]] : []).concat([["‹ Kilépés", () => W.close()]]), 0);
   }
   function chessHud(H) {
     H.title(`Vitorlás sakk · ${GS.lvl}. szint – ${rankVR(GS.lvl)}`, headline());
     H.list([`Leütve – világos: ${capStr(GS.capW)} · sötét: ${capStr(GS.capB)}`, `Nézőpont: ${VIEWS[CS.viewId || "bridge"][1]}`]);
     if (GS.promo) { H.buttons([["Vezér (fregatt)", () => pickPromo("q")], ["Bástya (torony)", () => pickPromo("r")], ["Futó (jacht)", () => pickPromo("b")], ["Huszár (viking)", () => pickPromo("n")]]); }
-    else H.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 2 játékos", toggleTwo], ["⇄ Színcsere", swapSide]]
+    else H.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 2 játékos", toggleTwo], ["⇄ Színcsere", swapSide], [CS.noSign ? "🪧 Tábla be" : "🪧 Tábla ki", toggleSign]]
       .concat(VIEW_CYCLE.map((k) => [VIEWS[k][0] + " " + VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])));
     H.hint("Húzással körbenézel · kattints egy hajódra, aztán a célmezőre · a stégre kattintva odalépsz");
   }
@@ -5658,7 +5667,7 @@
     return [["🔭", "Nézőpont", VIEW_CYCLE.map((k) => [VIEWS[k][0], VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])],
       ["💡", "Ötlet", hint], ["↶", "Visszalépés", undo], ["♟", "Új játszma", newGame],
       ["📶", "Szint", [["−", "Könnyebb", () => setLvl(-1)], ["+", "Nehezebb", () => setLvl(1)]]],
-      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
+      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["🪧", CS.noSign ? "Tábla mutatása" : "Tábla elrejtése", toggleSign], ["🪑", inVRSeatRaw() ? "Álló mód" : "Ülő mód", toggleSeat], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
   }
 
   /* ------------------------------------------------------------------ FELÉPÍTÉS */
@@ -5699,7 +5708,7 @@
     CS.pick.userData.xr = { hover: (on, h) => setHover(on && h ? sqFrom(h.point) : -1), move: (h) => { if (h) setHover(sqFrom(h.point)); }, click: (h) => { if (h) onSquare(sqFrom(h.point)); } };
     T.xr.extra.add(CS.pick); W.objs.push(CS.pick);
     CS.hovL = labelSprite(["", ""], { size: 1, fs: 54, w: 900 }); env.add(CS.hovL); CS.hovL.visible = false;
-    CS.sign = labelSprite(["", ""], { size: 30, fs: 64, w: 1400, bg: "rgba(14,33,66,.82)", edge: "#c9a227" }); env.add(CS.sign);
+    CS.sign = labelSprite(["", ""], { size: 30, fs: 64, w: 1400, bg: "rgba(14,33,66,.82)", edge: "#c9a227" }); env.add(CS.sign); try { CS.noSign = localStorage.getItem("zephyr-sakk-tabla") === "0"; } catch (e) {} CS.sign.visible = !CS.noSign;
     /* elsötétítő gömb a nézőpontváltáshoz (a kamerán) */
     CS.fadeM = new THREE.Mesh(new THREE.SphereGeometry(.4, 16, 10), new THREE.MeshBasicMaterial({ color: 0x05070c, transparent: true, opacity: 0, side: THREE.BackSide, depthTest: false, depthWrite: false })); CS.fadeM.renderOrder = 9999; CS.fadeM.visible = false;
     W.disposables.push(CS.fadeM.geometry, CS.fadeM.material); try { T.camObj().add(CS.fadeM); } catch (e) {}
@@ -6046,6 +6055,14 @@
       click: (h) => { if (!h || !h.uv) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; const b = P.btns.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) { b.fn(); P.draw(); } }
     };
     T.xr.extra.add(m);
+    /* összecsukott állapot: kis fül, rámutatva/csippentve újra kinyílik */
+    { const pc = document.createElement("canvas"); pc.width = 420; pc.height = 120; const pt = new THREE.CanvasTexture(pc); pt.colorSpace = THREE.SRGBColorSpace; W.disposables.push(pt);
+      const pm = new THREE.Mesh(new THREE.PlaneGeometry(.21, .06), new THREE.MeshBasicMaterial({ map: pt, transparent: true, depthTest: false, depthWrite: false })); pm.renderOrder = 995; W.disposables.push(pm.geometry, pm.material);
+      const pd = (hv) => { const g = pc.getContext("2d"); g.clearRect(0, 0, 420, 120); g.beginPath(); g.roundRect ? g.roundRect(4, 4, 412, 112, 56) : g.rect(4, 4, 412, 112); g.fillStyle = hv ? "#ffe08a" : "rgba(7,28,58,.9)"; g.fill(); g.lineWidth = 5; g.strokeStyle = "rgba(255,209,102,.9)"; g.stroke();
+        g.fillStyle = hv ? "#0b2f5e" : "#fff"; g.font = "800 50px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("☰ Panel", 210, 62); pt.needsUpdate = true; };
+      pd(false); pm.visible = false;
+      pm.userData.xr = { hover: (on) => pd(on), click: () => { W.togglePanel(); pd(false); } };
+      P.pill = pm; }
     P.draw = () => {
       const g = cv.getContext("2d"); P.btns = []; g.clearRect(0, 0, PW, PH);
       const bg = g.createLinearGradient(0, 0, 0, PH); bg.addColorStop(0, "rgba(14,52,98,.94)"); bg.addColorStop(1, "rgba(7,28,58,.94)");
@@ -6054,7 +6071,7 @@
       /* hosszú szöveg: a betűméret addig csökken, amíg ki nem fér (ne lógjon ki a panelből) */
       const fitFont = (wt, fs, min, t, maxW) => { g.font = `${wt} ${fs}px system-ui, sans-serif`; while (fs > min && g.measureText(t).width > maxW) { fs -= 2; g.font = `${wt} ${fs}px system-ui, sans-serif`; } };
       const api = {
-        title(t, s) { g.fillStyle = "#ffd166"; g.textAlign = "left"; g.textBaseline = "middle"; fitFont(800, 50, 32, t, PW - 88); g.fillText(t, 44, 66); g.fillStyle = "#fff"; fitFont(600, 34, 22, s || "", PW - 88); g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
+        title(t, s) { g.fillStyle = "#ffd166"; g.textAlign = "left"; g.textBaseline = "middle"; fitFont(800, 50, 32, t, PW - 200); g.fillText(t, 44, 66); g.fillStyle = "#fff"; fitFont(600, 34, 22, s || "", PW - 88); g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
         row(i, t, c, r) { const y = 210 + i * 66; g.fillStyle = c || "#fff"; g.beginPath(); g.arc(58, y, 11, 0, TAU); g.fill(); g.fillStyle = "#fff"; g.textAlign = "left"; fitFont(600, 36, 22, t, PW - 84 - (r ? 220 : 44)); g.fillText(t, 84, y); if (r) { g.textAlign = "right"; g.fillStyle = "#7fd3ff"; g.fillText(r, PW - 50, y); } rowY = y; },
         buttons(list, row) {
           const n = list.length, gap = 16, w = (PW - 80 - gap * (n - 1)) / n, y = PH - 150 - (row || 0) * 126, h = 110;
@@ -6075,6 +6092,10 @@
         }
       };
       if (W.spec && W.spec.panel) W.spec.panel(api);
+      /* összecsukó gomb a jobb felső sarokban – a panel egy kis „☰ Panel” fülre zsugorodik */
+      { const x = PW - 132, y = 22, w = 96, h = 78, k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn: () => W.togglePanel() });
+        g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 22) : g.rect(x, y, w, h); g.fillStyle = hov ? "#ffe08a" : "rgba(255,255,255,.14)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke();
+        g.fillStyle = hov ? "#0b2f5e" : "#fff"; g.fillRect(x + 26, y + h / 2 + 8, w - 52, 9); }
       tex.needsUpdate = true;
     };
     P.tick = (dt) => {
@@ -6083,6 +6104,12 @@
       if ((W.panelDirty || 0) > .5) { W.panelDirty = 0; P.draw(); }
     };
     return P;
+  }
+  function placePill() {
+    const P = W.panel; if (!P || !P.pill) return;
+    if (!P.m.parent) placePanel();
+    T.xr.extra.add(P.pill); P.pill.position.copy(P.m.position); P.pill.quaternion.copy(P.m.quaternion); P.pill.translateX(-.27); P.pill.translateY(.2);
+    if (!P.pill.parent) T.sceneEl.object3D.add(P.pill);
   }
   function placePanel() {
     const P = W.panel; if (!P) return;
@@ -6217,7 +6244,7 @@
     document.body.classList.add("world-on");
     W.hud = makeHud(); W.hud.el.style.display = T.inVR ? "none" : ""; W.hud.draw();
     W.panel = makePanel(); W.panel.draw();
-    if (T.inVR) placePanel();
+    if (T.inVR) { placePanel(); if (W.panelHidden) { T.xr.extra.delete(W.panel.m); placePill(); } }
     const cvs = T.sceneEl.canvas;
     cvs.addEventListener("pointermove", on2DMove); cvs.addEventListener("pointerdown", on2DDown); cvs.addEventListener("pointerup", on2DUp);
     addEventListener("keydown", kd); addEventListener("keyup", ku);
@@ -6228,12 +6255,16 @@
     W.t += dt;
     W.upd.forEach((f) => f(dt));
     W.spec.tick(dt);
-    if (W.panel) { W.panel.m.visible = T.inVR && !W.panelHidden; if (T.inVR) W.panel.tick(dt); }
+    if (W.panel) { W.panel.m.visible = T.inVR && !W.panelHidden; if (W.panel.pill) W.panel.pill.visible = T.inVR && !!W.panelHidden; if (T.inVR) W.panel.tick(dt); }
     W.hudT += dt; if (!T.inVR && W.hud && W.hudT > .4) { W.hudT = 0; W.hud.draw(); }
   };
   W.togglePanel = function () {
     if (!W.panel) return; W.panelHidden = !W.panelHidden;
-    if (!W.panelHidden) placePanel();
+    const P = W.panel;
+    if (W.panelHidden && P.pill) {   /* a fül a panel bal felső sarkánál marad, ugyanabban az irányban */
+      T.xr.extra.delete(P.m); placePill();
+    }
+    if (!W.panelHidden) { if (P.pill) T.xr.extra.delete(P.pill); T.xr.extra.add(P.m); placePanel(); }
   };
   W.vrChanged = function (on) {
     if (!W.active) return;
@@ -6252,8 +6283,8 @@
     cvs.removeEventListener("pointermove", on2DMove); cvs.removeEventListener("pointerdown", on2DDown); cvs.removeEventListener("pointerup", on2DUp); cvs.style.cursor = "";
     removeEventListener("keydown", kd); removeEventListener("keyup", ku);
     W.objs.forEach((o) => T.xr.extra.delete(o));
-    if (T.xrForget) T.xrForget(W.objs.concat(W.panel ? [W.panel.m] : []));
-    if (W.panel) { T.xr.extra.delete(W.panel.m); if (W.panel.m.parent) W.panel.m.parent.remove(W.panel.m); }
+    if (T.xrForget) T.xrForget(W.objs.concat(W.panel ? [W.panel.m].concat(W.panel.pill ? [W.panel.pill] : []) : []));
+    if (W.panel) { T.xr.extra.delete(W.panel.m); if (W.panel.m.parent) W.panel.m.parent.remove(W.panel.m); const pl = W.panel.pill; if (pl) { T.xr.extra.delete(pl); if (pl.parent) pl.parent.remove(pl); } }
     if (W.root && W.root.parent) W.root.parent.remove(W.root);
     W.root && W.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     W.disposables.forEach((d) => { try { d.dispose(); } catch (e) {} });

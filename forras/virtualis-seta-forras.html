@@ -972,6 +972,8 @@ body.walk-on .gm-dock { display: none; }
 .gm-ring i { --k: 0; width: 34px; height: 34px; border-radius: 50%; background: conic-gradient(#f2b233 calc(var(--k) * 360deg), rgba(255,255,255,.18) 0); -webkit-mask: radial-gradient(circle, transparent 0 11px, #000 12px); mask: radial-gradient(circle, transparent 0 11px, #000 12px); }
 .gm-x { all: unset; cursor: pointer; flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font: 700 24px/1 sans-serif; background: rgba(255,255,255,.14); }
 .gm-x:hover { background: #e2483d; }
+.gm-pn { all: unset; cursor: pointer; flex: none; height: 32px; padding: 0 12px; border-radius: 16px; display: grid; place-items: center; font: 800 14px/1 Manrope, Arial, sans-serif; color: #fff; background: rgba(255,255,255,.14); white-space: nowrap; }
+.gm-pn:hover { background: rgba(255,255,255,.26); } .gm-pn.off { background: #f2b233; color: #14202a; }
 .gm-help.show { animation: gmHelp 7s ease forwards; } @keyframes gmHelp { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
 .gm-help { opacity: 0; position: absolute; left: 50%; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); margin: 0; max-width: min(640px, calc(100% - 24px)); padding: 8px 14px; border-radius: 12px; font: 600 12.5px/1.35 var(--body); color: #fff; background: rgba(7,29,56,.6); backdrop-filter: blur(6px); text-align: center; pointer-events: none; }
 .gm-reward { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(4,14,30,.45); padding: 16px; }
@@ -12568,7 +12570,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     }
     g.restore();
   }
+  let GM_PANELS_OFF = (() => { try { return localStorage.getItem("zephyr-stegjatek-tablak") === "0"; } catch (e) { return false; } })();
   function gmLegend(g, W, H, items) {   /* pontérték-táblácska a bal alsó sarokban */
+    if (GM_PANELS_OFF) return;
     const small = W < 600, fs = small ? 11 : 12.5, pad = 8; g.font = `800 ${fs}px Manrope, Arial, sans-serif`;
     const rows = small ? Math.ceil(items.length / 2) : items.length, cols = small ? 2 : 1, cw = small ? (W - 40) / 2 : 190, rh = fs * 1.7;
     const bw = cw * cols + pad * 2, bh = rows * rh + pad * 2, x0 = 12, y0 = H - bh - (small ? 64 : 18);
@@ -12680,6 +12684,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     g.textAlign = "center"; g.textBaseline = "middle";
     const top = GM_TOP;
     let y2 = top + 52;
+    if (GM_PANELS_OFF) return y2;
     if (msg) {   /* több sorba tördelve, ha nem fér ki */
       let fs = W < 600 ? 15 : 18; g.font = `800 ${fs}px Manrope, Arial, sans-serif`;
       if (window.ZI18N && ZI18N.lang !== "hu") msg = ZI18N.t(msg);   /* előbb fordít, aztán tördel */
@@ -12952,6 +12957,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           g.font = "800 12px Manrope, Arial, sans-serif"; g.strokeText(f.sub, p.x, p.y + 18); g.fillStyle = "#fff"; g.fillText(f.sub, p.x, p.y + 18); g.restore(); });
         const c = cfg();
         /* HUD: szint, idő-sáv, pont/cél, pizzák, kombó */
+        if (!GM_PANELS_OFF) {
         const hy = GM_TOP + 2, bw = Math.min(W - 24, 460), bx = W / 2 - bw / 2;
         g.fillStyle = "rgba(7,29,56,.66)"; g.beginPath(); g.roundRect ? g.roundRect(bx, hy, bw, 48, 16) : g.rect(bx, hy, bw, 48); g.fill();
         g.textBaseline = "middle"; g.font = "900 15px Manrope, Arial, sans-serif"; g.textAlign = "left"; g.fillStyle = "#ffd978"; g.fillText(`${S.lv}. szint`, bx + 14, hy + 17);
@@ -12959,6 +12965,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         const tk = Math.max(0, S.left / c.time); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(bx + 14, hy + 32, bw - 28, 7); g.fillStyle = tk < .25 ? "#ff6b5a" : "#7fd8ff"; g.fillRect(bx + 14, hy + 32, (bw - 28) * tk, 7);
         g.textAlign = "center"; g.font = "800 13px Manrope, Arial, sans-serif"; g.fillStyle = "#fff"; g.fillText(`⏱ ${Math.ceil(Math.max(0, S.left))} mp`, W / 2, hy + 17);
         if (S.combo >= 3 && S.st === "play") { g.font = "900 18px Manrope, Arial, sans-serif"; g.fillStyle = "#ff9f43"; g.fillText(`Sorozat ×${Math.min(4, 1 + Math.floor((S.combo - 1) / 3))}`, W / 2, hy + 70); }
+        }
         if (S.msg) gmText(g, W, S.msg, "");
         /* pizzák a kosárban */
         const n = S.pizzas, pr = W < 600 ? 9 : 11; for (let k = 0; k < Math.min(n, 22); k++) pizzaDraw(g, W - 24 - (k % 11) * pr * 2.1, H - (W < 600 ? 168 : 30) - Math.floor(k / 11) * pr * 2.2, pr, .6, k);
@@ -13462,6 +13469,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       g.strokeStyle = "rgba(255,255,255,.8)"; g.lineWidth = 1.5; for (let k = 0; k < 3; k++) { const q = ((t * (.6 + .5 * S.wstr) + k / 3) % 1) * 2 - 1; g.globalAlpha = 1 - Math.abs(q); g.beginPath(); g.moveTo(-aw * 1.3, q * al); g.lineTo(-aw * 1.3, q * al + 7); g.moveTo(aw * 1.3, q * al); g.lineTo(aw * 1.3, q * al + 7); g.stroke(); } g.globalAlpha = 1;
       g.restore();
       g.fillStyle = "rgba(7,29,56,.78)"; g.beginPath(); g.roundRect ? g.roundRect(x - 48, y + R0 + 3, 96, 32, 10) : g.rect(x - 48, y + R0 + 3, 96, 32); g.fill(); g.fillStyle = col; g.font = "900 11.5px Manrope, Arial, sans-serif"; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillText(windName().toUpperCase(), x, y + R0 + 16); g.fillStyle = "#fff"; g.font = "800 10.5px Manrope, Arial"; g.fillText(bf + " Beaufort", x, y + R0 + 29);
+      if (!GM_PANELS_OFF) {   /* kis pályatérkép – a 🪧 gombbal elrejthető */
       const mw = W < 600 ? 92 : 132, mh = mw * 1.1, mx = W - mw - 12, my = W < 600 ? H - 125 - mw * 1.1 - 30 : y - 30, maxX = Math.max(...CO.m.map((q) => Math.abs(q[0])), CO.lh) + 10, maxZ = Math.max(...CO.m.map((q) => q[1])) + 8, sx = mw / (maxX * 2), sz = (mh - 16) / maxZ;
       g.fillStyle = "rgba(7,29,56,.62)"; g.beginPath(); g.roundRect ? g.roundRect(mx, my, mw, mh, 12) : g.rect(mx, my, mw, mh); g.fill();
       const M = (X, Z) => [mx + mw / 2 + X * sx, my + mh - 6 - Z * sz];
@@ -13472,6 +13480,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       CO.m.forEach(([X, Z], i) => { const [a, b] = M(X, Z); g.fillStyle = "#ff8a2a"; g.beginPath(); g.arc(a, b, 5, 0, 7); g.fill(); g.fillStyle = "#14202a"; g.font = "900 8px Manrope, Arial"; g.fillText(i + 1, a, b + 3); });
       S.boats.forEach((b) => { const [a, c] = M(b.X, b.Z); g.save(); g.translate(a, c); g.rotate(b.hd); g.fillStyle = b.c.me ? "#e2483d" : "#fff"; g.beginPath(); g.moveTo(0, -5); g.lineTo(3, 4); g.lineTo(-3, 4); g.closePath(); g.fill(); g.restore(); });
       g.fillStyle = "#fff"; g.font = "800 10px Manrope, Arial"; g.fillText(`${S.lvl}. pálya`, mx + mw / 2, my + 12);
+      }
       if (S.st === "race" || S.st === "count") {
         [[-1, "◀"], [1, "▶"]].forEach(([d, s2]) => { const bx = d < 0 ? 58 : W - 58, by = H - 70, on = S.steer === d;
           g.fillStyle = on ? "rgba(242,178,51,.85)" : "rgba(7,29,56,.55)"; g.beginPath(); g.arc(bx, by, 36, 0, 7); g.fill(); g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = 2; g.stroke();
@@ -14100,7 +14109,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           g.save(); g.translate(f.x + G.w / 2, f.y + G.h / 2 - k2 * G.h * .4); g.scale(sc, sc); blit(g, f.k, -G.w / 2, -G.h / 2, dpr); g.restore(); g.globalAlpha = 1; });
         S.sp.forEach((p) => { g.globalAlpha = Math.max(0, p.l); g.fillStyle = p.c; g.save(); g.translate(p.x, p.y); g.rotate(p.l * 6); const s = 3 + p.l * 3; g.beginPath(); for (let i = 0; i < 8; i++) { const r = i % 2 ? s * .35 : s, a = i * Math.PI / 4; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.fill(); g.restore(); g.globalAlpha = 1; });
         /* számláló: jobb felső sarok, a fejléc sorában */
-        {
+        if (!GM_PANELS_OFF) {
           const l1 = gmFmt(S.el * 1000), l2 = ph ? `${S.left} lap · ${S.moves} pár` : `${LAYOUTS[S.lay].n} · ${S.left} lap · ${S.moves} szabad pár`;
           g.font = `700 ${ph ? 11 : 12}px ${SANS}`; const w2 = g.measureText(l2).width; g.font = `900 ${ph ? 18 : 20}px ${SANS}`; const w1 = g.measureText(l1).width + 22;
           const cw = Math.max(w1, w2) + 24, chh = ph ? 44 : 48, cx = W - cw - 10; let cy = GM_HD.top;
@@ -14129,7 +14138,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           row(acts, py + 24, (id) => (id === "hint" ? "gold" : "")); row(lays, py + 44 + rh + 6, (id) => (id === S.lay ? "on" : ""));
           msgY = py - 44;
         }
-        if (S.msgT > 0 && S.msg) {
+        if (S.msgT > 0 && S.msg && !GM_PANELS_OFF) {
           g.globalAlpha = Math.min(1, S.msgT * 2); g.font = `700 ${ph ? 13 : 14}px ${SANS}`; const mw2 = Math.min(W - 24, g.measureText(S.msg).width + 30);
           g.fillStyle = "rgba(7,29,56,.88)"; g.beginPath(); g.roundRect ? g.roundRect(W / 2 - mw2 / 2, msgY, mw2, 34, 12) : g.rect(W / 2 - mw2 / 2, msgY, mw2, 34); g.fill();
           g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(S.msg, W / 2, msgY + 17, W - 40); g.globalAlpha = 1;
@@ -15037,8 +15046,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       { const sum = (l) => l.reduce((t2, p) => t2 + VAL[p.toLowerCase()], 0), d = (sum(S.capB) - sum(S.capW)) / 100;
         if (Math.abs(d) >= 1) { const wBot = !S.flip; g.fillStyle = "#ffd166"; g.font = `800 ${Math.max(13, sq * .28)}px ${SANS}`; g.textAlign = "right"; g.textBaseline = "middle";
           const yy = (d > 0) === wBot ? (L.land ? L.by + L.bw + 4 - sq * .1 : L.by + L.bw + L.capH * .5) : (L.land ? L.by - 4 + sq * .1 : L.by - L.capH * .5); g.fillText("+" + Math.round(Math.abs(d)), L.land ? L.bx + L.bw + L.capW - 6 : L.bx + L.bw - 6, yy); } }
-      /* állapotsor: széles képernyőn a fejléc mellett, keskenyen alatta */
-      { const txt = S.thinking ? S.msg.replace(/…$/, "") + ".".repeat(1 + Math.floor(S.t * 3) % 3) : S.msg; g.font = `800 ${L.ph ? 15 : 18}px ${SANS}`;
+      /* állapotsor: széles képernyőn a fejléc mellett, keskenyen alatta (🪧-gombbal elrejthető) */
+      if (!GM_PANELS_OFF) { const txt = S.thinking ? S.msg.replace(/…$/, "") + ".".repeat(1 + Math.floor(S.t * 3) % 3) : S.msg; g.font = `800 ${L.ph ? 15 : 18}px ${SANS}`;
         const x0 = L.pillInHd ? GM_HD.right + 12 : 10, x1 = W - 10, tw = Math.min(x1 - x0, g.measureText(txt).width + 36), cx = L.pillInHd ? Math.max(x0 + tw / 2, W / 2) : W / 2, cy = L.pillInHd ? (GM_HD.top + GM_HD.bottom) / 2 : GM_TOP + 16;
         rr(g, cx - tw / 2, cy - 17, tw, 34, 17); g.fillStyle = "rgba(7,29,56,.86)"; g.fill();
         g.fillStyle = /SAKK|matt|GYŐZ/.test(S.msg) ? "#ffd166" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(txt, cx, cy + .5); }
@@ -15049,7 +15058,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         S.promoBtn = []; "qrbn".split("").forEach((pr, k) => { const cx = px + pw * (k + .5) / 4, cy = py + ph2 * .6; g.fillStyle = "rgba(255,255,255,.08)"; g.beginPath(); g.arc(cx, cy, sq * .6, 0, TAU); g.fill(); drawPiece(g, w ? pr.toUpperCase() : pr, cx, cy - sq * .1, sq * 1.05, t, { icon: 1 }); S.promoBtn.push({ pr, x: cx - sq * .6, y: cy - sq * .8, w: sq * 1.2, h: sq * 1.4 }); }); }
       const barY = drawBar(g, W, H);
       /* vége: panel a lehetőségekkel (tovább / maradok / visszább) */
-      if (S.st === "over" && !S.anim && !S.menu) { const pw = Math.min(W - 30, 440), opts = [];
+      if (S.st === "over" && !S.anim && !S.menu && !GM_PANELS_OFF) { const pw = Math.min(W - 30, 440), opts = [];
         if (!S.two) { if (S.won && S.lvl < 24) opts.push(["next", `▲ Tovább: ${S.lvl + 1}. szint`, 1]); opts.push(["same", S.won ? "↻ Maradok ezen a szinten" : "↻ Újra ezen a szinten"]); if (S.lvl > 1) opts.push(["easier", `▼ Könnyebb: ${S.lvl - 1}. szint`]); if (!S.won) opts.push(["undo", "↶ Visszalépés és újrapróbálás"]); }
         else opts.push(["new", "⚓ Új játék", 1]);
         const bh = 44, ph2 = 92 + opts.length * (bh + 8), px = W / 2 - pw / 2, py = Math.max(L.by + 10, L.by + L.bw / 2 - ph2 / 2);
@@ -15109,7 +15118,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function gmOpen(id) {
     if (!gmEl) {
       gmEl = document.createElement("div"); gmEl.className = "gm-wrap"; gmEl.setAttribute("role", "dialog"); gmEl.setAttribute("aria-label", "Stégjátékok"); gmEl.tabIndex = -1;
-      gmEl.innerHTML = `<canvas class="gm-cv"></canvas><header class="gm-hd min"><button type="button" class="gm-cur" aria-expanded="false" aria-label="Játékválasztó"><span class="gm-dot"><svg viewBox="0 0 24 24" fill="#fff"><rect x="3" y="5" width="18" height="2.6" rx="1.3"/><rect x="3" y="10.7" width="18" height="2.6" rx="1.3"/><rect x="3" y="16.4" width="18" height="2.6" rx="1.3"/></svg></span><b></b><i>▾</i></button><div class="gm-tabs"></div><button type="button" class="gm-x" aria-label="Bezárás">×</button></header><p class="gm-help"></p>`;
+      gmEl.innerHTML = `<canvas class="gm-cv"></canvas><header class="gm-hd min"><button type="button" class="gm-cur" aria-expanded="false" aria-label="Játékválasztó"><span class="gm-dot"><svg viewBox="0 0 24 24" fill="#fff"><rect x="3" y="5" width="18" height="2.6" rx="1.3"/><rect x="3" y="10.7" width="18" height="2.6" rx="1.3"/><rect x="3" y="16.4" width="18" height="2.6" rx="1.3"/></svg></span><b></b><i>▾</i></button><div class="gm-tabs"></div><button type="button" class="gm-pn" aria-label="Táblák elrejtése / mutatása" title="Táblák elrejtése / mutatása">🪧</button><button type="button" class="gm-x" aria-label="Bezárás">×</button></header><p class="gm-help"></p>`;
       document.body.appendChild(gmEl);
       gmEl.querySelector(".gm-tabs").innerHTML = GM_LIST.map((q) => `<button type="button" data-gm="${q.id}" style="--gc:${q.c}">${q.n}</button>`).join("");
       gmCv = gmEl.querySelector(".gm-cv"); gmG = gmCv.getContext("2d");
@@ -15118,6 +15127,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         const ft = gmG.fillText.bind(gmG), sk = gmG.strokeText.bind(gmG), mt = gmG.measureText.bind(gmG);
         gmG.fillText = (s, x, y, m) => (m == null ? ft(tx(s), x, y) : ft(tx(s), x, y, m)); gmG.strokeText = (s, x, y, m) => (m == null ? sk(tx(s), x, y) : sk(tx(s), x, y, m)); gmG.measureText = (s) => mt(tx(s)); }
       gmEl.querySelector(".gm-x").addEventListener("click", gmClose);
+      /* 🪧: minden tájékoztató tábla (pontsáv, jelmagyarázat, térkép, állapotsor, üzenetek) egy gombnyomással eltűnik / visszajön */
+      { const pn = gmEl.querySelector(".gm-pn"), upd = () => { pn.classList.toggle("off", GM_PANELS_OFF); pn.textContent = GM_PANELS_OFF ? "🪧 Táblák" : "🪧"; };
+        pn.addEventListener("click", (e) => { e.stopPropagation(); GM_PANELS_OFF = !GM_PANELS_OFF; try { localStorage.setItem("zephyr-stegjatek-tablak", GM_PANELS_OFF ? "0" : "1"); } catch (x) {} upd(); }); upd(); }
       gmEl.querySelector(".gm-tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-gm]"); if (b) { gmStart(b.dataset.gm); gmMenu(false); } });
       gmEl.querySelector(".gm-cur").addEventListener("click", () => gmMenu(gmEl.querySelector(".gm-hd").classList.contains("min")));
       const pos = (e) => { const r = gmCv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };

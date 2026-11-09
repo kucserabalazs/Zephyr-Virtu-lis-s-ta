@@ -5,27 +5,33 @@
   const VIEW_CYCLE = ["bridge", "deck", "left", "enemy", "right", "balloon", "orbit"];
   const BALLOON_PARK = V3(-BH - 46, 26, -18);
   function viewPoint(id, o) {
-    const sd = (GS.two ? "w" : GS.human) === "w" ? 1 : -1, d = TOWER_D - 1.4;
+    const sd = (GS.two ? "w" : GS.human) === "w" ? 1 : -1, d = TOWER_D - 2.55;   /* a torony fedélzetének legelső pereme: előtted semmi */
     switch (id) {
       case "enemy": return { p: V3(0, TOWER_Y, -sd * d), pitch: -.3 };
       case "left": return { p: V3(-sd * d, TOWER_Y, 0), pitch: -.3 };
       case "right": return { p: V3(sd * d, TOWER_Y, 0), pitch: -.3 };
-      case "deck": return { p: V3(0, PONT_Y, sd * (BI + PONT * .6)), pitch: -.06 };
+      case "deck": return { p: V3(0, PONT_Y, sd * (BI + .12)), pitch: -.12 };   /* a stég belső élén, a kötél ELŐTT */
       case "walk": return { p: V3(o.x, PONT_Y, o.z), pitch: -.08 };
       case "balloon": return { p: V3(0, 44, sd * 46), pitch: -.92, balloon: true };
       case "orbit": { const th = o && o.th != null ? o.th : Math.atan2(0, sd); return { p: V3(Math.sin(th) * 66, 30, Math.cos(th) * 66), pitch: -.42, balloon: true, th }; }
       default: return { p: V3(0, TOWER_Y, sd * d), pitch: -.32 };
     }
   }
+  function inVRSeat() { if (CS.seat == null) { try { CS.seat = localStorage.getItem("zephyr-vr-ules") === "1"; } catch (e) { CS.seat = false; } } return !!(T.inVR && CS.seat); }
+  function toggleSeat() { CS.seat = !inVRSeatRaw(); try { localStorage.setItem("zephyr-vr-ules", CS.seat ? "1" : "0"); } catch (e) {} goView(CS.viewId || "bridge", null, true); W.panelDirty = 1; }
+  function inVRSeatRaw() { inVRSeat(); return !!CS.seat; }
+  function toggleSign() { CS.noSign = !CS.noSign; if (CS.sign) CS.sign.visible = !CS.noSign; try { localStorage.setItem("zephyr-sakk-tabla", CS.noSign ? "0" : "1"); } catch (e) {} W.panelDirty = 1; }
   function chessPlace(v, keepPsi) {
     const root = W.root; if (!root) return;
     const psi = keepPsi != null ? keepPsi : (T.camYaw ? T.camYaw() : 0), envYaw = Math.atan2(v.p.x, v.p.z), r = psi - envYaw;
     /* 2D-ben a ballonban a kosár pereme fölé, kicsit előre hajolva nézünk (VR-ben magad hajolsz ki) */
-    const pv = v.balloon && !T.inVR ? v.p.clone().add(V3(-Math.sin(envYaw) * 1.3, .45, -Math.cos(envYaw) * 1.3)) : v.p;
+    const pv = v.balloon ? v.p.clone().add(T.inVR ? V3(-Math.sin(envYaw) * .62, 0, -Math.cos(envYaw) * .62) : V3(-Math.sin(envYaw) * 1.3, .45, -Math.cos(envYaw) * 1.3)) : v.p;
+    /* ülő mód: VR-ben 45 cm-rel (ballonban 60) feljebb emel, hogy ülve se takarjon semmi */
+    const lift = inVRSeat() ? (v.balloon ? .6 : .45) : 0;
     const q = pv.clone().applyAxisAngle(V3(0, 1, 0), r);
     const hw = headWorld(new THREE.Vector3()), inVR = T.inVR;
     root.rotation.set(0, r, 0);
-    root.position.set(-q.x + (inVR ? hw.x : 0), inVR ? -pv.y : -(pv.y + 1.62), -q.z + (inVR ? hw.z : 0));
+    root.position.set(-q.x + (inVR ? hw.x : 0), inVR ? -pv.y - lift : -(pv.y + 1.62), -q.z + (inVR ? hw.z : 0));
     root.updateMatrixWorld(true);
     if (v.balloon) CS.balloon.position.copy(v.p); else if (!CS.orbit) CS.balloon.position.copy(BALLOON_PARK);
     if (v.balloon) CS.balloon.rotation.y = envYaw;
@@ -64,14 +70,14 @@
     P.row(2, `${VIEWS[CS.viewId || "bridge"][1]} · a stégre csippentve odalépsz`, "#7fd3ff");
     const mt = material();
     P.row(3, `Te: ${GS.two ? "két játékos" : GS.human === "w" ? "világos (gép ellen)" : "sötét (gép ellen)"} · anyag: ${mt === 0 ? "egyenlő" : (mt > 0 ? "világos +" : "sötét +") + Math.abs(mt)}`, "#ffffff");
-    P.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["🔭 Nézőpont", nextView]], 1);
-    P.buttons([["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 Két játékos", toggleTwo], ["‹ Kilépés", () => W.close()]], 0);
+    P.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["🔭 Nézőpont", nextView], [CS.noSign ? "🪧 Tábla be" : "🪧 Tábla ki", toggleSign]], 1);
+    P.buttons([["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 Két játékos", toggleTwo]].concat(T.inVR ? [[inVRSeatRaw() ? "🧍 Álló" : "🪑 Ülő mód", toggleSeat]] : []).concat([["‹ Kilépés", () => W.close()]]), 0);
   }
   function chessHud(H) {
     H.title(`Vitorlás sakk · ${GS.lvl}. szint – ${rankVR(GS.lvl)}`, headline());
     H.list([`Leütve – világos: ${capStr(GS.capW)} · sötét: ${capStr(GS.capB)}`, `Nézőpont: ${VIEWS[CS.viewId || "bridge"][1]}`]);
     if (GS.promo) { H.buttons([["Vezér (fregatt)", () => pickPromo("q")], ["Bástya (torony)", () => pickPromo("r")], ["Futó (jacht)", () => pickPromo("b")], ["Huszár (viking)", () => pickPromo("n")]]); }
-    else H.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 2 játékos", toggleTwo], ["⇄ Színcsere", swapSide]]
+    else H.buttons([["💡 Ötlet", hint], ["↶ Vissza", undo], ["♟ Új játszma", newGame], ["− Szint", () => setLvl(-1)], ["Szint +", () => setLvl(1)], [GS.two ? "🤖 Gép ellen" : "👥 2 játékos", toggleTwo], ["⇄ Színcsere", swapSide], [CS.noSign ? "🪧 Tábla be" : "🪧 Tábla ki", toggleSign]]
       .concat(VIEW_CYCLE.map((k) => [VIEWS[k][0] + " " + VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])));
     H.hint("Húzással körbenézel · kattints egy hajódra, aztán a célmezőre · a stégre kattintva odalépsz");
   }
@@ -79,7 +85,7 @@
     return [["🔭", "Nézőpont", VIEW_CYCLE.map((k) => [VIEWS[k][0], VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])],
       ["💡", "Ötlet", hint], ["↶", "Visszalépés", undo], ["♟", "Új játszma", newGame],
       ["📶", "Szint", [["−", "Könnyebb", () => setLvl(-1)], ["+", "Nehezebb", () => setLvl(1)]]],
-      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
+      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["🪧", CS.noSign ? "Tábla mutatása" : "Tábla elrejtése", toggleSign], ["🪑", inVRSeatRaw() ? "Álló mód" : "Ülő mód", toggleSeat], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
   }
 
   /* ------------------------------------------------------------------ FELÉPÍTÉS */
@@ -120,7 +126,7 @@
     CS.pick.userData.xr = { hover: (on, h) => setHover(on && h ? sqFrom(h.point) : -1), move: (h) => { if (h) setHover(sqFrom(h.point)); }, click: (h) => { if (h) onSquare(sqFrom(h.point)); } };
     T.xr.extra.add(CS.pick); W.objs.push(CS.pick);
     CS.hovL = labelSprite(["", ""], { size: 1, fs: 54, w: 900 }); env.add(CS.hovL); CS.hovL.visible = false;
-    CS.sign = labelSprite(["", ""], { size: 30, fs: 64, w: 1400, bg: "rgba(14,33,66,.82)", edge: "#c9a227" }); env.add(CS.sign);
+    CS.sign = labelSprite(["", ""], { size: 30, fs: 64, w: 1400, bg: "rgba(14,33,66,.82)", edge: "#c9a227" }); env.add(CS.sign); try { CS.noSign = localStorage.getItem("zephyr-sakk-tabla") === "0"; } catch (e) {} CS.sign.visible = !CS.noSign;
     /* elsötétítő gömb a nézőpontváltáshoz (a kamerán) */
     CS.fadeM = new THREE.Mesh(new THREE.SphereGeometry(.4, 16, 10), new THREE.MeshBasicMaterial({ color: 0x05070c, transparent: true, opacity: 0, side: THREE.BackSide, depthTest: false, depthWrite: false })); CS.fadeM.renderOrder = 9999; CS.fadeM.visible = false;
     W.disposables.push(CS.fadeM.geometry, CS.fadeM.material); try { T.camObj().add(CS.fadeM); } catch (e) {}

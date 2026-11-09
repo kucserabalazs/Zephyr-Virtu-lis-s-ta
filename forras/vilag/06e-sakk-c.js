@@ -168,17 +168,17 @@
     /* fedélzet */
     const deckT = txPlanks("vsteak", "#c08a52", "#9a6a3c", 14); const dm = mesh(new THREE.BoxGeometry(6.4, .25, 5.6), std({ map: deckT, roughness: .45 }), G); dm.position.set(0, TOWER_Y - .12, 0);
     L.push([BX(6.5, .08, 5.7), br, M4(0, TOWER_Y - .27, 0), "m"]);
-    /* korlát: sárgaréz oszlopok, két rúd, elöl üvegfal (nem takar) */
+    /* korlát: sárgaréz oszlopok, két rúd – a tábla felé NINCS korlát (csak egy 8 cm-es sárgaréz élléc), így ülve is szabad a kilátás */
     const rail = (a, b) => { L.push(ROD(V3(a[0], TOWER_Y + 1.05, a[1]), V3(b[0], TOWER_Y + 1.05, b[1]), .035, br, "m"), ROD(V3(a[0], TOWER_Y + .55, a[1]), V3(b[0], TOWER_Y + .55, b[1]), .02, br, "m")); };
     const cr = [[-3.1, -2.7], [3.1, -2.7], [3.1, 2.7], [-3.1, 2.7]];
-    for (let k = 0; k < 4; k++) { const a = cr[k], b = cr[(k + 1) % 4]; if (k === 2) { rail(a, [1.4, 2.7]); rail([-1.4, 2.7], b); } else rail(a, b);
+    for (let k = 0; k < 4; k++) { const a = cr[k], b = cr[(k + 1) % 4]; if (k === 0) { L.push([BX(6.3, .08, .06), br, M4(0, TOWER_Y + .04, -2.78), "m"]); continue; } if (k === 2) { rail(a, [1.4, 2.7]); rail([-1.4, 2.7], b); } else rail(a, b);
       for (let f = 0; f <= 6; f++) { const px = lerp(a[0], b[0], f / 6), pz = lerp(a[1], b[1], f / 6); if (k === 2 && Math.abs(px) < 1.3) continue; L.push([CY(.03, .03, 1.05, 6), br, M4(px, TOWER_Y + .52, pz), "m"], [new THREE.SphereGeometry(.05, 8, 6), br, M4(px, TOWER_Y + 1.08, pz), "m"]); } }
     /* vitorlavászon árnyékoló, zászlórúd, távcső, hajóharang */
     [[-3, 2.6], [3, 2.6]].forEach(([px, pz]) => L.push([CY(.06, .06, 3.4, 8), "#f2efe6", M4(px, TOWER_Y + 1.7, pz)]));
     L.push([CY(.05, .07, 5.5, 8), "#f2efe6", M4(0, TOWER_Y + 2.75, 2.6)]);
-    L.push(ROD(V3(2.2, TOWER_Y, -1.6), V3(2.0, TOWER_Y + 1.25, -1.7), .03, br, "m"), ROD(V3(2.6, TOWER_Y, -1.9), V3(2.0, TOWER_Y + 1.25, -1.7), .03, br, "m"), ROD(V3(1.8, TOWER_Y, -1.9), V3(2.0, TOWER_Y + 1.25, -1.7), .03, br, "m"));
-    L.push([CY(.07, .1, 1.1, 12).rotateX(Math.PI / 2 - .12), br, M4(2.0, TOWER_Y + 1.35, -1.85), "m"]);
-    L.push([CY(.18, .26, .34, 14), br, M4(-2.4, TOWER_Y + 1.5, -2.4), "m"], [BX(.06, .5, .06), dark, M4(-2.4, TOWER_Y + 1.2, -2.6)], [BX(.5, .06, .06), dark, M4(-2.4, TOWER_Y + 1.72, -2.45)]);
+    L.push(ROD(V3(2.8, TOWER_Y, 2.0), V3(2.6, TOWER_Y + 1.25, 1.9), .03, br, "m"), ROD(V3(2.9, TOWER_Y, 1.6), V3(2.6, TOWER_Y + 1.25, 1.9), .03, br, "m"), ROD(V3(2.3, TOWER_Y, 1.7), V3(2.6, TOWER_Y + 1.25, 1.9), .03, br, "m"));   /* távcső + harang hátul, nem takarnak */
+    L.push([CY(.07, .1, 1.1, 12).rotateX(Math.PI / 2 - .12), br, M4(2.6, TOWER_Y + 1.35, 1.75), "m"]);
+    L.push([CY(.18, .26, .34, 14), br, M4(-2.6, TOWER_Y + 1.5, 2.2), "m"], [BX(.06, .5, .06), dark, M4(-2.6, TOWER_Y + 1.2, 2.4)], [BX(.5, .06, .06), dark, M4(-2.6, TOWER_Y + 1.72, 2.25)]);
     /* lámpások a korlát sarkain */
     cr.forEach(([px, pz]) => L.push([CY(.1, .12, .3, 8), "#ffd890", M4(px, TOWER_Y + 1.25, pz), "e"], [new THREE.ConeGeometry(.15, .16, 8), br, M4(px, TOWER_Y + 1.48, pz), "m"]));
     /* bejáró a stégre */

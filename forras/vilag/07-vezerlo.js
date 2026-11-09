@@ -28,6 +28,14 @@
       click: (h) => { if (!h || !h.uv) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; const b = P.btns.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) { b.fn(); P.draw(); } }
     };
     T.xr.extra.add(m);
+    /* összecsukott állapot: kis fül, rámutatva/csippentve újra kinyílik */
+    { const pc = document.createElement("canvas"); pc.width = 420; pc.height = 120; const pt = new THREE.CanvasTexture(pc); pt.colorSpace = THREE.SRGBColorSpace; W.disposables.push(pt);
+      const pm = new THREE.Mesh(new THREE.PlaneGeometry(.21, .06), new THREE.MeshBasicMaterial({ map: pt, transparent: true, depthTest: false, depthWrite: false })); pm.renderOrder = 995; W.disposables.push(pm.geometry, pm.material);
+      const pd = (hv) => { const g = pc.getContext("2d"); g.clearRect(0, 0, 420, 120); g.beginPath(); g.roundRect ? g.roundRect(4, 4, 412, 112, 56) : g.rect(4, 4, 412, 112); g.fillStyle = hv ? "#ffe08a" : "rgba(7,28,58,.9)"; g.fill(); g.lineWidth = 5; g.strokeStyle = "rgba(255,209,102,.9)"; g.stroke();
+        g.fillStyle = hv ? "#0b2f5e" : "#fff"; g.font = "800 50px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("☰ Panel", 210, 62); pt.needsUpdate = true; };
+      pd(false); pm.visible = false;
+      pm.userData.xr = { hover: (on) => pd(on), click: () => { W.togglePanel(); pd(false); } };
+      P.pill = pm; }
     P.draw = () => {
       const g = cv.getContext("2d"); P.btns = []; g.clearRect(0, 0, PW, PH);
       const bg = g.createLinearGradient(0, 0, 0, PH); bg.addColorStop(0, "rgba(14,52,98,.94)"); bg.addColorStop(1, "rgba(7,28,58,.94)");
@@ -36,7 +44,7 @@
       /* hosszú szöveg: a betűméret addig csökken, amíg ki nem fér (ne lógjon ki a panelből) */
       const fitFont = (wt, fs, min, t, maxW) => { g.font = `${wt} ${fs}px system-ui, sans-serif`; while (fs > min && g.measureText(t).width > maxW) { fs -= 2; g.font = `${wt} ${fs}px system-ui, sans-serif`; } };
       const api = {
-        title(t, s) { g.fillStyle = "#ffd166"; g.textAlign = "left"; g.textBaseline = "middle"; fitFont(800, 50, 32, t, PW - 88); g.fillText(t, 44, 66); g.fillStyle = "#fff"; fitFont(600, 34, 22, s || "", PW - 88); g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
+        title(t, s) { g.fillStyle = "#ffd166"; g.textAlign = "left"; g.textBaseline = "middle"; fitFont(800, 50, 32, t, PW - 200); g.fillText(t, 44, 66); g.fillStyle = "#fff"; fitFont(600, 34, 22, s || "", PW - 88); g.fillText(s || "", 44, 122); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 158, PW - 80, 2); },
         row(i, t, c, r) { const y = 210 + i * 66; g.fillStyle = c || "#fff"; g.beginPath(); g.arc(58, y, 11, 0, TAU); g.fill(); g.fillStyle = "#fff"; g.textAlign = "left"; fitFont(600, 36, 22, t, PW - 84 - (r ? 220 : 44)); g.fillText(t, 84, y); if (r) { g.textAlign = "right"; g.fillStyle = "#7fd3ff"; g.fillText(r, PW - 50, y); } rowY = y; },
         buttons(list, row) {
           const n = list.length, gap = 16, w = (PW - 80 - gap * (n - 1)) / n, y = PH - 150 - (row || 0) * 126, h = 110;
@@ -57,6 +65,10 @@
         }
       };
       if (W.spec && W.spec.panel) W.spec.panel(api);
+      /* összecsukó gomb a jobb felső sarokban – a panel egy kis „☰ Panel” fülre zsugorodik */
+      { const x = PW - 132, y = 22, w = 96, h = 78, k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn: () => W.togglePanel() });
+        g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 22) : g.rect(x, y, w, h); g.fillStyle = hov ? "#ffe08a" : "rgba(255,255,255,.14)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke();
+        g.fillStyle = hov ? "#0b2f5e" : "#fff"; g.fillRect(x + 26, y + h / 2 + 8, w - 52, 9); }
       tex.needsUpdate = true;
     };
     P.tick = (dt) => {
@@ -65,6 +77,12 @@
       if ((W.panelDirty || 0) > .5) { W.panelDirty = 0; P.draw(); }
     };
     return P;
+  }
+  function placePill() {
+    const P = W.panel; if (!P || !P.pill) return;
+    if (!P.m.parent) placePanel();
+    T.xr.extra.add(P.pill); P.pill.position.copy(P.m.position); P.pill.quaternion.copy(P.m.quaternion); P.pill.translateX(-.27); P.pill.translateY(.2);
+    if (!P.pill.parent) T.sceneEl.object3D.add(P.pill);
   }
   function placePanel() {
     const P = W.panel; if (!P) return;
@@ -199,7 +217,7 @@
     document.body.classList.add("world-on");
     W.hud = makeHud(); W.hud.el.style.display = T.inVR ? "none" : ""; W.hud.draw();
     W.panel = makePanel(); W.panel.draw();
-    if (T.inVR) placePanel();
+    if (T.inVR) { placePanel(); if (W.panelHidden) { T.xr.extra.delete(W.panel.m); placePill(); } }
     const cvs = T.sceneEl.canvas;
     cvs.addEventListener("pointermove", on2DMove); cvs.addEventListener("pointerdown", on2DDown); cvs.addEventListener("pointerup", on2DUp);
     addEventListener("keydown", kd); addEventListener("keyup", ku);
@@ -210,12 +228,16 @@
     W.t += dt;
     W.upd.forEach((f) => f(dt));
     W.spec.tick(dt);
-    if (W.panel) { W.panel.m.visible = T.inVR && !W.panelHidden; if (T.inVR) W.panel.tick(dt); }
+    if (W.panel) { W.panel.m.visible = T.inVR && !W.panelHidden; if (W.panel.pill) W.panel.pill.visible = T.inVR && !!W.panelHidden; if (T.inVR) W.panel.tick(dt); }
     W.hudT += dt; if (!T.inVR && W.hud && W.hudT > .4) { W.hudT = 0; W.hud.draw(); }
   };
   W.togglePanel = function () {
     if (!W.panel) return; W.panelHidden = !W.panelHidden;
-    if (!W.panelHidden) placePanel();
+    const P = W.panel;
+    if (W.panelHidden && P.pill) {   /* a fül a panel bal felső sarkánál marad, ugyanabban az irányban */
+      T.xr.extra.delete(P.m); placePill();
+    }
+    if (!W.panelHidden) { if (P.pill) T.xr.extra.delete(P.pill); T.xr.extra.add(P.m); placePanel(); }
   };
   W.vrChanged = function (on) {
     if (!W.active) return;
@@ -234,8 +256,8 @@
     cvs.removeEventListener("pointermove", on2DMove); cvs.removeEventListener("pointerdown", on2DDown); cvs.removeEventListener("pointerup", on2DUp); cvs.style.cursor = "";
     removeEventListener("keydown", kd); removeEventListener("keyup", ku);
     W.objs.forEach((o) => T.xr.extra.delete(o));
-    if (T.xrForget) T.xrForget(W.objs.concat(W.panel ? [W.panel.m] : []));
-    if (W.panel) { T.xr.extra.delete(W.panel.m); if (W.panel.m.parent) W.panel.m.parent.remove(W.panel.m); }
+    if (T.xrForget) T.xrForget(W.objs.concat(W.panel ? [W.panel.m].concat(W.panel.pill ? [W.panel.pill] : []) : []));
+    if (W.panel) { T.xr.extra.delete(W.panel.m); if (W.panel.m.parent) W.panel.m.parent.remove(W.panel.m); const pl = W.panel.pill; if (pl) { T.xr.extra.delete(pl); if (pl.parent) pl.parent.remove(pl); } }
     if (W.root && W.root.parent) W.root.parent.remove(W.root);
     W.root && W.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     W.disposables.forEach((d) => { try { d.dispose(); } catch (e) {} });
