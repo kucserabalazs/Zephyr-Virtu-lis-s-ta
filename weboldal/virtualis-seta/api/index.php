@@ -674,8 +674,8 @@ function ical_export($db, $apt, $for, $detail) {
 }
 
 /* ---------------------------------------------------------------- e-mail */
-function send_mail($s, $to, $subject, $body) {
-    if (defined('ZB_TEST')) { $GLOBALS['ZB_MAILS'][] = $subject; $GLOBALS['ZB_BODIES'][] = $body; return true; }
+function send_mail($s, $to, $subject, $body, $html = '') {
+    if (defined('ZB_TEST')) { $GLOBALS['ZB_MAILS'][] = $subject; $GLOBALS['ZB_BODIES'][] = $body; $GLOBALS['ZB_HTMLS'][] = $html; return true; }
     if (!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)) { return false; }
     $host = isset($_SERVER['HTTP_HOST']) ? preg_replace('/[^a-z0-9.-]/i', '', $_SERVER['HTTP_HOST']) : 'balatoni-udules.hu';
     $host = preg_replace('/^www\./', '', $host);
@@ -684,6 +684,13 @@ function send_mail($s, $to, $subject, $body) {
         . ($s['email'] ? "Reply-To: {$s['email']}\r\n" : '')
         . "MIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n";
     $subj = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+    if ($html) {   /* szép HTML + sima szöveg együtt: a levelező a neki valót mutatja */
+        $bd = 'zb' . bin2hex(random_bytes(8));
+        $headers = preg_replace('/Content-Type: text\/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n/', "Content-Type: multipart/alternative; boundary=\"{$bd}\"\r\n", $headers);
+        $msg = "--{$bd}\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($body))
+            . "--{$bd}\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($html)) . "--{$bd}--\r\n";
+        return @mail($to, $subj, $msg, $headers, '-f' . $from);
+    }
     return @mail($to, $subj, chunk_split(base64_encode($body)), $headers, '-f' . $from);
 }
 function summary($s, $b) {
@@ -720,11 +727,75 @@ function pay_text($s, $b) {
     }
     return $t;
 }
+/* ---------------------------------------------------------------- HTML-levelek (Zephyr Nautical Horizon, 2026. nov. 9.)
+   A vendég szép, „hajójegy” stílusú levelet kap; mellette mindig ott a sima szöveges változat (multipart/alternative),
+   így minden levelezőben olvasható. Csak táblázatos elrendezés és beágyazott stílus – a levelezők így jelenítik meg megbízhatóan. */
+function eh($t) { return htmlspecialchars((string) $t, ENT_QUOTES, 'UTF-8'); }
+function email_html($s, $b, $o) {
+    $aps = apartments($s); $apt = isset($aps[$b['apt']]) ? $aps[$b['apt']]['name'] : $b['apt']; $no = isset($aps[$b['apt']]['no']) ? $aps[$b['apt']]['no'] : '';
+    $st = array('wait' => array('#FFF4D6', '#8A5D0C', 'Jóváhagyásra vár'), 'pay' => array('#FFF4D6', '#8A5D0C', 'Jóváhagyva – előlegre vár'),
+        'ok' => array('#E3F5EA', '#1D7446', 'Visszaigazolva'), 'no' => array('#FDE7E7', '#9B1C1C', 'Nem tudtuk elfogadni'), 'del' => array('#FDE7E7', '#9B1C1C', 'Törölve'));
+    $c = $st[$o['state']];
+    $nn = nights($b['checkin'], $b['checkout']);
+    $guests = (int) $b['adults'] . ' felnőtt' . ((int) $b['children'] ? ', ' . (int) $b['children'] . ' gyermek' : '');
+    $row = function ($k, $v, $strong = false) { return '<tr><td style="padding:7px 0;color:#5B6B7C;font-size:15px;">' . eh($k) . '</td><td style="padding:7px 0;text-align:right;color:#07182C;font-size:16px;' . ($strong ? 'font-weight:800;' : 'font-weight:600;') . '">' . eh($v) . '</td></tr>'; };
+    $tulip = '<span style="font-size:28px;color:#D4A13A;">&#10047;</span>';   /* virágmotívum – szövegként, mert a Gmail az SVG-t kiszűri */
+    $h = '<!DOCTYPE html><html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . eh($o['title']) . '</title></head>'
+        . '<body style="margin:0;padding:0;background:#EEF2F7;font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;">'
+        . '<div style="display:none;max-height:0;overflow:hidden;">' . eh($o['pre']) . '</div>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF2F7;"><tr><td align="center" style="padding:24px 12px;">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#FFFFFF;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(11,47,94,.12);">'
+        /* fejléc */
+        . '<tr><td style="background:#0B2F5E;padding:22px 28px;border-bottom:4px solid #D4A13A;"><table role="presentation" width="100%"><tr>'
+        . '<td style="color:#FFFFFF;"><div style="font-size:24px;font-weight:800;letter-spacing:5px;color:#E4BB63;">ZEPHYR</div><div style="font-size:12px;letter-spacing:3px;color:#DDE8F2;">APARTMANHÁZ · ZAMÁRDI · BALATON</div></td>'
+        . '<td align="right" style="font-size:30px;color:#E4BB63;">&#9973;</td></tr></table></td></tr>'
+        /* cím + állapot */
+        . '<tr><td style="padding:28px 28px 8px;"><div style="display:inline-block;padding:7px 14px;border-radius:999px;background:' . $c[0] . ';color:' . $c[1] . ';font-size:14px;font-weight:700;">' . eh($c[2]) . '</div>'
+        . '<h1 style="margin:14px 0 6px;font-size:26px;line-height:1.25;color:#0B2F5E;">' . eh($o['title']) . '</h1>'
+        . '<p style="margin:0 0 6px;font-size:17px;line-height:1.55;color:#22313F;">Kedves ' . eh($b['name']) . '!</p>'
+        . '<p style="margin:0;font-size:17px;line-height:1.55;color:#22313F;">' . $o['lead'] . '</p></td></tr>'
+        /* hajójegy */
+        . '<tr><td style="padding:18px 28px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:2px solid #D4A13A;border-radius:16px;background:#F7F9FC;">'
+        . '<tr><td style="padding:14px 18px;border-bottom:2px dashed #D9C9A0;"><table role="presentation" width="100%"><tr><td><div style="font-size:12px;letter-spacing:3px;color:#8A5D0C;font-weight:700;">HAJÓJEGY · ' . eh($b['ref']) . '</div>'
+        . '<div style="font-size:22px;font-weight:800;color:#0B2F5E;margin-top:4px;">' . eh(($no ? $no . ' · ' : '') . $apt) . ' apartman</div></td><td align="right">' . $tulip . '</td></tr></table></td></tr>'
+        . '<tr><td style="padding:14px 18px;"><table role="presentation" width="100%"><tr>'
+        . '<td width="50%" style="vertical-align:top;"><div style="font-size:12px;letter-spacing:2px;color:#5B6B7C;">ÉRKEZÉS</div><div style="font-size:18px;font-weight:800;color:#07182C;">' . eh(hu_date($b['checkin'])) . '</div><div style="font-size:14px;color:#5B6B7C;">' . eh($s['checkin']) . '-tól</div></td>'
+        . '<td width="50%" style="vertical-align:top;text-align:right;"><div style="font-size:12px;letter-spacing:2px;color:#5B6B7C;">TÁVOZÁS</div><div style="font-size:18px;font-weight:800;color:#07182C;">' . eh(hu_date($b['checkout'])) . '</div><div style="font-size:14px;color:#5B6B7C;">' . eh($s['checkout']) . '-ig</div></td>'
+        . '</tr></table><table role="presentation" width="100%" style="margin-top:10px;border-top:1px solid #E1E8F0;">'
+        . $row('Éjszakák', $nn . ' éj') . $row('Vendégek', $guests)
+        . (!empty($b['group']) ? $row('Csoportos foglalás', $b['group'] . ' (' . (int) $b['group_size'] . ' apartman)') : '')
+        . (!empty($b['discount']) ? $row('Stégjáték-kedvezmény (' . (int) $b['discount_pct'] . '%)', '−' . money($b['discount'])) : '')
+        . $row('Végösszeg (idegenforgalmi adóval)', money($b['total']), true) . $row('Előleg', money($b['deposit']))
+        . (isset($o['due']) ? $row('Érkezéskor fizetendő', money($o['due']), true) : '')
+        . '</table></td></tr></table></td></tr>'
+        . (!empty($o['extra']) ? '<tr><td style="padding:4px 28px 8px;">' . $o['extra'] . '</td></tr>' : '')
+        /* tudnivalók */
+        . '<tr><td style="padding:10px 28px 22px;"><table role="presentation" width="100%" style="background:#EAF0F6;border-radius:14px;"><tr><td style="padding:14px 18px;font-size:15px;line-height:1.6;color:#22313F;">'
+        . '&#128337; Érkezés ' . eh($s['checkin']) . '-tól, távozás ' . eh($s['checkout']) . '-ig<br>&#128179; SZÉP-kártyát is elfogadunk<br>&#9875; Saját napozóstég, ingyenes SUP és kerékpár</td></tr></table></td></tr>'
+        /* lábléc */
+        . '<tr><td style="background:#07182C;padding:20px 28px;color:#DDE8F2;font-size:14px;line-height:1.6;">'
+        . '<b style="color:#E4BB63;">Zephyr Apartmanház</b><br>' . eh($s['address']) . '<br>Tel.: <a href="tel:' . eh(preg_replace('/[^+0-9]/', '', $s['phone'])) . '" style="color:#FFFFFF;">' . eh($s['phone']) . '</a> · <a href="mailto:' . eh($s['email']) . '" style="color:#FFFFFF;">' . eh($s['email']) . '</a>'
+        . ($s['ntak'] ? '<br><span style="color:#8FA3B8;font-size:12px;">NTAK regisztrációs szám: ' . eh($s['ntak']) . '</span>' : '') . '</td></tr>'
+        . '</table></td></tr></table></body></html>';
+    return $h;
+}
+function pay_html($s, $b, $deadline) {
+    $box = function ($t, $body) { return '<table role="presentation" width="100%" style="margin:8px 0;border:1px solid #E1E8F0;border-radius:12px;"><tr><td style="padding:12px 16px;font-size:15px;line-height:1.6;color:#22313F;"><div style="font-size:12px;letter-spacing:2px;font-weight:700;color:#0B2F5E;margin-bottom:4px;">' . $t . '</div>' . $body . '</td></tr></table>'; };
+    $h = '<div style="font-size:17px;font-weight:800;color:#0B2F5E;margin:6px 0;">Előleg: ' . eh(money($b['deposit'])) . ' · határidő: ' . eh(rtrim($deadline, '.')) . '</div>'
+        . '<div style="font-size:15px;color:#22313F;margin-bottom:6px;">Közlemény: <b>' . eh($b['ref']) . '</b></div>';
+    if ($s['bank_holder'] || $s['bank_account']) { $h .= $box('BELFÖLDI ÁTUTALÁS', 'Kedvezményezett: <b>' . eh($s['bank_holder']) . '</b>' . ($s['bank_name'] ? '<br>Bank: ' . eh($s['bank_name']) : '') . ($s['bank_account'] ? '<br>Számlaszám: <b>' . eh($s['bank_account']) . '</b>' : '')); }
+    if ($s['bank_iban']) { $h .= $box('KÜLFÖLDI ÁTUTALÁS / INTERNATIONAL', 'IBAN: <b>' . eh($s['bank_iban']) . '</b>' . ($s['bank_swift'] ? '<br>SWIFT/BIC: ' . eh($s['bank_swift']) : '') . '<br>Reference: ' . eh($b['ref'])); }
+    $sz = szep_list($s);
+    if ($sz) { $t = 'Az előleget SZÉP-kártyáról is elutalhatja a kibocsátó online felületén, vagy érkezéskor a helyszínen is fizethet vele:'; foreach ($sz as $x) { $t .= '<br>– ' . eh($x[0]) . ': ' . eh($x[1]) . ' <b>' . eh($x[2]) . '</b>'; } $h .= $box('SZÉP-KÁRTYA (szállás alszámla)', $t); }
+    return $h;
+}
 function mail_received($s, $b) {
     send_mail($s, $b['email'], 'Foglalási kérés megérkezett – ' . $b['ref'] . ' – Zephyr Apartmanház',
         "Kedves {$b['name']}!\n\nKöszönjük foglalási kérését, megkaptuk. A kiválasztott napokat ideiglenesen lefoglaltuk.\n"
         . "Hamarosan ellenőrizzük, és jóváhagyás után e-mailben küldjük az előleg átutalásához szükséges adatokat. A foglalás az előleg beérkezésével válik véglegessé.\n\n"
-        . summary($s, $b) . footer($s));
+        . summary($s, $b) . footer($s),
+        email_html($s, $b, array('state' => 'wait', 'title' => 'Foglalási kérelmét megkaptuk!', 'pre' => 'A napokat ideiglenesen lefoglaltuk – hamarosan jelentkezünk.',
+            'lead' => 'Köszönjük, hogy a Zephyr Apartmanházat választotta. A kiválasztott napokat ideiglenesen lefoglaltuk. A kérést hamarosan ellenőrizzük, és jóváhagyás után e-mailben küldjük az előleg utalásához szükséges adatokat. <b>A foglalás az előleg beérkezésével válik véglegessé.</b>')));
 }
 function mail_admin_new($s, $b) {
     $link = (isset($_SERVER['HTTP_HOST']) ? 'https://' . $_SERVER['HTTP_HOST'] : '') . preg_replace('#/api/.*$#', '/', $_SERVER['REQUEST_URI']) . '#foglalas-admin';
@@ -761,21 +832,30 @@ function mail_approved($s, $b) {
         . "A foglalás véglegesítéséhez kérjük, utalja át az előleget " . rtrim($deadline, ".") . "-ig az alábbi adatokkal:\n\n"
         . 'Összeg: ' . money($b['deposit']) . "\nKözlemény: {$b['ref']}\n\n" . pay_text($s, $b) . "\n"
         . "Az előleg beérkezése után visszaigazoló e-mailt küldünk. A fennmaradó összeget érkezéskor kell rendezni" . (szep_list($s) ? ' (SZÉP-kártyát is elfogadunk)' : '') . ".\n\n"
-        . summary($s, $b) . footer($s));
+        . summary($s, $b) . footer($s),
+        email_html($s, $b, array('state' => 'pay', 'title' => 'Örömmel jóváhagytuk foglalását!', 'pre' => 'Az előleg utalásával a foglalás végleges lesz.',
+            'lead' => 'Foglalási kérését jóváhagytuk. A véglegesítéshez kérjük, utalja át az előleget az alábbi adatokkal. Az előleg beérkezése után visszaigazoló levelet küldünk; a fennmaradó összeget érkezéskor kell rendezni.',
+            'extra' => pay_html($s, $b, $deadline))));
 }
 function mail_paid($s, $b) {
     return send_mail($s, $b['email'], 'Foglalás visszaigazolva – ' . $b['ref'] . ' – Zephyr Apartmanház',
         "Kedves {$b['name']}!\n\nAz előleget megkaptuk, foglalása ezzel végleges. Szeretettel várjuk!\n\n"
-        . summary($s, $b) . 'Érkezéskor fizetendő: ' . money(max(0, (int) $b['total'] - (int) $b['deposit'])) . "\n" . footer($s));
+        . summary($s, $b) . 'Érkezéskor fizetendő: ' . money(max(0, (int) $b['total'] - (int) $b['deposit'])) . "\n" . footer($s),
+        email_html($s, $b, array('state' => 'ok', 'title' => 'Foglalása végleges – szeretettel várjuk!', 'pre' => 'Az előleget megkaptuk. Jó készülődést a Balatonra!',
+            'lead' => 'Az előleget megkaptuk, foglalása ezzel végleges. Szeretettel várjuk Zamárdiban! Ha bármi kérdése van az érkezés előtt, írjon vagy hívjon bátran.', 'due' => max(0, (int) $b['total'] - (int) $b['deposit']))));
 }
 function mail_rejected($s, $b, $reason) {
     send_mail($s, $b['email'], 'Foglalási kérés – ' . $b['ref'] . ' – Zephyr Apartmanház',
         "Kedves {$b['name']}!\n\nSajnálattal értesítjük, hogy a kért időszakra nem tudjuk elfogadni foglalását.\n"
-        . ($reason ? "\n{$reason}\n" : '') . "\nHa más időpont is megfelelne, szívesen segítünk.\n\n" . summary($s, $b) . footer($s));
+        . ($reason ? "\n{$reason}\n" : '') . "\nHa más időpont is megfelelne, szívesen segítünk.\n\n" . summary($s, $b) . footer($s),
+        email_html($s, $b, array('state' => 'no', 'title' => 'Sajnos erre az időszakra nem tudjuk fogadni', 'pre' => 'Ha más időpont is megfelelne, szívesen segítünk.',
+            'lead' => 'Sajnálattal értesítjük, hogy a kért időszakra nem tudjuk elfogadni foglalását.' . ($reason ? '<br><br>' . nl2br(eh($reason)) : '') . '<br><br>Ha más időpont is megfelelne, szívesen segítünk – válaszoljon erre a levélre.')));
 }
 function mail_cancelled($s, $b, $reason) {
     send_mail($s, $b['email'], 'Foglalás törölve – ' . $b['ref'] . ' – Zephyr Apartmanház',
-        "Kedves {$b['name']}!\n\nFoglalását töröltük.\n" . ($reason ? "\n{$reason}\n" : '') . "\n" . summary($s, $b) . footer($s));
+        "Kedves {$b['name']}!\n\nFoglalását töröltük.\n" . ($reason ? "\n{$reason}\n" : '') . "\n" . summary($s, $b) . footer($s),
+        email_html($s, $b, array('state' => 'del', 'title' => 'Foglalását töröltük', 'pre' => 'A foglalás törlésének részletei.',
+            'lead' => 'Foglalását töröltük.' . ($reason ? '<br><br>' . nl2br(eh($reason)) : '') . '<br><br>Kérdés esetén keressen minket bizalommal.')));
 }
 
 /* ---------------------------------------------------------------- vendég-programajánló (érkezés előtti levél, távolság szerint) */
