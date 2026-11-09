@@ -18,7 +18,13 @@ Kész (main):
 - Makett: 4 autó egymás mellett keresztben, orral nyugatra (06b, SZ1 = 44).
 - 3D-világ panel (07-vezerlo) Nautical Glass + áthelyezhető; VR sakk új csatái + csatakamera.
 - Kezdőoldal: Nautical Horizon réteg (`kezdooldal-forras.html` </style> előtt), új nyitócím.
-Hátra: 2D séta újratervezése (ChatGPT 2D-terv), kezdőoldal további szekciói, fordítások (új kulcsok), térkép-oldal a valódi Balaton-partvonallal, IWER-teszt, összefoglaló.
+- Balaton-térkép a VR-menüben (`pLake`: valódi OSM-partvonal, 10 km-es lépték, nézési legyező) + „Balatoni kultúra” oldal (`pCulture`, 8 tény), magyar motívumkészlet (`ZMOTIF`/`zMotif`, `forras/referencia/vr2/magyar-motif.svg`), tulipános betöltő.
+- 2D séta: ZEPHYR EXPLORE felület (body.zx: fejléc, „Helyek” fiók jobbra, eszközoszlop, kis térkép, arany „Foglalás”), 2D-ben is a gyűrűs útjelzők (`NAV2D`).
+- VR-foglalás élmény: üveggömbök a szobák valódi 360°-os képével (`BX`, `bxBuild/bxTick`), elküldéskor a gömb kitágul és körülvesz (`bxCelebrate`), „HAJÓJEGY” – állapot: jóváhagyásra vár (a ChatGPT kérése: kérelem ≠ visszaigazolt foglalás).
+- Foglalás 2.0 (2D, web + séta): „Kérelem” lépés, szabálysáv, jóváhagyásra vár státusz; **lista valódi szobafotókkal (alapértelmezett, `st.view`, localStorage zephyr-bk-view) + „Hajós nézet”**; **rugalmas ±3 nap** teljes ár-összevetéssel (`bestFor/flexOpts/flexHtml`, a legolcsóbb kombináció is); „Megnézem 360°-ban” (`BK_PHOTO`, a sétában `ZephyrTour.goScene`, a kezdőlapról link).
+- Eszközjegyzék 2.0 (`openBinder`, zi2- osztályok): keresés, kategóriák, kártyák, részletek animációval, „Hol találom?”, „Megmutatom a sétában ›”; a régi füzet: `openBinderOld`. **VR-ben**: a menü Apartmanok oldalán apartmanonként „Eszközök” → `pInv` (kategóriák, 4×3 rács, `pInvDet` mozgó bemutató hanggal, Megmutatom).
+- A VR-panel vászonfeliratai is fordulnak (`vT`, fillText/measureText csomagolva).
+Hátra: fordítások (új kulcsok – ügynök dolgozik rajta), a VR-foglalásba is ±3 napos ajánlás, kezdőoldal további szekciói.
 
 ## 1. Mi ez a projekt?
 A Zephyr Apartmanház (8621 Zamárdi, Gáspár András utca 58., tulajdonos: Kucsera Balázs) weboldalának megújítása:
