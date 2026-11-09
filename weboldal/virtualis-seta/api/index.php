@@ -675,7 +675,7 @@ function ical_export($db, $apt, $for, $detail) {
 
 /* ---------------------------------------------------------------- e-mail */
 function send_mail($s, $to, $subject, $body) {
-    if (defined('ZB_TEST')) { $GLOBALS['ZB_MAILS'][] = $subject; return true; }
+    if (defined('ZB_TEST')) { $GLOBALS['ZB_MAILS'][] = $subject; $GLOBALS['ZB_BODIES'][] = $body; return true; }
     if (!$to || !filter_var($to, FILTER_VALIDATE_EMAIL)) { return false; }
     $host = isset($_SERVER['HTTP_HOST']) ? preg_replace('/[^a-z0-9.-]/i', '', $_SERVER['HTTP_HOST']) : 'balatoni-udules.hu';
     $host = preg_replace('/^www\./', '', $host);
@@ -758,7 +758,7 @@ function mail_approved($s, $b) {
     $deadline = hu_date(date('Y-m-d', time() + max(1, (int) $s['pay_days']) * 86400));
     return send_mail($s, $b['email'], 'Foglalás jóváhagyva – előleg utalása – ' . $b['ref'],
         "Kedves {$b['name']}!\n\nÖrömmel értesítjük, hogy foglalási kérését jóváhagytuk.\n"
-        . "A foglalás véglegesítéséhez kérjük, utalja át az előleget {$deadline}-ig az alábbi adatokkal:\n\n"
+        . "A foglalás véglegesítéséhez kérjük, utalja át az előleget " . rtrim($deadline, ".") . "-ig az alábbi adatokkal:\n\n"
         . 'Összeg: ' . money($b['deposit']) . "\nKözlemény: {$b['ref']}\n\n" . pay_text($s, $b) . "\n"
         . "Az előleg beérkezése után visszaigazoló e-mailt küldünk. A fennmaradó összeget érkezéskor kell rendezni" . (szep_list($s) ? ' (SZÉP-kártyát is elfogadunk)' : '') . ".\n\n"
         . summary($s, $b) . footer($s));
