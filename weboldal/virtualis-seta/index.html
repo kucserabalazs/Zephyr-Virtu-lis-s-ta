@@ -14,6 +14,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Manrope:wght@400;600;700;800&display=swap">
 <style>
+/* Zephyr VR 2.0 (2026. nov. 9.): Inter betűcsalád – helyben tárolva (a VR-feliratok vásznai is ezt használják) */
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:500;src:url(fonts/inter-cyrillic-500-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:600;src:url(fonts/inter-cyrillic-600-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:700;src:url(fonts/inter-cyrillic-700-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:800;src:url(fonts/inter-cyrillic-800-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:500;src:url(fonts/inter-vietnamese-500-normal.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:600;src:url(fonts/inter-vietnamese-600-normal.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:700;src:url(fonts/inter-vietnamese-700-normal.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:800;src:url(fonts/inter-vietnamese-800-normal.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:500;src:url(fonts/inter-latin-ext-500-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:600;src:url(fonts/inter-latin-ext-600-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:700;src:url(fonts/inter-latin-ext-700-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:800;src:url(fonts/inter-latin-ext-800-normal.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:500;src:url(fonts/inter-latin-500-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:600;src:url(fonts/inter-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:700;src:url(fonts/inter-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:800;src:url(fonts/inter-latin-800-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+
 /* Layout: teljes képernyős 360° panoráma; bal felül helyszín-tábla, alatta lakásválasztó, alul helyszín-szalag, bal oldalt lenyitható alaprajz. Egyetlen sötét "balatoni este" megjelenés. */
 :root {
   --boat: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cpath%20d%3D%22M31%206v40%22%20stroke%3D%22%23000%22%20stroke-width%3D%222.4%22/%3E%3Cpath%20d%3D%22M33%208c9%209%2014%2022%2014%2034H33z%22/%3E%3Cpath%20d%3D%22M29%2014C22%2022%2017%2032%2016%2042h13z%22/%3E%3Cpath%20d%3D%22M31%206l8%203-8%203z%22/%3E%3Cpath%20d%3D%22M8%2047h48l-7%209H15z%22/%3E%3C/svg%3E");
@@ -7600,7 +7618,11 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
 
   function faceTo(x) {
-    if (inVR) return;
+    /* VR-ben (2026. nov. 9., a tulajdonos: „oda- és visszaútnál a nézőpont nem követte a haladás irányát”): a fejet nem fordíthatjuk,
+       ezért a játékteret (rig) forgatjuk úgy, hogy a kép „x” iránya oda kerüljön, amerre haladtál (a választott célpont iránya),
+       vagy ha az nem ismert, amerre most nézel. */
+    if (inVR) { try { const r0 = rig.object3D.rotation.y, tw = VRN.travelYaw != null ? VRN.travelYaw : camYaw(); VRN.travelYaw = null;
+      rig.object3D.rotation.y = yawFor(x) * Math.PI / 180 - (tw - r0); rig.object3D.updateMatrixWorld(true); } catch (e) {} return; }
     const lc = cam.components["look-controls"];
     if (lc && lc.yawObject) { lc.yawObject.rotation.y = 0; lc.pitchObject.rotation.x = 0; }
     rig.setAttribute("rotation", `0 ${yawFor(x)} 0`);
@@ -8095,10 +8117,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     walking = { stop: false }; autoRotate = false;
     walkBar(true, "Teleportálás …");
     try {
-      sndPortal();
-      await portalFx(1050, true);
+      /* a dimenziókapu-effektus is törölve (nov. 9.): sima átmenet */
       if (flat) goFlat(to, look); else await go(to, false, look);
-      await portalFx(750, false);
     } finally { walking = null; walkBar(false); const c = $("portalFx"); if (c) c.style.opacity = 0; setTimeout(navMark, 0); setTimeout(() => current && hiRes(current), 400); }
   }
 
@@ -8218,6 +8238,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       if (lc && lc.yawObject) { lc.yawObject.rotation.y = 0; lc.pitchObject.rotation.x = 0; }
     }
     if (lookX != null) faceTo(lookX);
+    else if (inVR && !EDIT) faceTo(sc.s ?? .75);   /* VR: a kép alapiránya a haladás irányába (nem abszolút szögre ugrik) */
     else if (!EDIT || first) rig.setAttribute("rotation", `0 ${yawFor(sc.s ?? .75)} 0`);
     else { const lc = cam.components["look-controls"]; if (lc && lc.yawObject) { lc.yawObject.rotation.y = 0; lc.pitchObject.rotation.x = 0; } rig.setAttribute("rotation", `0 ${yawFor(sc.s ?? .75)} 0`); }
     current = id;
@@ -8445,7 +8466,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (sc.sign && sc.sign[2] && sc.sign[2].some((r) => r[0] === to)) return { x: sc.sign[0], y: sc.sign[1] };
     return null;
   }
-  const gateMotionOk = () => !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /* 2026. nov. 9. (tulajdonos): a díszes kapuk TÖRÖLVE – „rondák”. A kód megmaradt (GATES_ON = true visszakapcsolja). */
+  const GATES_ON = false;
+  const gateMotionOk = () => GATES_ON && !matchMedia("(prefers-reduced-motion: reduce)").matches;
   const GTEX = {};
   function gateTex(file) {
     if (GTEX[file]) return GTEX[file];
@@ -8460,6 +8483,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   }
   /* a jelenet kapus nyilainak képei előre (kis késleltetéssel, hogy a panoráma töltődjön előbb) */
   function gatePrefetch(id) {
+    if (!GATES_ON) return;
     const sc = SCENES[id]; if (!sc || flat) return;
     const seen = {};
     (sc.l || []).concat(sc.pl || [], sc.wl || []).forEach((l) => { const g = gateFor(id, l[0]); if (g && !seen[g.no]) { seen[g.no] = 1; setTimeout(() => { gateTex(gateKey(g.no) + "-keret.webp"); gateTex(gateKey(g.no) + "-belso.jpg"); }, 900); } });
@@ -8911,46 +8935,141 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
      egy úszó névtábla (ikon + a hely neve). Rámutatva kifényesedik, rezzen a kéz; csippentésre átugrasz.
      Ami fölfelé vezet (pl. lépcső az emeletre), annál a jelölő a levegőben, feléd fordulva lebeg.
      =========================================================================================== */
+  /* ---- ZEPHYR WAYPOINTS (VR 2.0, 2026. nov. 9. – a ChatGPT-vel közös „Zephyr Nautical Horizon” terv szerint) ----
+     A régi (nagy tábla + fényoszlop + áramló nyílhegyek) helyett:
+     • vékony, 0,6 m-es padlógyűrű pontosan a fotó azon pontján, ahova a hely vezet (a panoráma 1,6 m-es kamera-magasságához
+       igazítva – így a fotó padlóján ül, bármilyen magas vagy, és bármilyen messze van);
+     • közvetlenül fölötte ALACSONYAN egy kis, sötét üveg címke (ikon + rövid név), függőleges tengely körül feléd fordul,
+       a távolságtól függetlenül mindig ugyanakkora látószögben (≈1,4° betűmagasság) → olvasható, de semmit nem takar;
+     • NINCS nyíl: a gyűrű maga a cél – nem mutathat rossz irányba;
+     • egyszerre legfeljebb 3 címke: amerre nézel (±38°), a többinél csak a gyűrű halványan; nyitott menünél minden elhalványul;
+     • rámutatva arany lesz és 6%-kal nő, a hosszú leírás második sorban megjelenik; csippentésre rövid jelzés, majd átlépsz;
+     • ami fölfelé vezet (lépcső az emeletre), annál a gyűrű függőlegesen áll a fotó azon pontján, feléd fordulva. */
   const VRN = { g: null, scene: null, list: [], hov: {}, tex: null, hidden: [] };
+  const ZT = { navy: "#0B2F5E", mid: "#07182C", raise: "#102A44", gold: "#D4A13A", soft: "#E4BB63", pearl: "#F7F9FC", text: "#FFFFFF", sub: "#DDE8F2", red: "#B51F32",
+    font: (w, px) => `${w} ${px}px Inter, system-ui, -apple-system, "Segoe UI", sans-serif` };
+  const PANO_EYE = 1.6;   /* a 360°-os fotók kamera-magassága (m) */
+  /* Zephyr Marine Icons: egységes, vonalas (Lucide-jellegű) ikonok vásznon – 24 egységes rácson rajzolva */
+  function zIcon(g, kind, cx, cy, size, col, lw) {
+    const s = size / 24; g.save(); g.translate(cx - size / 2, cy - size / 2); g.scale(s, s);
+    g.strokeStyle = col; g.fillStyle = col; g.lineWidth = (lw || 2.1); g.lineCap = "round"; g.lineJoin = "round";
+    const P = (d) => { g.stroke(new Path2D(d)); };
+    switch (kind) {
+      case "bed": P("M3 18V7M3 13h18v5M21 13a4 4 0 0 0-4-4h-6v4M7 12a1.6 1.6 0 1 0 0-.01"); break;
+      case "home": P("M3 11 12 4l9 7M5 10v10h14V10M10 20v-6h4v6"); break;
+      case "door": P("M6 21V4h12v17M3 21h18M14.5 12.5v.01"); break;
+      case "up": P("M4 20h4v-4h4v-4h4V8h4M14 5l3-3 3 3M17 2v6"); break;
+      case "down": P("M4 8h4v4h4v4h4v4h4M14 5l3 3 3-3M17 2v6"); break;
+      case "parking": P("M5 3h14v18H5zM10 17V7h3a3 3 0 0 1 0 6h-3"); break;
+      case "fire": P("M12 21c-3.5 0-6-2.4-6-5.6 0-3.1 2.2-4.6 3-7.4 1.5 1.3 2 2.6 2 4 1.3-.8 2-2.3 2-4.8 2.6 2 5 5.3 5 8.2 0 3.2-2.5 5.6-6 5.6z"); break;
+      case "waves": P("M2 9c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 21c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"); break;
+      case "sun": P("M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"); break;
+      case "bike": P("M5.5 17.5a3.5 3.5 0 1 0 0-.01M18.5 17.5a3.5 3.5 0 1 0 0-.01M5.5 17.5 9 9h6l3.5 8.5M9 9 12 17.5 15 9M8 6h3"); break;
+      case "sup": P("M12 2c3 4 3 16 0 20-3-4-3-16 0-20zM17 3l-3 19M15.6 3.6l2.6.8"); break;
+      case "beach": P("M12 3a9 9 0 0 1 9 9H3a9 9 0 0 1 9-9zM12 12v9M8 21h8"); break;
+      case "sail": P("M11 3v15M11 4l8 13h-8M11 6 5 15h6M3 19c3 2 15 2 18 0"); break;
+      case "pin": P("M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12zM12 9.5a2 2 0 1 0 0-.01"); break;
+      case "map": P("M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"); break;
+      case "cal": P("M4 6h16v15H4zM4 10h16M8 3v5M16 3v5M8 14h2M12 14h2M16 14h0M8 17h2M12 17h2"); break;
+      case "cube": P("M12 2 21 7v10l-9 5-9-5V7l9-5zM3 7l9 5 9-5M12 12v10"); break;
+      case "gear": P("M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"); break;
+      case "back": P("M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3"); break;
+      case "close": P("M6 6l12 12M18 6 6 18"); break;
+      case "turnL": P("M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"); break;
+      case "turnR": P("M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"); break;
+      case "exit": P("M10 17l-5-5 5-5M5 12h11M14 4h5v16h-5"); break;
+      case "eye": P("M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"); break;
+      case "info": P("M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20M12 16v-4M12 8h.01"); break;
+      case "chess": P("M8 21h8M9 21l1-6h4l1 6M10 15 9 9h6l-1 6M9 6h6M12 3v3"); break;
+      default: P("M5 12h14M13 6l6 6-6 6");
+    }
+    g.restore();
+  }
+  function vrnKind(link) {
+    const k = String(link[5] || "") + " " + String(link[6] || ""), lb = String(link[3] || "").toLowerCase(), to = String(link[0] || "");
+    if (/fel |emelet|lépcső fel|tetőterasz/.test(lb) || /emelet|folyoso|lepcsohaz/.test(to) && /fel/.test(lb)) return "up";
+    if (/^le\b|le a |vízbe|úszás|lépcső le/.test(lb)) return "down";
+    if (/apt|bed/.test(k) || /apartman|nappali|háló|szoba/.test(lb)) return "bed";
+    if (/home|zephyr/.test(k) || /utc|kilépés/.test(lb)) return "exit";
+    if (/sundeck|steg/.test(k) || /stég/.test(lb)) return "beach";
+    if (/parking/.test(k) || /parkol/.test(lb)) return "parking";
+    if (/grill/.test(k) || /grill|konyha.*kert|tűz/.test(lb)) return "fire";
+    if (/sup/.test(k) || /\bsup\b/.test(lb)) return "sup"; if (/bike/.test(k) || /kerékp|bicikli/.test(lb)) return "bike";
+    if (/gate/.test(k) || /kapu|bejár|ajtó/.test(lb)) return "door";
+    if (/strand|víz|nád|part/.test(lb)) return "waves"; if (/terasz|erkély/.test(lb)) return "sun";
+    return "pin";
+  }
+  /* rövid cím (≤ 24 karakter): a hosszú link-leírás helyett a cél neve; a hosszú leírás rámutatáskor 2. sorban */
+  function vrnTitle(link) {
+    const lb = String(link[3] || "").replace(/\n/g, " · ").trim(), sc = SCENES[link[0]], nm = sc ? String(sc.n || "").replace(/\n/g, " ") : "";
+    if (lb && lb.length <= 24) return { t: lb, sub: "" };
+    return { t: nm && nm.length <= 26 ? nm : lb.slice(0, 22) + "…", sub: lb };
+  }
   function vrnTextures() {
     if (VRN.tex) return VRN.tex;
-    const mk = (w, h, f) => { const c = document.createElement("canvas"); c.width = w; c.height = h; f(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
-    /* gyűrű: puha fényudvar + éles arany perem + belső halvány tányér */
+    const mk = (w, h, f) => { const c = document.createElement("canvas"); c.width = w; c.height = h; f(c.getContext("2d"), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+    /* gyűrű: vékony gyöngyház perem, alatta lágy sötét árnyék (bármilyen padlón kiválik), belül alig látható tányér */
     const ring = mk(512, 512, (g, w) => { const c = w / 2;
-      let gr = g.createRadialGradient(c, c, 0, c, c, c); gr.addColorStop(0, "rgba(255,230,160,.10)"); gr.addColorStop(.62, "rgba(255,214,120,.16)"); gr.addColorStop(.74, "rgba(255,226,150,.95)"); gr.addColorStop(.79, "rgba(255,248,220,1)"); gr.addColorStop(.84, "rgba(255,210,110,.85)"); gr.addColorStop(.92, "rgba(255,190,80,.22)"); gr.addColorStop(1, "rgba(255,190,80,0)");
-      g.fillStyle = gr; g.beginPath(); g.arc(c, c, c, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 3; g.setLineDash([18, 22]); g.beginPath(); g.arc(c, c, c * .62, 0, Math.PI * 2); g.stroke(); });
-    /* nyílhegyek (három chevron egymás után) – a textúra eltolásával „áramlanak” */
-    const chev = mk(256, 512, (g, w, h) => { g.clearRect(0, 0, w, h); g.lineCap = "round"; g.lineJoin = "round";
-      for (let i = 0; i < 3; i++) { const y = 70 + i * 150; g.strokeStyle = `rgba(255,${235 - i * 10},${190 - i * 30},${.95 - i * .25})`; g.lineWidth = 34; g.beginPath(); g.moveTo(40, y + 70); g.lineTo(w / 2, y); g.lineTo(w - 40, y + 70); g.stroke(); } });
-    chev.wrapT = THREE.RepeatWrapping;
-    /* fényoszlop: alul erős, fölfelé elhalványul */
-    const beam = mk(8, 256, (g, w, h) => { const gr = g.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, "rgba(255,226,150,.85)"); gr.addColorStop(.35, "rgba(255,214,130,.28)"); gr.addColorStop(1, "rgba(255,214,130,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
-    VRN.tex = { ring, chev, beam }; return VRN.tex;
+      let gr = g.createRadialGradient(c, c, c * .70, c, c, c); gr.addColorStop(0, "rgba(4,14,28,0)"); gr.addColorStop(.45, "rgba(4,14,28,.42)"); gr.addColorStop(1, "rgba(4,14,28,0)"); g.fillStyle = gr; g.beginPath(); g.arc(c, c, c, 0, Math.PI * 2); g.fill();
+      g.fillStyle = "rgba(247,249,252,.16)"; g.beginPath(); g.arc(c, c, c * .80, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = "rgba(255,255,255,1)"; g.lineWidth = c * .1; g.beginPath(); g.arc(c, c, c * .82, 0, Math.PI * 2); g.stroke();
+      g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = c * .014; g.beginPath(); g.arc(c, c, c * .70, 0, Math.PI * 2); g.stroke(); });
+    VRN.tex = { ring }; return VRN.tex;
   }
-  function vrnIcon(link) {
-    const k = String(link[5] || "") + " " + String(link[6] || ""), lb = String(link[3] || "").toLowerCase();
-    if (/apt|bed/.test(k)) return "🛏️"; if (/home|zephyr/.test(k)) return "🏠"; if (/sundeck|steg/.test(k) || /stég/.test(lb)) return "🏖️";
-    if (/parking/.test(k)) return "🅿️"; if (/grill/.test(k)) return "🔥"; if (/sup/.test(k)) return "🏄"; if (/bike/.test(k)) return "🚲"; if (/gate/.test(k)) return "🚪";
-    if (/fel |emelet|lépcső/.test(lb)) return "⬆️"; if (/^le\b|le a |vízbe|úszás/.test(lb)) return "⬇️"; if (/strand|víz|nád/.test(lb)) return "🌊"; if (/terasz/.test(lb)) return "☀️";
-    return "➜";
+  /* címke-vászon: sötét „Nautical Glass” kapszula, bal oldalt arany ikonkorong, fehér Inter cím; rámutatva arany perem + 2. sor */
+  function vrnLabelDraw(c, ttl, sub, kind, hot) {
+    const g = c.getContext("2d"), H = c.height, W = c.width; g.clearRect(0, 0, W, H);
+    g.font = ZT.font(650, 64); const tw = g.measureText(ttl).width; let sw = 0; if (hot && sub) { g.font = ZT.font(500, 40); sw = g.measureText(sub).width; }
+    const bw = Math.min(W - 24, Math.max(tw, sw) + 190), x0 = (W - bw) / 2, bh = hot && sub ? 190 : 128, y0 = (H - bh) / 2, r = 64;
+    const rr = () => { g.beginPath(); g.moveTo(x0 + r, y0); g.arcTo(x0 + bw, y0, x0 + bw, y0 + bh, r); g.arcTo(x0 + bw, y0 + bh, x0, y0 + bh, r); g.arcTo(x0, y0 + bh, x0, y0, r); g.arcTo(x0, y0, x0 + bw, y0, r); g.closePath(); };
+    g.save(); g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 22; g.shadowOffsetY = 6; rr();
+    const bg = g.createLinearGradient(0, y0, 0, y0 + bh); bg.addColorStop(0, "rgba(16,42,68,.95)"); bg.addColorStop(1, "rgba(7,24,44,.95)"); g.fillStyle = bg; g.fill(); g.restore();
+    rr(); g.lineWidth = hot ? 5 : 2.5; g.strokeStyle = hot ? ZT.gold : "rgba(221,232,242,.35)"; g.stroke();
+    g.save(); rr(); g.clip(); const hi = g.createLinearGradient(0, y0, 0, y0 + 34); hi.addColorStop(0, "rgba(255,255,255,.16)"); hi.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = hi; g.fillRect(x0, y0, bw, 34); g.restore();
+    const ic = x0 + 68, iy = y0 + 64; g.beginPath(); g.arc(ic, iy, 44, 0, Math.PI * 2); g.fillStyle = hot ? ZT.gold : "rgba(212,161,58,.18)"; g.fill(); g.lineWidth = 2.5; g.strokeStyle = ZT.gold; g.stroke();
+    zIcon(g, kind, ic, iy, 52, hot ? ZT.mid : ZT.soft, 2.2);
+    g.fillStyle = ZT.text; g.font = ZT.font(650, 64); g.textBaseline = "middle"; g.textAlign = "left"; g.fillText(ttl, x0 + 132, iy + 2);
+    if (hot && sub) { g.fillStyle = ZT.sub; g.font = ZT.font(500, 40); g.fillText(sub.length > 46 ? sub.slice(0, 45) + "…" : sub, x0 + 132, y0 + 148); }
+    return bw / W;
   }
-  function vrnLabelTex(title, sub, ico) {
-    const c = document.createElement("canvas"), g = c.getContext("2d"); c.width = 1100; c.height = 260;
-    g.font = "800 74px system-ui, sans-serif"; const tw = Math.min(800, g.measureText(title).width);
-    const W = Math.max(560, Math.min(1090, tw + 300)), x0 = (c.width - W) / 2;
-    const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
-    g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 24; rr(x0 + 8, 18, W - 16, 210, 105);
-    const bg = g.createLinearGradient(0, 18, 0, 228); bg.addColorStop(0, "rgba(22,64,118,.96)"); bg.addColorStop(1, "rgba(8,30,62,.96)"); g.fillStyle = bg; g.fill(); g.shadowBlur = 0;
-    g.lineWidth = 6; g.strokeStyle = "rgba(255,209,102,.95)"; g.stroke();
-    g.fillStyle = "rgba(255,255,255,.07)"; rr(x0 + 20, 28, W - 40, 80, 60); g.fill();
-    /* ikon-korong */
-    g.beginPath(); g.arc(x0 + 118, 123, 80, 0, Math.PI * 2); const ig = g.createLinearGradient(0, 43, 0, 203); ig.addColorStop(0, "#ffe08a"); ig.addColorStop(1, "#f2b233"); g.fillStyle = ig; g.fill();
-    g.font = "86px system-ui, 'Apple Color Emoji', 'Noto Color Emoji', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#0b2f5e"; g.fillText(ico, x0 + 118, 128);
-    g.textAlign = "left"; g.fillStyle = "#ffffff"; let fs = 74; g.font = `800 ${fs}px system-ui, sans-serif`; while (fs > 34 && g.measureText(title).width > W - 260) { fs -= 3; g.font = `800 ${fs}px system-ui, sans-serif`; }
-    g.fillText(title, x0 + 222, 100);
-    g.fillStyle = "#ffd166"; g.font = "600 42px system-ui, sans-serif"; g.fillText(sub, x0 + 224, 172);
-    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return { t, ar: c.height / c.width };
+  function vrnBuild() {
+    vrnClear(); const sc = SCENES[current]; if (!sc || !spots) return;
+    const T = vrnTextures(); VRN.g = new THREE.Group(); VRN.g.name = "vr-nav"; sceneEl.object3D.add(VRN.g); VRN.scene = current;
+    spots.object3D.updateMatrixWorld(true);
+    const h = headPos(new THREE.Vector3()), o0 = spots.object3D.localToWorld(new THREE.Vector3(0, 0, 0));
+    /* a fotó padlója: 1,6 m-rel a szemed alatt (nem a valódi padlód) – így a gyűrű pontosan a képen látható padlón ül */
+    const floorY = h.y - PANO_EYE;
+    vrnLinks(sc).forEach((link) => {
+      const [to, x, y] = link; const p = dirFrom(x, y, 1); const d = spots.object3D.localToWorld(new THREE.Vector3(p.x, p.y, p.z)).sub(o0).normalize();
+      const floor = d.y < -.06; let pos;
+      if (floor) { const dist = Math.min(14, PANO_EYE / -d.y); pos = h.clone().addScaledVector(d, dist); pos.y = floorY + .01; }
+      else pos = h.clone().addScaledVector(d, 3.2);
+      const dist = Math.hypot(pos.x - h.x, pos.z - h.z);
+      const m = new THREE.Group(); m.position.copy(pos); VRN.g.add(m);
+      const mats = [], geos = []; const add = (geo, mat, parent) => { geos.push(geo); mats.push(mat); const x2 = new THREE.Mesh(geo, mat); (parent || m).add(x2); return x2; };
+      const R = .30;   /* 0,6 m átmérő */
+      const tilt = new THREE.Group(); m.add(tilt);
+      if (floor) tilt.rotation.x = -Math.PI / 2; else { const q = new THREE.Vector3().subVectors(h, pos); tilt.rotation.y = Math.atan2(q.x, q.z); }
+      const ringM = new THREE.MeshBasicMaterial({ map: T.ring, transparent: true, depthWrite: false, depthTest: false, color: 0xffffff, fog: false, side: THREE.DoubleSide });
+      const ring = add(new THREE.PlaneGeometry(R * 2.5, R * 2.5), ringM, tilt); ring.renderOrder = 960;
+      const tt = vrnTitle(link), kind = floor ? vrnKind(link) : (vrnKind(link) === "pin" ? "up" : vrnKind(link));
+      const cvs = document.createElement("canvas"); cvs.width = 1024; cvs.height = 220; const fill = vrnLabelDraw(cvs, tt.t, tt.sub, kind, false);
+      const lt = new THREE.CanvasTexture(cvs); lt.colorSpace = THREE.SRGBColorSpace; lt.anisotropy = 4;
+      const lblM = new THREE.MeshBasicMaterial({ map: lt, transparent: true, depthWrite: false, depthTest: false, fog: false }); mats.push(lblM);
+      const lgeo = new THREE.PlaneGeometry(1, cvs.height / cvs.width); geos.push(lgeo);
+      const lbl = new THREE.Mesh(lgeo, lblM); lbl.renderOrder = 990; m.add(lbl);
+      /* láthatatlan, bőkezű célterület (gyűrű + címke) */
+      const hitM = new THREE.MeshBasicMaterial({ visible: false }); const hit = add(new THREE.CylinderGeometry(R * 1.6, R * 1.6, floor ? .9 : R * 3, 12), hitM); hit.position.y = floor ? .4 : 0;
+      const mkr = { link, to, m, ring, lbl, cvs, lt, tt, kind, fill, floor, dist, hot: 0, hotDrawn: false, vis: 1, t0: Math.random() * 6, hit,
+        dispose() { geos.forEach((g2) => g2.dispose()); mats.forEach((q) => { if (q.map && q.map !== T.ring) q.map.dispose(); q.dispose(); }); } };
+      hit.userData.xr = {
+        hover: (on, h2, key) => { VRN.hov[key || "x"] = on ? mkr : null; if (on) { try { xrPulse(XRP.src[key] && XRP.src[key].src, .25, 14); } catch (e) {} } },
+        click: () => vrnGo(mkr)
+      };
+      XRP.extra.add(hit); VRN.list.push(mkr);
+    });
+    /* a betűtípus később töltődhet be: akkor újrarajzoljuk a címkéket */
+    try { if (document.fonts && !VRN.fontOk) document.fonts.load(ZT.font(650, 64), "Á").then(() => { VRN.fontOk = true; VRN.list.forEach((q) => { q.fill = vrnLabelDraw(q.cvs, q.tt.t, q.tt.sub, q.kind, q.hot > .5); q.lt.needsUpdate = true; }); }); } catch (e) {}
   }
   function vrnLinks(sc) {
     /* minden kimenő irány: nyilak (l), telefonos nyilak (pl – a tábla sorai pontos helyen), séta-irányok (wl) */
@@ -8963,56 +9082,12 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     VRN.g = null; VRN.list = []; VRN.scene = null; VRN.hov = {};
     VRN.hidden.forEach((o) => { o.visible = true; }); VRN.hidden = [];
   }
-  function vrnBuild() {
-    vrnClear(); const sc = SCENES[current]; if (!sc || !spots) return;
-    const T = vrnTextures(); VRN.g = new THREE.Group(); VRN.g.name = "vr-nav"; sceneEl.object3D.add(VRN.g); VRN.scene = current;
-    spots.object3D.updateMatrixWorld(true);
-    const h = headPos(new THREE.Vector3()), o0 = spots.object3D.localToWorld(new THREE.Vector3(0, 0, 0));
-    const floorY = (rig ? rig.object3D.position.y : 0), eyeH = Math.max(1.2, Math.min(1.9, h.y - floorY || 1.6));
-    vrnLinks(sc).forEach((link) => {
-      const [to, x, y, label] = link; const p = dirFrom(x, y, 1); const d = spots.object3D.localToWorld(new THREE.Vector3(p.x, p.y, p.z)).sub(o0).normalize();
-      const floor = d.y < -.07; let pos;
-      if (floor) { const dist = Math.max(1.4, Math.min(9, (eyeH * .95) / -d.y)); pos = h.clone().addScaledVector(d, dist); pos.y = floorY + .015; }
-      else { pos = h.clone().addScaledVector(d, 3.6); }
-      const dist = Math.hypot(pos.x - h.x, pos.z - h.z), k = Math.max(.8, Math.min(1.9, Math.sqrt(dist / 2.6)));
-      const m = new THREE.Group(); m.position.copy(pos); VRN.g.add(m);
-      const R = .42 * k, mats = [], geos = [];
-      const add = (geo, mat, parent) => { geos.push(geo); mats.push(mat); const x2 = new THREE.Mesh(geo, mat); (parent || m).add(x2); return x2; };
-      const tilt = new THREE.Group(); m.add(tilt);
-      if (floor) tilt.rotation.x = -Math.PI / 2;   /* a padlón fekve */
-      else { const q = new THREE.Vector3().subVectors(h, pos); tilt.rotation.y = Math.atan2(q.x, q.z); }   /* a levegőben lebegve, feléd fordulva */
-      const ringM = new THREE.MeshBasicMaterial({ map: T.ring, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffffff, fog: false, side: THREE.DoubleSide });
-      const ring = add(new THREE.PlaneGeometry(R * 2.4, R * 2.4), ringM, tilt); ring.renderOrder = 960;
-      const chevT = T.chev.clone(); chevT.needsUpdate = true; chevT.wrapT = THREE.RepeatWrapping;
-      const chevM = new THREE.MeshBasicMaterial({ map: chevT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .85, side: THREE.DoubleSide });
-      const chev = add(new THREE.PlaneGeometry(R * .9, R * 1.5), chevM, tilt); chev.renderOrder = 961; chev.position.z = .004;
-      /* a nyílhegyek a haladás irányába (tőled el) mutassanak */
-      if (floor) chev.rotation.z = Math.atan2(-(pos.x - h.x), -(pos.z - h.z));
-      const beamM = new THREE.MeshBasicMaterial({ map: T.beam, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: floor ? .55 : 0, side: THREE.DoubleSide });
-      const beam = add(new THREE.CylinderGeometry(R * .55, R * .75, 1.5 * k, 28, 1, true), beamM); beam.position.y = .75 * k; beam.renderOrder = 959; beam.visible = floor;
-      const title = String(label || (SCENES[to] && SCENES[to].n) || "Tovább").replace(/\n/g, " · ");
-      const lt = vrnLabelTex(title, "csippents – odaugrasz", vrnIcon(link));
-      const lblM = new THREE.SpriteMaterial({ map: lt.t, transparent: true, depthWrite: false, depthTest: false, opacity: .92 }); mats.push(lblM);
-      const lbl = new THREE.Sprite(lblM); const lw = (floor ? .66 : .8) * k; lbl.scale.set(lw * 2, lw * 2 * lt.ar, 1); lbl.position.y = floor ? 1.55 * k : R * 1.5 + .2; lbl.renderOrder = 990; m.add(lbl);
-      /* láthatatlan, bőkezű célterület: gyűrű + oszlop + tábla egyben */
-      const hitM = new THREE.MeshBasicMaterial({ visible: false }); const hit = add(new THREE.CylinderGeometry(R * 1.35, R * 1.35, floor ? 1.9 * k : R * 3.4, 12), hitM); hit.position.y = floor ? .95 * k : 0;
-      const mk = { link, to, m, ring, chev, beam, lbl, lw, k, floor, hot: 0, t0: Math.random() * 6, hit, base: lt.ar,
-        dispose() { geos.forEach((g2) => g2.dispose()); mats.forEach((q) => { if (q.map && q.map !== T.ring && q.map !== T.beam) q.map.dispose(); q.dispose(); }); } };
-      hit.userData.xr = {
-        hover: (on, h2, key) => { VRN.hov[key || "x"] = on ? mk : null; if (on) { try { xrPulse(XRP.src[key] && XRP.src[key].src, .25, 14); } catch (e) {} } },
-        click: () => vrnGo(mk)
-      };
-      XRP.extra.add(hit); VRN.list.push(mk);
-    });
-    /* egymást takaró táblák: az irányuk (a fejedből nézve) túl közel → a távolabbiak feljebb kerülnek, lépcsőzetesen */
-    const ang = (mk) => Math.atan2(mk.m.position.x - h.x, mk.m.position.z - h.z);
-    const byD = VRN.list.slice().sort((a2, b2) => a2.m.position.distanceTo(h) - b2.m.position.distanceTo(h));
-    byD.forEach((mk, i) => { mk.lift = 0; for (let j = 0; j < i; j++) { const o = byD[j]; let da = Math.abs(ang(mk) - ang(o)); if (da > Math.PI) da = Math.PI * 2 - da; if (da < .32 && Math.abs(mk.lift - o.lift) < .9) mk.lift = o.lift + 1; } });
-  }
   function vrnGo(mk) {
     if (busy) return; const link = mk.link;
     try { Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, .5, 30)); } catch (e) {}
     VRN.leaving = { mk, t: performance.now() };
+    /* a haladás iránya (világ-szög): érkezéskor erre fogsz nézni (faceTo) */
+    try { const h = headPos(new THREE.Vector3()), p = mk.m.position; VRN.travelYaw = Math.atan2(-(p.x - h.x), -(p.z - h.z)); } catch (e) { VRN.travelYaw = null; }
     if (link[6] && WALKS[link[6]]) walk(WALKS[link[6]]); else if (inVR) vrnTransition(mk).catch((e) => { console.warn("vrt", e); VRN.trans = false; }); else go(link[0], false, arriveLook(link[0]));
   }
   /* ---- Átmenet két fotóhely között (VR): a fotó vázlattá „rajzolódik” (fénylő tusvonalak), előresuhansz egy
@@ -9108,25 +9183,32 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
   function vrnTick() {
     if (!inVR || worldOn() || !spots) { if (VRN.g) vrnClear(); return; }
-    /* a régi jelzések (nyilak, irányjelző tábla) VR-ben rejtve; a feliratok (pl. „Közös hűtő”) maradnak */
+    /* a régi jelzések (nyilak, irányjelző tábla) VR-ben rejtve */
     Array.from(spots.children || []).forEach((el) => { if ((el._ix === 1 || el._ix === 0) && el.object3D && el.object3D.visible) { el.object3D.visible = false; VRN.hidden.push(el.object3D); } });
     if (busy || VRN.trans) { if (VRN.g) VRN.g.visible = false; return; }
     if (!VRN.g || VRN.scene !== current) vrnBuild();
     if (!VRN.g) return; VRN.g.visible = true;
-    const t = performance.now() / 1000, hovSet = new Set(Object.values(VRN.hov).filter(Boolean)), h = headPos(_vrnH || (_vrnH = new THREE.Vector3()));
+    const h = headPos(_vrnH || (_vrnH = new THREE.Vector3())), f = headDir(_vrnF || (_vrnF = new THREE.Vector3())); f.y = 0; if (f.lengthSq() < 1e-6) f.set(0, 0, -1); f.normalize();
+    const hovSet = new Set(Object.values(VRN.hov).filter(Boolean)), menuOpen = !!(VRS.panel || (XRP.wristP && XRP.wristP.open) || (typeof SM !== "undefined" && SM.open));
+    /* melyik címke látszik: a nézési irányhoz legközelebbi legfeljebb 3 (±38°), és amire mutatsz */
+    const ang = (mk) => { const dx = mk.m.position.x - h.x, dz = mk.m.position.z - h.z, l = Math.hypot(dx, dz) || 1; return Math.acos(Math.max(-1, Math.min(1, (dx * f.x + dz * f.z) / l))); };
+    const ranked = VRN.list.map((mk) => [mk, ang(mk)]).filter((q) => q[1] < .66).sort((a, b) => a[1] - b[1]).slice(0, 3).map((q) => q[0]);
+    const gold = _vrnGold || (_vrnGold = new THREE.Color(ZT.gold)), white = _vrnWhite || (_vrnWhite = new THREE.Color(0xffffff));
     VRN.list.forEach((mk) => {
-      const want = hovSet.has(mk) ? 1 : 0; mk.hot += (want - mk.hot) * .18;
-      const pulse = 1 + .05 * Math.sin(t * 2.2 + mk.t0) + mk.hot * .22;
-      mk.ring.scale.setScalar(pulse); mk.ring.material.color.setRGB(1, 1 - .05 * mk.hot, 1 - .25 * mk.hot);
-      mk.chev.material.map.offset.y = -((t * .6 + mk.t0) % 1); mk.chev.material.opacity = .55 + .4 * mk.hot + .1 * Math.sin(t * 3 + mk.t0);
-      if (mk.floor) mk.beam.material.opacity = .35 + .45 * mk.hot + .08 * Math.sin(t * 1.7 + mk.t0);
-      /* a tábla mindig olvasható méretű: távolabb nagyobb, rámutatva még kicsit nő */
-      const dd = Math.max(1, mk.m.position.distanceTo(h)), s = mk.lw * 2 * Math.max(1, dd / 3.2) * (1 + .12 * mk.hot);
-      mk.lbl.scale.set(s, s * mk.base, 1); mk.lbl.material.opacity = .82 + .18 * mk.hot;
-      mk.lbl.position.y = (mk.floor ? 1.55 * mk.k : .6) + (mk.lift || 0) * s * mk.base * 1.15 + Math.sin(t * 1.3 + mk.t0) * .025;
+      const hot = hovSet.has(mk); mk.hot += ((hot ? 1 : 0) - mk.hot) * .25;
+      if ((mk.hot > .5) !== mk.hotDrawn) { mk.hotDrawn = mk.hot > .5; mk.fill = vrnLabelDraw(mk.cvs, mk.tt.t, mk.tt.sub, mk.kind, mk.hotDrawn); mk.lt.needsUpdate = true; }
+      const show = (ranked.includes(mk) || hot) && !menuOpen ? 1 : 0; mk.vis += (show - mk.vis) * .15;
+      const dRing = Math.hypot(mk.m.position.x - h.x, mk.m.position.z - h.z);
+      mk.ring.scale.setScalar((1 + Math.max(0, dRing - 2.5) * .16) * (1 + .06 * mk.hot));   /* messze kicsit nagyobb, hogy látható maradjon */ mk.ring.material.color.copy(white).lerp(gold, mk.hot);
+      mk.ring.material.opacity = menuOpen ? .15 : (.55 + .35 * Math.max(mk.vis, mk.hot));
+      /* állandó látószög: a címke mérete a távolsággal arányos (≈1,7°-os betűmagasság) */
+      const d3 = Math.max(.8, mk.m.position.distanceTo(h)), W = .64 * d3 * (1 + .06 * mk.hot), Hh = W * mk.cvs.height / mk.cvs.width;
+      mk.lbl.scale.set(W, W, 1); mk.lbl.material.opacity = mk.vis * (mk.dist < .8 && !hot ? 0 : 1); mk.lbl.visible = mk.lbl.material.opacity > .02;
+      mk.lbl.position.set(0, mk.floor ? .1 + Hh * .5 : -(.38 + Hh * .5), 0);
+      mk.lbl.rotation.set(0, Math.atan2(h.x - mk.m.position.x, h.z - mk.m.position.z), 0);
     });
   }
-  let _vrnH = null;
+  let _vrnH = null, _vrnF = null, _vrnGold = null, _vrnWhite = null;
   function vrHaptic(h, v, ms) {
     if (!h) { Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, v, ms)); return; }
     try { const tc = h.components["tracked-controls"], src = tc && tc.controller, gp = src && src.gamepad; const a = gp && gp.hapticActuators && gp.hapticActuators[0]; if (a && a.pulse) a.pulse(v, ms); } catch (e) {}
@@ -9171,7 +9253,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; VRS.tex = t;
       const e = document.createElement("a-entity");
       e.classList.add("hotspot");
-      e.setAttribute("geometry", `primitive: plane; width: 1.12; height: ${1.12 * VH / VW}`);
+      const PWm = WS.big ? 1.12 : .92; e.setAttribute("geometry", `primitive: plane; width: ${PWm}; height: ${PWm * VH / VW}`);   /* VR 2.0: 0,92 m széles (Nagy kezelőfelület: 1,12 m), 1,2 m-re */
       e.setAttribute("material", "shader: flat; transparent: true; side: double; depthTest: false");
       e.addEventListener("loaded", () => { const m = e.getObject3D("mesh"); if (m) { m.material.map = t; m.material.needsUpdate = true; m.renderOrder = 998; } vrPlace(); });
       e.addEventListener("click", (ev) => { const ix = ev.detail && ev.detail.intersection; if (ix && ix.uv) vrClick(ix.uv.x * VW, (1 - ix.uv.y) * VH); });
@@ -9189,9 +9271,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const yawW = camYaw(), ry = rig.object3D.rotation.y, a = yawW - ry;
     let eyeY = 1.4; try { const xc = sceneEl.renderer.xr.getCamera(); const p = new THREE.Vector3(); xc.getWorldPosition(p); if (p.y > .5) eyeY = p.y; } catch (e) {}
     const kbOn = VRS.page === "book" && VRS.book && VRS.book.step === "data";   /* billentyűzetnél a panel feljebb, a billentyűzet alatta */
-    const d = kbOn ? .98 : 1.05;
-    VRS.panel.object3D.position.set(-Math.sin(a) * d, eyeY - (kbOn ? .02 : .22), -Math.cos(a) * d);
-    VRS.panel.object3D.rotation.set(kbOn ? -.08 : -.18, a, 0, "YXZ");
+    const d = kbOn ? .98 : 1.2;
+    VRS.panel.object3D.position.set(-Math.sin(a) * d, eyeY - (kbOn ? .02 : .1), -Math.cos(a) * d);
+    VRS.panel.object3D.rotation.set(kbOn ? -.08 : -.08, a, 0, "YXZ");
     try { kbPlace(); } catch (e) {}
   }
   function vrHoverTick() {
@@ -9212,62 +9294,94 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const g = VRS.cvs && VRS.cvs.getContext("2d"); if (!g) return;
     VRS.btns = [];
     g.clearRect(0, 0, VW, VH);
-    /* üveghatású sötétkék alap, arany perem – a kocka paneljeihez illően */
-    const bg = g.createLinearGradient(0, 0, 0, VH); bg.addColorStop(0, "rgba(14,52,98,.96)"); bg.addColorStop(1, "rgba(7,28,58,.96)");
-    rr(g, 6, 6, VW - 12, VH - 12, 46); g.fillStyle = bg; g.fill(); g.lineWidth = 6; g.strokeStyle = "rgba(255,209,102,.85)"; g.stroke();
-    g.fillStyle = "#ffd166"; g.font = "800 44px system-ui, sans-serif"; g.textBaseline = "middle"; g.textAlign = "left";
-    g.fillText("ZEPHYR", 50, 62);
-    g.fillStyle = "#fff"; g.font = "600 36px system-ui, sans-serif";
+    /* VR 2.0 „Nautical Glass” panel (2026. nov. 9., a ChatGPT-vel közös terv): sötét mélykék, világos felső perem, finom kontúr;
+       arany csak a kiemelésen. Fejléc: kis arany felirat + a hely neve nagy fehér betűkkel. */
+    const bg = g.createLinearGradient(0, 0, 0, VH); bg.addColorStop(0, "rgba(16,42,68,.97)"); bg.addColorStop(1, "rgba(7,24,44,.97)");
+    rr(g, 4, 4, VW - 8, VH - 8, 40); g.fillStyle = bg; g.fill(); g.lineWidth = 2.5; g.strokeStyle = "rgba(221,232,242,.30)"; g.stroke();
+    g.save(); rr(g, 4, 4, VW - 8, VH - 8, 40); g.clip(); const hi = g.createLinearGradient(0, 4, 0, 60); hi.addColorStop(0, "rgba(255,255,255,.12)"); hi.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = hi; g.fillRect(0, 0, VW, 60); g.restore();
     const sc = SCENES[current] || {}, grp = GROUPS.find((q) => q.id === sc.g);
-    const zw = window.ZephyrWorld && ZephyrWorld.active ? ZephyrWorld.kind : null;   /* 3D világban a világ neve áll fejlécben, nem a séta utolsó helye */
-    if (zw) { g.fillText(zw === "race" ? "Vitorlásverseny – a kormánynál" : "A ház makettje", 250, 56); txt(g, "3D világ · a valódi fotókhoz: vissza a sétához", 250, 99, { fs: 21, w: 600, c: "rgba(191,240,213,.85)" }); }
-    else { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 680) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 250, 56); }
-    /* hitelességi pecsét: a vendég tudja, hogy valódi fényképet lát, nem látványtervet */
-    if (!zw) txt(g, ["korvett", "dingi", "fregatt", "kaloz", "schooner", "kadett"].includes((SCENES[current] || {}).g) ? "✓ Valódi 360°-os fénykép a szobáról – nem látványterv" : "✓ Valódi 360°-os fénykép – nem látványterv", 250, 99, { fs: 21, w: 600, c: "rgba(191,240,213,.85)" });
-    btn(g, VW - 120, 26, 76, 72, "✕", () => vrClose(), { round: 36 });
-    btn(g, VW - 330, 26, 106, 72, vr8k() ? "8K" : "4K", () => { vr8k(!vr8k()); if (vr8k()) hiRes(current); else hiDrop(); vrDraw(); }, { round: 36, fs: 30, on: vr8k() });
-    if (VRS.page !== "main") btn(g, VW - 212, 26, 76, 72, "‹", () => { VRS.page = "main"; vrDraw(); vrPlace(); }, { round: 36 });
-    g.font = "600 36px system-ui, sans-serif";
-    g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(40, 116, VW - 80, 2);
+    const zw = window.ZephyrWorld && ZephyrWorld.active ? ZephyrWorld.kind : null;
+    const real = ["korvett", "dingi", "fregatt", "kaloz", "schooner", "kadett"].includes(sc.g) ? "VALÓDI 360°-OS FÉNYKÉP A SZOBÁRÓL" : "VALÓDI 360°-OS FÉNYKÉP";
+    g.fillStyle = ZT.soft; g.font = ZT.font(700, 22); g.textBaseline = "middle"; g.textAlign = "left";
+    try { g.letterSpacing = "3px"; } catch (e) {} g.fillText(zw ? "ZEPHYR WORLDS" : "ZEPHYR EXPLORE  ·  " + real, 52, 40); try { g.letterSpacing = "0px"; } catch (e) {}
+    g.fillStyle = ZT.text; g.font = ZT.font(650, 40);
+    if (zw) g.fillText(zw === "race" ? "Vitorlásverseny – a kormánynál" : zw === "chess" ? "Vitorlás sakk" : "A ház makettje", 52, 84);
+    else { let t = (grp ? grp.name + " · " : "") + (sc.n || ""); while (t.length > 4 && g.measureText(t).width > 760) t = t.slice(0, -2); if (t !== (grp ? grp.name + " · " : "") + (sc.n || "")) t += "…"; g.fillText(t, 52, 84); }
+    btn(g, VW - 116, 22, 84, 84, "✕", () => vrClose(), { round: 42 });
+    btn(g, VW - 330, 22, 108, 84, vr8k() ? "8K" : "4K", () => { vr8k(!vr8k()); if (vr8k()) hiRes(current); else hiDrop(); vrDraw(); }, { round: 42, fs: 30, on: vr8k() });
+    if (VRS.page !== "main") btn(g, VW - 214, 22, 84, 84, "‹", () => { VRS.page = "main"; vrDraw(); vrPlace(); }, { round: 42 });
+    g.font = ZT.font(600, 36);
+    g.fillStyle = "rgba(221,232,242,.18)"; g.fillRect(40, 120, VW - 80, 2);
     if (VRS.page !== "book") { try { bkKeyboard(false); } catch (e) {} }
-    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld, help: pHelp, sun: pSun }[VRS.page] || pMain)(g);
+    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld, help: pHelp, sun: pSun, set: pSettings }[VRS.page] || pMain)(g);
     if (VRS.tex) VRS.tex.needsUpdate = true;
   }
+  /* gomb (VR 2.0): emelt sötét felület, rámutatva arany kontúr; „on” = elsődleges (arany); az elején álló emoji helyett
+     egységes vonalas Zephyr-ikon (zIcon) – két soros feliratnál az ikon fölül, egysorosnál balra */
+  const EMO_ICON = { "🧭": "pin", "🗺": "map", "🛏": "bed", "⛵": "sail", "📅": "cal", "☀": "sun", "❔": "info", "⟲": "back", "🏠": "home", "⚙": "gear", "♞": "chess", "↺": "turnL", "↻": "turnR", "🚪": "exit", "🧊": "cube", "🌐": "cube" };
   function btn(g, x, y, w, h, label, fn, o) {
     o = o || {};
     const i = VRS.btns.length, hov = i === VRS.hover && !o.off;
     VRS.btns.push({ x, y, w, h, fn, off: !!o.off });
-    rr(g, x, y, w, h, o.round || 22);
-    g.fillStyle = o.off ? "rgba(255,255,255,.05)" : o.on ? (hov ? "#ffe29a" : "#ffd166") : hov ? "rgba(255,255,255,.32)" : "rgba(255,255,255,.12)"; g.fill();
-    g.lineWidth = hov ? 5 : 2; g.strokeStyle = hov ? "#ffd166" : "rgba(255,255,255,.35)"; g.stroke();
-    g.fillStyle = o.off ? "rgba(255,255,255,.35)" : o.on ? "#0b2f5e" : "#fff";
-    g.textAlign = "center"; g.textBaseline = "middle";
-    const lines = String(label).split("\n");
+    rr(g, x, y, w, h, o.round || 26);
+    if (o.on) { const gg = g.createLinearGradient(0, y, 0, y + h); gg.addColorStop(0, hov ? "#F0CC7A" : ZT.soft); gg.addColorStop(1, hov ? ZT.soft : ZT.gold); g.fillStyle = gg; }
+    else g.fillStyle = o.off ? "rgba(255,255,255,.04)" : hov ? "rgba(36,72,110,.98)" : "rgba(16,42,68,.92)";
+    g.fill(); g.lineWidth = hov ? 5 : 2; g.strokeStyle = hov ? (o.on ? "#fff" : ZT.gold) : o.on ? "rgba(255,255,255,.4)" : "rgba(221,232,242,.24)"; g.stroke();
+    const fg = o.off ? "rgba(255,255,255,.35)" : o.on ? ZT.mid : ZT.text;
+    g.fillStyle = fg; g.textAlign = "center"; g.textBaseline = "middle";
+    let lines = String(label).split("\n"); let ico = null;
+    const m = lines[0].match(/^([\u2190-\u2BFF\u2600-\u27BF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|\uD83E[\uDD00-\uDDFF])\uFE0F?\s*/);
+    if (m && EMO_ICON[m[1]]) { ico = EMO_ICON[m[1]]; lines[0] = lines[0].slice(m[0].length); if (!lines[0]) lines.shift(); }
     const fs = o.fs || (lines.length > 1 ? 34 : 40);
-    g.font = `${o.bold === false ? 500 : 700} ${fs}px system-ui, sans-serif`;
-    lines.forEach((ln, k) => g.fillText(ln, x + w / 2, y + h / 2 + (k - (lines.length - 1) / 2) * fs * 1.15));
-    if (o.sub) { g.font = "500 26px system-ui, sans-serif"; g.fillStyle = o.on ? "#0b2f5e" : "rgba(255,255,255,.75)"; g.fillText(o.sub, x + w / 2, y + h - 30); }
+    g.font = ZT.font(o.bold === false ? 500 : 650, fs);
+    if (ico && (lines.length >= 1) && h >= 150 && !o.sub) {   /* ikon fölül */
+      const isz = Math.min(64, h * .36), tot = isz + 14 + lines.length * fs * 1.15, y0 = y + (h - tot) / 2;
+      zIcon(g, ico, x + w / 2, y0 + isz / 2, isz, o.on ? ZT.mid : ZT.soft, 2.2);
+      lines.forEach((ln, k) => g.fillText(ln, x + w / 2, y0 + isz + 14 + fs * .6 + k * fs * 1.15));
+    } else {
+      const tw = Math.max(...lines.map((ln) => g.measureText(ln).width)), isz = ico ? Math.min(52, fs * 1.3) : 0, gap = ico && lines.length ? 16 : 0, cx = x + w / 2 + (isz + gap) / 2;
+      const cy = y + (o.sub ? h * .4 : h / 2);
+      if (ico) zIcon(g, ico, cx - tw / 2 - gap - isz / 2, cy, isz, o.on ? ZT.mid : ZT.soft, 2.2);
+      lines.forEach((ln, k) => g.fillText(ln, ico ? cx : x + w / 2, cy + (k - (lines.length - 1) / 2) * fs * 1.15));
+    }
+    if (o.sub) { g.font = ZT.font(500, 25); g.fillStyle = o.on ? "rgba(7,24,44,.85)" : ZT.sub; g.fillText(o.sub, x + w / 2, y + h - 32); }
   }
-  function txt(g, s, x, y, o) { o = o || {}; g.fillStyle = o.c || "#fff"; g.font = `${o.w || 600} ${o.fs || 34}px system-ui, sans-serif`; g.textAlign = o.a || "left"; g.textBaseline = "middle"; g.fillText(s, x, y); }
+  function txt(g, s, x, y, o) { o = o || {}; g.fillStyle = o.c || "#fff"; g.font = ZT.font(o.w || 600, o.fs || 34); g.textAlign = o.a || "left"; g.textBaseline = "middle"; g.fillText(s, x, y); }
 
+  /* FŐMENÜ (VR 2.0 – Zephyr Spatial Menu): 2 sor × 3 nagy gomb + alsó sor (fordulás gombbal is, helyek listája, vissza, súgó, kilépés) */
   function pMain(g) {
-    const W3 = (VW - 80 - 2 * 26) / 3, H1 = 150, y0 = 140, gp = 20, X = (i) => 40 + i * (W3 + 26);
-    btn(g, X(0), y0, W3, H1, "🧭\nHelyszínek", () => { VRS.list = { g: (SCENES[current] || {}).g || "haz", off: 0 }; VRS.page = "places"; vrDraw(); });
-    btn(g, X(1), y0, W3, H1, "🗺\nHázvázlat", () => { VRS.page = "map"; vrDraw(); });
-    btn(g, X(2), y0, W3, H1, "🛏\nApartmanok", () => { VRS.page = "apts"; vrDraw(); });
-    const y1 = y0 + H1 + gp;
-    btn(g, X(0), y1, W3 * 2 + 26, H1, "⛵  Virtuális világ", () => { VRS.page = "world"; vrDraw(); }, { on: 1, sub: "vitorlásverseny a kormánynál · a ház makettje a regatta-bóján" });
-    const mOn = typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused;
-    btn(g, X(2), y1, W3, H1, mOn ? "♫ Zene: be" : "♫ Zene: ki", () => { try { toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); });
-    const y2 = y1 + H1 + gp;
+    const W3 = (VW - 80 - 2 * 24) / 3, H1 = 196, X = (i) => 40 + i * (W3 + 24), y0 = 140, y1 = y0 + H1 + 22;
     const bkGo = VRS.book && VRS.book.step !== "date" && VRS.book.step !== "done";
-    btn(g, X(0), y2, W3 * 2 + 26, H1, bkGo ? "📅  Foglalás folytatása" : "📅  Foglalás itt, VR-ben", () => { if (VRS.book && (VRS.book.step === "done" || (!VRS.book.ready && !VRS.book.loading))) VRS.book = null; vrBookInit(); VRS.page = "book"; vrDraw(); vrPlace(); }, { on: 1, sub: bkGo ? "ott folytatod, ahol abbahagytad" : "időpont · apartman · adatok – kilépés nélkül" });
-    btn(g, X(2), y2, W3, H1, "Foglalás\n2D ablakban", () => vrEndSession(() => window.ZephyrBooking && ZephyrBooking.open({ apt: ["korvett", "dingi", "fregatt", "kaloz", "schooner"].includes((SCENES[current] || {}).g) ? SCENES[current].g : "" })));
-    const y3 = y2 + H1 + gp, H3 = VH - 40 - y3, W4 = (VW - 80 - 3 * 20) / 4, X4 = (i) => 40 + i * (W4 + 20);
-    btn(g, X4(0), y3, W4, H3, "⟲ Vissza", () => { try { if (typeof goBack === "function") goBack(); } catch (e) {} }, { off: typeof goBack !== "function", fs: 34 });
-    btn(g, X4(1), y3, W4, H3, "☀ Napállás", () => { sunSet(true); VRS.page = "sun"; vrDraw(); }, { fs: 34, on: SUN.on });
-    btn(g, X4(2), y3, W4, H3, "❔ Súgó", () => { VRS.page = "help"; vrDraw(); }, { fs: 34 });
-    btn(g, X4(3), y3, W4, H3, "Kilépés\na VR-ből", () => vrEndSession(), { fs: 30 });
+    btn(g, X(0), y0, W3, H1, "🗺\nTérkép", () => { VRS.page = "map"; vrDraw(); });
+    btn(g, X(1), y0, W3, H1, "🛏\nApartmanok", () => { VRS.page = "apts"; vrDraw(); });
+    btn(g, X(2), y0, W3, H1, bkGo ? "📅\nFoglalás folytatása" : "📅\nFoglalás", () => { if (VRS.book && (VRS.book.step === "done" || (!VRS.book.ready && !VRS.book.loading))) VRS.book = null; vrBookInit(); VRS.page = "book"; vrDraw(); vrPlace(); }, { on: 1 });
+    btn(g, X(0), y1, W3, H1, "☀\nNapállás", () => { sunSet(true); VRS.page = "sun"; vrDraw(); }, { on: SUN.on });
+    btn(g, X(1), y1, W3, H1, "⛵\n3D-világok", () => { VRS.page = "world"; vrDraw(); });
+    btn(g, X(2), y1, W3, H1, "⚙\nBeállítások", () => { VRS.page = "set"; vrDraw(); });
+    const y2 = y1 + H1 + 26, H2 = VH - 36 - y2, W6 = (VW - 80 - 5 * 16) / 6, X6 = (i) => 40 + i * (W6 + 16), step = (WS.turnDeg || 30) * Math.PI / 180;
+    btn(g, X6(0), y2, W6, H2, "↺ Balra", () => { snapBlink(); vrTurn(step); }, { fs: 30 });
+    btn(g, X6(1), y2, W6, H2, "↻ Jobbra", () => { snapBlink(); vrTurn(-step); }, { fs: 30 });
+    btn(g, X6(2), y2, W6, H2, "🧭 Helyek", () => { VRS.list = { g: (SCENES[current] || {}).g || "haz", off: 0 }; VRS.page = "places"; vrDraw(); }, { fs: 30 });
+    btn(g, X6(3), y2, W6, H2, "⟲ Vissza", () => { try { if (typeof goBack === "function") goBack(); } catch (e) {} }, { off: typeof goBack !== "function", fs: 30 });
+    btn(g, X6(4), y2, W6, H2, "❔ Súgó", () => { VRS.page = "help"; vrDraw(); }, { fs: 30 });
+    btn(g, X6(5), y2, W6, H2, "Kilépés", () => vrEndSession(), { fs: 30 });
+  }
+  /* BEÁLLÍTÁSOK (VR 2.0): kényelem, megjelenés, hang – a böngésző megjegyzi */
+  function pSettings(g) {
+    const rows = [
+      ["Fordulás szöge", [30, 45, 90].map((n) => [n + "°", () => { wsSet("turnDeg", n); vrDraw(); }, (WS.turnDeg || 30) === n])],
+      ["Fordulás csippentve + rántással", [["Be", () => { wsSet("spin", true); vrDraw(); }, !!WS.spin], ["Ki", () => { wsSet("spin", false); vrDraw(); }, !WS.spin]]],
+      ["Nagy kezelőfelület (125%)", [["Be", () => { wsSet("big", true); vrClose(); vrOpen("set"); }, !!WS.big], ["Ki", () => { wsSet("big", false); vrClose(); vrOpen("set"); }, !WS.big]]],
+      ["Zene", [["Be", () => { try { if (!(typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused)) toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); }, typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused],
+                ["Ki", () => { try { if (typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused) toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); }, !(typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused)]]],
+      ["Régi karóra-menü a csuklón", [["Be", () => { wsSet("watch", true); vrDraw(); }, !!WS.watch], ["Ki", () => { wsSet("watch", false); vrDraw(); }, !WS.watch]]]
+    ];
+    rows.forEach(([lab, opts], r) => {
+      const y = 146 + r * 132; txt(g, lab, 60, y + 52, { fs: 34, w: 600 });
+      const bw = 150, x0 = VW - 60 - opts.length * (bw + 14) + 14;
+      opts.forEach(([t, fn, on], k) => btn(g, x0 + k * (bw + 14), y + 10, bw, 88, t, fn, { on, fs: 32, round: 44 }));
+      if (r < rows.length - 1) { g.fillStyle = "rgba(221,232,242,.12)"; g.fillRect(60, y + 120, VW - 120, 2); }
+    });
   }
   /* rövid súgó: első VR-belépéskor magától, utána a menüből – nagy betűkkel, hogyan irányítasz kézzel és kontrollerrel */
   function pHelp(g) {
@@ -10095,8 +10209,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       "Gyöngyház": ["#f4f1ea", "#bfb8aa", "rgba(232,226,214,.97)", "rgba(170,160,145,.97)"], "Balaton-türkiz": ["#2c9a92", "#0b3f45", "rgba(36,128,122,.97)", "rgba(10,62,66,.97)"] },
     strap: ["Fém lánc", "Barna bőr", "Kék szilikon", "Vitorlakötél"]
   };
-  const WS_DEF = { size: "Nagy", metal: "Arany", dial: "Tengerkék", strap: "Fém lánc", compass: true, sound: true, tap: false, face: "Digitális", loco: true, turnDeg: 45, spin: true, spinV: 2 };
-  let WS = (() => { try { const o = Object.assign({}, WS_DEF, JSON.parse(localStorage.getItem("zephyrOra") || "{}")); if ((o.spinV || 0) < 2) { o.spin = true; o.spinV = 2; } return o; } catch (e) { return Object.assign({}, WS_DEF); } })();   /* 2026. nov.: a csippentve forgatás alapból bekapcsolva (a tulajdonos kérése) */
+  const WS_DEF = { size: "Nagy", metal: "Arany", dial: "Tengerkék", strap: "Fém lánc", compass: true, sound: true, tap: false, face: "Digitális", loco: true, turnDeg: 30, spin: true, spinV: 3, watch: false, big: false };
+  let WS = (() => { try { const o = Object.assign({}, WS_DEF, JSON.parse(localStorage.getItem("zephyrOra") || "{}")); if ((o.spinV || 0) < 3) { o.spin = true; o.spinV = 3; o.turnDeg = 30; } return o; } catch (e) { return Object.assign({}, WS_DEF); } })();   /* 2026. nov.: a csippentve forgatás alapból bekapcsolva (a tulajdonos kérése) */
   /* 2026. nov. 6. (3. kör, a tulajdonos kérésére): a kéz fölötti ↑↓←→ „mikrogesztus” mozgás alapból KI (zavaró volt), és a csuklómenü
      koppintás nélkül, a csukló felfordításával + ránézéssel AZONNAL nyílik – egy régebben elmentett „koppintásos” beállítás sem írja felül. */
   WS.tap = false; WS.loco = false;
@@ -10426,6 +10540,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   let _wq, _wq2, _wm, _wv, _wv2, _wv3, _wup, _wv4;
   const wEase = (k) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
   function xrWrist() {
+    /* VR 2.0 (2026. nov. 9.): a karóra helyett TENYÉRMENÜ (smPalm) – az óra a Beállításokban visszakapcsolható */
+    if (!WS.watch) { const P0 = XRP.wristP; if (P0) { P0.g.visible = false; P0.m.visible = false; P0.open = false; } if (XRP.wrist) XRP.wrist.visible = false; smPalm(); return; }
     if (!_wq) { _wq = new THREE.Quaternion(); _wq2 = new THREE.Quaternion(); _wm = new THREE.Matrix4(); _wv = new THREE.Vector3(); _wv2 = new THREE.Vector3(); _wv3 = new THREE.Vector3(); _wv4 = new THREE.Vector3(); _wup = new THREE.Vector3(0, 1, 0); }
     const L = (XRP.seen && XRP.seen.left) ? XRP.src.left : (XRP.seen && XRP.seen.none) ? XRP.src.none : null;
     const P = xrWatch();
@@ -10597,12 +10713,22 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const a = xrLocalAngle(S0, frame, ref); if (a == null) return;
     if (sp.a0 == null) { sp.a0 = a; return; }
     let d = a - sp.a0; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
-    /* holtsáv: egy elhibázott csippentésnél a kéz remegése ne forgasson */
-    if (!sp.live) { if (Math.abs(d) < .09) return; sp.live = true; sp.a0 = a; return; }
-    /* CSIPPENTVE FORGATÁS (2026. nov. 7., a tulajdonos kérése): csippents a semmibe magad előtt, és húzd a kezed jobbra → a nézet veled együtt jobbra fordul,
-       balra húzva balra. A kéz 30°-os mozdulata ~50°-ot fordít; finoman simítva, hogy ne rángasson. */
-    const want = d * 1.65;
-    const step = (want - sp.done) * .65; vrTurn(step, true); sp.done += step;
+    /* ÚJ FORDULÁS (2026. nov. 9., VR 2.0 – Meta-irányelv: kézkövetésnél ugrásszerű fordulás): csippents a semmibe, és RÁNTSD a kezed
+       oldalra (~6 cm) → egy 30°-os (beállítható) ugrás arra, amerre rántottál, közben egy pillanatra elsötétül (nem szédít).
+       Csippentve tovább húzva újabb ugrás (további ~9 cm-enként); elengedve újraélesedik. */
+    const STEP = (WS.turnDeg || 30) * Math.PI / 180, TH0 = .12, TH1 = .19;
+    if (Math.abs(d) < (sp.n ? TH1 : TH0)) return;
+    const sg = Math.sign(d); sp.n = (sp.n || 0) + 1; sp.a0 = a;
+    snapBlink(); vrTurn(sg * STEP);
+  }
+  /* rövid elsötétülés fordulásnál (komfort): 40 ms sötét, 110 ms alatt kivilágosodik */
+  function snapBlink() {
+    try {
+      if (!XRP.blink) { const m = new THREE.Mesh(new THREE.SphereGeometry(.25, 16, 10), new THREE.MeshBasicMaterial({ color: 0x02060c, transparent: true, opacity: 0, side: THREE.BackSide, depthTest: false, depthWrite: false })); m.renderOrder = 10000; m.frustumCulled = false; XRP.blink = m; }
+      const c = camObj(); if (c && XRP.blink.parent !== c) c.add(XRP.blink);
+      XRP.blinkT = performance.now();
+      if (!XRP.blinkRaf) { const step = () => { const k = (performance.now() - XRP.blinkT) / 150; XRP.blink.material.opacity = k < .27 ? .92 : Math.max(0, .92 * (1 - (k - .27) / .73)); XRP.blink.visible = XRP.blink.material.opacity > .01; if (k < 1) XRP.blinkRaf = xrRaf(step); else XRP.blinkRaf = 0; }; XRP.blinkRaf = xrRaf(step); }
+    } catch (e) {}
   }
   /* a tenyér iránya a kéz ízületeiből: csukló, mutatóujj- és kisujj-kézközépcsont */
   function xrPalm(S0, src, frame, ref, parent) {
@@ -10811,43 +10937,73 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     T.g.position.copy(h).addScaledVector(f, .95); T.g.position.y -= .12; T.g.lookAt(h.x, T.g.position.y, h.z); }
   function locoTutClose() { const T = XRP.tut; if (!T) return; try { localStorage.setItem("zephyrLocoTut", "1"); } catch (e) {} XRP.extra.delete(T.m); if (T.g.parent) T.g.parent.remove(T.g); T.m.geometry.dispose(); T.m.material.map.dispose(); T.m.material.dispose(); XRP.tut = null; }
   /* --- alsó eszközsor: ↺ 45°  ·  ☰ Menü  ·  45° ↻ – a látótered alján lebeg, lefelé nézve mindig ott van --- */
+  /* ---- ZEPHYR SPATIAL MENU – megnyitás (VR 2.0, 2026. nov. 9., a ChatGPT-vel közös terv; Meta-irányelv: a menü a kézről NYÍLIK,
+     de utána a térben áll) ----
+     • A BAL tenyered fordítsd felfelé/magad felé, és nézz rá: a tenyered fölött megjelenik egy kis „Menü” korong, körülötte
+       arany ív telik meg – kb. 0,8 mp múlva előtted (1,2 m-re) kinyílik a nagy menü. (Nem kell csippenteni – a tenyér felé
+       fordított csippentést a Quest a saját menüjének tartja fenn, azt kerüljük.)
+     • Tartalék: ha lenézel, a lábad előtt mindig ott egy kis „Menü” gomb – mutass rá és csippents. */
+  const SM = { t: 0, cool: 0, chip: null, open: false };
+  function smChipDraw(k, hov) {
+    const C = SM.chipC, g = C.getContext("2d"), w = C.width, c = w / 2; g.clearRect(0, 0, w, w);
+    g.beginPath(); g.arc(c, c, c * .74, 0, Math.PI * 2); const bg = g.createLinearGradient(0, 0, 0, w); bg.addColorStop(0, "rgba(16,42,68,.96)"); bg.addColorStop(1, "rgba(7,24,44,.96)"); g.fillStyle = bg; g.fill();
+    g.lineWidth = 6; g.strokeStyle = hov ? ZT.gold : "rgba(221,232,242,.45)"; g.stroke();
+    if (k > 0) { g.beginPath(); g.arc(c, c, c * .9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, k)); g.lineWidth = 16; g.lineCap = "round"; g.strokeStyle = ZT.gold; g.stroke(); }
+    g.strokeStyle = ZT.text; g.lineWidth = 12; g.lineCap = "round"; [-26, 0, 26].forEach((dy) => { g.beginPath(); g.moveTo(c - 40, c - 18 + dy * .9); g.lineTo(c + 40, c - 18 + dy * .9); g.stroke(); });
+    g.fillStyle = ZT.text; g.font = ZT.font(700, 40); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("Menü", c, c + 58);
+    SM.chipT.needsUpdate = true;
+  }
+  function smChip() {
+    if (SM.chip) return SM.chip;
+    SM.chipC = document.createElement("canvas"); SM.chipC.width = SM.chipC.height = 256; SM.chipT = new THREE.CanvasTexture(SM.chipC); SM.chipT.colorSpace = THREE.SRGBColorSpace;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(.075, .075), new THREE.MeshBasicMaterial({ map: SM.chipT, transparent: true, depthTest: false, depthWrite: false })); m.renderOrder = 1001; m.visible = false;
+    sceneEl.object3D.add(m); SM.chip = m; smChipDraw(0, false); return m;
+  }
+  function smIsOpen() { return worldOn() ? !!(window.ZephyrWorld && ZephyrWorld.panel && !ZephyrWorld.panelHidden) : !!VRS.panel; }
+  function smPalm() {
+    const chip = smChip(); if (!inVR) { chip.visible = false; return; }
+    const now = performance.now(), dt = Math.min(.1, (now - (SM.last || now)) / 1000); SM.last = now; SM.cool = Math.max(0, SM.cool - dt);
+    const L = XRP.src.left, h = headPos(_smV1 || (_smV1 = new THREE.Vector3()));
+    let ok = false;
+    if (L && L.hand && L.palmUp && L.palmC && !(XRP.pinch && XRP.pinch.left) && !smIsOpen() && !SM.cool) {
+      const to = (_smV2 || (_smV2 = new THREE.Vector3())).copy(L.palmC).sub(h), dist = to.length(); to.normalize();
+      const hd = headDir(_smV3 || (_smV3 = new THREE.Vector3()));
+      ok = dist < .75 && L.palmC.y > h.y - .6 && hd.dot(to) > Math.cos(42 * Math.PI / 180);
+    }
+    SM.t = ok ? SM.t + dt : Math.max(0, SM.t - dt * 3);
+    chip.visible = SM.t > .12;
+    if (chip.visible && L && L.palmC) { chip.position.copy(L.palmC).addScaledVector(L.palmN || _smUp || (_smUp = new THREE.Vector3(0, 1, 0)), .085); chip.lookAt(h); const k = Math.min(1, (SM.t - .12) / .7); if (Math.abs(k - (SM.k || 0)) > .04 || k >= 1) { SM.k = k; smChipDraw(k, k >= 1); } }
+    if (SM.t >= .82) { SM.t = 0; SM.cool = 1.4; chip.visible = false; try { sndNav(); } catch (e) {} menuButton(); }
+  }
+  let _smV1 = null, _smV2 = null, _smV3 = null, _smUp = null;
+  /* tartalék „öv-gomb”: lenézve a lábad előtt egyetlen kis Menü gomb (régen: ↺ ☰ ↻ sáv a látótér alján – takart, csúnya volt) */
   function xrBarCanvas(label, sub, hov) {
-    const cv = document.createElement("canvas"); cv.width = 300; cv.height = 220; const g = cv.getContext("2d");
-    g.fillStyle = hov ? "rgba(255,209,102,.98)" : "rgba(11,47,94,.92)"; g.beginPath(); g.roundRect ? g.roundRect(8, 8, 284, 204, 46) : g.rect(8, 8, 284, 204); g.fill();
-    g.lineWidth = 8; g.strokeStyle = hov ? "#fff" : "#ffd166"; g.stroke();
-    g.fillStyle = hov ? "#0b2f5e" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle";
-    g.font = "800 100px system-ui, sans-serif"; g.fillText(label, 150, 92);
-    g.font = "700 40px system-ui, sans-serif"; g.fillText(sub, 150, 172);
+    const cv = document.createElement("canvas"); cv.width = 320; cv.height = 140; const g = cv.getContext("2d");
+    g.beginPath(); g.roundRect ? g.roundRect(6, 6, 308, 128, 64) : g.rect(6, 6, 308, 128); const bg = g.createLinearGradient(0, 0, 0, 140); bg.addColorStop(0, hov ? ZT.soft : "rgba(16,42,68,.95)"); bg.addColorStop(1, hov ? ZT.gold : "rgba(7,24,44,.95)"); g.fillStyle = bg; g.fill();
+    g.lineWidth = 4; g.strokeStyle = hov ? "#fff" : "rgba(221,232,242,.45)"; g.stroke();
+    g.strokeStyle = hov ? ZT.mid : ZT.text; g.lineWidth = 7; g.lineCap = "round"; [-16, 0, 16].forEach((dy) => { g.beginPath(); g.moveTo(54, 70 + dy); g.lineTo(102, 70 + dy); g.stroke(); });
+    g.fillStyle = hov ? ZT.mid : ZT.text; g.font = ZT.font(700, 56); g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(label, 128, 72);
     return cv;
   }
   function xrBar() {
     if (!inVR) { if (XRP.bar) XRP.bar.g.visible = false; return; }
-    const worldOn = !!(window.ZephyrWorld && ZephyrWorld.active);
     if (!XRP.bar) {
-      const g = new THREE.Group(), items = [];
-      [["↺", "Balra", () => vrTurn((WS.turnDeg || 45) * Math.PI / 180)], ["☰", "Menü", () => menuButton()], ["↻", "Jobbra", () => vrTurn(-(WS.turnDeg || 45) * Math.PI / 180)]].forEach(([l, s, fn], k) => {
-        const tx = [false, true].map((hv) => { const t = new THREE.CanvasTexture(xrBarCanvas(l, s, hv)); t.colorSpace = THREE.SRGBColorSpace; return t; });
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(.15, .11), new THREE.MeshBasicMaterial({ map: tx[0], transparent: true, depthTest: false, depthWrite: false }));
-        m.renderOrder = 997; m.position.x = (k - 1) * .175;
-        m.userData.xr = { click: fn, hover: (on) => { m.material.map = tx[on ? 1 : 0]; m.scale.setScalar(on ? 1.12 : 1); } };
-        m.userData.tex = tx; g.add(m); items.push(m);
-      });
-      sceneEl.object3D.add(g); XRP.bar = { g, items, yaw: null, follow: 1 };
-      items.forEach((m) => XRP.extra.add(m));
+      const g = new THREE.Group(), tx = [false, true].map((hv) => { const t = new THREE.CanvasTexture(xrBarCanvas("Menü", "", hv)); t.colorSpace = THREE.SRGBColorSpace; return t; });
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(.16, .07), new THREE.MeshBasicMaterial({ map: tx[0], transparent: true, depthTest: false, depthWrite: false }));
+      m.renderOrder = 997; m.userData.xr = { click: () => menuButton(), hover: (on) => { m.material.map = tx[on ? 1 : 0]; m.scale.setScalar(on ? 1.1 : 1); } };
+      g.add(m); sceneEl.object3D.add(g); XRP.bar = { g, items: [m], yaw: null, follow: 1 }; XRP.extra.add(m);
     }
     const B = XRP.bar;
-    /* nyitott panelnél (és billentyűzetnél) az eszközsor eltűnik – különben a sugár útjában lenne, és elnyelné a csippentést */
-    B.g.visible = !worldOn && !VRS.panel;
+    B.g.visible = !smIsOpen() && !(worldOn() && WS.beltWorld === false);
     if (!B.g.visible) { B.follow = 1; return; }
     const h = headPos(new THREE.Vector3()), f = headDir(new THREE.Vector3()); f.y = 0; if (f.lengthSq() < 1e-6) return; f.normalize();
     const yaw = Math.atan2(-f.x, -f.z);
-    /* „lusta” követés: csak akkor fordul utánad, ha már 35°-nál jobban elnéztél, akkor finoman */
     if (B.yaw == null || B.follow) { B.yaw = yaw; B.follow = 0; }
     let d = yaw - B.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
-    if (Math.abs(d) > .61 || B.chase) { B.chase = Math.abs(d) > .03; B.yaw += d * .12; }
-    const dist = .72, drop = .5;
+    if (Math.abs(d) > .52 || B.chase) { B.chase = Math.abs(d) > .03; B.yaw += d * .1; }
+    const dist = .5, drop = .78;   /* kb. 57°-kal a szemmagasság alatt: egyenesen előre nézve nem látszik, lenézve kéznél van */
     B.g.position.set(h.x - Math.sin(B.yaw) * dist, h.y - drop, h.z - Math.cos(B.yaw) * dist);
-    B.g.rotation.set(-Math.atan2(drop, dist) * .85, B.yaw, 0, "YXZ");
+    B.g.rotation.set(-Math.atan2(drop, dist), B.yaw, 0, "YXZ");
   }
   /* minden képkockában (VR-ben is) – A-Frame komponens a jeleneten */
   function regXR() {
