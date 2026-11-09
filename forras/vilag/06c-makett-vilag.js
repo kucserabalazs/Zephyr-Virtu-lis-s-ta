@@ -860,10 +860,10 @@
     ENV.trees = makeTreeline(env);
     ENV.lmk = makeLandmarks(env);
     ENV.water = makeWater(env, { sun: new THREE.Vector3(0, .3, -1).normalize(), rmax: 2400, rings: 84, seg: 128 }); ENV.water.position.y = WATER_Y;
-    buildBuoyStage(site);   /* (régen: buildMagicDeck – nyolcszögletű stég levendulával; a tulajdonos kérésére lecserélve) */
+    buildGardenIsland(site);   /* 2026. nov. 9.: kertsziget (előtte: regatta-bója, még előbb nyolcszögletű stég) */
     const keep = ENV.glows; buildShore(site); ENV.glows = keep.concat(ENV.glows.filter((q) => !keep.includes(q)));
     buildLife(site);
-    buildBuoyRace(site);
+    /* (a bója körüli verseny és a jelenetek a kertszigettel megszűntek) */
     /* fények */
     const sun = new THREE.DirectionalLight(0xffffff, 1.2), hemi = new THREE.HemisphereLight(0xcfe0f0, 0x46503a, .6), amb = new THREE.AmbientLight(0xffffff, .05);
     root.add(sun, hemi, amb); sun.target = new THREE.Object3D(); root.add(sun.target);

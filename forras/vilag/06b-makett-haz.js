@@ -103,8 +103,9 @@
     box("brick", PX1, .04, PZ0, 12.6, .065, PZ1 + 4.2);     /* behajtó a keleti sövény mentén, a kertig */
     box("grid", PX0, .04, PZ0, PX1, .062, PZ1);             /* gyephézagos parkoló */
     box("#9aa0a6", PX0 - .05, .04, PZ1 - .05, PX1, .075, PZ1 + .05); box("#9aa0a6", PX1 - .05, .04, PZ0, PX1 + .05, .075, PZ1 + 4.2);   /* szegélykő */
-    [[PX0 + .3, PZ0 + 1.4, "#eef0f2"], [PX0 + .3, PZ0 + 4.2, "#4a5058"], [PX0 + 4.65, PZ0 + 4.2, "#8a1f24"]].forEach(([x0, z, c]) => car(add, c, x0 + 2.15, z, Math.PI / 2));   /* orral nyugatra */
-    for (let k = 0; k < 3; k++) box("#e9ecef", PX0 + 4.45 + (k === 2 ? -4.35 : 0), .062, PZ0 + .15 + (k % 2) * 2.8, PX0 + 4.5 + (k === 2 ? -4.35 : 0), .066, PZ0 + 2.65 + (k % 2) * 2.8);   /* parkolóhely-jelölés */
+    /* 2026. nov. 9. (tulajdonos): a parkolóban NEM két autó áll egymás mögött, hanem NÉGY autó EGYMÁS MELLETT – orral a ház felé */
+    { const slot = (PX1 - PX0) / 4; ["#eef0f2", "#4a5058", "#8a1f24", "#1f3a6a"].forEach((c, k) => car(add, c, PX0 + slot * (k + .5), (PZ0 + PZ1) / 2 + .2, 0));
+      for (let k = 0; k <= 4; k++) box("#e9ecef", PX0 + slot * k - .03, .062, PZ0 + .9, PX0 + slot * k + .03, .066, PZ1 - .3); }   /* parkolóhely-jelölés */
     box("hedge", 12.6, .04, -2.7, 13.0, 1.75, SZ1);
     /* zöld belátásgátló kerítés a parkoló nyugati szélén és a Schooner-kert déli szélén */
     box("#4f6f5c", PX0 - .06, .04, PZ0, PX0, 1.75, PZ1); box("#4f6f5c", -.4, .04, PZ1 - .06, PX0, 1.75, PZ1);
@@ -225,6 +226,22 @@
     [0, 1].forEach((lv) => [["pT", FLOOR_H - .2], ["pL", .95]].forEach(([vis, Hh]) => {
       [Z_HALL - PART, Z_B - PART, Z_C - PART].forEach((z) => partRun(lv, "plasterIn", "x", z + PART / 2, WALL, OUT_W - WALL, PART, Hh, vis, doorsAll[lv]));
     }));
+    /* BEJÁRATI AJTÓK (2026. nov. 9., tulajdonos: „hiányzik a Fregatt apartman bejárata”): minden lakás bejárati ajtaja valódi, zárt
+       ajtólap tok-kerettel, sárgaréz kilinccsel és a lakás számával/nevével – az emeleti galériáról így látszik a Fregatt ajtaja is */
+    Object.keys(UNITS).forEach((id) => { const U = UNITS[id], g2 = T.GROUPS.find((q) => q.id === id) || {};
+      (planOf(id).furn || []).forEach((f) => { if (f[0] !== "door" || !/bejárat/.test(String(f[5] || ""))) return;
+        const q = mapRect(U, f[1], f[2], f[3], f[4]), alongX = (q[2] - q[0]) >= (q[3] - q[1]);
+        /* a legközelebbi falsík (lakáselválasztó / külső fal) */
+        const walls = alongX ? [Z_HALL - PART / 2, Z_B - PART / 2, Z_C - PART / 2, WALL / 2, Z_END - WALL / 2] : [WALL / 2, OUT_W - WALL / 2];
+        const c0 = alongX ? (q[1] + q[3]) / 2 : (q[0] + q[2]) / 2, c = walls.reduce((b, w) => Math.abs(w - c0) < Math.abs(b - c0) ? w : b, walls[0]);
+        if (Math.abs(c - c0) > .45) return;
+        const a0 = alongX ? q[0] : q[1], a1 = alongX ? q[2] : q[3], t = .05, lv = U.lvl;
+        const B = (mk, u0, y0, u1, y1, d0, d1) => alongX ? box(mk, u0, y0, c + d0, u1, y1, c + d1, lv) : box(mk, c + d0, y0, u0, c + d1, y1, u1, lv);
+        B("#4a3a2e", a0 + .02, 0, a1 - .02, 2.12, -t, t);   /* ajtólap */
+        B("frame", a0 - .06, 0, a0 + .02, 2.2, -.09, .09); B("frame", a1 - .02, 0, a1 + .06, 2.2, -.09, .09); B("frame", a0 - .06, 2.12, a1 + .06, 2.2, -.09, .09);
+        [-1, 1].forEach((sd) => { B("#c9a24a|m", a1 - .14, 1.0, a1 - .1, 1.04, sd * t, sd * (t + .07)); B("#2a2116", a0 + .12, .2, a1 - .12, .22, sd * t, sd * (t + .005)); B("#2a2116", a0 + .12, 1.9, a1 - .12, 1.92, sd * t, sd * (t + .005)); });
+        if (g2.no) { const sx = (a0 + a1) / 2; [-1, 1].forEach((sd) => B(id === "fregatt" ? "#c9a24a|m" : "#c9a24a|m", sx - .13, 1.55, sx + .13, 1.75, sd * t, sd * (t + .012))); }
+      }); });
     /* lakások: padló, belső válaszfalak, bútorok, mennyezeti lámpák, sétapontok (valódi 360°-os fotók) */
     Object.keys(UNITS).forEach((id) => {
       const U = UNITS[id], Pl = planOf(id), lv = U.lvl; let bb = [1e9, 1e9, -1e9, -1e9];

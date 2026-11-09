@@ -17,7 +17,7 @@
       default: return { p: V3(0, TOWER_Y, sd * d), pitch: -.32 };
     }
   }
-  function placeUser(v, keepPsi) {
+  function chessPlace(v, keepPsi) {
     const root = W.root; if (!root) return;
     const psi = keepPsi != null ? keepPsi : (T.camYaw ? T.camYaw() : 0), envYaw = Math.atan2(v.p.x, v.p.z), r = psi - envYaw;
     /* 2D-ben a ballonban a kosár pereme fölé, kicsit előre hajolva nézünk (VR-ben magad hajolsz ki) */
@@ -37,7 +37,7 @@
     if (!CS.env) return;
     const run = () => {
       CS.orbit = null; CS.viewId = id; const v = viewPoint(id, o);
-      const psi = placeUser(v);
+      const psi = chessPlace(v);
       if (id === "orbit") CS.orbit = { th: v.th, psi };
       if (!T.inVR) { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = v.pitch; }
       W.panelDirty = 1;
@@ -138,7 +138,7 @@
     };
     flashMsg(T.inVR ? "Üdv a fedélzeten! Mutass egy hajódra, csippents, majd a célmezőre." : "Üdv a fedélzeten! Kattints egy hajódra, majd a célmezőre.");
     setTimeout(maybeAI, 900);
-    W.chess = { GS, CS, CE, goView, onSquare, doMove, newGame, undo, finishAnim, place: (x, y, z, pitch) => { CS.orbit = null; placeUser({ p: V3(x, y, z) }); const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject && pitch != null) lc.pitchObject.rotation.x = pitch; } };   /* (tesztekhez) */
+    W.chess = { GS, CS, CE, goView, onSquare, doMove, newGame, undo, finishAnim, place: (x, y, z, pitch) => { CS.orbit = null; chessPlace({ p: V3(x, y, z) }); const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject && pitch != null) lc.pitchObject.rotation.x = pitch; } };   /* (tesztekhez) */
     return { tick: chessTick, panel: chessPanel, hud: chessHud, wrist: chessWrist };
   }
 
@@ -153,7 +153,7 @@
       if (F.t < d) o = F.t / d; else { if (!F.done) { F.done = true; F.run(); } o = Math.max(0, 1 - (F.t - d) / d); if (F.t > 2 * d) CS.fade = null; }
       CS.fadeM.visible = !!CS.fade; CS.fadeM.material.opacity = o; }
     /* körrepülés */
-    if (CS.orbit && !CS.fade) { CS.orbit.th += dt * .05; const v = viewPoint("orbit", { th: CS.orbit.th }); placeUser(v, CS.orbit.psi); }
+    if (CS.orbit && !CS.fade) { CS.orbit.th += dt * .05; const v = viewPoint("orbit", { th: CS.orbit.th }); chessPlace(v, CS.orbit.psi); }
     animTick(dt); fxTick(dt);
     /* részletesség: messziről (45 m fölött) a kötélzet, a zászlók és a lobogók nem rajzolódnak – Questen sok rajzolási hívást spórol */
     CS.lodT = (CS.lodT || 0) - dt; if (CS.lodT <= 0) { CS.lodT = .4; const cl = CS.env.worldToLocal(_hw.clone());
