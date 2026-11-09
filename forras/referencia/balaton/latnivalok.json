@@ -1,0 +1,386 @@
+[
+ {
+  "id": "zamardi_kozpont",
+  "name_hu": "Zamárdi (településközpont)",
+  "lat": 46.88434,
+  "lon": 17.95051,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Zam%C3%A1rdi",
+  "note": "Wikipedia infobox koordinátája (46°53′04″N 17°57′02″E)."
+ },
+ {
+  "id": "zephyr_haz",
+  "name_hu": "Zephyr Apartmanház – Zamárdi, Gáspár András u. 58.",
+  "lat": 46.8893551,
+  "lon": 17.9629734,
+  "height_m": null,
+  "type": "szallas",
+  "source_url": "https://www.google.com/maps/place/Zam%C3%A1rdi,+G%C3%A1sp%C3%A1r+Andr%C3%A1s+u.+58,+8621/@46.8893551,17.9629734",
+  "note": "Google Térkép épület-pont (2026-11-09)"
+ },
+ {
+  "id": "zamardi_szabadstrand",
+  "name_hu": "Zamárdi szabadstrand (Margó Ede sétány)",
+  "lat": 46.88463,
+  "lon": 17.9364,
+  "height_m": 104.8,
+  "type": "strand",
+  "source_url": "https://welovebalaton.hu/en/venue/zamardi-public-beach/",
+  "note": "welovebalaton geo: link; height_m = a Balaton átlagos vízszintje (Wikipedia: Lake Balaton)."
+ },
+ {
+  "id": "zamardi_kohegyi_kilato",
+  "name_hu": "Kőhegyi kilátó (Zamárdi-felső)",
+  "lat": 46.87217,
+  "lon": 17.93216,
+  "height_m": 219,
+  "type": "kilato",
+  "source_url": "https://welovebalaton.hu/en/venue/observation-tower-on-kohegy",
+  "structure_height_m": 5.3,
+  "note": "Koordináta: welovebalaton geo: link. Tengerszint feletti magasság (ele=219) és toronymagasság (height=5.3 m): OSM way 116727903 (https://www.openstreetmap.org/way/116727903), felmérés 2022-08-03."
+ },
+ {
+  "id": "zamardi_szamarko",
+  "name_hu": "Szamárkő (Zamárdi)",
+  "lat": 46.87482,
+  "lon": 17.93525,
+  "height_m": null,
+  "type": "termeszeti_ertek",
+  "source_url": "https://welovebalaton.hu/en/venue/the-donkey-stone",
+  "note": "welovebalaton geo: link (8621 Zamárdi, Kiserdő széle); magasság nincs forrásban."
+ },
+ {
+  "id": "zamardi_emlekkereszt",
+  "name_hu": "Balaton-Zamárd Emlékkereszt",
+  "lat": 46.86781,
+  "lon": 17.95223,
+  "height_m": 152,
+  "type": "emlekmu",
+  "source_url": "https://www.openstreetmap.org/node/3441442818",
+  "note": "OSM node 3441442818 (ele=152)."
+ },
+ {
+  "id": "szantod",
+  "name_hu": "Szántód (település)",
+  "lat": 46.88051,
+  "lon": 17.94486,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Sz%C3%A1nt%C3%B3d",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "szantodi_rev",
+  "name_hu": "Szántódi rév (kompkikötő)",
+  "lat": 46.87925,
+  "lon": 17.90055,
+  "height_m": 104.8,
+  "type": "komp",
+  "source_url": "https://welovebalaton.hu/en/venue/szantodrev-dock",
+  "note": "welovebalaton geo: link (8622 Szántód, Tihany utca 6.)."
+ },
+ {
+  "id": "tihanyi_rev",
+  "name_hu": "Tihanyi rév (kompkikötő)",
+  "lat": 46.88973,
+  "lon": 17.89099,
+  "height_m": 104.8,
+  "type": "komp",
+  "source_url": "https://welovebalaton.hu/en/venue/tihanyrev-dock/",
+  "note": "welovebalaton geo: link (8237 Tihany, Rév utca 1.). A révkikötő bejáratánál két 10 m-es jelzőárboc áll (zöld K, piros Ny) – https://ibiblio.org/lighthouse/hun.htm"
+ },
+ {
+  "id": "tihanyi_apatsag",
+  "name_hu": "Tihanyi Bencés Apátság",
+  "lat": 46.91389,
+  "lon": 17.88944,
+  "height_m": null,
+  "type": "templom",
+  "source_url": "https://en.wikipedia.org/wiki/Tihany_Abbey",
+  "note": "Wikipedia koordináta (46°54′50″N 17°53′22″E), csak percpontosságú; a tornyok magasságára és a hely tengerszint feletti magasságára nem találtam forrást."
+ },
+ {
+  "id": "tihany",
+  "name_hu": "Tihany (település)",
+  "lat": 46.90891,
+  "lon": 17.87923,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Tihany",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "tihany_hajokikoto",
+  "name_hu": "Tihany hajókikötő (Tihany-Sajkod felőli kikötő)",
+  "lat": 46.91712,
+  "lon": 17.89119,
+  "height_m": 104.8,
+  "type": "kikoto",
+  "source_url": "https://welovebalaton.hu/en/venue/tihany-dock",
+  "note": "welovebalaton geo: link."
+ },
+ {
+  "id": "tihany_belso_to",
+  "name_hu": "Tihanyi Belső-tó",
+  "lat": null,
+  "lon": null,
+  "height_m": null,
+  "type": "to",
+  "source_url": "https://ertektar.veszprembalaton2023.hu/en/location/lake-belso",
+  "note": "NINCS forrásolt koordináta. Forrás szerint kb. 25–26 m-rel a Balaton vízszintje felett (~130 m), kb. 30 ha (https://en.funiq.hu/2657-belső-tó-tihany)."
+ },
+ {
+  "id": "tihany_csucs_hegy",
+  "name_hu": "Csúcs-hegy (Tihany)",
+  "lat": 46.90642,
+  "lon": 17.85232,
+  "height_m": 232,
+  "type": "hegy",
+  "source_url": "https://peakvisor.com/peak/csucs-hegy-ah41ptjj.html",
+  "note": "PeakVisor (OSM-alapú)."
+ },
+ {
+  "id": "tihany_nyereg_hegy",
+  "name_hu": "Nyereg-hegy (Tihany)",
+  "lat": 46.91104,
+  "lon": 17.85291,
+  "height_m": 223,
+  "type": "hegy",
+  "source_url": "https://peakvisor.com/peak/nyereg-hegy.html",
+  "note": "PeakVisor."
+ },
+ {
+  "id": "tihany_apati_hegy",
+  "name_hu": "Apáti-hegy (Őrtorony-kilátó, Tihany)",
+  "lat": 46.91214,
+  "lon": 17.85574,
+  "height_m": 214,
+  "type": "hegy",
+  "source_url": "https://peakvisor.com/peak/apati-hegy.html",
+  "note": "PeakVisor 214 m; a hellohungary.hu kb. 216 m-t ír (https://hellohungary.hu/en/active/ortorony-kilato)."
+ },
+ {
+  "id": "tihany_akaszto_domb",
+  "name_hu": "Akasztó-domb (Tihany)",
+  "lat": 46.90344,
+  "lon": 17.89329,
+  "height_m": 198,
+  "type": "hegy",
+  "source_url": "https://peakvisor.com/peak/akaszto-domb.html",
+  "note": "PeakVisor; a falu fölötti kilátópont."
+ },
+ {
+  "id": "tihany_baratlakasok",
+  "name_hu": "Barátlakások (Óvár oldalában, Tihany)",
+  "lat": 46.9228,
+  "lon": 17.87959,
+  "height_m": 190,
+  "type": "latnivalo",
+  "source_url": "https://www.komoot.com/highlight/5039142",
+  "note": "Koordináta a komoot oldal térképközéppontja (kevésbé megbízható), 190 m a komoot szerint. Az Óvár csúcsa 214 m (https://welovebalaton.hu/en/article/2019/10/01/tour-ovar-for-a-splendid-view/), de a csúcs koordinátájára nincs forrás."
+ },
+ {
+  "id": "balatonfured",
+  "name_hu": "Balatonfüred (település)",
+  "lat": 46.95651,
+  "lon": 17.88911,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Balatonf%C3%BCred",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "balatonfured_tagore",
+  "name_hu": "Balatonfüred, Tagore sétány (móló, kikötő)",
+  "lat": 46.95367,
+  "lon": 17.89367,
+  "height_m": 104.8,
+  "type": "seta_kikoto",
+  "source_url": "https://welovebalaton.hu/en/venue/tagore-promenade-in-balatonfured",
+  "structure_height_m": 12,
+  "note": "A sétány welovebalaton geo: linkje – NEM a móló pontos helye. A móló keleti sarkán 12 m-es jelzőárboc (ibiblio.org/lighthouse/hun.htm)."
+ },
+ {
+  "id": "csopak",
+  "name_hu": "Csopak (település)",
+  "lat": 46.97829,
+  "lon": 17.91877,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Csopak",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "balatonalmadi",
+  "name_hu": "Balatonalmádi (település)",
+  "lat": 47.02433,
+  "lon": 18.01124,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Balatonalm%C3%A1di",
+  "note": "Wikipedia infobox; a település 104–250 m között fekszik."
+ },
+ {
+  "id": "siofok",
+  "name_hu": "Siófok (település)",
+  "lat": 46.92393,
+  "lon": 18.09012,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Si%C3%B3fok",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "siofok_viztorony",
+  "name_hu": "Siófoki víztorony (Fő tér)",
+  "lat": 46.90541,
+  "lon": 18.0522,
+  "height_m": null,
+  "type": "torony",
+  "source_url": "https://welovebalaton.hu/en/venue/siofok-water-tower",
+  "structure_height_m": 41.3,
+  "note": "Koordináta: welovebalaton geo: link (8600 Siófok, Fő tér 11.). Magasság 41,3 m: siofok.hu (https://siofok.hu/sights-of-siofok/statues/watertower); a geocaching.com kb. 45 m-t ír."
+ },
+ {
+  "id": "siofok_kikoto",
+  "name_hu": "Siófoki hajókikötő és mólók (jelzőtornyok)",
+  "lat": 46.90841,
+  "lon": 18.04634,
+  "height_m": 104.8,
+  "type": "kikoto_vilagitotorony",
+  "source_url": "https://welovebalaton.hu/en/venue/siofok-dock",
+  "structure_height_m": 12,
+  "note": "Koordináta a hajóállomásé (Krúdy sétány 2., welovebalaton) – a mólóvégi jelzőtornyok pontos helyére nincs forrás. Nyugati móló: 12 m-es zöld-fehér árboc (fény kb. 15 m); keleti móló: 10 m-es piros-fehér oszlop arany szoborral (fény 12 m) – https://ibiblio.org/lighthouse/hun.htm"
+ },
+ {
+  "id": "siofok_marina",
+  "name_hu": "Siófok, BH Zrt. vitorláskikötő (Krúdy sétány)",
+  "lat": 46.91033,
+  "lon": 18.04155,
+  "height_m": 104.8,
+  "type": "kikoto",
+  "source_url": "https://welovebalaton.hu/en/venue/siofok-marina",
+  "note": "welovebalaton geo: link."
+ },
+ {
+  "id": "balatonfoldvar",
+  "name_hu": "Balatonföldvár (település)",
+  "lat": 46.85469,
+  "lon": 17.88797,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Balatonf%C3%B6ldv%C3%A1r",
+  "note": "Wikipedia infobox; legmagasabb pont 208,2 m."
+ },
+ {
+  "id": "balatonfoldvar_kikoto",
+  "name_hu": "Balatonföldvári kikötő",
+  "lat": 46.85478,
+  "lon": 17.88112,
+  "height_m": 104.8,
+  "type": "kikoto",
+  "source_url": "https://welovebalaton.hu/en/venue/balatonfoldvar-dock",
+  "note": "welovebalaton geo: link. 1905-ben nyílt, két ívelt mólóval, Galamb-sziget (Wikipedia)."
+ },
+ {
+  "id": "badacsony",
+  "name_hu": "Badacsony (csúcs)",
+  "lat": 46.80351,
+  "lon": 17.49584,
+  "height_m": 437.4,
+  "type": "hegy",
+  "source_url": "https://en.wikipedia.org/wiki/Badacsony",
+  "note": "Wikipedia: 437,4 m, prominencia 300 m (46°48′12.64″N 17°29′45.01″E). welovebalaton: 438 m, geo 46.78513,17.4953578 (ez inkább a hegy lába/település)."
+ },
+ {
+  "id": "szigliget_var",
+  "name_hu": "Szigligeti vár",
+  "lat": 46.8042,
+  "lon": 17.4343,
+  "height_m": 239,
+  "type": "var",
+  "source_url": "https://welovebalaton.hu/en/venue/castle-of-szigliget/",
+  "note": "Koordináta: welovebalaton geo: link. Várhegy 239 m: https://en.wikipedia.org/wiki/Szigliget"
+ },
+ {
+  "id": "szigliget",
+  "name_hu": "Szigliget (település)",
+  "lat": 46.7961,
+  "lon": 17.43829,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Szigliget",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "keszthely",
+  "name_hu": "Keszthely (város)",
+  "lat": 46.76965,
+  "lon": 17.24813,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Keszthely",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "heviz",
+  "name_hu": "Hévíz (város)",
+  "lat": 46.79234,
+  "lon": 17.18497,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/H%C3%A9v%C3%ADz",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "revfulop",
+  "name_hu": "Révfülöp (település)",
+  "lat": 46.8326,
+  "lon": 17.6277,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/R%C3%A9vf%C3%BCl%C3%B6p",
+  "note": "Wikipedia infobox (46°49′57″N 17°37′40″E)."
+ },
+ {
+  "id": "balatonboglar",
+  "name_hu": "Balatonboglár (város)",
+  "lat": 46.77845,
+  "lon": 17.65488,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Balatonbogl%C3%A1r",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "fonyod",
+  "name_hu": "Fonyód (város)",
+  "lat": 46.74119,
+  "lon": 17.5503,
+  "height_m": null,
+  "type": "telepules",
+  "source_url": "https://en.wikipedia.org/wiki/Fony%C3%B3d",
+  "note": "Wikipedia infobox."
+ },
+ {
+  "id": "fonyod_varhegy",
+  "name_hu": "Fonyódi Várhegy (Várhegyi Széplátó kilátó)",
+  "lat": 46.73654,
+  "lon": 17.54116,
+  "height_m": 231,
+  "type": "hegy_kilato",
+  "source_url": "https://welovebalaton.hu/en/venue/varhegyi-szeplato",
+  "note": "welovebalaton: geo link és 231 m; a négyszintes kilátó magassága nincs megadva."
+ },
+ {
+  "id": "balaton_to",
+  "name_hu": "Balaton (tó, referencia)",
+  "lat": 46.85,
+  "lon": 17.72,
+  "height_m": 104.8,
+  "type": "to",
+  "source_url": "https://en.wikipedia.org/wiki/Lake_Balaton",
+  "note": "Wikipedia: vízfelszín 104,8 m tszf., átlagmélység 3,3 m, max. 12,2 m."
+ }
+]

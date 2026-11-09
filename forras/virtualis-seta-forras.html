@@ -3086,7 +3086,7 @@ const SCENES = {
   "strand-lepcso":  { g: "strand", n: "Strand · lépcső a vízbe", s: .25, m: [79.6, 122.9], l: [], wl: [["strand-pallo", .25, .6, "Fel a pallóra"], ["strand-viz", .98, .6, "Úszás a nyílt víz felé"]] },
   "strand-viz":     { g: "strand", n: "Fürdés a nádas között", s: .27, m: [91.1, 121.7], l: [], wl: [["strand-lepcso", .73, .6, "Lépcső"], ["steg-viz", .26, .54, "Napozóstég", -45]] },
   "steg-viz":       { g: "strand", n: "Napozóstég a vízről", s: .7, m: [99.8, 115.5], l: [], wl: [["steg", .77, .62, "Fel a stégre"], ["strand-viz", .2, .62, "Strand"]] },
-  "steg":           { g: "strand", n: "Napozóstég", s: .6, m: [103.5, 111.9], l: [["utca", .1, .62, "Vissza a házhoz", 0, "zephyr", "home"]], wl: [["steg-viz", .28, .66, "Le a vízbe"]] },
+  "steg":           { g: "strand", n: "Napozóstég", s: .6, m: [103.5, 111.9], l: [["utca", .36, .6, "Vissza a házhoz", 0, "zephyr", "home"]], wl: [["steg-viz", .28, .66, "Le a vízbe"]] },
   "kapu":           { g: "haz", n: "Kapu", s: .331, m: [1.5, 26.75], t: [[.52, .49, "Kerti csap"]], l: [["oldal-bejaro", .268, .563, "Apartmanok, parkoló, grill, SUP, kerékpár", 0, "combo:bed,parking,grill,sup,bike"], ["utca", .752, .599, "Kilépés az utcára", 0, "exit"], ["korvett-terasz", .427, .554, "Korvett Apartman terasz", -45, "apt1"]] },
   "oldal-bejaro":   { g: "haz", n: "A lépcsőháznál", s: .362, m: [1.5, 18.9], fov: 1.2,
                       sign: [.355, .589, [["hatso-lepcso", "Kert és parkoló", 0, ["parking", "grill", "sup", "bike"]], ["schooner-terasz2", "Schooner", 0, ["bed"], [5]], ["fedett-bejaro", "Korvett · Dingi", 90, ["bed"], [1, 2]], ["folyoso-fregatt", "Fregatt · Kalóz", 45, ["bed", "stairs"], [3, 4], "up"]]],
@@ -9375,13 +9375,14 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       ["Nagy kezelőfelület (125%)", [["Be", () => { wsSet("big", true); vrClose(); vrOpen("set"); }, !!WS.big], ["Ki", () => { wsSet("big", false); vrClose(); vrOpen("set"); }, !WS.big]]],
       ["Zene", [["Be", () => { try { if (!(typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused)) toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); }, typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused],
                 ["Ki", () => { try { if (typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused) toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); }, !(typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused)]]],
+      ["Látnivalók a horizonton (strand, stég)", [["Be", () => { wsSet("lm", true); lmClear(); vrDraw(); }, WS.lm !== false], ["Ki", () => { wsSet("lm", false); lmClear(); vrDraw(); }, WS.lm === false]]],
       ["Régi karóra-menü a csuklón", [["Be", () => { wsSet("watch", true); vrDraw(); }, !!WS.watch], ["Ki", () => { wsSet("watch", false); vrDraw(); }, !WS.watch]]]
     ];
     rows.forEach(([lab, opts], r) => {
-      const y = 146 + r * 132; txt(g, lab, 60, y + 52, { fs: 34, w: 600 });
+      const y = 140 + r * 116; txt(g, lab, 60, y + 50, { fs: 32, w: 600 });
       const bw = 150, x0 = VW - 60 - opts.length * (bw + 14) + 14;
-      opts.forEach(([t, fn, on], k) => btn(g, x0 + k * (bw + 14), y + 10, bw, 88, t, fn, { on, fs: 32, round: 44 }));
-      if (r < rows.length - 1) { g.fillStyle = "rgba(221,232,242,.12)"; g.fillRect(60, y + 120, VW - 120, 2); }
+      opts.forEach(([t, fn, on], k) => btn(g, x0 + k * (bw + 14), y + 12, bw, 78, t, fn, { on, fs: 30, round: 40 }));
+      if (r < rows.length - 1) { g.fillStyle = "rgba(221,232,242,.12)"; g.fillRect(60, y + 106, VW - 120, 2); }
     });
   }
   /* rövid súgó: első VR-belépéskor magától, utána a menüből – nagy betűkkel, hogyan irányítasz kézzel és kontrollerrel */
@@ -9886,6 +9887,56 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
   function lakeYaw(id) { return bearingYaw(id, LAKE_BEARING); }
 
+  /* ---------- LÁTNIVALÓK A HORIZONTON (VR 2.0, 2026. nov. 9.; a tulajdonos: „a hitelesség a fő cél – a helyszín a valóságtól nem térhet el”) ----------
+     A strandon és a stégen a túlparti és a parti nevezetességek kis címkéje PONTOSAN abban az irányban áll, ahol a valóságban vannak:
+     az irányszöget (fok, északtól keletre) és a távolságot a ház Google Térkép-pontjából (46,8893551 É; 17,9629734 K) számoltuk
+     a forras/referencia/balaton/latnivalok.json koordinátáiból (Wikipedia, welovebalaton.hu, OSM – forrással). A panoráma
+     tájolása: bearingYaw() – ugyanaz, mint a napállásnál. Egyszerre a nézési irányhoz legközelebbi legfeljebb 5 címke látszik. */
+  const LM_LIST = [["Tihanyi apátság", "church", 296.1, 6.2, null], ["Tihanyi rév", "ferry", 270.5, 5.5, 104.8], ["Szántódi rév", "ferry", 256.7, 4.9, 104.8], ["Csúcs-hegy (Tihany)", "peak", 282.8, 8.6, 232], ["Balatonfüred", "town", 323.7, 8.9, 104.8], ["Csopak", "town", 341.3, 10.4, null], ["Balatonalmádi", "town", 13.7, 15.4, null], ["Siófok – víztorony", "tower", 75.2, 7.0, null], ["Badacsony", "peak", 255.1, 36.8, 437.4], ["Szigligeti vár", "castle", 256.9, 41.3, 239], ["Balatonföldvár", "town", 238.3, 7.3, 104.8], ["Fonyódi Várhegy", "peak", 242.3, 36.3, 231], ["Révfülöp", "town", 256.2, 26.3, null], ["Kőhegyi kilátó", "tower", 230.8, 3.0, 219]];   /* [név, fajta, irányszög °, távolság km, magasság m] */
+  const LM = { g: null, scene: null, list: [] };
+  function lmIcon(k) { return { church: "home", ferry: "sail", peak: "up", town: "pin", tower: "eye", castle: "home" }[k] || "pin"; }
+  function lmClear() { if (LM.g) { LM.list.forEach((q) => { q.tex.dispose(); q.mat.dispose(); }); if (LM.g.parent) LM.g.parent.remove(LM.g); } LM.g = null; LM.list = []; LM.scene = null; }
+  function lmBuild() {
+    lmClear(); const sc = SCENES[current]; LM.scene = current;
+    if (!sc || sc.g !== "strand" || WS.lm === false) return;
+    const north = bearingYaw(current, 0); if (north == null) return;
+    LM.g = new THREE.Group(); LM.g.name = "latnivalok"; sceneEl.object3D.add(LM.g);
+    const R = 40, rows = [];
+    LM_LIST.slice().sort((a, b) => a[2] - b[2]).forEach(([n, k, brg, km, hm]) => {
+      const a = north - brg * Math.PI / 180;
+      /* egymáshoz közeli irányok (≤5°) címkéi lépcsőzetesen egymás fölé kerülnek */
+      let row = 0; while (rows.some((q) => q.row === row && Math.abs(((q.brg - brg + 540) % 360) - 180) < 11)) row++; rows.push({ row, brg });
+      const el = (2.6 + row * 2.4) * Math.PI / 180;
+      const c = document.createElement("canvas"); c.width = 640; c.height = 120; const g = c.getContext("2d");
+      g.font = ZT.font(650, 44); const t1 = n, t2 = (km < 10 ? km.toFixed(1).replace(".", ",") : Math.round(km)) + " km";
+      const w1 = g.measureText(t1).width; g.font = ZT.font(500, 34); const w2 = g.measureText(t2).width; const bw = Math.min(632, w1 + w2 + 130), x0 = (640 - bw) / 2;
+      g.beginPath(); g.roundRect ? g.roundRect(x0, 14, bw, 92, 46) : g.rect(x0, 14, bw, 92); g.fillStyle = "rgba(7,24,44,.82)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(228,187,99,.6)"; g.stroke();
+      zIcon(g, lmIcon(k), x0 + 48, 60, 40, ZT.soft, 2.2);
+      g.fillStyle = ZT.text; g.font = ZT.font(650, 44); g.textBaseline = "middle"; g.textAlign = "left"; g.fillText(t1, x0 + 84, 61);
+      g.fillStyle = ZT.soft; g.font = ZT.font(500, 34); g.fillText(t2, x0 + 96 + w1, 63);
+      const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false, fog: false, opacity: 0 });
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(8.4, 8.4 * 120 / 640), mat); m.renderOrder = 970;
+      const dir = new THREE.Vector3(-Math.sin(a), 0, -Math.cos(a));
+      m.position.set(dir.x * Math.cos(el) * R, Math.sin(el) * R, dir.z * Math.cos(el) * R); m.lookAt(0, m.position.y, 0);
+      /* függőleges vonalka a horizonttól a címkéig */
+      const tm = new THREE.MeshBasicMaterial({ color: 0xE4BB63, transparent: true, opacity: 0, depthTest: false, depthWrite: false });
+      const tick = new THREE.Mesh(new THREE.PlaneGeometry(.06, 1).translate(0, .5, 0), tm); tick.renderOrder = 969;
+      const h0 = Math.sin(.2 * Math.PI / 180) * R; tick.position.set(dir.x * R, h0, dir.z * R); tick.scale.y = Math.max(.1, m.position.y - h0 - .8); tick.lookAt(0, h0, 0);
+      LM.g.add(m, tick); LM.list.push({ m, tick, tex, mat, dir, vis: 0 });
+    });
+  }
+  function lmTick() {
+    if (!inVR || worldOn() || busy) { if (LM.g) LM.g.visible = false; return; }
+    if (LM.scene !== current) lmBuild();
+    if (!LM.g) return; LM.g.visible = true;
+    const h = headPos(_lmH || (_lmH = new THREE.Vector3())), f = headDir(_lmF || (_lmF = new THREE.Vector3())); LM.g.position.set(h.x, h.y, h.z);
+    const fy = f.y; f.y = 0; if (f.lengthSq() < 1e-6) return; f.normalize();
+    const menuOpen = !!VRS.panel, ranked = LM.list.map((q) => [q, q.dir.dot(f)]).filter((q) => q[1] > Math.cos(38 * Math.PI / 180)).sort((a, b) => b[1] - a[1]).slice(0, 7).map((q) => q[0]);
+    const up = fy > -.45;   /* lenézve (a stégre) eltűnnek */
+    LM.list.forEach((q) => { const want = ranked.includes(q) && up && !menuOpen ? 1 : 0; q.vis += (want - q.vis) * .1; q.mat.opacity = q.vis; q.tick.material.opacity = q.vis * .7; q.m.visible = q.tick.visible = q.vis > .02; });
+  }
+  let _lmH = null, _lmF = null;
   /* ---------- Napállás: merről süt a nap a választott napon és órában (Zamárdi, 46,889° É, 17,963° K) ---------- */
   const SUN = { on: false, ymd: null, h: 15, scene: null, g: null };
   function sunPos(ymd, hour) {
@@ -10141,6 +10192,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (!XRP.on) xrStart();
     if (!XRP.on) return;
     try { vrnTick(); } catch (e) { console.warn('vrn', e); }
+    try { lmTick(); } catch (e) { console.warn('lm', e); }
     const r = sceneEl.renderer, frame = r.xr.getFrame && r.xr.getFrame(), ref = r.xr.getReferenceSpace && r.xr.getReferenceSpace();
     if (!frame || !ref) return;
     /* A kezek és a kontrollerek pozíciója a rig (a „játéktér”) koordinátáiban értendő – ugyanott, ahol az A-Frame a kézmodellt rajzolja.
