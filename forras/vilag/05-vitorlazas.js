@@ -87,6 +87,7 @@
     BS.boom = clamp((awa - 22) * .72, 5, 80) * D2R * side;
     BS.jib = clamp((awa - 22) * .5, 7, 50) * D2R;
     BS.luff = Math.max(clamp(1 - (awa - 16) / 16, 0, 1), S.tackT > 1.2 ? .7 : 0);
+    BS.awa = awa; BS.aws = aws; BS.tackT = S.tackT;
     const heelT = clamp(Math.sin(clamp(awa, 0, 180) * D2R) ** 1.5 * (aws / (14 * KN)) ** 2 * 19, 0, 23) * D2R * (1 - BS.luff * .7);
     S.heel += (heelT - S.heel) * Math.min(1, dt * .8);
     BS.heel = -side * S.heel * .8;

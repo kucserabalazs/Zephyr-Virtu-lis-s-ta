@@ -498,6 +498,8 @@
     { /* a dőléshez a „valódi” (gyorsítás nélküli) hajósebességből számolt látszólagos szél kell – különben a VR-gyorsítás miatt a szél túl előre fordulna */
       const vR = S.v / VR_SPD, awH = [tw[0] + fx * vR, tw[1] + fz * vR], awsH = Math.hypot(awH[0], awH[1]), awaH = Math.acos(clamp((awH[0] * fx + awH[1] * fz) / (awsH || 1), -1, 1)) * R2D;
       const luffH = Math.max(clamp(1 - (awaH - 14) / 12, 0, 1), S.tackT > 1.4 ? .7 : 0);
+      /* a vitorlák a valódi látszólagos szélhez trimmelnek (a VR-gyorsítás nélkül) – különben gyors haladásnál is belobognának */
+      BS.awa = awaH; BS.aws = awsH; BS.gust = S.gk; BS.tackT = S.tackT; S.awaR = awaH;
       const F = (awsH * awsH) * heelCs(awaH) * (1 - luffH * .85) * (1 - BS.spin * .75 * clamp((awaH - 75) / 55, 0, 1)) * (1 + BS.spin * .5 * clamp(1 - (awaH - 75) / 45, 0, 1)), th = S.heel || 0, w0 = 1.4, zeta = .38;
       let M = (F * Math.pow(Math.cos(th), 1.3) - HEEL_KR * Math.sin(th)) / HEEL_KR;
       if (BS.spin > .5) M += Math.sin(.065) * Math.sin(W.t * 1.25) * clamp(aws / 9, 0, 1.4) * BS.spin;   /* spinakker alatt hátszélben ringatózás (oldalra-oldalra) */
@@ -639,7 +641,7 @@
     OS.side = (wfv[0] * Xv[0] + wfv[1] * Xv[1]) > 0 ? -1 : 1; OS.boom = clamp((twa - 28) * .78, 7, 82) * D2R * OS.side; OS.jib = clamp((twa - 28) * .55, 8, 52) * D2R; OS.luff = clamp(1 - (twa - 18) / 18, 0, 1);
     OS.spin += ((spin ? 1 : 0) - OS.spin) * Math.min(1, dt * .35);
     { const tw2 = [wfv[0] * S.tws * (S.gk || 1), wfv[1] * S.tws * (S.gk || 1)], aw2 = [tw2[0] + f[0] * r.v / VR_SPD, tw2[1] + f[1] * r.v / VR_SPD], aws2 = Math.hypot(aw2[0], aw2[1]), awa2 = Math.acos(clamp((aw2[0] * f[0] + aw2[1] * f[1]) / (aws2 || 1), -1, 1)) * R2D;
-      r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 : 0); } OS.pitch = Math.sin(W.t * 1.2 + r.ph) * .025;
+      OS.awa = awa2; OS.aws = aws2; OS.gust = S.gk || 1; r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 : 0); } OS.pitch = Math.sin(W.t * 1.2 + r.ph) * .025;
     const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.g.userData.update(dt);   /* minden képkockán, távol is (ne „ugráljon” a vitorla) */
     r.wk.push(r.x, r.z, r.g.rotation.y, r.v, dt, .05);
     /* névtábla a hajó fölött (helyezéssel), 25–220 m között látszik */
@@ -718,7 +720,7 @@
     g.fillStyle = "#7fd3ff"; g.font = "700 34px system-ui"; g.textAlign = "center"; g.fillText(S.next < S.marks.length ? `${S.next + 1}. BÓJA` : "BEFUTÓ", w / 2, 50);
     g.save(); g.translate(w / 2, 210); g.rotate(rel); g.fillStyle = "#ffd166"; g.beginPath(); g.moveTo(0, -110); g.lineTo(52, -20); g.lineTo(18, -20); g.lineTo(18, 70); g.lineTo(-18, 70); g.lineTo(-18, -20); g.lineTo(-52, -20); g.closePath(); g.fill(); g.restore();
     g.fillStyle = "#e9f6ff"; g.font = "800 64px system-ui"; g.fillText(`${Math.round(dist)} m`, w / 2, 360);
-    g.fillStyle = "#7fd3ff"; g.font = "600 30px system-ui"; g.fillText(`${(S.v / KN).toFixed(1)} csomó · szél ${Math.round(S.awa)}°`, w / 2, 420);
+    g.fillStyle = "#7fd3ff"; g.font = "600 30px system-ui"; g.fillText(`${(S.v / KN).toFixed(1)} csomó · szél ${Math.round(S.awaR == null ? S.awa : S.awaR)}°`, w / 2, 420);
     g.fillStyle = S.twa < 38 ? "#ff6a5a" : "#9fe0a0"; g.fillText(S.twa < 38 ? "TÚL KÖZEL A SZÉLHEZ – esd le!" : S.twa > 150 ? "hátszél" : S.twa > 110 ? "bővszél" : S.twa > 60 ? "félszél" : "cirkálás", w / 2, 470);
     /* kis pályatérkép a jobb felső sarokban: bóják, rajtvonal, a hajók (te: piros), orr felé forgatva */
     { const cx = 420, cy = 95, R2 = 80; g.save(); g.beginPath(); g.arc(cx, cy, R2, 0, TAU); g.fillStyle = "#0c1622"; g.fill(); g.strokeStyle = "#2a4256"; g.lineWidth = 3; g.stroke(); g.clip();

@@ -652,21 +652,82 @@
       const legs = mesh(new THREE.CapsuleGeometry(.08, .55, 3, 8), std({ color: "#2b3445" }), c); legs.position.set(0, .18, .0); legs.rotation.z = Math.PI / 2.4;
       body.add(c); crew.push({ g: c, z: -2.6 + k * .75, legs });
     }
-    /* vitorlák alakja: bumszög (rad, + = jobbra), génua-szög, oldal, fileelés (lobogás), spinakker */
-    const S = { boom: .15, jib: .2, side: 1, luff: 0, heel: 0, pitch: 0, spin: 0, t: 0, crewSide: 1 };
+    /* ================= VITORLÁK – életszerű trimm és lobogás (2026. nov. 9., szakirodalom alapján) =================
+       • A vitorla a LÁTSZÓLAGOS szélhez (awa, aws – a valódi, gyorsítás nélküli hajósebességből) áll be: a legénység úgy trimmel,
+         hogy a húr kb. 18–21°-os állásszögben álljon a széllel (Gentry; Forces on sails). Belobogás (luffing) CSAK akkor van,
+         ha a szél a vitorla belépő éle elé fordul, mert a szkótát már nem lehet tovább behúzni – túl élesen (awa < ~20°),
+         vagy fordulóban, a szél „szemében”. Egy jól trimmelt, gyorsan haladó hajó vitorlája teli és nyugodt.
+       • Részleges belobogás: előbb a génua, aztán a grósz belépő élén „buborék” (a szövet befelé púposodik és remeg);
+         teljes belobogás (flogging): az egész vitorla csapkod, a hullám az elülső éltől hátrafelé fut, a hátsó él csapkod a legjobban,
+         a frekvencia a szélsebességgel nő.
+       • Teli vitorlán erősebb szélben csak a hátsó él (leech) felső része rezeg kicsit, gyorsan – ez a jó trimm jele.
+       • Hátszélben a grósz a csarnakig engedve, „átesve” (stall) áll – nyugodt; a génua a grósz szélárnyékában összeesik és újra
+         kitelik, ezért spinakker nélkül a hajó PILLANGÓBA áll (wing-on-wing): a génuát a túloldalra, a szél felőli oldalra rúddal kitolják.
+       • Spinakker (szimmetrikus): a rúd merőleges a látszólagos szélre (hátszélben hátrahúzva, bővszélben az előstag felé),
+         a trimmer folyamatosan engedi a szkótát, amíg a belépő él közepe enyhén be nem hajlik (luff curl), majd visszahúzza;
+         hátszélben a spinakker a szél felőli oldalra fordul, szemben a grósszal – ez a spinakkeres „pillangó”. Túl éles szögnél összeesik. */
+    const S = { boom: .15, jib: .2, side: 1, luff: 0, heel: 0, pitch: 0, spin: 0, t: 0, crewSide: 1,
+      awa: null, aws: 6, gust: 1, tackT: 0, wing: 0, boomS: null, jibA: null, lfM: 0, lfJ: 0, bl: 0, jc: 0, scurl: 0 };
+    const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+    /* rúd: hátszélben a génua kitolásához (pillangó), spinakkerrel a spinakker rúdja */
+    const poleG = new THREE.CylinderGeometry(.03, .03, 1, 8); poleG.translate(0, .5, 0); const poleM = mesh(poleG, alu, body); poleM.visible = false;
+    const _q = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
+    function setPole(a, b) { _q.subVectors(b, a); const L = _q.length(); poleM.position.copy(a); poleM.scale.set(1, L, 1); poleM.quaternion.setFromUnitVectors(_up, _q.normalize()); }
+    const poleBase = new THREE.Vector3(0, mastBase + 1.3, mastZ + .1);
+    /* lobogás: az elülső éltől hátrafelé futó hullám; a hátsó élnél nagyobb kitérés; két frekvencia, hogy ne legyen gépies */
+    function flogW(u, v, om) { const t = S.t; return Math.sin(om * t - u * 7.5 - v * 2.4) * (.3 + .7 * u) + .45 * u * Math.sin(om * 1.73 * t - u * 11 + v * 3.3 + 1.3); }
+    /* automatikus trimm a látszólagos szélből (csak ha a hívó megadja az awa-t) */
+    function autoTrim(dt) {
+      const A = S.awa, U = S.aws, sd = S.side, k = Math.min(1, dt * 1.6);
+      /* grósz: húr ~18° a szélhez; legbelül ~4° (a traveller/szkóta vége), legkint ~82° (a csarnak) */
+      const bT = clamp(A - 18, 4, 82) * sd;
+      if (S.boomS == null) S.boomS = bT;
+      /* fordulóban/perdülésben a bum gyorsan átvág, egyébként a szkótás folyamatosan követi a szelet */
+      S.boomS += (bT - S.boomS) * Math.min(1, dt * (Math.sign(bT) !== Math.sign(S.boomS) ? 3.2 : 1.6));
+      S.boom = S.boomS * D2R;
+      const jT = clamp(A - 21, 9, 46); if (S.jibA == null) S.jibA = jT; S.jibA += (jT - S.jibA) * k; S.jib = S.jibA * D2R;
+      /* belobogás: az állásszög (látszólagos szél – vitorla húrja) ~8° alatt kezdődik, ~2° körül teljes */
+      const aM = A - Math.abs(S.boomS), aJ = A - S.jibA;
+      const tk = clamp((S.tackT - 1.1) / 1.8, 0, 1) * .85;   /* forduló után a génua addig csapkod, míg be nem csörlőzik */
+      const lfMt = Math.max(clamp((10 - aM) / 8, 0, 1), tk * .8), lfJt = Math.max(clamp((11 - aJ) / 8, 0, 1), tk);
+      S.lfM += (lfMt - S.lfM) * Math.min(1, dt * 5); S.lfJ += (lfJt - S.lfJ) * Math.min(1, dt * 5);
+      S.luff = Math.max(S.lfM, S.lfJ);
+      /* pillangó: spinakker nélkül mély hátszélben a génua a szél felőli oldalra kerül, rúddal kitolva (hiszterézissel) */
+      const wT = S.spin < .3 && A > (S.wing > .5 ? 150 : 163) ? 1 : 0; S.wing += (wT - S.wing) * Math.min(1, dt * .5);
+      /* a génua a grósz szélárnyékában (hátszél, nincs pillangó): összeesik és újra kitelik */
+      S.bl = clamp((A - 132) / 30, 0, 1) * (1 - sstep(.15, .6, S.wing)) * (1 - S.spin);
+      const cyc = .5 + .5 * Math.sin(S.t * TAU / 5.3 + .9 * Math.sin(S.t * .61));
+      S.jc += (S.bl * sstep(.3, .85, cyc) - S.jc) * Math.min(1, dt * (S.jc > S.bl * .5 ? 1.2 : 4));   /* lassan esik össze, hirtelen pukkan vissza */
+    }
+    function luffDepth(depth, chord, u, v, lf, om, amp) {
+      /* lf: 0 = teli, 0–0,6 = buborék az elülső élen, 0,6–1 = egész vitorla csapkod */
+      if (lf <= .001) return depth;
+      const fl = sstep(.55, 1, lf), bub = lf * (1 - fl), e = Math.exp(-u * 5.5);
+      return depth * (1 - fl) - depth * bub * 1.7 * e
+        + chord * (.02 * bub * Math.exp(-u * 3.5) * Math.sin(om * 1.6 * S.t - u * 14 + v * 5) + amp * fl * flogW(u, v, om));
+    }
+    function leechFlutter(u, v, U, lf) {   /* teli vitorla, erősebb szél: a felső hátsó él gyors, apró rezgése */
+      if (u < .8 || v < .4) return 0;
+      const a = clamp((U - 4.5) / 6, 0, 1) * (1 - lf); if (a <= 0) return 0;
+      return .022 * a * ((u - .8) / .2) ** 2 * sstep(.4, .75, v) * Math.sin(TAU * 7.3 * S.t + v * 9 + u * 3);
+    }
     function updMain() {
       const pa = mainG.attributes.position.array, { nu, nv } = mainG.userData;
       const y0 = mastBase + .92, yh = mastBase + mastH - .25, foot = 3.3, a = S.boom, side = S.side;
+      const auto = S.awa != null, U = auto ? S.aws : 6, lf = auto ? S.lfM : S.luff, om = TAU * (.9 + U * .16);
+      const gk = .955 + .045 * clamp((S.gust - 1) / .15, -1, 1);   /* széllökésben a vitorla „megtelik” */
+      const twist = auto ? .16 + .1 * clamp((S.awa - 30) / 120, 0, 1) : .22;   /* hátszélben nyitottabb felső rész */
       for (let j = 0; j <= nv; j++) {
         const v = j / nv, y = y0 + (yh - y0) * v;
         const chord = foot * ((1 - v) * (1 + .26 * Math.sin(Math.PI * v))) + .16 * v;
-        const tw = a + side * .22 * v;   /* a vitorla csavarodása felfelé */
+        const tw = a + side * twist * v;   /* a vitorla csavarodása felfelé */
         const dx = Math.sin(tw), dz = -Math.cos(tw);
-        const camber = .11 * (1 - v * .35);
+        const camber = .11 * (1 - v * .35) * gk;
         for (let i = 0; i <= nu; i++) {
           const u = i / nu, k = (j * (nu + 1) + i) * 3;
           let depth = chord * camber * Math.sin(Math.PI * Math.pow(u, .8));
-          if (S.luff > 0) depth = depth * (1 - S.luff) + S.luff * chord * .06 * Math.sin(S.t * 17 + u * 7 + v * 4);
+          depth = luffDepth(depth, chord, u, v, lf, om, .07);
+          if (auto) depth += leechFlutter(u, v, U, lf);
           pa[k] = dx * u * chord + Math.cos(tw) * depth * side;
           pa[k + 1] = y - u * .12 * (1 - v);
           pa[k + 2] = mastZ - .07 + dz * u * chord + Math.sin(tw) * depth * side;
@@ -675,13 +736,24 @@
       mainG.attributes.position.needsUpdate = true; mainG.computeVertexNormals();
       boomG.rotation.y = -a;
     }
+    const _cw = new THREE.Vector3();
     function updJib() {
       const pa = jibG.attributes.position.array, { nu, nv } = jibG.userData;
       const tack = _a.set(0, hullShape(1).sheer + .1, HULL.L / 2 - .25);
       const head = _b.set(0, foreH - .25, mastZ + .1 + (HULL.L / 2 - .25 - mastZ - .1) * .03);
-      const ja = S.jib, side = S.side, foot = 4.55;
+      const auto = S.awa != null, ja = S.jib, side = S.side, foot = 4.55, U = auto ? S.aws : 6, om = TAU * (1 + U * .17);
       const clew = _c.set(tack.x + Math.sin(ja) * foot * side, hullShape(.5).sheer + .42 + ja * .5, tack.z - Math.cos(ja) * foot);
-      _n.subVectors(head, tack).cross(_p.subVectors(clew, tack)).normalize(); if (_n.x * side < 0) _n.negate();
+      /* pillangó: a szkótapont a rúd végén, a szél felőli oldalon, kb. merőlegesen a hajóra */
+      const wg = auto ? sstep(0, 1, S.wing) : 0;
+      if (wg > 0) {
+        const th = 78 * D2R, Lp = 3.35; _cw.set(-side * Lp * Math.sin(th), poleBase.y + .05, poleBase.z + Lp * Math.cos(th));
+        /* átvitel közben a szkótapont a hajó előtt ível át */
+        const mid = Math.sin(Math.PI * wg); clew.lerp(_cw, wg); clew.z += mid * .9; clew.y += mid * .4;
+      }
+      const jsd = wg > .5 ? -side : side;
+      _n.subVectors(head, tack).cross(_p.subVectors(clew, tack)).normalize(); if (_n.x * jsd < 0) _n.negate();
+      const lf = auto ? S.lfJ * (1 - wg) : S.luff, cross = auto ? Math.abs(1 - 2 * wg) : 1;   /* átvitel közben ernyedt */
+      const jc = auto ? S.jc : 0;
       for (let j = 0; j <= nv; j++) {
         const v = j / nv;
         for (let i = 0; i <= nu; i++) {
@@ -689,29 +761,53 @@
           const lx = tack.x + (head.x - tack.x) * v, ly = tack.y + (head.y - tack.y) * v, lz = tack.z + (head.z - tack.z) * v;
           const ex = clew.x + (head.x - clew.x) * v, ey = clew.y + (head.y - clew.y) * v, ez = clew.z + (head.z - clew.z) * v;
           const chord = Math.hypot(ex - lx, ey - ly, ez - lz);
-          let depth = chord * .13 * Math.sin(Math.PI * Math.pow(u, .75)) * (1 - v * .4);
-          if (S.luff > 0) depth = depth * (1 - S.luff) + S.luff * chord * .08 * Math.sin(S.t * 19 + u * 8 + v * 6);
+          let depth = chord * .13 * Math.sin(Math.PI * Math.pow(u, .75)) * (1 - v * .4) * (wg > 0 ? .55 + .45 * cross : 1);
+          if (auto && wg > 0) depth *= 1 + .25 * wg * (1 - cross);   /* kitolva, teli „vitorla-szárny” */
+          depth = luffDepth(depth, chord, u, v, lf, om, .085);
+          if (jc > 0) depth = depth * (1 - 1.35 * jc) + chord * jc * .05 * Math.sin(S.t * 1.4 + u * 3 + v * 2.2);   /* szélárnyékban ernyedten leng */
+          if (auto) depth += leechFlutter(u, v, U, Math.max(lf, jc));
           pa[k] = lx + (ex - lx) * u + _n.x * depth; pa[k + 1] = ly + (ey - ly) * u + _n.y * depth; pa[k + 2] = lz + (ez - lz) * u + _n.z * depth;
         }
       }
       jibG.attributes.position.needsUpdate = true; jibG.computeVertexNormals();
+      if (wg > .55 && jibM.visible) { poleM.visible = true; setPole(poleBase, clew); } else if (!(spinM && spinM.visible)) poleM.visible = false;
     }
+    const _sn = new THREE.Vector3(), _sc = new THREE.Vector3();
     function updSpin() {
       if (!spinM) return; spinM.visible = S.spin > .02; if (!spinM.visible) { jibM.visible = true; return; }
       jibM.visible = S.spin < .6;
       const pa = spinG.attributes.position.array, { nu, nv } = spinG.userData, side = S.side, k0 = S.spin;
-      /* nagy, kerek spinakker: a tack az orrsudár végén, a clew messze hátszél felé – a vitorla az orr előtt duzzad */
-      const tack = _a.set(0, hullShape(1).sheer + .5, HULL.L / 2 + 2.1);
-      const head = _b.set(0, mastBase + mastH * .97, mastZ + .45);
-      const clew = _c.set(side * 5.4 * k0, hullShape(.5).sheer + 1.3, 1.6);
+      const auto = S.awa != null, A = auto ? S.awa : 150, U = auto ? S.aws : 6;
+      const fill = sstep(.4, 1, k0) * (1 - clamp((96 - A) / 16, 0, 1) * .85);   /* túl élesen összeesik */
+      /* rúd: merőleges a látszólagos szélre – hátszélben hátrahúzva (a szél felőli oldalon), bővszélben az előstag felé;
+         a hajó ringásával a trimmer együtt mozgatja */
+      const thp = clamp(A - 92 + S.heel * side * 25, 4, 82) * D2R, Lp = 3.1;
+      const tack = _a.set(-side * Lp * Math.sin(thp), poleBase.y + .25, poleBase.z + Lp * Math.cos(thp));
+      const topY = mastBase + mastH * .97, headY = deckY + (topY - deckY) * Math.min(1, k0 * 1.5);
+      const head = _b.set(-side * .25 * Math.sin(thp), headY, mastZ + .55);
+      /* a talp húrja: bővszélben a hajó mentén hátra-hátszél felé, hátszélben keresztben; a domborulat a szél áramlásával előre */
+      const dl = clamp(A - 38, 45, 92) * D2R, F = 5.7 * (.45 + .55 * fill);
+      _sc.set(side * Math.sin(dl), 0, -Math.cos(dl)); _sn.set(side * Math.cos(dl), 0, Math.sin(dl));
+      const clew = _c.copy(tack).addScaledVector(_sc, F); clew.y = poleBase.y + .45 + (A < 125 ? .5 : .15);
+      /* luff curl: a trimmer engedi a szkótát, amíg a belépő él közepe be nem hajlik, majd visszahúzza (~3,5 s ciklus) */
+      const cyc = .5 + .5 * Math.sin(S.t * TAU / 3.4 + .6 * Math.sin(S.t * .9));
+      const ct = auto ? sstep(.55, 1, cyc) * .75 + clamp((100 - A) / 12, 0, 1) * .5 : 0;
+      S.scurl += (ct - S.scurl) * Math.min(1, (1 / 60) * 6);
+      const om = TAU * (.8 + U * .14), lim = 1 - fill;
       for (let j = 0; j <= nv; j++) { const v = j / nv;
         for (let i = 0; i <= nu; i++) { const u = i / nu, k = (j * (nu + 1) + i) * 3;
           const lx = tack.x + (head.x - tack.x) * v, ly = tack.y + (head.y - tack.y) * v, lz = tack.z + (head.z - tack.z) * v;
           const ex = clew.x + (head.x - clew.x) * v, ey = clew.y + (head.y - clew.y) * v, ez = clew.z + (head.z - clew.z) * v;
-          const bulge = 4.4 * k0 * Math.pow(Math.sin(Math.PI * u), .8) * Math.pow(Math.sin(Math.PI * Math.min(1, v * 1.05 + .06)), .65) * (1 + .03 * Math.sin(W.t * 3.1 + v * 6));
-          pa[k] = lx + (ex - lx) * u + side * bulge * .7; pa[k + 1] = ly + (ey - ly) * u + bulge * .14; pa[k + 2] = lz + (ez - lz) * u + bulge * 1.05;
+          let bulge = F * .44 * fill * Math.pow(Math.sin(Math.PI * u), .85) * Math.pow(Math.sin(Math.PI * Math.min(1, v * 1.03 + .04)), .6) * (1 + .025 * Math.sin(S.t * 3.1 + v * 6));
+          /* belépő él (a rúd felőli szél) behajlása – a vitorla közepe táján a legerősebb */
+          const ce = u < .3 ? (1 - u / .3) ** 2 * Math.max(0, Math.sin(Math.PI * clamp((v - .18) / .72, 0, 1))) : 0;
+          bulge -= ce * S.scurl * 1.1 * fill;
+          /* ernyedt (felhúzás közben / túl éles szögnél): lengő, csapkodó szövet */
+          if (lim > .01) bulge += lim * F * .06 * flogW(u, v, om) + lim * .35 * Math.sin(S.t * 1.3 + v * 2);
+          pa[k] = lx + (ex - lx) * u + _sn.x * bulge; pa[k + 1] = ly + (ey - ly) * u + bulge * .12 - lim * v * .2 * (1 - k0); pa[k + 2] = lz + (ez - lz) * u + _sn.z * bulge;
         } }
       spinG.attributes.position.needsUpdate = true; spinG.computeVertexNormals();
+      if (k0 > .25) { poleM.visible = true; setPole(poleBase, tack); }
     }
     function updCrew(dt) {
       S.crewSide += (-S.side - S.crewSide) * Math.min(1, dt * 1.2);   /* a szél felőli oldalra ülnek át (lassan) */
@@ -727,6 +823,8 @@
     G.userData.update = (dt) => {
       S.t += dt;
       body.rotation.set(S.pitch, 0, S.heel, "YXZ");
+      if (S.awa != null) autoTrim(dt);
+      if (!(spinM && spinM.visible) && !(S.awa != null && S.wing > .55)) poleM.visible = false;
       updMain(); updJib(); updSpin(); updCrew(dt);
     };
     G.userData.mats = [hullMat, deckMat, white, dark, alu, chrome, wire, teak, glass, mainMat, jibMat].concat(spinM ? [spinM.material] : []);
@@ -1039,6 +1137,7 @@
     BS.boom = clamp((awa - 22) * .72, 5, 80) * D2R * side;
     BS.jib = clamp((awa - 22) * .5, 7, 50) * D2R;
     BS.luff = Math.max(clamp(1 - (awa - 16) / 16, 0, 1), S.tackT > 1.2 ? .7 : 0);
+    BS.awa = awa; BS.aws = aws; BS.tackT = S.tackT;
     const heelT = clamp(Math.sin(clamp(awa, 0, 180) * D2R) ** 1.5 * (aws / (14 * KN)) ** 2 * 19, 0, 23) * D2R * (1 - BS.luff * .7);
     S.heel += (heelT - S.heel) * Math.min(1, dt * .8);
     BS.heel = -side * S.heel * .8;
@@ -1643,6 +1742,8 @@
     { /* a dőléshez a „valódi” (gyorsítás nélküli) hajósebességből számolt látszólagos szél kell – különben a VR-gyorsítás miatt a szél túl előre fordulna */
       const vR = S.v / VR_SPD, awH = [tw[0] + fx * vR, tw[1] + fz * vR], awsH = Math.hypot(awH[0], awH[1]), awaH = Math.acos(clamp((awH[0] * fx + awH[1] * fz) / (awsH || 1), -1, 1)) * R2D;
       const luffH = Math.max(clamp(1 - (awaH - 14) / 12, 0, 1), S.tackT > 1.4 ? .7 : 0);
+      /* a vitorlák a valódi látszólagos szélhez trimmelnek (a VR-gyorsítás nélkül) – különben gyors haladásnál is belobognának */
+      BS.awa = awaH; BS.aws = awsH; BS.gust = S.gk; BS.tackT = S.tackT; S.awaR = awaH;
       const F = (awsH * awsH) * heelCs(awaH) * (1 - luffH * .85) * (1 - BS.spin * .75 * clamp((awaH - 75) / 55, 0, 1)) * (1 + BS.spin * .5 * clamp(1 - (awaH - 75) / 45, 0, 1)), th = S.heel || 0, w0 = 1.4, zeta = .38;
       let M = (F * Math.pow(Math.cos(th), 1.3) - HEEL_KR * Math.sin(th)) / HEEL_KR;
       if (BS.spin > .5) M += Math.sin(.065) * Math.sin(W.t * 1.25) * clamp(aws / 9, 0, 1.4) * BS.spin;   /* spinakker alatt hátszélben ringatózás (oldalra-oldalra) */
@@ -1784,7 +1885,7 @@
     OS.side = (wfv[0] * Xv[0] + wfv[1] * Xv[1]) > 0 ? -1 : 1; OS.boom = clamp((twa - 28) * .78, 7, 82) * D2R * OS.side; OS.jib = clamp((twa - 28) * .55, 8, 52) * D2R; OS.luff = clamp(1 - (twa - 18) / 18, 0, 1);
     OS.spin += ((spin ? 1 : 0) - OS.spin) * Math.min(1, dt * .35);
     { const tw2 = [wfv[0] * S.tws * (S.gk || 1), wfv[1] * S.tws * (S.gk || 1)], aw2 = [tw2[0] + f[0] * r.v / VR_SPD, tw2[1] + f[1] * r.v / VR_SPD], aws2 = Math.hypot(aw2[0], aw2[1]), awa2 = Math.acos(clamp((aw2[0] * f[0] + aw2[1] * f[1]) / (aws2 || 1), -1, 1)) * R2D;
-      r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 : 0); } OS.pitch = Math.sin(W.t * 1.2 + r.ph) * .025;
+      OS.awa = awa2; OS.aws = aws2; OS.gust = S.gk || 1; r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 : 0); } OS.pitch = Math.sin(W.t * 1.2 + r.ph) * .025;
     const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.g.userData.update(dt);   /* minden képkockán, távol is (ne „ugráljon” a vitorla) */
     r.wk.push(r.x, r.z, r.g.rotation.y, r.v, dt, .05);
     /* névtábla a hajó fölött (helyezéssel), 25–220 m között látszik */
@@ -1863,7 +1964,7 @@
     g.fillStyle = "#7fd3ff"; g.font = "700 34px system-ui"; g.textAlign = "center"; g.fillText(S.next < S.marks.length ? `${S.next + 1}. BÓJA` : "BEFUTÓ", w / 2, 50);
     g.save(); g.translate(w / 2, 210); g.rotate(rel); g.fillStyle = "#ffd166"; g.beginPath(); g.moveTo(0, -110); g.lineTo(52, -20); g.lineTo(18, -20); g.lineTo(18, 70); g.lineTo(-18, 70); g.lineTo(-18, -20); g.lineTo(-52, -20); g.closePath(); g.fill(); g.restore();
     g.fillStyle = "#e9f6ff"; g.font = "800 64px system-ui"; g.fillText(`${Math.round(dist)} m`, w / 2, 360);
-    g.fillStyle = "#7fd3ff"; g.font = "600 30px system-ui"; g.fillText(`${(S.v / KN).toFixed(1)} csomó · szél ${Math.round(S.awa)}°`, w / 2, 420);
+    g.fillStyle = "#7fd3ff"; g.font = "600 30px system-ui"; g.fillText(`${(S.v / KN).toFixed(1)} csomó · szél ${Math.round(S.awaR == null ? S.awa : S.awaR)}°`, w / 2, 420);
     g.fillStyle = S.twa < 38 ? "#ff6a5a" : "#9fe0a0"; g.fillText(S.twa < 38 ? "TÚL KÖZEL A SZÉLHEZ – esd le!" : S.twa > 150 ? "hátszél" : S.twa > 110 ? "bővszél" : S.twa > 60 ? "félszél" : "cirkálás", w / 2, 470);
     /* kis pályatérkép a jobb felső sarokban: bóják, rajtvonal, a hajók (te: piros), orr felé forgatva */
     { const cx = 420, cy = 95, R2 = 80; g.save(); g.beginPath(); g.arc(cx, cy, R2, 0, TAU); g.fillStyle = "#0c1622"; g.fill(); g.strokeStyle = "#2a4256"; g.lineWidth = 3; g.stroke(); g.clip();

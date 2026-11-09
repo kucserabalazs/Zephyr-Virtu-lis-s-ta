@@ -433,3 +433,11 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
 - Referenciakép: `forras/referencia/sakk-keszlet.jpg` (a tulajdonos képe). A ChatGPT (beépített böngésző, chatgpt.com, „Tervlapok készítése” beszélgetés) négynézetes tervlapot és szöveges műszaki leírást adott (király = 100 egység: gyalog 48, bástya 60, huszár 68, futó 78, vezér 90; színek: arany #D4A13A, elefántcsont #F3E8CF/#FFF9ED, tengerkék #102D50/#123B65, világítótorony #B83228, bőr #E8C4A5, haj #D9A23B, csőr #C85A27).
 - Kód: `forras/vilag/06e-sakk-g.js` – zBoat (díszhajótest), zDressBoat (arany perem, sávok, csigavonalak, horgonyok, oroszlánfej), zSailTex („Zephyr” felirat + embléma, arany horgony), zPawn/zRook/zKnight/zBishop/zQueen/zKing; ZU = .14 m/egység. Felülírja a FIGB/FIGS/FIGN-t (06e-sakk-f.js), a ROYAL üres (mind úszik). Teszt: /home/claude/t/zfig.py; `W.vchess` tesztexport.
 - Ütés-stílusok változatlanok (p lasszó, n ugrás, b örvény, r fénysugár, q tölcsér, k vihar+kraken) – később a háromárbócoshoz ágyúsortűz illene.
+
+## 2026. nov. 9. délután
+- VR: útjelzők igazítása séta közben (Beállítások → „Útjelzők igazítása”; csippentés + húzás; mentés eszközre, tulajdonosként szerverre: api `nav` / `nav_save`).
+- 2D séta: a Foglalás gomb a felső menüsorban (arany), alul nem takar.
+- VR vitorlásverseny – életszerű vitorlák (vilag/03-hajo.js autoTrim): a vitorlák a VALÓDI (VR_SPD nélküli) látszólagos szélhez trimmelnek
+  (korábbi hiba: a 1,95× gyorsítás miatt hátszélben is ~26°-os „szembeszél” → lobogás). Belobogás csak túl élesen/fordulóban;
+  buborék → teljes csapkodás, hátsó él rezgése, szélárnyékos génua összeesik; pillangó (génua rúddal kitolva) spinakker nélkül;
+  szimmetrikus spinakker: rúd ⟂ látszólagos szél, luff curl ciklus, hátszélben a szél felőli oldalra (spinakkeres pillangó).
