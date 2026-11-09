@@ -24,7 +24,12 @@ Kész (main):
 - Foglalás 2.0 (2D, web + séta): „Kérelem” lépés, szabálysáv, jóváhagyásra vár státusz; **lista valódi szobafotókkal (alapértelmezett, `st.view`, localStorage zephyr-bk-view) + „Hajós nézet”**; **rugalmas ±3 nap** teljes ár-összevetéssel (`bestFor/flexOpts/flexHtml`, a legolcsóbb kombináció is); „Megnézem 360°-ban” (`BK_PHOTO`, a sétában `ZephyrTour.goScene`, a kezdőlapról link).
 - Eszközjegyzék 2.0 (`openBinder`, zi2- osztályok): keresés, kategóriák, kártyák, részletek animációval, „Hol találom?”, „Megmutatom a sétában ›”; a régi füzet: `openBinderOld`. **VR-ben**: a menü Apartmanok oldalán apartmanonként „Eszközök” → `pInv` (kategóriák, 4×3 rács, `pInvDet` mozgó bemutató hanggal, Megmutatom).
 - A VR-panel vászonfeliratai is fordulnak (`vT`, fillText/measureText csomagolva).
-Hátra: fordítások (új kulcsok – ügynök dolgozik rajta), a VR-foglalásba is ±3 napos ajánlás, kezdőoldal további szekciói.
+- **Arany Kikötő (VR-foglalás 3D, `AK`, `akTick` az xrTick-ben; ChatGPT + Gemini + Claude közös terve, nov. 9.):** hajónapló-könyv keret lapozással (`akBook`, `akFlipStart`), Balaton-makett valódi OSM-partvonallal, feliratokkal, Zephyr-tűvel, siófoki világítótoronnyal, tihanyi apátsággal, szántód–tihanyi komppal, Badacsonnyal, szigligeti várral, Festetics-kastéllyal és a 6 apartman-vitorlással (`akTable`; a Kadett lakatos, nem választható), kormánykerekes elküldés (`akWheel`, `B.submitFn`), zászlófüzér (`akGarland`), 3D hajójegy a kész lépésnél, 6 színes tűzijáték késleltetett durranással. Beállítások → „Ünnepi effektek” ki/be (`WS.fx`).
+- Kadett mindenhol szerepel (privát, nem foglalható, nem bejárható): VR-apartmanok, VR-foglalás (lakatos gömb + kártya), 2D fotós lista, helyek-fülek, eszközjegyzék-választó.
+- Szabályok: érkezés 15:00 mindenhol; 1 éjszaka is kérhető; szezonon kívül 3 nappal előre, főszezonban (júl. 15-től zárásig) aznapra is (`lead_eff`, egyszeri migráció `mig_rules1109`).
+- Vendég-e-mailek HTML-ben (hajójegy-stílus, `email_html`, `pay_html`) + szöveges változat. FIGYELEM: a bankadatok (kedvezményezett, számlaszám) a beállításokban üresek – a tulajdonosnak kell kitöltenie.
+- Rövid címek: /uj/ és /virtualis-seta/ a tároló gyökerében átirányít a weboldal/ alá.
+Hátra (javaslatok): iránytű-lépésjelző és ±3 nap bóják a VR-ben, kapitányi adatpult (billentyűzet 3D), fókuszcsapda a 2D párbeszédablakokban, valódi Quest 2-es mérés.
 
 ## 1. Mi ez a projekt?
 A Zephyr Apartmanház (8621 Zamárdi, Gáspár András utca 58., tulajdonos: Kucsera Balázs) weboldalának megújítása:
