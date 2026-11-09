@@ -1652,6 +1652,53 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
 .zfb-status i { width: 12px; height: 12px; border-radius: 50%; background: #D4A13A; box-shadow: 0 0 0 4px rgba(212,161,58,.25); animation: zfbPulse 1.6s ease-in-out infinite; }
 @keyframes zfbPulse { 50% { box-shadow: 0 0 0 8px rgba(212,161,58,0); } }
 @media (max-width: 700px) { .zfb-h { font-size: 24px; } .zfb-rules li { font-size: 13.5px; padding: 7px 10px; } }
+
+/* ===== ESZKÖZJEGYZÉK 2.0 – Nautical Horizon ===== */
+.zi2 { position: fixed; inset: 0; z-index: 2147482990; display: grid; place-items: center; font-family: Inter, system-ui, sans-serif; opacity: 0; transition: opacity .3s; }
+.zi2.on { opacity: 1; }
+.zi2-bg { position: absolute; inset: 0; background: rgba(7,24,44,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.zi2-card { position: relative; width: min(1180px, calc(100vw - 32px)); height: min(820px, calc(100dvh - 32px)); display: grid; grid-template-rows: auto auto minmax(0, 1fr); background: #F7F9FC; border-radius: 22px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.45); border: 1px solid rgba(228,187,99,.4); transform: translateY(14px); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.zi2.on .zi2-card { transform: none; }
+.zi2-hd { display: flex; align-items: center; gap: 16px; padding: 16px 18px 16px 22px; background: linear-gradient(135deg, #07182C, #0B2F5E 70%, #103e70); color: #fff; border-bottom: 2px solid #D4A13A; }
+.zi2-mo { width: 40px; height: 40px; flex: none; fill: none; stroke: #E4BB63; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.zi2-ti { display: grid; gap: 4px; flex: none; } .zi2-ti small { font: 700 12px/1 Inter, sans-serif; letter-spacing: .24em; color: #E4BB63; } .zi2-ti b { font: 780 24px/1.1 Inter, sans-serif; }
+.zi2-search { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 16px; border-radius: 14px; background: #fff; color: #0B2F5E; }
+.zi2-search svg { width: 22px; height: 22px; fill: none; stroke: #0B2F5E; stroke-width: 2.2; stroke-linecap: round; flex: none; }
+.zi2-search input { all: unset; flex: 1; min-width: 0; font: 600 18px/1 Inter, sans-serif; color: #0B2F5E; }
+.zi2-x, .zi2-ret { all: unset; cursor: pointer; flex: none; height: 48px; min-width: 48px; padding: 0 14px; box-sizing: border-box; display: grid; place-items: center; border-radius: 14px; background: rgba(255,255,255,.12); font: 700 26px/1 Inter, sans-serif; color: #fff; }
+.zi2-ret { font-size: 17px; } .zi2-x:hover, .zi2-ret:hover { background: rgba(255,255,255,.24); }
+.zi2-cats { display: flex; gap: 8px; padding: 14px 18px 10px; overflow-x: auto; scrollbar-width: none; background: #fff; border-bottom: 1px solid #D9E1EA; }
+.zi2-cat { all: unset; cursor: pointer; flex: none; display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px; border-radius: 12px; border: 1.5px solid #D9E1EA; font: 650 16px/1 Inter, sans-serif; color: #0B2F5E; background: #fff; }
+.zi2-cat i { font-style: normal; font: 700 13px/1 Inter, sans-serif; padding: 4px 7px; border-radius: 8px; background: #EEF2F7; color: #40617A; }
+.zi2-cat:hover { border-color: var(--cc); } .zi2-cat.on { background: #0B2F5E; color: #fff; border-color: #0B2F5E; box-shadow: inset 0 -3px 0 #D4A13A; } .zi2-cat.on i { background: #D4A13A; color: #07182C; }
+.zi2-main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; min-height: 0; }
+.zi2-grid { overflow: auto; padding: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 14px; align-content: start; }
+.zi2-it { all: unset; cursor: pointer; box-sizing: border-box; display: grid; justify-items: center; gap: 6px; padding: 14px 10px 12px; border-radius: 16px; background: #fff; border: 1.5px solid #E0E7ED; box-shadow: 0 6px 16px rgba(24,53,81,.06); text-align: center; animation: zi2In .4s ease both; animation-delay: calc(var(--i) * 25ms); transition: transform .15s, border-color .15s, box-shadow .15s; }
+@keyframes zi2In { from { opacity: 0; transform: translateY(8px); } }
+.zi2-it:hover, .zi2-it:focus-visible { transform: translateY(-3px); border-color: var(--cc); box-shadow: 0 12px 26px rgba(24,53,81,.12); }
+.zi2-it.sel { border-color: #D4A13A; box-shadow: 0 0 0 3px rgba(212,161,58,.35); }
+.zi2-ic { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #fff, #EEF2F7); }
+.zi2-n { font: 700 16px/1.2 Inter, sans-serif; color: #0B2F5E; } .zi2-q { font: 750 13px/1 Inter, sans-serif; font-style: normal; color: #07182C; background: #F3E2B8; padding: 4px 8px; border-radius: 8px; }
+.zi2-r { font: 600 12.5px/1 Inter, sans-serif; color: #6a7f92; }
+.zi2-none { grid-column: 1 / -1; font-size: 18px; color: #40617A; padding: 30px 6px; }
+.zi2-info { grid-column: 1 / -1; background: #fff; border-radius: 16px; padding: 18px; border: 1px solid #E0E7ED; }
+.zi2-det { border-left: 1px solid #D9E1EA; background: #fff; overflow: auto; padding: 18px; position: relative; }
+.zi2-det canvas { width: 100%; aspect-ratio: 3 / 2; border-radius: 14px; background: #EEF2F7; display: block; }
+.zi2-det-t { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 6px; } .zi2-det-t b { font: 780 24px/1.15 Inter, sans-serif; color: #0B2F5E; } .zi2-det-t em { font-style: normal; font: 750 14px/1 Inter, sans-serif; background: #F3E2B8; padding: 5px 9px; border-radius: 8px; }
+.zi2-det p { font: 500 17px/1.55 Inter, sans-serif; color: #40617A; margin: 0 0 14px; }
+.zi2-where { display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; background: #F7F9FC; border: 1px solid #E0E7ED; } .zi2-where small { font: 700 11.5px/1 Inter, sans-serif; letter-spacing: .2em; color: #9a7424; } .zi2-where span { font: 650 16px/1.3 Inter, sans-serif; color: #0B2F5E; }
+.zi2-go { all: unset; cursor: pointer; box-sizing: border-box; margin-top: 14px; width: 100%; min-height: 54px; display: grid; place-items: center; border-radius: 14px; font: 750 17px/1 Inter, sans-serif; color: #07182C; background: linear-gradient(180deg, #E8C26C, #D4A13A); }
+.zi2-det-x { all: unset; cursor: pointer; position: absolute; right: 10px; top: 10px; width: 40px; height: 40px; border-radius: 50%; display: none; place-items: center; font: 700 24px/1 Inter; background: rgba(7,24,44,.75); color: #fff; z-index: 2; }
+.zi2-det-empty { display: grid; place-items: center; text-align: center; gap: 10px; padding: 40px 10px; color: #6a7f92; font: 500 16px/1.5 Inter, sans-serif; }
+.zi2-det-empty svg { width: 54px; height: 54px; fill: none; stroke: #D4A13A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 860px) {
+  .zi2-card { width: 100vw; height: 100dvh; border-radius: 0; }
+  .zi2-hd { flex-wrap: wrap; padding: 12px 14px; gap: 10px; } .zi2-search { order: 5; flex-basis: 100%; height: 50px; } .zi2-ti b { font-size: 20px; } .zi2-mo { width: 32px; height: 32px; } .zi2-ti { flex: 1; }
+  .zi2-main { grid-template-columns: 1fr; }
+  .zi2-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; gap: 10px; }
+  .zi2-det { position: absolute; left: 0; right: 0; bottom: 0; max-height: 78dvh; border-radius: 22px 22px 0 0; border: 0; box-shadow: 0 -18px 40px rgba(7,24,44,.3); transform: translateY(105%); transition: transform .35s cubic-bezier(.2,.8,.2,1); z-index: 5; }
+  .zi2.det-on .zi2-det { transform: none; } .zi2-det-x { display: grid; }
+}
 </style>
 
 <div id="stage"></div>
@@ -5603,7 +5650,88 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     return c;
   }
   let bkBack = null;   /* ahonnan a mappát megnyitották (pl. az apartmanválasztó): bezáráskor oda térünk vissza */
+
+  /* =====================================================================================================
+     ESZKÖZJEGYZÉK 2.0 (2026. nov. 9., a tulajdonos: „teljesen új, kidolgozott és használható megoldás mobilon, asztalon és VR-ben”)
+     Kereshető, kategóriákra bontott kártyarács a meglévő animált rajzokkal; tételre koppintva részletek (animáció, darabszám, leírás,
+     „Hol találom?” – a szoba, és egy gomb, amely a sétában oda visz). Telefonon teljes képernyős lap, alul részletek-lap; gépen jobb oldali
+     részletpanel. Az elérhetőség (Wi-Fi, telefon) külön kártyán. A régi lapozós füzet: openBinderOld().
+     ===================================================================================================== */
+  const invEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const INV_ROOM = { konyha: "konyha", eszkoz: "konyha", furdo: "furdo", halo: "halo", nappali: "nappali", terasz: "terasz" };
+  const invNorm = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  function invItems(gid) {
+    const pages = BIG_APT[gid] ? ["konyha", "eszkoz", "furdo", "halo", "nappali", "terasz"] : ["konyha", "eszkoz", "nappali", "furdo"];
+    const out = []; pages.forEach((p) => BPAGES[p].items.forEach((id) => { if (!IT[id] || (NO_WASHER[gid] && (id === "washer" || id === "pods"))) return; if (out.some((q) => q.id === id && q.p === p)) return; out.push({ id, p }); }));
+    return { pages, items: out };
+  }
+  function invRoomScene(gid, p) {
+    const r = INV_ROOM[p]; if (!r) return null; const cand = Object.keys(SCENES).filter((k) => SCENES[k].g === gid && k.indexOf(r) >= 0);
+    return cand.length ? cand[0] : null;
+  }
+  let invEl = null, invSt = null;
   function openBinder(gid, back) {
+    if (invEl) return;
+    const gr = GROUPS.find((q) => q.id === gid) || { name: "Zephyr", no: "" }, D = invItems(gid);
+    invSt = { gid, gr, D, cat: "all", q: "", sel: null, back: typeof back === "function" ? back : null, raf: 0 };
+    invEl = document.createElement("div"); invEl.className = "zi2"; invEl.setAttribute("role", "dialog"); invEl.setAttribute("aria-label", "Eszközjegyzék – " + gr.name);
+    invEl.innerHTML = `<div class="zi2-bg"></div><div class="zi2-card">
+      <header class="zi2-hd"><svg class="zi2-mo" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 26 C15 26 10 20 11 13 C17 13 21 17 24 20 C27 17 31 13 37 13 C38 20 33 26 24 26"/><path d="M17 13 Q20 9 24 5 Q28 9 31 13"/><path d="M24 26 V43"/><path d="M24 39 Q17 31 10 33 Q14 40 24 41"/><path d="M24 39 Q31 31 38 33 Q34 40 24 41"/></svg>
+        <div class="zi2-ti"><small>ESZKÖZJEGYZÉK</small><b>${gr.no ? gr.no + " · " : ""}${invEsc(gr.name)}</b></div>
+        <label class="zi2-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Mit keresel? pl. kávéfőző, hajszárító…" aria-label="Keresés az eszközjegyzékben"></label>
+        ${invSt.back ? `<button type="button" class="zi2-ret">‹ Vissza</button>` : ""}<button type="button" class="zi2-x" aria-label="Bezárás">×</button></header>
+      <nav class="zi2-cats" aria-label="Kategóriák"></nav>
+      <div class="zi2-main"><div class="zi2-grid" role="list"></div><aside class="zi2-det" aria-live="polite"></aside></div></div>`;
+    document.body.appendChild(invEl);
+    const cats = invEl.querySelector(".zi2-cats");
+    const mk = (k, t, n, c) => { const b = document.createElement("button"); b.type = "button"; b.className = "zi2-cat"; b.dataset.k = k; b.style.setProperty("--cc", c || "#0B2F5E"); b.innerHTML = `${invEsc(t)}${n != null ? `<i>${n}</i>` : ""}`; b.addEventListener("click", () => { invSt.cat = k; invRender(); }); cats.appendChild(b); };
+    mk("all", "Minden", D.items.length); D.pages.forEach((p) => mk(p, BPAGES[p].t, D.items.filter((q) => q.p === p).length, BPAGES[p].c)); mk("info", "Wi-Fi és elérhetőség", null, "#14202a");
+    const inp = invEl.querySelector("input"); inp.addEventListener("input", () => { invSt.q = inp.value; if (invSt.cat === "info") invSt.cat = "all"; invRender(); });
+    invEl.querySelector(".zi2-x").addEventListener("click", () => invClose(true)); invEl.querySelector(".zi2-bg").addEventListener("click", () => invClose());
+    if (invSt.back) invEl.querySelector(".zi2-ret").addEventListener("click", () => invClose());
+    invEl.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (invSt.sel) invDet(null); else invClose(); } });
+    invRender(); requestAnimationFrame(() => invEl.classList.add("on")); invEl.tabIndex = -1; invEl.focus(); try { sfx("whoosh"); } catch (e) {}
+  }
+  function invClose(noret) {
+    if (!invEl) return; cancelAnimationFrame(invSt.raf); const el = invEl, b = invSt.back; invEl = null; el.classList.remove("on"); setTimeout(() => el.remove(), 350);
+    if (b && noret !== true) setTimeout(() => { try { b(); } catch (e) {} }, 380);
+  }
+  function invRender() {
+    const S = invSt, grid = invEl.querySelector(".zi2-grid"), q = invNorm(S.q).trim();
+    invEl.querySelectorAll(".zi2-cat").forEach((b) => b.classList.toggle("on", b.dataset.k === S.cat));
+    grid.innerHTML = "";
+    if (S.cat === "info") { const w = document.createElement("div"); w.className = "zi2-info"; w.appendChild(infoPage()); grid.appendChild(w); invDet(null); return; }
+    const list = S.D.items.filter((x) => (S.cat === "all" || x.p === S.cat) && (!q || invNorm(IT[x.id].n + " " + IT[x.id].d + " " + BPAGES[x.p].t).includes(q)));
+    if (!list.length) { grid.innerHTML = `<p class="zi2-none">Nincs ilyen tétel. Próbáld másképp, vagy kérdezd a házigazdát: ${invEsc(ZC.phone)}</p>`; }
+    list.forEach((x, i) => {
+      const it = IT[x.id], b = document.createElement("button"); b.type = "button"; b.className = "zi2-it"; b.setAttribute("role", "listitem"); b.style.setProperty("--cc", BPAGES[x.p].c); b.style.setProperty("--i", Math.min(i, 20));
+      const ic = document.createElement("span"); ic.className = "zi2-ic"; ic.appendChild(itemCanvas(x.id, window.innerWidth <= 700 ? 64 : 76)); b.appendChild(ic);
+      b.insertAdjacentHTML("beforeend", `<span class="zi2-n">${invEsc(it.n)}</span>${it.q ? `<em class="zi2-q">${invEsc(it.q)}</em>` : ""}<span class="zi2-r">${invEsc(BPAGES[x.p].t)}</span>`);
+      b.addEventListener("click", () => invDet(x)); if (S.sel && S.sel.id === x.id && S.sel.p === x.p) b.classList.add("sel");
+      grid.appendChild(b);
+    });
+  }
+  function invDet(x) {
+    const S = invSt, det = invEl.querySelector(".zi2-det"); cancelAnimationFrame(S.raf); S.sel = x;
+    invEl.classList.toggle("det-on", !!x); invEl.querySelectorAll(".zi2-it").forEach((b, i) => b.classList.remove("sel"));
+    if (!x) { det.innerHTML = `<div class="zi2-det-empty"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 40 C17 33 9 27 9 18 C9 11 13 8 18 8 C21 8 23 10 24 13 C25 10 27 8 30 8 C35 8 39 11 39 18 C39 27 31 33 24 40 Z"/></svg><p>Válassz egy tételt – megmutatom, mire jó, hány darab van belőle, és hol találod.</p></div>`; return; }
+    const it = IT[x.id], sc = invRoomScene(S.gid, x.p);
+    det.innerHTML = `<button type="button" class="zi2-det-x" aria-label="Részletek bezárása">×</button><canvas></canvas><div class="zi2-det-t"><b>${invEsc(it.n)}</b>${it.q ? `<em>${invEsc(it.q)}</em>` : ""}</div><p>${invEsc(it.d)}</p>
+      <div class="zi2-where"><small>HOL TALÁLOM?</small><span>${invEsc(BPAGES[x.p].t)}${BPAGES[x.p].sub ? " · " + invEsc(BPAGES[x.p].sub) : ""}</span></div>
+      ${sc ? `<button type="button" class="zi2-go">Megmutatom a sétában ›</button>` : ""}`;
+    det.querySelector(".zi2-det-x").addEventListener("click", () => invDet(null));
+    if (sc) det.querySelector(".zi2-go").addEventListener("click", () => { invClose(true); try { go(sc, false); } catch (e) {} });
+    const cv = det.querySelector("canvas"), d = Math.min(2, window.devicePixelRatio || 1), w = cv.clientWidth || 360; cv.width = w * d; cv.height = w * 2 / 3 * d;
+    const t0 = performance.now(), fired = {};
+    const loop = (now) => { if (!invEl || invSt.sel !== x) return; const t = (now - t0) / 1000, g = cv.getContext("2d");
+      (it.s || []).forEach(([tt, n], k) => { if (t >= tt && !fired[k]) { fired[k] = 1; try { sfx(n); } catch (e) {} } });
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height); const sc2 = cv.width / 300; g.setTransform(sc2, 0, 0, sc2, cv.width / 2, cv.height / 2);
+      const bg = g.createRadialGradient(0, -20, 10, 0, 0, 190); bg.addColorStop(0, "#ffffff"); bg.addColorStop(1, "#EEF2F7"); g.fillStyle = bg; g.fillRect(-150, -100, 300, 200);
+      try { it.f(g, t, true); } catch (e) {} S.raf = requestAnimationFrame(loop); };
+    S.raf = requestAnimationFrame(loop);
+    invEl.querySelectorAll(".zi2-it").forEach((b) => { if (b.querySelector(".zi2-n").textContent === it.n) b.classList.add("sel"); });
+  }
+  function openBinderOld(gid, back) {
     if (bkEl) return;
     bkBack = typeof back === "function" ? back : null;
     const gr = GROUPS.find((q) => q.id === gid) || { name: "Zephyr", no: "" };
@@ -11363,7 +11491,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
 
   /* ---------- Híd a „Virtuális világ” modulhoz (vilag.js – csak megnyitáskor töltődik be) ---------- */
-  window.ZephyrTour = { _t: { smPalm: () => smPalm(), SM, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
+  window.ZephyrTour = { openInv: (g) => openBinder(g), _t: { smPalm: () => smPalm(), SM, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
     get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
