@@ -9572,7 +9572,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     g.font = ZT.font(600, 36);
     g.fillStyle = "rgba(221,232,242,.18)"; g.fillRect(40, 120, VW - 80, 2);
     if (VRS.page !== "book") { try { bkKeyboard(false); } catch (e) {} }
-    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld, help: pHelp, sun: pSun, set: pSettings, lake: pLake, culture: pCulture }[VRS.page] || pMain)(g);
+    ({ main: pMain, places: pPlaces, map: pMap, apts: pApts, book: pBook, world: pWorld, help: pHelp, sun: pSun, set: pSettings, lake: pLake, culture: pCulture, inv: pInv }[VRS.page] || pMain)(g);
     if (VRS.tex) VRS.tex.needsUpdate = true;
   }
   /* gomb (VR 2.0): emelt sötét felület, rámutatva arany kontúr; „on” = elsődleges (arany); az elején álló emoji helyett
@@ -9830,9 +9830,93 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     });
   }
   function pApts(g) {
+    /* VR 2.0: apartmanonként egy nagy kártya (belépés a szobába) + mellette „Eszközjegyzék” gomb (VR-es tárgylista, nov. 9.) */
     const A = GROUPS.filter((q) => q.no && !q.lock && !q.hidden);
-    const cw = (VW - 80 - 30) / 2, ch = 150;
-    A.forEach((q, i) => btn(g, 40 + (i % 2) * (cw + 30), 150 + Math.floor(i / 2) * (ch + 22), cw, ch, `${q.no} · ${q.name}`, () => { vrClose(); go(q.entry, false); }, { on: (SCENES[current] || {}).g === q.id, sub: q.where || q.sub }));
+    const cw = (VW - 80 - 30) / 2, ch = 150, iw = 150;
+    A.forEach((q, i) => {
+      const x = 40 + (i % 2) * (cw + 30), y = 150 + Math.floor(i / 2) * (ch + 22);
+      btn(g, x, y, cw - iw - 12, ch, `${q.no} · ${q.name}`, () => { vrClose(); go(q.entry, false); }, { on: (SCENES[current] || {}).g === q.id, sub: q.where || q.sub, fs: 34 });
+      btn(g, x + cw - iw, y, iw, ch, "", () => { VRS.inv = { gid: q.id, cat: "all", off: 0, sel: null }; VRS.page = "inv"; vrDraw(); });
+      const hv = VRS.btns.length - 1 === VRS.hover; vInvGlyph(g, x + cw - iw / 2, y + 56, 52, hv ? "#FFF6E0" : ZT.soft);
+      txt(g, "Eszközök", x + cw - iw / 2, y + 116, { a: "center", fs: 24, w: 650, c: hv ? "#FFF6E0" : ZT.sub });
+    });
+  }
+  /* kis „jegyzék” ikon: lap + három sor + pipa */
+  function vInvGlyph(g, cx, cy, s, col) {
+    g.save(); g.translate(cx - s / 2, cy - s / 2); g.strokeStyle = col; g.lineWidth = 3; g.lineCap = "round"; g.lineJoin = "round";
+    rr(g, s * .14, s * .04, s * .72, s * .92, 6); g.stroke();
+    [.32, .52, .72].forEach((yy) => { g.beginPath(); g.moveTo(s * .44, s * yy); g.lineTo(s * .74, s * yy); g.stroke(); g.beginPath(); g.moveTo(s * .25, s * yy); g.lineTo(s * .3, s * (yy + .04)); g.lineTo(s * .37, s * (yy - .05)); g.stroke(); });
+    g.restore();
+  }
+
+  /* ESZKÖZJEGYZÉK VR-BEN (2026. nov. 9.): bal oldalt kategóriák, jobbra 4×3-as kártyarács a 2D jegyzék rajzaival; tételre csippentve
+     nagy, mozgó bemutató + darabszám, leírás, „Hol találom?” és „Megmutatom” – ez a sétában a megfelelő szobába visz. */
+  function vInvItem(g, id, cx, cy, S, t, anim) {
+    const it = IT[id]; if (!it) return;
+    g.save(); g.translate(cx - S / 2, cy - S / 2); g.scale(S / 100, S / 100); g.translate(50, 52); g.scale(.55, .55);
+    try { it.f(g, t, !!anim); } catch (e) {}
+    g.restore();
+  }
+  function pInv(g) {
+    const V = VRS.inv || (VRS.inv = { gid: (SCENES[current] || {}).g || "korvett", cat: "all", off: 0, sel: null });
+    const gr = GROUPS.find((q) => q.id === V.gid) || { name: "", no: "" }, D = invItems(V.gid);
+    /* alcím */
+    vInvGlyph(g, 64, 166, 40, ZT.soft); txt(g, "Eszközjegyzék · " + (gr.no ? gr.no + " · " : "") + gr.name, 96, 166, { fs: 34, w: 700, c: ZT.soft });
+    /* kategóriák */
+    const cats = [["all", "Minden", D.items.length]].concat(D.pages.map((p) => [p, BPAGES[p].t, D.items.filter((q) => q.p === p).length]));
+    const cy0 = 206, chh = Math.min(76, (VH - 40 - cy0 - (cats.length - 1) * 10) / cats.length);
+    cats.forEach(([k, t, n], i) => btn(g, 40, cy0 + i * (chh + 10), 270, chh, t + "  " + n, () => { V.cat = k; V.off = 0; V.sel = null; vInvStop(); vrDraw(); }, { on: V.cat === k, fs: t.length > 14 ? 24 : 28 }));
+    const X0 = 330, W = VW - 40 - X0, Y0 = 206, H = VH - 40 - Y0;
+    if (V.sel) return pInvDet(g, V, X0, Y0, W, H);
+    const list = D.items.filter((q) => V.cat === "all" || q.p === V.cat), PER = 12, pages = Math.max(1, Math.ceil(list.length / PER));
+    V.off = Math.max(0, Math.min(V.off, pages - 1));
+    const cw = (W - 3 * 16) / 4, chc = (H - 96 - 2 * 16) / 3;
+    list.slice(V.off * PER, V.off * PER + PER).forEach((x, i) => {
+      const bx = X0 + (i % 4) * (cw + 16), by = Y0 + Math.floor(i / 4) * (chc + 16), it = IT[x.id];
+      btn(g, bx, by, cw, chc, "", () => { V.sel = x; vInvPlay(); vrDraw(); });
+      g.beginPath(); g.arc(bx + cw / 2, by + chc * .34, chc * .26, 0, Math.PI * 2); g.fillStyle = "#F7F9FC"; g.fill();
+      vInvItem(g, x.id, bx + cw / 2, by + chc * .34, chc * .46, 1.2, false);
+      g.save(); g.font = ZT.font(650, 23); let n = it.n; while (n.length > 3 && g.measureText(n).width > cw - 20) n = n.slice(0, -2); if (n !== it.n) n += "…"; g.restore();
+      txt(g, n, bx + cw / 2, by + chc * .7, { a: "center", fs: 23, w: 650 });
+      if (it.q) { g.save(); g.font = ZT.font(600, 18); const qw = g.measureText(it.q).width + 22; rr(g, bx + cw / 2 - qw / 2, by + chc - 34, qw, 26, 13); g.fillStyle = "rgba(212,161,58,.22)"; g.fill(); g.restore(); txt(g, it.q, bx + cw / 2, by + chc - 21, { a: "center", fs: 18, c: ZT.soft }); }
+    });
+    const yb = VH - 40 - 76;
+    btn(g, X0, yb, 200, 76, "‹ Előző", () => { V.off--; vrDraw(); }, { off: V.off <= 0, fs: 28 });
+    txt(g, (V.off + 1) + " / " + pages + " oldal · " + list.length + " tétel", X0 + W / 2, yb + 38, { a: "center", fs: 26, c: ZT.sub });
+    btn(g, X0 + W - 200, yb, 200, 76, "Következő ›", () => { V.off++; vrDraw(); }, { off: V.off >= pages - 1, fs: 28 });
+  }
+  function pInvDet(g, V, X0, Y0, W, H) {
+    const x = V.sel, it = IT[x.id], sc = invRoomScene(V.gid, x.p), t = V.t0 ? (performance.now() - V.t0) / 1000 : 1.2;
+    /* bemutató-kártya: világos, mint a 2D-s jegyzékben, hogy a rajzok színei jól látszódjanak */
+    const cs = H - 96 - 16; rr(g, X0, Y0, cs, cs, 28);
+    const bg = g.createRadialGradient(X0 + cs / 2, Y0 + cs * .4, 10, X0 + cs / 2, Y0 + cs / 2, cs * .7); bg.addColorStop(0, "#FFFFFF"); bg.addColorStop(1, "#E6ECF3"); g.fillStyle = bg; g.fill();
+    g.save(); rr(g, X0, Y0, cs, cs, 28); g.clip(); vInvItem(g, x.id, X0 + cs / 2, Y0 + cs / 2, cs * .62, t, true); g.restore();
+    const tx = X0 + cs + 34, tw = W - cs - 34;
+    g.save(); g.font = ZT.font(700, 40); let n = it.n; while (n.length > 3 && g.measureText(n).width > tw) n = n.slice(0, -2); if (n !== it.n) n += "…"; g.restore();
+    txt(g, n, tx, Y0 + 30, { fs: 40, w: 700 });
+    let yy = Y0 + 74;
+    if (it.q) { g.save(); g.font = ZT.font(650, 24); const qw = g.measureText(it.q).width + 28; rr(g, tx, yy, qw, 38, 19); g.fillStyle = "rgba(212,161,58,.22)"; g.fill(); g.strokeStyle = ZT.gold; g.lineWidth = 2; g.stroke(); g.restore(); txt(g, it.q, tx + 14, yy + 19, { fs: 24, w: 650, c: ZT.soft }); yy += 56; }
+    g.save(); g.font = ZT.font(500, 26); const ws = String(it.d || "").split(" "), ln = [""]; ws.forEach((w) => { const c2 = (ln[ln.length - 1] + " " + w).trim(); if (g.measureText(c2).width > tw) ln.push(w); else ln[ln.length - 1] = c2; }); g.restore();
+    ln.slice(0, 6).forEach((l2, k) => txt(g, l2, tx, yy + 16 + k * 34, { fs: 26, w: 500, c: ZT.sub }));
+    yy += 16 + Math.min(6, ln.length) * 34 + 10;
+    rr(g, tx, yy, tw, 92, 18); g.fillStyle = "rgba(16,42,68,.9)"; g.fill(); g.strokeStyle = "rgba(221,232,242,.2)"; g.lineWidth = 2; g.stroke();
+    g.save(); try { g.letterSpacing = "2px"; } catch (e) {} txt(g, "HOL TALÁLOM?", tx + 20, yy + 26, { fs: 18, w: 700, c: ZT.soft }); try { g.letterSpacing = "0px"; } catch (e) {} g.restore();
+    { g.save(); g.font = ZT.font(600, 25); const w0 = BPAGES[x.p].t + (BPAGES[x.p].sub ? " · " + BPAGES[x.p].sub : ""); let w1 = w0; while (w1.length > 3 && g.measureText(w1).width > tw - 40) w1 = w1.slice(0, -2); if (w1 !== w0) w1 += "…"; g.restore(); txt(g, w1, tx + 20, yy + 62, { fs: 25, w: 600 }); }
+    const yb = VH - 40 - 76, bw = (W - 32) / 3;
+    btn(g, X0, yb, bw, 76, "‹ A listához", () => { V.sel = null; vInvStop(); vrDraw(); }, { fs: 28 });
+    btn(g, X0 + bw + 16, yb, bw, 76, "Újra lejátszom", () => vInvPlay(), { fs: 28 });
+    btn(g, X0 + 2 * (bw + 16), yb, bw, 76, "Megmutatom ›", () => { const s2 = sc; vInvStop(); VRS.inv.sel = null; vrClose(); go(s2, false); }, { on: !!sc, off: !sc, fs: 28 });
+  }
+  /* a bemutató animációja: a panel textúráját ~20 fps-sel újrarajzoljuk 4,5 mp-ig, a hangokat a 2D-s jegyzék időzítése szerint lejátsszuk */
+  function vInvStop() { const V = VRS.inv; if (V && V.tm) { clearInterval(V.tm); V.tm = 0; } }
+  function vInvPlay() {
+    const V = VRS.inv; if (!V || !V.sel) return; vInvStop(); V.t0 = performance.now(); const it = IT[V.sel.id], fired = {}, sel = V.sel;
+    V.tm = setInterval(() => {
+      if (VRS.page !== "inv" || !VRS.panel || V.sel !== sel) { vInvStop(); return; }
+      const t = (performance.now() - V.t0) / 1000;
+      (it.s || []).forEach(([tt, n], k) => { if (t >= tt && !fired[k]) { fired[k] = 1; try { sfx(n); } catch (e) {} } });
+      vrDraw(); if (t > 4.5) vInvStop();
+    }, 50);
   }
 
   /* --- VR-en belüli foglalás, kilépés nélkül (2026. nov. 6.) ---
