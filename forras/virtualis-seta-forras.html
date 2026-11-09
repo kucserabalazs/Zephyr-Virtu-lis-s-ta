@@ -9260,7 +9260,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function pHelp(g) {
     txt(g, "Így irányítasz", 60, 168, { fs: 44, w: 800, c: "#ffd166" });
     /* 2026. nov. 6. (3. kör): a kéz fölötti „ököl + hüvelykujj” mozgás kikerült – a súgó az új, egyszerű kezelést mutatja */
-    const R = [["⌚", "Menü: csippents az órádra", "a bal csuklódon karóra van – jobb kézzel rácsippentve nyílik a nagy menü, újabb csippentéssel (vagy ✕) bezárul"],
+    const R = [["⌚", "Menü: érintsd meg az órádat", "a bal csuklódon karóra van – a jobb mutatóujjaddal megérintve (vagy rácsippentve, vagy 1 mp-ig ránézve) nyílik a nagy menü; újabb érintéssel vagy ✕-szel bezárul"],
                ["☝", "A gombokat ujjal nyomd", "a jobb mutatóujjaddal, mint egy érintőképernyőt (vagy mutass rá és csippents)"],
                ["👉", "Mutass + csippents = kattintás", "nyitott kézből sugár indul; hüvelyk- és mutatóujj összeér (kontroller: ravasz)"],
                ["➜", "Lépés: fénylő gyűrű a padlón", "ahová mehetsz, ott arany gyűrű és névtábla van – mutass rá és csippents"],
@@ -10142,11 +10142,13 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
   /* --- a szíj: a csukló ellipszis keresztmetszetén körbefut (helyi tér: +y = az ujjak felé, +z = a tenyér felől kifelé, a csukló közepe z = −0,026) --- */
   function watchStrap(style, mats) {
-    const g = new THREE.Group(), RX = .032, RZ = .023, CZ = -.027, W2 = .021;
-    const pt = (th) => new THREE.Vector3(RX * Math.sin(th), 0, CZ + RZ * Math.cos(th));
+    /* 2026. nov. 9. (tulajdonos): a szíj eddig HOSSZÁBAN futott a karon – most a csukló KÖRÜL ölel: az óra helyi x tengelye az alkar
+       (az ujjak felé, „3 óra”), az y a „12 óra” iránya (a csukló szélessége), a z a kézhát felé mutat → a szíj az y–z síkban kerül körbe. */
+    const g = new THREE.Group(), RX = .031, RZ = .022, CZ = -.026, W2 = .02;
+    const pt = (th) => new THREE.Vector3(0, RX * Math.sin(th), CZ + RZ * Math.cos(th));
     const t0 = .62, t1 = Math.PI * 2 - .62, N = style === "Fém lánc" ? 30 : style === "Vitorlakötél" ? 60 : 40;
     const parts = {}; const put = (k, geo, m) => { (parts[k] = parts[k] || []).push(geo.applyMatrix4(m)); };
-    const segM = (th, len, w, h, dz) => { const a = pt(th), b = pt(th + .001), tg = b.sub(a).normalize(), up = new THREE.Vector3(0, 1, 0), nz = new THREE.Vector3().crossVectors(tg, up).normalize();
+    const segM = (th, len, w, h, dz) => { const a = pt(th), b = pt(th + .001), tg = b.sub(a).normalize(), up = new THREE.Vector3(1, 0, 0), nz = new THREE.Vector3().crossVectors(tg, up).normalize();
       const m = new THREE.Matrix4().makeBasis(tg, up, nz); m.setPosition(pt(th).addScaledVector(nz, dz || 0)); return m; };
     for (let i = 0; i < N; i++) {
       const th = t0 + (t1 - t0) * (i + .5) / N, L = (t1 - t0) / N * ((RX + RZ) / 2) * 1.02;
@@ -10174,7 +10176,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       put("metal", new THREE.BoxGeometry(.012, .0016, .0016), bk.clone().multiply(new THREE.Matrix4().makeTranslation(0, 0, .004)));   /* nyelv */
       put("strap", new THREE.BoxGeometry(.006, W2 * 1.15, .006), segM(Math.PI + .22));   /* bújtató */ }
     /* fülek (a tok és a szíj között) */
-    [-1, 1].forEach((sx) => [-1, 1].forEach((sy) => put("metal", new THREE.BoxGeometry(.006, .0035, .006), new THREE.Matrix4().makeTranslation(sx * .021, sy * .009, -.002))));
+    [-1, 1].forEach((sx) => [-1, 1].forEach((sy) => put("metal", new THREE.BoxGeometry(.0035, .006, .006), new THREE.Matrix4().makeTranslation(sx * .009, sy * .021, -.002))));   /* fülek a 12 és a 6 óránál */
     Object.keys(parts).forEach((k) => { const geo = mergeG(parts[k]); const m = new THREE.Mesh(geo, mats[k] || mats.metal); g.add(m); });
     return g;
   }
@@ -10235,9 +10237,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const scr = new THREE.Mesh(new THREE.ShapeGeometry(rrect(.038, .032, .006), 8), new THREE.MeshBasicMaterial({ map: ftex })); scr.position.z = .0062; body.add(scr);
       { const uv = scr.geometry.attributes.uv, p = scr.geometry.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, p.getX(i) / .038 + .5, p.getY(i) / .032 + .5); }
       const gl = new THREE.Mesh(new THREE.ShapeGeometry(rrect(.0395, .0335, .0065), 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .04, metalness: .2, transparent: true, opacity: .14, depthWrite: false })); gl.position.z = .0068; body.add(gl);
-      const crown = new THREE.Mesh(new THREE.CylinderGeometry(.0034, .0034, .005, 18), gold); crown.position.set(.006, .0215, 0); body.add(crown);
-      for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2, r = new THREE.Mesh(new THREE.BoxGeometry(.0006, .0052, .0006), goldB); r.position.set(.006 + Math.cos(a) * .0035, .0215, Math.sin(a) * .0035); body.add(r); }
-      const btn = new THREE.Mesh(new THREE.BoxGeometry(.008, .0025, .003), goldB); btn.position.set(-.008, .02, 0); body.add(btn); }
+      /* korona a 3 óránál (az ujjak felé), alatta nyomógomb */
+      const crown = new THREE.Mesh(new THREE.CylinderGeometry(.0034, .0034, .005, 18).rotateZ(Math.PI / 2), gold); crown.position.set(.0245, .004, 0); body.add(crown);
+      for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2, r = new THREE.Mesh(new THREE.BoxGeometry(.0052, .0006, .0006), goldB); r.position.set(.0245, .004 + Math.cos(a) * .0035, Math.sin(a) * .0035); body.add(r); }
+      const btn = new THREE.Mesh(new THREE.BoxGeometry(.0025, .008, .003), goldB); btn.position.set(.0232, -.009, 0); body.add(btn); }
     P.strapG = null;
     /* --- találati sík (sugárhoz) és a kis óra (kontrollerhez) --- */
     const hit = new THREE.Mesh(new THREE.PlaneGeometry(WP.W, WP.H), new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide })); panel.add(hit); P.m = hit; hit.visible = false;
@@ -10367,7 +10370,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       g.fillStyle = fgc;
       const mon = ["jan.", "febr.", "márc.", "ápr.", "máj.", "jún.", "júl.", "aug.", "szept.", "okt.", "nov.", "dec."][d.getMonth()];
       g.font = "600 30px system-ui, sans-serif"; g.fillText(`${mon} ${d.getDate()}. · Zamárdi`, 200, 248);
-      g.fillStyle = "#ffd166"; g.font = "700 26px system-ui, sans-serif"; g.fillText("👌 csippents rá: menü", 200, 302);
+      g.fillStyle = "#ffd166"; g.font = "700 26px system-ui, sans-serif"; g.fillText("☝ érintsd meg: menü", 200, 302);
+      /* ránézéskor telő arany körív: ha betelik, kinyílik a menü */
+      if ((P.dwell || 0) > .03) { g.strokeStyle = "#ffd166"; g.lineWidth = 16; g.lineCap = "round"; g.beginPath(); g.arc(200, 170, 150, -Math.PI / 2, -Math.PI / 2 + Math.min(1, P.dwell / 1.0) * Math.PI * 2); g.stroke(); }
       ftex.needsUpdate = true;
     };
     /* találat: vászonkoordináta → fejlécgomb / térképpont / csempe */
@@ -10432,11 +10437,23 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     /* NYITÁS (nov. 6. este, a tulajdonos kérésére): az óra magától SOSEM nyílik ki – alapból csak egy karóra a csuklón.
        A jobb kézzel az órára csippentve nyílik a nagy menü (eléd, kényelmes távolságba); újabb csippentés az órán – vagy a ✕ – bezárja. */
     { const Rt = XRP.src.right, pr = !!(XRP.pinch && XRP.pinch.right);
-      if (!pr && Rt && Rt.hand && Rt.tip && base && Rt.tip.distanceTo(base) < .075) P.nearT = now;   /* a csippentés közben a mutatóujj elmozdul – a közvetlenül előtte mért közelség is számít */
-      if (pr && !P.prevPR && Rt && Rt.hand && Rt.tip && base && L && L.hand) { const d = Rt.tip.distanceTo(base); if (d < .085 || now - (P.nearT || 0) < 600) { P.userOpen = !P.userOpen; P.justToggled = now; try { xrPulse(Rt.src, .45, 25); } catch (e) {}
-        if (P.userOpen) { const hp = _wv3.clone(), hd = headDir(_wv2).clone(); hd.y = 0; if (hd.lengthSq() < 1e-6) hd.set(0, 0, -1); hd.normalize(); P.anchor = hp.clone().addScaledVector(hd, .62); P.anchor.y = hp.y - .14; } } }
-      P.prevPR = pr; }
-    if (P.closeReq) P.userOpen = false;
+      /* 2026. nov. 9. (tulajdonos: „képtelenség megnyomni, kihozni a kijelzőt”) – három, egymást kiegészítő mód:
+         1) a jobb mutatóujjal MEGÉRINTED az órát (nem kell csippenteni);  2) csippentés az óra közelében (13 cm-en belül);
+         3) az órát magad felé fordítod és RÁNÉZEL: kb. 1 mp múlva magától kinyílik. Bezárás: újabb érintés/csippentés az órán, vagy ✕. */
+      const toggle = (src) => { P.userOpen = !P.userOpen; P.justToggled = now; P.dwell = 0; if (!P.userOpen) P.noDwell = true; try { xrPulse(src, .5, 30); } catch (e) {}
+        if (P.userOpen) { const hp = _wv3.clone(), hd = headDir(_wv2).clone(); hd.y = 0; if (hd.lengthSq() < 1e-6) hd.set(0, 0, -1); hd.normalize(); P.anchor = hp.clone().addScaledVector(hd, .6); P.anchor.y = hp.y - .16; } };
+      const dT = Math.min(.1, (now - (P.lastNow || now)) / 1000); P.lastNow = now;
+      const dTip = Rt && Rt.hand && Rt.tip && base ? Rt.tip.distanceTo(base) : 9;
+      if (!pr && dTip < .13) P.nearT = now;   /* a csippentés közben a mutatóujj elmozdul – a közvetlenül előtte mért közelség is számít */
+      const cool = now - (P.justToggled || 0) > 900;
+      if (cool && L && L.hand && pr && !P.prevPR && (dTip < .13 || now - (P.nearT || 0) < 700)) toggle(Rt.src);
+      else if (cool && L && L.hand && !pr && dTip < .045 && (P.prevTip == null || P.prevTip >= .045)) toggle(Rt.src);   /* érintés: a mutatóujj „belép” az óra köré */
+      else if (L && L.hand && !P.userOpen && cool && !P.noDwell && gazeOk && faceUp && dTip > .1) { P.dwell = (P.dwell || 0) + dT; if (P.dwell > 1.0) toggle(L.src); }
+      else P.dwell = Math.max(0, (P.dwell || 0) - dT * 2);
+      if ((P.dwell || 0) > .03 || P.dwellShown) { P.dwellShown = (P.dwell || 0) > .03; if (((P.hubT || 0) % 3) === 0) P.drawHub(); }
+      P.prevTip = dTip; P.prevPR = pr; }
+    if (P.closeReq) { if (P.userOpen) { P.justToggled = now; P.noDwell = true; } P.userOpen = false; }
+    if (!faceUp) P.noDwell = false;   /* a ✕-szel bezárt menü csak akkor nyílik újra ránézésre, ha közben elfordítottad a csuklód */
     let want = P.hold ? true : P.closeReq ? false : L && L.hand ? !!P.userOpen : P.pinned;
     /* „felfordítás + koppintás” mód: a tenyér felfordítása csak élesíti, a jobb mutatóujjal az órára koppintva nyílik */
     if (false && WS.tap && L && L.hand && !P.hold) { const Rt = XRP.src.right;
@@ -10487,9 +10504,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (R && R.hand && R.tip && P.m.visible) {
       const lp = P.panel.worldToLocal(_wv4.copy(R.tip)); const px = (lp.x / WP.W + .5) * WP.CW, py = (.5 - lp.y / WP.H) * WP.CH, inside = px > 0 && px < WP.CW && py > 0 && py < WP.CH;
       if (inside && lp.z < .05 && lp.z > -.07) { const q = (() => { const pk = P.m.userData.xr; return null; })(); P.touchHov = true; const hit = { uv: { x: px / WP.CW, y: 1 - py / WP.CH } }; P.m.userData.xr.move(hit);
-        if (!P.poke && lp.z < .008 && (P.prevZ != null ? P.prevZ >= 0 : lp.z > -.015)) { P.poke = true; P.m.userData.xr.click(hit); try { xrPulse(R.src, .4, 20); } catch (e) {} } }
+        /* nyomás: amint az ujjhegy a tábla síkjához ér (1,2 cm-en belül) és felé halad – nem kell pontosan „átszúrni” */
+        if (!P.poke && lp.z < .012 && lp.z > -.05 && (P.prevZ == null || P.prevZ >= lp.z - .003) && now - (P.pokeT || 0) > 380) { P.poke = true; P.pokeT = now; P.m.userData.xr.click(hit); try { xrPulse(R.src, .5, 25); } catch (e) {} } }
       else if (P.touchHov) { P.touchHov = false; P.setHov(null); }
-      if (P.poke && (lp.z > .02 || !inside)) P.poke = false;
+      if (P.poke && (lp.z > .028 || !inside)) P.poke = false;
       P.prevZ = inside ? lp.z : null;
     }
     P.hubT = (P.hubT || 0) + 1;
