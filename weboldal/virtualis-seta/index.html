@@ -1719,6 +1719,13 @@ body.walk-on .zx-book, body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .z
 .zbf-o.na { opacity: .55; cursor: default; } .zbf-o.na .zbf-p { color: #8a95a3; font-weight: 600; }
 .zfl-lake .zbl-hd { margin-bottom: 4px; } .zfl-lake .zbv { background: rgba(255,255,255,.7); }
 @media (max-width: 600px) { .zbl-grid { grid-template-columns: 1fr; } .zbl-nm { font-size: 20px; } .zbv button { padding: 9px 12px; } }
+/* olvashatóság (Gemini + ChatGPT átnézés, nov. 9.: a tulajdonos és sok vendég gyengén lát): nagyobb naptárbetűk, sötétebb jelmagyarázat */
+.zfb-wd span { font-size: 13px !important; color: #4a5a6c !important; }
+.zfb-d b { font-size: 17px !important; } .zfb-d small { font-size: 12px !important; color: #1d6b33 !important; }
+.zfb-legend { font-size: 15px !important; color: #33424f !important; gap: 10px 18px !important; }
+.zfb-legend i { width: 16px !important; height: 16px !important; }
+.zfb-rules li { font-size: 15px; }
+@media (max-width: 600px) { .zfb-d b { font-size: 18px !important; } .zfb-d small { font-size: 11.5px !important; } }
 /* ===== ESZKÖZJEGYZÉK 2.0 – Nautical Horizon ===== */
 .zi2 { position: fixed; inset: 0; z-index: 2147482990; display: grid; place-items: center; font-family: Inter, system-ui, sans-serif; opacity: 0; transition: opacity .3s; }
 .zi2.on { opacity: 1; }
@@ -10990,8 +10997,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const beamMat = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .55, depthWrite: false });
     const beam = new THREE.Mesh(beamGeo, beamMat); beam.renderOrder = 1000;
     const dotMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .95, depthTest: false, depthWrite: false });
-    const dot = new THREE.Mesh(new THREE.RingGeometry(.006, .011, 24), dotMat); dot.renderOrder = 1001;
-    const halo = new THREE.Mesh(new THREE.RingGeometry(.013, .017, 32), new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .8, depthTest: false, depthWrite: false })); halo.renderOrder = 1001;
+    const dot = new THREE.Mesh(new THREE.RingGeometry(.008, .014, 24), dotMat); dot.renderOrder = 1001;
+    const halo = new THREE.Mesh(new THREE.RingGeometry(.017, .022, 32), new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .9, depthTest: false, depthWrite: false })); halo.renderOrder = 1001;
     const cur = new THREE.Group(); cur.add(dot, halo);
     g.add(beam); sceneEl.object3D.add(g); sceneEl.object3D.add(cur);
     return (XRP.ray[key] = { g, beam, cur, halo, dotMat, beamMat });
