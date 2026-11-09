@@ -10131,15 +10131,27 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const yb = VH - 128;
     const nights = B.ci && B.co ? vDiff(B.ci, B.co) : 0, minN = c.min_nights || 1;
     const sel = !B.ci ? "Csippents az érkezés napjára" : !B.co ? vHu(B.ci) + " → csippents a távozás napjára" : vHu(B.ci) + " → " + vHu(B.co) + " · " + nights + " éj";
-    txt(g, sel, 44, yb - 22, { fs: 28, w: 700, c: "#ffd166" });
     const step = (x, label, val, dn, up) => { txt(g, label, x, yb + 48, { fs: 26, w: 600, c: "rgba(255,255,255,.8)" }); btn(g, x + 118, yb + 10, 70, 76, "−", dn, { fs: 44 }); txt(g, String(val), x + 220, yb + 48, { a: "center", fs: 38, w: 800 }); btn(g, x + 252, yb + 10, 70, 76, "+", up, { fs: 44 }); };
     const capAll = c.apartments.reduce((s, a) => s + a.cap, 0);
     step(44, "Felnőtt", B.adults, () => { B.adults = Math.max(1, B.adults - 1); vrDraw(); }, () => { B.adults = Math.min(capAll - B.children, B.adults + 1); vrDraw(); });
     step(400, "Gyermek", B.children, () => { B.children = Math.max(0, B.children - 1); vrDraw(); }, () => { B.children = Math.min(capAll - B.adults, B.children + 1); vrDraw(); });
     let why = ""; if (B.ci && B.co && nights < minN) why = `Legalább ${minN} éjszaka`; else if (c.max_nights && nights > c.max_nights) why = `Legfeljebb ${c.max_nights} éjszaka`;
     const free = B.ci && B.co && !why ? bkFreeAptsNow(B) : [], capF = free.reduce((s, a) => s + a.cap, 0);
-    if (!why && B.ci && B.co && bkNeed(B) > capF) why = `Erre az időre ${capF} főnek van hely`;
+    if (!why && B.ci && B.co && bkNeed(B) > capF) why = capF ? `Erre az időre ${capF} főnek van hely` : "Erre az időre nincs szabad hely";
     const okNext = B.ci && B.co && !why;
+    /* rugalmas dátum (Booking 2.0, nov. 9.): ha a választott időszak nem jó, azonos éjszakaszámmal ±3 napon belül ajánlunk szabadat */
+    const alts = [];
+    if (B.ci && B.co && why && nights >= minN && !(c.max_nights && nights > c.max_nights)) {
+      const lead = vAdd(c.today, c.lead_days || 0);
+      for (const k of [-1, 1, -2, 2, -3, 3]) { const ci = vAdd(B.ci, k), co = vAdd(B.co, k); if (ci < lead) continue;
+        const fr = c.apartments.filter((a) => { for (let d = ci; d < co; d = vAdd(d, 1)) if (!bkNightApt(a.id, d)) return false; return true; });
+        if (fr.length && fr.reduce((s2, a) => s2 + a.cap, 0) >= bkNeed(B)) alts.push({ ci, co }); if (alts.length >= 3) break; }
+    }
+    if (alts.length) {
+      txt(g, "Szabad ±3 napon belül:", 44, yb - 30, { fs: 24, w: 700, c: "#ffd166" });
+      const aw = (VW - 84 - 330 - 2 * 12) / 3;
+      alts.forEach((o, i) => btn(g, 330 + i * (aw + 12), yb - 56, aw, 52, vHu(o.ci, false) + " – " + vHu(o.co, false), () => { B.ci = o.ci; B.co = o.co; B.sel = []; B.err = ""; vrDraw(); }, { fs: 24, round: 26, on: i === 0 }));
+    } else txt(g, sel, 44, yb - 22, { fs: 28, w: 700, c: "#ffd166" });
     btn(g, 770, yb + 4, VW - 810, 92, okNext ? "Tovább: szabad apartmanok ›" : why || "Válassz időszakot", () => { B.step = "apts"; B.sel = bkAutoSel(B); vrDraw(); }, { on: !!okNext, off: !okNext, fs: 32 });
   }
   const _bkTh = {}; let _bkQ = Promise.resolve();
