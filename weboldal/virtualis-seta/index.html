@@ -9184,12 +9184,15 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       VRT.sky.visible = false; VRT.fx.g.visible = false; U.map.value = null; VRN.trans = false;
     }
   }
+  const NAV2D = true;   /* VR 2.0: az új útjelzők a 2D sétában is (gép, telefon) */
+  function nav2dOn() { return !inVR && NAV2D && !EDIT && !flat; }
   function vrnTick() {
-    if (!inVR || worldOn() || !spots) { if (VRN.g) vrnClear(); return; }
+    if ((!inVR && !nav2dOn()) || worldOn() || !spots) { if (VRN.g) vrnClear(); return; }
     /* a régi jelzések (nyilak, irányjelző tábla) VR-ben rejtve */
-    Array.from(spots.children || []).forEach((el) => { if ((el._ix === 1 || el._ix === 0) && el.object3D && el.object3D.visible) { el.object3D.visible = false; VRN.hidden.push(el.object3D); } });
+    Array.from(spots.children || []).forEach((el) => { if ((el._ix === 1 || (el._ix === 0 && (inVR || el._label === "Irányjelző tábla"))) && el.object3D && el.object3D.visible) { el.object3D.visible = false; VRN.hidden.push(el.object3D); } });
     if (busy || VRN.trans) { if (VRN.g) VRN.g.visible = false; return; }
     if (!VRN.g || VRN.scene !== current) vrnBuild();
+    if (!inVR) vrn2dWire();
     if (!VRN.g) return; VRN.g.visible = true;
     const h = headPos(_vrnH || (_vrnH = new THREE.Vector3())), f = headDir(_vrnF || (_vrnF = new THREE.Vector3())); f.y = 0; if (f.lengthSq() < 1e-6) f.set(0, 0, -1); f.normalize();
     const hovSet = new Set(Object.values(VRN.hov).filter(Boolean)), menuOpen = !!(VRS.panel || (XRP.wristP && XRP.wristP.open) || (typeof SM !== "undefined" && SM.open));
@@ -9208,7 +9211,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const gl = Math.max(mk.hot, mk.foc * .6); mk.ring.material.color.copy(white).lerp(gold, gl);
       mk.ring.material.opacity = menuOpen ? .15 : (.55 + .35 * Math.max(mk.vis, mk.hot));
       /* állandó látószög: a címke mérete a távolsággal arányos (≈1,7°-os betűmagasság) */
-      const d3 = Math.max(.8, mk.m.position.distanceTo(h)), W = .64 * d3 * (1 + .06 * mk.hot), Hh = W * mk.cvs.height / mk.cvs.width;
+      const d3 = Math.max(.8, mk.m.position.distanceTo(h)), W = .64 * d3 * (1 + .06 * mk.hot) * (inVR ? 1 : device === "phone" ? 1.2 : .78), Hh = W * mk.cvs.height / mk.cvs.width;
       mk.lbl.scale.set(W, W, 1); mk.lbl.material.opacity = mk.vis * (mk.dist < .8 && !hot ? 0 : 1); mk.lbl.visible = mk.lbl.material.opacity > .02;
       const legL = mk.floor ? Math.max(.22, Math.min(1.1, .17 * d3)) : .3, yaw = Math.atan2(h.x - mk.m.position.x, h.z - mk.m.position.z);
       mk.lbl.position.set(0, mk.floor ? legL + Hh * .5 : -(.38 + Hh * .5), 0);
@@ -9217,6 +9220,22 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     });
   }
   let _vrnH = null, _vrnF = null, _vrnGold = null, _vrnWhite = null;
+  /* 2D: egérrel / ujjal is: rámutatás (arany) és kattintás/koppintás a gyűrűre vagy a címkére */
+  function vrn2dPick(ev) {
+    if (!VRN.list.length || !sceneEl || !sceneEl.canvas) return null;
+    const r = sceneEl.canvas.getBoundingClientRect(), x = ((ev.clientX - r.left) / r.width) * 2 - 1, y = -((ev.clientY - r.top) / r.height) * 2 + 1;
+    const rc = _vrnRC || (_vrnRC = new THREE.Raycaster()), c = camObj(); if (!c) return null; rc.setFromCamera({ x, y }, c);
+    const objs = []; VRN.list.forEach((mk) => { objs.push(mk.hit); if (mk.lbl.visible) objs.push(mk.lbl); });
+    const hit = rc.intersectObjects(objs, false)[0]; if (!hit) return null;
+    return VRN.list.find((mk) => mk.hit === hit.object || mk.lbl === hit.object) || null;
+  }
+  let _vrnRC = null, _vrnDown = null;
+  function vrn2dWire() {
+    if (vrn2dWire.ok || !sceneEl || !sceneEl.canvas) return; vrn2dWire.ok = true; const cv = sceneEl.canvas;
+    cv.addEventListener("pointermove", (ev) => { if (!nav2dOn() || ev.pointerType === "touch") return; const mk = vrn2dPick(ev); VRN.hov.mouse = mk; cv.style.cursor = mk ? "pointer" : ""; });
+    cv.addEventListener("pointerdown", (ev) => { _vrnDown = { x: ev.clientX, y: ev.clientY, t: performance.now() }; });
+    cv.addEventListener("pointerup", (ev) => { if (!nav2dOn() || !_vrnDown || busy) return; const d = Math.hypot(ev.clientX - _vrnDown.x, ev.clientY - _vrnDown.y); if (d > 8 || performance.now() - _vrnDown.t > 600) return; const mk = vrn2dPick(ev); if (mk) { ev.stopPropagation(); vrnGo(mk); } });
+  }
   function vrHaptic(h, v, ms) {
     if (!h) { Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, v, ms)); return; }
     try { const tc = h.components["tracked-controls"], src = tc && tc.controller, gp = src && src.gamepad; const a = gp && gp.hapticActuators && gp.hapticActuators[0]; if (a && a.pulse) a.pulse(v, ms); } catch (e) {}
@@ -9938,7 +9957,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     });
   }
   function lmTick() {
-    if (!inVR || worldOn() || busy) { if (LM.g) LM.g.visible = false; return; }
+    if ((!inVR && !nav2dOn()) || worldOn() || busy) { if (LM.g) LM.g.visible = false; return; }
     if (LM.scene !== current) lmBuild();
     if (!LM.g) return; LM.g.visible = true;
     const h = headPos(_lmH || (_lmH = new THREE.Vector3())), f = headDir(_lmF || (_lmF = new THREE.Vector3())); LM.g.position.set(h.x, h.y, h.z);
@@ -11079,6 +11098,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     AFRAME.registerComponent("zephyr-xr", {
       tick: function (t, dt) {
         try { if (inVR) xrTick(); } catch (e) { if (!XRP.err) { XRP.err = 1; console.warn("xr", e); } }
+        /* VR 2.0: a 2D sétában (gépen, telefonon) is ugyanazok az útjelzők és a látnivalók a horizonton */
+        if (!inVR && NAV2D) { try { vrnTick(); } catch (e) { if (!XRP.err2) { XRP.err2 = 1; console.warn("vrn2d", e); } } try { lmTick(); } catch (e) {} }
         try { if (SUN.on && SUN.scene !== current) { sunPlace(); sunPanel2D(true); } } catch (e) {}
         try { if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.tick(Math.min(.1, (dt || 16) / 1000)); } catch (e) { if (!XRP.werr) { XRP.werr = 1; console.warn("world", e); } }
       }

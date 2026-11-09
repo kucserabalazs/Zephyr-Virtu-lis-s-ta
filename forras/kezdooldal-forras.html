@@ -939,6 +939,35 @@ body { font: 500 18px/1.6 var(--body); }
 .zh-sub { font: 500 clamp(18px, 1.7vw, 23px)/1.45 var(--body); color: #F2F6FA; margin: 0 0 30px; max-width: 34ch; text-shadow: 0 2px 16px rgba(0,0,0,.4); }
 .hero-cta { justify-content: flex-start !important; flex-wrap: wrap; gap: 14px !important; }
 @media (max-width: 700px) { .hero::before { background: linear-gradient(0deg, rgba(7,24,44,.82) 0%, rgba(7,24,44,.45) 55%, rgba(7,24,44,.1) 100%); } .hero-cta .btn { flex: 1 1 100%; } .zh-h1 { max-width: none; } }
+
+/* --- a ChatGPT HTML/CSS koncepciójából (zephyr_homepage_concept.html) átvéve, a működő oldalhoz igazítva --- */
+/* fejléc: mindig fehér sáv, nagy logó arany elválasztóval, mélykék menüpontok, arany „Foglalás” gomb */
+.nav, .nav.solid { background: rgba(255,255,255,.98); box-shadow: 0 1px 0 #e4ebf2, 0 8px 24px rgba(7,24,44,.08); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.nav .wrap { max-width: 1440px; padding-block: 14px; }
+.nav-logo { display: flex; align-items: center; gap: 18px; }
+.nav-logo img { height: 54px; filter: none; }
+.nav-logo::after { content: ""; width: 2px; height: 44px; background: #D4A13A; }
+.nav-links a { color: #0B2F5E; font: 650 17px/1 var(--body); padding: 12px 13px; border-radius: 10px; }
+.nav-links a:hover { background: rgba(11,47,94,.07); color: #8c6917; }
+.nav .btn-gold { border-radius: 12px; font-size: 18px; padding: 15px 22px; box-shadow: 0 4px 16px rgba(184,136,53,.25); }
+.nav-burger { color: #0B2F5E; background: #F4F7FA; border: 1px solid #CED9E5; border-radius: 10px; }
+.nav .zi-btn { color: #0B2F5E !important; background: #F4F7FA !important; border: 1px solid #D8E0E9 !important; border-radius: 10px !important; font-weight: 750; }
+.hero { margin-top: 0; }
+/* szekciócímek: középre, arany vonalak és vitorlás-jel között; nagy, jól olvasható Inter */
+.sec-head h2 { font: 780 clamp(32px, 4.2vw, 50px)/1.12 var(--body); letter-spacing: -.03em; text-transform: none; color: #0B2F5E; }
+.sec-head h2 em { font: 600 .62em/1.2 var(--body); color: #49627B; display: block; margin: 6px 0 0; letter-spacing: -.01em; }
+.sec-head .lead { font-size: 19px; color: #40617A; }
+.eyebrow { color: #9a7424 !important; letter-spacing: .22em; }
+/* apartmankártyák: fehér kártya, valódi fotó, mélykék névsáv arany nyíllal */
+.apt { border-radius: 15px; border: 1px solid #e0e7ed; box-shadow: 0 12px 22px rgba(24,53,81,.08); }
+.apt-body h3 { font: 780 30px/1.05 var(--body); text-transform: none; letter-spacing: -.02em; color: #0B2F5E; }
+.apt-meta { font-size: 16px; }
+.apt-flag { font-family: var(--body); font-weight: 800; }
+.btn-line { border-radius: 12px; border-width: 2px; color: #0B2F5E; border-color: #0B2F5E; }
+/* hero „jellemzők” sor */
+.zh-feats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 26px; color: #D9E7F4; font: 650 17px/1 var(--body); }
+.zh-feats span { display: inline-flex; align-items: center; gap: 9px; } .zh-feats svg { width: 22px; height: 22px; stroke: #E4BB63; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 700px) { .nav-logo img { height: 40px; } .nav-logo::after { display: none; } .zh-feats { display: none; } .sec-head .lead { font-size: 17px; } }
 </style>
 <!--ZEPHYR-BOOKING-CSS-->
 
@@ -1018,6 +1047,12 @@ body { font: 500 18px/1.6 var(--body); }
       <a class="btn btn-gold" href="#apartmanok"><svg><use href="#i-anchor"/></svg>Apartmanjaink</a>
       <a class="btn btn-ghost" data-tour="" href="../virtualis-seta/?honnan=kezdolap"><svg><use href="#i-360"/></svg>Virtuális séta</a>
       <button type="button" class="btn btn-red" data-book=""><svg><use href="#i-cal"/></svg>Szabad napok, foglalás</button>
+    </div>
+    <div class="zh-feats" aria-label="Kiemelt szolgáltatások">
+      <span><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 1 9 9H3a9 9 0 0 1 9-9zM12 12v9M8 21h8"/></svg>Saját napozóstég</span>
+      <span><svg viewBox="0 0 24 24"><path d="M12 2c3 4 3 16 0 20-3-4-3-16 0-20zM17 3l-3 19"/></svg>Ingyenes SUP</span>
+      <span><svg viewBox="0 0 24 24"><path d="M5.5 17.5a3.5 3.5 0 1 0 0-.01M18.5 17.5a3.5 3.5 0 1 0 0-.01M5.5 17.5 9 9h6l3.5 8.5M9 9l3 8.5L15 9"/></svg>Kerékpárok</span>
+      <span><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"/></svg>360° séta és VR</span>
     </div>
   </div>
   <a class="hero-cue" href="#apartmanok" aria-label="Görgess lejjebb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.2V20M7.5 10.5h9M5 14c.8 3.5 3.6 6 7 6s6.2-2.5 7-6"/></svg>Görgess</a>
