@@ -1447,9 +1447,14 @@ case 'availability':
     if (!valid_date($to) || $to <= $from) { $to = add_days($from, 400); }
     if (nights($from, $to) > 430) { $to = add_days($from, 430); }
     if (maybe_sync($db)) { db_save($db); }
-    $busy = busy_map($db, $apt, $from, $to);
+    $busy = busy_map($db, $apt, add_days($from, -1), $to);   /* egy nappal korábbról is: a nyitónapon távozó vendég is látsszon */
     $days = array();
-    for ($d = $from; $d < $to; $d = add_days($d, 1)) { $days[] = array('d' => $d, 'p' => price_for($s, $apt, $d), 'free' => day_free($s, $d, $busy)); }
+    for ($d = $from; $d < $to; $d = add_days($d, 1)) {
+        /* érkezés/távozás jelzése a naptárban (a tulajdonos kérése, nov. 9.): személyes adat nélkül, csak hogy aznap jön-e/megy-e vendég; a zárt (családi) napok nem számítanak */
+        $b = isset($busy[$d]) ? $busy[$d] : null; $pd = add_days($d, -1); $pb = isset($busy[$pd]) ? $busy[$pd] : null;
+        $days[] = array('d' => $d, 'p' => price_for($s, $apt, $d), 'free' => day_free($s, $d, $busy),
+            'arr' => ($b && $b['checkin'] === $d && !is_closed_ext($b)) ? 1 : 0, 'dep' => ($pb && $pb['checkout'] === $d && !is_closed_ext($pb)) ? 1 : 0);
+    }
     out(array('apt' => $apt, 'days' => $days));
 
 case 'book':
