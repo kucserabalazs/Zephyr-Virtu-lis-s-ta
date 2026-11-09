@@ -9939,7 +9939,14 @@ if (/^https?:$/.test(location.protocol) && !/(^|\.)(claude\.ai|claudeusercontent
     if (dict[k] != null) return dict[k];
     const nums = []; const p = k.replace(NUM, (m) => { nums.push(m); return "{#}"; });
     if (nums.length && dict[p] != null) { let i = 0; return dict[p].replace(/\{#\}/g, () => (nums[i++] != null ? nums[i - 1] : "")); }
-    if (k.includes(" · ")) { const parts = k.split(" · "); const o = parts.map((x) => tr1(x)); if (o.some((x, i) => x !== parts[i])) return o.join(" · "); }   /* összetett felirat: részenként */
+    return trParts(k);   /* összetett felirat („A · B”, „A – B”): részenként */
+  }
+  function trParts(k) {
+    for (const sep of [" · ", " – "]) {
+      if (!k.includes(sep)) continue;
+      const parts = k.split(sep), o = parts.map((x) => { const y = tr1(x); return y !== x ? y : (trParts(x) ?? x); });
+      if (o.some((x, i) => x !== parts[i])) return o.join(sep);
+    }
     return null;
   }
   /* szövegcsomópontok: az eredeti magyar szöveget megjegyezzük, hogy nyelvváltáskor visszaállítható legyen */

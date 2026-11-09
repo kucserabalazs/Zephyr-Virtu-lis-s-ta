@@ -9327,7 +9327,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
   /* rövid cím (≤ 24 karakter): a hosszú link-leírás helyett a cél neve; a hosszú leírás rámutatáskor 2. sorban */
   function vrnTitle(link) {
-    const lb = String(link[3] || "").replace(/\n/g, " · ").trim(), sc = SCENES[link[0]], nm = sc ? String(sc.n || "").replace(/\n/g, " ") : "";
+    const sc = SCENES[link[0]], lb = vT(String(link[3] || "").replace(/\n/g, " · ").trim()), nm = sc ? vT(String(sc.n || "").replace(/\n/g, " ")) : "";   /* a választott nyelven */
     if (lb && lb.length <= 24) return { t: lb, sub: "" };
     return { t: nm && nm.length <= 26 ? nm : lb.slice(0, 22) + "…", sub: lb };
   }
@@ -10032,7 +10032,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   const vAdd = (s, n) => { const d = vPd(s); d.setDate(d.getDate() + n); return vYmd(d); };
   const vDiff = (a, b) => Math.round((vPd(b) - vPd(a)) / 864e5);
   const HU_MON = ["január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december"];
-  const vHu = (s, wd) => { const d = vPd(s); return HU_MON[d.getMonth()].slice(0, 3) + ". " + d.getDate() + "." + (wd === false ? "" : " " + ["vas.", "hétfő", "kedd", "szerda", "csüt.", "péntek", "szomb."][d.getDay()]); };
+  const vHu = (s, wd) => { const d = vPd(s); if (window.ZI18N && ZI18N.lang !== "hu") { try { return new Intl.DateTimeFormat(ZI18N.lang, wd === false ? { month: "short", day: "numeric" } : { weekday: "short", month: "short", day: "numeric" }).format(d); } catch (e) {} }   /* más nyelven helyi dátumformátum */
+    return HU_MON[d.getMonth()].slice(0, 3) + ". " + d.getDate() + "." + (wd === false ? "" : " " + ["vas.", "hétfő", "kedd", "szerda", "csüt.", "péntek", "szomb."][d.getDay()]); };
   const vMoney = (n) => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " Ft";
   const BK_FIELDS = [
     ["name", "Teljes név", "pl. Kiss Anna"], ["phone", "Telefonszám", "+36 30 123 4567"],
@@ -10094,7 +10095,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     txt(g, first.getFullYear() + ". " + HU_MON[first.getMonth()], VW / 2, 225, { a: "center", fs: 40, w: 800 });
     btn(g, VW - 130, 190, 90, 70, "›", () => { B.m = Math.min(12, B.m + 1); vrDraw(); }, { off: B.m >= 12, fs: 46 });
     const cw = (VW - 80) / 7, ch = 58, y0 = 298;
-    ["H", "K", "Sze", "Cs", "P", "Szo", "V"].forEach((d, i) => txt(g, d, 40 + i * cw + cw / 2, 282, { a: "center", fs: 24, w: 700, c: "rgba(255,255,255,.6)" }));
+    ["H", "K", "Sze", "Cs", "P", "Szo", "V"].forEach((d, i) => txt(g, window.ZI18N && ZI18N.lang !== "hu" ? ZI18N.t("nap:" + d) : d, 40 + i * cw + cw / 2, 282, { a: "center", fs: 24, w: 700, c: "rgba(255,255,255,.6)" }));
     const off = (first.getDay() + 6) % 7, dim = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
     for (let k = 1; k <= dim; k++) {
       const i = off + k - 1, x = 40 + (i % 7) * cw, y = y0 + Math.floor(i / 7) * (ch + 6), d = vYmd(new Date(first.getFullYear(), first.getMonth(), k));
@@ -10119,7 +10120,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     /* alul: kiválasztott időszak + létszám + tovább */
     const yb = VH - 128;
     const nights = B.ci && B.co ? vDiff(B.ci, B.co) : 0, minN = c.min_nights || 1;
-    const sel = !B.ci ? "Csippents az érkezés napjára" : !B.co ? vHu(B.ci) + " → csippents a távozás napjára" : vHu(B.ci) + " → " + vHu(B.co) + " · " + nights + " éj";
+    const sel = !B.ci ? "Csippents az érkezés napjára" : !B.co ? vHu(B.ci) + " → " + vT("csippents a távozás napjára") : vHu(B.ci) + " → " + vHu(B.co) + " · " + vT(nights + " éj");
     const step = (x, label, val, dn, up) => { txt(g, label, x, yb + 48, { fs: 26, w: 600, c: "rgba(255,255,255,.8)" }); btn(g, x + 118, yb + 10, 70, 76, "−", dn, { fs: 44 }); txt(g, String(val), x + 220, yb + 48, { a: "center", fs: 38, w: 800 }); btn(g, x + 252, yb + 10, 70, 76, "+", up, { fs: 44 }); };
     const capAll = c.apartments.reduce((s, a) => s + a.cap, 0);
     step(44, "Felnőtt", B.adults, () => { B.adults = Math.max(1, B.adults - 1); vrDraw(); }, () => { B.adults = Math.min(capAll - B.children, B.adults + 1); vrDraw(); });
@@ -10170,7 +10171,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* 2. lépés – apartmanok */
   function bkApts(g, B) {
     const fr = bkFreeAptsNow(B), need = bkNeed(B);
-    txt(g, `${vHu(B.ci)} → ${vHu(B.co)} · ${vDiff(B.ci, B.co)} éj · ${B.adults} felnőtt${B.children ? " + " + B.children + " gyermek" : ""}`, 44, 215, { fs: 30, w: 700, c: "#ffd166" });
+    txt(g, `${vHu(B.ci)} → ${vHu(B.co)} · ${vT(vDiff(B.ci, B.co) + " éj")} · ${B.adults} felnőtt${B.children ? " + " + B.children + " gyermek" : ""}`, 44, 215, { fs: 30, w: 700, c: "#ffd166" });
     if (!fr.length) { txt(g, "Erre az időszakra már nincs szabad apartman.", VW / 2, 420, { a: "center", fs: 34 }); }
     const cw = (VW - 80 - 24) / 2, ch = fr.length > 4 ? 120 : 150;
     fr.forEach((a, i) => {
@@ -10235,7 +10236,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function bkSum(g, B) {
     const c = bkCfg(), q = bkQ(B), p = ZephyrBooking.vr.price(q);
     const names = B.sel.map((id) => (c.apartments.find((a) => a.id === id) || {}).name).join(" + ");
-    const L = [["Időszak", `${vHu(B.ci)} → ${vHu(B.co)} (${p.n} éj)`], ["Apartman", names], ["Vendégek", `${B.adults} felnőtt${B.children ? ", " + B.children + " gyermek" : ""}`], ["Foglaló", `${B.form.name} · ${B.form.email}`]];
+    const L = [["Időszak", `${vHu(B.ci)} → ${vHu(B.co)} (${vT(p.n + " éj")})`], ["Apartman", names], ["Vendégek", `${B.adults} felnőtt${B.children ? ", " + B.children + " gyermek" : ""}`], ["Foglaló", `${B.form.name} · ${B.form.email}`]];
     L.forEach(([k, v], i) => { txt(g, k, 60, 222 + i * 50, { fs: 26, w: 600, c: "rgba(255,255,255,.65)" }); txt(g, v, 300, 222 + i * 50, { fs: 30, w: 700 }); });
     const P = [["Szállásdíj", p.acc]]; if (p.disc) P.push([`Játék-kedvezmény (${p.discPct}%)`, -p.disc]);
     P.push([`Idegenforgalmi adó (${B.adults} fő × ${p.n} éj × ${vMoney(p.taxPer)})`, p.tax]);
@@ -10275,7 +10276,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     row("APARTMAN", apts || "–", y0 + 344); txt(g, `${vDiff(B.ci, B.co)} éj · ${B.adults} felnőtt${B.children ? " + " + B.children + " gyermek" : ""}`, x0 + 420, y0 + 214, { fs: 26, w: 650, c: "#40617A" });
     txt(g, "AZONOSÍTÓ", cx + 40, y0 + 180, { fs: 22, w: 700, c: "#7a6a4a" }); txt(g, r.demo ? "BEMUTATÓ" : (r.ref || "–"), cx + 40, y0 + 216, { fs: 32, w: 800, c: ZT.navy });
     zMotif(g, "tulipan", cx + (x0 + W - cx) / 2, y0 + 330, 120, "#B58A2E", .9);
-    txt(g, r.demo ? "Bemutató mód – a kérés nem lett elküldve." : `A tulajdonos hamarosan visszaigazolja e-mailben (${B.form.email || ""}) – addig a napokat fenntartjuk.`, VW / 2, y0 + H + 46, { a: "center", fs: 24, w: 600, c: ZT.text });
+    txt(g, r.demo ? "Bemutató mód – a kérés nem lett elküldve." : vT("A tulajdonos hamarosan visszaigazolja e-mailben ({E}) – addig a napokat fenntartjuk.").split("{E}").join(B.form.email || ""), VW / 2, y0 + H + 46, { a: "center", fs: 24, w: 600, c: ZT.text });
     if (c.phone) txt(g, "Kérdés esetén: " + c.phone + " · " + (c.email || ""), VW / 2, y0 + H + 84, { a: "center", fs: 22, w: 500, c: ZT.sub });
     btn(g, VW / 2 - 260, VH - 96, 520, 76, "Vissza a sétához", () => { VRS.book = null; vrClose(); }, { on: 1, fs: 32 });
   }
@@ -10530,7 +10531,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       let row = 0; while (rows.some((q) => q.row === row && Math.abs(((q.brg - brg + 540) % 360) - 180) < 11)) row++; rows.push({ row, brg });
       const el = (2.6 + row * 2.4) * Math.PI / 180;
       const c = document.createElement("canvas"); c.width = 640; c.height = 120; const g = c.getContext("2d");
-      g.font = ZT.font(650, 44); const t1 = n, t2 = (km < 10 ? km.toFixed(1).replace(".", ",") : Math.round(km)) + " km";
+      g.font = ZT.font(650, 44); const t1 = vT(n), t2 = (km < 10 ? km.toFixed(1).replace(".", ",") : Math.round(km)) + " km";
       const w1 = g.measureText(t1).width; g.font = ZT.font(500, 34); const w2 = g.measureText(t2).width; const bw = Math.min(632, w1 + w2 + 130), x0 = (640 - bw) / 2;
       g.beginPath(); g.roundRect ? g.roundRect(x0, 14, bw, 92, 46) : g.rect(x0, 14, bw, 92); g.fillStyle = "rgba(7,24,44,.82)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(228,187,99,.6)"; g.stroke();
       zIcon(g, lmIcon(k), x0 + 48, 60, 40, ZT.soft, 2.2);
@@ -10590,6 +10591,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     return (m > 9 ? y + 1 : y) + "-07-15";
   }
   function sunCanvas(label, below) {
+    label = vT(label);
     const cv = document.createElement("canvas"); cv.width = 512; cv.height = 512; const g = cv.getContext("2d");
     const gr = g.createRadialGradient(256, 200, 10, 256, 200, 190); gr.addColorStop(0, below ? "rgba(255,190,120,.7)" : "rgba(255,255,235,1)"); gr.addColorStop(.18, below ? "rgba(255,150,80,.55)" : "rgba(255,236,150,.95)"); gr.addColorStop(.42, below ? "rgba(255,120,60,.18)" : "rgba(255,200,80,.35)"); gr.addColorStop(1, "rgba(255,180,60,0)");
     g.fillStyle = gr; g.fillRect(0, 0, 512, 400);

@@ -216,6 +216,7 @@ Nyitókép (drónvideó: `video/dron.mp4`, addig állókép; **alján a séta vi
 - claude.ai előnézet: a szótárak az előnézet mellett `nyelv/` alatt (Artifact files).
 - Ismert apróság: a {#} jelölők sorrendje kötött (dátumoknál pl. „2026, December 5”).
 - Build: `forras/tools/build.sh` (a /home/claude/build/build.sh erre mutat).
+- 2026-11-09: Foglalás 2.0, Eszközjegyzék 2.0, 2D séta, kezdőlap és a VR-panelek (súgó, napállás, Balaton-kultúra, VR-foglalás, hajójegy) új feliratai 23 nyelven (397 kulcs, köztük a naptár összes hónapjának dátumkulcsai) → munkafájl `forras/i18n/munka/uj/uj3.json`. A motor az „A – B” feliratot is részenként fordítja (mint az „A · B”-t). VR: `vHu()` más nyelven `Intl` dátum; útjelző-címkék, látnivaló-címkék, napcímke `vT()`-n át.
 
 ## 20. További apartman az adatok lépésben + ±1 hét optimalizáló – 2026-11-01
 - 3. lépés (adatok): „További apartman foglalása erre az időszakra” gomb → `addPanel()`: a szabad apartmanok „+ Hozzáadom” (`data-addapt`), a foglaltaknál `shiftFor(id)` keres ±7 napon belül azonos hosszú időszakot, amikor a már kiválasztottak ÉS ez is szabad (legkisebb eltolás) → „Csütörtöki helyett szombati érkezéssel (2 nappal később) mindkét apartman szabad: …” + „Erre az időszakra váltok és hozzáadom” (`data-shift`).
