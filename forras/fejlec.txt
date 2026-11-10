@@ -9,3 +9,8 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../Zephyr%20Apartman%20Kell%C3%A9kek/apple-touch-icon.png">
 <link rel="manifest" href="../Zephyr%20Apartman%20Kell%C3%A9kek/site.webmanifest">
 <meta name="theme-color" content="#102D4A">
+<!-- 2026-11-10: a kezdőképernyőre tett ikonról indítva teljes képernyőn fut, böngészősáv nélkül -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zephyr séta">

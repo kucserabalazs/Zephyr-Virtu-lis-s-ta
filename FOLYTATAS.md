@@ -500,3 +500,7 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
   Telefonos visszanagyítás: `--vk = k^0.6` (2× helyett kb. 1,5×) – „arany középút”.
 - Vitorlásverseny telefonon (2D, álló kép): a kamera 12 m-rel feljebb és 19 m-rel a kormány mögött, lefelé döntve (`ph2d` a 05b-vr-verseny.js-ben) – a hajó kicsi, látszik a pálya.
   A játék kezelőfelülete (`#worldHud`), a világválasztó, a stég-választó és a foglalási ablak is kap `--vk` nagyítást kicsinyített telefonos nézetben.
+- 19:55 – Stégjátékok (regatta) telefonon: a nyomva tartás szövegkijelölést / nagyítót indított iOS-en → `user-select: none`, `-webkit-touch-callout: none`,
+  a játékvásznon `touchstart/touchmove` preventDefault, `selectstart/contextmenu/gesturestart` tiltva. A ◀ ▶ gombok telefonon nagyobbak (a képernyő bal/jobb fele bárhol kormányoz).
+- A „kucserabalazs.github.io” felső sáv NEM az oldal része: a Claude app beépített böngészőjének kerete, az oldalból nem tüntethető el. Teljes képernyőhöz:
+  Safariban megnyitni → Megosztás → „Főképernyőhöz adás” (ehhez bekerült az `apple-mobile-web-app-capable` meta) – az ikonról indítva nincs böngészősáv.

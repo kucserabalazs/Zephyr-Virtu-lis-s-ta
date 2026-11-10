@@ -9,6 +9,11 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../Zephyr%20Apartman%20Kell%C3%A9kek/apple-touch-icon.png">
 <link rel="manifest" href="../Zephyr%20Apartman%20Kell%C3%A9kek/site.webmanifest">
 <meta name="theme-color" content="#102D4A">
+<!-- 2026-11-10: a kezdőképernyőre tett ikonról indítva teljes képernyőn fut, böngészősáv nélkül -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Zephyr séta">
 <title>Zephyr Virtuális Séta</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -982,6 +987,9 @@ body.walk-on .gm-dock { display: none; }
 .gm-wrap { position: fixed; inset: 0; z-index: 72; background: #0b2f5e; opacity: 0; transition: opacity .28s; outline: none; }
 .gm-wrap.on { opacity: 1; }
 .gm-cv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+/* 2026-11-10: telefonon a hosszú nyomás ne jelöljön ki szöveget / ne hozzon fel nagyítót, másolás-menüt (a kormányzás így használhatatlan volt) */
+.gm-wrap, .gm-wrap *, #worldHud, #worldHud *, a-scene, canvas, .zx-bar, .cubebox, .cubebox * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+:root[data-vwide][data-device="phone"] .gm-hd, :root[data-vwide][data-device="phone"] .gm-wrap .gm-side { zoom: var(--vk, 1); }
 .gm-hd { position: absolute; left: 10px; right: 10px; top: calc(10px + env(safe-area-inset-top, 0px)); display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 10px; border-radius: 18px; color: #fff;
   background: linear-gradient(160deg, rgba(40,86,150,.6), rgba(8,24,50,.72)); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.16), 0 12px 26px rgba(0,0,0,.3); }
 .gm-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; } .gm-tabs::-webkit-scrollbar { display: none; }
@@ -15674,9 +15682,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       g.fillStyle = "#fff"; g.font = "800 10px Manrope, Arial"; g.fillText(`${S.lvl}. pálya`, mx + mw / 2, my + 12);
       }
       if (S.st === "race" || S.st === "count") {
-        [[-1, "◀"], [1, "▶"]].forEach(([d, s2]) => { const bx = d < 0 ? 58 : W - 58, by = H - 70, on = S.steer === d;
-          g.fillStyle = on ? "rgba(242,178,51,.85)" : "rgba(7,29,56,.55)"; g.beginPath(); g.arc(bx, by, 36, 0, 7); g.fill(); g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = 2; g.stroke();
-          g.fillStyle = "#fff"; g.font = "900 28px Manrope, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(s2, bx + d * 2, by + 1); });
+        const uk = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--vk")) || 1) * (W < 900 && H > W ? 1.25 : 1);   /* telefonon nagyobb kormánygombok; a képernyő bal / jobb fele bárhol kormányoz */
+        [[-1, "◀"], [1, "▶"]].forEach(([d, s2]) => { const bx = d < 0 ? 62 * uk : W - 62 * uk, by = H - 76 * uk, on = S.steer === d;
+          g.fillStyle = on ? "rgba(242,178,51,.9)" : "rgba(7,29,56,.6)"; g.beginPath(); g.arc(bx, by, 40 * uk, 0, 7); g.fill(); g.strokeStyle = "rgba(255,255,255,.8)"; g.lineWidth = 2.5 * uk; g.stroke();
+          g.fillStyle = "#fff"; g.font = "900 " + Math.round(30 * uk) + "px Manrope, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(s2, bx + d * 2, by + 1); });
         /* újraindítás ugyanazon a pályán */
         L.rs = ph ? { x: W / 2 - 32, y: H - 88, w: 64, h: 30 } : { x: 26, y: y + R0 + 42, w: 64, h: 30 }; g.fillStyle = "rgba(7,29,56,.65)"; g.beginPath(); g.roundRect ? g.roundRect(L.rs.x, L.rs.y, L.rs.w, L.rs.h, 15) : g.rect(L.rs.x, L.rs.y, L.rs.w, L.rs.h); g.fill();
         g.fillStyle = "#fff"; g.font = "800 12px Manrope, Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("↻ Újra", L.rs.x + 32, L.rs.y + 15);
@@ -17325,6 +17334,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       gmEl.querySelector(".gm-tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-gm]"); if (b) { gmStart(b.dataset.gm); gmMenu(false); } });
       gmEl.querySelector(".gm-cur").addEventListener("click", () => gmMenu(gmEl.querySelector(".gm-hd").classList.contains("min")));
       const pos = (e) => { const r = gmCv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+      /* iOS: a nyomva tartás ne indítson szövegkijelölést, nagyítót vagy helyi menüt a játék fölött */
+      ["touchstart", "touchmove"].forEach((n) => gmCv.addEventListener(n, (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false }));
+      ["selectstart", "contextmenu", "gesturestart", "dragstart"].forEach((n) => gmEl.addEventListener(n, (e) => e.preventDefault()));
       gmCv.addEventListener("pointerdown", (e) => { gmMenu(false); gmInput = performance.now(); try { gmCv.setPointerCapture(e.pointerId); } catch (x) {} const [x, y] = pos(e); gmGame && gmGame.down && gmGame.down(x, y, gmCv.clientWidth, gmCv.clientHeight, e); e.preventDefault(); });
       gmCv.addEventListener("pointermove", (e) => { const [x, y] = pos(e); gmGame && gmGame.move && gmGame.move(x, y, gmCv.clientWidth, gmCv.clientHeight, e); });
       gmCv.addEventListener("pointerup", (e) => { gmInput = performance.now(); const [x, y] = pos(e); gmGame && gmGame.up && gmGame.up(x, y, gmCv.clientWidth, gmCv.clientHeight, e); });
