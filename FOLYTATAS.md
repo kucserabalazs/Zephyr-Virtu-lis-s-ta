@@ -504,3 +504,15 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
   a játékvásznon `touchstart/touchmove` preventDefault, `selectstart/contextmenu/gesturestart` tiltva. A ◀ ▶ gombok telefonon nagyobbak (a képernyő bal/jobb fele bárhol kormányoz).
 - A „kucserabalazs.github.io” felső sáv NEM az oldal része: a Claude app beépített böngészőjének kerete, az oldalból nem tüntethető el. Teljes képernyőhöz:
   Safariban megnyitni → Megosztás → „Főképernyőhöz adás” (ehhez bekerült az `apple-mobile-web-app-capable` meta) – az ikonról indítva nincs böngészősáv.
+
+## 2026. nov. 10. este – FOGYASZTÁS / TELJESÍTMÉNY (hangos megbeszélés alapján) – MEGÁLLAPODOTT SORREND
+A tulajdonos telefonja a tesztelés alatt 40% töltést vesztett és forró lett. Megbeszéltük, jóváhagyta („Tökéletes, kezd a munkát”):
+1. **KÉSZ (nov. 10. este):** gyors fogyasztáscsökkentés – `zvGov`: a 2D séta nyugalomban ~8 képkocka/mp (mozdulatra azonnal teljes), `zvPix`: telefonon/táblagépen
+   legfeljebb 2× rajzolási felbontás (iPhone 3× helyett) – ez a 3D-világokra is érvényes (ugyanaz a renderelő). Megjegyzés: a 8K panoráma telefonon EDDIG IS tiltva volt
+   (`hiAllowed`: iOS és nem-pc → 4K) – ezt a hívásban tévesen újdonságként ígértem.
+2. **KÖVETKEZŐ:** a STÉGJÁTÉKOS vitorlásverseny (`gameRace`, most 2D vászonrajz) hajói valódi 3D modellként, ELŐRE KISÜTÖTT fénnyel/árnyékkal; a mozgás (dőlés, lobogó
+   vitorla, spinakker), a szabályok és a stégről nézett nézőpont marad. Mérni: szebb-e, és mennyit fogyaszt. Választható DÖNTÉSES kormányzás (telefon billentése) a gombok mellé.
+3. Utána a kis DEKORÁCIÓS regatta (a séta alján futó sáv) ugyanazokkal a modellekkel, különösen takarékosan (ha nem látszik / nincs előtérben, álljon le).
+4. A végén a szemüveges (VR) világok: stég, hajók, makett – ugyanezzel a kisütött technikával.
+- Szabály: gépen a megjelenés nem romolhat; csak akkor szólok, ha valami megnézhető, vagy kinézetet érintő döntés kell.
+- Telefonos ellenőrzés Safariban (nem a Claude app beépített böngészőjében – annak sávja és kétszeres szélessége nem az oldal hibája).

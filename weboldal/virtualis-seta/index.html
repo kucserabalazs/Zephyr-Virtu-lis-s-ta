@@ -6867,6 +6867,31 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     sceneEl.append(sky, sky2, spots, rig);
     $("stage").appendChild(sceneEl);
 
+    /* ---- FOGYASZTÁS (2026-11-10 este): a 2D séta nyugalomban ne számoljon teljes erővel ----
+       Ha pár másodpercig nincs érintés / egér / billentyű / forgás, nincs séta, áttűnés, körbeforgás, VR és 3D-világ, akkor a kép másodpercenként
+       csak ~8-szor rajzolódik újra (az álló panorámán ez nem látszik, a jelzők lüktetése megmarad). Bármilyen mozdulatra azonnal teljes sebesség.
+       Telefonon a rajzolási felbontás legfeljebb 2× (iPhone-on 3× lenne: több mint kétszer annyi képpont, látható nyereség nélkül). */
+    let zvWakeT = performance.now() + 6000;
+    const zvWake = (ms) => { const t = performance.now() + (ms || 2500); if (t > zvWakeT) zvWakeT = t; };
+    window.zvWake = zvWake;
+    ["pointerdown", "pointerup", "touchstart", "touchmove", "touchend", "wheel", "keydown", "resize", "orientationchange", "focus"].forEach((n) => window.addEventListener(n, () => zvWake(2500), { passive: true, capture: true }));
+    window.addEventListener("pointermove", (e) => { if (e.buttons || e.pointerType !== "mouse") zvWake(2500); else zvWake(700); }, { passive: true, capture: true });
+    { let la = null, lb = null; window.addEventListener("deviceorientation", (e) => { if (la == null || Math.abs(e.alpha - la) > .35 || Math.abs(e.beta - lb) > .35) { la = e.alpha; lb = e.beta; zvWake(900); } }, { passive: true }); }
+    const zvPix = () => { try { const r = sceneEl.renderer; if (!r || sceneEl.is("vr-mode")) return; const cap = device === "phone" ? 2 : device === "tablet" ? 2 : 3, pr = Math.min(window.devicePixelRatio || 1, cap); if (Math.abs(r.getPixelRatio() - pr) > .01) { r.setPixelRatio(pr); const c = sceneEl.canvas; if (c && sceneEl.camera) r.setSize(c.clientWidth || innerWidth, c.clientHeight || innerHeight, false); } } catch (e) {} };
+    const zvGov = () => { try {
+      const r = sceneEl.renderer; if (!r || sceneEl._zvG || typeof sceneEl.render !== "function") return; sceneEl._zvG = 1;
+      const base = sceneEl.render; let last = 0; const q0 = new THREE.Quaternion(), q1 = new THREE.Quaternion();
+      r.setAnimationLoop((t, frame) => {
+        if (frame || inVR || sceneEl.is("vr-mode") || sceneEl.is("ar-mode")) return base(t, frame);
+        const now = performance.now(), act = now < zvWakeT || busy || walking || autoRotate || EDIT || document.body.classList.contains("world-on") || (window.ZephyrWorld && ZephyrWorld.active);
+        if (!act && now - last < 125) return;
+        last = now; base(t, frame);
+        try { const c = sceneEl.camera; if (c) { c.getWorldQuaternion(q1); if (Math.abs(q1.dot(q0)) < .9999995) { q0.copy(q1); zvWake(700); } } } catch (e) {}
+      });
+      zvPix();
+    } catch (e) {} };
+    if (sceneEl.renderStarted) zvGov(); else sceneEl.addEventListener("renderstart", zvGov, { once: true });
+    window.addEventListener("resize", () => setTimeout(zvPix, 250)); sceneEl.addEventListener("exit-vr", () => setTimeout(zvPix, 600));
     sceneEl.addEventListener("enter-vr", () => { if (sceneEl.is("vr-mode") || sceneEl.is("ar-mode")) vrEnter(); });
     sceneEl.addEventListener("exit-vr", () => vrExit());
     return new Promise((res) => sceneEl.hasLoaded ? res() : sceneEl.addEventListener("loaded", res, { once: true })).then(() => {
