@@ -545,3 +545,4 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
   (csúcsszín, MeshBasicMaterial); a fényes részek (lakkozott test, króm, karbon) matcap anyagot kapnak (`vrMatcap`). A vitorlák/zászlók (kétoldalas, mozgó) és az
   áttetsző/világító anyagok maradnak élő fényben. Kikapcsolás: localStorage `zephyr-bake` = `0`. Gépen előtte–utána képen közel azonos látvány.
   NEM KÉSZ még: a hajó ÚJ RÉSZLETEI (a jóváhagyott terv szerint: kötélzet a csörlőkig, feszítők, léczsebek, műszerek stb.), a vitorlák kisütése, mérés Quest 2-n.
+- 2026-11-11 00:40 – Regatta-modellek javítása a tulajdonos telefonos képei alapján: nagyobb kivágás (a közeli hajó/spinakker egyenes vonallal le volt vágva), a vitorlaszám a hátoldalról nézve sem tükrös (a textúra U-tükrözése nézet szerint).

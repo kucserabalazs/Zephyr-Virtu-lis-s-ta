@@ -15540,8 +15540,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         const M = b._gl, ph = b.ph || 0, ch = Math.cos(b.heel), sh = Math.sin(b.heel), cs = Math.cos(b.hd), sn = Math.sin(b.hd), bob = Math.sin(t * 1.6 + ph) * .08 + Math.sin(t * 2.7 + ph * 2) * .03, pitch = Math.sin(t * 1.75 + ph) * .035 * (1 + b.v / 5) + Math.sin(t * 3.1 + ph) * .012, cp = Math.cos(pitch), sp = Math.sin(pitch);
         M.G.matrix.set((ch * cs + sh * sp * sn) * K, (sh * cs - ch * sp * sn) * K, cp * sn * K, b.X, -sh * cp * K, ch * cp * K, sp * K, bob, -(-ch * sn + sh * sp * cs) * K, -(-sh * sn - ch * sp * cs) * K, -cp * cs * K, -b.Z, 0, 0, 0, 1); M.G.matrixWorldNeedsUpdate = true;
         bglSails(M, b, t);
+        { const e = M.G.matrix.elements, wp = (lx, ly, lz) => proj(C, e[0] * lx + e[4] * ly + e[8] * lz + e[12], e[1] * lx + e[5] * ly + e[9] * lz + e[13], -(e[2] * lx + e[6] * ly + e[10] * lz + e[14]));
+          const bS = Math.sin(b.boom), bC = Math.cos(b.boom), a = wp(0, 1.75, .9), h2 = wp(0, 11.1, .9), cl = wp(bS * 4.6, 1.75, .9 - bC * 4.6), mp = M.main.material.map;
+          if (a && h2 && cl && mp) { const back = (h2.x - a.x) * (cl.y - a.y) - (h2.y - a.y) * (cl.x - a.x) < 0, rx = back ? -1 : 1; if (mp.repeat.x !== rx) { mp.repeat.x = rx; mp.offset.x = back ? 1 : 0; } } }
         const c0 = proj(C, b.X, 0, b.Z); if (!c0) return true;
-        const s = c0.s * K, x0 = Math.max(0, Math.floor(c0.x - 9.5 * s)), x1 = Math.min(W, Math.ceil(c0.x + 9.5 * s)), y0 = Math.max(0, Math.floor(c0.y - 13.5 * s)), y1 = Math.min(H, Math.ceil(c0.y + 2.2 * s)); if (x1 - x0 < 2 || y1 - y0 < 2) return true;
+        const s = c0.s * K, x0 = Math.max(0, Math.floor(c0.x - 16 * s)), x1 = Math.min(W, Math.ceil(c0.x + 16 * s)), y0 = Math.max(0, Math.floor(c0.y - 16 * s)), y1 = Math.min(H, Math.ceil(c0.y + 6 * s));   /* bőven a hajó köré: dőlés, spinakker, közeli hajó se lógjon ki */ if (x1 - x0 < 2 || y1 - y0 < 2) return true;
         /* lágy árnyék a vízen (kész folt, nem élő számítás) */
         g.save(); g.translate(c0.x, c0.y + .05 * s); g.scale(1, .22); const rg = g.createRadialGradient(0, 0, .2 * s, 0, 0, 4.6 * s); rg.addColorStop(0, "rgba(4,24,48,.34)"); rg.addColorStop(1, "rgba(4,24,48,0)"); g.fillStyle = rg; g.beginPath(); g.arc(0, 0, 4.6 * s, 0, 7); g.fill(); g.restore();
         S.boats.forEach((q) => { if (q._gl) q._gl.G.visible = q === b; });
