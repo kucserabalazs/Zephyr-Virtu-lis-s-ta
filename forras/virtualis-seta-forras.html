@@ -12778,6 +12778,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
 
   /* ---------- Híd a „Virtuális világ” modulhoz (vilag.js – csak megnyitáskor töltődik be) ---------- */
+  /* közvetlen link a jegyzékhez: …/#leltar vagy …/#leltar-fregatt (vendégnek küldhető, telefonon is) */
+  { const m = /#leltar(?:-([a-z]+))?\b/.exec(location.hash); if (m) { const tryOpen = (n) => { try { openBinder(GROUPS.some((q) => q.id === m[1]) ? m[1] : "korvett"); } catch (e) { if (n < 40) setTimeout(() => tryOpen(n + 1), 400); } }; setTimeout(() => tryOpen(0), 2500); } }
   window.ZephyrTour = { openInv: (g) => openBinder(g), goScene: (k) => { if (SCENES[k]) go(k, false); }, _t: { smPalm: () => smPalm(), SM, AK: () => AK, WS: () => WS, SCENES: () => SCENES, cur: () => current, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
