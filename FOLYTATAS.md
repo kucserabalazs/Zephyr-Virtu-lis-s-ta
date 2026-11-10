@@ -540,3 +540,8 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
 - **Regatta vize:** TELEFONON a fénykép (állókép), ASZTALI GÉPEN hullámzó víz.
 - **Jegyzék:** a fordítást el kell végezni (mind a 24 nyelv).
 - **Makett HIBÁS:** a lépcsőháznál hiányzik az emeleti terasz egy része, és emiatt a KALÓZ bejárata sincs meg – javítandó (forras/vilag/06-makett.js).
+- 2026-11-11 00:02 – A hajók 2D TERVÉT (zephyr-makett-terv.png: sötétkék test arany csíkkal, fehér nagyvitorla piros Z-vel, piros génua; ellenfelek ugyanebből) a tulajdonos JÓVÁHAGYTA. Kérés: a VR-hajó (03-hajo.js makeBoat + 05b vrCockpit) kidolgozása.
+- 2026-11-11 éjjel – VR-versenyhajó, 1. lépés: `vrBake` (05b-vr-verseny.js) – a saját hajó + kokpit és az ellenfelek álló alkatrészein a fény építéskor kisütve
+  (csúcsszín, MeshBasicMaterial); a fényes részek (lakkozott test, króm, karbon) matcap anyagot kapnak (`vrMatcap`). A vitorlák/zászlók (kétoldalas, mozgó) és az
+  áttetsző/világító anyagok maradnak élő fényben. Kikapcsolás: localStorage `zephyr-bake` = `0`. Gépen előtte–utána képen közel azonos látvány.
+  NEM KÉSZ még: a hajó ÚJ RÉSZLETEI (a jóváhagyott terv szerint: kötélzet a csörlőkig, feszítők, léczsebek, műszerek stb.), a vitorlák kisütése, mérés Quest 2-n.

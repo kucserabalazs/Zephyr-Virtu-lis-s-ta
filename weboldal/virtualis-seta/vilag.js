@@ -1421,6 +1421,54 @@
     return { G, wheels, instT, chartT, deckY, helm: new THREE.Vector3(hs.hb - .74, deckY, hs.z - .62), crew, sh };
   }
   /* --------------------------------------------------------------- felépítés */
+  /* ================= KISÜTÖTT FÉNY A VERSENYHAJÓKON (2026-11-11) =================
+     A hajók eddig képpontonként, élőben számolt világítással rajzolódtak (lakkréteges „fizikai” anyagok) – ez a Quest 2-nek és a telefonnak a legdrágább munka.
+     Itt a kész hajó minden álló alkatrészére EGYSZER, építéskor kiszámoljuk a fényt (égbolt + talajfény + nap a felületi normális szerint), és csúcsszínként
+     ráírjuk; futás közben már csak a kész felületet rakja ki a gép (MeshBasicMaterial). A fényes részek (lakkozott test, króm, karbon) „matcap” anyagot kapnak:
+     egy kész fényképszerű gömbkép adja a csillogást, szintén élő fényszámítás nélkül. Áttetsző és világító (kijelző) anyagokhoz nem nyúlunk.
+     Kikapcsolás összehasonlításhoz: localStorage "zephyr-bake" = "0". */
+  const VRB = { mc: {}, mats: new Map() };
+  function vrMatcap(kind) {
+    if (VRB.mc[kind]) return VRB.mc[kind];
+    const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d");
+    g.fillStyle = "#000"; g.fillRect(0, 0, 256, 256);
+    if (kind === "chrome") { const v = g.createLinearGradient(0, 8, 0, 248); [[0, "#f4fbff"], [.3, "#bcd7ea"], [.47, "#f8fbfd"], [.5, "#4d5a66"], [.56, "#2a333c"], [.8, "#8d7f6b"], [1, "#d9cdb8"]].forEach(([p, col]) => v.addColorStop(p, col)); g.fillStyle = v; }
+    else if (kind === "gloss") { const v = g.createLinearGradient(0, 8, 0, 248); [[0, "#ffffff"], [.22, "#e9eef2"], [.5, "#b9c0c7"], [.62, "#8c949c"], [1, "#6e767e"]].forEach(([p, col]) => v.addColorStop(p, col)); g.fillStyle = v; }
+    else { const v = g.createLinearGradient(0, 8, 0, 248); [[0, "#f7f7f7"], [.5, "#b4b4b4"], [1, "#7c7c7c"]].forEach(([p, col]) => v.addColorStop(p, col)); g.fillStyle = v; }
+    g.beginPath(); g.arc(128, 128, 126, 0, 7); g.fill();
+    const hl = g.createRadialGradient(84, 70, 2, 84, 70, kind === "soft" ? 110 : 62); hl.addColorStop(0, kind === "chrome" ? "rgba(255,255,255,1)" : kind === "gloss" ? "rgba(255,255,255,.95)" : "rgba(255,255,255,.35)"); hl.addColorStop(1, "rgba(255,255,255,0)"); g.globalCompositeOperation = "lighter"; g.fillStyle = hl; g.beginPath(); g.arc(128, 128, 126, 0, 7); g.fill();
+    if (kind !== "soft") { const h2 = g.createRadialGradient(176, 196, 2, 176, 196, 60); h2.addColorStop(0, "rgba(160,200,235,.35)"); h2.addColorStop(1, "rgba(160,200,235,0)"); g.fillStyle = h2; g.beginPath(); g.arc(128, 128, 126, 0, 7); g.fill(); }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; W.disposables.push(t); return (VRB.mc[kind] = t);
+  }
+  function vrBake(root) {
+    try { if (localStorage.getItem("zephyr-bake") === "0") return 0; } catch (e) {}
+    const sun = new THREE.Vector3(.38, .82, .42).normalize(), n = new THREE.Vector3(), nm = new THREE.Matrix3(), done = new Set(); let cnt = 0;
+    root.updateMatrixWorld(true);
+    root.traverse((o) => {
+      if (!o.isMesh || o.isSkinnedMesh || o.userData.noBake) return; const m = o.material;
+      if (!m || Array.isArray(m) || !m.isMeshStandardMaterial || m.transparent || m.opacity < 1) return;
+      if (m.side === THREE.DoubleSide && m.metalness < .6 && !(m.clearcoat > 0)) return;   /* vitorlák, zászlók: mozgó, kétoldalas felületek – ezek maradnak élő fényben, hogy ne szürküljenek be */
+      if (m.emissive && m.emissiveIntensity > 0 && (m.emissive.r + m.emissive.g + m.emissive.b) > .02) return;   /* kijelzők, világító részek maradnak */
+      const g = o.geometry; if (!g || !g.attributes.position || !g.attributes.normal) return;
+      const shiny = m.metalness >= .6 ? "chrome" : (m.clearcoat > 0 || m.roughness <= .36) ? "gloss" : null;
+      const key = m.uuid + "|" + (shiny || "b"); let nmat = VRB.mats.get(key);
+      if (!nmat) {
+        const base = { color: m.color.clone(), map: m.map || null, side: m.side, alphaTest: m.alphaTest || 0, vertexColors: shiny ? !!m.vertexColors : true };
+        nmat = shiny ? new THREE.MeshMatcapMaterial(Object.assign(base, { matcap: vrMatcap(shiny) })) : new THREE.MeshBasicMaterial(base);
+        if (shiny === "chrome") nmat.color.lerp(new THREE.Color("#ffffff"), .35);
+        W.disposables.push(nmat); VRB.mats.set(key, nmat);
+      }
+      if (!shiny && !done.has(g.uuid)) { done.add(g.uuid);
+        const N = g.attributes.normal, cnt2 = N.count, had = m.vertexColors && g.attributes.color ? g.attributes.color : null, col = new Float32Array(cnt2 * 3), P = g.attributes.position; nm.getNormalMatrix(o.matrixWorld);
+        g.computeBoundingBox(); const bb = g.boundingBox, hy = Math.max(.001, bb.max.y - bb.min.y);
+        for (let i = 0; i < cnt2; i++) { n.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); if (m.side === THREE.DoubleSide && n.y < -.2) n.multiplyScalar(-1);
+          const hemi = .62 + .30 * (n.y * .5 + .5), d = Math.max(0, n.dot(sun)) * .46, ao = .92 + .08 * Math.min(1, (P.getY(i) - bb.min.y) / hy), L = Math.min(1.3, (hemi + d) * ao);
+          col[i * 3] = L * (had ? had.getX(i) : 1); col[i * 3 + 1] = L * 1.0 * (had ? had.getY(i) : 1); col[i * 3 + 2] = L * 1.02 * (had ? had.getZ(i) : 1); }
+        g.setAttribute("color", new THREE.BufferAttribute(col, 3)); }
+      o.material = nmat; o.castShadow = false; o.receiveShadow = false; cnt++;
+    });
+    return cnt;
+  }
   function buildVRace() {
     const root = W.root;
     Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0 });   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
@@ -1429,7 +1477,7 @@
     VRR.water = makeWater(env);
     const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#0b2f5e", boot: "#ffffff", stripe: "#c62828", jib: "#d61f26", main: "#f6f4ec", num: "HUN 27", name: "ZEPHYR", logo: "ZEPHYR", spin: ["#e2483d", "#ffffff", "#0b2f5e"] });
     boat.scale.setScalar(VR_SC); boat.rotation.y = Math.PI; root.add(boat); VRR.boat = boat;
-    const CK2 = vrCockpit(boat); VRR.ck = CK2;
+    const CK2 = vrCockpit(boat); VRR.ck = CK2; VRR.baked = vrBake(boat);
     /* a felhasználó helye: a jobb oldali (styrbord) kerék mögött; a hajó orra −z felé néz (a hajó π-vel elforgatva) */
     const hp = CK2.helm.clone().multiplyScalar(1 / VR_SC); hp.x = -hp.x;   /* styrbord = a hajó helyi −x oldala */
     /* 2026-11-10: telefonon (álló képernyő, 2D) a kormánytól nézve a hajó kitakarta a pályát – ott magasabbról és hátrébbról nézünk
@@ -1450,7 +1498,7 @@
       const pts = new THREE.Points(g, m); pts.frustumCulled = false; root.add(pts);
       VRR.spray = { pts, pos, col, N, vel: new Float32Array(N * 3), life: new Float32Array(N), max: new Float32Array(N), i: 0, acc: 0 }; }
     /* ellenfelek (ugyanakkora hajók) */
-    VRR.riv = VR_RIV.map((o, i) => { const g = makeBoat(Object.assign({ detail: 0, crew: 3 }, o)); g.scale.setScalar(VR_SC * .96); env.add(g); const wk = makeWake(env, 1.1);
+    VRR.riv = VR_RIV.map((o, i) => { const g = makeBoat(Object.assign({ detail: 0, crew: 3 }, o)); g.scale.setScalar(VR_SC * .96); env.add(g); vrBake(g); const wk = makeWake(env, 1.1);
       const lbl = labelSprite([o.name, o.num], { size: 4.2, fs: 60, w: 620 }); env.add(lbl); return { o, g, wk, i, lbl }; });
     VRR.podium = labelSprite(["", "", "", "", ""], { size: 2.4, fs: 56, w: 900 }); root.add(VRR.podium); VRR.podium.visible = false;
     /* bóják, rendezőhajó, rajt-bója, a következő bója jelzőoszlopa */
