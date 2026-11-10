@@ -494,3 +494,9 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
 - A telefonja (a Claude app beépített böngészője) kb. 780 px széles elrendezést ad 390 helyett (minden fele akkora volt, a telefonos szabályok nem éltek).
   Javítás: `zvFix` – `--vk` = innerWidth / screen.width; telefon módban a fejléc, a Menü, a kocka és a jegyzék ennyivel visszanagyítva (`data-vwide`).
   A telefonos jegyzék-szabályok `:root[data-device="phone"]` alapján élnek (nem szélesség alapján). Kocka telefonon: 138 px, a fejléc alatt 84 px-re; Menü sorai 60 px / 20 px betű.
+- 19:50 – A „hajónapló-sorok” is elutasítva („ugyanaz a csúfság”, és a 2× visszanagyítás túl nagy). TELJES újratervezés: `.zi2.zm` – régi tengeri térkép / étlap:
+  pergamen háttér, sötétkék tinta, visszafogott piros; nincs doboz, nincs arany, nincs kerek keret. Fülek aláhúzott szövegként, fejezetcím középen hullámdísszel,
+  tételek étlap-szerűen (név ······ mennyiség, típus, leírás), a fotók kis ferde „polaroidok”, a részletlapon tűzött jegyzet az érdekesség. A `zn`/`zl` szabályok a fájlban maradtak, de nem élnek.
+  Telefonos visszanagyítás: `--vk = k^0.6` (2× helyett kb. 1,5×) – „arany középút”.
+- Vitorlásverseny telefonon (2D, álló kép): a kamera 12 m-rel feljebb és 19 m-rel a kormány mögött, lefelé döntve (`ph2d` a 05b-vr-verseny.js-ben) – a hajó kicsi, látszik a pálya.
+  A játék kezelőfelülete (`#worldHud`), a világválasztó, a stég-választó és a foglalási ablak is kap `--vk` nagyítást kicsinyített telefonos nézetben.
