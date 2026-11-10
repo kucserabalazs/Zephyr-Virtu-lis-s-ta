@@ -2082,13 +2082,20 @@ body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .zx-bar, body.world-on .z
     const DEMO = { korvett: [[3, 4], [17, 5], [31, 7], [45, 3]], dingi: [[5, 3], [12, 4], [24, 6], [40, 4]], fregatt: [[8, 5], [20, 3], [38, 6], [50, 2]],
                    kaloz: [[2, 6], [14, 3], [27, 4], [43, 5]], schooner: [[6, 4], [11, 2], [22, 5], [35, 4], [48, 3]] }[apt] || [];
     DEMO.push([33, 2]);   /* egy hétvége, amikor mind az öt apartman foglalt: a kezdő naptárban „foglalt”-ként látszik */
-    const demoBusy = (i) => DEMO.some(([s0, n]) => i >= s0 && i < s0 + n);
+    /* PRÓBA MÓD ÉLETHŰEN (2026-11-10, a tulajdonos kérésére): a ház csak szezonban (május 15. – október 15.) foglalható – azon kívül
+       minden nap zárt –, a próbafoglalások pedig a szezon ELEJÉRE esnek (ha épp szezon van: a mai naptól). Így a tesztoldalon a naptár
+       ugyanúgy viselkedik, mint élesben: télen a következő szezon első hónapján nyílik, és ott rögtön látszanak foglalt napok,
+       érkezések–távozások, a teljesen betelt hétvége – van mit kipróbálni. */
+    const inSeason = (dt) => { const k = (dt.getMonth() + 1) * 100 + dt.getDate(); return k >= 515 && k <= 1015; };
+    let s0i = 0; for (let i = 0; i < 400; i++) { if (inSeason(pd(addD(cfg.today, i)))) { s0i = i; break; } }
+    const demoBusy = (i) => DEMO.some(([s0, n]) => i >= s0i + s0 && i < s0i + s0 + n);
     for (let i = 0; i < 400; i++) {
       const d = addD(cfg.today, i), dt = pd(d), m = dt.getMonth(), wk = dt.getDay() === 5 || dt.getDay() === 6;
+      if (!inSeason(dt)) { busyLeft = 0; rEnd = -1; out.push({ d, p: Math.round(a.price / 500) * 500, free: false, arr: 0, dep: 0 }); continue; }
       const season = m === 6 || m === 7 ? 1.35 : m === 5 || m === 8 ? 1.1 : 1;
-      let arr = DEMO.some(([s0]) => s0 === i) ? 1 : 0, dep = DEMO.some(([s0, n]) => s0 + n === i) ? 1 : 0;
+      let arr = DEMO.some(([s0]) => s0i + s0 === i) ? 1 : 0, dep = DEMO.some(([s0, n]) => s0i + s0 + n === i) ? 1 : 0;
       if (rEnd === i) dep = 1;
-      if (i >= 60 && busyLeft <= 0 && rnd() < .07) { busyLeft = 2 + Math.floor(rnd() * 5); arr = 1; rEnd = i + busyLeft; }
+      if (i >= s0i + 60 && busyLeft <= 0 && rnd() < .07) { busyLeft = 2 + Math.floor(rnd() * 5); arr = 1; rEnd = i + busyLeft; }
       out.push({ d, p: Math.round(a.price * season * (wk ? 1.1 : 1) / 500) * 500, free: !demoBusy(i) && busyLeft-- <= 0, arr, dep });
     }
     return out;
@@ -9437,8 +9444,21 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     return "pin";
   }
   /* rövid cím (≤ 24 karakter): a hosszú link-leírás helyett a cél neve; a hosszú leírás rámutatáskor 2. sorban */
+  /* RÖVID ÚTJELZŐ-FELIRATOK (2026-11-10, a tulajdonos kérésére: a hosszú szövegek takarták egymást és a képet).
+     A tábla ikonja már mutatja, hogy apartman / terasz / lépcső – a feliratban elég a név. Csak magyarul rövidítünk; más nyelven a
+     meglévő fordítás marad (a rövidített magyar szövegnek nincs külön fordítása). */
+  const VRN_SHORT = [
+    [/^Apartman \d+ · (.+)$/, "$1"], [/^(\S+) Apartman \d+$/, "$1"], [/^(\S+) Apartman$/, "$1"],
+    [/^(\S+) Apartman [Tt]erasz$/, "$1 terasz"], [/^Parkoló és · Grillterasz$/, "Parkoló, grill"],
+    [/^Kerékpár, SUP, hűtőszekrény.*$/, "Kerékpár, SUP"], [/^Kerékpárok, hűtőszekrény.*$/, "Kerékpárok"],
+    [/^Úszás a nyílt víz felé$/, "Nyílt víz"], [/^Kilépés az utcára$/, "Ki az utcára"], [/^Lépcső fel a Kalóz és Fregatt apartmanokhoz$/, "Fel az emeletre"]
+  ];
+  function vrnShort(t) { if (window.ZI18N && ZI18N.lang && ZI18N.lang !== "hu") return t; for (const [re, to] of VRN_SHORT) { if (re.test(t)) return t.replace(re, to); } return t; }
   function vrnTitle(link) {
-    const sc = SCENES[link[0]], lb = vT(String(link[3] || "").replace(/\n/g, " · ").trim()), nm = sc ? vT(String(sc.n || "").replace(/\n/g, " ")) : "";   /* a választott nyelven */
+    const hu = !(window.ZI18N && ZI18N.lang && ZI18N.lang !== "hu");
+    const raw = String(link[3] || "").replace(/\n/g, " · ").trim(), sc = SCENES[link[0]];
+    if (hu) { const sh = vrnShort(raw); if (sh && sh.length <= 16) return { t: sh, sub: "" }; const sn = sc ? vrnShort(String(sc.n || "").replace(/\n/g, " ")) : ""; if (sn && sn.length <= 16) return { t: sn, sub: raw }; }
+    const lb = vT(raw), nm = sc ? vT(String(sc.n || "").replace(/\n/g, " ")) : "";   /* a választott nyelven */
     if (lb && lb.length <= 24) return { t: lb, sub: "" };
     return { t: nm && nm.length <= 26 ? nm : lb.slice(0, 22) + "…", sub: lb };
   }
@@ -9655,11 +9675,29 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       /* állandó látószög: a címke mérete a távolsággal arányos (≈1,7°-os betűmagasság) */
       const d3 = Math.max(.8, mk.m.position.distanceTo(h)), W = .64 * d3 * (1 + .06 * mk.hot) * (inVR ? 1 : device === "phone" ? .85 : .55), Hh = W * mk.cvs.height / mk.cvs.width;
       mk.lbl.scale.set(W, W, 1); mk.lbl.material.opacity = mk.vis * (mk.dist < .8 && !hot ? 0 : 1); mk.lbl.visible = mk.lbl.material.opacity > .02;
-      const legL = mk.floor ? Math.max(.22, Math.min(1.1, .17 * d3)) : .3, yaw = Math.atan2(h.x - mk.m.position.x, h.z - mk.m.position.z);
-      mk.lbl.position.set(0, mk.floor ? legL + Hh * .5 : -(.38 + Hh * .5), 0);
+      mk.liftCur = (mk.liftCur || 0) + ((mk.liftT || 0) - (mk.liftCur || 0)) * .18;   /* ütközéskerülő emelés (lásd lent), finoman beúszva */
+      const legL = (mk.floor ? Math.max(.22, Math.min(1.1, .17 * d3)) : .3) + (mk.floor ? mk.liftCur * d3 : 0), yaw = Math.atan2(h.x - mk.m.position.x, h.z - mk.m.position.z);
+      mk.lbl.position.set(0, mk.floor ? legL + Hh * .5 : -(.38 + Hh * .5 + mk.liftCur * d3), 0);
+      mk._lay = mk.lbl.visible ? { az: Math.atan2(mk.m.position.x - h.x, mk.m.position.z - h.z), el: Math.atan2(mk.m.position.y + mk.lbl.position.y - mk.liftCur * d3 * (mk.floor ? 1 : -1) - h.y, dRing || .01), aw: W * (mk.fill || .6) / d3, ah: Hh * .62 / d3, d: d3 } : null;
       mk.lbl.rotation.set(0, yaw, 0);
       mk.leg.visible = mk.floor && mk.lbl.visible; if (mk.leg.visible) { mk.leg.scale.set(.0028 * d3, legL - Hh * .18, 1); mk.leg.rotation.set(0, yaw, 0); mk.leg.material.opacity = .7 * mk.lbl.material.opacity; mk.leg.material.color.copy(white).lerp(gold, gl); }
     });
+    /* A CÍMKÉK NE TAKARJÁK EGYMÁST (2026-11-10): a látszó címkéket közelről távol felé sorra vesszük; ha egy távolabbi címke
+       (a nézőből nézve) rálógna egy már elhelyezettre, feljebb emeljük (padlón álló jelzőnél a szára megnyúlik; falon lévőnél lejjebb
+       kerül), amíg el nem fér – legfeljebb három szinttel. A cél a következő képkockákban finoman érvényesül (mk.liftT → liftCur). */
+    const placed = [];
+    VRN.list.filter((mk) => mk._lay).sort((a, b) => a._lay.d - b._lay.d).forEach((mk) => {
+      const L = mk._lay; let lift = 0;
+      for (let pass = 0; pass < 3; pass++) {
+        const el = L.el + lift * (mk.floor ? 1 : -1);
+        const hit = placed.find((q) => { let da = Math.abs(q.az - L.az); if (da > Math.PI) da = 2 * Math.PI - da; return da < (q.aw + L.aw) * .5 + .01 && Math.abs(q.el - el) < (q.ah + L.ah) * .5 + .004; });
+        if (!hit) break;
+        lift = mk.floor ? Math.max(lift, hit.el + (hit.ah + L.ah) * .5 + .008 - L.el) : Math.max(lift, L.el - (hit.el - (hit.ah + L.ah) * .5 - .008));
+      }
+      mk.liftT = Math.min(.5, Math.max(0, lift));
+      placed.push({ az: L.az, el: L.el + mk.liftT * (mk.floor ? 1 : -1), aw: L.aw, ah: L.ah });
+    });
+    VRN.list.forEach((mk) => { if (!mk._lay) mk.liftT = 0; });
   }
   let _vrnH = null, _vrnF = null, _vrnGold = null, _vrnWhite = null;
   /* ---- Útjelzők igazítása VR-ben (2026. nov. 9., a tulajdonos kérése: „miközben sétálok, legyen lehetőségem a rendezésére”) ----
