@@ -487,3 +487,5 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
   Zephyr vitorlással, kötélszegély, jelzőzászlós kategóriafülek, sárgaréz hajóablak-keret a képek körül, mentőöv-számozás a lépéseknél, „Tudtad?” érdekességek
   (`IT.<id>.fun`), apartman-névadó hajótípusok (`INV_SHIP`). A szemüveges (VR) jegyzék kinézete nem változott.
 - Közvetlen link a jegyzékhez: `…/virtualis-seta/#leltar` (Korvett) vagy `#leltar-<apartman>` (dingi, fregatt, kaloz, schooner, kadett).
+- Telefon (nov. 10. este, kérésre): a többfunkciós kocka telefonon is kint van (fejléc alatt bal felül, 104 px, „Vissza” lappal előre – ez az alapállás); táblagépen továbbra is rejtve.
+  A jegyzék telefonon egyoszlopos, nagy betűs (név 23 px, leírás 19 px), a részletlap 88% magas.
