@@ -1655,8 +1655,56 @@ body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .zx-bar, body.world-on .z
    marad felül. A jobb oldali „Helyek” fiók itt nem kell (a fényképsor mindig látszik) – telefonon és táblagépen változatlan. */
 :root[data-device="pc"] body.zx .cubebox { --S: 118px; --H: 73px; --gp: 8px; position: fixed; z-index: 7; top: calc(45px + env(safe-area-inset-top, 0px)); left: calc(-14px + env(safe-area-inset-left, 0px)); pointer-events: auto; }   /* 2026-11-10: jóval kisebb (az eredeti 186 px helyett 118 px), szorosan a bal felső sarokban, közvetlenül a fejléc alatt (a tulajdonos kérése) */
 :root[data-device="pc"] body.zx .map { top: calc(170px + env(safe-area-inset-top, 0px)); max-height: calc(100% - 342px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
-:root[data-device="pc"] body.zx .top .tools { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); }
 :root[data-device="pc"] body.zx #zxPlacesBtn { display: none !important; }
+
+/* ===================== FEJLÉC: CSAK „FOGLALÁS” + „MENÜ” (2026-11-10, a tulajdonos kérése) ===================== */
+body.zx #btnSun, body.zx #sunPanel, body.zx #btnTools { display: none !important; }
+.zx-menu-btn svg { stroke: #E4BB63; }
+.zx-menu-btn .zx-t, .zx-menu-btn span { display: inline !important; }
+html body.zx .top #tools { position: fixed !important; top: calc(72px + env(safe-area-inset-top, 0px)) !important; right: max(14px, env(safe-area-inset-right, 0px)) !important; left: auto !important; bottom: auto !important;
+  width: 276px; box-sizing: border-box; margin: 0 !important; padding: 12px; gap: 6px; display: none !important; flex-direction: column !important; align-items: stretch; z-index: 45; pointer-events: auto;
+  border-radius: 18px; background: rgba(7,24,44,.93); border: 1px solid rgba(228,187,99,.45); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 18px 44px rgba(0,0,0,.45); }
+html body.zx.zx-menu .top #tools { display: flex !important; animation: zxMenuIn .18s ease both; }
+@keyframes zxMenuIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+html body.zx #tools > .tool, html body.zx #tools > .devwrap > .tool, html body.zx #tools > .vr-btn, html body.zx #tools > .zx-btn {
+  position: static !important; width: 100% !important; height: 50px !important; min-height: 0; box-sizing: border-box; margin: 0 !important; padding: 0 14px !important; gap: 12px !important;
+  justify-content: start !important; justify-items: start; align-items: center; grid-auto-flow: column; grid-auto-columns: max-content; border-radius: 12px !important;
+  background: rgba(16,42,68,.9) !important; border: 1px solid rgba(221,232,242,.2) !important; box-shadow: none !important; color: #fff !important; font: 650 16px/1 Inter, sans-serif !important; letter-spacing: 0 !important; animation: none !important; }
+html body.zx #tools > .tool:hover, html body.zx #tools > .devwrap > .tool:hover, html body.zx #tools > .vr-btn:hover, html body.zx #tools > .zx-btn:hover { border-color: #E4BB63 !important; background: rgba(22,56,92,.95) !important; }
+html body.zx #tools > .tool[aria-pressed="true"], html body.zx #tools > .devwrap > .tool[aria-pressed="true"] { border-color: #D4A13A !important; color: #F0D48A !important; }
+html body.zx #tools [data-zx]::after { content: attr(data-zx); font: 650 16px/1 Inter, sans-serif; color: inherit; white-space: nowrap; }
+html body.zx #tools > .vr-btn > :not(:first-child), html body.zx #tools > .zx-btn > .zx-t { display: none !important; }
+html body.zx #tools > .vr-btn svg, html body.zx #tools > .zx-btn svg, html body.zx #tools .tool svg { width: 22px !important; height: 22px !important; flex: none; }
+html body.zx #tools > .vr-btn > span:first-child { font-size: 20px !important; }
+html body.zx #tools > .devwrap { display: block !important; width: 100%; }
+html body.zx #tools .tool-dev b { font: 800 13px/1 Inter, sans-serif !important; letter-spacing: .06em; color: #E4BB63; }
+html body.zx #tools .devmenu { right: 0; left: auto; top: calc(100% + 6px); z-index: 50; }
+:root[data-device="pc"] body.zx #tools > #zxPlacesBtn { display: none !important; }
+body.in-vr #tools, body.world-on #tools { display: none !important; }
+
+/* ===================== ALSÓ HELYSZÍNSOR: ÜVEGGÖMBÖK (asztali nézet, 2026-11-10, a tulajdonos kérése) =====================
+   A lapos, torz 360°-os bélyegkép helyett minden helyszín egy kis üveggömb (mint a foglalás fotós kártyáin): arany–fehér gyűrű,
+   fényes csillanás, alatta a név. Az aktuális helyszín gömbje és az, amelyikre ráviszed az egeret, lassan forog. */
+.thumb .th-orb { display: none; }
+:root[data-device="pc"] body.zx .strip { gap: 6px; padding-top: 10px; padding-bottom: 2px; align-items: start; }
+:root[data-device="pc"] body.zx .thumb { width: 96px; background: none !important; border: 0 !important; box-shadow: none !important; overflow: visible; border-radius: 0; display: grid; justify-items: center; align-content: start; gap: 7px; padding: 4px 0 2px; }
+:root[data-device="pc"] body.zx .thumb img { display: none !important; }
+:root[data-device="pc"] body.zx .thumb .th-orb { display: block; position: relative; width: 68px; height: 68px; border-radius: 50%; background-repeat: repeat-x; background-size: 300% 150%; background-position: 0 55%;
+  box-shadow: 0 8px 16px rgba(7,24,44,.5), 0 0 0 2px rgba(255,255,255,.88), 0 0 0 4px rgba(212,161,58,.92); transition: transform .3s cubic-bezier(.2,.8,.2,1.2), box-shadow .25s; }
+:root[data-device="pc"] body.zx .thumb .th-orb.priv { filter: blur(3px) saturate(.6); }
+:root[data-device="pc"] body.zx .thumb .th-orb::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.85) 0 7%, rgba(255,255,255,.25) 13%, rgba(255,255,255,0) 30%),
+              radial-gradient(circle at 70% 82%, rgba(255,255,255,.22) 0 8%, rgba(255,255,255,0) 22%),
+              radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 52%, rgba(7,24,44,.55) 100%);
+  box-shadow: inset 0 -6px 12px rgba(7,24,44,.45), inset 0 5px 8px rgba(255,255,255,.35); }
+:root[data-device="pc"] body.zx .thumb:hover { transform: none; }
+:root[data-device="pc"] body.zx .thumb:hover .th-orb { transform: translateY(-4px) scale(1.07); animation: zblOrbSpin 22s linear infinite; }
+:root[data-device="pc"] body.zx .thumb[aria-current="true"] .th-orb { animation: zblOrbSpin 30s linear infinite; box-shadow: 0 8px 18px rgba(7,24,44,.55), 0 0 0 2px #fff, 0 0 0 5px var(--signal), 0 0 16px rgba(229,38,47,.55); }
+:root[data-device="pc"] body.zx .thumb[aria-current="true"]::after { right: 8px; top: 0; width: 20px; height: 20px; z-index: 2; }
+:root[data-device="pc"] body.zx .thumb span { display: block !important; width: 100%; padding: 0 2px; text-align: center; font: 650 12.5px/1.2 Inter, sans-serif; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.9), 0 0 8px rgba(0,0,0,.6);
+  white-space: normal; overflow: hidden; display: -webkit-box !important; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-wrap: balance; box-sizing: border-box; }
+:root[data-device="pc"] body.zx .thumb:focus-visible .th-orb { box-shadow: 0 0 0 2px #fff, 0 0 0 5px #9fdcff; }
+@media (prefers-reduced-motion: reduce) { .thumb .th-orb { animation: none !important; } }
 
 /* magyar tulipán a betöltőképernyőn – egyszeri vonalrajzolás (csökkentett mozgásnál statikus) */
 .loader-motif { display: block; width: 58px; height: 58px; margin: 0 auto 10px; fill: none; stroke: #D4A13A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 120; stroke-dashoffset: 120; animation: zmDraw .9s ease-out .2s forwards; }
@@ -1904,7 +1952,7 @@ body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .zx-bar, body.world-on .z
     <div class="cube-stage" id="cubeStage" tabindex="0" role="group" aria-roledescription="forgatható kocka" aria-label="Forgatható kocka – húzással forgatható, koppintásra a felénk néző oldal működik">
       <div class="cube" id="cube">
         <section class="cf cf5" data-f="5"><div class="cf-in"><svg class="cf-ico" viewBox="0 0 64 64" aria-hidden="true"><path d="M27 4h10l1.6 7.2a22 22 0 0 1 5.2 3l7-2.3 5 8.7-5.5 4.9a22 22 0 0 1 0 6l5.5 4.9-5 8.7-7-2.3a22 22 0 0 1-5.2 3L37 60H27l-1.6-7.2a22 22 0 0 1-5.2-3l-7 2.3-5-8.7 5.5-4.9a22 22 0 0 1 0-6l-5.5-4.9 5-8.7 7 2.3a22 22 0 0 1 5.2-3z" fill="#fff"/><circle cx="32" cy="32" r="10" fill="#2f7fd0"/><circle cx="32" cy="32" r="4" fill="#0b2f5e"/></svg><b class="cf-lbl">Settings</b></div></section>
-        <section class="cf cf6" data-f="6"><div class="cf-in"><svg class="cf-ico" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="8" width="30" height="46" rx="4" fill="#c58d3a"/><rect x="13" y="14" width="24" height="37" rx="2" fill="#fff"/><rect x="19" y="5" width="12" height="7" rx="2" fill="#c9d3dd"/><path d="M16 22l2 2 4-4M16 31l2 2 4-4M16 40l2 2 4-4" fill="none" stroke="#2fae5a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 22h9M25 31h9M25 40h9" stroke="#9fb1c4" stroke-width="2.4"/><path d="M40 40h20l-2 13c-.3 2-2 3-4 3H46c-2 0-3.7-1-4-3z" fill="#e2322a"/><rect x="38" y="37" width="24" height="4" rx="2" fill="#fff"/></svg><b class="cf-lbl">Inventory</b></div></section>
+        <section class="cf cf6" data-f="6"><div class="cf-in"><svg class="cf-ico" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="8" width="30" height="46" rx="4" fill="#c58d3a"/><rect x="13" y="14" width="24" height="37" rx="2" fill="#fff"/><rect x="19" y="5" width="12" height="7" rx="2" fill="#c9d3dd"/><path d="M16 22l2 2 4-4M16 31l2 2 4-4M16 40l2 2 4-4" fill="none" stroke="#2fae5a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 22h9M25 31h9M25 40h9" stroke="#9fb1c4" stroke-width="2.4"/><path d="M40 40h20l-2 13c-.3 2-2 3-4 3H46c-2 0-3.7-1-4-3z" fill="#e2322a"/><rect x="38" y="37" width="24" height="4" rx="2" fill="#fff"/></svg><b class="cf-lbl">Eszközök</b></div></section>
         <i class="ce ce1" aria-hidden="true"></i><i class="ce ce2" aria-hidden="true"></i><i class="ce ce3" aria-hidden="true"></i><i class="ce ce4" aria-hidden="true"></i>
         <section class="cf cf1" data-f="1" aria-live="polite"><div class="cf-in plate">
           <span class="house"><img class="logo" src="img/zephyr-logo-s.png" alt="Zephyr Apartman · Zamárdi" draggable="false"></span>
@@ -12506,7 +12554,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     Object.keys(SCENES).filter((k) => SCENES[k].g === gid).forEach((k) => {
       const b = document.createElement("button");
       b.className = "thumb"; b.type = "button"; b.dataset.id = k; b.id = "thumb-" + k;
-      b.innerHTML = `<img src="${thumbUrl(k)}" alt="" loading="lazy"${SCENES[k].priv ? ' class="priv"' : ""}><span>${SCENES[k].n}</span>`;
+      b.innerHTML = `<img src="${thumbUrl(k)}" alt="" loading="lazy"${SCENES[k].priv ? ' class="priv"' : ""}><i class="th-orb${SCENES[k].priv ? " priv" : ""}" style="background-image:url('${thumbUrl(k)}')" aria-hidden="true"></i><span>${SCENES[k].n}</span>`;   /* th-orb: forgó üveggömb a 360°-os képből (asztali nézet) */
       b.addEventListener("click", () => go(k));
       strip.appendChild(b);
     });
@@ -13549,7 +13597,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (!pick && apts.some((a) => a.id === g)) { openBinder(g); return; }
     let el = $("invPick"); if (el) { el.remove(); return; }
     el = document.createElement("div"); el.id = "invPick"; el.className = "inv-pick"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Melyik apartman eszközkészletét nézed?");
-    el.innerHTML = `<div class="inv-card"><h3>Inventory · eszközkészlet</h3><p>Melyik apartmanét nézed meg?</p><div class="inv-list">${apts.map((a) => `<button type="button" data-inv="${a.id}"><b>${a.no}</b>${a.name}</button>`).join("")}${GROUPS.filter((x) => x.no && x.lock).map((a) => `<button type="button" disabled title="Saját használatú lakás – privát"><b>${a.no}</b>${a.name} · privát</button>`).join("")}</div><button type="button" class="inv-x" aria-label="Bezárás">×</button></div>`;
+    el.innerHTML = `<div class="inv-card"><h3>Eszközök</h3><p>Melyik apartmanét nézed meg?</p><div class="inv-list">${apts.map((a) => `<button type="button" data-inv="${a.id}"><b>${a.no}</b>${a.name}</button>`).join("")}${GROUPS.filter((x) => x.no && x.lock).map((a) => `<button type="button" disabled title="Saját használatú lakás – privát"><b>${a.no}</b>${a.name} · privát</button>`).join("")}</div><button type="button" class="inv-x" aria-label="Bezárás">×</button></div>`;
     document.body.appendChild(el);
     el.addEventListener("click", (e) => { const b = e.target.closest("[data-inv]"); if (b) { el.remove(); openBinder(b.dataset.inv, () => openInventory(true)); return; } if (e.target === el || e.target.closest(".inv-x")) el.remove(); });
   }
@@ -13847,7 +13895,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         },
         3(g) { base(g, false); const gr = g.createLinearGradient(0, 40, 0, 300); gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#cbd8e4"); icon(g, "M28 7L5 28l23 21V36h5c12 0 19 6 23 19 4-21-6-34-23-34h-5z", CW / 2 - 136, 34, 4.6, gr); label(g, "BACK", CH - 52, 150); },
         5(g, w, h) { baseSq(g, w, h, false); gear(g, w / 2, h * .42, h * .27); labelSq(g, "SETTINGS", w, h * .86, h * .17); },
-        6(g, w, h) { baseSq(g, w, h, false); clip(g, w / 2, h * .43, h * .3); labelSq(g, "INVENTORY", w, h * .86, h * .16); },
+        6(g, w, h) { baseSq(g, w, h, false); clip(g, w / 2, h * .43, h * .3); labelSq(g, window.ZI18N && ZI18N.lang && ZI18N.lang !== "hu" ? "INVENTORY" : "ESZKÖZÖK", w, h * .86, h * .16); },   /* 2026-11-10: magyar nyelven magyar felirat (a tulajdonos kérése) */
         4(g) { base(g, true); const gr = g.createLinearGradient(0, 40, 0, 300); gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#ffe0dc"); icon(g, "M32 5L3 31h9v27h15V42h10v16h15V31h9L49 19V9h-8v3z", CW / 2 - 118, 22, 3.7, gr); label(g, "HOME", CH - 52, 150); }
       };
       const maxAniso = R.capabilities.getMaxAnisotropy ? R.capabilities.getMaxAnisotropy() : 1;
@@ -16937,12 +16985,28 @@ html.zi-rtl body { text-align: start; }`;
     pb.addEventListener("click", () => setP(!document.body.classList.contains("zx-places")));
     let pref = null; try { pref = localStorage.getItem("zephyr-zx-places"); } catch (e) {}
     setP(pref == null ? innerWidth >= 1100 : pref === "1");
-    if (window.ZI18N) try { ZI18N.mountPicker($("zxRight")); } catch (e) {}
+    /* 2026-11-10 (a tulajdonos kérése): a fejlécben csak a „Foglalás” marad kint; a nyelvválasztó (a nyelvet a főoldalon választja a vendég)
+       és a Nap gomb lekerült, a helyükön egyetlen „Menü” gomb van – alatta minden egyéb: 3D világok, VR, nézet, alaprajz, zene, hangerő,
+       körbenézés, teljes képernyő (telefonon / táblagépen a Helyek is). Így semmi nem takarja a képet. */
+    const mb = document.createElement("button"); mb.type = "button"; mb.id = "zxMenuBtn"; mb.className = "zx-btn zx-menu-btn"; mb.setAttribute("aria-expanded", "false"); mb.setAttribute("aria-controls", "tools");
+    mb.innerHTML = `<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Menü</span>`;
+    $("zxRight").appendChild(mb);
+    const tools = $("tools");
+    const ZXL = { btnWorld: "3D világok", btnVR: "VR szemüveg", zxPlacesBtn: "Helyek", btnDevice: "Nézet váltása", btnMap: "Alaprajz", btnGyro: "Mozgásérzékelő", btnMusic: "Zene", btnSound: "Hangerő", btnRotate: "Körbenézés", btnFull: "Teljes képernyő" };
+    const zxLabels = () => Object.keys(ZXL).forEach((id) => { const b = $(id); if (b) b.dataset.zx = window.ZI18N && ZI18N.lang !== "hu" ? ZI18N.t(ZXL[id]) : ZXL[id]; });
+    const setM = (on) => { document.body.classList.toggle("zx-menu", on); if (tools) tools.classList.toggle("open", on); mb.setAttribute("aria-expanded", on ? "true" : "false"); if (on) zxLabels(); };
+    mb.addEventListener("click", (ev) => { ev.stopPropagation(); setM(!document.body.classList.contains("zx-menu")); });
+    document.addEventListener("click", (ev) => { if (!document.body.classList.contains("zx-menu")) return; if (tools && tools.contains(ev.target)) { const hit = ev.target.closest && ev.target.closest("#btnWorld, #btnVR, #zxPlacesBtn, #btnFull"); if (hit) setM(false); return; } setM(false); });
+    document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && document.body.classList.contains("zx-menu")) setM(false); });
+    /* érintőképernyőn a panorámára koppintás nem mindig ad „click”-et – ott a lenyomás zárja a menüt */
+    document.addEventListener("pointerdown", (ev) => { if (!document.body.classList.contains("zx-menu")) return; if ((tools && tools.contains(ev.target)) || mb.contains(ev.target)) return; setM(false); }, true);
     /* a hely neve a régi táblából (a kockán volt) */
     const sync = () => { const p = $("placeName"), u = $("unitName"); if (p) $("zxPlace").textContent = p.textContent; if (u) $("zxUnit").textContent = u.textContent; };
     sync(); ["placeName", "unitName"].forEach((id) => { const el = $(id); if (el) new MutationObserver(sync).observe(el, { childList: true, characterData: true, subtree: true }); });
     /* a dinamikusan létrejövő gombok (VR, 3D-világ, Nap) a fejlécbe kerülnek */
-    const adopt = () => { ["btnSun", "btnWorld", "btnVR"].forEach((id) => { const b = $(id); if (b && b.parentNode !== $("zxRight")) $("zxRight").insertBefore(b, $("zxPlacesBtn")); }); };
+    const adopt = () => { if (!tools) return; const first = tools.querySelector(".devwrap");
+      ["btnWorld", "btnVR", "zxPlacesBtn"].forEach((id) => { const b = $(id); if (b && b.parentNode !== tools) tools.insertBefore(b, first); });
+      zxLabels(); };
     adopt(); setInterval(adopt, 1200);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build); else build();
