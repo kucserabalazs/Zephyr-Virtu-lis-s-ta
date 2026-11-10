@@ -2004,6 +2004,84 @@ body.in-vr #tools, body.world-on #tools { display: none !important; }
   .zi2-det { position: absolute; left: 0; right: 0; bottom: 0; max-height: 78dvh; border-radius: 22px 22px 0 0; border: 0; box-shadow: 0 -18px 40px rgba(7,24,44,.3); transform: translateY(105%); transition: transform .35s cubic-bezier(.2,.8,.2,1); z-index: 5; }
   .zi2.det-on .zi2-det { transform: none; } .zi2-det-x { display: grid; }
 }
+
+/* ===== ESZKÖZJEGYZÉK – HAJÓS KIVITEL („Fedélzeti leltár”, 2026-11-10) – a tulajdonos kérésére: vitorlás jelképek, kidolgozott megjelenés ===== */
+.zi2.zn .zi2-card { background: #f3ecdc; border: 0; box-shadow: 0 0 0 2px #0a2748, 0 0 0 5px #caa04a, 0 0 0 7px #0a2748, 0 34px 90px rgba(0,0,0,.55); border-radius: 20px; }
+.zi2.zn .zi2-hd { position: relative; padding: 18px 18px 30px 22px; border-bottom: 0; background: radial-gradient(120% 140% at 12% 0%, #1a4f8c 0%, #0c3465 38%, #071d3a 100%); overflow: hidden; }
+.zi2.zn .zi2-hd > * { position: relative; z-index: 2; }
+.zi2.zn .zi2-hd::before { content: ""; position: absolute; inset: 0; z-index: 0; opacity: .5; background: radial-gradient(1.2px 1.2px at 12% 22%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 31% 12%, #fff 50%, transparent 52%), radial-gradient(1.3px 1.3px at 58% 26%, #ffe9a8 50%, transparent 52%), radial-gradient(1px 1px at 77% 14%, #fff 50%, transparent 52%), radial-gradient(1.2px 1.2px at 91% 30%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 44% 40%, #fff 50%, transparent 52%); }
+.zi2.zn .zi2-hd::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 8px; z-index: 3; background: repeating-linear-gradient(118deg, #b98a2b 0 7px, #f4dc97 7px 10px, #8f6a1c 10px 14px); box-shadow: 0 -1px 0 rgba(0,0,0,.35), inset 0 2px 2px rgba(255,255,255,.35), inset 0 -2px 2px rgba(0,0,0,.3); }
+.zi2-sea { position: absolute !important; left: 0; right: 0; bottom: 8px; height: 26px; z-index: 1 !important; pointer-events: none; overflow: hidden; }
+.zi2-sea svg.w { position: absolute; left: 0; bottom: 0; width: 200%; height: 100%; }
+.zi2-sea svg.w1 { animation: znWave 16s linear infinite; opacity: .55; } .zi2-sea svg.w2 { animation: znWave 9s linear infinite reverse; opacity: .9; }
+.zi2-sea svg.boat { position: absolute; bottom: 5px; left: 0; width: 46px; height: 46px; animation: znSail 46s linear infinite, znBob 3.2s ease-in-out infinite; }
+@keyframes znWave { to { transform: translateX(-50%); } }
+@keyframes znSail { from { left: -60px; } to { left: 100%; } }
+@keyframes znBob { 0%,100% { margin-bottom: 0; rotate: -2deg; } 50% { margin-bottom: 3px; rotate: 3deg; } }
+.zi2.zn .zi2-mo { width: 58px; height: 58px; stroke: none; fill: none; filter: drop-shadow(0 3px 6px rgba(0,0,0,.4)); }
+.zi2.zn .zi2-mo .needle { transform-origin: 32px 32px; animation: znNeedle 7s ease-in-out infinite; }
+@keyframes znNeedle { 0%,100% { transform: rotate(-9deg); } 50% { transform: rotate(11deg); } }
+.zi2.zn .zi2-ti small { color: #f0d58c; letter-spacing: .3em; font-size: 12px; }
+.zi2.zn .zi2-ti b { font: 700 28px/1.05 Georgia, "Times New Roman", serif; letter-spacing: .01em; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
+.zi2.zn .zi2-ti em { font: italic 500 14px/1.2 Georgia, serif; color: #cfe0f3; }
+.zi2.zn .zi2-search { border-radius: 999px; background: #fffdf6; box-shadow: inset 0 2px 5px rgba(11,47,94,.18), 0 0 0 2px #caa04a, 0 0 0 4px rgba(7,24,44,.55); }
+.zi2.zn .zi2-x, .zi2.zn .zi2-ret { border-radius: 999px; background: linear-gradient(180deg, #f1d990, #c9973a); color: #07182C; box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 3px 8px rgba(0,0,0,.35); }
+.zi2.zn .zi2-x:hover, .zi2.zn .zi2-ret:hover { background: linear-gradient(180deg, #fff0bd, #d9aa4a); }
+.zi2.zn .zi2-cats { background: linear-gradient(180deg, #0c2f5a, #0a2748); border-bottom: 3px solid #caa04a; padding: 12px 18px 12px; gap: 10px; }
+.zi2.zn .zi2-cat { height: 46px; border-radius: 6px 14px 14px 6px; border: 0; padding: 0 14px 0 12px; background: #fffdf6; color: #0B2F5E; box-shadow: inset 6px 0 0 var(--cc), 0 3px 8px rgba(0,0,0,.28); font-weight: 700; }
+.zi2-pen { flex: none; width: 20px; height: 15px; background: var(--cc); clip-path: polygon(0 0, 100% 50%, 0 100%); margin-left: 4px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+.zi2.zn .zi2-cat i { background: #e9eef4; }
+.zi2.zn .zi2-cat:hover { transform: translateY(-1px); }
+.zi2.zn .zi2-cat.on { background: linear-gradient(180deg, #f6e2a4, #d3a544); color: #07182C; box-shadow: inset 6px 0 0 #07182C, 0 4px 12px rgba(0,0,0,.4); } .zi2.zn .zi2-cat.on i { background: #07182C; color: #f6e2a4; } .zi2.zn .zi2-cat.on .zi2-pen { background: #07182C; }
+.zi2.zn .zi2-grid { background-color: #f3ecdc; background-image: linear-gradient(rgba(11,47,94,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(11,47,94,.045) 1px, transparent 1px), radial-gradient(60% 50% at 80% 100%, rgba(26,120,170,.10), transparent 70%); background-size: 44px 44px, 44px 44px, 100% 100%; padding: 22px 20px; gap: 16px; }
+.zi2.zn .zi2-it { position: relative; padding: 18px 10px 14px; border-radius: 14px; border: 1px solid #dccfae; background: linear-gradient(180deg, #fffefb, #fbf6e9); box-shadow: 0 1px 0 #fff inset, 0 8px 18px rgba(60,44,10,.10); }
+.zi2.zn .zi2-it::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; border-radius: 14px 14px 0 0; background: repeating-linear-gradient(90deg, var(--cc) 0 14px, #fffdf6 14px 20px); opacity: .9; }
+.zi2.zn .zi2-it::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 14px; border-radius: 0 0 14px 14px; opacity: .8; background: radial-gradient(14px 9px at 14px 16px, rgba(26,120,170,.20) 97%, transparent 100%) 0 0 / 28px 14px repeat-x; pointer-events: none; }
+.zi2.zn .zi2-it:hover, .zi2.zn .zi2-it:focus-visible { transform: translateY(-4px) rotate(-.4deg); border-color: #caa04a; box-shadow: 0 16px 30px rgba(60,44,10,.2); }
+.zi2.zn .zi2-it.sel { border-color: #caa04a; box-shadow: 0 0 0 3px rgba(202,160,74,.55), 0 14px 28px rgba(60,44,10,.2); }
+.zi2-no { position: absolute; left: 9px; top: 12px; font: italic 600 12px/1 Georgia, serif; color: #a08544; letter-spacing: .02em; }
+.zi2.zn .zi2-ic { position: relative; width: 92px; height: 92px; margin: 6px 0 4px; background: radial-gradient(circle at 50% 35%, #ffffff, #e3edf4 70%, #cfdfea); box-shadow: inset 0 3px 8px rgba(11,47,94,.25) !important; overflow: visible !important; }
+.zi2.zn .zi2-ic.ph { background: #cfdfea; } .zi2.zn .zi2-ic.ph img { border-radius: 50%; transform: none; object-position: 50% 55%; width: 100%; height: 100%; scale: 1; } .zi2.zn .zi2-ic.ph { overflow: visible !important; } .zi2.zn .zi2-ic.ph > img { clip-path: circle(50%); transform: scale(1); object-fit: cover; }
+.zi2.zn .zi2-ic > canvas { border-radius: 50%; }
+.zi2.zn .zi2-ic::before { content: ""; position: absolute; inset: -8px; border-radius: 50%; z-index: 1; background: conic-gradient(from 30deg, #fbeab0, #b8862b 18%, #f6dc93 34%, #8f6a1c 52%, #f8e4a3 70%, #a87a22 86%, #fbeab0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px)); mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px)); filter: drop-shadow(0 3px 4px rgba(60,44,10,.35)); }
+.zi2.zn .zi2-ic::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; z-index: 2; background: radial-gradient(circle 2px at 50% 4px, #6b4e12 95%, transparent), radial-gradient(circle 2px at 50% calc(100% - 4px), #6b4e12 95%, transparent), radial-gradient(circle 2px at 4px 50%, #6b4e12 95%, transparent), radial-gradient(circle 2px at calc(100% - 4px) 50%, #6b4e12 95%, transparent), radial-gradient(circle 2px at 15.5% 15.5%, #6b4e12 95%, transparent), radial-gradient(circle 2px at 84.5% 15.5%, #6b4e12 95%, transparent), radial-gradient(circle 2px at 15.5% 84.5%, #6b4e12 95%, transparent), radial-gradient(circle 2px at 84.5% 84.5%, #6b4e12 95%, transparent), linear-gradient(135deg, rgba(255,255,255,.55) 0 18%, transparent 34%); -webkit-mask: radial-gradient(farthest-side, #000 99%, transparent); mask: radial-gradient(farthest-side, #000 99%, transparent); pointer-events: none; }
+.zi2.zn .zi2-n { font: 700 17px/1.2 Georgia, "Times New Roman", serif; color: #0a2748; }
+.zi2.zn .zi2-m { color: #8a6714; font-weight: 700; }
+.zi2.zn .zi2-r { font: 700 11px/1 Inter, sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #fff; background: var(--cc); padding: 5px 9px 5px 8px; border-radius: 3px 9px 9px 3px; margin-top: 3px; position: relative; z-index: 1; align-self: start; }
+.zi2.zn .zi2-it { align-content: start; }
+.zi2.zn .zi2-q { background: #f3e2b8; border: 1px solid #dcc487; }
+.zi2.zn .zi2-det { border-left: 0; background: linear-gradient(180deg, #fffefb, #faf4e4); box-shadow: inset 8px 0 14px -8px rgba(60,44,10,.28); padding: 20px 18px 22px; }
+.zi2.zn .zi2-det::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: repeating-linear-gradient(28deg, #b98a2b 0 7px, #f4dc97 7px 10px, #8f6a1c 10px 14px); }
+.zi2.zn .zi2-photo { border-radius: 10px; box-shadow: 0 0 0 3px #fffdf6, 0 0 0 5px #caa04a, 0 0 0 6px #7b5a17, 0 14px 28px rgba(60,44,10,.3); margin: 6px 6px 0; }
+.zi2.zn .zi2-photo figcaption { background: rgba(7,24,44,.86); border: 1px solid rgba(240,213,140,.7); font: italic 600 13.5px/1 Georgia, serif; }
+.zi2.zn .zi2-det canvas { border-radius: 10px; box-shadow: 0 0 0 3px #fffdf6, 0 0 0 5px #caa04a, 0 10px 22px rgba(60,44,10,.22); width: calc(100% - 12px); margin: 6px 6px 0; }
+.zi2.zn .zi2-det-t { margin-top: 20px; } .zi2.zn .zi2-det-t b { font: 700 28px/1.12 Georgia, "Times New Roman", serif; color: #0a2748; }
+.zi2.zn .zi2-model { border-radius: 4px 14px 14px 4px; border: 0; background: linear-gradient(180deg, #0c3465, #0a2748); box-shadow: inset 6px 0 0 #caa04a, 0 6px 14px rgba(7,24,44,.25); padding: 12px 14px 12px 20px; }
+.zi2.zn .zi2-model strong { color: #fff; font: 700 19px/1.2 Georgia, serif; } .zi2.zn .zi2-model span { color: #f0d58c; }
+.zi2.zn .zi2-specs li { background: #fffdf6; border: 1px solid #caa04a; color: #0a2748; box-shadow: 0 1px 0 #fff inset; }
+.zi2.zn .zi2-h { font: 700 21px/1.2 Georgia, serif; color: #0a2748; margin-top: 8px; }
+.zi2.zn .zi2-h svg { width: 24px; height: 24px; flex: none; fill: none; stroke: #b98a2b; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.zi2.zn .zi2-h::after { height: 6px; border-radius: 0; background: repeating-linear-gradient(118deg, #b98a2b 0 5px, #f4dc97 5px 7px, #8f6a1c 7px 10px); -webkit-mask: linear-gradient(90deg, #000, transparent); mask: linear-gradient(90deg, #000, transparent); }
+.zi2.zn .zi2-steps li { background: #fffefb; border: 1px solid #e2d6b6; border-radius: 12px; grid-template-columns: 44px 1fr; }
+.zi2.zn .zi2-steps li::before { width: 44px; height: 44px; color: #fff; font: 800 18px/1 Inter, sans-serif; background: radial-gradient(circle, #0a2748 0 54%, transparent 56%), repeating-conic-gradient(from 22.5deg, #d8372f 0 45deg, #ffffff 45deg 90deg); box-shadow: 0 0 0 1.5px #9a2a24, 0 3px 7px rgba(60,44,10,.3); }
+.zi2.zn .zi2-warn { border-radius: 12px; border: 1px solid #e3b56d; border-left: 0; background: #fff6e6; position: relative; padding-left: 26px; overflow: hidden; }
+.zi2.zn .zi2-warn::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 12px; background: repeating-linear-gradient(180deg, #d8372f 0 12px, #f6c21c 12px 24px); }
+.zi2-fun { position: relative; margin: 0 0 16px; padding: 14px 16px 14px 62px; border-radius: 14px; background: radial-gradient(120% 160% at 0% 0%, #164a85, #0a2748 70%); color: #eaf2fb; box-shadow: 0 8px 18px rgba(7,24,44,.28), inset 0 0 0 1px rgba(240,213,140,.45); }
+.zi2-fun svg { position: absolute; left: 12px; top: 50%; width: 40px; height: 40px; margin-top: -20px; fill: none; stroke: #f0d58c; stroke-width: 2; stroke-linecap: round; animation: znWheel 14s linear infinite; }
+@keyframes znWheel { to { transform: rotate(360deg); } }
+.zi2-fun b { display: block; font: 700 12px/1 Inter, sans-serif; letter-spacing: .22em; color: #f0d58c; margin-bottom: 6px; } .zi2-fun span { font: 500 15.5px/1.5 Georgia, serif; }
+.zi2.zn .zi2-where { border-radius: 12px; background: #fffdf6; border: 1px dashed #caa04a; } .zi2.zn .zi2-where small { color: #8a6714; }
+.zi2.zn .zi2-go { border-radius: 999px; min-height: 56px; font: 700 18px/1 Georgia, serif; background: linear-gradient(180deg, #f6e2a4, #d3a544 60%, #b98a2b); box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 0 0 2px #7b5a17, 0 8px 16px rgba(60,44,10,.3); }
+.zi2.zn .zi2-go:hover { filter: brightness(1.06); }
+.zi2.zn .zi2-manual { border-radius: 999px; border-color: #0a2748; background: #fffdf6; }
+.zi2.zn .zi2-det-empty { padding: 18px 6px; gap: 14px; color: #40617A; font-size: 16.5px; }
+.zi2.zn .zi2-det-empty svg.rose { width: 150px; height: 150px; stroke: none; filter: drop-shadow(0 6px 12px rgba(60,44,10,.25)); } .zi2.zn .zi2-det-empty svg.rose .needle { transform-origin: 32px 32px; animation: znNeedle 7s ease-in-out infinite; }
+.zi2-ship { width: 100%; box-sizing: border-box; text-align: left; padding: 14px 16px; border-radius: 14px; background: #fffdf6; border: 1px solid #dccfae; box-shadow: 0 8px 18px rgba(60,44,10,.1); }
+.zi2-ship small { display: block; font: 700 11.5px/1 Inter, sans-serif; letter-spacing: .22em; color: #8a6714; margin-bottom: 6px; } .zi2-ship b { display: block; font: 700 21px/1.2 Georgia, serif; color: #0a2748; margin-bottom: 6px; } .zi2-ship span { font: 500 15.5px/1.5 Georgia, serif; color: #2f4a63; }
+.zi2.zn .zi2-none { font: italic 500 18px/1.5 Georgia, serif; }
+.zi2.zn .zi2-info { background: #fffefb; border: 1px solid #dccfae; }
+@media (max-width: 860px) { .zi2.zn .zi2-card { box-shadow: none; border-radius: 0; } .zi2.zn .zi2-hd { padding: 12px 14px 28px; } .zi2.zn .zi2-ti b { font-size: 23px; } .zi2.zn .zi2-mo { width: 44px; height: 44px; } .zi2.zn .zi2-grid { padding: 16px 12px; gap: 12px; } .zi2.zn .zi2-ic { width: 84px; height: 84px; } .zi2.zn .zi2-det::before { display: none; } .zi2.zn .zi2-det { box-shadow: 0 -18px 40px rgba(7,24,44,.35); border-top: 5px solid #caa04a; } }
+@media (prefers-reduced-motion: reduce) { .zi2-sea svg, .zi2.zn .needle, .zi2-fun svg { animation: none !important; } }
 </style>
 
 <div id="stage"></div>
@@ -6233,6 +6311,19 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   IT.hob.d = "Kétlapos elektromos főzőlap a pultba építve – fokozatkapcsolóval.";
   IT.fridgefreezer.d = "Hűtőszekrény fagyasztórekesszel – érkezéskor már hideg.";
   IT.ac.d = "Hűtő-fűtő klíma a nappaliban; a távirányítóval kapcsolod és állítod.";
+  try { const FUN = {
+    coffee: "Az „eszpresszó” olasz szó, azt jelenti: kipréselt – a forró vizet a gőz nyomása hajtja át az őrölt kávén.",
+    balatonmap: "A Balaton Közép-Európa legnagyobb tava: mintegy 77 km hosszú, átlagos mélysége viszont alig több mint 3 méter.",
+    sailphoto: "A Kékszalag a Balaton nagy tókerülő vitorlásversenye – Európa legrégebbi és leghosszabb tókerülő versenye, 1934 óta rendezik.",
+    walldecor: "A vitorlás hajó a széllel szemben is tud haladni: cikcakkban, „kreuzolva” jut el oda, ahonnan a szél fúj.",
+    ac: "A ház névadója, Zephürosz, a görög mitológia enyhe nyugati szele – a klíma az ő hűsítő munkáját végzi el szélcsendben.",
+    kettle: "A tengerészek a sebességet ma is csomóban mérik: 1 csomó = 1 tengeri mérföld (1852 méter) óránként.",
+    bedding: "A hajókon az ágyat kojának hívják, a függőágyat pedig a tengerészek évszázadokig minden reggel feltekerve vitték a fedélzetre.",
+    tv: "A hajókon a bal oldal neve „backbord” (piros lámpa), a jobb oldalé „steuerbord” (zöld lámpa) – a távirányító piros gombját így könnyű megjegyezni.",
+    terraceset: "Balatoni viharjelzés: percenként 45 villanás az elsőfok (figyelmeztetés), 90 villanás a másodfok – ilyenkor tilos fürdeni és vízre szállni.",
+    shower: "Egy átlagos zuhanyzás 40–60 liter vizet használ – a bojler 50 literes, ezért érdemes nem túl sokáig folyatni a meleg vizet.",
+    towel: "A vitorlázók szerint a törölköző a hajó legfontosabb felszerelése – közvetlenül a mentőmellény után."
+  }; Object.keys(FUN).forEach((k) => { if (IT[k]) IT[k].fun = FUN[k]; }); } catch (e) {}
   const INV_ROOM = { konyha: "konyha", eszkoz: "konyha", furdo: "furdo", halo: "halo", nappali: "nappali", terasz: "terasz" };
   const invNorm = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   function invItems(gid) {
@@ -6245,27 +6336,38 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     return cand.length ? cand[0] : null;
   }
   let invEl = null, invSt = null;
+  /* az apartmanok hajós névadói – rövid érdekesség a jegyzék fejlécében és az üres részletpanelen */
+  const INV_SHIP = {
+    korvett: ["A korvett – fürge őrhajó", "A korvett kis, gyors hadihajó: a fregattnál kisebb, őrjáratra és kíséretre épült. A vitorlás korszakban egyetlen ágyúfedélzete volt."],
+    dingi: ["A dingi – a kishajók kishajója", "A dingi kicsi, nyitott csónak vagy kisvitorlás. A nagy hajók kísérőcsónakja, és a legtöbb vitorlázó ilyenben tanulja meg a szelet olvasni."],
+    fregatt: ["A fregatt – háromárbócos gyorsjáró", "A fregatt a vitorlás hadiflották gyors, háromárbócos hajója volt: felderített, üzenetet vitt és konvojt kísért."],
+    kaloz: ["A Kalóz – balatoni klasszikus", "A Kalóz magyar tervezésű, kétszemélyes jolle – a Balaton egyik legkedveltebb túra- és versenyhajó-osztálya."],
+    schooner: ["A schooner – a szkúner", "A schooner (magyarul szkúner) legalább kétárbócos vitorlás hosszvitorlákkal; kis legénységgel is gyors, ezért szerették a kereskedők és a halászok."],
+    kadett: ["A Kadett – az ifjú versenyzők hajója", "A Kadett kétszemélyes ifjúsági versenydingi: ebben tanulnak meg a fiatalok csapatban versenyezni."],
+    zephyr: ["Zephyr – a nyugati szél", "Zephürosz a görög mitológiában az enyhe nyugati szél istene, a tavasz hírnöke. A vitorlázók ma is zefírnek hívják a lágy, kellemes szelet."]
+  };
   function openBinder(gid, back) {
     if (invEl) return;
     const gr = GROUPS.find((q) => q.id === gid) || { name: "Zephyr", no: "" }, D = invItems(gid);
     invSt = { gid, gr, D, cat: "all", q: "", sel: null, back: typeof back === "function" ? back : null, raf: 0 };
-    invEl = document.createElement("div"); invEl.className = "zi2"; invEl.setAttribute("role", "dialog"); invEl.setAttribute("aria-label", "Eszközjegyzék – " + gr.name);
+    invEl = document.createElement("div"); invEl.className = "zi2 zn"; invEl.setAttribute("role", "dialog"); invEl.setAttribute("aria-label", "Eszközjegyzék – " + gr.name);
     invEl.innerHTML = `<div class="zi2-bg"></div><div class="zi2-card">
-      <header class="zi2-hd"><svg class="zi2-mo" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 26 C15 26 10 20 11 13 C17 13 21 17 24 20 C27 17 31 13 37 13 C38 20 33 26 24 26"/><path d="M17 13 Q20 9 24 5 Q28 9 31 13"/><path d="M24 26 V43"/><path d="M24 39 Q17 31 10 33 Q14 40 24 41"/><path d="M24 39 Q31 31 38 33 Q34 40 24 41"/></svg>
-        <div class="zi2-ti"><small>ESZKÖZJEGYZÉK</small><b>${gr.no ? gr.no + " · " : ""}${invEsc(gr.name)}</b></div>
+      <header class="zi2-hd"><div class="zi2-sea" aria-hidden="true"><svg class="w w1" viewBox="0 0 400 26" preserveAspectRatio="none"><path d="M0 14 Q12.5 4 25 14 T50 14 T75 14 T100 14 T125 14 T150 14 T175 14 T200 14 T225 14 T250 14 T275 14 T300 14 T325 14 T350 14 T375 14 T400 14 V26 H0Z" fill="#2a78b8"/></svg><svg class="boat" viewBox="0 0 48 48"><path d="M23 6 V34" stroke="#f4dc97" stroke-width="1.6"/><path d="M24.5 8 40 33 H24.5Z" fill="#fffdf6" stroke="#0a2748" stroke-width=".8"/><path d="M21.5 11 8 33 H21.5Z" fill="#d8372f" stroke="#7d1c17" stroke-width=".8"/><path d="M5 36 H43 L37 44 H11Z" fill="#fffdf6" stroke="#0a2748" stroke-width="1.2"/><path d="M8 39 H40" stroke="#caa04a" stroke-width="1.4"/></svg><svg class="w w2" viewBox="0 0 400 26" preserveAspectRatio="none"><path d="M0 18 Q10 10 20 18 T40 18 T60 18 T80 18 T100 18 T120 18 T140 18 T160 18 T180 18 T200 18 T220 18 T240 18 T260 18 T280 18 T300 18 T320 18 T340 18 T360 18 T380 18 T400 18 V26 H0Z" fill="#12497f"/></svg></div>
+        <svg class="zi2-mo rose" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#0a2748" stroke="#f0d58c" stroke-width="2"/><circle cx="32" cy="32" r="24" fill="none" stroke="#caa04a" stroke-width="1" stroke-dasharray="1.2 2.6"/><path d="M32 6 36 28 58 32 36 36 32 58 28 36 6 32 28 28Z" fill="#f6e2a4" stroke="#8f6a1c" stroke-width=".8"/><path d="M32 6 32 32 28 28Z M58 32 32 32 36 28Z M32 58 32 32 36 36Z M6 32 32 32 28 36Z" fill="#caa04a"/><path d="M14 14 29 29 M50 14 35 29 M50 50 35 35 M14 50 29 35" stroke="#f0d58c" stroke-width="1.4"/><g class="needle"><path d="M32 12 35 32 32 34 29 32Z" fill="#d8372f"/><path d="M32 52 35 32 32 30 29 32Z" fill="#fffdf6"/></g><circle cx="32" cy="32" r="2.6" fill="#0a2748" stroke="#f0d58c" stroke-width="1.2"/></svg>
+        <div class="zi2-ti"><small>FEDÉLZETI LELTÁR</small><b>${gr.no ? gr.no + " · " : ""}${invEsc(gr.name)}</b><em>${invEsc((INV_SHIP[gid] || INV_SHIP.zephyr)[0])}</em></div>
         <label class="zi2-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Mit keresel? pl. kávéfőző, hajszárító…" aria-label="Keresés az eszközjegyzékben"></label>
         ${invSt.back ? `<button type="button" class="zi2-ret">‹ Vissza</button>` : ""}<button type="button" class="zi2-x" aria-label="Bezárás">×</button></header>
       <nav class="zi2-cats" aria-label="Kategóriák"></nav>
       <div class="zi2-main"><div class="zi2-grid" role="list"></div><aside class="zi2-det" aria-live="polite"></aside></div></div>`;
     document.body.appendChild(invEl);
     const cats = invEl.querySelector(".zi2-cats");
-    const mk = (k, t, n, c) => { const b = document.createElement("button"); b.type = "button"; b.className = "zi2-cat"; b.dataset.k = k; b.style.setProperty("--cc", c || "#0B2F5E"); b.innerHTML = `${invEsc(t)}${n != null ? `<i>${n}</i>` : ""}`; b.addEventListener("click", () => { invSt.cat = k; invRender(); }); cats.appendChild(b); };
+    const mk = (k, t, n, c) => { const b = document.createElement("button"); b.type = "button"; b.className = "zi2-cat"; b.dataset.k = k; b.style.setProperty("--cc", c || "#0B2F5E"); b.innerHTML = `<s class="zi2-pen"></s>${invEsc(t)}${n != null ? `<i>${n}</i>` : ""}`; b.addEventListener("click", () => { invSt.cat = k; invRender(); }); cats.appendChild(b); };
     mk("all", "Minden", D.items.length); D.pages.forEach((p) => mk(p, BPAGES[p].t, D.items.filter((q) => q.p === p).length, BPAGES[p].c)); mk("info", "Wi-Fi és elérhetőség", null, "#14202a");
     const inp = invEl.querySelector("input"); inp.addEventListener("input", () => { invSt.q = inp.value; if (invSt.cat === "info") invSt.cat = "all"; invRender(); });
     invEl.querySelector(".zi2-x").addEventListener("click", () => invClose(true)); invEl.querySelector(".zi2-bg").addEventListener("click", () => invClose());
     if (invSt.back) invEl.querySelector(".zi2-ret").addEventListener("click", () => invClose());
     invEl.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (invSt.sel) invDet(null); else invClose(); } });
-    invRender(); requestAnimationFrame(() => invEl.classList.add("on")); invEl.tabIndex = -1; invEl.focus(); try { sfx("whoosh"); } catch (e) {}
+    invRender(); invDet(null); requestAnimationFrame(() => invEl.classList.add("on")); invEl.tabIndex = -1; invEl.focus(); try { sfx("whoosh"); } catch (e) {}
   }
   function invClose(noret) {
     if (!invEl) return; cancelAnimationFrame(invSt.raf); const el = invEl, b = invSt.back; invEl = null; el.classList.remove("on"); setTimeout(() => el.remove(), 350);
@@ -6283,6 +6385,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const ic = document.createElement("span"); ic.className = "zi2-ic"; const rp = invRealPhoto(it, S.gid);
       if (rp) { ic.classList.add("ph"); ic.innerHTML = `<img src="${rp}" alt="" loading="lazy">`; } else ic.appendChild(itemCanvas(x.id, window.innerWidth <= 700 ? 64 : 76));
       b.appendChild(ic);
+      b.insertAdjacentHTML("afterbegin", `<span class="zi2-no">№ ${String(i + 1).padStart(2, "0")}</span>`);
       b.insertAdjacentHTML("beforeend", `<span class="zi2-n">${invEsc(it.n)}</span>${invReal(it, S.gid) ? `<em class="zi2-m">${invEsc(invReal(it, S.gid).model)}</em>` : ""}${it.q ? `<em class="zi2-q">${invEsc(it.q)}</em>` : ""}<span class="zi2-r">${invEsc(BPAGES[x.p].t)}</span>`);
       b.addEventListener("click", () => invDet(x)); if (S.sel && S.sel.id === x.id && S.sel.p === x.p) b.classList.add("sel");
       grid.appendChild(b);
@@ -6294,7 +6397,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function invDet(x) {
     const S = invSt, det = invEl.querySelector(".zi2-det"); cancelAnimationFrame(S.raf); S.sel = x;
     invEl.classList.toggle("det-on", !!x); invEl.querySelectorAll(".zi2-it").forEach((b, i) => b.classList.remove("sel"));
-    if (!x) { det.innerHTML = `<div class="zi2-det-empty"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 40 C17 33 9 27 9 18 C9 11 13 8 18 8 C21 8 23 10 24 13 C25 10 27 8 30 8 C35 8 39 11 39 18 C39 27 31 33 24 40 Z"/></svg><p>Válassz egy tételt – megmutatom, mire jó, hány darab van belőle, és hol találod.</p></div>`; return; }
+    if (!x) { const sh = INV_SHIP[S.gid] || INV_SHIP.zephyr; det.innerHTML = `<div class="zi2-det-empty"><svg class="rose" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#0a2748" stroke="#f0d58c" stroke-width="2"/><circle cx="32" cy="32" r="24" fill="none" stroke="#caa04a" stroke-width="1" stroke-dasharray="1.2 2.6"/><path d="M32 6 36 28 58 32 36 36 32 58 28 36 6 32 28 28Z" fill="#f6e2a4" stroke="#8f6a1c" stroke-width=".8"/><path d="M32 6 32 32 28 28Z M58 32 32 32 36 28Z M32 58 32 32 36 36Z M6 32 32 32 28 36Z" fill="#caa04a"/><path d="M14 14 29 29 M50 14 35 29 M50 50 35 35 M14 50 29 35" stroke="#f0d58c" stroke-width="1.4"/><g class="needle"><path d="M32 12 35 32 32 34 29 32Z" fill="#d8372f"/><path d="M32 52 35 32 32 30 29 32Z" fill="#fffdf6"/></g><circle cx="32" cy="32" r="2.6" fill="#0a2748" stroke="#f0d58c" stroke-width="1.2"/></svg><p>Válassz egy tételt – megmutatom, mire jó, hogyan használd, és hol találod.</p>
+      <div class="zi2-ship"><small>AZ APARTMAN NÉVADÓJA</small><b>${invEsc(sh[0])}</b><span>${invEsc(sh[1])}</span></div>
+      <div class="zi2-ship"><small>A HÁZ NEVE</small><b>Zephyr</b><span>${invEsc(INV_SHIP.zephyr[1])}</span></div></div>`; return; }
     const it = IT[x.id], sc = invRoomScene(S.gid, x.p);
     if (invReal(it, S.gid)) {   /* valódi típus, saját fotó, útmutató lépésenként */
       const R = invReal(it, S.gid), rp = invRealPhoto(it, S.gid);
@@ -6304,7 +6409,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
         <div class="zi2-model"><strong>${invEsc(R.model)}</strong>${R.brand ? `<span>${invEsc(R.brand)}</span>` : ""}</div>
         <p>${invEsc(it.d)}</p>
         ${R.specs ? `<ul class="zi2-specs">${R.specs.map((q) => `<li>${invEsc(q)}</li>`).join("")}</ul>` : ""}
-        <h4 class="zi2-h">Így használd</h4>
+        ${it.fun ? `<div class="zi2-fun"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="11"/><circle cx="20" cy="20" r="3"/><path d="M20 3v34M3 20h34M8 8l24 24M32 8 8 32"/></svg><b>TUDTAD?</b><span>${invEsc(it.fun)}</span></div>` : ""}
+        <h4 class="zi2-h"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.2V21M8 11h8M4 14c0 4 3.6 7 8 7s8-3 8-7M4 14l-1.5 2.5M4 14l2.6 1.4M20 14l1.5 2.5M20 14l-2.6 1.4"/></svg>Így használd</h4>
         <ol class="zi2-steps">${R.steps.map(([a, b2]) => `<li><div><b>${invEsc(a)}</b><span>${invEsc(b2)}</span></div></li>`).join("")}</ol>
         ${R.warn ? `<div class="zi2-warn"><b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19zM12 10v5M12 17.6v.4"/></svg>Fontos</b><ul>${R.warn.map((q) => `<li>${invEsc(q)}</li>`).join("")}</ul></div>` : ""}
         ${R.manual ? `<a class="zi2-manual" href="${R.manual}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l4 4v14H7zM15 3v4h4M10 12h6M10 16h6"/></svg>A gyári használati útmutató (PDF)</a>` : ""}
@@ -6317,6 +6423,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       return;
     }
     det.innerHTML = `<button type="button" class="zi2-det-x" aria-label="Részletek bezárása">×</button><canvas></canvas><div class="zi2-det-t"><b>${invEsc(it.n)}</b>${it.q ? `<em>${invEsc(it.q)}</em>` : ""}</div><p>${invEsc(it.d)}</p>
+      ${it.fun ? `<div class="zi2-fun"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="11"/><circle cx="20" cy="20" r="3"/><path d="M20 3v34M3 20h34M8 8l24 24M32 8 8 32"/></svg><b>TUDTAD?</b><span>${invEsc(it.fun)}</span></div>` : ""}
       <div class="zi2-where"><small>HOL TALÁLOM?</small><span>${invEsc(BPAGES[x.p].t)}${BPAGES[x.p].sub ? " · " + invEsc(BPAGES[x.p].sub) : ""}</span></div>
       ${sc ? `<button type="button" class="zi2-go">Megmutatom a sétában ›</button>` : ""}`;
     det.querySelector(".zi2-det-x").addEventListener("click", () => invDet(null));
