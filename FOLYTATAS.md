@@ -489,3 +489,8 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
 - Közvetlen link a jegyzékhez: `…/virtualis-seta/#leltar` (Korvett) vagy `#leltar-<apartman>` (dingi, fregatt, kaloz, schooner, kadett).
 - Telefon (nov. 10. este, kérésre): a többfunkciós kocka telefonon is kint van (fejléc alatt bal felül, 104 px, „Vissza” lappal előre – ez az alapállás); táblagépen továbbra is rejtve.
   A jegyzék telefonon egyoszlopos, nagy betűs (név 23 px, leírás 19 px), a részletlap 88% magas.
+- 19:30 – A tulajdonos elutasította a csempe-rácsot és a kerek aranykeretes képeket („soha többé”). Új jegyzék: `.zi2.zn.zl` „hajónapló” – helyiségenként
+  fejezetszalag (`.zl-sec`), tételenként egy sor (`.zl-th` téglalap kép balra, név + típus + leírás + címkék jobbra, nyíl). A hajós fejléc megmaradt.
+- A telefonja (a Claude app beépített böngészője) kb. 780 px széles elrendezést ad 390 helyett (minden fele akkora volt, a telefonos szabályok nem éltek).
+  Javítás: `zvFix` – `--vk` = innerWidth / screen.width; telefon módban a fejléc, a Menü, a kocka és a jegyzék ennyivel visszanagyítva (`data-vwide`).
+  A telefonos jegyzék-szabályok `:root[data-device="phone"]` alapján élnek (nem szélesség alapján). Kocka telefonon: 138 px, a fejléc alatt 84 px-re; Menü sorai 60 px / 20 px betű.
