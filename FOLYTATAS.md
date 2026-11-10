@@ -546,3 +546,9 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
   áttetsző/világító anyagok maradnak élő fényben. Kikapcsolás: localStorage `zephyr-bake` = `0`. Gépen előtte–utána képen közel azonos látvány.
   NEM KÉSZ még: a hajó ÚJ RÉSZLETEI (a jóváhagyott terv szerint: kötélzet a csörlőkig, feszítők, léczsebek, műszerek stb.), a vitorlák kisütése, mérés Quest 2-n.
 - 2026-11-11 00:40 – Regatta-modellek javítása a tulajdonos telefonos képei alapján: nagyobb kivágás (a közeli hajó/spinakker egyenes vonallal le volt vágva), a vitorlaszám a hátoldalról nézve sem tükrös (a textúra U-tükrözése nézet szerint).
+- 2026-11-11 00:36 – ÚJ KÉRÉS (vitorlás SAKK, 2D): (1) ne melegedjen tőle a telefon; (2) minden csata legyen más és más, nagyon kidolgozottan: az emberek vízbe zuhannak,
+  tengeri szörny nyeli el, hurrikán pusztítja el, varázslat végez vele, a világítótorony lézerfénye; mind másként essen szét; és az is legyen változatos, hogy MELYIK
+  bábu MELYIKKEL találkozik (bábupáronként más csata).
+- 2026-11-11 00:50 – Melegedés a 3D-világokban telefonon: `zvGov` – ha világ fut (sakk, verseny, makett) és a készülék telefon, 2D-ben legfeljebb ~30 képkocka/mp és 1,5× felbontás.
+  MÉRÉS: a vitorlás sakk 671 000 háromszöget és 223 rajzolási hívást küld képkockánként – EZ a melegedés fő oka; igazi megoldás: a bábuk/tábla egyszerűsítése telefonra
+  (távoli bábuk könnyített modellje, összevont geometria, kisütött fény). A sakk csatáinak változatossá tétele (bábupáronként más, szörny/hurrikán/varázslat/lézer) MÉG NINCS KÉSZ.

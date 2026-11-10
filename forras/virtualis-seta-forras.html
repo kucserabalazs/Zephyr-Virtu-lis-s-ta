@@ -6867,8 +6867,13 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const base = sceneEl.render; let last = 0; const q0 = new THREE.Quaternion(), q1 = new THREE.Quaternion();
       r.setAnimationLoop((t, frame) => {
         if (frame || inVR || sceneEl.is("vr-mode") || sceneEl.is("ar-mode")) return base(t, frame);
-        const now = performance.now(), act = now < zvWakeT || busy || walking || autoRotate || EDIT || document.body.classList.contains("world-on") || (window.ZephyrWorld && ZephyrWorld.active);
+        const inWorld = document.body.classList.contains("world-on") || !!(window.ZephyrWorld && ZephyrWorld.active);
+        const now = performance.now(), act = now < zvWakeT || busy || walking || autoRotate || EDIT || inWorld;
         if (!act && now - last < 125) return;
+        /* 2026-11-11: telefonon a 3D-világok (sakk, verseny, makett) 2D-ben másodpercenként legfeljebb ~30 képkockát rajzolnak, 1,5× felbontással –
+           a mozgás idő szerint számol, így ugyanolyan gyors marad, csak a telefon dolgozik feleannyit (melegedés, akkumulátor) */
+        if (inWorld && device === "phone") { if (now - last < 30) return; if (!sceneEl._zvW) { sceneEl._zvW = 1; try { r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5)); const c = sceneEl.canvas; r.setSize(c.clientWidth || innerWidth, c.clientHeight || innerHeight, false); } catch (e) {} } }
+        else if (sceneEl._zvW) { sceneEl._zvW = 0; zvPix(); }
         last = now; base(t, frame);
         try { const c = sceneEl.camera; if (c) { c.getWorldQuaternion(q1); if (Math.abs(q1.dot(q0)) < .9999995) { q0.copy(q1); zvWake(700); } } } catch (e) {}
       });
