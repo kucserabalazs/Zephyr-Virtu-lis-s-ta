@@ -522,3 +522,15 @@ A tulajdonos telefonja a tesztelés alatt 40% töltést vesztett és forró lett
   futás közben NINCS (MeshBasicMaterial + csúcsszín + kész textúra). WebGL nélkül a régi rajzolt hajó marad (`boat3d`), a tükörkép továbbra is a régi 2D rajz.
   A Zephyr a valóságnak megfelelően: fehér nagyvitorla piros Z-vel, piros génua. Teszt: `ZephyrTour.openGame("race")`.
   HÁTRAVAN ebből a lépésből: döntéses kormányzás (telefon billentése) választhatóként; fogyasztásmérés a tulajdonos telefonján; finomítás a visszajelzése alapján.
+
+## 2026. nov. 10. 23:15 – JÓVÁHAGYOTT FOLYTATÁS (a tulajdonos: „Mindegyiket csináld meg és a javasolt beállításaidat jóváhagyom, mert jól működik.”)
+A modellezett, kisütött fényű hajók iránya ELFOGADVA. Sorrend:
+1. A Zephyr (Raptor 27; fehér nagyvitorla piros Z-vel, piros génua) MAKETT-MINŐSÉGBEN + külön körbeforgatható, közelíthető néző. Részletek: dörzsléc, festett vízvonal,
+   hajónév, kormánylapát, tőkesúly; íves szegélydeszkás pallózás, csúszásgátló mezők, nyílások, bakok, sínek, csörlők; keretes ablakok, lejáró, padok, műszerek;
+   szálingok, feszítők, felhúzókötelek, szélirányjelző; varrott panelek, megerősítések, lécek, reffsorok, vitorlaszám, ablak; tagolt, mozgó legénység; finomabb kisütés.
+   (Fotót kértem a valódi hajóról – ha nem küld, általános versenyhajó az ő színeivel.)
+2. A három ellenfél ugyanebből; KÖNNYÍTETT változat a regattába (távolra), gazdag változat közelre (VR, kormánykerekes verseny).
+3. Regatta: döntéses kormányzás választhatóként; a vízi tükörkép is a modellből; fogyasztásmérés a tulajdonos telefonján.
+4. A séta alján futó kis dekorációs regatta ugyanezekkel a modellekkel, takarékosan.
+5. Szemüveges (VR) világok: stég, hajók, makett – kisütött technikával.
+Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak fényfoltok mozognak) – a tulajdonos szóvá tette, hogy nem hullámzik; hullámzó víz külön kérdés, még nem döntöttünk róla.
