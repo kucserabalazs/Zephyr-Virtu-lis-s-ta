@@ -534,3 +534,9 @@ A modellezett, kisütött fényű hajók iránya ELFOGADVA. Sorrend:
 4. A séta alján futó kis dekorációs regatta ugyanezekkel a modellekkel, takarékosan.
 5. Szemüveges (VR) világok: stég, hajók, makett – kisütött technikával.
 Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak fényfoltok mozognak) – a tulajdonos szóvá tette, hogy nem hullámzik; hullámzó víz külön kérdés, még nem döntöttünk róla.
+
+## 2026. nov. 10. 23:19 – A TULAJDONOS DÖNTÉSEI
+- **Stég-séta:** a TÉRKÉPES változat (C) marad, de „jobban kidolgozott térképkörnyezetben”. A többi próbaváltozat és a választó törlendő.
+- **Regatta vize:** TELEFONON a fénykép (állókép), ASZTALI GÉPEN hullámzó víz.
+- **Jegyzék:** a fordítást el kell végezni (mind a 24 nyelv).
+- **Makett HIBÁS:** a lépcsőháznál hiányzik az emeleti terasz egy része, és emiatt a KALÓZ bejárata sincs meg – javítandó (forras/vilag/06-makett.js).
