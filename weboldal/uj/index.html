@@ -1640,6 +1640,30 @@ body.in-vr #tools, body.world-on #tools { display: none !important; }
 .wr-boat { position: absolute; top: 50%; width: 26px; height: 26px; margin: -24px 0 0 -13px; background: var(--boat-w) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); transition: left 1.1s ease; animation: boatRock 1.2s ease-in-out infinite; }
 .wr-ends { display: flex; justify-content: space-between; margin-top: 9px; font: 600 13px/1 Inter, sans-serif; color: #B9CADB; }
 
+/* ===================== ESZKÖZKÉSZLET – VALÓDI ESZKÖZÖK (2026-11-10): fotó, típus, útmutató ===================== */
+.zi2-ic.ph { overflow: hidden; padding: 0 !important; background: #dfe7ef; box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(212,161,58,.85), 0 6px 14px rgba(11,47,94,.18); }
+.zi2-ic.ph img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; transform: scale(1.5); }
+.zi2-m { display: block; font: 650 12.5px/1.25 Inter, sans-serif; font-style: normal; color: #9a7420; letter-spacing: .01em; margin-top: 1px; }
+.zi2-photo { margin: 0; position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 24px rgba(11,47,94,.18), 0 0 0 1px rgba(11,47,94,.08); }
+.zi2-photo img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.zi2-photo figcaption { position: absolute; left: 10px; bottom: 10px; padding: 6px 11px; border-radius: 999px; background: rgba(7,24,44,.82); color: #fff; font: 650 13px/1 Inter, sans-serif; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.zi2-model { display: grid; gap: 3px; margin: 0 0 10px; padding: 10px 14px; border-radius: 12px; background: linear-gradient(180deg, #fff9e9, #fdf1cf); border: 1px solid #ecd596; }
+.zi2-model strong { font: 750 18px/1.2 Inter, sans-serif; color: #5c4208; } .zi2-model span { font: 600 13.5px/1.2 Inter, sans-serif; color: #8a6a1c; }
+.zi2-specs { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; padding: 0; }
+.zi2-specs li { padding: 6px 11px; border-radius: 999px; background: #EEF2F7; border: 1px solid #D9E1EA; font: 650 13.5px/1 Inter, sans-serif; color: #0B2F5E; }
+.zi2-h { margin: 4px 0 10px; font: 780 19px/1.2 Inter, sans-serif; color: #0B2F5E; display: flex; align-items: center; gap: 10px; }
+.zi2-h::after { content: ""; flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #D4A13A, rgba(212,161,58,0)); }
+.zi2-steps { list-style: none; counter-reset: zs; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+.zi2-steps li { counter-increment: zs; display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: start; padding: 11px 12px; border-radius: 14px; background: #fff; border: 1px solid #D9E1EA; box-shadow: 0 1px 2px rgba(11,47,94,.05); }
+.zi2-steps li::before { content: counter(zs); width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font: 800 18px/1 Inter, sans-serif; color: #fff; background: linear-gradient(160deg, #164377, #0B2F5E); box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #D4A13A; }
+.zi2-steps li div { display: grid; gap: 3px; padding-top: 1px; } .zi2-steps b { font: 720 17px/1.25 Inter, sans-serif; color: #0B2F5E; } .zi2-steps span { font: 500 15.5px/1.45 Inter, sans-serif; color: #40617A; }
+.zi2-warn { margin: 0 0 14px; padding: 12px 14px; border-radius: 14px; background: #fff4e5; border: 1px solid #f0c98a; border-left: 5px solid #e08a1e; }
+.zi2-warn b { display: flex; align-items: center; gap: 8px; font: 780 16px/1 Inter, sans-serif; color: #8a4b00; margin-bottom: 8px; }
+.zi2-warn svg { width: 20px; height: 20px; fill: none; stroke: #c96f00; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.zi2-warn ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; } .zi2-warn li { font: 550 15px/1.45 Inter, sans-serif; color: #6a3f06; }
+.zi2-manual { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 10px 14px; border-radius: 12px; background: #fff; border: 1.5px solid #0B2F5E; color: #0B2F5E; font: 700 15px/1 Inter, sans-serif; text-decoration: none; }
+.zi2-manual:hover { background: #0B2F5E; color: #fff; } .zi2-manual svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
 /* magyar tulipán a betöltőképernyőn – egyszeri vonalrajzolás (csökkentett mozgásnál statikus) */
 .loader-motif { display: block; width: 58px; height: 58px; margin: 0 auto 10px; fill: none; stroke: #D4A13A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 120; stroke-dashoffset: 120; animation: zmDraw .9s ease-out .2s forwards; }
 @keyframes zmDraw { to { stroke-dashoffset: 0; } }

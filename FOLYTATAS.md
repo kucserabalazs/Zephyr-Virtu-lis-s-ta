@@ -467,3 +467,14 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
 - **Mini verseny** pontosan az alsó sáv fölött fut (`--zx-bh`, a sáv mért magassága).
 - **„Lépcső” megálló:** a tulajdonos döntése – megállóként nem kell (fel- és lemenet közben nem állunk meg rajta), de a fényképsorból megnyitható marad. Ez a jelenlegi állapot.
 - **Következő nagy feladat: Eszközkészlet újratervezése** – valódi típusok (pl. Szarvasi SZV-612 eszpresszó kávéfőző, fekete és piros), valósághű ábra, használati útmutató lépésenként; a tulajdonostól kell: melyik apartmanban melyik, saját fotók. Első próba: a kávéfőző.
+
+## 2026. nov. 10. – Eszközjegyzék: valódi eszközök (fotó + típus + használat)
+- Kérés: a képekről minden beazonosítható eszköz kerüljön be képpel és műszaki leírással; a ház műszaki dokumentációja is legyen felhasználva.
+- `IT.<id>.real = { model, brand, photo, specs, steps, warn, manual, where, apts, by }` – `invReal(it, gid)` adja az apartmanra érvényes adatot
+  (`by.<apt>` = eltérés, pl. Schooner: Beko kombi hűtő; `apts` = csak ezekben azonosított, máshol marad az általános rajz + leírás).
+- Fotók: `weboldal/virtualis-seta/img/eszk/<photo>-<apt>.jpg` – a tulajdonos saját 8K konyhapanorámáiból vágva (crop.py / items.py a tesztmappában).
+- Beazonosítva: Szarvasi SZV-612/3 Mini Espresso (mind az 5), Gorenje mikró (5), Esperanza pirító (5), Evido kétlapos főzőlap (5),
+  Candy pult alatti hűtő (1–4) / Beko kombi (Schooner), fehér vízforraló (1–4, márka nem olvasható), Beko mosógép (Fregatt), Airfel split klíma (1–4).
+- Műszaki dokumentációból új tételek: `boiler` (Ariston 50 l villanybojler, Fürdőszoba), `heater` (fűtőpanel 1600/1200/750 W, Nappali); klíma 2,6 kW, –10 °C alatt tiltva.
+- NEM került be (szándékosan): riasztó, kamera, épületfelügyelet, kódok. Hiányzik még: pontos típusszámok (mikró, hűtő, mosógép, klíma, pirító), TV, hajszárító típusa,
+  Schooner vízforraló + klíma fotó, a többi lakás mosógépe. Az új szövegek fordítása a többi nyelvre még hátravan.

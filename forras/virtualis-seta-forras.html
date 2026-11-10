@@ -1732,6 +1732,30 @@ body.in-vr #tools, body.world-on #tools { display: none !important; }
 .wr-boat { position: absolute; top: 50%; width: 26px; height: 26px; margin: -24px 0 0 -13px; background: var(--boat-w) center / contain no-repeat; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); transition: left 1.1s ease; animation: boatRock 1.2s ease-in-out infinite; }
 .wr-ends { display: flex; justify-content: space-between; margin-top: 9px; font: 600 13px/1 Inter, sans-serif; color: #B9CADB; }
 
+/* ===================== ESZKÖZKÉSZLET – VALÓDI ESZKÖZÖK (2026-11-10): fotó, típus, útmutató ===================== */
+.zi2-ic.ph { overflow: hidden; padding: 0 !important; background: #dfe7ef; box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(212,161,58,.85), 0 6px 14px rgba(11,47,94,.18); }
+.zi2-ic.ph img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; transform: scale(1.5); }
+.zi2-m { display: block; font: 650 12.5px/1.25 Inter, sans-serif; font-style: normal; color: #9a7420; letter-spacing: .01em; margin-top: 1px; }
+.zi2-photo { margin: 0; position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 24px rgba(11,47,94,.18), 0 0 0 1px rgba(11,47,94,.08); }
+.zi2-photo img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.zi2-photo figcaption { position: absolute; left: 10px; bottom: 10px; padding: 6px 11px; border-radius: 999px; background: rgba(7,24,44,.82); color: #fff; font: 650 13px/1 Inter, sans-serif; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.zi2-model { display: grid; gap: 3px; margin: 0 0 10px; padding: 10px 14px; border-radius: 12px; background: linear-gradient(180deg, #fff9e9, #fdf1cf); border: 1px solid #ecd596; }
+.zi2-model strong { font: 750 18px/1.2 Inter, sans-serif; color: #5c4208; } .zi2-model span { font: 600 13.5px/1.2 Inter, sans-serif; color: #8a6a1c; }
+.zi2-specs { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px; padding: 0; }
+.zi2-specs li { padding: 6px 11px; border-radius: 999px; background: #EEF2F7; border: 1px solid #D9E1EA; font: 650 13.5px/1 Inter, sans-serif; color: #0B2F5E; }
+.zi2-h { margin: 4px 0 10px; font: 780 19px/1.2 Inter, sans-serif; color: #0B2F5E; display: flex; align-items: center; gap: 10px; }
+.zi2-h::after { content: ""; flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #D4A13A, rgba(212,161,58,0)); }
+.zi2-steps { list-style: none; counter-reset: zs; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+.zi2-steps li { counter-increment: zs; display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: start; padding: 11px 12px; border-radius: 14px; background: #fff; border: 1px solid #D9E1EA; box-shadow: 0 1px 2px rgba(11,47,94,.05); }
+.zi2-steps li::before { content: counter(zs); width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font: 800 18px/1 Inter, sans-serif; color: #fff; background: linear-gradient(160deg, #164377, #0B2F5E); box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #D4A13A; }
+.zi2-steps li div { display: grid; gap: 3px; padding-top: 1px; } .zi2-steps b { font: 720 17px/1.25 Inter, sans-serif; color: #0B2F5E; } .zi2-steps span { font: 500 15.5px/1.45 Inter, sans-serif; color: #40617A; }
+.zi2-warn { margin: 0 0 14px; padding: 12px 14px; border-radius: 14px; background: #fff4e5; border: 1px solid #f0c98a; border-left: 5px solid #e08a1e; }
+.zi2-warn b { display: flex; align-items: center; gap: 8px; font: 780 16px/1 Inter, sans-serif; color: #8a4b00; margin-bottom: 8px; }
+.zi2-warn svg { width: 20px; height: 20px; fill: none; stroke: #c96f00; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.zi2-warn ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; } .zi2-warn li { font: 550 15px/1.45 Inter, sans-serif; color: #6a3f06; }
+.zi2-manual { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 10px 14px; border-radius: 12px; background: #fff; border: 1.5px solid #0B2F5E; color: #0B2F5E; font: 700 15px/1 Inter, sans-serif; text-decoration: none; }
+.zi2-manual:hover { background: #0B2F5E; color: #fff; } .zi2-manual svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
 /* magyar tulipán a betöltőképernyőn – egyszeri vonalrajzolás (csökkentett mozgásnál statikus) */
 .loader-motif { display: block; width: 58px; height: 58px; margin: 0 auto 10px; fill: none; stroke: #D4A13A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 120; stroke-dashoffset: 120; animation: zmDraw .9s ease-out .2s forwards; }
 @keyframes zmDraw { to { stroke-dashoffset: 0; } }
@@ -5661,7 +5685,29 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       g.fillStyle = "rgba(255,255,255,.5)"; g.beginPath(); g.ellipse(-12, 2, 8, 14, -.5, 0, Math.PI * 2); g.fill();
       if (A) g.translate(Math.sin(t * 40) * 1, 0);
     } };
-  IT.coffee = { n: "Kávéfőző", q: "", d: "Filteres kávéfőző – friss kávé reggelente.", s: [[.5, "brew"]],
+  /* VALÓDI ESZKÖZADATOK (2026-11-10, a tulajdonos kérésére – első, próbának szánt tétel: a kávéfőző).
+     `real`: a tényleges típus, apartmanonként saját fotó (a tulajdonos 8K-s panorámáiból kivágva: img/eszk/<kulcs>-<apartman>.jpg),
+     a használat lépésről lépésre (a gyári útmutató alapján, saját szavakkal), figyelmeztetések, adatok, a gyári útmutató linkje.
+     Ugyanezzel a szerkezettel bővíthető a többi eszköz is (vízforraló, mikró, főzőlap, klíma …). */
+  IT.coffee = { n: "Kávéfőző", q: "", d: "Eszpresszó kávéfőző őrölt kávéhoz – 2–6 adag friss, erős kávé pár perc alatt.", s: [[.5, "brew"]],
+    real: {
+      model: "Szarvasi SZV-612/3 Mini Espresso", brand: "Szarvasi · magyar gyártmány", photo: "kavefozo",
+      specs: ["800 W", "3 bar nyomás", "2–6 adag", "őrölt kávéhoz", "víz: legfeljebb 4 dl"],
+      steps: [
+        ["Csavard le a zárócsavart", "A gép tetején lévő nagy, kerek kupak. Csak hideg gépnél nyisd ki!"],
+        ["Töltsd be a vizet", "Az üvegkiöntővel mérd ki: a jelölés mutatja, mennyi kell 2, illetve 6 adaghoz. Legfeljebb 4 dl fér bele."],
+        ["Csavard vissza szorosan", "A zárócsavarnak jól kell zárnia, különben a gőz elszökik."],
+        ["Vedd le a szűrőtartót", "Alul, a nyelénél fogva. Tedd bele a kis szűrőt (2 adag) vagy a nagyot (6 adag)."],
+        ["Töltsd meg kávéval", "Lazán, ne nyomkodd le. A szűrő pereméről töröld le a kávét."],
+        ["Tedd vissza a szűrőtartót", "Illeszd a helyére, és a nyelével húzd meg."],
+        ["Tedd alá az üvegkiöntőt", "Fedéllel együtt, pontosan a szűrőtartó alá."],
+        ["Kapcsold be a piros gombbal", "A gomb világít. Pár perc múlva lefolyik a kávé – ha már nem csöpög, kapcsold ki."]
+      ],
+      warn: ["A gép nyomás alatt működik: főzés közben, és amíg forró, TILOS lecsavarni a zárócsavart vagy levenni a szűrőtartót. Újabb főzés előtt várd meg, míg teljesen kihűl.",
+             "Víz nélkül ne kapcsold be, és főzés közben ne hagyd magára.",
+             "Az üvegkiöntőt ne tedd mikróba. Gyerek ne használja."],
+      manual: "http://szarvasi.hu/wp-content/uploads/2023/06/SZV_612-3_620_623_624_-_06-07-21-1.pdf", where: "Konyha – a pulton, a mikró mellett"
+    },
     f(g, t, A) {
       bR(g, -48, -66, 96, 22, 6, "#37474f", BO, 2.5); bR(g, -48, -44, 26, 100, 4, "#37474f", BO, 2.5); bR(g, -56, 56, 112, 12, 4, "#263238", BO, 2.5);
       bP(g, "M-16 -44 L40 -44 L32 -30 L-8 -30 Z", "#546e7a", BO, 2);
@@ -5671,6 +5717,51 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       bC(g, -35, -10, 3, A ? "#ff1744" : "#7f0000", 0);
       if (A) steam(g, 12, 0, t, 3, 30, .6);
     } };
+  /* ---- VALÓDI ESZKÖZADATOK, 2. kör (2026-11-10): a panorámákon beazonosított gépek. A márka a készüléken olvasható felirat alapján;
+     ahol a pontos típusszám a képről nem olvasható, ott nem találgatunk – csak a márka és a kivitel szerepel. A műszaki adatok a ház
+     műszaki dokumentációjából (klíma, fűtés). A használat leírása saját megfogalmazás; a bekötés a tétel után, az IT_REAL-ban. ---- */
+  const IT_REAL = {
+    microwave: { model: "Gorenje mikrohullámú sütő", brand: "kéttekerős, mechanikus kezelés · forgótányér", photo: "mikro", where: "Konyha – a pulton (a Schoonerben a felső polcon)",
+      specs: ["2 tekerőgomb", "forgótányér", "a végén csenget"],
+      steps: [["Tedd be az ételt", "Mikróba való tányéron vagy edényben, a forgótányér közepére."], ["Csukd be az ajtót", "Nyitott ajtóval nem indul el."],
+        ["Állítsd be az erősséget", "A felső gombbal: melegítéshez közepes vagy magas fokozat, kiolvasztáshoz a hópehely jel."],
+        ["Tekerd fel az időt", "Az alsó gombbal. Amint eltekered, a sütő elindul – 1–2 perc elég egy tányér ételhez."],
+        ["Csengetés jelzi, ha kész", "Ha előbb kivennéd, tekerd az időt nullára, csak utána nyisd ki."]],
+      warn: ["Fémet, alufóliát, fémszélű tányért ne tegyél bele.", "Üresen ne indítsd el. Zárt edényt, héjas tojást ne melegíts benne."] },
+    kettle: { model: "Elektromos vízforraló", brand: "fehér, vezeték nélküli kanna külön talppal", photo: "vizforralo", apts: ["korvett", "dingi", "fregatt", "kaloz"], where: "Konyha – a pulton",
+      specs: ["automatikus kikapcsolás", "levehető kanna"],
+      steps: [["Töltsd meg vízzel", "A kanna oldalán lévő jelzés (min–max) között."], ["Tedd a talpára", "A kanna csak a talpon melegít."],
+        ["Kapcsold be", "A fogantyúnál lévő kapcsolóval; a jelzőfény világít."], ["Magától kikapcsol", "Amikor felforrt a víz, kattanással leáll. Pár perc az egész."]],
+      warn: ["Víz nélkül ne kapcsold be.", "Forrás közben ne nyisd fel a fedelét – forró gőz jön ki."] },
+    toaster: { model: "Esperanza kenyérpirító", brand: "kétszeletes, fehér", photo: "pirito", where: "Konyha – a pulton",
+      specs: ["2 szelet", "állítható pirítás", "magától kiugrik"],
+      steps: [["Tedd be a szeleteket", "Egy vagy két szelet kenyér a két nyílásba."], ["Állítsd be a fokozatot", "Az oldalsó tekerővel: kisebb szám világosabb, nagyobb szám barnább pirítós."],
+        ["Nyomd le a kart", "Ütközésig – ekkor kezd pirítani."], ["Magától kiugrik", "Ha előbb megállítanád, húzd fel a kart, vagy nyomd meg a megszakító gombot."]],
+      warn: ["Ha beszorul a kenyér, előbb húzd ki a konnektorból – késsel, villával soha ne nyúlj bele.", "Ne tedd szekrény vagy függöny alá, használat közben forró a teteje."] },
+    hob: { model: "Evido kétlapos elektromos főzőlap", brand: "beépített, rozsdamentes · két öntöttvas főzőlap", photo: "fozolap", where: "Konyha – a pultba építve",
+      specs: ["2 főzőlap", "fokozatkapcsolók", "jelzőlámpa"],
+      steps: [["Tedd fel az edényt", "Lapos aljú lábas vagy serpenyő – nagyjából akkora, mint a főzőlap."], ["Kapcsold be a gombbal", "Minden laphoz saját tekerőgomb tartozik; a nagyobb szám erősebb fokozat. Bekapcsolva világít a jelzőlámpa."],
+        ["Adj neki időt", "Az öntöttvas lap lassabban melegszik fel, mint a gáz – forraláshoz indíts a legerősebb fokozaton, aztán vedd vissza."],
+        ["Kapcsold ki pár perccel előbb", "A lap sokáig meleg marad, a maradék hővel még elkészül az étel. A gombot tekerd 0-ra."]],
+      warn: ["Kikapcsolás után is sokáig forró – ne érj hozzá, és ne tegyél rá semmit.", "Ne hagyd bekapcsolva felügyelet nélkül; távozás előtt nézd meg, hogy mindkét gomb 0-n áll."] },
+    fridgefreezer: { model: "Candy pult alá épített hűtőszekrény", brand: "fehér, a konyhapult alatt", photo: "huto", where: "Konyha – a pult alatt",
+      specs: ["hőfokszabályzó belül", "fagyasztórekesz"],
+      by: { schooner: { model: "Beko kombinált hűtőszekrény", brand: "fehér, szabadon álló · felül fagyasztó", where: "Konyha – a bejárat mellett, a fal mellett áll", specs: ["külön fagyasztó felül", "hőfokszabályzó belül"] } },
+      steps: [["Érkezéskor már be van kapcsolva", "Nem kell semmit állítanod – csak pakolj be."], ["Hőfok állítása", "Belül, a világításnál lévő tekerővel: a nagyobb szám hidegebb. A középső állás általában megfelelő."],
+        ["Forrón ne tegyél be semmit", "Várd meg, míg az étel kihűl, és ne hagyd sokáig nyitva az ajtót."], ["Távozáskor", "Vidd el vagy dobd ki, ami a tiéd; a hűtőt ne kapcsold ki és ne húzd ki."]],
+      warn: ["Üvegpalackot ne tegyél a fagyasztóba – megrepedhet."] },
+    washer: { model: "Beko elöltöltős mosógép", brand: "a konyhapult alá építve", photo: "mosogep", apts: ["fregatt"], where: "Konyha – a pult alatt, a hűtő mellett",
+      specs: ["elöltöltős", "programválasztó tekerő"],
+      steps: [["Tedd be a ruhát", "Ne tömd tele: maradjon egy tenyérnyi hely a dob tetején. Csukd be az ajtót kattanásig."], ["Mosószer", "Mosókapszulát a dobba, a ruhák közé; folyékony vagy por mosószert a bal felső fiókba."],
+        ["Válassz programot", "A tekerővel: hétköznapi ruhához a pamut vagy a vegyes program, 30–40 °C."], ["Indítsd el", "A Start gombbal. A végén az ajtózár 1–2 perc múlva enged ki."]],
+      warn: ["Menet közben ne feszegesd az ajtót – zárva van, amíg víz van a dobban.", "Mosás után hagyd résnyire nyitva az ajtót, hogy kiszáradjon."] },
+    ac: { model: "Airfel split klíma", brand: "hűt és fűt · távirányítóval", photo: "klima", apts: ["korvett", "dingi", "fregatt", "kaloz"], where: "A nappali falán; a távirányító a bejáratnál, a fali tartóban",
+      specs: ["2,6 kW", "hűtés és fűtés", "távirányítós"],
+      steps: [["Vedd le a távirányítót", "A bejáratnál, a fali tartóban találod. Irányítsd a klíma felé."], ["Kapcsold be", "Az ON/OFF gombbal; a klíma csippan, és kinyílik a lamellája."],
+        ["Válassz üzemmódot", "A MODE gombbal: hópehely = hűtés, nap = fűtés."], ["Állítsd be a hőfokot", "A ▲ ▼ gombokkal. Nyáron 24–26 °C a kellemes és takarékos – ne állítsd 8 foknál többel a kinti hőmérséklet alá."],
+        ["Csukd be az ajtót, ablakot", "Nyitott ablaknál a klíma hiába dolgozik."], ["Ha elmész, kapcsold ki", "Ugyanazzal az ON/OFF gombbal."]],
+      warn: ["Nagy hidegben (–10 °C alatt) a klíma fűtése le van tiltva – ilyenkor a fali fűtőpanelek fűtenek.", "A beltéri egységet ne takard le, és ne akassz rá semmit."] }
+  };
   IT.kettle = { n: "Vízforraló", q: "", d: "A vízforralóval néhány perc alatt kész a forró víz teához vagy kávéhoz.", s: [[.2, "boil"], [2.8, "click"]],
     f(g, t, A) {
       bR(g, -50, 56, 100, 10, 4, "#455a64", BO, 2);
@@ -5815,6 +5906,29 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     f(g, t, A) {
       if (A) { bC(g, 0, 40, 34, "#ffd7a8", BO, 2); for (let k = 0; k < 9; k++) { const p = Math.min(1, t / 2); g.strokeStyle = "#6d4c41"; g.lineWidth = 3; g.beginPath(); g.moveTo(-30 + k * 7.5, 18); g.quadraticCurveTo(-30 + k * 7.5 + (1 - p) * Math.sin(k * 2) * 12, 0, -28 + k * 7.5 + p * 4, -12 + (1 - p) * Math.cos(k) * 8); g.stroke(); } }
       g.save(); g.translate(A ? -80 + ((t * 70) % 160) : 0, A ? -26 : 0); bR(g, -54, -10, 108, 14, 4, "#8d6e63", BO, 2.5); for (let k = 0; k < 18; k++) bL(g, [[-48 + k * 5.6, 4], [-48 + k * 5.6, k < 8 ? 22 : 18]], BO, 2); g.restore();
+    } };
+  /* a ház műszaki dokumentációjából (2026-11-10): apartmanonként egy 50 literes Ariston villanybojler és fali elektromos fűtőpanelek */
+  IT.boiler = { n: "Meleg víz – villanybojler", q: "", d: "50 literes villanybojler adja a meleg vizet – magától fűt, nem kell kapcsolnod.", s: [[.3, "boil"]],
+    real: { model: "Ariston 50 literes villanybojler", brand: "apartmanonként saját bojler", where: "Fürdőszoba",
+      specs: ["50 liter", "elektromos", "önműködő"],
+      steps: [["Nincs vele teendőd", "A bojler folyamatosan melegen tartja a vizet, érkezéskor már meleg."], ["50 liter egyszerre", "Két-három zuhanyzásra elég. Ha többen fürödtök egymás után, a végére langyosabb lehet."],
+        ["Ha elfogyott a meleg víz", "Várj nagyjából egy órát, a bojler magától újra felfűt."]],
+      warn: ["A bojler csapjait, szelepeit és kapcsolóját ne állítsd el. Ha tartósan nincs meleg víz, szólj nekünk."] },
+    f(g, t, A) {
+      bR(g, -34, -72, 68, 124, 30, "#f5f7fa", BO, 2.5); bR(g, -34, 30, 68, 22, 8, "#cfd8dc", BO, 2); bR(g, -8, 36, 16, 10, 3, "#ef5350", BO, 1.2);
+      bL(g, [[-16, 52], [-16, 74]], "#1e88e5", 4); bL(g, [[16, 52], [16, 74]], "#e53935", 4);
+      for (let k = 0; k < 3; k++) { const y = -40 + k * 22 + Math.sin(t * 2 + k) * 2; bL(g, [[-14, y], [-5, y - 5], [5, y + 5], [14, y]], "#ffb74d", 2.5); }
+    } };
+  IT.heater = { n: "Fűtőpanel", q: "", d: "Fali elektromos fűtőpanel a hűvösebb napokra – a klíma mellett ez fűt.", s: [[.3, "click"]],
+    real: { model: "Fali elektromos fűtőpanel", brand: "helyiségenként méretezve", where: "A szobák falán, az ablak közelében",
+      specs: ["1600 W", "1200 W", "750 W", "termosztátos"],
+      steps: [["Kapcsold be", "A panel oldalán vagy alján lévő kapcsolóval."], ["Állítsd be a hőfokot", "A termosztát gombjával. Ha elérte a kívánt meleget, magától kikapcsol, majd visszakapcsol."],
+        ["Távozáskor vedd vissza", "Ha hosszabb időre elmész, állítsd alacsonyra vagy kapcsold ki."]],
+      warn: ["Ne teríts rá törölközőt, ruhát – letakarva túlmelegszik.", "Ne tolj elé bútort, hagyd szabadon a szellőzését."] },
+    f(g, t, A) {
+      bR(g, -66, -40, 132, 80, 8, "#fafafa", BO, 2.5); for (let k = 0; k < 9; k++) bL(g, [[-52 + k * 13, -32], [-52 + k * 13, -22]], "#b0bec5", 2);
+      bR(g, 44, 20, 14, 12, 3, "#ff7043", BO, 1.2); bL(g, [[-50, 40], [-50, 54]], "#90a4ae", 4); bL(g, [[50, 40], [50, 54]], "#90a4ae", 4);
+      for (let k = 0; k < 3; k++) { const x = -30 + k * 30, y = -52 - Math.abs(Math.sin(t * 1.6 + k)) * 6; bL(g, [[x, y + 8], [x + 5, y + 2], [x - 5, y - 4], [x, y - 10]], "#ff8a65", 2.5); }
     } };
   IT.hairdryer = { n: "Hajszárító", q: "", d: "Hajszárító két fokozattal és hideg levegő funkcióval.", s: [[.3, "blow"]],
     f(g, t, A) {
@@ -5994,9 +6108,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   const BPAGES = {
     konyha: { t: "Konyha", sub: "Edények és evőeszközök", c: "#d84315", ic: "cutlery", items: ["cutlery", "smallcut", "plates", "glasses", "pot", "pan", "crepe", "colander", "grater", "opener", "corkscrew", "canopener", "scissors", "kidset"] },
     eszkoz: { t: "Konyhai eszközök", sub: "Gépek, kellékek, alapanyagok", c: "#ef6c00", ic: "microwave", items: ["microwave", "coffee", "kettle", "toaster", "hob", "fridgefreezer", "washer", "pods", "dishsoap", "sponge", "cloth", "papertowel", "breadbasket", "bin", "binbag", "coffeebean", "tea", "sugar", "sweet", "salt", "saltpepper", "napkin", "toothpick", "extinguisher", "firstaid"] },
-    furdo: { t: "Fürdőszoba", sub: "Tisztálkodás", c: "#1565c0", ic: "towel", items: ["towel", "toothbrush", "comb", "hairdryer", "toiletpaper", "bathmat", "handsoap", "amenity", "freshener"] },
+    furdo: { t: "Fürdőszoba", sub: "Tisztálkodás", c: "#1565c0", ic: "towel", items: ["towel", "toothbrush", "comb", "hairdryer", "boiler", "toiletpaper", "bathmat", "handsoap", "amenity", "freshener"] },
     halo: { t: "Hálószoba", sub: "Kényelem éjjel", c: "#6a1b9a", ic: "nightlamp", items: ["charger", "nightlamp", "phoneholder", "towel"] },
-    nappali: { t: "Nappali", sub: "Szórakozás és klíma", c: "#2e7d32", ic: "tvremote", items: ["acremote", "tvremote", "floorlamp", "ac", "shutter", "mosquito"] },
+    nappali: { t: "Nappali", sub: "Szórakozás és klíma", c: "#2e7d32", ic: "tvremote", items: ["acremote", "tvremote", "floorlamp", "ac", "heater", "shutter", "mosquito"] },
     terasz: { t: "Terasz", sub: "Szabadban", c: "#00796b", ic: "ashtray", items: ["ashtray", "standash", "rack"] },
     info: { t: "Elérhetőség", sub: "Wi-Fi, cím és kapcsolat", c: "#14202a", ic: null }
   };
@@ -6019,6 +6133,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
      részletpanel. Az elérhetőség (Wi-Fi, telefon) külön kártyán. A régi lapozós füzet: openBinderOld().
      ===================================================================================================== */
   const invEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  try { Object.keys(IT_REAL).forEach((k) => { if (IT[k]) IT[k].real = IT_REAL[k]; }); } catch (e) {}
+  IT.hob.d = "Kétlapos elektromos főzőlap a pultba építve – fokozatkapcsolóval.";
+  IT.fridgefreezer.d = "Hűtőszekrény fagyasztórekesszel – érkezéskor már hideg.";
+  IT.ac.d = "Hűtő-fűtő klíma a nappaliban; a távirányítóval kapcsolod és állítod.";
   const INV_ROOM = { konyha: "konyha", eszkoz: "konyha", furdo: "furdo", halo: "halo", nappali: "nappali", terasz: "terasz" };
   const invNorm = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   function invItems(gid) {
@@ -6066,17 +6184,42 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     if (!list.length) { grid.innerHTML = `<p class="zi2-none">Nincs ilyen tétel. Próbáld másképp, vagy kérdezd a házigazdát: ${invEsc(ZC.phone)}</p>`; }
     list.forEach((x, i) => {
       const it = IT[x.id], b = document.createElement("button"); b.type = "button"; b.className = "zi2-it"; b.setAttribute("role", "listitem"); b.style.setProperty("--cc", BPAGES[x.p].c); b.style.setProperty("--i", Math.min(i, 20));
-      const ic = document.createElement("span"); ic.className = "zi2-ic"; ic.appendChild(itemCanvas(x.id, window.innerWidth <= 700 ? 64 : 76)); b.appendChild(ic);
-      b.insertAdjacentHTML("beforeend", `<span class="zi2-n">${invEsc(it.n)}</span>${it.q ? `<em class="zi2-q">${invEsc(it.q)}</em>` : ""}<span class="zi2-r">${invEsc(BPAGES[x.p].t)}</span>`);
+      const ic = document.createElement("span"); ic.className = "zi2-ic"; const rp = invRealPhoto(it, S.gid);
+      if (rp) { ic.classList.add("ph"); ic.innerHTML = `<img src="${rp}" alt="" loading="lazy">`; } else ic.appendChild(itemCanvas(x.id, window.innerWidth <= 700 ? 64 : 76));
+      b.appendChild(ic);
+      b.insertAdjacentHTML("beforeend", `<span class="zi2-n">${invEsc(it.n)}</span>${invReal(it, S.gid) ? `<em class="zi2-m">${invEsc(invReal(it, S.gid).model)}</em>` : ""}${it.q ? `<em class="zi2-q">${invEsc(it.q)}</em>` : ""}<span class="zi2-r">${invEsc(BPAGES[x.p].t)}</span>`);
       b.addEventListener("click", () => invDet(x)); if (S.sel && S.sel.id === x.id && S.sel.p === x.p) b.classList.add("sel");
       grid.appendChild(b);
     });
   }
+  /* a tétel valódi fotója az adott apartmanból (ha van) */
+  const invReal = (it, gid) => { const R = it && it.real; if (!R) return null; const g = gid === "kadett" ? "schooner" : gid; if (R.apts && !R.apts.includes(g)) return null;   /* ahol a képen nem azonosítható, ott marad az általános leírás */ return Object.assign({}, R, (R.by || {})[g] || {}, { _g: g }); };   /* a Kadett belül a Schoonerrel egyezik */
+  function invRealPhoto(it, gid) { const R = invReal(it, gid); if (!R || !R.photo) return ""; const has = R.ph || R.apts || ["korvett", "dingi", "fregatt", "kaloz", "schooner"]; return has.includes(R._g) ? `img/eszk/${R.photo}-${R._g}.jpg` : ""; }
   function invDet(x) {
     const S = invSt, det = invEl.querySelector(".zi2-det"); cancelAnimationFrame(S.raf); S.sel = x;
     invEl.classList.toggle("det-on", !!x); invEl.querySelectorAll(".zi2-it").forEach((b, i) => b.classList.remove("sel"));
     if (!x) { det.innerHTML = `<div class="zi2-det-empty"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 40 C17 33 9 27 9 18 C9 11 13 8 18 8 C21 8 23 10 24 13 C25 10 27 8 30 8 C35 8 39 11 39 18 C39 27 31 33 24 40 Z"/></svg><p>Válassz egy tételt – megmutatom, mire jó, hány darab van belőle, és hol találod.</p></div>`; return; }
     const it = IT[x.id], sc = invRoomScene(S.gid, x.p);
+    if (invReal(it, S.gid)) {   /* valódi típus, saját fotó, útmutató lépésenként */
+      const R = invReal(it, S.gid), rp = invRealPhoto(it, S.gid);
+      det.innerHTML = `<button type="button" class="zi2-det-x" aria-label="Részletek bezárása">×</button>
+        ${rp ? `<figure class="zi2-photo"><img src="${rp}" alt="${invEsc(it.n)} – ${invEsc(R.model)}"><figcaption>Így néz ki az apartmanodban</figcaption></figure>` : ""}
+        <div class="zi2-det-t"><b>${invEsc(it.n)}</b></div>
+        <div class="zi2-model"><strong>${invEsc(R.model)}</strong>${R.brand ? `<span>${invEsc(R.brand)}</span>` : ""}</div>
+        <p>${invEsc(it.d)}</p>
+        ${R.specs ? `<ul class="zi2-specs">${R.specs.map((q) => `<li>${invEsc(q)}</li>`).join("")}</ul>` : ""}
+        <h4 class="zi2-h">Így használd</h4>
+        <ol class="zi2-steps">${R.steps.map(([a, b2]) => `<li><div><b>${invEsc(a)}</b><span>${invEsc(b2)}</span></div></li>`).join("")}</ol>
+        ${R.warn ? `<div class="zi2-warn"><b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19zM12 10v5M12 17.6v.4"/></svg>Fontos</b><ul>${R.warn.map((q) => `<li>${invEsc(q)}</li>`).join("")}</ul></div>` : ""}
+        ${R.manual ? `<a class="zi2-manual" href="${R.manual}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h8l4 4v14H7zM15 3v4h4M10 12h6M10 16h6"/></svg>A gyári használati útmutató (PDF)</a>` : ""}
+        <div class="zi2-where"><small>HOL TALÁLOM?</small><span>${invEsc(R.where || (BPAGES[x.p].t + (BPAGES[x.p].sub ? " · " + BPAGES[x.p].sub : "")))}</span></div>
+        ${sc ? `<button type="button" class="zi2-go">Megmutatom a sétában ›</button>` : ""}`;
+      det.scrollTop = 0;
+      det.querySelector(".zi2-det-x").addEventListener("click", () => invDet(null));
+      if (sc) det.querySelector(".zi2-go").addEventListener("click", () => { invClose(true); try { go(sc, false); } catch (e) {} });
+      invEl.querySelectorAll(".zi2-it").forEach((b) => { if (b.querySelector(".zi2-n").textContent === it.n) b.classList.add("sel"); });
+      return;
+    }
     det.innerHTML = `<button type="button" class="zi2-det-x" aria-label="Részletek bezárása">×</button><canvas></canvas><div class="zi2-det-t"><b>${invEsc(it.n)}</b>${it.q ? `<em>${invEsc(it.q)}</em>` : ""}</div><p>${invEsc(it.d)}</p>
       <div class="zi2-where"><small>HOL TALÁLOM?</small><span>${invEsc(BPAGES[x.p].t)}${BPAGES[x.p].sub ? " · " + invEsc(BPAGES[x.p].sub) : ""}</span></div>
       ${sc ? `<button type="button" class="zi2-go">Megmutatom a sétában ›</button>` : ""}`;
