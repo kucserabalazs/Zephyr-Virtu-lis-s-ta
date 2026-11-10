@@ -1642,8 +1642,8 @@ body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .zx-bar, body.world-on .z
    Gépen megmarad a régi, megszokott kezelés: bal felül a többfunkciós üvegkocka, alatta a házvázlat, alul a csoport-fülek és a
    fényképes helyszínsor, fölötte a mini vitorlásverseny. Az új, vékony fejléc (logó, a hely neve, Foglalás, VR, 3D, Nap, nyelv)
    marad felül. A jobb oldali „Helyek” fiók itt nem kell (a fényképsor mindig látszik) – telefonon és táblagépen változatlan. */
-:root[data-device="pc"] body.zx .cubebox { --S: 158px; --H: 98px; --gp: 10px; position: fixed; z-index: 7; top: calc(70px + env(safe-area-inset-top, 0px)); left: max(8px, env(safe-area-inset-left, 0px)); pointer-events: auto; }   /* 2026-11-10: kb. 15%-kal kisebb (a tulajdonos kérése) */
-:root[data-device="pc"] body.zx .map { top: calc(226px + env(safe-area-inset-top, 0px)); max-height: calc(100% - 398px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+:root[data-device="pc"] body.zx .cubebox { --S: 118px; --H: 73px; --gp: 8px; position: fixed; z-index: 7; top: calc(45px + env(safe-area-inset-top, 0px)); left: calc(-14px + env(safe-area-inset-left, 0px)); pointer-events: auto; }   /* 2026-11-10: jóval kisebb (az eredeti 186 px helyett 118 px), szorosan a bal felső sarokban, közvetlenül a fejléc alatt (a tulajdonos kérése) */
+:root[data-device="pc"] body.zx .map { top: calc(170px + env(safe-area-inset-top, 0px)); max-height: calc(100% - 342px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
 :root[data-device="pc"] body.zx .top .tools { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); }
 :root[data-device="pc"] body.zx #zxPlacesBtn { display: none !important; }
 
