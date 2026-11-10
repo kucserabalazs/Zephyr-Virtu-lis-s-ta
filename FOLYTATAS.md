@@ -516,3 +516,9 @@ A tulajdonos telefonja a tesztelés alatt 40% töltést vesztett és forró lett
 4. A végén a szemüveges (VR) világok: stég, hajók, makett – ugyanezzel a kisütött technikával.
 - Szabály: gépen a megjelenés nem romolhat; csak akkor szólok, ha valami megnézhető, vagy kinézetet érintő döntés kell.
 - Telefonos ellenőrzés Safariban (nem a Claude app beépített böngészőjében – annak sávja és kétszeres szélessége nem az oldal hibája).
+- **2. lépés ELSŐ VÁLTOZATA KÉSZ (nov. 10. éjjel):** a stégjátékos regatta (`gameRace`) hajói valódi 3D modellek kisütött fénnyel – `BGL`, `bglBuild` (hajótest
+  keresztmetszetekből, tíkfa fedélzet rásütött árnyékokkal, kabin, kokpit, árbóc, kötélzet, korlát, legénység), `bglSails` (élő: nagyvitorla, génua, spinakker, bum, zászló),
+  `boatGL` (ugyanaz a kamera, mint `camOf/proj`; hajónként csak a saját képernyő-téglalapját rendereli és másolja a 2D vászonra, mélységi sorrendben). Világítás-számítás
+  futás közben NINCS (MeshBasicMaterial + csúcsszín + kész textúra). WebGL nélkül a régi rajzolt hajó marad (`boat3d`), a tükörkép továbbra is a régi 2D rajz.
+  A Zephyr a valóságnak megfelelően: fehér nagyvitorla piros Z-vel, piros génua. Teszt: `ZephyrTour.openGame("race")`.
+  HÁTRAVAN ebből a lépésből: döntéses kormányzás (telefon billentése) választhatóként; fogyasztásmérés a tulajdonos telefonján; finomítás a visszajelzése alapján.
