@@ -474,7 +474,7 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
   (`by.<apt>` = eltérés, pl. Schooner: Beko kombi hűtő; `apts` = csak ezekben azonosított, máshol marad az általános rajz + leírás).
 - Fotók: `weboldal/virtualis-seta/img/eszk/<photo>-<apt>.jpg` – a tulajdonos saját 8K konyhapanorámáiból vágva (crop.py / items.py a tesztmappában).
 - Beazonosítva: Szarvasi SZV-612/3 Mini Espresso (mind az 5), Gorenje mikró (5), Esperanza pirító (5), Evido kétlapos főzőlap (5),
-  Candy pult alatti hűtő (1–4) / Beko kombi (Schooner), fehér vízforraló (1–4, márka nem olvasható), Beko mosógép (Fregatt), Airfel split klíma (1–4).
+  Candy pult alatti hűtő (1–4) / Beko kombi (Schooner), fehér vízforraló (1–4, márka nem olvasható), Candy Aquamatic mosógép (Korvett), Beko mosógép (Fregatt), Airfel split klíma (1–4).
 - Műszaki dokumentációból új tételek: `boiler` (Ariston 50 l villanybojler, Fürdőszoba), `heater` (fűtőpanel 1600/1200/750 W, Nappali); klíma 2,6 kW, –10 °C alatt tiltva.
 - NEM került be (szándékosan): riasztó, kamera, épületfelügyelet, kódok. Hiányzik még: pontos típusszámok (mikró, hűtő, mosógép, klíma, pirító), TV, hajszárító típusa,
   Schooner vízforraló + klíma fotó, a többi lakás mosógépe. Az új szövegek fordítása a többi nyelvre még hátravan.
