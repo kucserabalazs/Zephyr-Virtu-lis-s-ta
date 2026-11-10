@@ -1653,8 +1653,8 @@ body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .zx-bar, body.world-on .z
    Gépen megmarad a régi, megszokott kezelés: bal felül a többfunkciós üvegkocka, alatta a házvázlat, alul a csoport-fülek és a
    fényképes helyszínsor, fölötte a mini vitorlásverseny. Az új, vékony fejléc (logó, a hely neve, Foglalás, VR, 3D, Nap, nyelv)
    marad felül. A jobb oldali „Helyek” fiók itt nem kell (a fényképsor mindig látszik) – telefonon és táblagépen változatlan. */
-:root[data-device="pc"] body.zx .cubebox { position: fixed; z-index: 7; top: calc(70px + env(safe-area-inset-top, 0px)); left: max(8px, env(safe-area-inset-left, 0px)); pointer-events: auto; }
-:root[data-device="pc"] body.zx .map { top: calc(250px + env(safe-area-inset-top, 0px)); max-height: calc(100% - 422px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+:root[data-device="pc"] body.zx .cubebox { --S: 158px; --H: 98px; --gp: 10px; position: fixed; z-index: 7; top: calc(70px + env(safe-area-inset-top, 0px)); left: max(8px, env(safe-area-inset-left, 0px)); pointer-events: auto; }   /* 2026-11-10: kb. 15%-kal kisebb (a tulajdonos kérése) */
+:root[data-device="pc"] body.zx .map { top: calc(226px + env(safe-area-inset-top, 0px)); max-height: calc(100% - 398px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
 :root[data-device="pc"] body.zx .top .tools { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); }
 :root[data-device="pc"] body.zx #zxPlacesBtn { display: none !important; }
 
@@ -1769,6 +1769,67 @@ body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .zx-bar, body.world-on .z
 .zfb-legend .ldep, .zfb-legend .larr, .zfb-legend .lchg { position: relative; background: #fff; border: 1.5px solid #d8dee5; overflow: hidden; }
 .zfb-legend .ldep::before, .zfb-legend .lchg::before { content: ""; position: absolute; left: 0; top: 0; border-style: solid; border-width: 8px 8px 0 0; border-color: #D9534F transparent transparent transparent; }
 .zfb-legend .larr::after, .zfb-legend .lchg::after { content: ""; position: absolute; right: 0; bottom: 0; border-style: solid; border-width: 0 0 8px 8px; border-color: transparent transparent #2F7FD0 transparent; }
+
+/* ===================== FOGLALÁSI NAPTÁR – KIDOLGOZOTT KIVITEL (2026-11-10, a tulajdonos kérésére) =====================
+   A korábbi lapos fehér háttér és a kemény élű piros / kék háromszögek helyett:
+   • a naptár saját, finoman árnyékolt „lapon” ül, a háttér lágy égkék–gyöngyház átmenet;
+   • a napok enyhén domború, lekerekített csempék; a foglalt nap nyugodt, halvány rózsaszín (nem csíkos);
+   • az érkezés / távozás jele a sarokból lágyan a csempébe olvadó színátmenet (piros: aznap távozik egy vendég, kék: aznap érkezik);
+   • a jelmagyarázat rendezett, kétoszlopos kártya ugyanezekkel a mintákkal. */
+.zfb-body { background:
+    radial-gradient(120% 46% at 50% 0%, rgba(255,255,255,.96) 0%, rgba(255,255,255,0) 100%),
+    linear-gradient(180deg, #f6f9fc 0%, #edf3f9 55%, #e6eef6 100%) !important; }
+.zfb-month { background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%); border: 1px solid rgba(11,47,94,.10); border-radius: 20px; padding: 16px 14px 14px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 10px 26px rgba(11,47,94,.09), 0 2px 6px rgba(11,47,94,.05); }
+.zfb-month h4 { font-size: 19px !important; letter-spacing: .01em; margin-bottom: 12px !important; color: #0b2f5e; }
+.zfb-month h4::before, .zfb-month h4::after { width: 34px !important; }
+.zfb-wd { margin-bottom: 4px; border-bottom: 1px solid rgba(11,47,94,.08); }
+.zfb-wd span { letter-spacing: .04em; text-transform: uppercase; font-size: 12px !important; color: #6b7b8c !important; padding: 2px 0 8px !important; }
+.zfb-wd, .zfb-days { gap: 6px !important; }
+.zfb-d { border-radius: 13px !important; border: 1px solid #d5e0ea !important; overflow: hidden;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8fc 100%) !important;
+  box-shadow: 0 1px 0 #fff inset, 0 -8px 12px rgba(11,47,94,.035) inset, 0 1px 2px rgba(11,47,94,.07); }
+.zfb-d b, .zfb-d small { position: relative; z-index: 1; }
+.zfb-d b { color: #0b2f5e; } .zfb-d small { color: #1d7a3c !important; letter-spacing: .01em; }
+.zfb-days .zfb-d:is(:nth-child(7n), :nth-child(7n - 1)):not(.empty):not(.busy):not(.off):not(.in):not(.ci):not(.co) { background: linear-gradient(180deg, #fffdf6 0%, #f8f3e4 100%) !important; border-color: #e6dcc0 !important; }
+.zfb-d:hover:not(:disabled) { border-color: #d4a13a !important; box-shadow: 0 0 0 2px rgba(212,161,58,.28), 0 6px 14px rgba(11,47,94,.16); }
+.zfb-d.empty { background: none !important; border: 0 !important; box-shadow: none !important; }
+.zfb-d.off { background: #eef2f6 !important; border-color: transparent !important; box-shadow: none !important; }
+.zfb-d.off b { color: #b3bec9; font-weight: 600; }
+.zfb-d.busy { background: linear-gradient(180deg, #f8ecea 0%, #f1dedb 100%) !important; border-color: #e9cfcb !important; box-shadow: 0 1px 0 rgba(255,255,255,.7) inset; }
+.zfb-d.busy b { color: #b9837d; text-decoration: line-through; text-decoration-thickness: 1.5px; text-decoration-color: rgba(185,131,125,.75); }
+.zfb-d.in { background: linear-gradient(180deg, #fff7dc 0%, #ffe9a8 100%) !important; border-color: #f1d27a !important; border-radius: 6px !important; }
+.zfb-d.ci, .zfb-d.co { background: linear-gradient(160deg, #164377 0%, #0b2f5e 60%, #08244a 100%) !important; border-color: #0b2f5e !important; box-shadow: 0 6px 14px rgba(11,47,94,.35), 0 1px 0 rgba(255,255,255,.18) inset !important; }
+.zfb-d.ci b, .zfb-d.co b { color: #fff; } .zfb-d.ci small, .zfb-d.co small { color: #f2d27a !important; }
+.zfb-d.ci { border-radius: 16px 6px 6px 16px !important; } .zfb-d.co { border-radius: 6px 16px 16px 6px !important; }
+/* távozási nap (az előző vendég 10:00-ig marad): a bal felső sarokból lágyan kifutó halvány rózsaszín */
+.zfb-d.outday:not(.ci):not(.co):not(.in) { background:
+    linear-gradient(135deg, rgba(226,120,110,.34) 0%, rgba(226,120,110,.16) 20%, rgba(226,120,110,0) 46%),
+    linear-gradient(180deg, #ffffff 0%, #f3f8fc 100%) !important; }
+/* sarokjelek: a kemény háromszög helyett a sarokból a csempébe olvadó színátmenet + hajszálvékony ív */
+.zfb-d.dep::before, .zfb-d.chg::before { content: ""; position: absolute; inset: 0; width: auto; height: auto; border: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(circle at 0 0, rgba(214,72,62,.95) 0, rgba(214,72,62,.95) 5px, rgba(214,72,62,0) 6px),
+    linear-gradient(135deg, rgba(222,84,74,.62) 0%, rgba(222,84,74,.34) 14%, rgba(222,84,74,.10) 27%, rgba(222,84,74,0) 38%); }
+.zfb-d.arr::after, .zfb-d.chg::after { content: ""; position: absolute; inset: 0; width: auto; height: auto; border: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(circle at 100% 100%, rgba(38,112,200,.95) 0, rgba(38,112,200,.95) 5px, rgba(38,112,200,0) 6px),
+    linear-gradient(315deg, rgba(47,127,208,.62) 0%, rgba(47,127,208,.34) 14%, rgba(47,127,208,.10) 27%, rgba(47,127,208,0) 38%); }
+.zfb-d.ci.dep::before, .zfb-d.co.dep::before, .zfb-d.ci.arr::after, .zfb-d.co.arr::after, .zfb-d.ci.chg::before, .zfb-d.ci.chg::after, .zfb-d.co.chg::before, .zfb-d.co.chg::after { opacity: .55; }
+.zfb-d.today::after { z-index: 2; }
+/* jelmagyarázat: rendezett kártya, két oszlop */
+.zfb-legend { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 9px 18px !important; margin-top: 16px !important; padding: 14px 16px; border-radius: 16px;
+  background: rgba(255,255,255,.72); border: 1px solid rgba(11,47,94,.09); box-shadow: 0 1px 0 #fff inset; font-size: 14px !important; line-height: 1.3; color: #3a4a5a !important; }
+.zfb-legend span { display: flex; align-items: center; gap: 9px; }
+.zfb-legend i { flex: none; width: 22px !important; height: 22px !important; border-radius: 7px !important; margin: 0 !important; vertical-align: 0 !important; box-sizing: border-box; position: relative; overflow: hidden;
+  background: linear-gradient(180deg, #fff, #f3f8fc); border: 1px solid #d5e0ea !important; }
+.zfb-legend .lb { background: linear-gradient(180deg, #f8ecea, #f1dedb) !important; border-color: #e9cfcb !important; }
+.zfb-legend .ls { background: linear-gradient(160deg, #164377, #0b2f5e) !important; border-color: #0b2f5e !important; }
+.zfb-legend .lo { background: linear-gradient(135deg, rgba(226,120,110,.38) 0%, rgba(226,120,110,.16) 24%, rgba(226,120,110,0) 50%), linear-gradient(180deg, #fff, #f3f8fc) !important; }
+.zfb-legend .ldep::before, .zfb-legend .lchg::before { content: ""; position: absolute; inset: 0; border: 0 !important; width: auto; height: auto;
+  background: linear-gradient(135deg, rgba(222,84,74,.9) 0%, rgba(222,84,74,.45) 22%, rgba(222,84,74,0) 46%); }
+.zfb-legend .larr::after, .zfb-legend .lchg::after { content: ""; position: absolute; inset: 0; border: 0 !important; width: auto; height: auto;
+  background: linear-gradient(315deg, rgba(47,127,208,.9) 0%, rgba(47,127,208,.45) 22%, rgba(47,127,208,0) 46%); }
 /* üveggömb a fotós kártyán (nov. 9., a tulajdonos kérése: „ugyanolyan 3 dimenziós hatással”, a fotók változatlanok) */
 .zbl-c { position: relative; }
 .zbl-orb { all: unset; box-sizing: border-box; cursor: pointer; position: absolute; z-index: 3; top: 10px; right: 10px; width: 92px; height: 92px; border-radius: 50%;
@@ -13685,18 +13746,46 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         g.shadowColor = red ? "rgba(255,200,190,.55)" : "rgba(140,200,255,.5)"; g.shadowBlur = 22;
         rr(g, 14, 14, CW - 28, CH - 28, 50); g.lineWidth = 3; g.strokeStyle = red ? "rgba(255,220,214,.4)" : "rgba(170,215,255,.32)"; g.stroke();
         g.shadowColor = "transparent"; g.restore();
+        /* RÉSZLETGAZDAG KIVITEL (2026-11-10): finom, gravírozott hullámminta a lap anyagában (mint egy óraszámlapon), a sarkokban
+           halvány sugárkoszorú, a perem mentén kettős arany hajszálkeret */
+        g.save(); rr(g, 16, 16, CW - 32, CH - 32, 48); g.clip();
+        g.lineWidth = 1.4;
+        for (let k = 0; k < 26; k++) {
+          const yy = 26 + k * (CH - 52) / 25, amp = 7 + 3 * Math.sin(k * .9);
+          g.beginPath(); for (let x = 0; x <= CW; x += 8) { const y = yy + Math.sin(x / 46 + k * .55) * amp; x ? g.lineTo(x, y) : g.moveTo(x, y); }
+          g.strokeStyle = red ? "rgba(255,235,228,.075)" : "rgba(150,200,255,.085)"; g.stroke();
+          g.beginPath(); for (let x = 0; x <= CW; x += 8) { const y = yy + 2.2 + Math.sin(x / 46 + k * .55) * amp; x ? g.lineTo(x, y) : g.moveTo(x, y); }
+          g.strokeStyle = red ? "rgba(60,0,0,.10)" : "rgba(0,6,20,.16)"; g.stroke();
+        }
+        g.translate(CW - 40, 40); g.lineWidth = 1.2;
+        for (let k = 0; k < 28; k++) { const a = Math.PI / 2 + k * (Math.PI / 2) / 27; g.beginPath(); g.moveTo(Math.cos(a) * 30, Math.sin(a) * 30); g.lineTo(Math.cos(a) * 210, Math.sin(a) * 210); g.strokeStyle = red ? "rgba(255,240,235,.06)" : "rgba(170,215,255,.07)"; g.stroke(); }
+        g.restore();
         rr(g, 5, 5, CW - 10, CH - 10, 57); g.lineWidth = 5; g.strokeStyle = red ? "rgba(90,8,4,.9)" : "rgba(2,10,24,.95)"; g.stroke();
-        rr(g, 10, 10, CW - 20, CH - 20, 53); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.3)"; g.stroke();
+        const gold = g.createLinearGradient(0, 0, CW, CH); gold.addColorStop(0, "#fff1c4"); gold.addColorStop(.3, "#e4bb63"); gold.addColorStop(.55, "#b9892f"); gold.addColorStop(.8, "#f0d48a"); gold.addColorStop(1, "#a97a25");
+        rr(g, 11, 11, CW - 22, CH - 22, 52); g.lineWidth = 3; g.strokeStyle = gold; g.stroke();
+        rr(g, 22, 22, CW - 44, CH - 44, 44); g.lineWidth = 1.2; g.strokeStyle = "rgba(240,212,138,.5)"; g.stroke();
       }
       function baseSq(g, w, h) {
         g.clearRect(0, 0, w, h);
         const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#1a3a66"); gr.addColorStop(.4, "#10294b"); gr.addColorStop(1, "#091a33");
         rr(g, 4, 4, w - 8, h - 8, 64); g.fillStyle = gr; g.fill();
         g.save(); rr(g, 4, 4, w - 8, h - 8, 64); g.clip(); const hl = g.createLinearGradient(0, 0, 0, h * .5); hl.addColorStop(0, "rgba(255,255,255,.14)"); hl.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = hl; g.fillRect(0, 0, w, h * .5); g.restore();
+        /* körkörös gravírozás (a felső / alsó lapon), arany hajszálkeret */
+        g.save(); rr(g, 16, 16, w - 32, h - 32, 54); g.clip(); g.lineWidth = 1.3;
+        for (let k = 1; k < 30; k++) { g.beginPath(); g.arc(w / 2, h * .42, k * 17, 0, 7); g.strokeStyle = "rgba(150,200,255,.07)"; g.stroke(); g.beginPath(); g.arc(w / 2, h * .42 + 2, k * 17, 0, 7); g.strokeStyle = "rgba(0,6,20,.13)"; g.stroke(); }
+        g.restore();
         rr(g, 5, 5, w - 10, h - 10, 63); g.lineWidth = 5; g.strokeStyle = "rgba(4,14,30,.95)"; g.stroke();
-        rr(g, 11, 11, w - 22, h - 22, 58); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.22)"; g.stroke();
+        const gold = g.createLinearGradient(0, 0, w, h); gold.addColorStop(0, "#fff1c4"); gold.addColorStop(.3, "#e4bb63"); gold.addColorStop(.55, "#b9892f"); gold.addColorStop(.8, "#f0d48a"); gold.addColorStop(1, "#a97a25");
+        rr(g, 11, 11, w - 22, h - 22, 58); g.lineWidth = 3; g.strokeStyle = gold; g.stroke();
+        rr(g, 22, 22, w - 44, h - 44, 50); g.lineWidth = 1.2; g.strokeStyle = "rgba(240,212,138,.5)"; g.stroke();
       }
-      function labelSq(g, txt, w, y, size) { g.font = `800 ${size}px ${FONT}`; while (size > 40 && g.measureText(txt).width > w - 90) { size -= 4; g.font = `800 ${size}px ${FONT}`; } g.textAlign = "center"; g.fillStyle = "#fff"; g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 10; g.shadowOffsetY = 4; g.fillText(txt, w / 2, y); g.shadowColor = "transparent"; }
+      function emboss(g, txt, x, y, size) {   /* domború felirat: sötét alsó él, világos felső él, enyhe gyöngyház-átmenet */
+        g.textAlign = "center"; g.textBaseline = "alphabetic";
+        g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 12; g.shadowOffsetY = 5; g.fillStyle = "rgba(0,8,24,.85)"; g.fillText(txt, x, y + 3); g.shadowColor = "transparent"; g.shadowBlur = 0; g.shadowOffsetY = 0;
+        g.fillStyle = "rgba(255,255,255,.55)"; g.fillText(txt, x, y - 2.5);
+        const tg = g.createLinearGradient(0, y - size * .78, 0, y + size * .04); tg.addColorStop(0, "#ffffff"); tg.addColorStop(.55, "#f1f6fb"); tg.addColorStop(1, "#c3d2e2"); g.fillStyle = tg; g.fillText(txt, x, y);
+      }
+      function labelSq(g, txt, w, y, size) { g.font = `800 ${size}px ${FONT}`; while (size > 40 && g.measureText(txt).width > w - 90) { size -= 4; g.font = `800 ${size}px ${FONT}`; } emboss(g, txt, w / 2, y, size); }
       function gear(g, x, y, R0) {   /* fogaskerék: fehér, kék középpel */
         g.save(); g.translate(x, y); g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 16; g.shadowOffsetY = 6;
         const teeth = 9, ro = R0, ri = R0 * .78; g.beginPath();
@@ -13718,8 +13807,15 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         rr(g, -pw * .58, -R0 * .3, pw * 1.16, R0 * .14, R0 * .06); g.fillStyle = "#ffffff"; g.fill(); rr(g, -R0 * .12, -R0 * .44, R0 * .24, R0 * .14, R0 * .05); g.fill();
         g.restore();
       }
-      function label(g, txt, y, size) { g.font = `800 ${size}px ${FONT}`; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillStyle = "#fff"; g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 10; g.shadowOffsetY = 4; g.fillText(txt, CW / 2, y); g.shadowColor = "transparent"; }
-      function icon(g, path, x, y, s, fill) { g.save(); g.translate(x, y); g.scale(s, s); g.shadowColor = "rgba(0,0,0,.45)"; g.shadowBlur = 14 / s; g.shadowOffsetY = 6 / s; g.fillStyle = fill; g.fill(new Path2D(path)); g.restore(); }
+      function label(g, txt, y, size) { g.font = `800 ${size}px ${FONT}`; emboss(g, txt, CW / 2, y, size); }
+      function icon(g, path, x, y, s, fill) {   /* domború ikon: vetett árnyék, sötét alsó él, világos felső él, vékony körvonal */
+        const P = new Path2D(path); g.save(); g.translate(x, y); g.scale(s, s);
+        g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 16 / s; g.shadowOffsetY = 7 / s; g.fillStyle = "rgba(0,8,24,.9)"; g.save(); g.translate(0, 1.1); g.fill(P); g.restore();
+        g.shadowColor = "transparent"; g.shadowBlur = 0; g.shadowOffsetY = 0;
+        g.fillStyle = "rgba(255,255,255,.7)"; g.save(); g.translate(0, -.7); g.fill(P); g.restore();
+        g.fillStyle = fill; g.fill(P); g.lineWidth = .7; g.lineJoin = "round"; g.strokeStyle = "rgba(255,255,255,.75)"; g.stroke(P);
+        g.restore();
+      }
       const DRAW = {
         1(g) {
           base(g, false);
@@ -13755,22 +13851,51 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         4(g) { base(g, true); const gr = g.createLinearGradient(0, 40, 0, 300); gr.addColorStop(0, "#ffffff"); gr.addColorStop(1, "#ffe0dc"); icon(g, "M32 5L3 31h9v27h15V42h10v16h15V31h9L49 19V9h-8v3z", CW / 2 - 118, 22, 3.7, gr); label(g, "HOME", CH - 52, 150); }
       };
       const maxAniso = R.capabilities.getMaxAnisotropy ? R.capabilities.getMaxAnisotropy() : 1;
+      /* RÉSZLETGAZDAG KIVITEL (2026-11-10, a tulajdonos kérésére) – valódi anyagok a sík festett lapok helyett:
+         • a lapok fényes zománcként viselkednek: lakkréteg, amelyen forgatáskor végigfut a panoráma tükröződése (a rajz saját fénye
+           megmarad, így a felirat minden megvilágításban olvasható);
+         • minden lap körül domború, aranyozott fémkeret (letört éllel) és négy apró sárgaréz csavar – ezek valódi 3D-testek;
+         • az üvegtömb belsejében egy második, halvány él: ettől látszik az üveg vastagsága. */
+      const panelMat = (tex) => new T.MeshPhysicalMaterial({ map: tex, color: 0x9aa3ad, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: .58, roughness: .3, metalness: 0,
+        clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: .85, alphaTest: .5 });
+      const goldMat = new T.MeshStandardMaterial({ color: 0xe2b85c, metalness: 1, roughness: .24, envMapIntensity: 1.5 });
+      const screwMat = new T.MeshStandardMaterial({ color: 0xcfa24a, metalness: 1, roughness: .34, envMapIntensity: 1.3 });
+      const screwGeo = new T.CylinderGeometry(.021, .024, .012, 18), slotGeo = new T.BoxGeometry(.03, .004, .005), slotMat = new T.MeshStandardMaterial({ color: 0x3a2a10, metalness: .6, roughness: .6 });
+      function rrShape(sh, w, h, r) { const x = -w / 2, y = -h / 2; sh.moveTo(x + r, y); sh.lineTo(x + w - r, y); sh.quadraticCurveTo(x + w, y, x + w, y + r); sh.lineTo(x + w, y + h - r); sh.quadraticCurveTo(x + w, y + h, x + w - r, y + h); sh.lineTo(x + r, y + h); sh.quadraticCurveTo(x, y + h, x, y + h - r); sh.lineTo(x, y + r); sh.quadraticCurveTo(x, y, x + r, y); }
+      function frame3d(w, h, rc) {   /* keret a lap síkjában (a +Z felé domborodik) + 4 csavar */
+        const gF = new T.Group(), t = .03, out = new T.Shape(), hole = new T.Path();
+        rrShape(out, w + .012, h + .012, rc + .006); rrShape(hole, w - 2 * t, h - 2 * t, Math.max(.02, rc - t)); out.holes.push(hole);
+        const geo = new T.ExtrudeGeometry(out, { depth: .012, bevelEnabled: true, bevelThickness: .008, bevelSize: .008, bevelSegments: 3, curveSegments: 18 });
+        gF.add(new T.Mesh(geo, goldMat));
+        const ox = w / 2 - t - .05, oy = h / 2 - t - .05;
+        [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy], k) => {
+          const sc = new T.Mesh(screwGeo, screwMat); sc.rotation.x = Math.PI / 2; sc.position.set(sx * ox, sy * oy, .008); gF.add(sc);
+          const sl = new T.Mesh(slotGeo, slotMat); sl.position.set(sx * ox, sy * oy, .0145); sl.rotation.z = .5 + k * 1.1; gF.add(sl);
+        });
+        gF.renderOrder = 2; return gF;
+      }
+      {   /* belső üvegél – az üveg vastagsága */
+        const inMat = rimMat.clone(); inMat.uniforms = { col: { value: new T.Color(0xbfe0ff) }, pw: { value: 3.2 }, k: { value: .42 } };
+        const inner = new T.Mesh(roundedBox(BW - .11, BH - .11, BD - .11, RAD - .045, 10), inMat); inner.renderOrder = 2; group.add(inner);
+      }
       /* teteje (Settings) és alja (Inventory) – négyzetes panelek */
       const QW = BW - .27, QC = 720;
       [[5, 1], [6, -1]].forEach(([f, sgn]) => {
         const c = document.createElement("canvas"); c.width = QC; c.height = QC; DRAW[f](c.getContext("2d"), QC, QC);
         const tex = new T.CanvasTexture(c); if ("colorSpace" in tex) tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = maxAniso;
-        const m = new T.Mesh(new T.PlaneGeometry(QW, QW), new T.MeshBasicMaterial({ map: tex, alphaTest: .5, toneMapped: false }));
+        const m = new T.Mesh(new T.PlaneGeometry(QW, QW), panelMat(tex));
         m.rotation.order = "YXZ"; m.rotation.x = -sgn * Math.PI / 2; m.position.y = sgn * (BH / 2 - INSET);
         group.add(m); panels.push({ f, c, tex, m, sq: 1 });
+        const fr = frame3d(QW, QW, .2); fr.rotation.x = -sgn * Math.PI / 2; fr.position.y = sgn * (BH / 2 - INSET + .004); group.add(fr);
       });
       [1, 2, 3, 4].forEach((f, i) => {
         const c = document.createElement("canvas"); c.width = CW; c.height = CH; DRAW[f](c.getContext("2d"));
         const tex = new T.CanvasTexture(c); if ("colorSpace" in tex) tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = maxAniso;
-        const m = new T.Mesh(new T.PlaneGeometry(PW, PH), new T.MeshBasicMaterial({ map: tex, alphaTest: .5, toneMapped: false }));
+        const m = new T.Mesh(new T.PlaneGeometry(PW, PH), panelMat(tex));
         const a = -i * Math.PI / 2;   /* 1 elöl, 2 jobbra, 3 hátul, 4 balra – mint a CSS-kockán */
         m.rotation.y = -a; m.position.set(Math.sin(-a) * (BD / 2 - INSET), 0, Math.cos(-a) * (BD / 2 - INSET));
         group.add(m); panels.push({ f, c, tex, m });
+        const fr = frame3d(PW, PH, .1); fr.rotation.y = -a; fr.position.set(Math.sin(-a) * (BD / 2 - INSET + .004), 0, Math.cos(-a) * (BD / 2 - INSET + .004)); group.add(fr);
       });
       /* fények: a fő fény balra fent, egy hideg ellenfény jobbra hátul */
       scene.add(new T.AmbientLight(0xffffff, .55));

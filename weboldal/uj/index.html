@@ -1550,8 +1550,8 @@ body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .zx-bar, body.world-on .z
    Gépen megmarad a régi, megszokott kezelés: bal felül a többfunkciós üvegkocka, alatta a házvázlat, alul a csoport-fülek és a
    fényképes helyszínsor, fölötte a mini vitorlásverseny. Az új, vékony fejléc (logó, a hely neve, Foglalás, VR, 3D, Nap, nyelv)
    marad felül. A jobb oldali „Helyek” fiók itt nem kell (a fényképsor mindig látszik) – telefonon és táblagépen változatlan. */
-:root[data-device="pc"] body.zx .cubebox { position: fixed; z-index: 7; top: calc(70px + env(safe-area-inset-top, 0px)); left: max(8px, env(safe-area-inset-left, 0px)); pointer-events: auto; }
-:root[data-device="pc"] body.zx .map { top: calc(250px + env(safe-area-inset-top, 0px)); max-height: calc(100% - 422px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+:root[data-device="pc"] body.zx .cubebox { --S: 158px; --H: 98px; --gp: 10px; position: fixed; z-index: 7; top: calc(70px + env(safe-area-inset-top, 0px)); left: max(8px, env(safe-area-inset-left, 0px)); pointer-events: auto; }   /* 2026-11-10: kb. 15%-kal kisebb (a tulajdonos kérése) */
+:root[data-device="pc"] body.zx .map { top: calc(226px + env(safe-area-inset-top, 0px)); max-height: calc(100% - 398px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
 :root[data-device="pc"] body.zx .top .tools { left: auto; right: max(16px, env(safe-area-inset-right, 0px)); }
 :root[data-device="pc"] body.zx #zxPlacesBtn { display: none !important; }
 
@@ -1666,6 +1666,67 @@ body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .zx-bar, body.world-on .z
 .zfb-legend .ldep, .zfb-legend .larr, .zfb-legend .lchg { position: relative; background: #fff; border: 1.5px solid #d8dee5; overflow: hidden; }
 .zfb-legend .ldep::before, .zfb-legend .lchg::before { content: ""; position: absolute; left: 0; top: 0; border-style: solid; border-width: 8px 8px 0 0; border-color: #D9534F transparent transparent transparent; }
 .zfb-legend .larr::after, .zfb-legend .lchg::after { content: ""; position: absolute; right: 0; bottom: 0; border-style: solid; border-width: 0 0 8px 8px; border-color: transparent transparent #2F7FD0 transparent; }
+
+/* ===================== FOGLALÁSI NAPTÁR – KIDOLGOZOTT KIVITEL (2026-11-10, a tulajdonos kérésére) =====================
+   A korábbi lapos fehér háttér és a kemény élű piros / kék háromszögek helyett:
+   • a naptár saját, finoman árnyékolt „lapon” ül, a háttér lágy égkék–gyöngyház átmenet;
+   • a napok enyhén domború, lekerekített csempék; a foglalt nap nyugodt, halvány rózsaszín (nem csíkos);
+   • az érkezés / távozás jele a sarokból lágyan a csempébe olvadó színátmenet (piros: aznap távozik egy vendég, kék: aznap érkezik);
+   • a jelmagyarázat rendezett, kétoszlopos kártya ugyanezekkel a mintákkal. */
+.zfb-body { background:
+    radial-gradient(120% 46% at 50% 0%, rgba(255,255,255,.96) 0%, rgba(255,255,255,0) 100%),
+    linear-gradient(180deg, #f6f9fc 0%, #edf3f9 55%, #e6eef6 100%) !important; }
+.zfb-month { background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%); border: 1px solid rgba(11,47,94,.10); border-radius: 20px; padding: 16px 14px 14px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 10px 26px rgba(11,47,94,.09), 0 2px 6px rgba(11,47,94,.05); }
+.zfb-month h4 { font-size: 19px !important; letter-spacing: .01em; margin-bottom: 12px !important; color: #0b2f5e; }
+.zfb-month h4::before, .zfb-month h4::after { width: 34px !important; }
+.zfb-wd { margin-bottom: 4px; border-bottom: 1px solid rgba(11,47,94,.08); }
+.zfb-wd span { letter-spacing: .04em; text-transform: uppercase; font-size: 12px !important; color: #6b7b8c !important; padding: 2px 0 8px !important; }
+.zfb-wd, .zfb-days { gap: 6px !important; }
+.zfb-d { border-radius: 13px !important; border: 1px solid #d5e0ea !important; overflow: hidden;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8fc 100%) !important;
+  box-shadow: 0 1px 0 #fff inset, 0 -8px 12px rgba(11,47,94,.035) inset, 0 1px 2px rgba(11,47,94,.07); }
+.zfb-d b, .zfb-d small { position: relative; z-index: 1; }
+.zfb-d b { color: #0b2f5e; } .zfb-d small { color: #1d7a3c !important; letter-spacing: .01em; }
+.zfb-days .zfb-d:is(:nth-child(7n), :nth-child(7n - 1)):not(.empty):not(.busy):not(.off):not(.in):not(.ci):not(.co) { background: linear-gradient(180deg, #fffdf6 0%, #f8f3e4 100%) !important; border-color: #e6dcc0 !important; }
+.zfb-d:hover:not(:disabled) { border-color: #d4a13a !important; box-shadow: 0 0 0 2px rgba(212,161,58,.28), 0 6px 14px rgba(11,47,94,.16); }
+.zfb-d.empty { background: none !important; border: 0 !important; box-shadow: none !important; }
+.zfb-d.off { background: #eef2f6 !important; border-color: transparent !important; box-shadow: none !important; }
+.zfb-d.off b { color: #b3bec9; font-weight: 600; }
+.zfb-d.busy { background: linear-gradient(180deg, #f8ecea 0%, #f1dedb 100%) !important; border-color: #e9cfcb !important; box-shadow: 0 1px 0 rgba(255,255,255,.7) inset; }
+.zfb-d.busy b { color: #b9837d; text-decoration: line-through; text-decoration-thickness: 1.5px; text-decoration-color: rgba(185,131,125,.75); }
+.zfb-d.in { background: linear-gradient(180deg, #fff7dc 0%, #ffe9a8 100%) !important; border-color: #f1d27a !important; border-radius: 6px !important; }
+.zfb-d.ci, .zfb-d.co { background: linear-gradient(160deg, #164377 0%, #0b2f5e 60%, #08244a 100%) !important; border-color: #0b2f5e !important; box-shadow: 0 6px 14px rgba(11,47,94,.35), 0 1px 0 rgba(255,255,255,.18) inset !important; }
+.zfb-d.ci b, .zfb-d.co b { color: #fff; } .zfb-d.ci small, .zfb-d.co small { color: #f2d27a !important; }
+.zfb-d.ci { border-radius: 16px 6px 6px 16px !important; } .zfb-d.co { border-radius: 6px 16px 16px 6px !important; }
+/* távozási nap (az előző vendég 10:00-ig marad): a bal felső sarokból lágyan kifutó halvány rózsaszín */
+.zfb-d.outday:not(.ci):not(.co):not(.in) { background:
+    linear-gradient(135deg, rgba(226,120,110,.34) 0%, rgba(226,120,110,.16) 20%, rgba(226,120,110,0) 46%),
+    linear-gradient(180deg, #ffffff 0%, #f3f8fc 100%) !important; }
+/* sarokjelek: a kemény háromszög helyett a sarokból a csempébe olvadó színátmenet + hajszálvékony ív */
+.zfb-d.dep::before, .zfb-d.chg::before { content: ""; position: absolute; inset: 0; width: auto; height: auto; border: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(circle at 0 0, rgba(214,72,62,.95) 0, rgba(214,72,62,.95) 5px, rgba(214,72,62,0) 6px),
+    linear-gradient(135deg, rgba(222,84,74,.62) 0%, rgba(222,84,74,.34) 14%, rgba(222,84,74,.10) 27%, rgba(222,84,74,0) 38%); }
+.zfb-d.arr::after, .zfb-d.chg::after { content: ""; position: absolute; inset: 0; width: auto; height: auto; border: 0; border-radius: inherit; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(circle at 100% 100%, rgba(38,112,200,.95) 0, rgba(38,112,200,.95) 5px, rgba(38,112,200,0) 6px),
+    linear-gradient(315deg, rgba(47,127,208,.62) 0%, rgba(47,127,208,.34) 14%, rgba(47,127,208,.10) 27%, rgba(47,127,208,0) 38%); }
+.zfb-d.ci.dep::before, .zfb-d.co.dep::before, .zfb-d.ci.arr::after, .zfb-d.co.arr::after, .zfb-d.ci.chg::before, .zfb-d.ci.chg::after, .zfb-d.co.chg::before, .zfb-d.co.chg::after { opacity: .55; }
+.zfb-d.today::after { z-index: 2; }
+/* jelmagyarázat: rendezett kártya, két oszlop */
+.zfb-legend { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 9px 18px !important; margin-top: 16px !important; padding: 14px 16px; border-radius: 16px;
+  background: rgba(255,255,255,.72); border: 1px solid rgba(11,47,94,.09); box-shadow: 0 1px 0 #fff inset; font-size: 14px !important; line-height: 1.3; color: #3a4a5a !important; }
+.zfb-legend span { display: flex; align-items: center; gap: 9px; }
+.zfb-legend i { flex: none; width: 22px !important; height: 22px !important; border-radius: 7px !important; margin: 0 !important; vertical-align: 0 !important; box-sizing: border-box; position: relative; overflow: hidden;
+  background: linear-gradient(180deg, #fff, #f3f8fc); border: 1px solid #d5e0ea !important; }
+.zfb-legend .lb { background: linear-gradient(180deg, #f8ecea, #f1dedb) !important; border-color: #e9cfcb !important; }
+.zfb-legend .ls { background: linear-gradient(160deg, #164377, #0b2f5e) !important; border-color: #0b2f5e !important; }
+.zfb-legend .lo { background: linear-gradient(135deg, rgba(226,120,110,.38) 0%, rgba(226,120,110,.16) 24%, rgba(226,120,110,0) 50%), linear-gradient(180deg, #fff, #f3f8fc) !important; }
+.zfb-legend .ldep::before, .zfb-legend .lchg::before { content: ""; position: absolute; inset: 0; border: 0 !important; width: auto; height: auto;
+  background: linear-gradient(135deg, rgba(222,84,74,.9) 0%, rgba(222,84,74,.45) 22%, rgba(222,84,74,0) 46%); }
+.zfb-legend .larr::after, .zfb-legend .lchg::after { content: ""; position: absolute; inset: 0; border: 0 !important; width: auto; height: auto;
+  background: linear-gradient(315deg, rgba(47,127,208,.9) 0%, rgba(47,127,208,.45) 22%, rgba(47,127,208,0) 46%); }
 /* üveggömb a fotós kártyán (nov. 9., a tulajdonos kérése: „ugyanolyan 3 dimenziós hatással”, a fotók változatlanok) */
 .zbl-c { position: relative; }
 .zbl-orb { all: unset; box-sizing: border-box; cursor: pointer; position: absolute; z-index: 3; top: 10px; right: 10px; width: 92px; height: 92px; border-radius: 50%;
