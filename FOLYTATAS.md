@@ -478,3 +478,8 @@ A tulajdonos a nov. 6-i maketten csalódott („a semmiben áll”, kicsi, nem n
 - Műszaki dokumentációból új tételek: `boiler` (Ariston 50 l villanybojler, Fürdőszoba), `heater` (fűtőpanel 1600/1200/750 W, Nappali); klíma 2,6 kW, –10 °C alatt tiltva.
 - NEM került be (szándékosan): riasztó, kamera, épületfelügyelet, kódok. Hiányzik még: pontos típusszámok (mikró, hűtő, mosógép, klíma, pirító), TV, hajszárító típusa,
   Schooner vízforraló + klíma fotó, a többi lakás mosógépe. Az új szövegek fordítása a többi nyelvre még hátravan.
+- 3–4. kör (nov. 10. du.): helyiségenkénti átnézés mind az 5 lakásban. Új tételek saját fotóval: `tv` (Dingi: Orion felirat olvasható, a többinél a márka nem),
+  `shower`, `towelrad`, `wardrobe`, `armchair`, `dining`, `zapper` (tölthető szúnyogcsapó), `terraceset` (Korvett), `bedding`, `cushions`, `balatonmap`, `walldecor`, `sailphoto`.
+  Bojler pontosítva: Ariston Velis lapos, érintőkijelzős (pontos alváltozat – Evo/Pro/Wi-Fi – nem olvasható). Schooner: Beko mosógép + Airfel klíma fotóval.
+  Tulajdonos kérése: termékoldali gyári fotó + párnák töltetének összetétele – ezekhez típusszám/címke kell tőle (gyári képet szerzői jog miatt csak linkként).
+  Még át nem nézett panorámák: fregatt-halo/-furdo/-erkely, kaloz-furdo/-asztal, schooner-terasz2, dingi-eloter, korvett-eloszoba.

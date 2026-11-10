@@ -5761,13 +5761,13 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       steps: [["Érkezéskor már be van kapcsolva", "Nem kell semmit állítanod – csak pakolj be."], ["Hőfok állítása", "Belül, a világításnál lévő tekerővel: a nagyobb szám hidegebb. A középső állás általában megfelelő."],
         ["Forrón ne tegyél be semmit", "Várd meg, míg az étel kihűl, és ne hagyd sokáig nyitva az ajtót."], ["Távozáskor", "Vidd el vagy dobd ki, ami a tiéd; a hűtőt ne kapcsold ki és ne húzd ki."]],
       warn: ["Üvegpalackot ne tegyél a fagyasztóba – megrepedhet."] },
-    washer: { model: "Beko elöltöltős mosógép", brand: "a konyhapult alá építve", photo: "mosogep", apts: ["korvett", "fregatt"], where: "Konyha – a pult alatt, a hűtő mellett",
-      by: { korvett: { model: "Candy Aquamatic mosógép", brand: "kompakt, elöltöltős · a konyhapult alá építve", where: "Konyha – a pult jobb végén, a mikró alatt", specs: ["kompakt méret", "elöltöltős", "programválasztó tekerő"] } },
+    washer: { model: "Beko elöltöltős mosógép", brand: "a konyhapult alá építve", photo: "mosogep", apts: ["korvett", "fregatt", "schooner"], where: "Konyha – a pult alatt, a hűtő mellett",
+      by: { schooner: { where: "Konyha – a pult alatt, az ablak felőli oldalon" }, korvett: { model: "Candy Aquamatic mosógép", brand: "kompakt, elöltöltős · a konyhapult alá építve", where: "Konyha – a pult jobb végén, a mikró alatt", specs: ["kompakt méret", "legfeljebb 4 kg ruha", "elöltöltős", "programválasztó tekerő"] } },
       specs: ["elöltöltős", "programválasztó tekerő"],
       steps: [["Tedd be a ruhát", "Ne tömd tele: maradjon egy tenyérnyi hely a dob tetején. Csukd be az ajtót kattanásig."], ["Mosószer", "Mosókapszulát a dobba, a ruhák közé; folyékony vagy por mosószert a mosószeres fiókba."],
         ["Válassz programot", "A tekerővel: hétköznapi ruhához a pamut vagy a vegyes program, 30–40 °C."], ["Indítsd el", "A Start gombbal. A végén az ajtózár 1–2 perc múlva enged ki."]],
       warn: ["Menet közben ne feszegesd az ajtót – zárva van, amíg víz van a dobban.", "Mosás után hagyd résnyire nyitva az ajtót, hogy kiszáradjon."] },
-    ac: { model: "Airfel split klíma", brand: "hűt és fűt · távirányítóval", photo: "klima", apts: ["korvett", "dingi", "fregatt", "kaloz"], where: "A nappali falán; a távirányító a bejáratnál, a fali tartóban",
+    ac: { model: "Airfel split klíma", brand: "hűt és fűt · távirányítóval", photo: "klima", where: "A nappali falán; a távirányító a bejáratnál, a fali tartóban",
       specs: ["2,6 kW", "hűtés és fűtés", "távirányítós"],
       steps: [["Vedd le a távirányítót", "A bejáratnál, a fali tartóban találod. Irányítsd a klíma felé."], ["Kapcsold be", "Az ON/OFF gombbal; a klíma csippan, és kinyílik a lamellája."],
         ["Válassz üzemmódot", "A MODE gombbal: hópehely = hűtés, nap = fűtés."], ["Állítsd be a hőfokot", "A ▲ ▼ gombokkal. Nyáron 24–26 °C a kellemes és takarékos – ne állítsd 8 foknál többel a kinti hőmérséklet alá."],
@@ -5921,8 +5921,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     } };
   /* a ház műszaki dokumentációjából (2026-11-10): apartmanonként egy 50 literes Ariston villanybojler és fali elektromos fűtőpanelek */
   IT.boiler = { n: "Meleg víz – villanybojler", q: "", d: "50 literes villanybojler adja a meleg vizet – magától fűt, nem kell kapcsolnod.", s: [[.3, "boil"]],
-    real: { model: "Ariston 50 literes villanybojler", brand: "apartmanonként saját bojler", where: "Fürdőszoba",
-      specs: ["50 liter", "elektromos", "önműködő"],
+    real: { model: "Ariston Velis lapos villanybojler", brand: "50 literes · érintőgombos kijelzővel · apartmanonként saját bojler", photo: "bojler", ph: ["korvett", "dingi", "schooner"], where: "Fürdőszoba – a falon, a WC fölött",
+      specs: ["50 liter", "elektromos", "lapos, ikertartályos", "önműködő"],
       steps: [["Nincs vele teendőd", "A bojler folyamatosan melegen tartja a vizet, érkezéskor már meleg."], ["50 liter egyszerre", "Két-három zuhanyzásra elég. Ha többen fürödtök egymás után, a végére langyosabb lehet."],
         ["Ha elfogyott a meleg víz", "Várj nagyjából egy órát, a bojler magától újra felfűt."]],
       warn: ["A bojler csapjait, szelepeit és kapcsolóját ne állítsd el. Ha tartósan nincs meleg víz, szólj nekünk."] },
@@ -5932,7 +5932,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       for (let k = 0; k < 3; k++) { const y = -40 + k * 22 + Math.sin(t * 2 + k) * 2; bL(g, [[-14, y], [-5, y - 5], [5, y + 5], [14, y]], "#ffb74d", 2.5); }
     } };
   IT.heater = { n: "Fűtőpanel", q: "", d: "Fali elektromos fűtőpanel a hűvösebb napokra – a klíma mellett ez fűt.", s: [[.3, "click"]],
-    real: { model: "Fali elektromos fűtőpanel", brand: "helyiségenként méretezve", where: "A szobák falán, az ablak közelében",
+    real: { model: "Fali elektromos fűtőpanel (konvektor)", brand: "fehér, lapos · helyiségenként méretezve", photo: "futopanel", ph: ["dingi", "kaloz", "schooner"], where: "A szobák falán, alul – az ablak alatt vagy a fotel mögött",
       specs: ["1600 W", "1200 W", "750 W", "termosztátos"],
       steps: [["Kapcsold be", "A panel oldalán vagy alján lévő kapcsolóval."], ["Állítsd be a hőfokot", "A termosztát gombjával. Ha elérte a kívánt meleget, magától kikapcsol, majd visszakapcsol."],
         ["Távozáskor vedd vissza", "Ha hosszabb időre elmész, állítsd alacsonyra vagy kapcsold ki."]],
@@ -5942,6 +5942,90 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       bR(g, 44, 20, 14, 12, 3, "#ff7043", BO, 1.2); bL(g, [[-50, 40], [-50, 54]], "#90a4ae", 4); bL(g, [[50, 40], [50, 54]], "#90a4ae", 4);
       for (let k = 0; k < 3; k++) { const x = -30 + k * 30, y = -52 - Math.abs(Math.sin(t * 1.6 + k)) * 6; bL(g, [[x, y + 8], [x + 5, y + 2], [x - 5, y - 4], [x, y - 10]], "#ff8a65", 2.5); }
     } };
+  /* ---- 3. kör (2026-11-10): a panorámák helyiségenkénti átnézéséből – bútorok, tévé, fürdő, terasz. Fotó: img/eszk/<photo>-<apt>.jpg ---- */
+  IT.tv = { n: "Televízió", q: "", d: "Falra szerelt lapos tévé – az ágyból és az asztaltól is jól látszik.", s: [[.3, "click"]],
+    real: { model: "Falra szerelt LED televízió", brand: "dönthető fali tartón", photo: "tv", by: { dingi: { model: "Orion LED televízió" } }, where: "A nappali falán, a kis polc fölött",
+      specs: ["LED kijelző", "fali tartón", "távirányítós"],
+      steps: [["Kapcsold be", "A távirányító piros gombjával. A tévé alján kis piros lámpa jelzi, hogy áram alatt van."], ["Csatornaváltás", "A számgombokkal vagy a CH ▲▼ gombbal."],
+        ["Hangerő", "A VOL + / – gombbal; a némítás az áthúzott hangszóró jel."], ["Ha nincs kép", "A SOURCE (vagy INPUT) gombbal válaszd a TV / DTV bemenetet."], ["Lefekvés előtt kapcsold ki", "Ugyanazzal a piros gombbal."]],
+      warn: ["A tévét ne billentsd és ne húzd lefelé – a fali tartó csak a súlyát bírja.", "A hátulján lévő kábeleket ne húzd ki."] },
+    f(g, t, A) { bR(g, -70, -46, 140, 84, 6, "#263238", BO, 2.5); bR(g, -63, -40, 126, 72, 3, "#37474f", BO, 1); bL(g, [[-50, -30], [-20, -30]], "#78909c", 2); bR(g, -4, 40, 8, 5, 2, Math.sin(t * 3) > 0 ? "#ef5350" : "#b71c1c", BO, 1); bR(g, -46, 52, 92, 8, 2, "#d7b98a", BO, 2); } };
+  IT.shower = { n: "Zuhany", q: "", d: "Zuhanyzó esőztető fejjel és kézi zuhannyal.", s: [[.3, "boil"]],
+    real: { model: "Zuhany esőztető fejjel", brand: "felső esőztető + kézi zuhany, egykaros csappal", photo: "zuhany", ph: ["korvett", "dingi", "schooner"], where: "Fürdőszoba",
+      specs: ["esőztető fej", "kézi zuhany", "egykaros csap"],
+      steps: [["Nyisd meg a csapot", "A kart emeld fel; balra melegebb, jobbra hidegebb a víz."], ["Válts a két fej között", "A csaptelepen lévő váltógombot húzd vagy fordítsd el: felső esőztető vagy kézi zuhany."],
+        ["Várj pár másodpercet", "Amíg a meleg víz a bojlerből odaér."], ["Zuhanyzás után", "Zárd el a csapot, és hagyd nyitva a kabin ajtaját vagy a függönyt, hogy kiszáradjon."]],
+      warn: ["A zuhanytálca vizesen csúszik – óvatosan lépj ki.", "Zuhanyzás közben húzd be a kabinajtót vagy a függönyt, hogy ne ázzon el a padló."] },
+    f(g, t, A) { bL(g, [[30, 70], [30, -50], [-10, -50]], "#90a4ae", 5); bR(g, -44, -56, 50, 10, 4, "#cfd8dc", BO, 2); for (let k = 0; k < 5; k++) { const x = -38 + k * 10, y = -40 + ((t * 60 + k * 17) % 70); bL(g, [[x, y], [x, y + 10]], "#4fc3f7", 2.5); } bR(g, 22, 20, 16, 12, 3, "#b0bec5", BO, 1.5); } };
+  IT.towelrad = { n: "Törölközőszárító radiátor", q: "", d: "Elektromos, íves törölközőszárító – a vizes törölköző pár óra alatt megszárad rajta.", s: [[.3, "click"]],
+    real: { model: "Elektromos törölközőszárító radiátor", brand: "fehér, íves csőradiátor · fűtőpatronnal", photo: "torolkozoszarito", ph: ["korvett", "dingi"], where: "Fürdőszoba – a falon",
+      specs: ["elektromos", "íves kivitel", "kapcsoló alul"],
+      steps: [["Terítsd rá a törölközőt", "Egy rétegben, a csövekre akasztva."], ["Kapcsold be", "A radiátor alján lévő fűtőpatron kapcsolójával."], ["Ha megszáradt, kapcsold ki", "Ne hagyd egész nap bekapcsolva."]],
+      warn: ["Bekapcsolva forró – különösen gyerekekre figyelj.", "Műszálas ruhát, strandjátékot ne tegyél rá."] },
+    f(g, t, A) { bL(g, [[-40, -70], [-40, 70]], "#eceff1", 7); bL(g, [[40, -70], [40, 70]], "#eceff1", 7); for (let k = 0; k < 9; k++) bL(g, [[-40, -62 + k * 15], [40, -62 + k * 15]], "#cfd8dc", 4); bR(g, 34, 66, 12, 12, 3, "#ff7043", BO, 1.2); bR(g, -30, -30, 60, 46, 4, "#80deea", BO, 2); } };
+  IT.wardrobe = { n: "Ruhásszekrény", q: "", d: "Tükrös ruhásszekrény akasztós résszel és polcokkal; a tetején a pótpárnák.", s: [[.3, "click"]],
+    real: { model: "Tükrös ruhásszekrény", brand: "akasztós rész, polcok, fiókok", photo: "szekreny", apts: ["korvett", "dingi", "kaloz", "schooner"], where: "A szobában, a fal mellett",
+      by: { schooner: { model: "Tolóajtós, tükrös gardróbszekrény", brand: "két tükrös tolóajtó · akasztós rész és polcok", where: "A hálószobában" }, korvett: { where: "A hálószobában" } },
+      specs: ["egész alakos tükör", "vállfák", "pótpárnák a tetején"],
+      steps: [["Vállfák és polcok", "Az akasztós részben vállfákat találsz, mellette polcok a hajtogatott ruháknak."], ["Pótpárna, takaró", "A szekrény tetején lévő díszpárnák a kanapéhoz, fotelhez tartoznak – nyugodtan használd."], ["Távozás előtt", "Nézz be a szekrénybe és a fiókokba, nehogy itt maradjon valami."]],
+      warn: ["A tolóajtót (Schooner) ne rántsd meg, finoman gurul a sínen."] },
+    f(g, t, A) { bR(g, -56, -70, 112, 140, 5, "#c9a77a", BO, 2.5); bL(g, [[-18, -70], [-18, 70]], BO, 2); bL(g, [[18, -70], [18, 70]], BO, 2); bR(g, -14, -56, 28, 78, 2, "#b3e5fc", BO, 1.5); bL(g, [[-24, -4], [-24, 12]], "#607d8b", 3); bL(g, [[24, -4], [24, 12]], "#607d8b", 3); bL(g, [[-18, 34], [18, 34]], BO, 1.5); bL(g, [[-18, 52], [18, 52]], BO, 1.5); } };
+  IT.armchair = { n: "Fotel", q: "", d: "Kényelmes kárpitozott fotel olvasáshoz, tévézéshez.", s: [[.3, "click"]],
+    real: { model: "Kárpitozott fotel", brand: "szövet ülőfelület, műbőr karfa", photo: "fotel", where: "A nappaliban",
+      by: { schooner: { model: "Bársonyhuzatú kagylófotel", brand: "szürke, kerek háttámlával", where: "A hálószobában, a kis asztal mellett" } },
+      specs: ["kárpitozott", "karfás"],
+      steps: [["Ülj le, pihenj", "A fotel könnyen arrébb húzható, ha a tévé vagy az ablak felé fordítanád."], ["Ha valami ráömlik", "Azonnal itasd fel száraz törlőkendővel, és szólj nekünk – nem baj, megoldjuk."]],
+      warn: ["Vizes fürdőruhában, naptejes bőrrel ne ülj rá – tegyél alá törölközőt."] },
+    f(g, t, A) { bR(g, -46, -50, 92, 70, 14, "#8d8d8d", BO, 2.5); bR(g, -60, -10, 26, 60, 10, "#3e3e3e", BO, 2.5); bR(g, 34, -10, 26, 60, 10, "#3e3e3e", BO, 2.5); bR(g, -36, 6, 72, 34, 8, "#a5a5a5", BO, 2.5); bL(g, [[-44, 52], [-44, 64]], BO, 4); bL(g, [[44, 52], [44, 64]], BO, 4); } };
+  IT.dining = { n: "Étkezőasztal székekkel", q: "", d: "Étkezőasztal székekkel – reggelihez, vacsorához, társasjátékhoz.", s: [[.3, "click"]],
+    real: { model: "Étkezőasztal székekkel", brand: "fa asztal alátétekkel", photo: "etkezo", where: "A nappaliban, a konyha mellett",
+      by: { korvett: { specs: ["4 szék", "fa lécbetétes asztal", "tányéralátétek"] }, fregatt: { specs: ["4 szék", "fa lécbetétes asztal", "tányéralátétek"] }, schooner: { model: "Kerek étkezőasztal 4 karfás székkel", brand: "fehér, egylábú asztal · sötét fa székek", where: "A nappali étkezősarkában, a tévé alatt", specs: ["4 karfás szék", "kerek asztal"] },
+        dingi: { model: "Lehajtható étkezőasztal székkel", brand: "falhoz állított, félköríves asztal", where: "A bejárat mellett, a tévé alatt", specs: ["helytakarékos", "tányéralátét"] }, kaloz: { model: "Lehajtható étkezőasztal székkel", brand: "falhoz állított, félköríves asztal", where: "A bejárat mellett, a tévé alatt", specs: ["helytakarékos", "tányéralátét"] } },
+      specs: ["székek", "tányéralátétek"],
+      steps: [["Teríts meg", "Tányért, poharat, evőeszközt a konyhaszekrényben találsz; az alátétek az asztalon vannak."], ["Forró edény alá tegyél alátétet", "A fa asztallap nem szereti a forró lábast."], ["Evés után töröld le", "Nedves törlőkendővel – a konyhapulton találod."]],
+      warn: ["A székekre ne állj fel."] },
+    f(g, t, A) { bR(g, -56, -14, 112, 12, 4, "#a9764a", BO, 2.5); bL(g, [[0, -2], [0, 50]], BO, 5); bL(g, [[-24, 52], [24, 52]], BO, 5); bR(g, -86, -20, 22, 44, 5, "#4e342e", BO, 2); bL(g, [[-82, 24], [-82, 56]], BO, 3.5); bR(g, 64, -20, 22, 44, 5, "#4e342e", BO, 2); bL(g, [[82, 24], [82, 56]], BO, 3.5); bR(g, -22, -24, 44, 8, 4, "#e6d3a8", BO, 1.5); } };
+  IT.zapper = { n: "Elektromos szúnyogcsapó", q: "", d: "Tölthető, ütő formájú elektromos szúnyogcsapó a talpán áll – ha mégis bejutna egy szúnyog.", s: [[.3, "click"]],
+    real: { model: "Tölthető elektromos szúnyogcsapó", brand: "teniszütő formájú · álló töltőtalppal", photo: "szunyogcsapo", apts: ["dingi", "kaloz", "schooner"], where: "A kisasztalon vagy az éjjeliszekrényen, a töltőtalpán",
+      specs: ["tölthető", "biztonsági rács", "nyomógombos"],
+      steps: [["Vedd le a talpáról", "A nyelénél fogva."], ["Tartsd nyomva a gombot", "Csak addig van áram a rácsban, amíg a nyelén lévő gombot nyomod."], ["Érintsd a szúnyoghoz", "Kis pattanás jelzi a találatot."], ["Tedd vissza a talpára", "Ott töltődik, így mindig használatra kész."]],
+      warn: ["Nem játék – gyerek kezébe ne add.", "A rácsot bekapcsolva ne érintsd meg, és vízhez ne vidd közel."] },
+    f(g, t, A) { bR(g, -26, -72, 52, 76, 22, "#eceff1", BO, 2.5); for (let k = 0; k < 5; k++) bL(g, [[-16 + k * 8, -62], [-16 + k * 8, -6]], "#90a4ae", 1.5); bL(g, [[0, 4], [0, 56]], "#b0bec5", 8); bR(g, -18, 56, 36, 12, 5, "#cfd8dc", BO, 2); if (Math.sin(t * 5) > .8) bL(g, [[-6, -40], [2, -34], [-4, -28], [6, -22]], "#ffd54f", 2.5); } };
+  IT.terraceset = { n: "Terasz – asztal és székek", q: "", d: "Kerti asztal és székek a teraszon – reggeli kávéhoz, esti beszélgetéshez.", s: [[.3, "click"]],
+    real: { model: "Kerti asztal rakásolható székekkel", brand: "márvány mintás asztallap · fekete fémvázas, hálós székek", photo: "terasz", apts: ["korvett"], where: "A teraszon, a nappali ajtaja előtt",
+      specs: ["asztal", "4 szék az asztalnál", "2 pihenőszék"],
+      steps: [["Használd bátran", "A székek könnyűek, oda teszed őket, ahová süt (vagy nem süt) a nap."], ["Este, távozáskor", "Told vissza a székeket az asztalhoz, a fal mellé – szélben könnyen elindulnak."], ["Vizes holmi", "A fürdőruhát, törölközőt a ruhaszárítóra tedd, ne a szék támlájára."]],
+      warn: ["A székekre ne állj fel.", "Este 10 után kérjük, halkan beszélgessetek a teraszon."] },
+    f(g, t, A) { bR(g, -40, -18, 80, 10, 3, "#eceff1", BO, 2.5); bL(g, [[0, -8], [0, 46]], BO, 5); bL(g, [[-18, 48], [18, 48]], BO, 5); bP(g, "M-84 -40 L-64 -40 L-60 14 L-88 14 Z", "#37474f", BO, 2); bL(g, [[-86, 14], [-90, 52]], BO, 3); bL(g, [[-62, 14], [-58, 52]], BO, 3); bP(g, "M64 -40 L84 -40 L88 14 L60 14 Z", "#37474f", BO, 2); bL(g, [[62, 14], [58, 52]], BO, 3); bL(g, [[86, 14], [90, 52]], BO, 3); } };
+  /* ---- 4. kör: párnák, takarók, dekoráció (a töltet összetétele a címkéről kerül majd be – a képről nem állapítható meg) ---- */
+  IT.bedding = { n: "Ágynemű – párna és paplan", q: "személyenként", d: "Frissen húzott párna és paplan vár, az ágyon összehajtott törölközővel.", s: [[.3, "click"]],
+    real: { model: "Párna, paplan és ágyneműhuzat", brand: "személyenként egy párna és egy paplan · mintás huzatban", photo: "agynemu", where: "Az ágyon, megágyazva",
+      specs: ["frissen mosott huzat", "személyenként 1 párna", "személyenként 1 paplan"],
+      steps: [["Érkezéskor meg van ágyazva", "Nem kell ágyneműt hoznod."], ["Ha fázol vagy pótpárna kell", "A szekrény tetején lévő díszpárnákat is használhatod; pótpaplant kérj tőlünk."], ["Távozáskor", "Az ágyneműt hagyd az ágyon, nem kell lehúznod."]],
+      warn: ["Az ágyneműt és a párnát ne vidd ki a teraszra vagy a strandra.", "Ha allergiás vagy valamilyen töltetre, jelezd előre – megnézzük, mit tudunk adni."] },
+    f(g, t, A) { bR(g, -70, -6, 140, 50, 10, "#bfa58a", BO, 2.5); bR(g, -62, -34, 56, 34, 10, "#fafafa", BO, 2.5); bR(g, 6, -34, 56, 34, 10, "#fafafa", BO, 2.5); for (let k = 0; k < 5; k++) bR(g, -54 + k * 26, 10 + (k % 2) * 12, 8, 8, 4, "#fff8e1", BO, 1); bL(g, [[-70, 44], [-70, 58]], BO, 4); bL(g, [[70, 44], [70, 58]], BO, 4); } };
+  IT.cushions = { n: "Díszpárnák", q: "", d: "Szövet díszpárnák a szekrény tetején – a kanapéhoz, fotelhez, olvasáshoz.", s: [[.3, "click"]],
+    real: { model: "Szövet díszpárnák", brand: "barna-bézs szövethuzattal", photo: "diszparna", apts: ["korvett", "dingi", "kaloz", "schooner"], where: "A ruhásszekrény tetején",
+      specs: ["szövethuzat", "háttámlának, deréktámasznak"],
+      steps: [["Vedd le, ha kell", "Tévézéshez, olvasáshoz jó háttámla a kanapén vagy az ágyon."], ["Használat után", "Tedd vissza a szekrény tetejére, hogy ne legyen útban."]],
+      warn: ["A díszpárnák a szobába valók – a teraszra, strandra ne vidd ki őket."] },
+    f(g, t, A) { bR(g, -60, -10, 60, 44, 14, "#a1887f", BO, 2.5); bR(g, -4, -22, 62, 46, 14, "#8d6e63", BO, 2.5); bR(g, -30, 20, 70, 38, 14, "#bcaaa4", BO, 2.5); } };
+  IT.balatonmap = { n: "Balaton-térkép", q: "", d: "Bekeretezett, nagy méretű Balaton-térkép a falon – tervezd meg rajta a kirándulást.", s: [[.3, "click"]],
+    real: { model: "Bekeretezett Balaton-térkép", brand: "domborzati térkép az egész tóról", photo: "terkep", apts: ["korvett", "schooner"], where: "A hálószoba falán",
+      specs: ["az egész Balaton", "települések, utak", "Zamárdi a déli parton"],
+      steps: [["Keresd meg Zamárdit", "A déli parton, Siófoktól nyugatra, a tihanyi félszigettel szemben."], ["Tervezz kirándulást", "Szántódról komp visz át Tihanyba – a térképen a tó legkeskenyebb pontja."]],
+      warn: ["A kép üveg alatt van – ne akassz rá semmit, és ne támaszkodj neki."] },
+    f(g, t, A) { bR(g, -74, -40, 148, 80, 4, "#6d4c41", BO, 2.5); bR(g, -68, -34, 136, 68, 2, "#e8f0d8", BO, 1); bP(g, "M-56 14 C-36 -6 -8 6 6 -2 C22 -12 44 -14 60 -22 C50 -4 26 4 10 10 C-10 18 -34 12 -56 14 Z", "#81d4fa", BO, 1.5); bR(g, 2, -6, 6, 6, 3, "#e53935", BO, 1); } };
+  IT.walldecor = { n: "Fali vitorlás dísz", q: "", d: "Fémből készült vitorlás fali dísz – az apartman hajós hangulatának része.", s: [[.3, "click"]],
+    real: { model: "Fém vitorlás fali dísz", brand: "kézműves jellegű, fémből", photo: "falidisz", where: "A nappali falán",
+      specs: ["fém", "falra rögzítve"], steps: [["Csak nézni való", "A dísz a falra van rögzítve – a hajós nevű apartmanok hangulatához tartozik."]],
+      warn: ["Ne akassz rá ruhát, törölközőt, és ne vedd le a falról."] },
+    f(g, t, A) { bR(g, -50, -64, 100, 128, 4, "rgba(0,0,0,0)", "#8d6e63", 2.5); bP(g, "M-6 -48 L-6 30 L-40 30 Z", "#78909c", BO, 2); bP(g, "M2 -36 L2 30 L34 30 Z", "#26a69a", BO, 2); bP(g, "M-44 36 L40 36 L28 52 L-32 52 Z", "#6d4c41", BO, 2); bL(g, [[20, -50], [28, -56], [36, -50]], BO, 2); } };
+  IT.sailphoto = { n: "Vitorlás fotók", q: "", d: "Bekeretezett balatoni vitorlás fotók a falakon.", s: [[.3, "click"]],
+    real: { model: "Bekeretezett vitorlás fotók", brand: "balatoni vitorlások, regatták", photo: "vitorlaskep", where: "A nappali falain",
+      specs: ["fa keretben", "üveg alatt"], steps: [["Balatoni hangulat", "A képeken balatoni vitorlások és versenyek láthatók – ha kedvet kaptál, a stégről te is nézheted őket."]],
+      warn: ["A képek üveg alatt vannak – ne támaszkodj nekik, és ne vedd le őket a falról."] },
+    f(g, t, A) { bR(g, -66, -46, 132, 92, 4, "#d7b98a", BO, 2.5); bR(g, -58, -38, 116, 76, 2, "#b3e5fc", BO, 1); bR(g, -58, 14, 116, 24, 0, "#4fc3f7", BO, 0); bP(g, "M-20 -26 L-20 14 L-44 14 Z", "#fafafa", BO, 1.5); bP(g, "M-14 -18 L-14 14 L8 14 Z", "#ef5350", BO, 1.5); bP(g, "M28 -20 L28 14 L10 14 Z", "#fafafa", BO, 1.5); } };
   IT.hairdryer = { n: "Hajszárító", q: "", d: "Hajszárító két fokozattal és hideg levegő funkcióval.", s: [[.3, "blow"]],
     f(g, t, A) {
       bR(g, -60, -26, 90, 44, 22, "#7e57c2", BO, 2.5); bP(g, "M30 -18 L56 -14 L56 10 L30 14 Z", "#5e35b1", BO, 2.5); bP(g, "M-30 14 L-20 70 L-2 70 L-6 14 Z", "#7e57c2", BO, 2.5); bR(g, -18, 40, 8, 12, 2, "#ffeb3b", BO, 1.2);
@@ -6120,10 +6204,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   const BPAGES = {
     konyha: { t: "Konyha", sub: "Edények és evőeszközök", c: "#d84315", ic: "cutlery", items: ["cutlery", "smallcut", "plates", "glasses", "pot", "pan", "crepe", "colander", "grater", "opener", "corkscrew", "canopener", "scissors", "kidset"] },
     eszkoz: { t: "Konyhai eszközök", sub: "Gépek, kellékek, alapanyagok", c: "#ef6c00", ic: "microwave", items: ["microwave", "coffee", "kettle", "toaster", "hob", "fridgefreezer", "washer", "pods", "dishsoap", "sponge", "cloth", "papertowel", "breadbasket", "bin", "binbag", "coffeebean", "tea", "sugar", "sweet", "salt", "saltpepper", "napkin", "toothpick", "extinguisher", "firstaid"] },
-    furdo: { t: "Fürdőszoba", sub: "Tisztálkodás", c: "#1565c0", ic: "towel", items: ["towel", "toothbrush", "comb", "hairdryer", "boiler", "toiletpaper", "bathmat", "handsoap", "amenity", "freshener"] },
-    halo: { t: "Hálószoba", sub: "Kényelem éjjel", c: "#6a1b9a", ic: "nightlamp", items: ["charger", "nightlamp", "phoneholder", "towel"] },
-    nappali: { t: "Nappali", sub: "Szórakozás és klíma", c: "#2e7d32", ic: "tvremote", items: ["acremote", "tvremote", "floorlamp", "ac", "heater", "shutter", "mosquito"] },
-    terasz: { t: "Terasz", sub: "Szabadban", c: "#00796b", ic: "ashtray", items: ["ashtray", "standash", "rack"] },
+    furdo: { t: "Fürdőszoba", sub: "Tisztálkodás", c: "#1565c0", ic: "towel", items: ["towel", "toothbrush", "comb", "hairdryer", "shower", "towelrad", "boiler", "toiletpaper", "bathmat", "handsoap", "amenity", "freshener"] },
+    halo: { t: "Hálószoba", sub: "Kényelem éjjel", c: "#6a1b9a", ic: "nightlamp", items: ["charger", "nightlamp", "phoneholder", "towel", "balatonmap"] },
+    nappali: { t: "Nappali", sub: "Szórakozás és klíma", c: "#2e7d32", ic: "tvremote", items: ["tv", "tvremote", "ac", "acremote", "heater", "dining", "armchair", "wardrobe", "floorlamp", "zapper", "shutter", "mosquito", "bedding", "cushions", "walldecor", "sailphoto"] },
+    terasz: { t: "Terasz", sub: "Szabadban", c: "#00796b", ic: "ashtray", items: ["terraceset", "ashtray", "standash", "rack"] },
     info: { t: "Elérhetőség", sub: "Wi-Fi, cím és kapcsolat", c: "#14202a", ic: null }
   };
   const BIG_APT = { korvett: 1, kaloz: 1, schooner: 1, kadett: 1 };
