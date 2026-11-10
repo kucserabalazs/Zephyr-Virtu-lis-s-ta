@@ -94,6 +94,7 @@
     hlPaint(); W.panelDirty = 1;
   }
   function flashMsg(t) { CS.flash = { t, k: 3.2 }; W.panelDirty = 1; }
+  W._chessTest = { get CS() { return CS; }, get GS() { return GS; }, get CE() { return CE; }, move: (m) => doMove(m, true), forceStyle: (v) => { CS.forceBattle = v; } };   /* csak teszteléshez (késleltetett elérés) */
   function doMove(m, fromAI) {
     const before = GS.s;
     GS.hist.push({ s: before, capW: GS.capW.slice(), capB: GS.capB.slice(), last: GS.last });

@@ -260,9 +260,25 @@
      király (kapitány):        vihart hív – sötét felhő, zuhogó eső, öt villám, végül a kraken csápjai a mélybe húzzák
      Közben a kép a csata közelébe repül (2D-ben simán, VR-ben kíméletes elsötétüléssel), a végén vissza. */
   const BST = { p: "ram", n: "dive", b: "broadside", r: "beam", q: "spout", k: "storm" };
+  /* ---- VÁLTOZATOS CSATÁK (v3, 2026-11-11) – a tulajdonos kérése: minden csata más legyen, és az is számítson, melyik bábu melyikkel találkozik.
+     Új jelenetek a régi hat mellé:  kraken – tengeri szörny emelkedik ki és a mélybe rántja (vihar nélkül);  hurricane – hurrikán: felhő, eső, víztölcsér, a magasban
+     darabokra szedi;  laser – a legközelebbi SAJÁT világítótorony fénysugara végez vele (ha nincs torony, a támadóból jön);  magic – varázslat: a víztölcsér után szikrázva semmivé válik.
+     Minden támadótípusnak több lehetősége van; a sorrendet a támadó–áldozat PÁROS dönti el (páronként más az „első számú” csata), és az utolsó két csata soha nem ismétlődik.
+     A jeleneteken belül is véletlen a villámok száma, a sortüzek száma, az emelés magassága, a szétesés módja. */
+  const BOPT = { p: ["ram", "kraken", "laser", "hurricane", "magic"], n: ["dive", "storm", "ram", "magic", "kraken"], b: ["broadside", "laser", "kraken", "ram", "hurricane"],
+                 r: ["beam", "hurricane", "kraken", "storm", "magic"], q: ["spout", "magic", "storm", "hurricane", "laser", "kraken"], k: ["storm", "kraken", "hurricane", "spout", "laser"] };
+  const BBASE = { kraken: "storm", hurricane: "spout", laser: "beam", magic: "spout" };
+  function battlePick(P, V) {
+    if (CS.forceBattle) { const fb = CS.forceBattle; return fb === "dive" && P.t !== "n" ? "ram" : fb; }
+    const opt = BOPT[P.t] || ["ram"], ord = "pnbrqk", h = (ord.indexOf(P.t) * 7 + ord.indexOf(V.t) * 3 + (P.c === "w" ? 0 : 2)) % opt.length, last = CS.lastBattles || (CS.lastBattles = []);
+    const rot = opt.slice(h).concat(opt.slice(0, h)), fresh = rot.filter((q) => last.indexOf(q) < 0);
+    const pool = fresh.length ? fresh : rot, pick = pool[rand() < .62 ? 0 : Math.floor(rand() * pool.length)];
+    last.push(pick); if (last.length > 2) last.shift(); return pick;
+  }
   function battleSetup(A, P, V) {
-    const st = BST[P.t] || "ram", M = A.movers[0], dir = A.vp.clone().sub(A.ap).setY(0).normalize();
-    Object.assign(A, { style: st, V, P, dir, tGone: 1e9, tSink: 1e9, tTurn: .8 });
+    const variant = battlePick(P, V), st = BBASE[variant] || variant, M = A.movers[0], dir = A.vp.clone().sub(A.ap).setY(0).normalize();
+    Object.assign(A, { style: st, variant, V, P, dir, tGone: 1e9, tSink: 1e9, tTurn: .8, liftH: rr(13, 21), endMode: rand() < .5 ? "a" : "b" });
+    if (variant === "laser") { let best = null, bd = 1e9; for (let i = 0; i < 64; i++) { const q = CS.vis[i]; if (q && q.t === "r" && q.c === P.c && q !== P) { const d = q.g.position.distanceTo(A.vp); if (d < bd) { bd = d; best = q; } } } A.lampP = best; }
     if (st === "ram") { M.y1 = yawOf(dir); A.tSail = .95; M.dur = Math.max(M.dur, 2.1); snd("creak", .7); }
     else if (st === "dive") { M.y1 = yawOf(dir); A.tTurn = .3; A.leap = true; A.leapH = 19; A.tSail = .4; M.dur = 3.6; snd("whoosh"); }
     else if (st === "broadside") {
@@ -271,9 +287,13 @@
       A.shots = []; [1.5, 2.55, 3.45].forEach((t0, vol) => { for (let i = 0; i < 4; i++) A.shots.push({ t: t0 + i * .12, i, vol }); }); A.shi = 0;
       A.tSink = 4.2; A.tGone = 6.6; A.tSail = 6.3; snd("creak", .8);
     }
-    else if (st === "beam") { A.tFire = .6; A.tLock = 2.2; A.tSink = 3.8; A.tGone = 5.9; A.tSail = 5.6; snd("whoosh", .5); }
-    else if (st === "spout") { A.tFire = .5; A.tLift = 2.0; A.tFall = 4.1; A.tSink = 4.7; A.tGone = 5.7; A.tSail = 5.4; snd("whoosh", .6); }
-    else { A.tFire = .4; A.strikes = [1.15, 1.6, 2.05, 2.6, 2.95]; A.si = 0; A.tSink = 3.3; A.tGone = 6.3; A.tSail = 6.0; snd("boom", .4); }
+    else if (st === "beam") { const lk = rr(1.7, 2.6); A.tFire = .6; A.tLock = lk; A.tSink = lk + rr(1.3, 1.9); A.tGone = A.tSink + 2.1; A.tSail = A.tGone - .3; snd("whoosh", .5); }
+    else if (st === "spout") { A.tFire = .5; A.tLift = 2.0; A.tFall = 4.1; A.tSink = 4.7; A.tGone = 5.7; A.tSail = 5.4; snd("whoosh", .6);
+      if (variant === "hurricane") { A.tFall = 4.4; A.tTear = 3.9; A.tSink = 1e9; A.tGone = 5.6; A.tSail = 5.3; snd("boom", .5); }
+      else if (variant === "magic") { A.tPoof = 3.9; A.tFall = 1e9; A.tSink = 1e9; A.tGone = 5.2; A.tSail = 4.9; } }
+    else if (variant === "kraken") { A.tFire = 1e9; A.strikes = []; A.si = 0; A.tSink = 1.5; A.tGone = 4.9; A.tSail = 4.6; snd("splash", 1); }
+    else { const n = 3 + Math.floor(rand() * 4); A.tFire = .4; A.strikes = Array.from({ length: n }, (_, i) => 1.1 + i * rr(.34, .52)); A.si = 0; A.tSink = A.strikes[n - 1] + rr(.3, .6); A.tGone = A.tSink + 3; A.tSail = A.tGone - .3; snd("boom", .4); }
+    if (st === "broadside") { const vol = 2 + Math.floor(rand() * 3); A.shots = []; for (let v = 0; v < vol; v++) for (let i = 0; i < 4; i++) A.shots.push({ t: 1.5 + v * 1.0 + i * .12, i, vol: v === 0 ? 0 : v === vol - 1 ? 2 : 1 }); A.tSink = 1.5 + (vol - 1) * 1.0 + .75; A.tGone = A.tSink + 2.4; A.tSail = A.tGone - .3; }
     cineStart(A);
   }
   /* ideiglenes hálók a csatához (örvény, fénysugár, víztölcsér, villám, felhő, eső, csápok, roncsdarabok) */
@@ -392,11 +412,12 @@
       if (t < A.tSink) vt.rotation.z = V.sinkRoll * V.kick * .3 + Math.sin(t * 2) * .03;
       else { const k = clamp((t - A.tSink) / (A.tGone - A.tSink - .2), 0, 1); vt.rotation.set(Math.sin(t * 1.3) * .1 * k, 0, V.sinkRoll * (.25 + k * 1.1), "YXZ"); vt.position.y = -Math.pow(k, 1.6) * (V.dim[1] + 4); bubbles(10); sinkOnce(); }
     } else if (st === "beam") {
-      const lamp = P.g.position.clone().add(V3(0, (P.model.userData.lamp || P.dim[1] * .8) * PSC, 0)), ctr = V3(V.g.position.x, V.dim[1] * .5 + vt.position.y, V.g.position.z);
+      const LP = A.lampP || P, lamp = LP.g.position.clone().add(V3(0, (LP.model.userData.lamp || LP.dim[1] * .8) * PSC, 0)), ctr = V3(V.g.position.x, V.dim[1] * .5 + vt.position.y, V.g.position.z);
       const dist = Math.hypot(vp.x - lamp.x, vp.z - lamp.z), u = clamp((t - A.tFire) / (A.tLock - A.tFire), 0, 1);
-      let tgt; if (t < A.tLock) { const off = (1 - smooth(u)) * 1.5 * V.sinkRoll, dd = dir.clone().applyAxisAngle(V3(0, 1, 0), off); tgt = A.ap.clone().addScaledVector(dd, dist * (.75 + .25 * u)).setY(.3); } else tgt = ctr;
+      let tgt; if (t < A.tLock) { const from = V3(lamp.x, 0, lamp.z), d0 = vp.clone().sub(from).setY(0).normalize(), off = (1 - smooth(u)) * 1.5 * V.sinkRoll, dd = d0.applyAxisAngle(V3(0, 1, 0), off); tgt = from.addScaledVector(dd, dist * (.75 + .25 * u)).setY(.3); } else tgt = ctr;
       const on = clamp((t - A.tFire) / .3, 0, 1), out = clamp((t - A.tSink - .4) / .5, 0, 1), lock = clamp((t - A.tLock) / .6, 0, 1);
-      if (P.beam) { const want = Math.atan2(-(tgt.z - lamp.z), tgt.x - lamp.x) - P.g.rotation.y; P.beam.rotation.y += wrapA(want - P.beam.rotation.y) * Math.min(1, dt * 10); }
+      if (LP.beam) { const want = Math.atan2(-(tgt.z - lamp.z), tgt.x - lamp.x) - LP.g.rotation.y; LP.beam.rotation.y += wrapA(want - LP.beam.rotation.y) * Math.min(1, dt * 10); }
+      if (A.variant === "laser") { B.ray.material.color.set("#ff5a4a"); B.core.material.color.set("#fff0ea"); } else { B.ray.material.color.set("#fff2c0"); B.core.material.color.set("#ffffff"); }
       B.ray.visible = B.core.visible = on > 0 && out < 1;
       if (B.ray.visible) { const L = lamp.distanceTo(tgt), q = new THREE.Quaternion().setFromUnitVectors(V3(0, 0, 1), tgt.clone().sub(lamp).normalize()), fl = 1 + .25 * Math.sin(t * 43) * lock, wd = (1 + lock * 1.3) * fl;
         [B.ray, B.core].forEach((m) => { m.position.copy(lamp); m.quaternion.copy(q); m.scale.set(wd, wd, L); }); B.ray.material.opacity = on * (1 - out) * (.55 + .45 * lock); B.core.material.opacity = lock * (1 - out) * .9;
@@ -404,10 +425,16 @@
         if (t < A.tLock && rand() < dt * 25) CS.fx.smoke.emit(tgt.clone().add(V3(rr(-.6, .6), 0, rr(-.6, .6))), V3(0, rr(.8, 1.6), 0), rr(.8, 1.4)); }
       if (lock > 0 && t < A.tSink) { alarm(1); if (!A.bsnd) { A.bsnd = 1; snd("hit", .8); } burn(10 + lock * 30); if (rand() < dt * 30) CS.fx.flash.emit(ctr.clone().add(V3(rr(-1, 1), rr(-1, 1), rr(-1, 1))), V3(0, rr(.5, 2), 0), rr(1.5, 3), .3); if (rand() < dt * 14) CS.fx.smoke.emit(V3(vp.x + rr(-2, 2), .4, vp.z + rr(-2, 2)), V3(0, rr(1.5, 3), 0), rr(1.5, 3)); }
       if (t > A.tSink && !A.boom) { A.boom = 1; CS.fx.flash.emit(ctr, V3(0, 0, 0), 12, .45); debris(ctr, 22, 8, 10); for (let j = 0; j < 36; j++) CS.fx.fire.emit(ctr.clone(), V3(rr(-5, 5), rr(1, 9), rr(-5, 5)), rr(1, 2.6), rr(.4, .9)); snd("boom", 1.2); splashAt(vp, true); }
-      if (t > A.tSink) { const kk = clamp((t - A.tSink) / (A.tGone - A.tSink - .2), 0, 1); vt.scale.set(1 + kk * .18, Math.max(.04, 1 - kk * .95), 1 + kk * .18); vt.position.y = -kk * 2; vt.rotation.z = V.sinkRoll * kk * .4; burn(20 * (1 - kk)); if (rand() < dt * 16) CS.fx.smoke.emit(V3(vp.x + rr(-1.5, 1.5), .5, vp.z + rr(-1.5, 1.5)), V3(rr(-.4, .4), rr(2, 4), rr(-.4, .4)), rr(2, 4)); bubbles(6); sinkOnce(); }
+      if (t > A.tSink) { const kk = clamp((t - A.tSink) / (A.tGone - A.tSink - .2), 0, 1);
+        if (A.endMode === "b") { vt.scale.set(1 - kk * .5, 1, 1 + kk * .15); vt.rotation.set(-kk * .9, 0, V.sinkRoll * (kk * 1.5), "YXZ"); vt.position.y = -Math.pow(kk, 1.5) * (V.dim[1] + 3); if (rand() < dt * 5) debris(V.g.position.clone().setY(1), 2, 3, 4); }
+        else { vt.scale.set(1 + kk * .18, Math.max(.04, 1 - kk * .95), 1 + kk * .18); vt.position.y = -kk * 2; vt.rotation.z = V.sinkRoll * kk * .4; }
+        burn(20 * (1 - kk)); if (rand() < dt * 16) CS.fx.smoke.emit(V3(vp.x + rr(-1.5, 1.5), .5, vp.z + rr(-1.5, 1.5)), V3(rr(-.4, .4), rr(2, 4), rr(-.4, .4)), rr(2, 4)); bubbles(6); sinkOnce(); }
     } else if (st === "spout") {
       /* a királynő körül csillámló spirál – varázsol */
-      if (t > A.tFire && t < A.tFall && rand() < dt * 30) { const a = t * 6 + rand() * .5, r = 2.2, h = ((t * 4) % 1) * P.dim[1]; CS.fx.flash.emit(V3(A.ap.x + Math.cos(a) * r, h, A.ap.z + Math.sin(a) * r), V3(0, 1.5, 0), rr(.6, 1.2), .6); }
+      const hur = A.variant === "hurricane", mag = A.variant === "magic";
+      if (hur) { const cf = clamp((t - .2) / .9, 0, 1) * (1 - clamp((t - A.tGone + .6) / .6, 0, 1)); [B.cloud, B.cloud2].forEach((c, i) => { c.visible = cf > 0; c.position.set(vp.x + (i ? 5 : 0), 30 + i * 2.5, vp.z + (i ? -4 : 0)); c.rotation.y += dt * (i ? -1.4 : 1.1); c.material.opacity = (i ? .75 : .9) * cf; });
+        B.rain.visible = cf > .2; B.rain.material.opacity = .6 * cf; if (B.rain.visible) { const a = B.rain.geometry.attributes.position.array; B.rainD.forEach((d, i) => { d[1] -= dt * 30; if (d[1] < 0) { d[1] += 30; d[0] = rr(-14, 14); d[2] = rr(-14, 14); } const sw = Math.sin(t * 2 + d[1] * .2) * 2.5; a.set([vp.x + d[0] + sw, d[1], vp.z + d[2], vp.x + d[0] + sw + 1.1, d[1] + 1.2, vp.z + d[2] + .4], i * 6); }); B.rain.geometry.attributes.position.needsUpdate = true; } }
+      if (!hur && t > A.tFire && t < Math.min(A.tFall, A.tGone) && rand() < dt * (mag ? 55 : 30)) { const a = t * 6 + rand() * .5, r = 2.2, h = ((t * 4) % 1) * P.dim[1]; CS.fx.flash.emit(V3(A.ap.x + Math.cos(a) * r, h, A.ap.z + Math.sin(a) * r), V3(0, 1.5, 0), rr(.6, 1.2), .6); }
       const w = clamp((t - A.tFire) / 1.2, 0, 1), wout = clamp((t - A.tFall - .3) / .6, 0, 1);
       B.whirl.visible = w > 0 && wout < 1; B.whirl.position.set(vp.x, .32, vp.z); B.whirl.scale.setScalar(.5 + 7 * smooth(w) * (1 - wout)); B.whirl.rotation.y -= dt * (3 + 6 * w); B.whirl.material.opacity = .95 * w * (1 - wout);
       if (w > .3 && t < A.tFall && rand() < dt * 30) { const a = rand() * TAU, r = rr(2, 7); CS.fx.spray.emit(V3(vp.x + Math.cos(a) * r, .3, vp.z + Math.sin(a) * r), V3(-Math.sin(a) * 6, rr(1, 3), Math.cos(a) * 6), rr(.3, .7), .9); }
@@ -417,17 +444,28 @@
       if (k > 0 && !A.wsnd) { A.wsnd = 1; snd("whoosh"); }
       if (t < A.tLift) alarm(w);
       const lift = clamp((t - A.tLift) / 1.5, 0, 1), fall = clamp((t - A.tFall) / .55, 0, 1);
-      if (t > A.tLift && t < A.tFall + .55) { V.yaw += dt * (3 + lift * 11); vt.position.y = smooth(lift) * 17 * (1 - fall * fall); vt.rotation.set(Math.sin(t * 3) * .55 * lift, 0, Math.cos(t * 2.4) * .65 * lift, "YXZ"); }
+      if (hur && t > A.tTear && !A.torn) { A.torn = 1; const c = V3(vp.x, vt.position.y + V.dim[1] * .5, vp.z); debris(c, 34, 12, 6); CS.fx.flash.emit(c, V3(0, 0, 0), 8, .3); for (let j = 0; j < 26; j++) CS.fx.spray.emit(c.clone(), V3(rr(-7, 7), rr(-2, 5), rr(-7, 7)), rr(.5, 1), 1.4); snd("hit", 1.2); snd("boom", .8); V.body.visible = false; }
+      if (mag && t > A.tPoof) { const pk = clamp((t - A.tPoof) / .9, 0, 1); vt.scale.setScalar(Math.max(.01, 1 - pk)); V.yaw += dt * 20 * pk; if (rand() < dt * 90) { const a = rand() * TAU; CS.fx.flash.emit(V3(vp.x + Math.cos(a) * rr(.5, 3), vt.position.y + rr(0, V.dim[1]), vp.z + Math.sin(a) * rr(.5, 3)), V3(Math.cos(a) * 3, rr(1, 4), Math.sin(a) * 3), rr(.6, 1.6), .7); }
+        if (pk >= 1 && !A.poofed) { A.poofed = 1; CS.fx.flash.emit(V3(vp.x, vt.position.y + 2, vp.z), V3(0, 0, 0), 14, .4); snd("whoosh", 1.1); V.body.visible = false; } }
+      if (t > A.tLift && t < A.tFall + .55) { V.yaw += dt * (3 + lift * (hur ? 17 : 11)); vt.position.y = smooth(lift) * A.liftH * (1 - fall * fall); vt.rotation.set(Math.sin(t * 3) * .55 * lift, 0, Math.cos(t * 2.4) * .65 * lift, "YXZ"); }
       if (fall >= 1 && !A.splashed) { A.splashed = 1; geyser(vp, 14); splashAt(vp, true); debris(vp.clone().setY(.5), 22, 7, 8); snd("hit", 1.2); }
       if (t > A.tSink) { const kk = clamp((t - A.tSink) / (A.tGone - A.tSink - .1), 0, 1); vt.position.y = -2 - kk * (V.dim[1] + 3); vt.rotation.z = V.sinkRoll * (.6 + kk * .6); bubbles(14); sinkOnce(); }
     } else if (st === "storm") {
-      const cf = clamp((t - A.tFire) / .9, 0, 1) * (1 - clamp((t - A.tGone + .6) / .6, 0, 1));
+      const krk = A.variant === "kraken";
+      { const mw = B.maw || (B.maw = (() => { const g = new THREE.Group(), skin = std({ color: "#3d2a52", roughness: .5 }), eye = basic({ color: "#ffd23f" }), pup = basic({ color: "#120a18" }), tooth = std({ color: "#f3ecd8", roughness: .4 });
+          const head = new THREE.Mesh(new THREE.SphereGeometry(5.2, 28, 16, 0, TAU, 0, Math.PI * .56), skin); g.add(head);
+          for (let i = 0; i < 9; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(.5, 2.2, 8), skin); const a = -1.2 + i * .3; sp.position.set(0, 5.1 * Math.cos(a * .55), 5.1 * Math.sin(a * .55) * -1); sp.rotation.x = -a * .55; g.add(sp); }
+          [-1, 1].forEach((sd) => { const e = new THREE.Mesh(new THREE.SphereGeometry(.85, 14, 10), eye); e.position.set(sd * 2.5, 3.1, 3.4); g.add(e); const p = new THREE.Mesh(new THREE.SphereGeometry(.42, 10, 8), pup); p.position.set(sd * 2.62, 3.15, 4.08); p.scale.set(.5, 1.2, 1); g.add(p); });
+          for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI - Math.PI / 2, th = new THREE.Mesh(new THREE.ConeGeometry(.3, 1.3, 6), tooth); th.position.set(Math.sin(a) * 4.4, .7, Math.cos(a) * 4.4); th.rotation.x = Math.PI; g.add(th); }
+          g.visible = false; CS.env.add(g); return g; })());
+        if (krk) { const up = clamp((t - A.tSink + .5) / 1.0, 0, 1), dn = clamp((t - A.tSink - 1.2) / (A.tGone - A.tSink - 1.4), 0, 1); mw.visible = up > 0 && t < A.tGone + .2; mw.position.set(vp.x, -6.2 + smooth(up) * 4.6 - Math.pow(dn, 1.3) * 7, vp.z); mw.rotation.set(-.35 + Math.sin(t * 2.4) * .08 - dn * .5, yawOf(dir) + Math.PI + Math.sin(t * 1.3) * .2, Math.sin(t * 3.1) * .06); if (up > 0 && up < 1 && rand() < dt * 40) { const a = rand() * TAU; CS.fx.spray.emit(V3(vp.x + Math.cos(a) * 5, .3, vp.z + Math.sin(a) * 5), V3(Math.cos(a) * 4, rr(3, 8), Math.sin(a) * 4), rr(.5, 1), 1.2); } } else mw.visible = false; }
+      const cf = krk ? 0 : clamp((t - A.tFire) / .9, 0, 1) * (1 - clamp((t - A.tGone + .6) / .6, 0, 1));
       [B.cloud, B.cloud2].forEach((c, i) => { c.visible = cf > 0; c.position.set(vp.x + (i ? 6 : 0), 32 + i * 2.5, vp.z + (i ? -4 : 0)); c.rotation.y += dt * (i ? -.25 : .18); c.material.opacity = (i ? .7 : .85) * cf; });
       /* eső */
-      const rain = clamp((t - A.tFire - .5) / .6, 0, 1) * (1 - clamp((t - A.tGone + .8) / .6, 0, 1)); B.rain.visible = rain > 0; B.rain.material.opacity = .55 * rain;
+      const rain = krk ? 0 : clamp((t - A.tFire - .5) / .6, 0, 1) * (1 - clamp((t - A.tGone + .8) / .6, 0, 1)); B.rain.visible = rain > 0; B.rain.material.opacity = .55 * rain;
       if (B.rain.visible) { const a = B.rain.geometry.attributes.position.array; B.rainD.forEach((d, i) => { d[1] -= dt * 28; if (d[1] < 0) { d[1] += 30; d[0] = rr(-14, 14); d[2] = rr(-14, 14); if (rand() < .25) CS.fx.rings.emit(vp.x + d[0], vp.z + d[2], .5, .6); }
         a.set([vp.x + d[0], d[1], vp.z + d[2], vp.x + d[0] + .25, d[1] + 1.3, vp.z + d[2] + .1], i * 6); }); B.rain.geometry.attributes.position.needsUpdate = true; }
-      if (t > A.tFire && t < A.tSink) alarm(1);
+      if ((krk ? t > .3 : t > A.tFire) && t < A.tSink) alarm(1);
       if (A.si < A.strikes.length && t > A.strikes[A.si]) { A.si++; A.boltT = .18; A.burn = 1; const top = V3(vp.x + rr(-5, 5), 32, vp.z + rr(-5, 5)), end = vp.clone().add(V3(rr(-.6, .6), V.dim[1] * rr(.5, .85), rr(-.6, .6)));
         setGeo(B.bolt, boltGeo(top, end, 14, 2.4, .12)); setGeo(B.boltG, boltGeo(top, end, 10, 3.2, .5)); CS.fx.flash.emit(end, V3(0, 0, 0), 9, .3); CS.fx.flash.emit(top, V3(0, 0, 0), 16, .25); snd("boom", 1); V.kick = 1;
         for (let j = 0; j < 14; j++) CS.fx.fire.emit(end.clone(), V3(rr(-5, 5), rr(0, 6), rr(-5, 5)), rr(.4, 1), rr(.3, .6)); if (A.si >= 3) debris(end, 5, 5, 6); }
@@ -464,7 +502,7 @@
   }
   function battleEnd() {
     const B = CS.bfx; if (!B) return;
-    B.whirl.visible = B.ray.visible = B.core.visible = B.spout.visible = B.bolt.visible = B.boltG.visible = B.cloud.visible = B.cloud2.visible = B.rain.visible = false; B.tent.forEach((m) => { m.visible = false; });
+    B.whirl.visible = B.ray.visible = B.core.visible = B.spout.visible = B.bolt.visible = B.boltG.visible = B.cloud.visible = B.cloud2.visible = B.rain.visible = false; B.tent.forEach((m) => { m.visible = false; }); if (B.maw) B.maw.visible = false;
   }
 
   /* ------------------------------------------------------------ CSATAKAMERA: a kép a csata közelébe repül, majd vissza.

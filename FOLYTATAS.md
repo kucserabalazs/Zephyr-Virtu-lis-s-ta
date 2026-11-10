@@ -552,3 +552,7 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
 - 2026-11-11 00:50 – Melegedés a 3D-világokban telefonon: `zvGov` – ha világ fut (sakk, verseny, makett) és a készülék telefon, 2D-ben legfeljebb ~30 képkocka/mp és 1,5× felbontás.
   MÉRÉS: a vitorlás sakk 671 000 háromszöget és 223 rajzolási hívást küld képkockánként – EZ a melegedés fő oka; igazi megoldás: a bábuk/tábla egyszerűsítése telefonra
   (távoli bábuk könnyített modellje, összevont geometria, kisütött fény). A sakk csatáinak változatossá tétele (bábupáronként más, szörny/hurrikán/varázslat/lézer) MÉG NINCS KÉSZ.
+- 2026-11-11 01:20 – SAKK, változatos csaták (06e-sakk-f.js, v3): `battlePick` (támadó–áldozat páronként más sorrend, az utolsó két csata nem ismétlődik), új jelenetek:
+  `kraken` (tengeri szörny feje + csápok, vihar nélkül), `hurricane` (felhő, eső, víztölcsér, a magasban darabokra szedi), `laser` (a legközelebbi saját világítótorony vörös
+  sugara), `magic` (szikrázva semmivé válik); véletlen villám-/sortűzszám, emelési magasság, kétféle szétesés. Teszt: `ZephyrWorld._chessTest.forceStyle("kraken")`.
+  ELLENŐRIZVE képen: kraken feje, lézer. NEM láttam képen: hurrikán, varázslat (a tesztgép túl lassú) – a tulajdonosnak kell megnéznie. A 2D STÉGJÁTÉKOS sakk csatáihoz még nem nyúltam.
