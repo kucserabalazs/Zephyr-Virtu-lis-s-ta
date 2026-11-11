@@ -583,3 +583,4 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
 - 2026-11-11 01:56–01:57 – ÚJ KÉRÉSEK (még NINCSENEK kész): (a) SZABÁLYMAGYARÁZAT a versenyhez úgy, hogy egy gyerek is megértse; (b) VITORLÁS SZÓTÁR az összes vitorláskifejezéssel,
   ahol lehet rajzos illusztrációval – sima, rajzolt (2D) felület, de szép és érthető; (c) a KORMÁNYZÁS nem jó: „folyton elszabadul a kormány” – megkérdeztem, melyik eszközön
   (szemüveg kézkövetéssel / telefon / gép) és összefügg a kerék → kormányrúd kérdéssel.
+- 2026-11-11 02:10 – SAKK: a tábla feszített víztükör (a hullám a tábla fölött 100%-ban kisimítva, a fényfodor nem mozog), az állandó víz-/szélzaj kikapcsolva (a csaták hangjai maradtak).

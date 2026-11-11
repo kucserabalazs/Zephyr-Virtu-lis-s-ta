@@ -5295,7 +5295,7 @@
     const mat = wm.userData.mat, U = mat.uniforms;
     const data = new Uint8Array(64 * 4), tex = new THREE.DataTexture(data, 8, 8, THREE.RGBAFormat); tex.magFilter = tex.minFilter = THREE.NearestFilter; tex.needsUpdate = true; W.disposables.push(tex);
     U.uHL = { value: tex }; U.uLSq = { value: new THREE.Color(.78, .64, .44) }; U.uDSq = { value: new THREE.Color(.02, .045, .13) }; U.uPulse = { value: 0 }; U.uBoard = { value: boardTex() };
-    const damp = `float bDamp(vec2 q){ return 1. - .66 * (1. - smoothstep(${BH.toFixed(1)}, ${(BH + 14).toFixed(1)}, max(abs(q.x), abs(q.y)))); }\n`;
+    const damp = `float bDamp(vec2 q){ return 1. - 1.0 * (1. - smoothstep(${BH.toFixed(1)}, ${(BH + 14).toFixed(1)}, max(abs(q.x), abs(q.y)))); }\n`;
     mat.vertexShader = mat.vertexShader.replace("void main(){", damp + "void main(){").replace("vec3 disp = vec3(0.);", "fadeD *= bDamp(w); vec3 disp = vec3(0.);");
     const BASE = "vec3 base = mix(uDeep, uShallow, clamp(.35 + crest * 1.6 + n.x * .8, 0., 1.)) * (1. - gust * .16) * uLight;";
     if (mat.fragmentShader.indexOf(BASE) < 0) console.warn("sakk: a víz árnyalója megváltozott");
@@ -5309,7 +5309,7 @@
             vec2 cell = floor(bq), fr = fract(bq) - .5; float lt = 1. - mod(cell.x + cell.y, 2.);
             float shade = clamp(.62 + crest * 2.4 + n.x * 1.1, .2, 1.45);
             vec3 sqc = mix(uDSq, uLSq, lt) * shade * uLight;
-            float cau = lt * pow(vn(vW * 1.25 + vec2(uT * .35, -uT * .27)) * vn(vW * 1.7 - vec2(uT * .3, uT * .22)) * 1.9, 2.2) * .2;
+            float cau = lt * pow(vn(vW * 1.25) * vn(vW * 1.7) * 1.9, 2.2) * .2;
             base = mix(base, sqc + cau * vec3(1., .86, .62), .88);
             float edge = max(abs(fr.x), abs(fr.y));
             vec4 hl = texture2D(uHL, (cell + .5) / 8.);
@@ -5326,14 +5326,14 @@
     return { tex, data };
   }
   /* a víz magassága egy pontban (a hajók ringásához) – a tábla fölött csillapítva, mint az árnyalóban */
-  const bDampJS = (x, z) => 1 - .66 * (1 - smoothstepJS(BH, BH + 14, Math.max(Math.abs(x), Math.abs(z))));
+  const bDampJS = (x, z) => 1 - 1.0 * (1 - smoothstepJS(BH, BH + 14, Math.max(Math.abs(x), Math.abs(z))));
   function smoothstepJS(a, b, x) { const k = clamp((x - a) / (b - a), 0, 1); return k * k * (3 - 2 * k); }
   const waveB = (x, z) => waveAt(x, z, W.t) * bDampJS(x, z);
 
   /* úszó kötélsorok a mezők között (úszók: egy példányosított háló, a csúcsárnyalóban ringanak) */
   const WAVE_GLSL = () => `uniform float uWT; uniform vec4 uWW[5]; uniform float uWD;
     float wH(vec2 p){ float y = 0.; for (int i = 0; i < 5; i++){ float dir = uWD + uWW[i].x, k = uWW[i].y, A = uWW[i].z, c = sqrt(9.81 / k); y += A * sin(k * (cos(dir) * p.x + sin(dir) * p.y) - k * c * uWT); }
-      return y * (1. - .66 * (1. - smoothstep(${BH.toFixed(1)}, ${(BH + 14).toFixed(1)}, max(abs(p.x), abs(p.y))))); }`;
+      return y * (1. - 1.0 * (1. - smoothstep(${BH.toFixed(1)}, ${(BH + 14).toFixed(1)}, max(abs(p.x), abs(p.y))))); }`;
   const WU = { uWT: { value: 0 }, uWW: { value: WAVES.map(([a, L, A, Q]) => new THREE.Vector4(a * D2R, TAU / L, A, Q)) }, uWD: { value: WIND_DIR } };
   function bobMat(o) {
     const m = std(o);
@@ -5903,7 +5903,8 @@
     /* játszma */
     if (!gsLoad()) gsReset(); gsStatus(); syncPieces(); hlPaint();
     goView("bridge", null, true);
-    audioStart({ water: .035, wind: .025 });
+    /* 2026-11-11, a tulajdonos kérése: a sakkban NINCS állandó víz- és szélzaj, a tábla feszített víztükör (a hullámzás a tábla fölött teljesen kisimítva) */
+    audioStart({ water: .0001, wind: .0001 });
     CS.pm = (e) => { if (T.inVR || !W.active) return; const h = pick2D(e); if (!h) return setHover(-1); const o = h.object; if (o === CS.pick) setHover(sqFrom(h.point)); };
     T.sceneEl.canvas.addEventListener("pointermove", CS.pm);
     W.onClose = () => {

@@ -133,7 +133,8 @@
     /* játszma */
     if (!gsLoad()) gsReset(); gsStatus(); syncPieces(); hlPaint();
     goView("bridge", null, true);
-    audioStart({ water: .035, wind: .025 });
+    /* 2026-11-11, a tulajdonos kérése: a sakkban NINCS állandó víz- és szélzaj, a tábla feszített víztükör (a hullámzás a tábla fölött teljesen kisimítva) */
+    audioStart({ water: .0001, wind: .0001 });
     CS.pm = (e) => { if (T.inVR || !W.active) return; const h = pick2D(e); if (!h) return setHover(-1); const o = h.object; if (o === CS.pick) setHover(sqFrom(h.point)); };
     T.sceneEl.canvas.addEventListener("pointermove", CS.pm);
     W.onClose = () => {
