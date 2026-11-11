@@ -579,3 +579,4 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
 - VITORLÁK: PIROS nagyvitorla (grósz) BORDÓ lazy-baggel a bumon, FEHÉR rollgénua (bordó UV-csíkkal feltekerve), ezüst árbóc egy szálingpárral, ezüst bum. Spinakker: fehér (a tulajdonos közlése).
 - A korábban jóváhagyott 2D terv (sötétkék test, arany csík, fehér nagyvitorla) ezért ÉRVÉNYTELEN – új terv kell a fotók alapján.
 - Azonnal átállítva: a Zephyr teste fehér, sötétkék csíkkal (VR-verseny és 2D regatta).
+- 2026-11-11 02:00 – A hivatalos logóból kivágva: img/zephyr-hajo-logo.png (az „Apartman” maradhatna is – a tulajdonos szerint nem baj); a VR Zephyr orrán kétoldalt a logó, a farnál „H-30381”, a vitorlán nincs felirat. A „Backbord!” rákiáltás háromszoros, dühös, kürttel. A logó elhelyezését képen NEM tudtam ellenőrizni (kívülről nem sikerült ránézni a hajóra).

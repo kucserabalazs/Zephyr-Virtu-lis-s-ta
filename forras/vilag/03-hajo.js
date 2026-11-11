@@ -287,6 +287,15 @@
       [-1, 1].forEach((sd) => { const s = hullShape(.12); const p = mesh(new THREE.PlaneGeometry(1.25, .24), basic({ map: nt, transparent: true, depthWrite: false }), body);
         p.position.set(sd * (s.hb + .012), s.sheer - .28, s.z); p.rotation.y = sd * Math.PI / 2; });
     }
+    /* 2026-11-11: a valódi Zephyr – az ORRON kétoldalt a hivatalos logó („Apartman” felirat nélkül), a FARNÁL a lajstromszám */
+    if (o.logoImg) {
+      const lt = new THREE.TextureLoader().load(o.logoImg); lt.colorSpace = THREE.SRGBColorSpace; lt.anisotropy = 8; W.disposables.push(lt);
+      [-1, 1].forEach((sd) => { const u = .8, s = hullShape(u), s2 = hullShape(u + .06), ang = Math.atan2(s2.hb - s.hb, s2.z - s.z);
+        const p = mesh(new THREE.PlaneGeometry(1.25, 1.25 * 489 / 1625), basic({ map: lt, transparent: true, depthWrite: false, side: THREE.DoubleSide }), body); p.userData.noBake = true;
+        p.position.set(sd * (s.hb + .02), s.sheer - .42, s.z); p.rotation.y = sd * (Math.PI / 2 + ang * (s2.z > s.z ? 1 : -1)); });
+    }
+    if (o.reg) { const rt = nameTex(o.reg, "#111111");
+      [-1, 1].forEach((sd) => { const s = hullShape(.14); const p = mesh(new THREE.PlaneGeometry(1.0, .19), basic({ map: rt, transparent: true, depthWrite: false }), body); p.position.set(sd * (s.hb + .012), s.sheer - .3, s.z); p.rotation.y = sd * Math.PI / 2; }); }
     /* legénység (kikötve ülnek a szél felőli oldalon) */
     const crew = [];
     const skin = std({ color: "#d9a988", roughness: .7 });

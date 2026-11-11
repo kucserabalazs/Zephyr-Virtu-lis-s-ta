@@ -634,6 +634,15 @@
       [-1, 1].forEach((sd) => { const s = hullShape(.12); const p = mesh(new THREE.PlaneGeometry(1.25, .24), basic({ map: nt, transparent: true, depthWrite: false }), body);
         p.position.set(sd * (s.hb + .012), s.sheer - .28, s.z); p.rotation.y = sd * Math.PI / 2; });
     }
+    /* 2026-11-11: a valódi Zephyr – az ORRON kétoldalt a hivatalos logó („Apartman” felirat nélkül), a FARNÁL a lajstromszám */
+    if (o.logoImg) {
+      const lt = new THREE.TextureLoader().load(o.logoImg); lt.colorSpace = THREE.SRGBColorSpace; lt.anisotropy = 8; W.disposables.push(lt);
+      [-1, 1].forEach((sd) => { const u = .8, s = hullShape(u), s2 = hullShape(u + .06), ang = Math.atan2(s2.hb - s.hb, s2.z - s.z);
+        const p = mesh(new THREE.PlaneGeometry(1.25, 1.25 * 489 / 1625), basic({ map: lt, transparent: true, depthWrite: false, side: THREE.DoubleSide }), body); p.userData.noBake = true;
+        p.position.set(sd * (s.hb + .02), s.sheer - .42, s.z); p.rotation.y = sd * (Math.PI / 2 + ang * (s2.z > s.z ? 1 : -1)); });
+    }
+    if (o.reg) { const rt = nameTex(o.reg, "#111111");
+      [-1, 1].forEach((sd) => { const s = hullShape(.14); const p = mesh(new THREE.PlaneGeometry(1.0, .19), basic({ map: rt, transparent: true, depthWrite: false }), body); p.position.set(sd * (s.hb + .012), s.sheer - .3, s.z); p.rotation.y = sd * Math.PI / 2; }); }
     /* legénység (kikötve ülnek a szél felőli oldalon) */
     const crew = [];
     const skin = std({ color: "#d9a988", roughness: .7 });
@@ -1475,7 +1484,7 @@
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
     makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
-    const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: "HUN 27", name: "ZEPHYR", logo: "ZEPHYR", spin: ["#ffffff", "#ffffff", "#f3f3ee"] });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
+    const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", spin: ["#ffffff", "#ffffff", "#f3f3ee"] });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
     boat.scale.setScalar(VR_SC); boat.rotation.y = Math.PI; root.add(boat); VRR.boat = boat;
     const CK2 = vrCockpit(boat); VRR.ck = CK2; VRR.baked = vrBake(boat);
     /* a felhasználó helye: a jobb oldali (styrbord) kerék mögött; a hajó orra −z felé néz (a hajó π-vel elforgatva) */
@@ -1726,7 +1735,12 @@
     if (o._mi !== i) { o._mi = i; o._ms = sd; return 0; } const prev = o._ms; o._ms = sd; if (d > 1.5 && d < 45) { if (prev > 0 && sd <= 0) return 1; if (prev < 0 && sd >= 0) return -1; } return 0; }
   const vrStb = (b) => wrapA(VRR.wf - b) > 0;   /* a szél jobbról jön (a szél felőli irány a hajó orrától jobbra esik) */
   function vrGiveWay(a, o) { const as = vrStb(a.b), os = vrStb(o.b); if (as !== os) return !as; const uw = vfwd(VRR.wf); return (a.x - o.x) * uw[0] + (a.z - o.z) * uw[1] > 0; }   /* igaz: „a”-nak kell kitérnie */
-  function vrHail(txt) { try { const u = new SpeechSynthesisUtterance(txt); u.lang = "hu-HU"; u.rate = 1.15; u.pitch = .8; u.volume = 1; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} beep(); setTimeout(beep, 220); }
+  /* a rákiáltás legyen nagyon intenzív és haragos (a tulajdonos kérése): háromszor, hangosan, gyorsan, mély dühös hangon + éles, ismétlődő kürt */
+  function vrHail(txt) {
+    try { speechSynthesis.cancel(); const hu = (speechSynthesis.getVoices() || []).find((v) => /^hu/i.test(v.lang));
+      [txt.toUpperCase() + "!", txt.toUpperCase() + "!!", "Térj már ki! " + txt.toUpperCase() + "!!!"].forEach((q, i) => { const u = new SpeechSynthesisUtterance(q); u.lang = "hu-HU"; if (hu) u.voice = hu; u.rate = 1.45 + i * .1; u.pitch = .55 + i * .12; u.volume = 1; speechSynthesis.speak(u); }); } catch (e) {}
+    try { const a = T.ac(); if (a) [0, .16, .32, .55, .71].forEach((d, i) => { const o = a.createOscillator(), g = a.createGain(), t0 = a.currentTime + d; o.type = "sawtooth"; o.frequency.setValueAtTime(i < 3 ? 330 : 262, t0); o.frequency.linearRampToValueAtTime(i < 3 ? 300 : 230, t0 + .13); g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(.22, t0 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + .14); o.connect(g).connect(T.outBus()); o.start(t0); o.stop(t0 + .16); }); } catch (e) {}
+  }
   function vrTick(dt) {
     const S = VRR, C = S.C;
     if (S.ensign) { const pa = S.ensign.geometry.attributes.position, b0 = S.ensign.userData.base, t = W.t; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 9 - t * 7) * .05 * x / .6; } pa.needsUpdate = true; }
@@ -1932,7 +1946,7 @@
       const brg = wrapA(Math.atan2(dx, -dz) - r.b), ahead = Math.abs(brg) < 1.9, racing = S.st === "race" && !r.fin && !o.fin, gw = racing ? vrGiveWay(r, o) : true, careless = (r.errGW || 0) > W.t;
       if (gw && !careless) { if (d < 36 && ahead) want += (brg > 0 ? -1 : 1) * .7 * (1 - d / 36); }
       else if (d < 9) want += (brg > 0 ? -1 : 1) * .35 * (1 - d / 9);   /* az útjogos tartja az irányát, csak az utolsó pillanatban tér ki */
-      if (o === S && racing && !gw) { const closing = r._dS != null && d < r._dS - .002; if (d < 26 && closing && Math.abs(wrapA(Math.atan2(-dx, dz) - S.b)) < 1.7 && (!S.hailT || W.t - S.hailT > 8)) { S.hailT = W.t; S.msg = `„BACKBORD!” – a(z) ${r.o.name} hajónak útjoga van: TÉRJ KI!`; S.msgT = 5; vrHail("Bekbord!"); } }
+      if (o === S && racing && !gw) { const closing = r._dS != null && d < r._dS - .002; if (d < 26 && closing && Math.abs(wrapA(Math.atan2(-dx, dz) - S.b)) < 1.7 && (!S.hailT || W.t - S.hailT > 8)) { S.hailT = W.t; S.msg = `„BACKBORD!!! BACKBORD!!!” – a(z) ${r.o.name} hajónak útjoga van: TÉRJ KI AZONNAL!`; S.msgT = 6; vrHail("Bekbord!"); } }
       if (o === S) r._dS = d; });
     /* a kitérés se fordítsa a hajót a szélbe (holtszög): legalább 40°-kal a szél mellett maradjon */
     { const relW = wrapA(want - S.wf); if (Math.abs(relW) < 40 * D2R) want = S.wf + (relW === 0 ? r.tack : Math.sign(relW)) * 40 * D2R; }
