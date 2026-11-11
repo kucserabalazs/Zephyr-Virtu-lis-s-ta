@@ -295,7 +295,7 @@
     /* üzenettábla a kerék előtt (VR-ben a panel nélkül is látszik): bójakerülés, rossz oldal, korai rajt, koccanás, befutó */
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.msgL = labelSprite(["", ""], { size: 2.0, fs: 50, w: 1150 }); CK2.G.add(VRR.msgL);
       VRR.msgL.position.set(w0.ped.position.x * .6, CK2.deckY + 1.75, w0.ped.position.z + 2.2); VRR.msgL.visible = false; }
-    { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Markold meg a kormányt!", "zárd ökölbe a kezed a peremén – nyitott tenyérrel engeded el"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
+    { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Markold meg a kormányt!", "zárd ökölbe a kezed a peremén – nyitott tenyérrel engeded el · kontrollerrel: a hüvelykujjkar kormányoz"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
     SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
     vrSetup(VRR.lvl || 1);
@@ -533,7 +533,13 @@
     }
     S.grab = S.grabs.right || S.grabs.left || null;
     if (dN) { S.wa = clamp(S.wa + dSum / dN * 1.5, -WA_MAX, WA_MAX);   /* érzékenyebb áttétel: kis kézmozdulat is kormányoz */ Object.values(S.grabs).forEach((G) => { G.hist.push([W.t, S.wa]); while (G.hist.length > 2 && W.t - G.hist[0][0] > .2) G.hist.shift(); }); }
+    /* 2026-11-11 KONTROLLERES KORMÁNYZÁS (tulajdonos: „a Quest kontrollerét vegyük be, a belső joystick részével … mindkettő menjen, bal- és jobbkezes is tudjon;
+       legyen választható opció, de a kézzel történő irányításról nem mondok le”): bármelyik kontroller hüvelykujjkarja oldalra billentve kormányoz – a kerék
+       a kar állását követi (arányosan, simítva), elengedve középre áll. Nem kell átkapcsolni: amelyik a kezedben van, az él; a kézi (ökölfogásos) kormány változatlan. */
+    let stk = 0, stkN = 0; try { Object.keys((X && X.src) || {}).forEach((key) => { const q = X.src[key], gp = q && q.src && !q.src.hand && q.src.gamepad; if (!gp || !gp.axes) return; const ax = gp.axes.length >= 4 ? gp.axes[2] : gp.axes[0]; if (typeof ax === "number" && Math.abs(ax) > .12) { stk += ax; stkN++; } }); } catch (e) {}
+    S.stickOn = stkN > 0;
     const k = SAIL.keys; if (k.L || k.R) { S.wa = clamp(S.wa + ((k.R ? 1 : 0) - (k.L ? 1 : 0)) * dt * 2.4, -WA_MAX, WA_MAX); S.wv = 0; }
+    else if (stkN && !S.grab && !S.rgrab) { const v = clamp(stk, -1, 1), tg = Math.sign(v) * Math.pow((Math.abs(v) - .12) / .88, 1.4) * WA_MAX * .8; S.wa += (tg - S.wa) * Math.min(1, dt * 4.5); S.wv = 0; S.padUsed = true; }
     else if (!S.grab && !S.rgrab) {
       S.wv = 0; S.wa += (0 - S.wa) * Math.min(1, dt * 1.6); if (Math.abs(S.wa) < .004) S.wa = 0;   /* 2026-11-11: elengedve a kormány simán középre áll – a hajó egyenesben marad, nem fordul tovább */
     }

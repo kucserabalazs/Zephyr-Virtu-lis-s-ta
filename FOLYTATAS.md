@@ -660,3 +660,5 @@ Megbeszélt döntések:
   (6) „Új változat” gomb: verzio.json + __BV__ (build.sh) – az oldal magától észreveszi az újabb változatot, egy koppintás a frissítés (u1.js).
   (+) VR alsó képsor séta közben: `xrStrip` – a hely képei forgó gömbökként ívben a látómező alatt, csippentve odalép, fölötte apró vitorlások (kikapcs.: WS.vrStrip=false).
 - NEM KÉSZÜLT EL: (2) bábuk nagyobb, szemüvegben is látható kidolgozása; (7) útjelzők méretezése; peremfogás a többi világban. NEM TUDOM, mi a „jobb oldalt lévő, bezárhatatlan” elem, ha nem a világ-menü füle volt – meg kell kérdezni / képet kérni.
+- 2026-11-11 ~11:20 HANGHÍVÁS: „a versenynél a kormány használhatatlan, állandóan lejön róla a kezem”. Döntés: KONTROLLERES kormányzás is legyen (mindkét hüvelykujjkar, választható/automatikus), a kézi irányításról NEM mond le – azon tovább kell dolgozni. Engedélyt adott, hogy a Mac-en a Quest közvetített képét nézzem (Meta VR Developer Hub → Start casting → „Casting” app); csak nézek, nem irányítok.
+- KÉSZ: hüvelykujjkaros kormány a VR-versenyben (05b, `stk`): arányos, simított, elengedve középre áll; a kézi fogás változatlan. Headsetben még nem próbálta.
