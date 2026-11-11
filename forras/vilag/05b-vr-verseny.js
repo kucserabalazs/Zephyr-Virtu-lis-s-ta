@@ -113,7 +113,11 @@
     /* 2026-11-12 00:42 (tulajdonos: „a vitorlásverseny használhatatlan, rosszabb, mint valaha – a rúd jó helyen volt, csináld vissza úgy, ahogy volt; a lényeg:
        a kezem egy normál mozdulatával végállásig tudjam tolni, ne essek ki a székből, ne kelljen lépnem”): a rúd és a toldó VISSZA az eredeti méretre (0,9 / 0,8 m),
        és a kormányzás már nem a rúd geometriájából jön, hanem a KÉZ ÚTJÁBÓL: a megfogástól számítva 28 cm oldalra = teljes kitérés (TIL.REACH). */
-    const TIL = { TL: .9, EL: .8, TMAX: .62, REACH: .28, pz: hs.z - .95, py: deckY + .62, ty: deckY + .76 };
+    /* 2026-11-12 00:50 (tulajdonos: „ha balra tolom a rudat, a toldó ráhajlik a kormányra és becsukódik ahelyett, hogy kormányozna – a toldó csak látszatra legyen toldó,
+       a viselkedése a kormány MEREV egészének része legyen; a rúd legyen rövidebb, ott legyen a vége, ahol az én vonalam kezdődik, inkább picit hátrébb”):
+       a toldó mereven áll a rúdhoz képest (nem csuklik), az egész együtt fordul; a forgáspont hátrébb került, a rúd 0,68 m, a vége a kormányos vonala mögött 5 cm-rel;
+       a látszó elfordulás ±21° (TMAX), így a markolat nagyjából a kezeddel együtt megy a 28 cm-es úton. */
+    const TIL = { TL: .68, EL: .8, TMAX: .37, REACH: .28, pz: hs.z - 1.35, py: deckY + .62, ty: deckY + .76 };
     { const wood = std({ color: "#8a5326", roughness: .38 }), til = new THREE.Group(); G.add(til); til.position.set(0, TIL.py, TIL.pz);
       const stock = mesh(new THREE.CylinderGeometry(.045, .055, .62, 16), chrome, til); stock.position.y = -.31;
       const headB = mesh(new THREE.BoxGeometry(.12, .1, .2), chrome, til); headB.position.set(0, .01, .04);
@@ -125,7 +129,7 @@
       const gripM = std({ color: "#2a2d33", roughness: .8, emissive: new THREE.Color("#ffd166"), emissiveIntensity: 0 });
       const grip = mesh(new THREE.CylinderGeometry(.021, .021, .22, 14), gripM, ext); grip.rotation.x = Math.PI / 2; grip.position.z = TIL.EL - .1; grip.userData.noBake = true;
       const ball = mesh(new THREE.SphereGeometry(.03, 14, 10), gripM, ext); ball.position.z = TIL.EL + .01; ball.userData.noBake = true;
-      Object.assign(TIL, { til, ext, gripM, rest: new THREE.Vector3(-.86, .34, -.22).normalize(), end: new THREE.Vector3() }); til.visible = ext.visible = false; }
+      Object.assign(TIL, { til, ext, gripM, rest: new THREE.Vector3(-.68, .3, .37).normalize(), end: new THREE.Vector3() }); til.visible = ext.visible = false; }
     /* utazósín (traveller) a kerekek előtt, keresztben; rajta a kocsi, a főszkóta felfut a bumra */
     const tz = hs.z + 2.25, trav = mesh(new THREE.BoxGeometry(2 * (sh(.2).hb - .5), .06, .12), grey, G); trav.position.set(0, sh(.2).y + .05, tz);
     const car = mesh(new THREE.BoxGeometry(.24, .1, .16), carbon, G); car.position.set(0, sh(.2).y + .12, tz);
@@ -449,6 +453,7 @@
   /* --------------------------------------------------------------- kormány */
   const _wv = new THREE.Vector3();
   const _tz = new THREE.Vector3(0, 0, 1);
+  const _ty = new THREE.Vector3(0, 1, 0);
   function wheelAngleOf(w, p) {   /* a kéz/sugár pontja a kerék síkjában: óramutató szerinti szög a kormányos szemszögéből */
     const lp = w.wheel.worldToLocal(_wv.copy(p)); return Math.atan2(-lp.x, lp.y);   /* a kormányos felől nézve jobbra = a hajó helyi −x */
   }
@@ -619,7 +624,7 @@
     S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; const want = S.grab && S.grab.w === w ? 1.6 : (VRR.wHover ? .25 : 0) + (!S.everGrab && S.st === "pre" && w.sd < 0 ? .25 + .25 * Math.sin(W.t * 4) : 0); w.gripM.emissiveIntensity += (want - w.gripM.emissiveIntensity) * Math.min(1, dt * 8); });
     if (S.tiller) { const TI = S.ck.tiller, th = S.wa / WA_MAX * TI.TMAX; TI.til.rotation.y = th;   /* a rúd a kormányállást mutatja; a toldó a csuklótól a kézig (vagy nyugalmi helyére) ér */
       const tx = Math.sin(th) * TI.TL, tz = TI.pz + Math.cos(th) * TI.TL, G = S.grab && S.grab.tiller ? S.grab : null;
-      { const Ge = Object.values(S.grabs || {}).find((q) => q.tiller && q.s && q.e); if (Ge) _wv.set(Ge.e.x - tx, Ge.e.y - TI.ty, Ge.e.z - tz).normalize(); else _wv.copy(TI.rest); } (TI.dir || (TI.dir = new THREE.Vector3())).copy(_wv);
+      _wv.copy(TI.rest).applyAxisAngle(_ty, th);   /* a toldó MEREV: a rúddal együtt fordul, nem csuklik */ (TI.dir || (TI.dir = new THREE.Vector3())).copy(_wv);
       TI.ext.position.set(tx, TI.ty, tz); TI.ext.quaternion.setFromUnitVectors(_tz, _wv); TI.end.set(tx, TI.ty, tz).addScaledVector(_wv, TI.EL - .1);
       const want = G ? 1.5 : (S.near ? .6 : 0) + (!S.everGrab && S.st === "pre" ? .3 + .3 * Math.sin(W.t * 4) : 0); TI.gripM.emissiveIntensity += (want - TI.gripM.emissiveIntensity) * Math.min(1, dt * 8); }
     if (S.grab) S.everGrab = true;
