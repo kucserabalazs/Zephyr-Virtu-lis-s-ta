@@ -10982,6 +10982,31 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     });
     btn(g, VW / 2 - 200, VH - 70, 400, 56, "‹ Balaton-térkép", () => { VRS.page = "lake"; vrDraw(); }, { fs: 26 });
   }
+  /* ---- 2026-11-11 02:46 TULAJDONOS: „Virtuális térben a ház alaprajza nagyon gagyi, használja a 2D-ben beállított alaprajzot … és ne legyenek
+     ezek az összekötőcsíkok meg ez a sok szar” → a VR-térképek a 2D-s (kidolgozott, bútoros, ikonos) alaprajzot mutatják: az élő SVG-t a számított
+     stílusokkal együtt képpé alakítjuk (csoportonként egyszer), és arra csak a sétapontok kerülnek. Nincs összekötő vonal, méretfelirat, jelmagyarázat. */
+  const PLSHOT = {};
+  function planShot(gid) {
+    const key = gid + "|" + ((window.ZI18N && ZI18N.lang) || "hu"), c = PLSHOT[key]; if (c) return c.ok ? c : null;
+    if (currentGroup !== gid) return null;
+    const src = document.querySelector("#mapSvg svg"); if (!src) return null;
+    const vb = (src.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number); if (vb.length !== 4 || !(vb[2] > 0) || !(vb[3] > 0)) return null;
+    const E = PLSHOT[key] = { ok: false, vb, cv: null };
+    try {
+      const cl = src.cloneNode(true), A = src.querySelectorAll("*"), B = cl.querySelectorAll("*");
+      const PR = ["fill", "stroke", "stroke-width", "stroke-dasharray", "stroke-linecap", "stroke-linejoin", "opacity", "fill-opacity", "stroke-opacity", "font-family", "font-size", "font-weight", "font-style", "text-anchor", "dominant-baseline", "letter-spacing", "display", "visibility", "paint-order"];
+      for (let i = 0; i < A.length && i < B.length; i++) { const tg = A[i].tagName.toLowerCase(); if (tg === "defs" || tg === "pattern" || tg === "title") continue; const cs = getComputedStyle(A[i]); let st = ""; PR.forEach((q) => { let v = cs.getPropertyValue(q); if (v) { v = v.replace(/url\("?[^"#)]*#/g, 'url("#').replace(/"/g, "'"); st += q + ":" + v + ";"; } }); B[i].setAttribute("style", st); }
+      cl.querySelectorAll(".dot, .halo, title").forEach((e) => e.remove());
+      const k = Math.min(1500 / vb[2], 1500 / vb[3]), w = Math.round(vb[2] * k), h = Math.round(vb[3] * k);
+      cl.setAttribute("xmlns", "http://www.w3.org/2000/svg"); cl.setAttribute("width", w); cl.setAttribute("height", h); cl.removeAttribute("class"); cl.removeAttribute("style");
+      const img = new Image();
+      img.onload = () => { try { const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const g = cv.getContext("2d"); g.fillStyle = "#12304f"; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h); E.cv = cv; E.ok = true;
+        if (VRS.panel && VRS.page === "map") vrDraw(); try { if (XRP.wristP && XRP.wristP.open) XRP.wristP.draw(); } catch (e) {} } catch (e) {} };
+      img.onerror = () => { E.bad = true; };
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(cl));
+    } catch (e) { E.bad = true; }
+    return null;
+  }
   function pMap(g) {
     /* házvázlat: a csoport alaprajza (ha van) és a helyszínek pontjai méterben – rámutatva odaugrik */
     btn(g, VW - 470, 22, 128, 84, "Balaton", () => { VRS.page = "lake"; vrDraw(); }, { round: 42, fs: 28 });
@@ -10997,6 +11022,24 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const box = [80, 170, VW - 160, VH - 230], sx = (x1 - x0) || 1, sy = (y1 - y0) || 1, sc = Math.min(box[2] / sx, box[3] / sy);
     const ox = box[0] + (box[2] - sx * sc) / 2, oy = box[1] + (box[3] - sy * sc) / 2;
     const X = (x) => ox + (x - x0) * sc, Y = (y) => oy + (y - y0) * sc, P = (k) => [X(SCENES[k].m[0]), Y(SCENES[k].m[1])];
+    const shot = planShot(gid);
+    if (shot) {   /* a 2D-s alaprajz képe + csak a sétapontok */
+      const bx2 = [40, 124, VW - 80, VH - 150], k2 = Math.min(bx2[2] / shot.cv.width, bx2[3] / shot.cv.height), w2 = shot.cv.width * k2, h2 = shot.cv.height * k2, x2 = bx2[0] + (bx2[2] - w2) / 2, y2 = bx2[1] + (bx2[3] - h2) / 2;
+      /* keskeny, magas vázlatnál (házvázlat) mellette a ház MAKETTJÉNEK képe – „a makettos segítséggel felturbózva” */
+      if (w2 < bx2[2] * .5) { const MI = planShot.mk || (planShot.mk = (() => { const im = new Image(); im.onload = () => { im._ok = 1; if (VRS.panel && VRS.page === "map") vrDraw(); }; im.src = "img/makett-haz.jpg"; return im; })());
+        if (MI._ok) { const mw2 = Math.min(x2 - 80, 440), mh2 = mw2 * MI.height / MI.width, mxx = 56, myy = y2 + 30;
+          g.save(); rr(g, mxx, myy, mw2, mh2, 18); g.clip(); g.drawImage(MI, mxx, myy, mw2, mh2); g.restore(); rr(g, mxx, myy, mw2, mh2, 18); g.lineWidth = 3; g.strokeStyle = "rgba(228,187,99,.85)"; g.stroke();
+          txt(g, "A ház makettje", mxx + mw2 / 2, myy + mh2 + 34, { a: "center", fs: 26, w: 700, c: ZT.soft }); txt(g, "3D-világok → A ház makettje: körbejárható", mxx + mw2 / 2, myy + mh2 + 66, { a: "center", fs: 19, w: 500, c: ZT.sub });
+          txt(g, "Bökj egy fehér pontra:", x2 + w2 + 36, y2 + 60, { fs: 24, w: 600, c: ZT.soft }); txt(g, "odalépsz.", x2 + w2 + 36, y2 + 92, { fs: 24, w: 600, c: ZT.soft }); } }
+      g.save(); rr(g, x2, y2, w2, h2, 18); g.clip(); g.drawImage(shot.cv, x2, y2, w2, h2); g.restore(); rr(g, x2, y2, w2, h2, 18); g.lineWidth = 3; g.strokeStyle = "rgba(228,187,99,.85)"; g.stroke();
+      const PX = (k) => [x2 + (SCENES[k].m[0] - shot.vb[0]) / shot.vb[2] * w2, y2 + (SCENES[k].m[1] - shot.vb[1]) / shot.vb[3] * h2];
+      all.forEach((k) => { const [x, y] = PX(k), on = k === current, i = VRS.btns.length, hov = i === VRS.hover;
+        VRS.btns.push({ x: x - 30, y: y - 30, w: 60, h: 60, fn: () => { vrClose(); go(k, false); } });
+        if (on) { g.beginPath(); g.arc(x, y, 30, 0, Math.PI * 2); g.fillStyle = "rgba(229,38,47,.28)"; g.fill(); }
+        g.beginPath(); g.arc(x, y, on ? 17 : hov ? 18 : 12, 0, Math.PI * 2); g.fillStyle = on ? "#e5262f" : hov ? "#ffd166" : "#ffffff"; g.fill(); g.lineWidth = 4; g.strokeStyle = "#0b2f5e"; g.stroke();
+        if (on || hov) { const t = vT(String(SCENES[k].n || "").replace(/\n/g, " ")); g.save(); g.font = ZT.font(700, 26); const tw = g.measureText(t).width + 28; const lx = Math.max(x2 + tw / 2 + 4, Math.min(x2 + w2 - tw / 2 - 4, x)); rr(g, lx - tw / 2, y - 66, tw, 40, 14); g.fillStyle = "rgba(7,24,44,.94)"; g.fill(); g.lineWidth = 2; g.strokeStyle = on ? "#e5262f" : ZT.gold; g.stroke(); g.restore(); txt(g, t, lx, y - 45, { a: "center", fs: 26, w: 700, c: "#fff" }); } });
+      return;
+    }
     rr(g, 40, 136, VW - 80, VH - 170, 24); g.fillStyle = "rgba(244,241,230,.08)"; g.fill();
     rects.forEach(([r, out]) => {
       g.fillStyle = out ? "rgba(120,170,120,.18)" : "rgba(244,241,230,.13)"; g.fillRect(X(r[1]), Y(r[2]), r[3] * sc, r[4] * sc);
@@ -11025,7 +11068,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       txt(g, lg, VW / 2, VH - 52, { a: "center", fs: fsz, w: 600, c: "rgba(255,255,255,.72)" });
     }
     g.strokeStyle = "rgba(255,209,102,.35)"; g.lineWidth = 3;
-    all.forEach((k) => (SCENES[k].l || []).concat(SCENES[k].wl || []).forEach((l) => { if (!all.includes(l[0])) return; const a = P(k), b = P(l[0]); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); }));
+    /* (összekötő vonalak törölve – 2026-11-11, tulajdonos) */
     all.forEach((k) => {
       const [x, y] = P(k), on = k === current, i = VRS.btns.length, hov = i === VRS.hover;
       VRS.btns.push({ x: x - 36, y: y - 36, w: 72, h: 72, fn: () => { vrClose(); go(k, false); } });
@@ -12457,11 +12500,14 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         let all = Object.keys(SCENES).filter((k) => SCENES[k].g === gid && SCENES[k].m && isVisible(k) && !SCENES[k].nomap);
         title(grp.name || "Térkép", "Csippents vagy bökj egy pontra: odalépsz");
         if (!all.length) { g.fillStyle = "#333"; g.font = "600 26px system-ui"; g.textAlign = "center"; g.fillText("Ehhez a helyhez nincs térkép", mx + mw / 2, my + mh / 2); g.restore(); return; }
-        const rects = plan ? (plan.rooms || []).map((r) => [r, 0]).concat((plan.outs || []).map((r) => [r, 1])) : [];
+        const shot = planShot(gid);
+        const rects = shot ? [] : plan ? (plan.rooms || []).map((r) => [r, 0]).concat((plan.outs || []).map((r) => [r, 1])) : [];
         const xs = all.map((k) => SCENES[k].m[0]), ys = all.map((k) => SCENES[k].m[1]); rects.forEach(([r]) => { xs.push(r[1], r[1] + r[3]); ys.push(r[2], r[2] + r[4]); });
+        if (shot) { xs.length = 0; ys.length = 0; xs.push(shot.vb[0], shot.vb[0] + shot.vb[2]); ys.push(shot.vb[1], shot.vb[1] + shot.vb[3]); }
         const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-        const box = [mx + 34, my + 104, mw - 68, mh - 150], sx = (x1 - x0) || 1, sy = (y1 - y0) || 1, sc = Math.min(box[2] / sx, box[3] / sy);
+        const box = shot ? [mx + 8, my + 82, mw - 16, mh - 90] : [mx + 34, my + 104, mw - 68, mh - 150], sx = (x1 - x0) || 1, sy = (y1 - y0) || 1, sc = Math.min(box[2] / sx, box[3] / sy);
         const ox = box[0] + (box[2] - sx * sc) / 2, oy = box[1] + (box[3] - sy * sc) / 2, X = (x) => ox + (x - x0) * sc, Y = (y) => oy + (y - y0) * sc;
+        if (shot) { g.fillStyle = "#12304f"; g.fillRect(mx, my + 74, mw, mh); g.drawImage(shot.cv, X(shot.vb[0]), Y(shot.vb[1]), shot.vb[2] * sc, shot.vb[3] * sc); }
         rects.forEach(([r, out]) => { const x = X(r[1]), y = Y(r[2]), w = r[3] * sc, h = r[4] * sc;
           g.fillStyle = out ? "rgba(176,140,98,.35)" : /fürd/i.test(r[0]) ? "#dfe9ee" : /háló/i.test(r[0]) ? "#efe4d2" : "#f6efe2"; g.fillRect(x, y, w, h);
           g.setLineDash(out ? [10, 8] : []); g.lineWidth = out ? 3 : 6; g.strokeStyle = out ? "#8a6a48" : "#3a3f45"; g.strokeRect(x, y, w, h); g.setLineDash([]);
@@ -12473,8 +12519,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           g.beginPath(); g.arc(x, y, me ? 16 : hv ? 17 : 12, 0, Math.PI * 2); g.fillStyle = me ? "#e5262f" : hv ? "#ffd166" : "#1f5fa8"; g.fill(); g.lineWidth = 4; g.strokeStyle = "#fff"; g.stroke();
           if (hv || me) { const t = SCENES[k].n; g.font = "700 22px system-ui, sans-serif"; const tw2 = g.measureText(t).width + 24; g.fillStyle = "rgba(9,34,70,.92)"; rr(g, x - tw2 / 2, y - 58, tw2, 34, 12); g.fill(); g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(t, x, y - 41); }
           P.mapDots.push({ k, x, y }); });
-        g.fillStyle = "#2a3a4a"; g.font = "600 20px system-ui, sans-serif"; g.textAlign = "left"; g.fillText("● itt vagy  ● sétapont", mx + 22, my + mh - 22);
-        g.fillStyle = "#e5262f"; g.beginPath(); g.arc(mx + 26, my + mh - 28, 7, 0, 7); g.fill();
+        if (!shot) { g.fillStyle = "#2a3a4a"; g.font = "600 20px system-ui, sans-serif"; g.textAlign = "left"; g.fillText("● itt vagy  ● sétapont", mx + 22, my + mh - 22);
+        g.fillStyle = "#e5262f"; g.beginPath(); g.arc(mx + 26, my + mh - 28, 7, 0, 7); g.fill(); }
       }
       g.restore();
     }
@@ -13079,7 +13125,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---------- Híd a „Virtuális világ” modulhoz (vilag.js – csak megnyitáskor töltődik be) ---------- */
   /* közvetlen link a jegyzékhez: …/#leltar vagy …/#leltar-fregatt (vendégnek küldhető, telefonon is) */
   { const m = /#leltar(?:-([a-z]+))?\b/.exec(location.hash); if (m) { const tryOpen = (n) => { try { openBinder(GROUPS.some((q) => q.id === m[1]) ? m[1] : "korvett"); } catch (e) { if (n < 40) setTimeout(() => tryOpen(n + 1), 400); } }; setTimeout(() => tryOpen(0), 2500); } }
-  window.ZephyrTour = { openGame: (id) => gmOpen(id), stegMap: () => stegMapCard(), openInv: (g) => openBinder(g), goScene: (k) => { if (SCENES[k]) go(k, false); }, _t: { smPalm: () => smPalm(), SM, AK: () => AK, WS: () => WS, SCENES: () => SCENES, cur: () => current, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
+  window.ZephyrTour = { openGame: (id) => gmOpen(id), stegMap: () => stegMapCard(), openInv: (g) => openBinder(g), goScene: (k) => { if (SCENES[k]) go(k, false); }, _t: { smPalm: () => smPalm(), SM, AK: () => AK, WS: () => WS, SCENES: () => SCENES, cur: () => current, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrOpen: (pg) => vrOpen(pg), vrCvs: () => VRS.cvs, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
     get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
