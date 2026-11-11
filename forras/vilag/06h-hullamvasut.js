@@ -210,7 +210,8 @@
     ["Siófok", "Víztorony és óriáskerék", 46.9085, 18.0486, hvSiofok, .7, 34, "Siófok jelképe az 1912-ben épült Víztorony; mellette a parti óriáskerék és az Aranypart."]
   ];
   function hvSights(env) {
-    HV.sights = HV_SIGHTS.map(([n, sub, la, lo, fn, sc, lh, txt]) => { const [x, z] = hvMP(la, lo), L = [], g = new THREE.Group(); fn(L); g.position.set(x, .9, z); g.scale.setScalar(sc); env.add(g); hvBake(L, g); hvLabel(n, sub, x, lh * sc + 16, z, env, 46); return { n, sub, x, z, txt }; });
+    HV.sightG = []; HV.labels = [];
+    HV.sights = HV_SIGHTS.map(([n, sub, la, lo, fn, sc, lh, txt]) => { const [x, z] = hvMP(la, lo), L = [], g = new THREE.Group(); fn(L); g.position.set(x, .9, z); g.scale.setScalar(sc); env.add(g); hvBake(L, g); (HV.sightG = HV.sightG || []).push({ g, sc }); (HV.labels = HV.labels || []).push(hvLabel(n, sub, x, lh * sc + 16, z, env, 46)); return { n, sub, x, z, txt }; });
   }
   /* a körút pályája: minden látnivaló mellett alacsonyan elhalad, közöttük az égbe emelkedik, és onnan csap le a következőre */
   function hvTourPts() {
@@ -229,7 +230,7 @@
   /* ---------- a két pálya ---------- */
   const HV_OZ = 1500;   /* a VAD menet „élményparkja” a térképtől délre, külön vízen (a korábbi díszletekkel) */
   function hvPark(env) {
-    const park = new THREE.Group(); park.position.set(0, 0, HV_OZ); env.add(park);
+    const park = new THREE.Group(); park.position.set(0, 0, HV_OZ); env.add(park); HV.park = park;
     [[hvAbbey, -196, -228], [hvBadacsony, 238, -402], [hvSzigliget, 58, -415], [hvPier, 150, -55], [hvFestetics, -185, 78]].forEach(([fn, x, z]) => { const L = [], g = new THREE.Group(); fn(L); g.position.set(x, 0, z); park.add(g); hvBake(L, g); });
     { const L = [], x = 200, c = "#d61f26", T4 = hvT4; L.push([hvBX(5, .4, 26), "#b98a55", T4(x - 4.4, 2.3, 0)], [hvBX(5, .4, 26), "#b98a55", T4(x + 4.4, 2.3, 0)], [hvBX(15, .5, 22), c, T4(x, 8.4, 0)], [hvBX(16, .3, 23), "#f5f2e8", T4(x, 8.8, 0)]);
       [[-6.6, -10], [6.6, -10], [-6.6, 10], [6.6, 10]].forEach(([dx, dz]) => L.push([hvCY(.28, .28, 6.2, 7), "#f5f2e8", T4(x + dx, 5.3, dz)], [hvCY(.4, .5, 5, 7), "#8a6239", T4(x + dx, 0, dz)])); hvBake(L, park); }
@@ -245,14 +246,17 @@
   }
   function buildCoaster() {
     const root = W.root, env = new THREE.Group(), far = new THREE.Group(); root.add(env); env.add(far); HV.env = env; HV.far = far; env.matrixAutoUpdate = false;
-    makeSky(far); makeShores(far);
+    const oldSky = makeSky(far); makeShores(far);
     HV.water = makeWater(env);
+    try { HV.foto = makePhotoSky(far, oldSky, HV.water); } catch (e) {}   /* 2026-11-11: valódi égfotó a hullámvasúton is */
     hvMap(env); hvSights(env); hvPark(env);
     HV.calm = hvTrack(hvTourPts(), { bank: 6 }); HV.wild = hvTrack(hvWildPts(), { bank: 9 });
     HV.passS = HV.pass.map((i) => HV.calm.sOf(i)); HV.s0 = HV.passS[0] - 4;
-    hvRails(HV.calm, env, "#2b5ea8"); hvRails(HV.wild, env, "#d61f26", "#22262c");
+    const wg = new THREE.Group(); env.add(wg); HV.wildG = wg; if (HV.park) wg.add(HV.park);
+    hvRails(HV.calm, env, "#2b5ea8"); hvRails(HV.wild, wg, "#d61f26", "#22262c");
     /* a vad pálya jellemző pontjai (ívhossz): a felhúzás vége, az alagút, a fékezés */
-    HV.wild.sLift = HV.wild.sOf(6) - 4; HV.wild.sTun0 = HV.wild.sOf(25) - 22; HV.wild.sTun1 = HV.wild.sOf(30) + 14; hvTunnel(HV.wild, HV.wild.sTun0, HV.wild.sTun1, env);
+    HV.wild.sLift = HV.wild.sOf(6) - 4; HV.wild.sTun0 = HV.wild.sOf(25) - 22; HV.wild.sTun1 = HV.wild.sOf(30) + 14; hvTunnel(HV.wild, HV.wild.sTun0, HV.wild.sTun1, wg);
+    try { hvPlus(env, root); } catch (e) { console.warn("hvPlus", e); }
     /* a Zephyr a sínen: a hajó áll, a világ mozog; a néző a kokpitban ül (a kormányos helyén) */
     const ride = new THREE.Group(); root.add(ride); HV.ride = ride;
     const boat = makeBoat({ detail: 0, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, flag: true });
@@ -263,14 +267,15 @@
     /* élet a vízen: két horgonyzó vitorlás a nyugodt pálya mellett (kisütve), lassan ringanak */
     HV.deco = [[BOATS[1], 40, -150, 2.2], [BOATS[6], -60, -40, -.9]].map(([o, x, z, ry]) => { const g = makeBoat(Object.assign({ detail: 0, crew: 2 }, o)); g.position.set(x, 0, z); g.rotation.y = ry; env.add(g); const S2 = g.userData.S; if (S2) { S2.awa = 60; S2.aws = 5; S2.side = 1; S2.boom = .5; S2.jib = .4; } try { vrBake(g); } catch (e) {} return g; });
     HV.lights = addLights(SUN.clone());
-    HV.mode = "calm"; HV.st = "station"; HV.s = HV.s0; HV.v = 0; HV.run = 0; HV.cur = 0; HV.warn = false; HV.t = 0; HV.fr = { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }; HV.q = new THREE.Quaternion(); HV.shake = 0;
-    hvPlace(); hvApply(0);
+    HV.mode = "calm"; HV.st = W.kind === "table" ? "table" : "station"; HV.tbl = null; HV.s = HV.s0; HV.v = 0; HV.run = 0; HV.cur = 0; HV.warn = false; HV.t = 0; HV.fr = { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }; HV.q = new THREE.Quaternion(); HV.shake = 0;
+    hvPlace(); if (HV.st === "table") hvTableShow(true); hvApply(0);
     faceYaw(0); audioStart({ water: .02, wind: .015 });
     return { tick: hvTick, panel: hvPanel, hud: hvHud };
   }
   function hvPlace() { const hy = T.inVR ? Math.max(1.0, T.headY()) : T.headY(); HV.ride.position.set(-.42, hy - 1.52, -2.55); }   /* szem: a kokpit jobb oldalán ülve, 1,5 m-rel a vízvonal fölött */
   function hvTrackNow() { return HV.mode === "wild" ? HV.wild : HV.calm; }
   function hvApply(dt) {
+    if (HV.st === "table") { hvTableApply(dt || 0); return; }
     const TR = hvTrackNow(), fr = TR.at(HV.s, HV.fr), R = new THREE.Vector3().crossVectors(fr.f, fr.u).normalize(), nz = fr.f.clone().negate();
     const m = new THREE.Matrix4().makeBasis(R, fr.u, nz); m.setPosition(fr.p); m.invert();
     const a = HV.ride.position, sh = HV.shake, t = W.t;
@@ -280,10 +285,11 @@
     const wm = HV.water; wm.position.set(Math.round(fr.p.x / 40) * 40, 0, Math.round(fr.p.z / 40) * 40); const mat = wm.userData.mat; if (mat) { mat.uniforms.uT.value = W.t; mat.uniforms.uOff.value.set(wm.position.x, wm.position.z); if (mat.uniforms.uCam) { try { const cw = new THREE.Vector3(); T.camObj().getWorldPosition(cw); HV.env.updateMatrixWorld(true); mat.uniforms.uCam.value.copy(HV.env.worldToLocal(cw)); } catch (e) { mat.uniforms.uCam.value.copy(fr.p); } } }
     HV.slope = fr.f.y; HV.alt = fr.p.y;
   }
-  function hvStart(mode) { HV.mode = mode; HV.st = "ride"; HV.s = mode === "wild" ? 0 : HV.s0; HV.run = 0; HV.v = .5; HV.warn = false; HV.lap = 0; HV.t = 0; W.panelDirty = 1; try { T.sfx && T.sfx("click"); } catch (e) {} }
-  function hvStop() { HV.st = "station"; HV.mode = "calm"; HV.s = HV.s0; HV.run = 0; HV.cur = 0; HV.v = 0; HV.warn = false; HV.shake = 0; hvApply(0); AU.set("rush", 0, .3); AU.set("wind", .015, .5); W.panelDirty = 1; }
+  function hvStart(mode) { if (HVT.on) hvTableShow(false); HV.mode = mode; HV.st = "ride"; HV.s = mode === "wild" ? 0 : HV.s0; HV.run = 0; HV.v = .5; HV.warn = false; HV.lap = 0; HV.t = 0; W.panelDirty = 1; try { T.sfx && T.sfx("click"); } catch (e) {} }
+  function hvStop() { hvQuiet(); HV.st = "station"; HV.mode = "calm"; HV.s = HV.s0; HV.run = 0; HV.cur = 0; HV.v = 0; HV.warn = false; HV.shake = 0; hvApply(0); AU.set("rush", 0, .3); AU.set("wind", .015, .5); W.panelDirty = 1; }
   function hvTick(dt) {
     dt = Math.min(dt, .05); if (T.inVR !== HV.wasVR) { HV.wasVR = T.inVR; hvPlace(); }
+    try { hvPlusTick(dt); } catch (e) {}
     const b = HV.boat; if (b && b.userData.update) { const BS = b.userData.S; if (BS) { BS.aws = 5 + HV.v * .5; BS.awa = 34; BS.t = W.t; } b.userData.update(dt); }
     (HV.deco || []).forEach((g, i) => { const S2 = g.userData.S; if (S2) { S2.heel = .05 + Math.sin(W.t * .7 + i) * .03; S2.pitch = Math.sin(W.t * .9 + i * 2) * .02; } g.position.y = Math.sin(W.t * .8 + i) * .06; if (g.userData.update) g.userData.update(dt); });
     if (HV.st !== "ride") { hvApply(dt); return; }
@@ -309,7 +315,10 @@
     AU.set("rush", clamp(HV.v / 32, 0, 1) * .16, .2); AU.set("wind", .02 + clamp(HV.v / 30, 0, 1) * .12, .2);
     HV.hudT = (HV.hudT || 0) + dt; if (HV.hudT > .5) { HV.hudT = 0; W.panelDirty = 1; }
   }
+  function hvToTable(on) { hvQuiet(); HV.st = on ? "table" : "station"; HV.mode = "calm"; HV.s = HV.s0; HV.v = 0; HV.run = 0; HV.warn = false; HV.shake = 0; hvTableShow(on); hvApply(0); W.panelDirty = 1; }
+  function hvVoice() { let on = true; try { on = localStorage.getItem("zephyr-hv-hang") !== "0"; } catch (e) {} return on; }
   function hvInfo() {
+    if (HV.st === "table") { const c = HV.sights[HVT.cur || 0] || HV.sights[0]; return `Balaton-terepasztal: a kis Zephyr körbejárja a tavat. Most itt jár: ${c.n} (${c.sub}). Sétáld körbe az asztalt, aztán szállj be!`; }
     if (HV.st !== "ride") return HV.warn ? "⚠ VAD MENET: 60 m-es zuhanás, hurok, dugóhúzó, alagút – erős gyomor kell! Rosszullétre hajlamosaknak, kisgyerekeknek NEM ajánlott. VR-ben ülj le!" : "Ülj be a Zephyrbe! Balaton-körút: a térkép fölött az égbe emelkedünk, és minden látnivalóhoz lecsapunk – vagy a vad menet.";
     const TR = hvTrackNow(), kmh = Math.round(HV.v * 3.6), pct = Math.round((HV.run || 0) / TR.L * 100);
     if (HV.mode !== "wild") { const S = HV.sights, c = S[HV.cur] || S[0], nx = S[(HV.cur + 1) % S.length]; return (HV.near < 60 ? `${c.n} – ${c.txt}` : `Következő: ${nx.n} (${nx.sub})`) + ` · ${kmh} km/h · ${Math.round(HV.alt || 0)} m · ${pct}%`; }
@@ -318,17 +327,19 @@
   function hvButtons() {
     if (HV.st === "ride") return [["■ Kiszállok (megállás)", hvStop], ["‹ Vissza a sétához", () => W.close()]];
     if (HV.warn) return [["✔ Vállalom – INDULJON a vad menet!", () => hvStart("wild")], ["Mégsem", () => { HV.warn = false; W.panelDirty = 1; }]];
-    return [["🗺 Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], ["‹ Vissza a sétához", () => W.close()]];
+    const hang = [hvVoice() ? "🔊 Idegenvezetés: be" : "🔇 Idegenvezetés: ki", () => { try { localStorage.setItem("zephyr-hv-hang", hvVoice() ? "0" : "1"); } catch (e) {} hvQuiet(); W.panelDirty = 1; }];
+    if (HV.st === "table") return [["🎢 Beszállok – Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { hvToTable(false); HV.warn = true; W.panelDirty = 1; }], [HVT.spin ? "⏸ Asztal megállítása" : "↻ Asztal forgatása", () => { HVT.spin = !HVT.spin; W.panelDirty = 1; }], ["‹ Vissza a sétához", () => W.close()]];
+    return [["🗺 Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], ["🗺 Terepasztal", () => hvToTable(true)], hang, ["‹ Vissza a sétához", () => W.close()]];
   }
   function hvPanel(P) {
-    P.title("Balatoni hullámvasút", hvInfo());
+    P.title(HV.st === "table" ? "Balaton-terepasztal" : "Balatoni hullámvasút", hvInfo());
     P.row(0, HV.st === "ride" && HV.mode !== "wild" && HV.sights ? (HV.sights[HV.cur] || {}).txt || "" : "Balaton-körút: Zephyr · Kőhegy · komp · Földvár · Gömbkilátó · Fonyód · Keszthely · Szigliget · Badacsony · Révfülöp · Hegyestű · Tihany · Füred · Siófok", "#7fd3ff");
     P.row(1, "Vad menet: lassú felhúzás 63 m-re · szabadesés · hurok · alagút · dugóhúzó", "#ff8a8a");
     P.row(2, "Bármikor kiszállhatsz: „Kiszállok” – a hajó azonnal megáll az állomáson.", "#ffd166");
     P.buttons(hvButtons());
   }
   function hvHud(H) {
-    H.title("Balatoni hullámvasút", hvInfo());
+    H.title(HV.st === "table" ? "Balaton-terepasztal" : "Balatoni hullámvasút", hvInfo());
     H.buttons(hvButtons().map(([l, f]) => [l, f, false]));
     H.hint("Húzással körbenézel · a hajó a sínen megy, te a kokpitban ülsz · bármikor kiszállhatsz");
   }

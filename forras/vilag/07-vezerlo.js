@@ -242,7 +242,7 @@
       return;
     }
     sky.object3D.visible = false;
-    safe(() => { W.spec = kind === "race" ? buildVRace() : kind === "coaster" ? buildCoaster() : kind === "chess" ? lodBuild(buildChess) : kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
+    safe(() => { W.spec = kind === "race" ? buildVRace() : kind === "coaster" || kind === "table" ? buildCoaster() : kind === "chess" ? lodBuild(buildChess) : kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
   };
   /* 2026-11-11 TELEFONOS KÖNNYÍTÉS (a vitorlás sakk 865 ezer háromszöget rajzolt – ettől melegedett a telefon): telefonon (nem VR-ben) az építés idejére
      a gömbök, hengerek, tóruszok, kapszulák, kúpok, esztergált és cső-testek felbontását kb. a felére vesszük – a formák ugyanazok, csak kevesebb lapból.

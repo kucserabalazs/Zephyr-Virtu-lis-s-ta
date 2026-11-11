@@ -690,3 +690,16 @@ Kérés: (1) álló hajónál úgy érzi, a hajó oldalra csúszik; (2) „a kor
 - Kérés: a kormányrúd legalább kétszer olyan hosszú legyen (nem tudja teljesen eltolni magától, hogy jobbra forduljon). KÉSZ: rúd 0,9 → 1,7 m, toldó 0,8 → 1,45 m (átlósan fut a kézhez, markolat a test mellett), teljes kitérés 12° rúdszögnél (kb. 35 cm kézút). `TIL` a 05b-ben.
 - Kérés: a sakknál (és bármely világ-menünél) a menü szélére csippentve a panel azonnal eltávolodik, nem a jelenlegi helyéről indul. KÉSZ (07-vezerlo.js): a fogás a kéz pillanatnyi sugarához rögzül, a panel dőlése megmarad (eddig −0,15-re ugrott), az első 0,35 mp kézrándulása nem számít, az előre-hátra tolás 5 cm holtjátékkal és ×2 (volt ×4). A mentett helyzet a dőlést is tárolja (`t`).
 - Szemüvegben nem ellenőrzött.
+## 2026-11-11 18:56 – „A hullámvasutat fejleszd ennél sokkal jobbra, tedd a VR játékok közé a terepasztallal együtt, és legyen elérhető a menüből a VR játékok”
+(A kérés a mentőmellényes projekt beszélgetésébe érkezett; ott készült el, erre a tárolóra feltöltve.)
+- MENÜ: a „3D világ / Virtuális világ” neve mindenhol **VR játékok** (2D választó, fejléc-gomb, VR-főmenü csempéje „🎮 VR játékok”, VR-körmenü). A VR-menü „VR játékok” oldalán most 5 játék van: Vitorlásverseny, Hullámvasút, Terepasztal, Vitorlás sakk, Makett (eddig a hullámvasút a VR-panelről hiányzott).
+- HULLÁMVASÚT 2.0 (új fájl: `forras/vilag/06i-hullamvasut-plusz.js`, `hvPlus` / `hvPlusTick`; a 06h csak a bekötést kapta):
+  valódi égfotó (`makePhotoSky`), a térképen 23 település házakkal és templommal, ~60 domb szőlősorokkal, ~600 fa, 44 vitorlás és bóják a tavon,
+  felhők a pálya csúcsainál, forgó arany karikák a csúcsokon (átrepülsz rajtuk), cölöpös állomás „ZEPHYR EXPRESSZ” táblával az indulásnál,
+  sebességcsíkok gyors haladásnál, hangos idegenvezetés a látnivalóknál (böngésző-felolvasó, magyar hang ha van; kapcsoló az állomáson: „Idegenvezetés be/ki”, localStorage `zephyr-hv-hang`).
+  A díszletek mind kisütve, egy-egy hálóba vonva; a pálya és a menetdinamika változatlan.
+- TEREPASZTAL (új világ: `table`, ugyanaz a `buildCoaster`, `HV.st = "table"`): az egész Balaton-körút 1:900-as makettként egy diófa asztalon (3,4 × 2,2 m), sárgaréz szegéllyel, sötétkék teremben;
+  arany pályavonal, rajta körbejár a kis Zephyr; a látnivalók és feliratok az asztalon nagyítva; az asztal lassan forog (megállítható). Gombok: Beszállok – Balaton-körút / Vad menet / forgatás.
+  A hullámvasút állomásáról is elérhető („Terepasztal” gomb). A vad pálya élményparkja az asztalon nem látszik.
+- Teszt: gépi böngészőben (2D) a hullámvasút és a terepasztal megnyílik, a menet elindul, hiba nélkül. **Szemüvegben NEM próbáltam**: az asztal magassága/távolsága (szem alatt 62 cm, 1,85 m-re), a karikák mérete, a felolvasás a Quest böngszőjében és a terhelés ellenőrizendő.
+- Őszintén: ez több részletet és életet ad, de a Quest saját környezetének (modellezett, kisütött glTF-világ) szintjét kódból rakott formákkal továbbra sem éri el.
