@@ -212,6 +212,7 @@
         const base = { color: m.color.clone(), map: m.map || null, side: m.side, alphaTest: m.alphaTest || 0, vertexColors: shiny ? !!m.vertexColors : true };
         nmat = shiny ? new THREE.MeshMatcapMaterial(Object.assign(base, { matcap: vrMatcap(shiny) })) : new THREE.MeshBasicMaterial(base);
         if (shiny === "chrome") nmat.color.lerp(new THREE.Color("#ffffff"), .35);
+        if (!shiny) { const lum = nmat.color.r * .3 + nmat.color.g * .55 + nmat.color.b * .15; if (lum < .035 && !nmat.map) nmat.color.lerp(new THREE.Color(.07, .08, .1), .75); }   /* a koromfekete alkatrész szemüvegben lapos „lyuk” volt – sötétszürke lesz, így látszik rajta az árnyalás */
         W.disposables.push(nmat); VRB.mats.set(key, nmat);
       }
       if (!shiny && !done.has(g.uuid)) { done.add(g.uuid);
@@ -230,8 +231,9 @@
     const root = W.root;
     Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0 });   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
-    makeSky(far); makeShores(far);
+    const oldSky = makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
+    VRR.foto = makePhotoSky(far, oldSky, VRR.water);   /* valódi égfotó + a víz ezt tükrözi */
     const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"] });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
     boat.scale.setScalar(VR_SC); boat.rotation.y = Math.PI; root.add(boat); VRR.boat = boat;
     const CK2 = vrCockpit(boat); VRR.ck = CK2; VRR.baked = vrBake(boat);

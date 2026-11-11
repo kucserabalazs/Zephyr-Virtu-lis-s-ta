@@ -177,6 +177,46 @@
     return m;
   }
 
+  /* ------------------------------------------------------------------ FÉNYKÉP-ÉGBOLT (2026-11-11): valódi, 360°-os égfotó a kódból rajzolt ég helyett.
+     Forrás: Poly Haven „Kloofendal 48d Partly Cloudy (Pure Sky)”, Greg Zaal – CC0 (szabadon használható). A felső félgömb van meg (img/eg/).
+     A nap a képen 47,9° magasan áll; az eget úgy forgatjuk, hogy a nap iránya a régi SUN irányszögével essen egybe.
+     Kikapcsolás: localStorage „zephyr-foto-eg” = 0 (akkor a régi, rajzolt ég marad). */
+  const FOTO_EG = { u: .5951, el: 47.9 * D2R, hor: [.44, .46, .53], zen: [.20, .34, .62] };
+  function makePhotoSky(parent, oldSky, water) {
+    try { if (localStorage.getItem("zephyr-foto-eg") === "0") return null; } catch (e) {}
+    const az = Math.atan2(SUN.z, SUN.x), ce = Math.cos(FOTO_EG.el);
+    const sun = new THREE.Vector3(Math.cos(az) * ce, Math.sin(FOTO_EG.el), Math.sin(az) * ce);
+    const phi = FOTO_EG.u * TAU, ry = Math.atan2(Math.sin(phi), -Math.cos(phi)) - az;
+    const out = { sun, ry, mesh: null };
+    let maxT = 4096; try { maxT = T.scene.renderer.capabilities.maxTextureSize; } catch (e) {}
+    const phone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !/OculusBrowser|Quest|Pico/i.test(navigator.userAgent);
+    const big = maxT >= 8192 && !phone, L = new THREE.TextureLoader();
+    L.load("img/eg/" + (big ? "eg-8k.jpg" : "eg-4k.jpg"), (tex) => {
+      if (!parent.parent) { tex.dispose(); return; }   /* közben bezárták a világot */
+      tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = THREE.RepeatWrapping; tex.anisotropy = 4; W.disposables.push(tex);
+      const mat = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false,
+        uniforms: { map: { value: tex }, uHaze: { value: new THREE.Color(FOTO_EG.hor[0], FOTO_EG.hor[1], FOTO_EG.hor[2]) } },
+        vertexShader: `varying vec2 vUv; void main(){ vUv = uv; vec4 p = modelViewMatrix * vec4(position,1.); gl_Position = projectionMatrix * p; gl_Position.z = gl_Position.w; }`,
+        fragmentShader: `uniform sampler2D map; uniform vec3 uHaze; varying vec2 vUv;
+          void main(){ float v = (vUv.y - .5) * 2.; vec3 c = texture2D(map, vec2(vUv.x, clamp(v, .003, .999))).rgb;
+            c = mix(uHaze, c, smoothstep(-.002, .03, v)); if (v < 0.) c = mix(uHaze, uHaze * vec3(.62,.74,.78), clamp(-v * 5., 0., 1.));
+            gl_FragColor = vec4(c, 1.);
+            #include <colorspace_fragment>
+          }` });
+      W.disposables.push(mat);
+      const m = mesh(new THREE.SphereGeometry(9000, 96, 48), mat, parent); m.renderOrder = -20; m.frustumCulled = false; m.rotation.y = ry; out.mesh = m;
+      if (oldSky) oldSky.visible = false;
+    });
+    if (water && water.userData.mat) L.load("img/eg/eg-t.jpg", (tex) => {   /* a víz ugyanazt az eget tükrözi (elmosott, kis kép) */
+      if (!parent.parent) { tex.dispose(); return; }
+      tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = THREE.RepeatWrapping; tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; W.disposables.push(tex);
+      const U = water.userData.mat.uniforms; U.uSkyT.value = tex; U.uSkyRot.value.set(Math.cos(ry), Math.sin(ry)); U.uSkyOn.value = 1; U.uSun.value = sun;
+      U.uHaze.value = new THREE.Color(FOTO_EG.hor[0], FOTO_EG.hor[1], FOTO_EG.hor[2]); U.uSunC.value = new THREE.Color(1, .97, .9);
+      U.uDeep.value = new THREE.Color(.035, .16, .20); U.uShallow.value = new THREE.Color(.10, .33, .34);
+    });
+    return out;
+  }
+
   /* ------------------------------------------------------------------ VÍZ: Gerstner-hullámok + apró fodrok, Fresnel-tükröződés, napcsillogás, széllökés-foltok */
   const WAVES = [  /* irány (fok, a szél felől), hullámhossz (m), amplitúdó (m), meredekség – Balatoni rövid, „kabbelős” hullámzás */
     [0, 7.5, .13, .55], [24, 4.6, .075, .5], [-31, 3.1, .045, .45], [62, 11, .07, .3], [-70, 2.2, .025, .4]
@@ -201,7 +241,7 @@
       uniforms: { uT: { value: 0 }, uOff: { value: new THREE.Vector2() }, uWind: { value: WIND_DIR }, uW: { value: wv }, uSun: { value: opt.sun || SUN }, uCam: { value: new THREE.Vector3() }, uGust: { value: new THREE.Vector2(1, 0) },
         /* színek (a makett-világ napszakhoz igazítja őket; az alapértékek a vitorlázás délutánja) */
         uSkyH: { value: new THREE.Color(.70, .80, .87) }, uSkyZ: { value: new THREE.Color(.25, .45, .75) }, uDeep: { value: new THREE.Color(.06, .25, .27) }, uShallow: { value: new THREE.Color(.18, .44, .41) },
-        uSunC: { value: new THREE.Color(1, .95, .82) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 } },
+        uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 } },
       vertexShader: `
         uniform float uT, uWind; uniform vec2 uOff; uniform vec4 uW[5];
         varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
@@ -219,7 +259,7 @@
           gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5];
+        uniform sampler2D uSkyT; uniform float uSkyOn; uniform vec2 uSkyRot; uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5];
         varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*f*(f*(f*6.-15.)+10.); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
@@ -251,6 +291,7 @@
           float fres = .02 + .98 * pow(1. - ndv, 5.);
           vec3 refl = reflect(-view, n); float el = clamp(refl.y, 0., 1.);
           vec3 sky = mix(uSkyH, uSkyZ, pow(el, .45));
+          if (uSkyOn > .5) { float lx = refl.x * uSkyRot.x - refl.z * uSkyRot.y, lz = refl.x * uSkyRot.y + refl.z * uSkyRot.x; sky = texture2D(uSkyT, vec2(fract(atan(lz, -lx) / 6.2831853), clamp(asin(el) / 1.5708, .02, .98))).rgb * uLight; }
           /* mélységérzet: a hullám hátán világosabb, a völgyben sötétebb; a napfény átsüt a taraj vékony részén (zöldes) */
           vec3 base = mix(uDeep, uShallow, clamp(.35 + crest * 1.6 + n.x * .8, 0., 1.)) * (1. - gust * .16) * uLight;
           float sss = pow(max(dot(view, -uSun), 0.), 4.) * clamp(crest * 3., 0., 1.);
@@ -323,12 +364,12 @@
       for (let k = 0; k < 260; k++) { const b = 318 + rand() * 75, bb = b % 360; const y0 = yOf(.18 + rand() * .3); g.fillStyle = `rgba(${220 + rand() * 30},${215 + rand() * 30},${200 + rand() * 30},.55)`; g.fillRect(X(bb), y0, 2 + rand() * 3, 2); }
       /* déli part: Zamárdi (közel, 1,5 km): fasor, házak, a strand nádasa */
       const south = [[75, .05]];
-      for (let b = 75; b <= 287; b += .2) { let e = .42 + .25 * Math.abs(ns(b, 1.7)) + .12 * Math.abs(ns(b, 5.3)); if (b < 95 || b > 270) e *= .55; south.push([b, e]); }
+      for (let b = 75; b <= 287; b += .2) { let e = .42 + .25 * Math.abs(ns(b, 1.7)) + .12 * Math.abs(ns(b, 5.3)); if (b < 95 || b > 270) e *= .55; e *= clamp((b - 75) / 9, .1, 1) * clamp((288 - b) / 9, .1, 1);   /* a két vége lágyan fut ki, nem „levágott sáv” */ south.push([b, e]); }
       south.push([288, .05]);
       layer(south, "rgba(52,80,52,.97)");
       for (let k = 0; k < 340; k++) { const b = 90 + rand() * 180; const e = .12 + rand() * .22; g.fillStyle = rand() < .6 ? `rgba(240,236,226,.85)` : `rgba(180,70,52,.8)`; g.fillRect(X(b), yOf(e), 3 + rand() * 6, 3 + rand() * 4); }
       /* parti nádas sáv */
-      g.fillStyle = "rgba(150,140,82,.9)"; g.fillRect(X(75), yOf(.07), X(287) - X(75), yOf(0) - yOf(.07) + 1);
+      { const x0 = X(75), x1 = X(287), gr = g.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, "rgba(150,140,82,0)"); gr.addColorStop(.05, "rgba(150,140,82,.9)"); gr.addColorStop(.95, "rgba(150,140,82,.9)"); gr.addColorStop(1, "rgba(150,140,82,0)"); g.fillStyle = gr; g.fillRect(x0, yOf(.07), x1 - x0, yOf(0) - yOf(.07) + 1); }
       /* Siófok felé alacsony part, Kenese magaspart */
       layer([[52, .04], [58, .22], [66, .26], [74, .12], [76, .04]], "rgba(140,150,140,.8)");
     });
@@ -1533,6 +1574,7 @@
         const base = { color: m.color.clone(), map: m.map || null, side: m.side, alphaTest: m.alphaTest || 0, vertexColors: shiny ? !!m.vertexColors : true };
         nmat = shiny ? new THREE.MeshMatcapMaterial(Object.assign(base, { matcap: vrMatcap(shiny) })) : new THREE.MeshBasicMaterial(base);
         if (shiny === "chrome") nmat.color.lerp(new THREE.Color("#ffffff"), .35);
+        if (!shiny) { const lum = nmat.color.r * .3 + nmat.color.g * .55 + nmat.color.b * .15; if (lum < .035 && !nmat.map) nmat.color.lerp(new THREE.Color(.07, .08, .1), .75); }   /* a koromfekete alkatrész szemüvegben lapos „lyuk” volt – sötétszürke lesz, így látszik rajta az árnyalás */
         W.disposables.push(nmat); VRB.mats.set(key, nmat);
       }
       if (!shiny && !done.has(g.uuid)) { done.add(g.uuid);
@@ -1551,8 +1593,9 @@
     const root = W.root;
     Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0 });   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
-    makeSky(far); makeShores(far);
+    const oldSky = makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
+    VRR.foto = makePhotoSky(far, oldSky, VRR.water);   /* valódi égfotó + a víz ezt tükrözi */
     const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"] });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
     boat.scale.setScalar(VR_SC); boat.rotation.y = Math.PI; root.add(boat); VRR.boat = boat;
     const CK2 = vrCockpit(boat); VRR.ck = CK2; VRR.baked = vrBake(boat);
