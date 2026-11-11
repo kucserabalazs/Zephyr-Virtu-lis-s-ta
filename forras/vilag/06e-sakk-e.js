@@ -7,14 +7,14 @@
   function viewPoint(id, o) {
     const sd = (GS.two ? "w" : GS.human) === "w" ? 1 : -1, d = TOWER_D - 2.55;   /* a torony fedélzetének legelső pereme: előtted semmi */
     switch (id) {
-      case "enemy": return { p: V3(0, TOWER_Y, -sd * d), pitch: -.3 };
-      case "left": return { p: V3(-sd * d, TOWER_Y, 0), pitch: -.3 };
-      case "right": return { p: V3(sd * d, TOWER_Y, 0), pitch: -.3 };
+      case "enemy": return { p: V3(0, TOWER_Y, -sd * d), pitch: -.6 };
+      case "left": return { p: V3(-sd * d, TOWER_Y, 0), pitch: -.6 };
+      case "right": return { p: V3(sd * d, TOWER_Y, 0), pitch: -.6 };
       case "deck": return { p: V3(0, PONT_Y, sd * (BI + .12)), pitch: -.12 };   /* a stég belső élén, a kötél ELŐTT */
       case "walk": return { p: V3(o.x, PONT_Y, o.z), pitch: -.08 };
       case "balloon": return { p: V3(0, 44, sd * 46), pitch: -.92, balloon: true };
       case "orbit": { const th = o && o.th != null ? o.th : Math.atan2(0, sd); return { p: V3(Math.sin(th) * 66, 30, Math.cos(th) * 66), pitch: -.42, balloon: true, th }; }
-      default: return { p: V3(0, TOWER_Y, sd * d), pitch: -.32 };
+      default: return { p: V3(0, TOWER_Y, sd * d), pitch: -.62 };
     }
   }
   function inVRSeat() { if (CS.seat == null) { try { CS.seat = localStorage.getItem("zephyr-vr-ules") === "1"; } catch (e) { CS.seat = false; } } return !!(T.inVR && CS.seat); }

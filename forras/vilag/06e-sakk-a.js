@@ -11,7 +11,7 @@
      A szabályok és a gép a stégjáték (gameChess) motorja – a mentés is közös („zephyr-sakk”), így a 2D-ben
      elkezdett játszma itt folytatható, és fordítva.
      ===================================================================================================== */
-  const SQ = 9, BH = SQ * 4, GAP = 1.6, BI = BH + GAP, RS = BI / 8, PONT = 2.8, PONT_Y = .55, TOWER_Y = 12, TOWER_D = BI + PONT + 11, PSC = .86;
+  const SQ = 9, BH = SQ * 4, GAP = 1.6, BI = BH + GAP, RS = BI / 8, PONT = 2.8, PONT_Y = .55, TOWER_Y = 24, TOWER_D = BI + PONT + 11, PSC = .86;
   const CSUN = new THREE.Vector3(-.86, .105, -.5).normalize();   /* lemenő nap: nyugat-északnyugat, 6° magasan */
   const sqX = (i) => ((i & 7) - 3.5) * SQ, sqZ = (i) => ((i >> 3) - 3.5) * SQ;
   const PAL = {
