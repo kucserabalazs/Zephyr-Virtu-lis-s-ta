@@ -149,6 +149,8 @@
     { const L = []; [-1, 1].forEach((sd) => { L.push([hvBX(.5, .3, 6.4), "#22262c", new THREE.Matrix4().makeTranslation(sd * .62, -.72, 0)]); [-2.2, 0, 2.2].forEach((z) => L.push([hvCY(.24, .24, .16, 12).rotateZ(Math.PI / 2), "#e4bb63", new THREE.Matrix4().makeTranslation(sd * .62, -.86, z)])); });
       L.push([hvBX(1.6, .22, 5.6), "#3b4a66", new THREE.Matrix4().makeTranslation(0, -.56, 0)]); hvBake(L, ride); }
     try { vrBake(boat); } catch (e) {}
+    /* élet a vízen: két horgonyzó vitorlás a nyugodt pálya mellett (kisütve), lassan ringanak */
+    HV.deco = [[BOATS[1], 40, -150, 2.2], [BOATS[6], -60, -40, -.9]].map(([o, x, z, ry]) => { const g = makeBoat(Object.assign({ detail: 0, crew: 2 }, o)); g.position.set(x, 0, z); g.rotation.y = ry; env.add(g); const S2 = g.userData.S; if (S2) { S2.awa = 60; S2.aws = 5; S2.side = 1; S2.boom = .5; S2.jib = .4; } try { vrBake(g); } catch (e) {} return g; });
     HV.lights = addLights(SUN.clone());
     HV.st = "station"; HV.s = 0; HV.v = 0; HV.warn = false; HV.t = 0; HV.fr = { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }; HV.q = new THREE.Quaternion(); HV.shake = 0;
     hvPlace(); hvApply(0);
@@ -172,11 +174,13 @@
   function hvTick(dt) {
     dt = Math.min(dt, .05); if (T.inVR !== HV.wasVR) { HV.wasVR = T.inVR; hvPlace(); }
     const b = HV.boat; if (b && b.userData.update) { const BS = b.userData.S; if (BS) { BS.aws = 5 + HV.v * .5; BS.awa = 34; BS.t = W.t; } b.userData.update(dt); }
+    (HV.deco || []).forEach((g, i) => { const S2 = g.userData.S; if (S2) { S2.heel = .05 + Math.sin(W.t * .7 + i) * .03; S2.pitch = Math.sin(W.t * .9 + i * 2) * .02; } g.position.y = Math.sin(W.t * .8 + i) * .06; if (g.userData.update) g.userData.update(dt); });
     if (HV.st !== "ride") { hvApply(dt); return; }
     const TR = hvTrackNow(), g = 9.81; HV.t += dt; let tgt;
     if (HV.mode === "wild") {
       const y = HV.alt || 3;
-      if (HV.s < TR.sLift) tgt = HV.s < 30 ? 4 : 5.2;                                   /* lassú, kattogó felhúzás */
+      if (HV.s < TR.sLift) { tgt = HV.s < 30 ? 4 : 5.2;                                 /* lassú, kattogó felhúzás */
+        if (HV.s > 30 && Math.floor(HV.s / .55) !== HV.clk) { HV.clk = Math.floor(HV.s / .55); try { const a = T.ac(); if (a) { const o = a.createOscillator(), gn = a.createGain(); o.type = "square"; o.frequency.value = 150 + (HV.clk % 2) * 40; gn.gain.setValueAtTime(.035, a.currentTime); gn.gain.exponentialRampToValueAtTime(.0001, a.currentTime + .045); o.connect(gn).connect(T.outBus()); o.start(); o.stop(a.currentTime + .06); } } catch (e) {} } }
       else tgt = Math.sqrt(Math.max(36, 2 * g * (63.5 - y) * .9 + 30));                 /* szabadesés: az energia a magasságból */
       if (HV.s > TR.L - 120) tgt = Math.min(tgt, 5 + (TR.L - HV.s) * .16);              /* fékezés az állomás előtt */
       HV.v += clamp(tgt - HV.v, -14 * dt, (HV.s < TR.sLift ? 3 : 40) * dt);

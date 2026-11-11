@@ -1583,7 +1583,7 @@
     VRR.markG = new THREE.Group(); env.add(VRR.markG);
     VRR.cb = makeCommittee(); VRR.cb.scale.setScalar(1.2); env.add(VRR.cb);
     VRR.cdL = labelSprite(["RAJT", "0:45"], { size: 7, fs: 70, w: 640 }); env.add(VRR.cdL);
-    VRR.pin = makeBuoy("#ff7a00", 2.0); VRR.pin.scale.setScalar(1.3); env.add(VRR.pin);
+    VRR.pin = makeBuoy("#ff7a00", 2.0); VRR.pin.scale.setScalar(1.3); env.add(VRR.pin); try { vrBake(VRR.cb); vrBake(VRR.pin); } catch (e) {}   /* 2026-11-11: a rendezőhajó és a bóják is kisütve */
     const beamT = canvasTex(32, 256, (gg, w, h) => { const gr = gg.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, "rgba(255,209,102,.9)"); gr.addColorStop(1, "rgba(255,209,102,0)"); gg.fillStyle = gr; gg.fillRect(0, 0, w, h); });
     VRR.beam = mesh(new THREE.CylinderGeometry(2.4, 2.4, 60, 16, 1, true), basic({ map: beamT, transparent: true, opacity: .5, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }), env); VRR.beam.renderOrder = 5;
     VRR.beamLbl = labelSprite(["1. bója", "kerüld bal kéz felől"], { size: 14, fs: 64, w: 760 }); env.add(VRR.beamLbl);
@@ -1721,7 +1721,7 @@
     const C = VRR.C = vrCourse(lvl); VRR.lvl = lvl;
     VRR.wf = C.wf; VRR.tws = C.tws;
     while (VRR.markG.children.length) VRR.markG.remove(VRR.markG.children[0]);
-    VRR.marks = C.marks.map((m, i) => { const b = makeBuoy(i === C.marks.length - 1 && C.marks.length > 2 ? "#ffd166" : "#ff7a00", 2.4); b.scale.setScalar(1.5); b.position.set(m.x, 0, m.z); VRR.markG.add(b);
+    VRR.marks = C.marks.map((m, i) => { const b = makeBuoy(i === C.marks.length - 1 && C.marks.length > 2 ? "#ffd166" : "#ff7a00", 2.4); b.scale.setScalar(1.5); b.position.set(m.x, 0, m.z); VRR.markG.add(b); try { vrBake(b); } catch (e) {}
       const nt = canvasTex(128, 128, (gg) => { gg.fillStyle = "#14161b"; gg.font = "900 110px system-ui"; gg.textAlign = "center"; gg.textBaseline = "middle"; gg.fillText(String(i + 1), 64, 70); });
       [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((ry) => { const p = mesh(new THREE.PlaneGeometry(.7, .7), basic({ map: nt, transparent: true, depthWrite: false }), b); p.position.set(Math.sin(ry) * .66, 1.4, Math.cos(ry) * .66); p.rotation.y = ry; });
       return { x: m.x, z: m.z, g: b }; });
@@ -7346,6 +7346,8 @@
     { const L = []; [-1, 1].forEach((sd) => { L.push([hvBX(.5, .3, 6.4), "#22262c", new THREE.Matrix4().makeTranslation(sd * .62, -.72, 0)]); [-2.2, 0, 2.2].forEach((z) => L.push([hvCY(.24, .24, .16, 12).rotateZ(Math.PI / 2), "#e4bb63", new THREE.Matrix4().makeTranslation(sd * .62, -.86, z)])); });
       L.push([hvBX(1.6, .22, 5.6), "#3b4a66", new THREE.Matrix4().makeTranslation(0, -.56, 0)]); hvBake(L, ride); }
     try { vrBake(boat); } catch (e) {}
+    /* élet a vízen: két horgonyzó vitorlás a nyugodt pálya mellett (kisütve), lassan ringanak */
+    HV.deco = [[BOATS[1], 40, -150, 2.2], [BOATS[6], -60, -40, -.9]].map(([o, x, z, ry]) => { const g = makeBoat(Object.assign({ detail: 0, crew: 2 }, o)); g.position.set(x, 0, z); g.rotation.y = ry; env.add(g); const S2 = g.userData.S; if (S2) { S2.awa = 60; S2.aws = 5; S2.side = 1; S2.boom = .5; S2.jib = .4; } try { vrBake(g); } catch (e) {} return g; });
     HV.lights = addLights(SUN.clone());
     HV.st = "station"; HV.s = 0; HV.v = 0; HV.warn = false; HV.t = 0; HV.fr = { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }; HV.q = new THREE.Quaternion(); HV.shake = 0;
     hvPlace(); hvApply(0);
@@ -7369,11 +7371,13 @@
   function hvTick(dt) {
     dt = Math.min(dt, .05); if (T.inVR !== HV.wasVR) { HV.wasVR = T.inVR; hvPlace(); }
     const b = HV.boat; if (b && b.userData.update) { const BS = b.userData.S; if (BS) { BS.aws = 5 + HV.v * .5; BS.awa = 34; BS.t = W.t; } b.userData.update(dt); }
+    (HV.deco || []).forEach((g, i) => { const S2 = g.userData.S; if (S2) { S2.heel = .05 + Math.sin(W.t * .7 + i) * .03; S2.pitch = Math.sin(W.t * .9 + i * 2) * .02; } g.position.y = Math.sin(W.t * .8 + i) * .06; if (g.userData.update) g.userData.update(dt); });
     if (HV.st !== "ride") { hvApply(dt); return; }
     const TR = hvTrackNow(), g = 9.81; HV.t += dt; let tgt;
     if (HV.mode === "wild") {
       const y = HV.alt || 3;
-      if (HV.s < TR.sLift) tgt = HV.s < 30 ? 4 : 5.2;                                   /* lassú, kattogó felhúzás */
+      if (HV.s < TR.sLift) { tgt = HV.s < 30 ? 4 : 5.2;                                 /* lassú, kattogó felhúzás */
+        if (HV.s > 30 && Math.floor(HV.s / .55) !== HV.clk) { HV.clk = Math.floor(HV.s / .55); try { const a = T.ac(); if (a) { const o = a.createOscillator(), gn = a.createGain(); o.type = "square"; o.frequency.value = 150 + (HV.clk % 2) * 40; gn.gain.setValueAtTime(.035, a.currentTime); gn.gain.exponentialRampToValueAtTime(.0001, a.currentTime + .045); o.connect(gn).connect(T.outBus()); o.start(); o.stop(a.currentTime + .06); } } catch (e) {} } }
       else tgt = Math.sqrt(Math.max(36, 2 * g * (63.5 - y) * .9 + 30));                 /* szabadesés: az energia a magasságból */
       if (HV.s > TR.L - 120) tgt = Math.min(tgt, 5 + (TR.L - HV.s) * .16);              /* fékezés az állomás előtt */
       HV.v += clamp(tgt - HV.v, -14 * dt, (HV.s < TR.sLift ? 3 : 40) * dt);
