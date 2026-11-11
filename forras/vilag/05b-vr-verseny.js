@@ -520,10 +520,14 @@
           if (G.lp && G.lp.distanceTo(pt) > .3) { G.lost = (G.lost || 0) + dt; if (G.lost > 2.5) wheelRelease(h); else G.lp.lerp(pt, .08); return; }   /* valószerűtlen ugrás = követési hiba: kivárjuk */
           (G.lp || (G.lp = new THREE.Vector3())).copy(pt);
           G.lost = 0; if (open) { G.off = (G.off || 0) + dt; if (G.off > .5) { wheelRelease(h); S.hold[h] = holding; return; } } else G.off = 0;
-          const lp = G.w.wheel.worldToLocal(_wv.copy(pt)), r = Math.hypot(lp.x, lp.y);
-          if (r > G.w.WR + .75 || Math.abs(lp.z) > .85) { wheelRelease(h); S.hold[h] = holding; return; }   /* a kéz messze elment a keréktől */
-          if (r > .07) { const raw = Math.atan2(-lp.x, lp.y), dr = wrapA(raw - G.f), fc = 1.6 + .4 * Math.abs(dr) / Math.max(dt, 1e-3), al = 1 / (1 + 1 / (2 * Math.PI * fc * Math.max(dt, 1e-3)));
-            G.f = G.f + dr * al; dSum += wrapA(G.f - G.a); dN++; G.a = G.f; }
+          /* 2026-11-11 (a tulajdonos közvetített Quest-képén láttam: a kerék kis kézmozdulatra ~200°-ot pördült, a kéz az agyhoz csúszott, a hajó megállt):
+             a kéz SZÖGE helyett az OLDALIRÁNYÚ elmozdulása kormányoz. Az agy közelében a szög kis mozdulatra is hatalmasat ugrott – ez „szabadította el” a kormányt.
+             Most: megfogás után a kezed bárhol lehet; 25 cm oldalra = majdnem teljes kitérítés; a kerék simán követ. Elengedés: CSAK nyitott tenyérrel. */
+          const lp = G.w.wheel.worldToLocal(_wv.copy(pt));
+          if (Math.hypot(lp.x, lp.y, lp.z) > 1.4) { wheelRelease(h); S.hold[h] = holding; return; }
+          if (G.x0 == null) { G.x0 = lp.x; G.wa0 = S.wa; }
+          const tgW = clamp(G.wa0 - (lp.x - G.x0) * (WA_MAX * .8 / .25), -WA_MAX, WA_MAX); S.wa += (tgW - S.wa) * Math.min(1, dt * 8); S.wv = 0;
+          G.hist.push([W.t, S.wa]); while (G.hist.length > 2 && W.t - G.hist[0][0] > .2) G.hist.shift();
         } else if (holding && !S.hold[h]) {   /* fogás kezdete: a kéz a perem mellett zárul (vagy csippent) */
           S.ck.wheels.forEach((w) => { if (S.grabs[h]) return; const lp = w.wheel.worldToLocal(_wv.copy(pt)), r = Math.hypot(lp.x, lp.y);
             if (Math.abs(lp.z) < .36 && r > w.WR - .34 && r < w.WR + .34) { const a0 = Math.atan2(-lp.x, lp.y); S.grabs[h] = { w, a: a0, f: a0, key: h, ray: false, hist: [[W.t, S.wa]] }; S.wv = 0; vrGripHand(w, h, a0 - S.wa); try { flap(.02); X.pulse && X.pulse(h, .5, 30); } catch (e) {} } });
