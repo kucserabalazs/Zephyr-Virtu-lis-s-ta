@@ -710,3 +710,9 @@ Kérés: (1) álló hajónál úgy érzi, a hajó oldalra csúszik; (2) „a kor
 - KÉSZ (05b): a kormányrúd és a toldó teljes hosszában fogható (a kézhez legközelebbi pont, 30 cm-en belül). Rúdon fogva: a kéz iránya a forgásponttól adja a szöget; toldón fogva: a fogás helyéig érő toldóhosszal számol (`G.r` / `G.s`). Két kézzel is fogható. Szemüvegben nem ellenőrzött.
 - 18:57-kor kérte a zephyrmellény.hu elérhetővé tételét és kimásolását, majd 18:58-kor „stopp” – azzal NEM kezdtem el semmit, újabb utasításra vár.
 >>>>>>> d631647 (VR verseny: a kormányrúd és a toldó bárhol megfogható)
+
+## 2026-11-11 23:17 – terepasztal telefonon: „nem mozdítható, nem tudok ráközelíteni, nem látszik semmi, használhatatlan, kidolgozatlan”
+- KÉSZ (06i): a tó tölti ki az asztalt (`hvTableFit`: a partvonal főtengelye az asztal hosszába fordul, lépték a tó hosszához); egy ujjal húzva csúszik, két ujjal nagyít és forgat, gépen egér + görgő (`hvTable2D`); gombok: Nagyítás, Kicsinyítés, Kövesd a vonatot, Alaphelyzet; az asztal széle levágja, ami kilógna (`hvTableClip`, vágósíkok); telefonon felülről döntve, álló képnél az asztal hossza a képernyő hosszában. Gépi telefon-méretű próbán működik; valódi telefonon/szemüvegben nem ellenőrzött.
+
+## 2026-11-11 23:22 – „A hullámvasút élmény kifejezetten gyenge!”
+Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térképe körül; ha felemelkedik, a magasból lássa a Balaton térkép szerinti körvonalát; a kidolgozott szép DIMENZIÓKAPUK legyenek benne (nem az arany karikák); a nézőpont nem jó; CSÓNAKBAN üljünk, ne vitorlásban.

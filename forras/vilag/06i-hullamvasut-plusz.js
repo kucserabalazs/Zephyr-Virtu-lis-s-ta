@@ -88,21 +88,71 @@
     hvBake(L, g, { fog: false });
     const tex = canvasTex(64, 512, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#0a1626"); gr.addColorStop(.45, "#12305a"); gr.addColorStop(.62, "#1d4a80"); gr.addColorStop(1, "#070d18"); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
     const sg = new THREE.SphereGeometry(26, 24, 16); W.disposables.push(sg); const dome = mesh(sg, basic({ map: tex, side: THREE.BackSide, fog: false, depthWrite: false }), g); dome.renderOrder = -5;
-    hvLabel("BALATON-TEREPASZTAL", "a Zephyr Expressz körútja", 0, .95, -1.25, g, 1.5);
+    HVT.title = hvLabel("BALATON-TEREPASZTAL", "a Zephyr Expressz körútja", 0, .95, -1.25, g, 1.5);
     g.visible = false;
   }
   function hvTableShow(on) {
-    if (!HV.tbl) hvTableBuild(W.root); HVT.on = on; if (on) HVT.pos = null; HV.tbl.visible = on; HV.far.visible = !on; HV.water.visible = !on; HV.ride.visible = !on; if (HV.wildG) HV.wildG.visible = !on; if (HVP.clouds) HVP.clouds.visible = !on; if (HVP.line) HVP.line.visible = on; if (HVP.mini) HVP.mini.visible = on; if (HVP.streak) HVP.streak.ln.visible = false;
+    if (!HV.tbl) hvTableBuild(W.root); HVT.on = on; if (on) { HVT.pos = null; hvTableFit(); HVT.zoom = HVT.zoomT = 1; HVT.cx = HVT.cx0; HVT.cz = HVT.cz0; HVT.follow = false; HVT.spin = !!T.inVR; } if (HVT.rim) HVT.rim.visible = on; hvTableClip(on); hvTable2D(on && !T.inVR); HV.tbl.visible = on; HV.far.visible = !on; HV.water.visible = !on; HV.ride.visible = !on; if (HV.wildG) HV.wildG.visible = !on; if (HVP.clouds) HVP.clouds.visible = !on; if (HVP.line) HVP.line.visible = on; if (HVP.mini) HVP.mini.visible = on; if (HVP.streak) HVP.streak.ln.visible = false;
     (HV.sightG || []).forEach((q) => q.g.scale.setScalar(q.sc * (on ? 2.3 : 1))); (HV.labels || []).forEach((s) => { const b = s.userData.sc0 || (s.userData.sc0 = s.scale.x); s.scale.set(b * (on ? 2.1 : 1), b * (on ? 2.1 : 1) / 4, 1); });
     HVP.rings.forEach((r) => { r.m.visible = !on; });
     try { if (on) { AU.set("rush", 0, .3); AU.set("wind", .01, .5); } } catch (e) {}
   }
+  /* 2026-11-11 23:17 (tulajdonos, telefonról: „a terepasztal nem mozdítható, nem tudok ráközelíteni, nem látszik semmi … használhatatlan, kidolgozatlannak látszik”):
+     • a TÓ tölti ki az asztalt: a partvonal főtengelye az asztal hosszába fordul, a lépték a tó hosszához igazodik (eddig a tó vékony csík volt a távolban);
+     • MOZGATHATÓ és NAGYÍTHATÓ: egy ujjal húzva a térkép csúszik, két ujjal nagyít/kicsinyít és forgat (gépen: egér + görgő); gombok: nagyítás, kicsinyítés,
+       alaphelyzet, „kövesd a vonatot”; ami a nagyításnál kilógna, azt az asztal széle levágja (vágósíkok), így olyan, mint egy térkép-ablak;
+     • telefonon felülről, döntve nézünk rá (a nézet rögzített, az ujj a térképet mozgatja – nem a kamerát). */
+  function hvTableFit() {
+    if (HVT.fit) return; HVT.fit = true; let mx = 0, mz = 0; const P = HV_SHORE.map(([lon, lat]) => hvMP(lat, lon)); P.forEach(([x, z]) => { mx += x; mz += z; }); mx /= P.length; mz /= P.length;
+    let sxx = 0, szz = 0, sxz = 0; P.forEach(([x, z]) => { sxx += (x - mx) * (x - mx); szz += (z - mz) * (z - mz); sxz += (x - mx) * (z - mz); });
+    const th = .5 * Math.atan2(2 * sxz, sxx - szz), c = Math.cos(th), sn = Math.sin(th); let a0 = 1e9, a1 = -1e9, b0 = 1e9, b1 = -1e9;
+    P.forEach(([x, z]) => { const a = x * c + z * sn, b = -x * sn + z * c; a0 = Math.min(a0, a); a1 = Math.max(a1, a); b0 = Math.min(b0, b); b1 = Math.max(b1, b); });
+    const ca = (a0 + a1) / 2, cb = (b0 + b1) / 2; HVT.align = th; HVT.sc = 2.9 / (a1 - a0); HVT.cx0 = ca * c - cb * sn; HVT.cz0 = ca * sn + cb * c;
+    HVT.planes = [0, 1, 2, 3].map(() => new THREE.Plane());
+    /* a térkép lapja körül sima „szárazföld” – nagyításnál/forgatásnál se látsszon ki mellette az asztal kék lapja (az tónak tűnt) */
+    { const sh = new THREE.Shape(); sh.moveTo(-9000, -9000); sh.lineTo(9000, -9000); sh.lineTo(9000, 9000); sh.lineTo(-9000, 9000); sh.closePath(); const ho = new THREE.Path(); ho.moveTo(-1900, -640); ho.lineTo(-1900, 880); ho.lineTo(760, 880); ho.lineTo(760, -640); ho.closePath(); sh.holes.push(ho);
+      const gg = new THREE.ShapeGeometry(sh, 1); gg.rotateX(-Math.PI / 2); gg.translate(0, .9, 0); W.disposables.push(gg); HVT.rim = mesh(gg, basic({ color: "#d3dfb4", fog: false }), HV.env); HVT.rim.visible = false; }
+  }
+  function hvTableClip(on) {
+    try { T.sceneEl.renderer.localClippingEnabled = true; } catch (e) {}
+    HV.env.traverse((o) => { if (o === HV.far || !o.material) return; (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (m.isShaderMaterial) return; m.clippingPlanes = on ? HVT.planes : null; m.needsUpdate = true; }); });
+  }
+  const TBV = { pts: new Map(), cv: null, on: false };
+  function hvTable2D(on) {
+    if (on === TBV.on) return; TBV.on = on; try { T.cam.setAttribute("look-controls", "enabled", !on); } catch (e) {}
+    if (!on) { if (TBV.cv) { const cv = TBV.cv, h = TBV.h; cv.removeEventListener("pointerdown", h.down); removeEventListener("pointermove", h.move); removeEventListener("pointerup", h.up); removeEventListener("pointercancel", h.up); cv.removeEventListener("wheel", h.wheel); TBV.cv = null; TBV.pts.clear(); } return; }
+    const cv = T.sceneEl.canvas; if (!cv) return; TBV.cv = cv; const P = TBV.pts;
+    const two = () => { const a = [...P.values()]; return { d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), a: Math.atan2(a[1].y - a[0].y, a[1].x - a[0].x) }; };
+    TBV.h = {
+      down: (e) => { if (!HVT.on) return; P.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (P.size === 2) TBV.p2 = two(); },
+      move: (e) => { if (!HVT.on || !P.has(e.pointerId)) return; const q = P.get(e.pointerId), dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY;
+        if (P.size === 1) { let fov = 80; try { fov = T.sceneEl.camera.fov; } catch (x) {} const mpp = 2 * HVT.D * Math.tan(fov * D2R / 2) / Math.max(1, innerHeight), wx = dx * mpp, wz = dy * mpp / Math.sin(HVT.pitch);
+          const a = -(HVT.rot + HVT.align), k = 1 / (HVT.sc * HVT.zoom); HVT.cx -= (wx * Math.cos(a) + wz * Math.sin(a)) * k; HVT.cz -= (-wx * Math.sin(a) + wz * Math.cos(a)) * k; HVT.follow = false; HVT.spin = false; }
+        else if (P.size === 2 && TBV.p2) { const n = two(); if (TBV.p2.d > 10) HVT.zoomT = clamp(HVT.zoomT * n.d / Math.max(10, TBV.p2.d), 1, 12); let da = n.a - TBV.p2.a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; HVT.rot -= da; HVT.spin = false; TBV.p2 = n; } },
+      up: (e) => { P.delete(e.pointerId); TBV.p2 = null; },
+      wheel: (e) => { if (!HVT.on) return; e.preventDefault(); HVT.zoomT = clamp(HVT.zoomT * Math.exp(-e.deltaY * .0015), 1, 12); }
+    };
+    cv.addEventListener("pointerdown", TBV.h.down); addEventListener("pointermove", TBV.h.move); addEventListener("pointerup", TBV.h.up); addEventListener("pointercancel", TBV.h.up); cv.addEventListener("wheel", TBV.h.wheel, { passive: false }); cv.style.touchAction = "none";
+    if (!TBV.disp) { TBV.disp = true; }
+    W.disposables.push({ dispose() { hvTable2D(false); HVT.on = false; HVT.fit = false; TBV.on = false; } });
+  }
   function hvTableApply(dt) {
-    /* az asztal a néző szeme alá 62 cm-rel, 1,85 m-rel elé kerül – a kamera VALÓDI helyéből számolva (megnyitáskor és VR-váltáskor egyszer) */
-    if (!HVT.pos || HVT.vr !== T.inVR) { HVT.vr = T.inVR; let ey = 0; try { ey = T.headY(); } catch (e) {} if (T.inVR) ey = Math.max(1.0, ey); HVT.pos = T.inVR ? new THREE.Vector3(0, ey - .62, -1.85) : new THREE.Vector3(0, ey - .5, -2.25); }   /* 2D-ben a kamera az origóban van (headY = 0), VR-ben a fej magasságában */
+    hvTableFit();
+    const portrait = innerHeight > innerWidth * 1.1;
+    if (!HVT.pos || HVT.vr !== T.inVR || HVT.por !== portrait) { HVT.vr = T.inVR; HVT.por = portrait; let ey = 0; try { ey = T.headY(); } catch (e) {} if (T.inVR) ey = Math.max(1.0, ey);
+      if (T.inVR) HVT.pos = new THREE.Vector3(0, ey - .62, -1.85);
+      else { HVT.pitch = portrait ? 1.12 : .98; HVT.D = portrait ? 3.0 : 2.15; HVT.pos = new THREE.Vector3(0, ey - HVT.D * Math.sin(HVT.pitch), -HVT.D * Math.cos(HVT.pitch)); HVT.rot = portrait ? Math.PI / 2 : 0; } }   /* telefonon (álló kép) az asztal hossza a képernyő hosszába fordul */
+    if (!T.inVR) { hvTable2D(true); try { T.cam.object3D.rotation.set(-HVT.pitch, 0, 0); } catch (e) {} } else hvTable2D(false);
+    if (HVT.title) HVT.title.visible = !!T.inVR;
     const tp = HVT.pos, ty = tp.y;
     HV.tbl.position.copy(tp); if (HVT.spin) HVT.rot += dt * .07;
-    const m = new THREE.Matrix4().makeTranslation(tp.x, ty + .012, tp.z); m.multiply(new THREE.Matrix4().makeRotationY(HVT.rot)); m.multiply(new THREE.Matrix4().makeScale(HVT.sc, HVT.sc, HVT.sc)); m.multiply(new THREE.Matrix4().makeTranslation(-HVT.cx, -.9, -HVT.cz));
+    HVT.zoom = Math.exp(lerp(Math.log(HVT.zoom), Math.log(HVT.zoomT), Math.min(1, dt * 7)));
+    const g = HVP.mini; let trn = null; if (g) { HVP.ms = (HVP.ms + dt * 62) % HV.calm.L; const fr = HV.calm.at(HVP.ms, HV.fr); trn = fr.p; g.position.copy(fr.p); g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3().crossVectors(fr.u, fr.f).normalize(), fr.u, fr.f)); let near = 1e9, ci = 0; HV.sights.forEach((s, i) => { const d = Math.hypot(s.x - fr.p.x, s.z - fr.p.z); if (d < near) { near = d; ci = i; } }); if (ci !== HVT.cur) { HVT.cur = ci; W.panelDirty = 1; } }
+    if (HVT.follow && trn) { const k = Math.min(1, dt * 3); HVT.cx += (trn.x - HVT.cx) * k; HVT.cz += (trn.z - HVT.cz) * k; }
+    HVT.cx = clamp(HVT.cx, -1900, 760); HVT.cz = clamp(HVT.cz, -880, 640);
+    const sc = HVT.sc * HVT.zoom, m = new THREE.Matrix4().makeTranslation(tp.x, ty + .012, tp.z); m.multiply(new THREE.Matrix4().makeRotationY(HVT.rot + HVT.align)); m.multiply(new THREE.Matrix4().makeScale(sc, sc, sc)); m.multiply(new THREE.Matrix4().makeTranslation(-HVT.cx, -.9, -HVT.cz));
     HV.env.matrix.copy(m); HV.env.matrixWorldNeedsUpdate = true; HV.tbl.rotation.y = HVT.rot;
-    const g = HVP.mini; if (g) { HVP.ms = (HVP.ms + dt * 62) % HV.calm.L; const fr = HV.calm.at(HVP.ms, HV.fr); g.position.copy(fr.p); g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3().crossVectors(fr.u, fr.f).normalize(), fr.u, fr.f)); let near = 1e9, ci = 0; HV.sights.forEach((s, i) => { const d = Math.hypot(s.x - fr.p.x, s.z - fr.p.z); if (d < near) { near = d; ci = i; } }); if (ci !== HVT.cur) { HVT.cur = ci; W.panelDirty = 1; } }
+    /* vágósíkok: az asztal kék lapjának széle (3,12 × 1,86 m), az asztallal együtt forogva */
+    { const c = Math.cos(HVT.rot), sn = Math.sin(HVT.rot), ax = new THREE.Vector3(c, 0, -sn), az = new THREE.Vector3(sn, 0, c), PL = HVT.planes;
+      [[ax, 1.56], [ax, -1.56], [az, .93], [az, -.93]].forEach(([v, d], i) => { const n = v.clone().multiplyScalar(d > 0 ? -1 : 1), pt = tp.clone().addScaledVector(v, d); PL[i].setFromNormalAndCoplanarPoint(n, pt); }); }
   }
