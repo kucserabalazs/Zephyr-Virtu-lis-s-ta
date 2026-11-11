@@ -29,15 +29,20 @@
       /* ÁTHELYEZÉS (2026. nov. 9., a tulajdonos kérése: „mindig útban van”): a panel fejlécét megfogva (csippentve) bárhová húzható a térben;
          a kéz előre-hátra mozdításával közelebb/távolabb tolható; elengedve ott marad, és a helyét világonként megjegyzi. */
       down: (h, S0, key) => { if (!h || !h.uv || !S0 || !S0.o) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; if (y > 165 || x > PW - 250) return;
-        const hp = h.point.clone(), head = T.headPos ? T.headPos() : null; P.drag = { key, dist: h.distance, off: P.m.position.clone().sub(hp), hd0: head ? S0.o.distanceTo(head) : 0 };
+        /* 2026-11-11 18:54 (tulajdonos: „a csippentés pillanatában eltávolodik tőlem, nem abból az állásból indul, ahol van”): a fogás a kéz PILLANATNYI sugarához
+           képest rögzül (nem a korábbi találati ponthoz), a dőlése megmarad, és a kéz előre-hátra mozgása csak 5 cm holtjáték után, szelídebben (×2) tol rajta. */
+        const head = T.headPos ? T.headPos() : null, dist0 = S0.d ? Math.max(.15, P.m.position.clone().sub(S0.o).dot(S0.d)) : h.distance, hp = S0.d ? S0.o.clone().addScaledVector(S0.d, dist0) : h.point.clone();
+        P.drag = { key, dist: dist0, off: P.m.position.clone().sub(hp), hd0: head ? S0.o.distanceTo(head) : 0, tilt: P.m.rotation.x, t0: performance.now() };
         if (T.xr.press) T.xr.press[key] = null; try { T.xr.pulse && T.xr.pulse(key, .4, 20); } catch (e) {} },
       drag: (S0, key) => { const D = P.drag; if (!D || D.key !== key || !S0 || !S0.o || !S0.d) return; const head = T.headPos ? T.headPos() : null;
-        const dist = clamp(D.dist + (head ? (S0.o.distanceTo(head) - D.hd0) * 4 : 0), .35, 4.5); const tgt = S0.o.clone().addScaledVector(S0.d, dist).add(D.off);
-        P.m.position.lerp(tgt, .6); if (head) { const dx = P.m.position.x - head.x, dz = P.m.position.z - head.z; P.m.rotation.set(-.15, Math.atan2(-dx, -dz), 0, "YXZ"); } },
+        let dh = head ? S0.o.distanceTo(head) - D.hd0 : 0; if (performance.now() - D.t0 < 350) { D.hd0 += dh; dh = 0; }   /* a csippentés első pillanatának kézrándulása nem számít */
+        dh = Math.abs(dh) < .05 ? 0 : (dh - Math.sign(dh) * .05) * 2;
+        const dist = clamp(D.dist + dh, .3, 4.5); const tgt = S0.o.clone().addScaledVector(S0.d, dist).add(D.off);
+        P.m.position.lerp(tgt, .5); if (head) { const dx = P.m.position.x - head.x, dz = P.m.position.z - head.z; P.m.rotation.set(D.tilt, Math.atan2(-dx, -dz), 0, "YXZ"); } },
       up: () => { if (!P.drag) return; P.drag = null; W.panelPos = W.panelPos || {};
         /* a fejhez (és a nézési irányhoz) képest jegyezzük meg – így akkor is jó helyre kerül, ha közben a hajó / a nézőpont elmozdult */
         const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw(), d = P.m.position.clone().sub(head).applyAxisAngle(new THREE.Vector3(0, 1, 0), -yaw);
-        W.panelPos[W.kind] = { rel: d.toArray(), r: wrapA(P.m.rotation.y - yaw) };
+        W.panelPos[W.kind] = { rel: d.toArray(), r: wrapA(P.m.rotation.y - yaw), t: P.m.rotation.x };
         try { localStorage.setItem("zephyr-panelpos2", JSON.stringify(W.panelPos)); } catch (e) {} }
     };
     T.xr.extra.add(m);
@@ -107,7 +112,7 @@
     if (!W.panelPos) { try { W.panelPos = JSON.parse(localStorage.getItem("zephyr-panelpos2") || "{}"); } catch (e) { W.panelPos = {}; } }
     const saved = !fresh && W.panelPos[W.kind];
     if (saved && saved.rel) { const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw();
-      P.m.position.copy(head).add(new THREE.Vector3().fromArray(saved.rel).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)); P.m.rotation.set(-.15, saved.r + yaw, 0, "YXZ"); T.sceneEl.object3D.add(P.m); return; }
+      P.m.position.copy(head).add(new THREE.Vector3().fromArray(saved.rel).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)); P.m.rotation.set(typeof saved.t === "number" ? saved.t : -.15, saved.r + yaw, 0, "YXZ"); T.sceneEl.object3D.add(P.m); return; }
     const yaw = T.camYaw(), hy = T.headY();
     let a = yaw + (W.kind === "maquette" ? .62 : .55), d = W.kind === "sail" ? .85 : 1.05, y = hy - .25;
     if (W.kind === "chess") { a = yaw + .62; d = 1.0; y = hy - .3; }

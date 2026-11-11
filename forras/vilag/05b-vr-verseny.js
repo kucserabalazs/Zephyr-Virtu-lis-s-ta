@@ -107,7 +107,10 @@
        kormányrúd a tat közepén (a forgáspont a kormányos mögött), a végén csuklós toldó (hosszabbító), amelynek a markolatát a kéz fogja.
        A rúd a kéz helyéből számolódik (két kör metszése: rúdhossz a forgáspont körül, toldóhossz a kéz körül) – pont úgy mozog, mint az igazi.
        Ellentétes mozgás: a rudat balra húzod → a hajó jobbra fordul. Régi kerék vissza: localStorage „zephyr-kormany” = kerek. */
-    const TIL = { TL: .9, EL: .8, TMAX: .62, pz: hs.z - .95, py: deckY + .62, ty: deckY + .76 };
+    /* 2026-11-11 18:54 (tulajdonos: „a kormányrúdnak legalább kétszer olyan hosszúnak kell lennie – nem tudom teljesen eltolni magamtól”): rúd 0,9 → 1,7 m,
+       toldó 0,8 → 1,45 m (átlósan fut a kézhez, a markolat a test mellett van, így a teljes karhossz jut a tolásra), és a teljes kormánykitéréshez
+       kisebb rúdszög kell (12°) – a markolatot kb. 35 cm-rel kell eltolni/meghúzni a végállásig. */
+    const TIL = { TL: 1.7, EL: 1.45, TMAX: .21, pz: hs.z - .95, py: deckY + .62, ty: deckY + .76 };
     { const wood = std({ color: "#8a5326", roughness: .38 }), til = new THREE.Group(); G.add(til); til.position.set(0, TIL.py, TIL.pz);
       const stock = mesh(new THREE.CylinderGeometry(.045, .055, .62, 16), chrome, til); stock.position.y = -.31;
       const headB = mesh(new THREE.BoxGeometry(.12, .1, .2), chrome, til); headB.position.set(0, .01, .04);
@@ -119,7 +122,7 @@
       const gripM = std({ color: "#2a2d33", roughness: .8, emissive: new THREE.Color("#ffd166"), emissiveIntensity: 0 });
       const grip = mesh(new THREE.CylinderGeometry(.021, .021, .22, 14), gripM, ext); grip.rotation.x = Math.PI / 2; grip.position.z = TIL.EL - .1; grip.userData.noBake = true;
       const ball = mesh(new THREE.SphereGeometry(.03, 14, 10), gripM, ext); ball.position.z = TIL.EL + .01; ball.userData.noBake = true;
-      Object.assign(TIL, { til, ext, gripM, rest: new THREE.Vector3(-.86, .34, -.22).normalize(), end: new THREE.Vector3() }); til.visible = ext.visible = false; }
+      Object.assign(TIL, { til, ext, gripM, rest: new THREE.Vector3(-.72, .3, -1.2).normalize(), end: new THREE.Vector3() }); til.visible = ext.visible = false; }
     /* utazósín (traveller) a kerekek előtt, keresztben; rajta a kocsi, a főszkóta felfut a bumra */
     const tz = hs.z + 2.25, trav = mesh(new THREE.BoxGeometry(2 * (sh(.2).hb - .5), .06, .12), grey, G); trav.position.set(0, sh(.2).y + .05, tz);
     const car = mesh(new THREE.BoxGeometry(.24, .1, .16), carbon, G); car.position.set(0, sh(.2).y + .12, tz);
@@ -317,7 +320,7 @@
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.msgL = labelSprite(["", ""], { size: 2.0, fs: 50, w: 1150 }); CK2.G.add(VRR.msgL);
       VRR.msgL.position.set(w0.ped.position.x * .6, CK2.deckY + 1.75, w0.ped.position.z + 2.2); VRR.msgL.visible = false; }
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Markold meg a kormányt!", "zárd ökölbe a kezed a peremén – nyitott tenyérrel engeded el · kontrollerrel: a hüvelykujjkar kormányoz"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
-    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrúd markolatát!", "zárd ökölbe a kezed a markolatnál · balra húzod: jobbra fordul · nyitott tenyérrel engeded el · kontrollerrel: hüvelykujjkar"], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.5, CK2.tiller.ty + .75, CK2.tiller.pz + CK2.tiller.TL); }
+    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrúd markolatát!", "zárd ökölbe a kezed a markolatnál · eltolod magadtól: jobbra fordul, magad felé húzod: balra · nyitott tenyérrel engeded el · kontrollerrel: hüvelykujjkar"], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.45, CK2.tiller.ty + .8, CK2.tiller.pz + 1.1); }
     SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
     vrSetup(VRR.lvl || 1);

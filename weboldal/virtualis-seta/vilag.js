@@ -1469,7 +1469,10 @@
        kormányrúd a tat közepén (a forgáspont a kormányos mögött), a végén csuklós toldó (hosszabbító), amelynek a markolatát a kéz fogja.
        A rúd a kéz helyéből számolódik (két kör metszése: rúdhossz a forgáspont körül, toldóhossz a kéz körül) – pont úgy mozog, mint az igazi.
        Ellentétes mozgás: a rudat balra húzod → a hajó jobbra fordul. Régi kerék vissza: localStorage „zephyr-kormany” = kerek. */
-    const TIL = { TL: .9, EL: .8, TMAX: .62, pz: hs.z - .95, py: deckY + .62, ty: deckY + .76 };
+    /* 2026-11-11 18:54 (tulajdonos: „a kormányrúdnak legalább kétszer olyan hosszúnak kell lennie – nem tudom teljesen eltolni magamtól”): rúd 0,9 → 1,7 m,
+       toldó 0,8 → 1,45 m (átlósan fut a kézhez, a markolat a test mellett van, így a teljes karhossz jut a tolásra), és a teljes kormánykitéréshez
+       kisebb rúdszög kell (12°) – a markolatot kb. 35 cm-rel kell eltolni/meghúzni a végállásig. */
+    const TIL = { TL: 1.7, EL: 1.45, TMAX: .21, pz: hs.z - .95, py: deckY + .62, ty: deckY + .76 };
     { const wood = std({ color: "#8a5326", roughness: .38 }), til = new THREE.Group(); G.add(til); til.position.set(0, TIL.py, TIL.pz);
       const stock = mesh(new THREE.CylinderGeometry(.045, .055, .62, 16), chrome, til); stock.position.y = -.31;
       const headB = mesh(new THREE.BoxGeometry(.12, .1, .2), chrome, til); headB.position.set(0, .01, .04);
@@ -1481,7 +1484,7 @@
       const gripM = std({ color: "#2a2d33", roughness: .8, emissive: new THREE.Color("#ffd166"), emissiveIntensity: 0 });
       const grip = mesh(new THREE.CylinderGeometry(.021, .021, .22, 14), gripM, ext); grip.rotation.x = Math.PI / 2; grip.position.z = TIL.EL - .1; grip.userData.noBake = true;
       const ball = mesh(new THREE.SphereGeometry(.03, 14, 10), gripM, ext); ball.position.z = TIL.EL + .01; ball.userData.noBake = true;
-      Object.assign(TIL, { til, ext, gripM, rest: new THREE.Vector3(-.86, .34, -.22).normalize(), end: new THREE.Vector3() }); til.visible = ext.visible = false; }
+      Object.assign(TIL, { til, ext, gripM, rest: new THREE.Vector3(-.72, .3, -1.2).normalize(), end: new THREE.Vector3() }); til.visible = ext.visible = false; }
     /* utazósín (traveller) a kerekek előtt, keresztben; rajta a kocsi, a főszkóta felfut a bumra */
     const tz = hs.z + 2.25, trav = mesh(new THREE.BoxGeometry(2 * (sh(.2).hb - .5), .06, .12), grey, G); trav.position.set(0, sh(.2).y + .05, tz);
     const car = mesh(new THREE.BoxGeometry(.24, .1, .16), carbon, G); car.position.set(0, sh(.2).y + .12, tz);
@@ -1679,7 +1682,7 @@
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.msgL = labelSprite(["", ""], { size: 2.0, fs: 50, w: 1150 }); CK2.G.add(VRR.msgL);
       VRR.msgL.position.set(w0.ped.position.x * .6, CK2.deckY + 1.75, w0.ped.position.z + 2.2); VRR.msgL.visible = false; }
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Markold meg a kormányt!", "zárd ökölbe a kezed a peremén – nyitott tenyérrel engeded el · kontrollerrel: a hüvelykujjkar kormányoz"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
-    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrúd markolatát!", "zárd ökölbe a kezed a markolatnál · balra húzod: jobbra fordul · nyitott tenyérrel engeded el · kontrollerrel: hüvelykujjkar"], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.5, CK2.tiller.ty + .75, CK2.tiller.pz + CK2.tiller.TL); }
+    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrúd markolatát!", "zárd ökölbe a kezed a markolatnál · eltolod magadtól: jobbra fordul, magad felé húzod: balra · nyitott tenyérrel engeded el · kontrollerrel: hüvelykujjkar"], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.45, CK2.tiller.ty + .8, CK2.tiller.pz + 1.1); }
     SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
     vrSetup(VRR.lvl || 1);
@@ -7783,15 +7786,20 @@
       /* ÁTHELYEZÉS (2026. nov. 9., a tulajdonos kérése: „mindig útban van”): a panel fejlécét megfogva (csippentve) bárhová húzható a térben;
          a kéz előre-hátra mozdításával közelebb/távolabb tolható; elengedve ott marad, és a helyét világonként megjegyzi. */
       down: (h, S0, key) => { if (!h || !h.uv || !S0 || !S0.o) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; if (y > 165 || x > PW - 250) return;
-        const hp = h.point.clone(), head = T.headPos ? T.headPos() : null; P.drag = { key, dist: h.distance, off: P.m.position.clone().sub(hp), hd0: head ? S0.o.distanceTo(head) : 0 };
+        /* 2026-11-11 18:54 (tulajdonos: „a csippentés pillanatában eltávolodik tőlem, nem abból az állásból indul, ahol van”): a fogás a kéz PILLANATNYI sugarához
+           képest rögzül (nem a korábbi találati ponthoz), a dőlése megmarad, és a kéz előre-hátra mozgása csak 5 cm holtjáték után, szelídebben (×2) tol rajta. */
+        const head = T.headPos ? T.headPos() : null, dist0 = S0.d ? Math.max(.15, P.m.position.clone().sub(S0.o).dot(S0.d)) : h.distance, hp = S0.d ? S0.o.clone().addScaledVector(S0.d, dist0) : h.point.clone();
+        P.drag = { key, dist: dist0, off: P.m.position.clone().sub(hp), hd0: head ? S0.o.distanceTo(head) : 0, tilt: P.m.rotation.x, t0: performance.now() };
         if (T.xr.press) T.xr.press[key] = null; try { T.xr.pulse && T.xr.pulse(key, .4, 20); } catch (e) {} },
       drag: (S0, key) => { const D = P.drag; if (!D || D.key !== key || !S0 || !S0.o || !S0.d) return; const head = T.headPos ? T.headPos() : null;
-        const dist = clamp(D.dist + (head ? (S0.o.distanceTo(head) - D.hd0) * 4 : 0), .35, 4.5); const tgt = S0.o.clone().addScaledVector(S0.d, dist).add(D.off);
-        P.m.position.lerp(tgt, .6); if (head) { const dx = P.m.position.x - head.x, dz = P.m.position.z - head.z; P.m.rotation.set(-.15, Math.atan2(-dx, -dz), 0, "YXZ"); } },
+        let dh = head ? S0.o.distanceTo(head) - D.hd0 : 0; if (performance.now() - D.t0 < 350) { D.hd0 += dh; dh = 0; }   /* a csippentés első pillanatának kézrándulása nem számít */
+        dh = Math.abs(dh) < .05 ? 0 : (dh - Math.sign(dh) * .05) * 2;
+        const dist = clamp(D.dist + dh, .3, 4.5); const tgt = S0.o.clone().addScaledVector(S0.d, dist).add(D.off);
+        P.m.position.lerp(tgt, .5); if (head) { const dx = P.m.position.x - head.x, dz = P.m.position.z - head.z; P.m.rotation.set(D.tilt, Math.atan2(-dx, -dz), 0, "YXZ"); } },
       up: () => { if (!P.drag) return; P.drag = null; W.panelPos = W.panelPos || {};
         /* a fejhez (és a nézési irányhoz) képest jegyezzük meg – így akkor is jó helyre kerül, ha közben a hajó / a nézőpont elmozdult */
         const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw(), d = P.m.position.clone().sub(head).applyAxisAngle(new THREE.Vector3(0, 1, 0), -yaw);
-        W.panelPos[W.kind] = { rel: d.toArray(), r: wrapA(P.m.rotation.y - yaw) };
+        W.panelPos[W.kind] = { rel: d.toArray(), r: wrapA(P.m.rotation.y - yaw), t: P.m.rotation.x };
         try { localStorage.setItem("zephyr-panelpos2", JSON.stringify(W.panelPos)); } catch (e) {} }
     };
     T.xr.extra.add(m);
@@ -7861,7 +7869,7 @@
     if (!W.panelPos) { try { W.panelPos = JSON.parse(localStorage.getItem("zephyr-panelpos2") || "{}"); } catch (e) { W.panelPos = {}; } }
     const saved = !fresh && W.panelPos[W.kind];
     if (saved && saved.rel) { const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw();
-      P.m.position.copy(head).add(new THREE.Vector3().fromArray(saved.rel).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)); P.m.rotation.set(-.15, saved.r + yaw, 0, "YXZ"); T.sceneEl.object3D.add(P.m); return; }
+      P.m.position.copy(head).add(new THREE.Vector3().fromArray(saved.rel).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)); P.m.rotation.set(typeof saved.t === "number" ? saved.t : -.15, saved.r + yaw, 0, "YXZ"); T.sceneEl.object3D.add(P.m); return; }
     const yaw = T.camYaw(), hy = T.headY();
     let a = yaw + (W.kind === "maquette" ? .62 : .55), d = W.kind === "sail" ? .85 : 1.05, y = hy - .25;
     if (W.kind === "chess") { a = yaw + .62; d = 1.0; y = hy - .3; }

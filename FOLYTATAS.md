@@ -685,3 +685,8 @@ Kérés: (1) álló hajónál úgy érzi, a hajó oldalra csúszik; (2) „a kor
 - KÉSZ (2): botkormány a 05b-ben (`TIL`, `CK2.tiller`): rúd a tat közepén (0,9 m), csuklós toldó (0,8 m) markolattal. Fogás: ököl/csippentés a markolat 34 cm-es körzetében; elengedés: nyitott tenyér 0,6 mp. A rúd szöge a kéz helyéből (két kör metszése). Balra húzva jobbra fordul. A kerekek és tengelyük rejtve, az oszlop a műszerekkel marad. Régi kerék: localStorage `zephyr-kormany`=kerek. A hüvelykujjkar és a billentyűk változatlanul működnek.
 - KÍSÉRLET (1): a hajó a kódban sosem csúszik oldalra (csak előre halad) – az érzetet valószínűleg a keresztben vonuló hullámkép adja álló hajónál. Lassú hajónál a hullámkép most lassabban vonul (40%-ra). Ha így is megmarad, a közvetítésen kell megnézni.
 - Szemüvegben egyik sem ellenőrzött (a botkormány iránya, fogási távolsága, magassága hangolandó lehet).
+
+## 2026-11-11 18:54 – hosszabb kormányrúd; a menü csippentéskor „hátraugrik”
+- Kérés: a kormányrúd legalább kétszer olyan hosszú legyen (nem tudja teljesen eltolni magától, hogy jobbra forduljon). KÉSZ: rúd 0,9 → 1,7 m, toldó 0,8 → 1,45 m (átlósan fut a kézhez, markolat a test mellett), teljes kitérés 12° rúdszögnél (kb. 35 cm kézút). `TIL` a 05b-ben.
+- Kérés: a sakknál (és bármely világ-menünél) a menü szélére csippentve a panel azonnal eltávolodik, nem a jelenlegi helyéről indul. KÉSZ (07-vezerlo.js): a fogás a kéz pillanatnyi sugarához rögzül, a panel dőlése megmarad (eddig −0,15-re ugrott), az első 0,35 mp kézrándulása nem számít, az előre-hátra tolás 5 cm holtjátékkal és ×2 (volt ×4). A mentett helyzet a dőlést is tárolja (`t`).
+- Szemüvegben nem ellenőrzött.
