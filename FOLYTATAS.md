@@ -593,3 +593,22 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
   1. Kormányzás (elszabadul a kormány) + kerék → kormányrúd döntés  2. Zephyr makett-minőségben a fotók alapján (új 2D terv jóváhagyásra)  3. Változó szél balatoni adatok alapján
   4. Sakk: nézőpont, bábuk kidolgozása, telefonos könnyítés, 2D stégjátékos sakk csatái  5. Szabálymagyarázat gyerekeknek + rajzos vitorlás szótár  6. Makett hibája (emeleti terasz, Kalóz bejárat)
   7. Jegyzék fordítása 23 nyelvre  8. Dekorációs kis regatta a modellekkel  9. 2D regatta szabályai (bójakerülés, útjog) – a VR-versenyben már kész
+
+## 2026-11-11 02:19 – ÉJSZAKAI MEGBÍZÁS (hangos megbeszélés után; „reggelre próbálj meg mindennel végezni, ne állj meg”)
+Megbeszélt döntések:
+- KORMÁNY (VR): MARAD A KERÉK (nem rúd). Megfogás MARKOLÁSSAL (ököl), nem csippentéssel; elengedés csak ha a kéz kb. fél mp-ig NYITVA van; ha a kézkövetés pillanatokra
+  elvész, a kormány NEM szabadul el; fogás közben jól látható jel; a kerék a kézhez „tapad”; lassabb, simább, kis mozdulatra is reagáló kormány; elengedve nem fordul tovább;
+  ha a kéz végleg elvész, a kormány középre áll.
+- JELZÉSEK (VR-verseny): a szöveges táblák, a bója fölötti nagy felirat, a vízre festett nyilak, a keringő jelek MEGSZŰNNEK. Marad: SZÉLMŰSZER (tárcsa: szélirány a hajóhoz képest +
+  erősség) és egy tiszta, felülnézetes RADAR (hajó középen, bóják számozva, a következő kiemelve, pályavonal, célvonal, ellenfelek; sarokban sebesség és idő); kint egyetlen
+  fényoszlop a következő bójánál; üzenet csak szabálysértéskor.
+- SEBESSÉGÉRZET 2–3×: látvánnyal (sűrűbb, gyorsabban suhanó víz, orrhullám, tajték, szélzaj), NEM a fizikával; a VITORLA mozgása a valódi szélhez igazodjon – gyenge szélben
+  ne csapkodjon viharosan.
+- HULLÁMVASÚT (új, a végére): a Zephyrben ülve a Balaton látnivalói között (Tihanyi apátság, Badacsony, füredi móló, Szigliget, Keszthely); két fokozat: nyugodt (alap) és
+  VAD („nagyon kemény”: lassú emelkedés, szabadesés, hurok, dugóhúzó, alagút); a hajó/kokpit mindig látszik; a vad előtt figyelmeztetés; kiszállás bármikor.
+- Sorrend: kormány → jelzések/radar → sebességérzet → változó szél → hajómodellek kisütve → sakk (nézőpont, bábuk) → szabálymagyarázat + szótár → makett hiba → fordítás → hullámvasút.
+
+## 2026-11-11 éjszaka – elkészült (1–2. lépés)
+- VR kormány: ökölfogás, csak nyitott tenyérre (0,5 mp) enged el, követésvesztés 2,5 mp-ig nem enged el, elengedve a kerék középre áll, lassabb/finomabb kormánylapát.
+- VR jelzések: kinti táblák, feliratok, vízre festett nyilak, keringő jelek kikapcsolva; maradt: egy fényoszlop a következő bóján, RADAR (felülnézet) és SZÉLMŰSZER a kormányállásban; üzenet csak szabálysértéskor.
+- Nem ellenőrizhető általam: valódi Quest kézkövetés.
