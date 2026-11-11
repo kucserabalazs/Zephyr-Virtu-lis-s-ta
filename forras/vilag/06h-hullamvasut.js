@@ -264,7 +264,7 @@
     const oldSky = makeSky(far); makeShores(far);
     HV.water = makeWater(env);
     try { HV.foto = makePhotoSky(far, oldSky, HV.water); } catch (e) {}   /* 2026-11-11: valódi égfotó a hullámvasúton is */
-    hvMap(env); hvSights(env); hvPark(env);
+    { const mm = hvMap(env); try { hvGroundTex(mm); } catch (e) { console.warn("hvGroundTex", e); } } hvSights(env); hvPark(env);
     HV.calm = hvTrack(hvTourPts(), { bank: 6 }); HV.wild = hvTrack(hvWildPts(), { bank: 9 });
     HV.passS = HV.pass.map((i) => HV.calm.sOf(i)); HV.s0 = HV.passS[0] - 4;
     const wg = new THREE.Group(); env.add(wg); HV.wildG = wg; if (HV.park) wg.add(HV.park);

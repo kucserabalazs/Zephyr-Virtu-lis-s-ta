@@ -12,6 +12,7 @@
   function hvInLake(x, z) { if (!HV_POLY) HV_POLY = HV_SHORE.map(([lon, lat]) => hvMP(lat, lon)); let c = false; const P = HV_POLY; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const a = P[i], b = P[j]; if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
   function hvPlus(env, root) {
     const TR = HV.calm, rnd = hvRng(20261111), T4 = hvT4, X0 = -1880, X1 = 740, Z0 = -860, Z1 = 620;
+    const KIT = hvKitOn(), LITE = hvKitLite(); HVK.trees = []; HVK.houses = []; HVK.boats = []; HVK.mboats = []; HVK.meshes = [];
     const tp = []; for (let k = 0; k < TR.M; k += 5) tp.push(TR.P[k]);
     const clear = (x, z, h, r) => { const r2 = r * r; for (let i = 0; i < tp.length; i++) { const p = tp[i], dx = p.x - x, dz = p.z - z; if (dx * dx + dz * dz < r2 && p.y < h + 6) return false; } return true; };
     const sightD = (x, z) => { let m = 1e9; HV.sights.forEach((s) => { const d = Math.hypot(s.x - x, s.z - z); if (d < m) m = d; }); return m; };
@@ -20,27 +21,32 @@
     { const L = []; let n = 0; for (let i = 0; i < 520 && n < 64; i++) { const x = X0 + rnd() * (X1 - X0), z = Z0 + rnd() * (Z1 - Z0), north = z < -40, r = 26 + rnd() * (north ? 54 : 34), h = (north ? 9 : 5) + rnd() * (north ? 22 : 9);
         if (!onLand(x, z, r + 8) || sightD(x, z) < r + 80 || !clear(x, z, h, r + 10)) continue; hvHill(L, x, z, r, h, ["#6aa457", "#5f9a4e", "#74ad5c", "#57924a"][n % 4], .3 + rnd() * .25); n++;
         if (north && n % 3 === 0) for (let q = 0; q < 3; q++) for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI + .3; L.push([hvBX(4.4, .5, .6), q % 2 ? "#8fbf4f" : "#7aad42", T4(x + Math.cos(a) * (r * .8 - q * 3), 1.4 + q * 1.2, z + Math.sin(a) * (r * .8 - q * 3), -a + Math.PI / 2)]); } }
-      if (L.length) hvBake(L, env); }
+      if (L.length) { const hm = hvBake(L, env); try { hvDetail(hm, "fu", [.125, .159, .033], .09); } catch (e) {} } }
     /* 2) erdők, fasorok */
-    { const L = []; let n = 0; for (let i = 0; i < 2600 && n < 620; i++) { const x = X0 + rnd() * (X1 - X0), z = Z0 + rnd() * (Z1 - Z0); if (hvInLake(x, z) || sightD(x, z) < 46 || !clear(x, z, 8, 7)) continue; const hh = 2.6 + rnd() * 3.4, dark = rnd() < .5;
+    { const L = [], NT = KIT ? (LITE ? 520 : 1300) : 620; let n = 0; for (let i = 0; i < 7000 && n < NT; i++) { const x = X0 + rnd() * (X1 - X0), z = Z0 + rnd() * (Z1 - Z0); if (hvInLake(x, z) || sightD(x, z) < 46 || !clear(x, z, 8, 7)) continue; const hh = 2.6 + rnd() * 3.4, dark = rnd() < .5;
+        if (KIT) { HVK.trees.push([x, z, hh]); n++; continue; }
         L.push([hvCO(1.3 + rnd() * .9, hh * 1.5, 6), dark ? "#2f7a3e" : (n % 5 ? "#3f8f4a" : "#4f9f52"), T4(x, .9 + hh * .95, z)], [hvCY(.2, .26, 1.3, 5), "#5a4030", T4(x, 1.4, z)]); n++; }
       if (L.length) hvBake(L, env); }
     /* 3) települések: házak piros tetővel, templom toronnyal */
     { const L = [], walls = ["#f4efe2", "#efe2bd", "#f6ecd0", "#e9e2d2", "#f1d9b0"], roofs = ["#b5492f", "#a8452c", "#c05a3a", "#8f3f2a"];
       HV_TOWNS.forEach(([nm, la, lo], ti) => { const [cx, cz] = hvMP(la, lo); let made = 0;
-        for (let i = 0; i < 60 && made < 15; i++) { const a = rnd() * TAU, d = 5 + rnd() * 30, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d; if (!onLand(x, z, 3) || sightD(x, z) < 36 || !clear(x, z, 9, 7)) continue;
-          const w = 2.6 + rnd() * 1.6, dp = 3 + rnd() * 2.4, h = 1.9 + rnd() * 1.3, ry = rnd() * Math.PI; L.push([hvBX(w, h, dp), walls[(ti + made) % 5], T4(x, .9 + h / 2, z, ry)]);
+        for (let i = 0; i < 60 && made < (KIT ? (LITE ? 4 : 9) : 15); i++) { const a = rnd() * TAU, d = 5 + rnd() * 30, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d; if (!onLand(x, z, 3) || sightD(x, z) < 36 || !clear(x, z, 9, 7)) continue;
+          const w = 2.6 + rnd() * 1.6, dp = 3 + rnd() * 2.4, h = 1.9 + rnd() * 1.3, ry = rnd() * Math.PI; if (KIT) { HVK.houses.push([x, z, Math.round(rnd() * 4) * Math.PI / 2 + (rnd() - .5) * .3, w]); made++; continue; } L.push([hvBX(w, h, dp), walls[(ti + made) % 5], T4(x, .9 + h / 2, z, ry)]);
           const rf = new THREE.Matrix4().makeRotationY(ry + Math.PI / 4); rf.premultiply(new THREE.Matrix4().makeScale(1, 1, 1)); rf.setPosition(x, .9 + h + .8, z); L.push([hvCO(Math.max(w, dp) * .78, 1.7, 4), roofs[(ti + made) % 4], rf]); made++; }
         if (made > 5) { let x = cx + 6, z = cz - 5; if (onLand(x, z, 4) && sightD(x, z) > 36 && clear(x, z, 16, 6)) L.push([hvBX(3.4, 4, 7), "#f6f1e4", T4(x, 2.9, z)], [hvBX(2.4, 8.5, 2.4), "#f6f1e4", T4(x, 5.1, z + 4.2)], [hvCO(2, 4.4, 4), "#7a3b22", T4(x, 11.5, z + 4.2, Math.PI / 4)], [hvBX(.14, 1.3, .14), "#e4bb63", T4(x, 14.2, z + 4.2)]); } });
       if (L.length) hvBake(L, env); }
     /* 4) élet a tavon: vitorlások, bóják */
     { const L = [], sails = ["#ffffff", "#fffaf0", "#d61f26", "#f5c542", "#ffffff", "#3d7fc2"]; let n = 0;
-      for (let i = 0; i < 900 && n < 44; i++) { const x = X0 + rnd() * (X1 - X0), z = Z0 + rnd() * (Z1 - Z0); if (!hvInLake(x, z) || !clear(x, z, 16, 12) || sightD(x, z) < 40) continue; let ok = true; for (let k = 0; k < 4; k++) if (!hvInLake(x + Math.cos(k * 1.57) * 22, z + Math.sin(k * 1.57) * 22)) ok = false; if (!ok) continue;
+      for (let i = 0; i < 1600 && n < (KIT ? (LITE ? 50 : 90) : 44); i++) { const x = X0 + rnd() * (X1 - X0), z = Z0 + rnd() * (Z1 - Z0); if (!hvInLake(x, z) || !clear(x, z, 16, 12) || sightD(x, z) < 40) continue; let ok = true; for (let k = 0; k < 4; k++) if (!hvInLake(x + Math.cos(k * 1.57) * 22, z + Math.sin(k * 1.57) * 22)) ok = false; if (!ok) continue;
+        if (KIT) { HVK.boats.push([x, z, rnd() * TAU, 1.1 + rnd() * .8]); n++; continue; }
         const ry = rnd() * TAU, s = 1.1 + rnd() * .8, R = (dx, dy, dz) => { const m = new THREE.Matrix4().makeRotationY(ry); m.setPosition(x + (dx * Math.cos(ry) + dz * Math.sin(ry)) * s, dy * s, z + (-dx * Math.sin(ry) + dz * Math.cos(ry)) * s); m.scale(new THREE.Vector3(s, s, s)); return m; };
         L.push([hvBX(2.1, 1.1, 7.4), n % 3 ? "#f7f7f2" : "#13305e", R(0, .5, 0)], [hvCY(.1, .12, 10, 5), "#c9ced4", R(0, 5.8, -.6)]);
         { const g = hvCO(2.7, 8.2, 3); g.scale(.08, 1, 1); L.push([g, sails[n % 6], R(0, 5.6, 1)]); const g2 = hvCO(1.9, 6.4, 3); g2.scale(.08, 1, 1); L.push([g2, "#fffaf0", R(0, 4.6, -2.3)]); } n++; }
-      for (let i = 0; i < 400 && n < 70; i++) { const x = X0 + rnd() * (X1 - X0), z = Z0 + rnd() * (Z1 - Z0); if (!hvInLake(x, z)) continue; L.push([hvCY(.5, .7, 1.4, 8), n % 2 ? "#f5c542" : "#d61f26", T4(x, .6, z)], [hvCO(.5, .9, 8), "#f5f5f0", T4(x, 1.7, z)]); n++; }
+      for (let i = 0, nb = 0; i < 400 && nb < 26; i++, nb++) { const x = X0 + rnd() * (X1 - X0), z = Z0 + rnd() * (Z1 - Z0); if (!hvInLake(x, z)) continue; L.push([hvCY(.5, .7, 1.4, 8), n % 2 ? "#f5c542" : "#d61f26", T4(x, .6, z)], [hvCO(.5, .9, 8), "#f5f5f0", T4(x, 1.7, z)]); n++; }
       if (L.length) hvBake(L, env); }
+    /* 4b) vitorláskikötők + a kész modellek kirakása */
+    try { hvHarbours(env, rnd); } catch (e) { console.warn("hvHarbours", e); }
+    if (KIT) { try { hvKitBuild(env, rnd); } catch (e) { console.warn("hvKitBuild", e); } }
     /* 5) felhők a pálya csúcsai körül – ezek között suhansz át */
     /* 2026-11-11 23:31: a szögletes, kódból rakott felhők KIVÉVE – a valódi égfotó felhői mellett csúnyák voltak */
     if (false) { const L = []; let last = -1e9, n = 0; for (let k = 0; k < TR.M && n < 46; k++) { const p = TR.P[k]; if (p.y < 62 || TR.S[k] - last < 55) continue; last = TR.S[k]; const f = TR.F[k], sd = n % 2 ? 1 : -1, off = 20 + rnd() * 30, cx = p.x - f.z * sd * off, cz = p.z + f.x * sd * off, cy = p.y + (rnd() * 22 - 9);
