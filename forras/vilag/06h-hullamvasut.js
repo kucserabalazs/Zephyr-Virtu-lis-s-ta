@@ -78,35 +78,38 @@
   /* ---------- díszletek: a Balaton nevezetességei (alacsony poligonszám, kisütve) ---------- */
   function hvHill(L, x, z, r, h, col, top) { const g = hvCY(r * (top || .25), r, h, 18); const P = g.attributes.position; for (let i = 0; i < P.count; i++) { const k = 1 + .09 * Math.sin(P.getX(i) * .31 + P.getZ(i) * .17) + .06 * Math.sin(P.getZ(i) * .43); P.setX(i, P.getX(i) * k); P.setZ(i, P.getZ(i) * k); } L.push([g, col, new THREE.Matrix4().makeTranslation(x, h / 2 - .5, z)]); }
   function hvTrees(L, x, z, r, n, y, seed) { for (let i = 0; i < n; i++) { const a = (i * 2.399 + seed) % TAU, d = r * Math.sqrt(((i * 7 + 3) % n + .5) / n), tx = x + Math.cos(a) * d, tz = z + Math.sin(a) * d, hh = 3 + (i % 4); L.push([hvCO(1.6 + (i % 3) * .5, hh * 1.6, 7), i % 3 ? "#2f7a3e" : "#3f8f4a", new THREE.Matrix4().makeTranslation(tx, y + hh, tz)]); L.push([hvCY(.25, .3, 1.6, 5), "#5a4030", new THREE.Matrix4().makeTranslation(tx, y + .6, tz)]); } }
-  function hvScenery(env) {
-    const L = [], T4 = (x, y, z, ry) => { const m = new THREE.Matrix4().makeRotationY(ry || 0); m.setPosition(x, y, z); return m; };
-    /* TIHANYI APÁTSÁG: félsziget dombja, kéttornyú barokk templom, kolostorszárny */
-    { const X = -196, Z = -228, H = 34; hvHill(L, X, Z, 78, H, "#5f9a4e", .5); hvHill(L, X + 60, Z + 50, 46, 14, "#6aa457", .5); hvTrees(L, X, Z, 60, 26, H * .55, 1);
+  const hvT4 = (x, y, z, ry) => { const m = new THREE.Matrix4().makeRotationY(ry || 0); m.setPosition(x, y, z); return m; };
+  function hvAbbey(L) { const T4 = hvT4;
+    { const X = 0, Z = 0, H = 34; hvHill(L, X, Z, 78, H, "#5f9a4e", .5); hvHill(L, X + 60, Z + 50, 46, 14, "#6aa457", .5); hvTrees(L, X, Z, 60, 26, H * .55, 1);
       L.push([hvBX(15, 14, 34), "#f2e6c4", T4(X, H + 6.5, Z)], [hvCY(.01, 9.6, 6, 4), "#b5492f", (() => { const m = new THREE.Matrix4().makeRotationY(Math.PI / 4); m.premultiply(new THREE.Matrix4().makeScale(1, 1, 2.6)); m.setPosition(X, H + 16.5, Z); return m; })()]);
       [-5.2, 5.2].forEach((dx) => { L.push([hvBX(6, 26, 6), "#f6ecd0", T4(X + dx, H + 12.5, Z + 15)], [hvBX(6.6, 1, 6.6), "#d9c9a0", T4(X + dx, H + 20, Z + 15)], [hvSP(3.3), "#3f6e5a", T4(X + dx, H + 27, Z + 15)], [hvCO(1.5, 6, 8), "#3f6e5a", T4(X + dx, H + 32, Z + 15)], [hvBX(.25, 3, .25), "#e4bb63", T4(X + dx, H + 36, Z + 15)], [hvBX(1.4, .25, .25), "#e4bb63", T4(X + dx, H + 36.4, Z + 15)]);
         [0, 6].forEach((dy) => L.push([hvBX(1.6, 3.4, .3), "#3a4658", T4(X + dx, H + 9 + dy, Z + 18.1)])); });
       L.push([hvBX(3, 6, .4), "#5a3a22", T4(X, H + 3, Z + 17.2)], [hvBX(40, 9, 12), "#efe2bd", T4(X - 26, H + 4, Z - 6)], [hvBX(41, 3, 13), "#b5492f", T4(X - 26, H + 10, Z - 6)]);
       for (let k = 0; k < 9; k++) L.push([hvBX(1.5, 2.6, .3), "#3a4658", T4(X - 42 + k * 4, H + 5, Z + .2)]); }
-    /* BADACSONY: lapos tetejű bazalthegy, bazaltorgonák, szőlősorok, présházak */
-    { const X = 238, Z = -402, H = 70; hvHill(L, X, Z, 64, 22, "#6aa457", .84); hvHill(L, X, Z, 52, H * .72, "#4f8a46", .84); hvHill(L, X, Z, 42, H, "#3f7a3c", .88);
+  }
+  function hvBadacsony(L) { const T4 = hvT4;
+    { const X = 0, Z = 0, H = 70; hvHill(L, X, Z, 64, 22, "#6aa457", .84); hvHill(L, X, Z, 52, H * .72, "#4f8a46", .84); hvHill(L, X, Z, 42, H, "#3f7a3c", .88);
       for (let k = 0; k < 26; k++) { const a = k / 26 * TAU; L.push([hvBX(3.2, 16 + (k % 3) * 4, 3.2), k % 2 ? "#5b5f66" : "#6c7078", T4(X + Math.cos(a) * 40, H * .72 + 4, Z + Math.sin(a) * 40, -a)]); }
       for (let r = 0; r < 4; r++) for (let k = 0; k < 30; k++) { const a = k / 30 * TAU; if (Math.sin(a) < -.2) continue; L.push([hvBX(5.5, .9, .7), r % 2 ? "#8fbf4f" : "#7aad42", T4(X + Math.cos(a) * (53 + r * 3.2), 20 - r * 4.6, Z + Math.sin(a) * (53 + r * 3.2), -a + Math.PI / 2)]); }
       [[56, 20], [-50, 34], [10, 60]].forEach(([dx, dz]) => { L.push([hvBX(6, 4, 5), "#f4efe2", T4(X + dx, 12, Z + dz)], [hvCY(.01, 4.6, 3, 4), "#a8452c", T4(X + dx, 15.5, Z + dz, Math.PI / 4)]); }); }
-    /* SZIGLIGETI VÁR: várhegy, romos falak, öregtorony, zászló */
-    { const X = 58, Z = -415, H = 46; hvHill(L, X, Z, 62, H, "#5a9550", .42); hvTrees(L, X, Z, 52, 22, H * .4, 4);
+  }
+  function hvSzigliget(L) { const T4 = hvT4;
+    { const X = 0, Z = 0, H = 46; hvHill(L, X, Z, 62, H, "#5a9550", .42); hvTrees(L, X, Z, 52, 22, H * .4, 4);
       const wl = (dx, dz, w, h, d, ry) => L.push([hvBX(w, h, d), (dx + dz) % 2 ? "#b9ab93" : "#a89a82", T4(X + dx, H + h / 2 - 1, Z + dz, ry)]);
       wl(-14, 0, 2, 9, 30); wl(14, 2, 2, 6, 26); wl(0, -14, 30, 7, 2); wl(-4, 14, 20, 4.5, 2); wl(-13, -13, 6, 15, 6); wl(12, 12, 5, 10, 5); wl(3, -2, 9, 5, 1.6, .5); wl(-6, 6, 1.6, 7, 9, .2);
       for (let k = 0; k < 7; k++) L.push([hvBX(1.6, 1.6, 2.1), "#b9ab93", T4(X - 14, H + 9, Z - 12 + k * 4)]);
       L.push([hvCY(.15, .15, 9, 5), "#5a4030", T4(X - 13, H + 18, Z - 13)], [hvBX(4, 2.4, .12), "#d61f26", T4(X - 11, H + 21, Z - 13)]); }
-    /* FÜREDI MÓLÓ: hosszú móló kandeláberekkel, a végén világítótorony, mellette sétahajó */
-    { const X = 150, Z = -55; L.push([hvBX(8, 1.2, 90), "#c9c4b6", T4(X, 1.4, Z)], [hvBX(8.6, .3, 90.6), "#e3ded0", T4(X, 2.1, Z)], [hvBX(60, 3, 14), "#c9c4b6", T4(X + 10, .6, Z + 52)], [hvBX(64, .6, 18), "#7fb069", T4(X + 10, 2.3, Z + 54)]);
+  }
+  function hvPier(L) { const T4 = hvT4;
+    { const X = 0, Z = 0; L.push([hvBX(8, 1.2, 90), "#c9c4b6", T4(X, 1.4, Z)], [hvBX(8.6, .3, 90.6), "#e3ded0", T4(X, 2.1, Z)], [hvBX(60, 3, 14), "#c9c4b6", T4(X + 10, .6, Z + 52)], [hvBX(64, .6, 18), "#7fb069", T4(X + 10, 2.3, Z + 54)]);
       for (let k = 0; k < 9; k++) { const z = Z - 40 + k * 10; [-3.6, 3.6].forEach((dx) => { L.push([hvCY(.12, .16, 4.2, 6), "#22262c", T4(X + dx, 4.2, z)], [hvSP(.42), "#ffe7a8", T4(X + dx, 6.5, z)]); }); L.push([hvCY(.5, .5, 5, 7), "#8c8676", T4(X - 3, -1.2, z)], [hvCY(.5, .5, 5, 7), "#8c8676", T4(X + 3, -1.2, z)]); }
       L.push([hvCY(1.3, 1.9, 11, 12), "#f5f5f0", T4(X, 7.6, Z - 43)], [hvCY(1.6, 1.6, 1.2, 12), "#d61f26", T4(X, 9, Z - 43)], [hvCY(1.1, 1.1, 2, 10), "#ffe7a8", T4(X, 14, Z - 43)], [hvCO(1.7, 2.2, 10), "#d61f26", T4(X, 16.1, Z - 43)]);
       const SX = X - 20, SZ = Z - 8; L.push([hvBX(8, 3, 34), "#f7f7f2", T4(SX, 1.2, SZ)], [hvBX(8.2, .6, 34.4), "#141d4d", T4(SX, .2, SZ)], [hvBX(6.4, 2.6, 20), "#ffffff", T4(SX, 4, SZ + 2)], [hvBX(5, 2.2, 8), "#f1f1ea", T4(SX, 6.4, SZ + 4)], [hvCY(.8, 1, 3, 10), "#d61f26", T4(SX, 8.6, SZ + 2)]);
       for (let k = 0; k < 8; k++) L.push([hvBX(.1, 1.2, 1.5), "#27425f", T4(SX + 3.25, 4.2, SZ - 6 + k * 2.3)], [hvBX(.1, 1.2, 1.5), "#27425f", T4(SX - 3.25, 4.2, SZ - 6 + k * 2.3)]);
       hvTrees(L, X + 14, Z + 58, 22, 9, 2.4, 2); }
-    /* KESZTHELY – FESTETICS-KASTÉLY: hosszú barokk palota manzárdtetővel, középtorony kupolával, park */
-    { const X = -185, Z = 78, Y = 4; L.push([hvCY(84, 92, Y + 1, 22), "#79b062", T4(X, Y / 2 - .5, Z)]);
+  }
+  function hvFestetics(L) { const T4 = hvT4;
+    { const X = 0, Z = 0, Y = 4; L.push([hvCY(84, 92, Y + 1, 22), "#79b062", T4(X, Y / 2 - .5, Z)]);
       const ry = .5, R = (dx, dz) => [X + dx * Math.cos(ry) + dz * Math.sin(ry), Z - dx * Math.sin(ry) + dz * Math.cos(ry)];
       const bx = (w, h, d, dx, y, dz, col) => { const [x, z] = R(dx, dz); L.push([hvBX(w, h, d), col, T4(x, Y + y, z, ry)]); };
       bx(84, 13, 13, 0, 6.5, 0, "#f3e2a6"); bx(85, 4.5, 14, 0, 15, 0, "#5b5e66"); bx(80, 1.5, 9, 0, 18, 0, "#4b4e56");
@@ -115,30 +118,135 @@
       for (let k = 0; k < 19; k++) { if (Math.abs(k - 9) < 2) continue; [3.4, 9.4].forEach((y) => bx(2, 3.2, .3, -38 + k * 4.2, y, 6.6, "#3a4658")); }
       bx(4, 6, .4, 0, 3, 8.2, "#5a3a22"); bx(30, .4, 30, 0, .3, 34, "#e9dcb0"); { const [x, z] = R(0, 34); L.push([hvCY(5, 5.6, 1, 14), "#c9c4b6", T4(x, Y + .6, z)], [hvCY(.5, .8, 3.4, 8), "#c9c4b6", T4(x, Y + 2.6, z)], [hvSP(1.2), "#9fd8ef", T4(x, Y + 4.6, z)]); }
       hvTrees(L, X - 30, Z + 44, 34, 16, Y, 7); hvTrees(L, X + 52, Z + 30, 20, 9, Y, 3); }
-    /* a két állomás: fa stég tetővel */
-    [[-14, "#2b5ea8"], [200, "#d61f26"]].forEach(([x, c]) => { L.push([hvBX(5, .4, 26), "#b98a55", T4(x - 4.4, 2.3, 0)], [hvBX(5, .4, 26), "#b98a55", T4(x + 4.4, 2.3, 0)], [hvBX(15, .5, 22), c, T4(x, 8.4, 0)], [hvBX(16, .3, 23), "#f5f2e8", T4(x, 8.8, 0)]);
-      [[-6.6, -10], [6.6, -10], [-6.6, 10], [6.6, 10]].forEach(([dx, dz]) => L.push([hvCY(.28, .28, 6.2, 7), "#f5f2e8", T4(x + dx, 5.3, dz)], [hvCY(.4, .5, 5, 7), "#8a6239", T4(x + dx, 0, dz)])); L.push([hvBX(26, .4, 4), "#b98a55", T4(x - 19.5, 2.3, 11)]); });
-    hvBake(L, env);
-    hvLabel("Tihanyi apátság", "alapítva 1055-ben", -196, 84, -228, env, 70); hvLabel("Badacsony", "bazalthegy · 438 m", 238, 94, -402, env, 80); hvLabel("Szigligeti vár", "a Balaton vára", 58, 80, -415, env, 64);
-    hvLabel("Balatonfüredi móló", "", 150, 26, -70, env, 54); hvLabel("Festetics-kastély", "Keszthely", -185, 66, 78, env, 70);
-    hvLabel("NYUGODT MENET", "Zephyr-állomás", -14, 14, 0, env, 26); hvLabel("VAD MENET ⚠", "csak bátraknak", 200, 14, 0, env, 26);
+  }
+  /* ---- új látványosságok (2026-11-11 04:38–04:39, tulajdonos: „szerepeljen az apartman, a Gömbkilátó, Badacsony rajta a kereszttel, a tihanyi apátság … és minden más látványosság”) ---- */
+  function hvCross(L, x, y, z, s) { L.push([hvBX(1.1 * s, 9 * s, 1.1 * s), "#d9d4c6", hvT4(x, y + 4.5 * s, z)], [hvBX(5 * s, 1.1 * s, 1.1 * s), "#d9d4c6", hvT4(x, y + 6.4 * s, z)], [hvBX(2.6 * s, 1.2 * s, 2.6 * s), "#b9b3a2", hvT4(x, y + .6 * s, z)]); }
+  function hvHouse(L) {   /* Zephyr Apartmanház: fehér, kétszintes, lapostetős ház üvegkorlátos teraszokkal, tetőterasszal, kerttel */
+    const T4 = hvT4; L.push([hvBX(46, 1, 60), "#7fb069", T4(0, .5, 4)], [hvBX(10, .3, 44), "#cfc8b8", T4(-9, 1.1, 2)], [hvBX(12, 7.2, 34), "#f6f4ee", T4(2, 4.6, 0)], [hvBX(12.6, .5, 34.6), "#dedbd2", T4(2, 8.4, 0)], [hvBX(12.2, .35, 34.2), "#e9e6dc", T4(2, 4.7, 0)]);
+    for (let k = 0; k < 7; k++) { [2.6, 6.2].forEach((y) => L.push([hvBX(.2, 1.9, 2.2), "#33485e", T4(-4.05, y + 1, -13.5 + k * 4.4)], [hvBX(.2, 1.9, 2.2), "#33485e", T4(8.05, y + 1, -13.5 + k * 4.4)])); }
+    [1.4, 5].forEach((y) => L.push([hvBX(12, .3, 4), "#c9c4b6", T4(2, y, -19)], [hvBX(12, 1.1, .15), "#9fd8ef", T4(2, y + .75, -21)], [hvBX(.15, 1.1, 4), "#9fd8ef", T4(-4, y + .75, -19)], [hvBX(.15, 1.1, 4), "#9fd8ef", T4(8, y + .75, -19)]));
+    L.push([hvBX(.2, 5.4, 1.6), "#141d4d", T4(-4.08, 4.6, -16.6)], [hvBX(12, .3, 5), "#b98a55", T4(2, 5, 19.5)], [hvBX(12, 1.1, .15), "#9fd8ef", T4(2, 5.8, 22)]);
+    for (let k = 0; k < 9; k++) L.push([hvBX(.12, 1.1, .12), "#8d949c", T4(-3.8 + k * 1.45, 9.2, -17)], [hvBX(.12, 1.1, .12), "#8d949c", T4(-3.8 + k * 1.45, 9.2, 17)]); L.push([hvBX(12, .12, .12), "#8d949c", T4(2, 9.75, -17)], [hvBX(12, .12, .12), "#8d949c", T4(2, 9.75, 17)]);
+    L.push([hvCY(.12, .12, 7, 5), "#f5f2e8", T4(7, 12, -16)], [hvBX(3.4, 2, .1), "#d61f26", T4(8.8, 14.4, -16)]);
+    [[-14, 22], [-16, 8], [14, 24], [16, -6]].forEach(([x, z], i) => { L.push([hvCO(2.6, 7, 7), "#2f7a3e", T4(x, 5.5, z)], [hvCY(.3, .35, 2, 5), "#5a4030", T4(x, 1.6, z)]); });
+    [[-9, 12, "#c62828"], [-9, 5, "#f5f5f0"], [-9, -2, "#27425f"]].forEach(([x, z, c]) => L.push([hvBX(2.4, 1.2, 5), c, T4(x, 1.9, z)], [hvBX(2.2, .8, 2.6), "#22262c", T4(x, 2.8, z + .2)]));
+    L.push([hvBX(5, .3, 5), "#f5f2e8", T4(12, 4.2, 26)], [hvCO(4.2, 2, 4), "#b5492f", T4(12, 5.4, 26, Math.PI / 4)]); [[-2, -2], [2, -2], [-2, 2], [2, 2]].forEach(([dx, dz]) => L.push([hvCY(.15, .15, 3, 5), "#8a6239", T4(12 + dx, 2.6, 26 + dz)]));
+  }
+  function hvGomb(L) {   /* Balatonboglár – Gömbkilátó (Xantus János-kilátó): rácsos alumíniumgömb a Várdombon */
+    const T4 = hvT4, H = 26; hvHill(L, 0, 0, 44, H, "#5f9a4e", .4); hvTrees(L, 0, 0, 38, 20, H * .45, 5);
+    const cy = H + 13, R = 9.5; for (let k = 0; k < 4; k++) L.push([hvCY(.35, .5, 6, 6), "#aab2ba", T4(Math.cos(k * Math.PI / 2 + .78) * 4, H + 2.5, Math.sin(k * Math.PI / 2 + .78) * 4)]);
+    for (let k = 0; k < 8; k++) { const g = new THREE.TorusGeometry(R, .22, 5, 30); g.rotateY(k / 8 * Math.PI); L.push([g, "#dfe5ea", T4(0, cy, 0)]); }
+    [-.62, -.3, 0, .3, .62].forEach((f) => { const g = new THREE.TorusGeometry(R * Math.sqrt(1 - f * f), .22, 5, 32); g.rotateX(Math.PI / 2); L.push([g, "#dfe5ea", T4(0, cy + f * R, 0)]); });
+    L.push([hvCY(1.1, 1.1, R * 1.8, 10), "#c9d2da", T4(0, cy, 0)], [hvCY(5.6, 5.6, .3, 16), "#b98a55", T4(0, cy - 1.5, 0)], [hvCY(3.6, 3.6, .3, 14), "#b98a55", T4(0, cy + 4.2, 0)]);
+    for (let k = 0; k < 20; k++) { const a = k / 20 * TAU * 2.5; L.push([hvBX(2.2, .18, .8), "#8d949c", T4(Math.cos(a) * 1.9, cy - 8 + k * .62, Math.sin(a) * 1.9, -a)]); }
+  }
+  function hvTower(L, H, hillR, col, kind) {   /* fa/kő kilátótorony dombon (Kőhegy, Fülöp-hegy, Fonyód) */
+    const T4 = hvT4; hvHill(L, 0, 0, hillR, H, "#5f9a4e", .42); hvTrees(L, 0, 0, hillR * .85, 14, H * .45, kind || 2);
+    const th = 20; [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const g = hvCY(.3, .42, th, 6); L.push([g, col, (() => { const m = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(b * .1, 0, -a * .1)); m.setPosition(a * 2.6, H + th / 2, b * 2.6); return m; })()]); });
+    [6.5, 13, 19.5].forEach((y, k) => { const w = 7.2 - k * 1; L.push([hvBX(w, .35, w), col, T4(0, H + y, 0)], [hvBX(w, 1.1, .14), col, T4(0, H + y + .7, w / 2)], [hvBX(w, 1.1, .14), col, T4(0, H + y + .7, -w / 2)], [hvBX(.14, 1.1, w), col, T4(w / 2, H + y + .7, 0)], [hvBX(.14, 1.1, w), col, T4(-w / 2, H + y + .7, 0)]); });
+    L.push([hvCO(5.2, 3.6, 4), "#7a4a22", T4(0, H + 24.6, 0, Math.PI / 4)]); [[-2, -2], [2, -2], [-2, 2], [2, 2]].forEach(([a, b]) => L.push([hvCY(.16, .16, 3.4, 5), col, T4(a, H + 21.2, b)]));
+    for (let k = 0; k < 16; k++) L.push([hvBX(2, .14, .6), col, T4(0, H + 1 + k * 1.15, (k % 6 < 3 ? 1 : -1) * 1.2, k * .5)]);
+  }
+  function hvFerry(L) {   /* Szántód–Tihany komp: lapos autókomp rámpákkal, híddal, autókkal + a rév mólója */
+    const T4 = hvT4; L.push([hvBX(11, 2.2, 34), "#f4f4ee", T4(0, 1.3, 0)], [hvBX(11.4, .7, 34.4), "#27425f", T4(0, .5, 0)], [hvBX(9, .3, 7), "#8d949c", T4(0, 2.2, 20, 0)], [hvBX(9, .3, 7), "#8d949c", T4(0, 2.2, -20)]);
+    L.push([hvBX(3, 5, 6), "#ffffff", T4(-4.2, 5, 0)], [hvBX(12, 2.4, 5), "#ffffff", T4(0, 8.6, 0)], [hvBX(12.2, .9, 4), "#27425f", T4(0, 8.9, -.7)], [hvCY(.7, .8, 2.6, 10), "#d61f26", T4(0, 11.2, 1)], [hvBX(3, 5, 6), "#ffffff", T4(4.2, 5, 0)]);
+    [[-1.6, -9, "#c62828"], [1.8, -8, "#f5c542"], [-1.6, 9, "#3d7fc2"], [1.8, 10, "#f5f5f0"], [0, -14, "#3fb37f"]].forEach(([x, z, c]) => L.push([hvBX(2, 1, 4.2), c, T4(x, 2.9, z)], [hvBX(1.8, .7, 2.2), "#22262c", T4(x, 3.7, z + .2)]));
+    for (let k = 0; k < 10; k++) [-5.5, 5.5].forEach((x) => L.push([hvBX(.14, 1.2, .14), "#d9dde2", T4(x, 3, -15 + k * 3.3)])); [-5.5, 5.5].forEach((x) => L.push([hvBX(.14, .14, 31), "#d9dde2", T4(x, 3.6, 0)]));
+    L.push([hvBX(10, 1.4, 30), "#c9c4b6", T4(0, 1, 44)], [hvBX(6, 3, 5), "#f2e6c4", T4(8, 3.2, 54)], [hvCY(.01, 4.6, 2.4, 4), "#b5492f", T4(8, 5.9, 54, Math.PI / 4)]);
+  }
+  function hvFoldvar(L) {   /* Balatonföldvár: Hajózástörténeti Látogatóközpont és kilátó (hajóorr alakú terasz), kikötő vitorlásokkal */
+    const T4 = hvT4; L.push([hvBX(16, 9, 22), "#f1efe8", T4(0, 5.5, 0)], [hvBX(17, .6, 23), "#27425f", T4(0, 10.2, 0)], [hvBX(.3, 5, 16), "#9fd8ef", T4(-8.1, 6, 0)], [hvBX(.3, 5, 16), "#9fd8ef", T4(8.1, 6, 0)]);
+    L.push([hvCY(1.2, 1.5, 30, 10), "#e9e6dc", T4(0, 16, -4)], [hvCY(.01, 9, 1, 3), "#b98a55", (() => { const m = new THREE.Matrix4().makeRotationY(Math.PI); m.premultiply(new THREE.Matrix4().makeScale(1, 1, 1.9)); m.setPosition(0, 26, -8); return m; })()], [hvCY(.12, .12, 14, 5), "#f5f2e8", T4(0, 38, -4)], [hvBX(3, 1.8, .1), "#d61f26", T4(1.6, 43.6, -4)]);
+    for (let k = 0; k < 7; k++) L.push([hvBX(.14, 1.2, .14), "#d9dde2", T4(-6 + k * 2, 27.2, -15 + Math.abs(k - 3) * 2.6)]);
+    L.push([hvBX(60, 1.2, 4), "#c9c4b6", T4(0, .9, -30)], [hvBX(4, 1.2, 30), "#c9c4b6", T4(-28, .9, -44)], [hvBX(4, 1.2, 30), "#c9c4b6", T4(28, .9, -44)]);
+    for (let k = 0; k < 7; k++) { const x = -21 + k * 7, z = -42 - (k % 2) * 6; L.push([hvBX(2, 1.1, 7), k % 2 ? "#f7f7f2" : "#13305e", T4(x, .9, z)], [hvCY(.1, .12, 11, 5), "#c9ced4", T4(x, 6.6, z - .5)], [hvCY(.01, 2.6, 8, 3), "#fffaf0", (() => { const m = new THREE.Matrix4().makeScale(.12, 1, 1); m.setPosition(x, 6.4, z + 1.2); return m; })()]); }
+  }
+  function hvSiofok(L) {   /* Siófok: Víztorony (a város jelképe) és az óriáskerék a parton */
+    const T4 = hvT4; L.push([hvBX(46, 1, 30), "#cfc8b8", T4(6, .5, 0)], [hvBX(8, 20, 8), "#e8d9b8", T4(-8, 11, 0)], [hvBX(11, 9, 11), "#f1e6cc", T4(-8, 25.5, 0)], [hvBX(11.8, .8, 11.8), "#8a6a48", T4(-8, 21.2, 0)], [hvCO(8.6, 7, 4), "#7a3b22", T4(-8, 33.5, 0, Math.PI / 4)], [hvCY(.2, .2, 4, 5), "#e4bb63", T4(-8, 38.5, 0)]);
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; L.push([hvBX(2.2, 3.2, .3), "#33485e", T4(-8 + Math.sin(a) * 5.55, 26, Math.cos(a) * 5.55, a)], [hvBX(1.6, 3, .3), "#33485e", T4(-8 + Math.sin(a) * 4.05, 9, Math.cos(a) * 4.05, a)], [hvBX(1.6, 3, .3), "#33485e", T4(-8 + Math.sin(a) * 4.05, 15, Math.cos(a) * 4.05, a)]); }
+    const wx = 16, wy = 19, R = 15; { const g = new THREE.TorusGeometry(R, .35, 5, 40); L.push([g, "#f5f5f0", T4(wx, wy, 0)]); const g2 = new THREE.TorusGeometry(R * .55, .2, 5, 30); L.push([g2, "#f5f5f0", T4(wx, wy, 0)]); }
+    for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; const m = new THREE.Matrix4().makeRotationZ(a); m.setPosition(wx, wy, 0); L.push([hvBX(.16, R * 2, .16), "#dfe5ea", m]); L.push([hvBX(2.2, 2.4, 2), ["#d61f26", "#f5c542", "#3d7fc2", "#3fb37f"][k % 4], T4(wx + Math.cos(a) * R, wy + Math.sin(a) * R - 1.4, 0)]); }
+    [-1, 1].forEach((sd) => { const m = new THREE.Matrix4().makeRotationZ(sd * .32); m.setPosition(wx + sd * 3.2, wy / 2 + .5, 1.4); L.push([hvBX(.5, wy + 1, .5), "#aab2ba", m]); const m2 = m.clone(); m2.setPosition(wx + sd * 3.2, wy / 2 + .5, -1.4); L.push([hvBX(.5, wy + 1, .5), "#aab2ba", m2]); });
+    hvTrees(L, 30, 8, 10, 6, 1, 3);
+  }
+  function hvHegyestu(L) {   /* Hegyestű (Zánka–Monoszló): félbevágott bazaltkúp, a bányafalon bazaltoszlopok */
+    const T4 = hvT4, H = 40; const g = hvCY(3, 34, H, 18, 1, false, 0, Math.PI * 1.25); L.push([g, "#5a9550", T4(0, H / 2, 0)]);
+    for (let k = 0; k < 16; k++) { const t = k / 15, x = -8 + t * 26, h2 = H * (1 - Math.abs(t - .3) * 1.05) * .9; if (h2 > 3) L.push([hvCY(1.3, 1.3, h2, 6), k % 2 ? "#5b5f66" : "#70757d", T4(x * .62, h2 / 2, -2 - x * .5)]); }
+    hvTrees(L, -6, 14, 22, 10, 2, 6);
+  }
+  /* ---------- A BALATON TÉRKÉPE: a valódi partvonal (OSM), körülötte térképszerű szárazföld településnevekkel ---------- */
+  const HV_K = 22, HV_O = [46.88936, 17.96297];                                   /* 1 km = 22 m; origó: a Zephyr Apartmanház */
+  const hvMP = (lat, lon) => [(lon - HV_O[1]) * 76.1 * HV_K, -(lat - HV_O[0]) * 111.0 * HV_K];
+  const HV_TOWNS = [["Zamárdi", 46.885, 17.953], ["Siófok", 46.905, 18.058], ["Balatonföldvár", 46.851, 17.881], ["Balatonlelle", 46.782, 17.69], ["Balatonboglár", 46.775, 17.655], ["Fonyód", 46.741, 17.555], ["Balatonmáriafürdő", 46.704, 17.385], ["Keszthely", 46.768, 17.243], ["Gyenesdiás", 46.771, 17.29], ["Szigliget", 46.795, 17.435], ["Badacsonytomaj", 46.806, 17.512], ["Révfülöp", 46.829, 17.627], ["Zánka", 46.871, 17.685], ["Balatonakali", 46.882, 17.752], ["Tihany", 46.914, 17.889], ["Balatonfüred", 46.958, 17.89], ["Csopak", 46.977, 17.918], ["Alsóörs", 46.985, 17.975], ["Balatonalmádi", 47.03, 18.02], ["Balatonkenese", 47.04, 18.107], ["Balatonvilágos", 46.975, 18.165], ["Szántód", 46.862, 17.905], ["Balatonszemes", 46.81, 17.77]];
+  function hvMap(env) {
+    const X0 = -1900, X1 = 760, N0 = -640, N1 = 880;   /* x és „észak” (= −z) tartomány méterben */
+    const sh = new THREE.Shape(); sh.moveTo(X0, N0); sh.lineTo(X1, N0); sh.lineTo(X1, N1); sh.lineTo(X0, N1); sh.closePath();
+    const hole = new THREE.Path(); HV_SHORE.forEach(([lon, lat], i) => { const [x, z] = hvMP(lat, lon); if (i) hole.lineTo(x, -z); else hole.moveTo(x, -z); }); hole.closePath(); sh.holes.push(hole);
+    const g = new THREE.ShapeGeometry(sh, 1), P = g.attributes.position, uv = g.attributes.uv; for (let i = 0; i < P.count; i++) uv.setXY(i, (P.getX(i) - X0) / (X1 - X0), (P.getY(i) - N0) / (N1 - N0)); g.rotateX(-Math.PI / 2); g.translate(0, .9, 0);
+    const tex = canvasTex(2048, 1170, (c, w, h) => { const PX = (x) => (x - X0) / (X1 - X0) * w, PY = (n) => (1 - (n - N0) / (N1 - N0)) * h;
+      const bg = c.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, "#bcd3a0"); bg.addColorStop(.5, "#d8e3b8"); bg.addColorStop(1, "#e3e6c0"); c.fillStyle = bg; c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 520; i++) { const x = (i * 7919 % 2048), y = (i * 104729 % 1170), r = 14 + (i * 31 % 40), north = y < h * .45; c.fillStyle = north ? `rgba(70,130,70,${.10 + (i % 5) * .03})` : (i % 3 ? `rgba(226,206,120,${.12 + (i % 4) * .03})` : `rgba(110,160,80,.13)`); c.beginPath(); c.ellipse(x, y, r * 1.6, r, (i % 7) * .5, 0, TAU); c.fill(); }
+      c.strokeStyle = "rgba(255,255,255,.75)"; c.lineWidth = 3; c.beginPath(); HV_TOWNS.forEach(([n, la, lo], i) => { const [x, z] = hvMP(la, lo); const px = PX(x), py = PY(-z); c.fillStyle = "rgba(190,180,170,.85)"; c.beginPath(); c.arc(px, py, 6, 0, TAU); c.fill(); });
+      c.strokeStyle = "rgba(60,90,120,.9)"; c.lineWidth = 5; c.beginPath(); HV_SHORE.forEach(([lon, lat], i) => { const [x, z] = hvMP(lat, lon); if (i) c.lineTo(PX(x), PY(-z)); else c.moveTo(PX(x), PY(-z)); }); c.closePath(); c.stroke(); c.strokeStyle = "rgba(240,226,170,.9)"; c.lineWidth = 2.5; c.stroke();
+      c.textAlign = "center"; c.textBaseline = "middle"; HV_TOWNS.forEach(([n, la, lo]) => { const [x, z] = hvMP(la, lo), px = PX(x), south = la < 46.9 && !(lo < 17.66 && la > 46.76) && !/Tihany|Zánka|akali|Révfülöp|Badacsony|Szigliget/.test(n), py = PY(-z) + (south ? 17 : -17); c.font = "700 13px Inter, system-ui, sans-serif"; c.lineWidth = 3.5; c.strokeStyle = "rgba(255,255,255,.85)"; c.strokeText(n, px, py); c.fillStyle = "#2a3a4a"; c.fillText(n, px, py); });
+      c.font = "italic 700 46px Georgia, serif"; c.fillStyle = "rgba(40,70,40,.35)"; c.fillText("B A K O N Y", PX(-520), PY(560)); c.fillText("S O M O G Y", PX(-700), PY(-520)); });
+    tex.anisotropy = 8; const m = mesh(g, basic({ map: tex }), env); m.matrixAutoUpdate = false; m.updateMatrix(); return m;
+  }
+  /* a körút látnivalói a VALÓDI helyükön: [név, alcím, szélesség, hosszúság, építő, méretarány, címkemagasság, bemutató szöveg] */
+  const HV_SIGHTS = [
+    ["Zephyr Apartmanház", "Zamárdi", 46.88936, 17.96297, hvHouse, .62, 16, "Innen indulunk: a Zephyr Apartmanház Zamárdiban, pár percre a szabadstrandtól."],
+    ["Kőhegyi kilátó", "Zamárdi", 46.87217, 17.93216, (L) => hvTower(L, 16, 24, "#a8794a", 2), .55, 30, "A zamárdi Kőhegy kilátójából a Tihanyi-félsziget és az egész keleti medence belátható."],
+    ["Szántódi rév", "komp Tihanyba", 46.8815, 17.9008, hvFerry, .5, 12, "A tó legkeskenyebb pontja: itt jár a komp Szántód és Tihany között, alig 1,2 km."],
+    ["Balatonföldvár", "Hajózástörténeti kilátó", 46.8548, 17.8795, hvFoldvar, .55, 30, "Földvár kikötője és a hajóorr alakú kilátóterasz – a balatoni hajózás múzeuma."],
+    ["Gömbkilátó", "Balatonboglár", 46.779, 17.652, hvGomb, .85, 46, "A boglári Várdomb 15 méter átmérőjű alumíniumgömbje – az 1958-as brüsszeli világkiállításról került ide."],
+    ["Fonyód", "Vár-hegyi kilátó", 46.741, 17.548, (L) => hvTower(L, 22, 34, "#8f8676", 4), .8, 44, "Fonyód ikerhegyéről a legszebb a kilátás a szemközti Badacsonyra és a tanúhegyekre."],
+    ["Festetics-kastély", "Keszthely", 46.7707, 17.242, hvFestetics, .55, 40, "Keszthely: a Festetics család barokk kastélya 101 teremmel és a híres Helikon Könyvtárral."],
+    ["Szigligeti vár", "a Balaton vára", 46.8042, 17.4343, hvSzigliget, .8, 62, "Szigliget 750 éves várát a török sosem tudta bevenni – ezért hívják a Balaton várának."],
+    ["Badacsony", "a Ranolder-kereszttel", 46.8035, 17.4958, (L) => { hvBadacsony(L); hvCross(L, 30, 70, 24, 2.2); }, .8, 86, "A 438 méteres bazalthegy tetején áll a Ranolder-kereszt; lankáin terem a híres badacsonyi szürkebarát."],
+    ["Révfülöp", "Fülöp-hegyi kilátó", 46.8326, 17.6277, (L) => hvTower(L, 18, 28, "#a8794a", 5), .7, 38, "Révfülöp: innen indul minden nyáron a Balaton-átúszás 5,2 kilométeres távja Balatonboglárra."],
+    ["Hegyestű", "bazaltorgonák", 46.888, 17.647, hvHegyestu, .7, 38, "A Hegyestű félbevágott vulkánjában 20 méter magas bazaltoszlopok állnak – a Káli-medence kapuja."],
+    ["Tihanyi apátság", "alapítva 1055-ben", 46.91389, 17.88944, hvAbbey, .52, 46, "I. András király 1055-ben alapította; alapítólevele a legrégebbi magyar nyelvemlék. A félszigeten virágzik a levendula."],
+    ["Balatonfüred", "móló és Tagore sétány", 46.9537, 17.8955, hvPier, .6, 22, "Füred mólója és a Tagore sétány: a reformkor óta a Balaton legelegánsabb fürdővárosa, az Anna-bál otthona."],
+    ["Siófok", "Víztorony és óriáskerék", 46.9085, 18.0486, hvSiofok, .7, 34, "Siófok jelképe az 1912-ben épült Víztorony; mellette a parti óriáskerék és az Aranypart."]
+  ];
+  function hvSights(env) {
+    HV.sights = HV_SIGHTS.map(([n, sub, la, lo, fn, sc, lh, txt]) => { const [x, z] = hvMP(la, lo), L = [], g = new THREE.Group(); fn(L); g.position.set(x, .9, z); g.scale.setScalar(sc); env.add(g); hvBake(L, g); hvLabel(n, sub, x, lh * sc + 16, z, env, 46); return { n, sub, x, z, txt }; });
+  }
+  /* a körút pályája: minden látnivaló mellett alacsonyan elhalad, közöttük az égbe emelkedik, és onnan csap le a következőre */
+  function hvTourPts() {
+    const S = HV.sights, n = S.length, pts = []; HV.pass = [];
+    for (let i = 0; i < n; i++) { const a = S[i], b = S[(i + 1) % n], p = S[(i - 1 + n) % n]; let dx = b.x - p.x, dz = b.z - p.z; const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
+      const sx = a.x - dz * 26, sz = a.z + dx * 26; pts.push([sx - dx * 20, 9.5, sz - dz * 20], [sx, 8.5, sz], [sx + dx * 20, 9.5, sz + dz * 20]); HV.pass.push(pts.length - 2);
+      const nb = S[(i + 1) % n], nn = S[(i + 2) % n]; let ex = nn.x - a.x, ez = nn.z - a.z; const el = Math.hypot(ex, ez) || 1; ex /= el; ez /= el; const tx = nb.x - ez * 26 - ex * 20, tz = nb.z + ex * 26 - ez * 20, fx = sx + dx * 20, fz = sz + dz * 20;
+      const dist = Math.hypot(tx - fx, tz - fz), peak = clamp(dist * .5, 24, 150);
+      if (dist > 70) [[.2, .55], [.42, 1], [.62, .95], [.84, .42]].forEach(([t, h]) => pts.push([fx + (tx - fx) * t, 9 + peak * h, fz + (tz - fz) * t]));
+      else pts.push([fx + (tx - fx) * .5, 9 + peak * .9, fz + (tz - fz) * .5]); }
+    return pts;
   }
   /* ---------- a két pálya ---------- */
-  function hvCalmPts() { return [[-14, 3, 14], [-14, 3, -14], [-16, 3.4, -48], [-30, 6, -92], [-62, 9, -140], [-92, 12, -176], [-104, 9, -232], [-84, 6, -286], [-44, 5, -322], [8, 8, -338], [62, 11, -330], [112, 13, -296], [142, 10, -232], [136, 6, -160], [118, 5, -104], [112, 4.2, -52], [96, 6, -6], [58, 9, 34], [8, 8, 58], [-52, 7, 70], [-104, 5.5, 58], [-128, 4.4, 26], [-112, 4, -2], [-74, 4.4, 14], [-40, 4, 34], [-18, 3.4, 34]]; }
+  const HV_OZ = 1500;   /* a VAD menet „élményparkja” a térképtől délre, külön vízen (a korábbi díszletekkel) */
+  function hvPark(env) {
+    const park = new THREE.Group(); park.position.set(0, 0, HV_OZ); env.add(park);
+    [[hvAbbey, -196, -228], [hvBadacsony, 238, -402], [hvSzigliget, 58, -415], [hvPier, 150, -55], [hvFestetics, -185, 78]].forEach(([fn, x, z]) => { const L = [], g = new THREE.Group(); fn(L); g.position.set(x, 0, z); park.add(g); hvBake(L, g); });
+    { const L = [], x = 200, c = "#d61f26", T4 = hvT4; L.push([hvBX(5, .4, 26), "#b98a55", T4(x - 4.4, 2.3, 0)], [hvBX(5, .4, 26), "#b98a55", T4(x + 4.4, 2.3, 0)], [hvBX(15, .5, 22), c, T4(x, 8.4, 0)], [hvBX(16, .3, 23), "#f5f2e8", T4(x, 8.8, 0)]);
+      [[-6.6, -10], [6.6, -10], [-6.6, 10], [6.6, 10]].forEach(([dx, dz]) => L.push([hvCY(.28, .28, 6.2, 7), "#f5f2e8", T4(x + dx, 5.3, dz)], [hvCY(.4, .5, 5, 7), "#8a6239", T4(x + dx, 0, dz)])); hvBake(L, park); }
+    hvLabel("VAD MENET ⚠", "csak bátraknak", 200, 14, 0, park, 26);
+  }
   function hvWildPts() {
     const X = 200, a = [[X, 3, 14], [X, 3, -12], [X, 3.4, -34], [X, 20, -72], [X, 42, -116], [X, 60, -152], [X, 63.5, -166], [X, 57, -178], [X, 35, -193], [X, 11, -207], [X, 3.2, -224]];
     const lc = [X, 17, -246], R = 14; for (let k = 0; k <= 8; k++) { const t = k / 8 * TAU, p = [X + 7 * k / 8, lc[1] - R * Math.cos(t), lc[2] - R * Math.sin(t)]; a.push([p[0], p[1], p[2], [0, lc[1] - p[1], lc[2] - p[2]]]); }
     a.push([X + 7, 3.4, -268], [X + 7, 14, -290], [X + 7, 23, -306], [X + 7, 12, -323], [X + 7, 5, -340], [X + 8, 5, -360], [X + 14, 6, -384], [X + 30, 7, -401], [X + 50, 8, -407], [X + 72, 10, -398], [X + 86, 12, -374], [X + 88, 10.5, -348], [X + 86, 9, -326]);
     const ax = [X + 86, 14], r = 5; for (let k = 0; k <= 8; k++) { const t = k / 8 * TAU, p = [ax[0] - r * Math.sin(t), ax[1] - r * Math.cos(t), -312 + 66 * k / 8]; a.push([p[0], p[1], p[2], [ax[0] - p[0], ax[1] - p[1], 0]]); }
     a.push([X + 86, 9.5, -232], [X + 86, 17, -204], [X + 84, 6, -170], [X + 80, 4, -132], [X + 70, 3, -94], [X + 62, 1.5, -62], [X + 50, 3, -30], [X + 36, 6.5, 0], [X + 22, 7, 28], [X + 8, 5, 40], [X, 3.6, 32]);
-    return a;
+    return a.map((q) => [q[0], q[1], q[2] + HV_OZ].concat(q[3] ? [q[3]] : []));
   }
   function buildCoaster() {
     const root = W.root, env = new THREE.Group(), far = new THREE.Group(); root.add(env); env.add(far); HV.env = env; HV.far = far; env.matrixAutoUpdate = false;
     makeSky(far); makeShores(far);
     HV.water = makeWater(env);
-    hvScenery(env);
-    HV.calm = hvTrack(hvCalmPts(), { bank: 5 }); HV.wild = hvTrack(hvWildPts(), { bank: 9 });
+    hvMap(env); hvSights(env); hvPark(env);
+    HV.calm = hvTrack(hvTourPts(), { bank: 6 }); HV.wild = hvTrack(hvWildPts(), { bank: 9 });
+    HV.passS = HV.pass.map((i) => HV.calm.sOf(i)); HV.s0 = HV.passS[0] - 4;
     hvRails(HV.calm, env, "#2b5ea8"); hvRails(HV.wild, env, "#d61f26", "#22262c");
     /* a vad pálya jellemző pontjai (ívhossz): a felhúzás vége, az alagút, a fékezés */
     HV.wild.sLift = HV.wild.sOf(6) - 4; HV.wild.sTun0 = HV.wild.sOf(25) - 22; HV.wild.sTun1 = HV.wild.sOf(30) + 14; hvTunnel(HV.wild, HV.wild.sTun0, HV.wild.sTun1, env);
@@ -152,7 +260,7 @@
     /* élet a vízen: két horgonyzó vitorlás a nyugodt pálya mellett (kisütve), lassan ringanak */
     HV.deco = [[BOATS[1], 40, -150, 2.2], [BOATS[6], -60, -40, -.9]].map(([o, x, z, ry]) => { const g = makeBoat(Object.assign({ detail: 0, crew: 2 }, o)); g.position.set(x, 0, z); g.rotation.y = ry; env.add(g); const S2 = g.userData.S; if (S2) { S2.awa = 60; S2.aws = 5; S2.side = 1; S2.boom = .5; S2.jib = .4; } try { vrBake(g); } catch (e) {} return g; });
     HV.lights = addLights(SUN.clone());
-    HV.st = "station"; HV.s = 0; HV.v = 0; HV.warn = false; HV.t = 0; HV.fr = { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }; HV.q = new THREE.Quaternion(); HV.shake = 0;
+    HV.mode = "calm"; HV.st = "station"; HV.s = HV.s0; HV.v = 0; HV.run = 0; HV.cur = 0; HV.warn = false; HV.t = 0; HV.fr = { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }; HV.q = new THREE.Quaternion(); HV.shake = 0;
     hvPlace(); hvApply(0);
     faceYaw(0); audioStart({ water: .02, wind: .015 });
     return { tick: hvTick, panel: hvPanel, hud: hvHud };
@@ -169,8 +277,8 @@
     const wm = HV.water; wm.position.set(Math.round(fr.p.x / 40) * 40, 0, Math.round(fr.p.z / 40) * 40); const mat = wm.userData.mat; if (mat) { mat.uniforms.uT.value = W.t; mat.uniforms.uOff.value.set(wm.position.x, wm.position.z); if (mat.uniforms.uCam) { try { const cw = new THREE.Vector3(); T.camObj().getWorldPosition(cw); HV.env.updateMatrixWorld(true); mat.uniforms.uCam.value.copy(HV.env.worldToLocal(cw)); } catch (e) { mat.uniforms.uCam.value.copy(fr.p); } } }
     HV.slope = fr.f.y; HV.alt = fr.p.y;
   }
-  function hvStart(mode) { HV.mode = mode; HV.st = "ride"; HV.s = 0; HV.v = .5; HV.warn = false; HV.lap = 0; HV.t = 0; W.panelDirty = 1; try { T.sfx && T.sfx("click"); } catch (e) {} }
-  function hvStop() { HV.st = "station"; HV.s = 0; HV.v = 0; HV.warn = false; HV.shake = 0; hvApply(0); AU.set("rush", 0, .3); AU.set("wind", .015, .5); W.panelDirty = 1; }
+  function hvStart(mode) { HV.mode = mode; HV.st = "ride"; HV.s = mode === "wild" ? 0 : HV.s0; HV.run = 0; HV.v = .5; HV.warn = false; HV.lap = 0; HV.t = 0; W.panelDirty = 1; try { T.sfx && T.sfx("click"); } catch (e) {} }
+  function hvStop() { HV.st = "station"; HV.mode = "calm"; HV.s = HV.s0; HV.run = 0; HV.cur = 0; HV.v = 0; HV.warn = false; HV.shake = 0; hvApply(0); AU.set("rush", 0, .3); AU.set("wind", .015, .5); W.panelDirty = 1; }
   function hvTick(dt) {
     dt = Math.min(dt, .05); if (T.inVR !== HV.wasVR) { HV.wasVR = T.inVR; hvPlace(); }
     const b = HV.boat; if (b && b.userData.update) { const BS = b.userData.S; if (BS) { BS.aws = 5 + HV.v * .5; BS.awa = 34; BS.t = W.t; } b.userData.update(dt); }
@@ -184,27 +292,34 @@
       else tgt = Math.sqrt(Math.max(36, 2 * g * (63.5 - y) * .9 + 30));                 /* szabadesés: az energia a magasságból */
       if (HV.s > TR.L - 120) tgt = Math.min(tgt, 5 + (TR.L - HV.s) * .16);              /* fékezés az állomás előtt */
       HV.v += clamp(tgt - HV.v, -14 * dt, (HV.s < TR.sLift ? 3 : 40) * dt);
-    } else { tgt = 7.5 - (HV.slope || 0) * 9; if (HV.s > TR.L - 40) tgt = Math.min(tgt, 2 + (TR.L - HV.s) * .14); HV.v += clamp(tgt - HV.v, -3 * dt, 1.6 * dt); }
-    HV.s += Math.max(.4, HV.v) * dt;
-    if (HV.s >= TR.L - .5) { hvStop(); return; }
+    } else {
+      /* BALATON-KÖRÚT: a látnivalóknál lelassít (bemutatás), utána az égbe emelkedik, és onnan csap le a következőre */
+      const L2 = TR.L, sm = ((HV.s % L2) + L2) % L2; let near = 1e9, ahead = 1e9, ci = -1; HV.passS.forEach((ps, i) => { const da = ((ps - sm) % L2 + L2) % L2, dn = Math.min(da, L2 - da); if (dn < near) { near = dn; ci = i; } if (da < ahead) ahead = da; });
+      const sl = HV.slope || 0; tgt = sl < -.12 ? 13 + 24 * Math.min(1, -sl * 1.3) : sl > .12 ? 13 : 16;
+      if (near < 24 || HV.v * HV.v > 20 + 2 * 13 * Math.max(0, ahead - 22)) tgt = 4.5;
+      if (HV.run > L2 - 30) tgt = Math.min(tgt, 1.5 + (L2 - HV.run) * .2);
+      HV.v += clamp(tgt - HV.v, -17 * dt, 9 * dt); if (near < 60 && ci !== HV.cur) { HV.cur = ci; W.panelDirty = 1; } HV.near = near; }
+    { const d = Math.max(.4, HV.v) * dt; HV.s += d; HV.run = (HV.run || 0) + d; }
+    if (HV.run >= TR.L - .5) { hvStop(); return; }
     HV.shake = HV.mode === "wild" ? clamp((HV.v - 8) / 22, 0, 1) : 0;
     hvApply(dt);
     AU.set("rush", clamp(HV.v / 32, 0, 1) * .16, .2); AU.set("wind", .02 + clamp(HV.v / 30, 0, 1) * .12, .2);
     HV.hudT = (HV.hudT || 0) + dt; if (HV.hudT > .5) { HV.hudT = 0; W.panelDirty = 1; }
   }
   function hvInfo() {
-    if (HV.st !== "ride") return HV.warn ? "⚠ VAD MENET: 60 m-es zuhanás, hurok, dugóhúzó, alagút – erős gyomor kell! Rosszullétre hajlamosaknak, kisgyerekeknek NEM ajánlott. VR-ben ülj le!" : "Ülj be a Zephyrbe! Válassz: nyugodt városnéző kör, vagy a vad menet.";
-    const TR = hvTrackNow(), kmh = Math.round(HV.v * 3.6), pct = Math.round(HV.s / TR.L * 100);
-    return `${HV.mode === "wild" ? "VAD MENET" : "Nyugodt menet"} · ${kmh} km/h · magasság ${Math.round(HV.alt || 0)} m · ${pct}%`;
+    if (HV.st !== "ride") return HV.warn ? "⚠ VAD MENET: 60 m-es zuhanás, hurok, dugóhúzó, alagút – erős gyomor kell! Rosszullétre hajlamosaknak, kisgyerekeknek NEM ajánlott. VR-ben ülj le!" : "Ülj be a Zephyrbe! Balaton-körút: a térkép fölött az égbe emelkedünk, és minden látnivalóhoz lecsapunk – vagy a vad menet.";
+    const TR = hvTrackNow(), kmh = Math.round(HV.v * 3.6), pct = Math.round((HV.run || 0) / TR.L * 100);
+    if (HV.mode !== "wild") { const S = HV.sights, c = S[HV.cur] || S[0], nx = S[(HV.cur + 1) % S.length]; return (HV.near < 60 ? `${c.n} – ${c.txt}` : `Következő: ${nx.n} (${nx.sub})`) + ` · ${kmh} km/h · ${Math.round(HV.alt || 0)} m · ${pct}%`; }
+    return `VAD MENET · ${kmh} km/h · magasság ${Math.round(HV.alt || 0)} m · ${pct}%`;
   }
   function hvButtons() {
     if (HV.st === "ride") return [["■ Kiszállok (megállás)", hvStop], ["‹ Vissza a sétához", () => W.close()]];
     if (HV.warn) return [["✔ Vállalom – INDULJON a vad menet!", () => hvStart("wild")], ["Mégsem", () => { HV.warn = false; W.panelDirty = 1; }]];
-    return [["⛵ Nyugodt menet", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], ["‹ Vissza a sétához", () => W.close()]];
+    return [["🗺 Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], ["‹ Vissza a sétához", () => W.close()]];
   }
   function hvPanel(P) {
     P.title("Balatoni hullámvasút", hvInfo());
-    P.row(0, "Nyugodt menet: Tihany · Szigliget · Badacsony · füredi móló · Festetics-kastély", "#7fd3ff");
+    P.row(0, HV.st === "ride" && HV.mode !== "wild" && HV.sights ? (HV.sights[HV.cur] || {}).txt || "" : "Balaton-körút: Zephyr · Kőhegy · komp · Földvár · Gömbkilátó · Fonyód · Keszthely · Szigliget · Badacsony · Révfülöp · Hegyestű · Tihany · Füred · Siófok", "#7fd3ff");
     P.row(1, "Vad menet: lassú felhúzás 63 m-re · szabadesés · hurok · alagút · dugóhúzó", "#ff8a8a");
     P.row(2, "Bármikor kiszállhatsz: „Kiszállok” – a hajó azonnal megáll az állomáson.", "#ffd166");
     P.buttons(hvButtons());

@@ -251,7 +251,7 @@
       set("LatheGeometry", (O, a) => new O(a[0], R(a[1], 12, 7), a[2], a[3]));
       set("TubeGeometry", (O, a) => new O(a[0], R(a[1], 64, 6, .6), a[2], R(a[3], 8, 3, .6), a[4]));
     } catch (e) { Object.keys(keep).forEach((n) => { try { THREE[n] = keep[n]; } catch (e2) {} }); return fn(); }
-    try { return fn(); } finally { Object.keys(keep).forEach((n) => { try { THREE[n] = keep[n]; } catch (e2) {} }); }
+    W.lod = true; try { return fn(); } finally { W.lod = false; Object.keys(keep).forEach((n) => { try { THREE[n] = keep[n]; } catch (e2) {} }); }
   }
   function finishOpen() {
     document.body.classList.add("world-on");

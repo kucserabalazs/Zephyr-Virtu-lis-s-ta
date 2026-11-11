@@ -65,6 +65,97 @@
       const g = new THREE.ShapeGeometry(sh, 4); g.rotateX(-Math.PI / 2); g.translate(0, h, 0); return g; };
     return { geo, z, w, ys, yb, at, rim, band, keel, deck, L, B, D };
   }
+  /* =====================================================================================================
+     2026-11-11 04:37 TULAJDONOS: „A bábukat ne tervezd újra, csak a kidolgozottság legyen magasabb szintű.”
+     A meglévő figurák MARADNAK – erre a rétegre kerülnek a finom részletek: korlátok, hajóablakok, palánkvonalak, lámpások,
+     legénység, ágyúk, kormánykerék, kötéllétrák, ékszerek, kitüntetések, kard, tollforgó, szélkakas, sirály stb.
+     Kikapcsolás (összehasonlításhoz): localStorage zephyr-sakk-finom = 0.
+     ===================================================================================================== */
+  function zFine(L, kind, c, B, I) {
+    try { if (localStorage.getItem("zephyr-sakk-finom") === "0") return; } catch (e) {}
+    if (W.lod && kind === "pawn") return;   /* telefonon a 16 gyalog marad az egyszerűbb (hűvösebb) változat; a tisztek megkapják a részleteket */
+    const P = ZC[c], CYL = (r0, r1, h, s) => new THREE.CylinderGeometry(r0, r1, h, s || 8), BOX = (w, h, d) => new THREE.BoxGeometry(w, h, d), TOR = (R, r, a, b, arc) => new THREE.TorusGeometry(R, r, a || 6, b || 16, arc || TAU);
+    const rail = (u0, u1, n, h, sc) => [-1, 1].forEach((sd) => { const pts = []; for (let k = 0; k <= n; k++) { const u = u0 + (u1 - u0) * k / n, x = sd * B.w(u) * (sc || .9), y = B.ys(u), z = B.z(u); L.push([CYL(h * .05, h * .06, h, 5), "g", M4(x, y + h / 2, z)], [ZS(h * .1, 6, 5), "g", M4(x, y + h, z)]); pts.push(V3(x, y + h, z)); } L.push([new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 4, h * .04, 5, false), "g"]); });
+    const ports = (f, us, r) => [-1, 1].forEach((sd) => us.forEach((u) => { const p = B.at(u, f); L.push([TOR(r, r * .28, 6, 14), "g", M4(sd * p[0] * 1.02, p[1], p[2], Math.PI / 2)], [CYL(r * .8, r * .8, .2, 10).rotateZ(Math.PI / 2), "l", M4(sd * p[0] * 1.015, p[1], p[2]), "#ffe4a0"]); }));
+    const seams = (y, xs, len, z0) => xs.forEach((x) => L.push([BOX(.12, .07, len * (1 - Math.abs(x) / (B.B * .62))), "m", M4(x, y + .05, z0 || 0), c === "w" ? "#cdbb93" : "#0c2a47"]));
+    const lantern = (x, y, z, s) => L.push([CYL(s * .12, s * .12, s * 1.6, 5), "g", M4(x, y + s * .8, z)], [ZS(s * .52, 10, 8), "l", M4(x, y + s * 2, z), ZC.glow], [TOR(s * .5, s * .1, 5, 12).rotateX(Math.PI / 2), "g", M4(x, y + s * 1.62, z)], [new THREE.ConeGeometry(s * .56, s * .7, 8), "g", M4(x, y + s * 2.75, z)]);
+    const sailor = (x, y, z, s, col, ry) => { L.push([CYL(s * .5, s * .62, s * 1.7, 8), "s", M4(x, y + s * .85, z), "#22314a"], [CYL(s * .58, s * .52, s * 1.5, 8), "s", M4(x, y + s * 2.4, z), col], [ZS(s * .5, 10, 8), "m", M4(x, y + s * 3.6, z), ZC.skin], [CYL(s * .56, s * .56, s * .22, 10), "s", M4(x, y + s * 4.05, z), "#ffffff"], [CYL(s * .34, s * .4, s * .36, 10), "s", M4(x, y + s * 4.3, z), "#ffffff"]);
+      [-1, 1].forEach((sd) => L.push([CYL(s * .17, s * .15, s * 1.3, 6), "s", M4(x + sd * s * .72 * Math.cos(ry || 0), y + s * 2.35, z + sd * s * .72 * Math.sin(ry || 0), 0, 0, sd * .25), col])); };
+    const barrel = (x, y, z, s) => L.push([CYL(s * .8, s * .8, s * 1.9, 10), "m", M4(x, y + s * .95, z), "#7a4a22"], [CYL(s * .92, s * .92, s * 1.1, 10), "m", M4(x, y + s * .95, z), "#84522a"], [TOR(s * .9, s * .09, 5, 14).rotateX(Math.PI / 2), "g", M4(x, y + s * .45, z)], [TOR(s * .9, s * .09, 5, 14).rotateX(Math.PI / 2), "g", M4(x, y + s * 1.45, z)]);
+    const wheel = (x, y, z, R) => { L.push([TOR(R, R * .09, 6, 24), "g", M4(x, y, z)], [TOR(R * .34, R * .08, 5, 12), "g", M4(x, y, z)], [BOX(R * .35, y * 0 + R * 1.5, R * .3), "m", M4(x, y - R * 1.1, z + R * .25), "#6a4424"]); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; L.push([CYL(R * .05, R * .05, R * 2.5, 5), "g", M4(x, y, z, 0, 0, a)]); } };
+    if (kind === "pawn") {
+      seams(7.2, [-4.5, -2.25, 0, 2.25, 4.5], 27);
+      L.push([BOX(5.4, 2.5, 7), "e", M4(0, 8.45, 5.2), P.hull], [BOX(6, .4, 7.6), "g", M4(0, 9.9, 5.2)], [BOX(2, 1.9, .2), "e", M4(0, 8.3, 1.6), P.accent], [ZS(.2, 6, 5), "g", M4(.6, 8.3, 1.45)]);
+      [-1, 1].forEach((sd) => { [3.6, 6.8].forEach((z) => L.push([TOR(.55, .16, 5, 12), "g", M4(sd * 2.72, 8.7, z, Math.PI / 2)], [CYL(.45, .45, .15, 8).rotateZ(Math.PI / 2), "l", M4(sd * 2.7, 8.7, z), "#ffe4a0"])); });
+      L.push([TOR(1.05, .34, 6, 14), "e", M4(0, 10.3, 5.2, 0, Math.PI / 2), "#d8262c"]); [0, 1, 2, 3].forEach((k) => L.push([BOX(.5, .72, .5), "e", M4(Math.cos(k * Math.PI / 2 + .8) * 1.05, 10.3, 5.2 + Math.sin(k * Math.PI / 2 + .8) * 1.05), "#ffffff"]));
+      rail(.06, .5, 6, 1.7, .9); lantern(0, B.ys(.03), B.z(.03) - 1, .75);
+      barrel(2.6, 7.2, -8.5, .85); L.push([TOR(.9, .26, 5, 12).rotateX(Math.PI / 2), "m", M4(-2.6, 7.5, -8.8), "#d9c59a"], [TOR(.6, .24, 5, 10).rotateX(Math.PI / 2), "m", M4(-2.6, 7.95, -8.8), "#d9c59a"]);
+      sailor(1.2, 7.2, 11.2, .95, c === "w" ? "#c8322c" : "#e9e2d3", 0);
+      rigLines([[V3(0, 30, -2.5), V3(-7.4, 8.4, 3.5)], [V3(0, 30, -2.5), V3(7.4, 8.4, 3.5)]], I, ZC.gold2);
+    } else if (kind === "bishop") {
+      seams(12.2, [-6, -3, 0, 3, 6], 30, -1); rail(.3, .66, 7, 2, .93);
+      [-1, 1].forEach((sd) => { for (let k = 0; k < 6; k++) { const u = .2 + k * .11, p = B.at(u, .3); L.push([CYL(.34, .42, 2.8, 8).rotateZ(Math.PI / 2), "s", M4(sd * (p[0] * 1.02 + 1.1), p[1], p[2]), "#1b1e24"], [TOR(.42, .1, 5, 10), "g", M4(sd * (p[0] * 1.02 + 2.45), p[1], p[2], Math.PI / 2)]); } });
+      wheel(0, 21.6, 13.4, 1.6); [-1, 1].forEach((sd) => lantern(sd * 6.6, 21.4, 20.2, 1.05)); lantern(0, 21.4, 20.6, 1.35);
+      [[-9, 64, .86], [0, 76, 1], [10, 60, .76]].forEach(([mz, top, s]) => { const y = 12 + (top - 12) * .52 + .6; L.push([TOR(1.9 * s, .13, 5, 18).rotateX(Math.PI / 2), "g", M4(0, y + 1.6, mz)]); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; L.push([CYL(.08, .08, 1.6, 4), "g", M4(Math.sin(a) * 1.9 * s, y + .8, mz + Math.cos(a) * 1.9 * s)]); } });
+      sailor(0, 12 + 64 * .52 + .6, 0, .62, c === "w" ? "#c8322c" : "#e9e2d3", 0); sailor(0, 19.5, 15.6, .85, c === "w" ? "#173F68" : "#e9e2d3", 0); sailor(-2.5, 16, -15, .8, c === "w" ? "#c8322c" : "#e9e2d3", 0);
+      L.push([ZS(1, 12, 8), "e", ZE(0, 13.6, 5, 1.5, .9, 3.6), "#fff9ed"], [TOR(1, .12, 5, 20).rotateX(Math.PI / 2), "g", ZE(0, 14, 5, 1.5, 1, 3.6)], [BOX(4.4, .3, 4.4), "m", M4(0, 12.4, -4.6), "#6a4424"], [BOX(4.9, .22, .4), "g", M4(0, 12.6, -2.4)], [BOX(4.9, .22, .4), "g", M4(0, 12.6, -6.8)]);
+      for (let k = 0; k < 5; k++) L.push([BOX(.14, .1, 4.2), "g", M4(-1.8 + k * .9, 12.6, -4.6)]);
+      barrel(-4.6, 12.2, 8.4, .9); barrel(-3, 12.2, 9.2, .9); barrel(4.4, 12.2, 8.8, .9);
+      L.push([new THREE.SphereGeometry(.8, 10, 8, 0, TAU, 0, Math.PI / 2), "g", M4(0, 17.3, -12.4)], [BOX(.2, 2, .2), "g", M4(-.9, 16.8, -12.4)], [BOX(.2, 2, .2), "g", M4(.9, 16.8, -12.4)], [BOX(2.2, .2, .2), "g", M4(0, 17.9, -12.4)]);
+      ports(.62, [.34, .46, .58], .6);
+      const rg = []; [[0, 70, 0, 10, 13, 1, 4.2], [-9, 58, -9, 9.6, 13, -8, 3.4], [10, 54, 10, 8.4, 13, 10, 3]].forEach(([mz0, ty, mz, bx, by, bz, off]) => [-1, 1].forEach((sd) => { const A0 = V3(0, ty, mz), B0 = V3(sd * bx, by, bz), B1 = V3(sd * bx, by, bz + off); rg.push([A0, B1]); for (let k = 1; k < 9; k++) { const t = k / 9 * .82 + .12; rg.push([A0.clone().lerp(B0, t), A0.clone().lerp(B1, t)]); } }));
+      rigLines(rg, I, ZC.gold2);
+    } else if (kind === "rook") {
+      const rT = (y) => 6.4 - (y - 8) / 38 * 1.7;
+      for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; L.push([BOX(.5, 1.7, 1.5), "g", M4(Math.sin(a) * (rT(45) + .7), 44.7, Math.cos(a) * (rT(45) + .7), a)]); }
+      [[23, -1], [35, -1], [29, 1], [41, 1]].forEach(([y, s]) => { L.push([TOR(.95, .16, 5, 12, Math.PI), "g", M4(0, y + 1.3, s * (rT(y) + .12), s > 0 ? Math.PI : 0)]); [-1, 1].forEach((sd) => L.push([BOX(.55, 2.6, .22), "e", M4(sd * 1.15, y, s * (rT(y) + .12)), P.roof])); });
+      L.push([ZS(.28, 8, 6), "g", M4(.95, 11, -rT(11) - .4)], [BOX(2.6, .14, .1), "g", M4(0, 12.2, -rT(12) - .38)], [BOX(2.6, .14, .1), "g", M4(0, 9.8, -rT(10) - .38)], [BOX(.14, 5, .1), "g", M4(0, 11.2, -rT(11) - .38)]);
+      for (let k = 0; k < 3; k++) L.push([BOX(5.2 - k * .7, .5, 1.6 - k * .35), "m", M4(0, 8.25 + k * .5, -rT(8) - 1.5 + k * .3), "#b9ab93"]);
+      L.push([TOR(1.2, .36, 6, 14), "e", M4(4.3, 12.2, -rT(12.2) + 1.25, -.72), "#d8262c"]);
+      [-1, 1].forEach((sd) => { const [g, m] = rodGeom(V3(sd * .8, 8, rT(8) + .45), V3(sd * .8, 45.4, rT(45.4) + .45), .13, 6); L.push([g, "g", m]); }); for (let k = 0; k < 24; k++) { const y = 9 + k * 1.55; L.push([BOX(1.6, .14, .14), "g", M4(0, y, rT(y) + .45)]); }
+      [48.6, 50.3, 52].forEach((y) => L.push([TOR(3.76, .12, 5, 28).rotateX(Math.PI / 2), "g", M4(0, y, 0)])); L.push([CYL(.9, 1.3, 3.2, 10), "l", M4(0, 50.3, 0), "#fff3c4"]);
+      L.push([CYL(.1, .1, 4.6, 5), "g", M4(0, 62.6, 0)], [BOX(4.2, .16, .16), "g", M4(0, 62.2, 0)], [BOX(.16, .16, 4.2), "g", M4(0, 62.2, 0)], [new THREE.ConeGeometry(.5, 1.4, 4).rotateX(-Math.PI / 2), "g", M4(0, 64.4, -2)], [BOX(.12, .9, 1.4), "g", M4(0, 64.4, 1.6)], [BOX(.12, .12, 3.6), "g", M4(0, 64.4, 0)]);
+      ["É", "D"].forEach((_, k) => L.push([ZS(.26, 6, 5), "g", M4(0, 62.2, k ? 2.3 : -2.3)])); [-2.3, 2.3].forEach((x) => L.push([ZS(.26, 6, 5), "g", M4(x, 62.2, 0)]));
+      { const gx = 4.6, gy = 49.75, gz = -4.7; L.push([ZS(1, 10, 8), "s", ZE(gx, gy + .6, gz, .55, .5, .95), "#ffffff"], [ZS(.36, 8, 6), "s", M4(gx, gy + 1.15, gz - .75), "#ffffff"], [new THREE.ConeGeometry(.12, .5, 5).rotateX(-Math.PI / 2), "e", M4(gx, gy + 1.1, gz - 1.25), "#e8a21c"], [ZS(1, 8, 6), "s", ZE(gx, gy + .7, gz + .5, .5, .16, .8), "#9aa3ad"], [CYL(.04, .04, .5, 4), "e", M4(gx - .15, gy + .1, gz), "#e8a21c"], [CYL(.04, .04, .5, 4), "e", M4(gx + .15, gy + .1, gz), "#e8a21c"]); }
+      for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; L.push([CYL(.42, .5, 1.5, 8), "s", M4(Math.sin(a) * 11.2, 8.7, Math.cos(a) * 11.2), "#2b2f36"], [ZS(.5, 8, 6), "g", M4(Math.sin(a) * 11.2, 9.6, Math.cos(a) * 11.2)]); }
+    } else if (kind === "knight") {
+      L.push([TOR(3.75, .5, 6, 22), "g", M4(0, 20.6, -11.3, 0, 1.05)], [ZS(.85, 10, 8), "e", M4(0, 19.2, -14.4), "#c21f3a"], [TOR(.95, .2, 5, 12), "g", M4(0, 19.2, -14.5, 0, .5)]);
+      for (let k = 0; k < 9; k++) { const a = (k - 4) * .2; L.push([ZS(.3, 6, 5), "e", M4(Math.sin(a) * 3.9, 21.6 - Math.cos(a) * .2, -11.9 - Math.cos(a) * 2.2), "#fff9ed"]); }
+      L.push([TOR(1.35, .2, 5, 16).rotateX(Math.PI / 2), "g", M4(0, 64.5, -8.6)]); for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; L.push([new THREE.ConeGeometry(.3, 1.3, 5), "g", M4(Math.sin(a) * 1.35, 65.2, -8.6 + Math.cos(a) * 1.35)], [ZS(.2, 6, 5), "e", M4(Math.sin(a) * 1.35, 65.95, -8.6 + Math.cos(a) * 1.35), k % 2 ? "#1f6fd1" : "#c21f3a"]); }
+      [-1, 1].forEach((sd) => L.push([ZS(.15, 6, 5), "e", M4(sd * 1.95, 63.3, -10.15), "#ffffff"]));
+      { const cc = V3(0, 16.5, -7.8), rr = [5.2, 5.6, 5]; for (let r = 0; r < 5; r++) for (let k = -3; k <= 3; k++) { const ax = k * .24 + (r % 2) * .12, ay = -.45 + r * .26, d = V3(Math.sin(ax) * Math.cos(ay), Math.sin(ay), -Math.cos(ax) * Math.cos(ay)), pos = V3(cc.x + d.x * rr[0] * 1.01, cc.y + d.y * rr[1] * 1.01, cc.z + d.z * rr[2] * 1.01), q = new THREE.Quaternion().setFromUnitVectors(V3(0, 0, 1), d);
+          L.push([ZS(1, 8, 6), "s", new THREE.Matrix4().compose(pos, q, V3(.75, .95, .22)), (r + k) % 2 ? P.wing : P.swan]); } }
+      L.push([ZT([V3(0, 19, -14.6), V3(0, 13, -16.6), V3(0, 11.4, -16.4)], .16, 16), "g"]);
+      rail(.1, .42, 4, 1.5, .9); lantern(0, B.ys(.02), B.z(.02) - 1.2, .8);
+    } else if (kind === "queen") {
+      const yW = 42, hy = yW + 23.8, prof = [[13, 13.4], [12, 18], [9.4, 26], [6.4, 35], [4.75, yW]];
+      for (let i = 0; i < 18; i++) { const a = i / 18 * TAU; L.push([ZT(prof.map(([r, y], k) => V3(Math.cos(a + k * .06) * (r + .12), y, Math.sin(a + k * .06) * (r + .12))), .15, 14), "g"]); }
+      [19.5, 31].forEach((y, k) => { const r = k ? 7.75 : 11.45; L.push([TOR(r, .2, 5, 48).rotateX(Math.PI / 2), "g", M4(0, y, 0)]); });
+      for (let i = 0; i < 9; i++) { const a = (i + .25) / 9 * TAU; L.push([ZS(.55, 8, 6), "e", M4(Math.cos(a) * 12.6, 16.9, Math.sin(a) * 12.6), i % 2 ? "#1f6fd1" : "#c21f3a"], [TOR(.62, .13, 5, 10), "g", M4(Math.cos(a) * 12.65, 16.9, Math.sin(a) * 12.65, -a + Math.PI / 2)]); }
+      for (let k = 0; k < 13; k++) { const a = (k - 6) * .2; L.push([ZS(.3, 6, 5), "e", M4(Math.sin(a) * 2.5, yW + 15.5 - Math.cos(a) * .5, -Math.cos(a) * 2.4), "#fffaf0"]); } L.push([ZS(.5, 8, 6), "e", M4(0, yW + 14.5, -2.7), "#1f6fd1"]);
+      [-1, 1].forEach((sd) => L.push([ZS(.32, 6, 5), "g", M4(sd * 4.15, hy - 1.6, .2)], [ZS(.28, 6, 5), "e", M4(sd * 4.15, hy - 2.5, .2), "#c21f3a"]));
+      L.push([TOR(1.12, .22, 5, 12), "g", M4(4.4, yW + 2.4, -5.9, 0, .9)], [TOR(1.12, .22, 5, 12), "g", M4(-6.9, yW + .2, -4.2, 0, 1.1)]);
+      { const a0 = V3(4.1, yW + 1.3, -6.9), a1 = V3(6.6, yW + 15, -9.6); const [g, m] = rodGeom(a0.clone().lerp(a1, -.18), a1, .32, 8); L.push([g, "g", m], [ZS(1.15, 12, 10), "e", M4(a1.x, a1.y + .9, a1.z), c === "w" ? "#1f6fd1" : "#c21f3a"], [TOR(1.18, .16, 5, 14).rotateX(Math.PI / 2), "g", M4(a1.x, a1.y + .9, a1.z)], [BOX(.2, 1.5, .2), "g", M4(a1.x, a1.y + 2.6, a1.z)], [BOX(.9, .2, .2), "g", M4(a1.x, a1.y + 2.8, a1.z)], [TOR(.5, .14, 5, 10).rotateX(Math.PI / 2), "g", M4(a1.x, a1.y - .5, a1.z)]); }
+      L.push([new THREE.SphereGeometry(1, 14, 8, 0, TAU, 0, Math.PI / 2), "s", ZE(0, hy + 4.6, 0, 3.1, 2.6, 3.1), c === "w" ? "#8a1c2e" : "#173F68"]);
+      [-1, 1].forEach((sd) => { L.push([CYL(.1, .1, 2.2, 4), "g", M4(sd * 7, 19.5, 21)], [ZS(.75, 10, 8), "l", M4(sd * 7, 18, 21), ZC.glow], [new THREE.ConeGeometry(.8, .7, 8), "g", M4(sd * 7, 18.9, 21)]); });
+      rail(.14, .46, 5, 1.8, .92); ports(.68, [.3, .44, .58], .7);
+      for (let i = 0; i < 5; i++) { const a = -1 + i * .5; L.push([ZS(1, 8, 6), "e", ZE(Math.sin(a) * 9.4, 17.4, -12 + Math.abs(a) * 2.2, .7, .5, .7), i % 2 ? "#e85a7a" : "#fff0f3"]); }
+    } else if (kind === "king") {
+      const y0 = 15.6, hy = y0 + 52, ty = hy + 5.2;
+      seams(15.4, [-7.5, -5, -2.5, 0, 2.5, 5, 7.5], 36); rail(.08, .34, 5, 2.2, .93); rail(.7, .9, 4, 2, .9); ports(.7, [.26, .38, .5, .62, .74], .72);
+      wheel(0, y0 + 6.4, 11.5, 3.2); [-1, 1].forEach((sd) => lantern(sd * 7.4, B.ys(.03) + .4, B.z(.03) - 1, 1.25));
+      [-1, 1].forEach((sd) => { L.push([TOR(2.12, .28, 5, 16).rotateX(Math.PI / 2), "g", M4(sd * 2.6, y0 + 7, 0)], [ZT([V3(sd * 1.4, y0 + 44.6, -4.6), V3(sd * 1.9, y0 + 36, -7.6), V3(sd * 1.5, y0 + 27.6, -7), V3(sd * 2.4, y0 + 16, -8.2), V3(sd * 3.4, y0 + 9.6, -8.2)], .22, 24), "g"]); });
+      L.push([ZT([V3(6.4, y0 + 43.5, -2.6), V3(3.2, y0 + 39.4, -6.9), V3(-1, y0 + 33.6, -7.5), V3(-5.6, y0 + 28.4, -4.6)], .95, 22), "e", null, c === "w" ? "#b8322c" : "#efe6d2"]);
+      [[-4.4, "#c21f3a"], [-2.9, "#1f6fd1"], [-1.4, "#f0c040"]].forEach(([x, col], k) => { const y = y0 + 39.2 - k * .5, z = -Math.sqrt(Math.max(1, 59 - x * x)) - .35; L.push([BOX(.9, 1.5, .2), "e", M4(x, y + 1, z), col], [CYL(.62, .62, .2, 10).rotateX(Math.PI / 2), "g", M4(x, y - .25, z - .05)], [ZS(.22, 6, 5), "e", M4(x, y - .25, z - .2), col]); });
+      { const a0 = V3(-8.4, y0 + 27.5, .5), a1 = V3(-12.4, y0 + 6, 7.5); const [g, m] = rodGeom(a0, a1, .55, 8); L.push([g, "e", m, "#2a1a0e"]); const [g2, m2] = rodGeom(a1.clone().lerp(a0, .08), a1, .62, 8); L.push([g2, "g", m2]); const [g3, m3] = rodGeom(a0, a0.clone().lerp(a1, -.2), .34, 8); L.push([g3, "g", m3], [ZS(.62, 8, 6), "g", M4(-7.5, y0 + 32.1, -1)], [BOX(3.2, .4, .9), "g", M4(-8.3, y0 + 27.8, .4, 0, 0, .3)], [TOR(1.2, .16, 5, 12, Math.PI), "g", M4(-7.9, y0 + 29.6, -.2, Math.PI / 2, 0, .3)]); }
+      L.push([varTube(new THREE.CatmullRomCurve3([V3(4.6, ty + 1.2, 1.5), V3(7.2, ty + 5.8, 3.4), V3(8, ty + 9.6, 6.8), V3(6.2, ty + 10.8, 10.4)]), 22, 9, (t) => 1.5 * Math.sin(Math.PI * Math.min(1, t * .9 + .12))), "m", null, "#ffffff"], [ZS(.85, 10, 8), "g", M4(4.6, ty + 1.2, 1.4)], [ZS(.4, 8, 6), "e", M4(4.6, ty + 1.2, .6), "#c21f3a"]);
+      L.push([ZT([V3(1.6, y0 + 30.2, -6.9), V3(3, y0 + 28.4, -7.4), V3(4.6, y0 + 29.6, -6.4)], .1, 12), "g"], [CYL(.7, .7, .25, 12).rotateX(Math.PI / 2), "g", M4(4.9, y0 + 29.2, -6.2)]);
+      { const bx = 0, bz = -15.5, by = 15.4; L.push([BOX(4.6, 2.4, 3), "m", M4(bx, by + 1.2, bz), "#6a4424"], [BOX(4.9, .3, .5), "g", M4(bx, by + 1.2, bz - 1.4)], [BOX(.5, 2.5, 3.2), "g", M4(bx - 1.5, by + 1.2, bz)], [BOX(.5, 2.5, 3.2), "g", M4(bx + 1.5, by + 1.2, bz)], [BOX(4.6, .4, 3), "m", M4(bx, by + 3.5, bz + 1.5, 0, -1.05), "#7a4e28"], [BOX(.8, .9, .3), "g", M4(bx, by + 1.6, bz - 1.56)]);
+        for (let k = 0; k < 14; k++) L.push([ZS(.42, 6, 5), "g", M4(bx - 1.6 + (k % 5) * .8, by + 2.5 + ((k * 7) % 3) * .25, bz - .8 + ((k * 3) % 4) * .5)]); L.push([ZS(.4, 6, 5), "e", M4(bx + .4, by + 3, bz - .2), "#c21f3a"], [ZS(.36, 6, 5), "e", M4(bx - .8, by + 2.9, bz + .3), "#1f6fd1"]); }
+      [-1, 1].forEach((sd) => { L.push([CYL(.6, .75, 4.4, 10).rotateX(Math.PI / 2), "s", M4(sd * 5.4, 16.6, -9.5, sd * -.18), "#1b1e24"], [TOR(.74, .14, 5, 12), "g", M4(sd * 5.8, 16.6, -11.6, sd * -.18)], [BOX(1.8, .7, 3), "m", M4(sd * 5.4, 15.8, -9, sd * -.18), "#6a4424"], [CYL(.7, .7, .3, 10).rotateZ(Math.PI / 2), "m", M4(sd * 5.4 - 1, 15.9, -9), "#4a2e16"], [CYL(.7, .7, .3, 10).rotateZ(Math.PI / 2), "m", M4(sd * 5.4 + 1, 15.9, -9), "#4a2e16"]); });
+      sailor(-6.4, 15.4, 4, 1.25, c === "w" ? "#c8322c" : "#e9e2d3", 0);
+    }
+  }
   /* aranyozott oroszlánfej (orrdísz): sörény-korona, pofa, orr, szemek, fülek – az arc a dir irányba néz */
   function zLion(L, x, y, z, s, dir) {
     const ry = dir > 0 ? Math.PI : 0, R = (dx, dy, dz) => { const v = V3(dx, dy, dz).applyAxisAngle(V3(0, 1, 0), ry); return [x + v.x * s, y + v.y * s, z + v.z * s]; };
@@ -154,6 +245,7 @@
     L.push([new THREE.CylinderGeometry(.35, .35, 15.5, 10).rotateX(Math.PI / 2), "g", M4(0, 11, mz + 7.6)], [ZS(.55, 8, 6), "g", M4(0, 11, mz)]);
     L.push([ZT([V3(0, 9, B.z(.02) + .5), V3(0, 13.5, B.z(.02) - .6), V3(0, 13, B.z(.02) - 2.2)], .35), "g"]);
     L.push([ZT([V3(0, 7.6, -14.5), V3(0, 9.4, -17.6), V3(0, 11.2, -17.9)], .45), "g"]);
+    zFine(L, "pawn", c, B, I);
     zMesh(L, I);
     rigLines([[V3(0, 46, mz), V3(0, 9.6, -17.2)], [V3(0, 46, mz), V3(0, 9.2, B.z(.02))], [V3(0, 40, mz), V3(-7.8, 8.3, mz + 1)], [V3(0, 40, mz), V3(7.8, 8.3, mz + 1)]], I, ZC.gold2);
     /* fővitorla „Zephyr” felirattal és emblémával – két oldalról olvasható; orrvitorla */
@@ -186,6 +278,7 @@
     L.push([new THREE.TorusGeometry(3.8, .3, 6, 32).rotateX(Math.PI / 2), "g", M4(0, 47.1, 0)], [new THREE.TorusGeometry(3.8, .3, 6, 32).rotateX(Math.PI / 2), "g", M4(0, 53.6, 0)]);
     L.push([ZL([[4.7, 53.6], [4.4, 54.3], [2.2, 56.8], [.7, 58.2], [0, 58.4]], 32), "e", null, P.roof], [new THREE.TorusGeometry(4.55, .28, 5, 32).rotateX(Math.PI / 2), "g", M4(0, 53.8, 0)]);
     L.push([ZS(.9, 10, 8), "g", M4(0, 58.7, 0)], [new THREE.ConeGeometry(.35, 1.6, 6), "g", M4(0, 60, 0)]);
+    zFine(L, "rook", c, null, I);
     zMesh(L, I);
     const g2 = zWrap(G, I, [24.6, 60.8, 24.6]); g2.userData.lamp = 50.3 * ZU; return g2;
   }
@@ -212,6 +305,7 @@
         L.push([ZS(1, 10, 6), "g", new THREE.Matrix4().compose(mid.clone().addScaledVector(dir, .3).add(V3(0, -.2, 0)), q, V3(2.2, .22, len * .54))]);
       }
     });
+    zFine(L, "knight", c, B, I);
     zMesh(L, I);
     return zWrap(G, I, [25, 66, 36]);
   }
@@ -233,6 +327,7 @@
     const MS = [[-9, 64, .86], [0, 76, 1], [10, 60, .76]];
     MS.forEach(([mz, top, s]) => { L.push([new THREE.CylinderGeometry(.42 * s, .8 * s, top - 12, 10), "g", M4(0, (top + 12) / 2, mz)], [ZS(.75, 8, 6), "g", M4(0, top + .4, mz)], [new THREE.CylinderGeometry(1.6 * s, 1.2 * s, 1.2, 12), "g", M4(0, 12 + (top - 12) * .52, mz)]);
       [.26, .56, .82].forEach((f, k) => { if (s < .8 && k === 2) return; const y = 12 + (top - 12) * f + 7 * s * (1 - k * .18), wd = 26 * s * (1 - k * .2); L.push([new THREE.CylinderGeometry(.28, .28, wd + 1.4, 8).rotateZ(Math.PI / 2), "g", M4(0, y + .3, mz - .4)]); }); });
+    zFine(L, "bishop", c, B, I);
     zMesh(L, I);
     /* keresztvitorlák (a fő és az első árboc alsó két vitorláján arany horgony), orrvitorlák, zászlók, kötélzet */
     MS.forEach(([mz, top, s], mi) => { [.26, .56, .82].forEach((f, k) => { if (s < .8 && k === 2) return; const yTop = 12 + (top - 12) * f + 7 * s * (1 - k * .18), h = 12 * s * (1 - k * .18), wd = 26 * s * (1 - k * .2);
@@ -278,6 +373,7 @@
     const cy = hy + 4.6; L.push([new THREE.CylinderGeometry(3.5, 3.2, 1.8, 28, 1, true), "g", M4(0, cy, 0)], [new THREE.TorusGeometry(3.45, .32, 6, 32).rotateX(Math.PI / 2), "g", M4(0, cy - .9, 0)], [new THREE.TorusGeometry(3.6, .3, 6, 32).rotateX(Math.PI / 2), "g", M4(0, cy + .9, 0)]);
     for (let i = 0; i < 5; i++) { const a = Math.PI + (i - 2) * .62, x = Math.sin(a) * 3.45, z = Math.cos(a) * 3.45, h2 = i === 2 ? 4.6 : 3.2;
       L.push([new THREE.ConeGeometry(.75, h2, 6), "g", M4(x, cy + .9 + h2 / 2, z)], [ZS(.5, 8, 6), "g", M4(x, cy + 1.2 + h2, z)], [ZS(.42, 8, 6), "e", M4(x * 1.05, cy, z * 1.05), i % 2 ? "#1f6fd1" : "#c21f3a"]); }
+    zFine(L, "queen", c, B, I);
     zMesh(L, I);
     return zWrap(G, I, [32, 90, 46]);
   }
@@ -312,6 +408,7 @@
     const triE = new THREE.CylinderGeometry(8.75, 8.75, .8, 3, 1, true); triE.rotateY(Math.PI); L.push([triE, "g", M4(0, ty + 1.7, 0)]);
     L.push([new THREE.SphereGeometry(1, 18, 12, 0, TAU, 0, Math.PI / 2), "e", ZE(0, ty + .4, .6, 4.8, 4.6, 4.8), "#102D50"]);
     L.push([anchorGeo(2.6), "g", M4(0, ty + .4, -5.6, Math.PI)]);
+    zFine(L, "king", c, B, I);
     zMesh(L, I);
     return zWrap(G, I, [35, 100, 54]);
   }
