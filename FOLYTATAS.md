@@ -678,3 +678,10 @@ Kérés: a Quest saját környezetének (bálna, teknős) szintjét szeretné: e
 - KÉSZ: az alsó képsor gömbjei alacsony elsőbbségűek (`userData.lowPri`): ha a sugár mögöttük nyilat/táblát is ér, az kapja; a sor lejjebb került (fej −0,56 m), a fogófelület kisebb.
 - KÉSZ: látható gomb a séta közben a képsor alatt: „✎ Táblák rendezése” / „✓ Rendezés kész” (`xrEditPill`) – eddig csak a Beállítások alján volt kapcsoló, és nyitott panel mellett a táblák nem voltak megfoghatók (a „Be” most be is zárja a panelt).
 - Szemüvegben NEM ellenőrzött. Ha így sem megy a táblák húzása, a közvetítésen meg kell nézni, mi történik csippentéskor.
+
+## 2026-11-11 12:18 – botkormány, „oldalra csúszás”, táblafelirat átírása VR-ben
+Kérés: (1) álló hajónál úgy érzi, a hajó oldalra csúszik; (2) „a kormánykerékkel nem boldogulunk” → térjünk át a BOTKORMÁNYRA kormánytoldóval, a test előtt mozgatva, ellentétes mozgással; a kerék tűnjön el; (3) a táblákat a gombbal már tudja rendezni („nagyon frankó”), de a feliratot nem tudja átírni – ez nagyon fontos.
+- KÉSZ (3): VR-ben minden csippentés húzásnak számított (`mk.moved` azonnal igaz lett), ezért a rácsippentés sosem lett átnevezés. Most 4°-nál kisebb kézmozdulat NEM húzás → rövid rácsippentés = átnevezés (VR-billentyűzet).
+- KÉSZ (2): botkormány a 05b-ben (`TIL`, `CK2.tiller`): rúd a tat közepén (0,9 m), csuklós toldó (0,8 m) markolattal. Fogás: ököl/csippentés a markolat 34 cm-es körzetében; elengedés: nyitott tenyér 0,6 mp. A rúd szöge a kéz helyéből (két kör metszése). Balra húzva jobbra fordul. A kerekek és tengelyük rejtve, az oszlop a műszerekkel marad. Régi kerék: localStorage `zephyr-kormany`=kerek. A hüvelykujjkar és a billentyűk változatlanul működnek.
+- KÍSÉRLET (1): a hajó a kódban sosem csúszik oldalra (csak előre halad) – az érzetet valószínűleg a keresztben vonuló hullámkép adja álló hajónál. Lassú hajónál a hullámkép most lassabban vonul (40%-ra). Ha így is megmarad, a közvetítésen kell megnézni.
+- Szemüvegben egyik sem ellenőrzött (a botkormány iránya, fogási távolsága, magassága hangolandó lehet).

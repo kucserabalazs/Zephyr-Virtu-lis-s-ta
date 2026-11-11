@@ -10505,8 +10505,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         hover: (on, h2, key) => { VRN.hov[key || "x"] = on ? mkr : null; if (on) { try { xrPulse(XRP.src[key] && XRP.src[key].src, .25, 14); } catch (e) {} } },
         click: () => { if (navEditOn() || mkr.moved) { const mv = mkr.moved; mkr.moved = false; if (!mv && navEditOn() && inVR) navRename(mkr); return; } vrnGo(mkr); },
         /* ÚTJELZŐK IGAZÍTÁSA (Beállítások → „Útjelzők igazítása”): csippentve megfogod a gyűrűt, a sugárral a padlón máshová húzod, elengeded → elmentve */
-        down: (hh, S0, key) => { if (!navEditOn()) return; VRN.grab = mkr; mkr.moved = false; try { sfx("click"); vrHaptic(null, .5, 30); } catch (e) {} },
-        drag: (S0) => { if (VRN.grab !== mkr || !S0 || !S0.o) return; navDragTo(mkr, S0.o, S0.d); },
+        down: (hh, S0, key) => { if (!navEditOn()) return; VRN.grab = mkr; mkr.moved = false; mkr.d0 = S0 && S0.d ? S0.d.clone() : null; try { sfx("click"); vrHaptic(null, .5, 30); } catch (e) {} },
+        drag: (S0) => { if (VRN.grab !== mkr || !S0 || !S0.o) return; if (!mkr.moved && mkr.d0 && S0.d && S0.d.angleTo(mkr.d0) < .07) return;   /* 2026-11-11: amíg a kéz nem mozdul el (4°), ez NEM húzás – így a rövid rácsippentés átnevezés lesz (eddig minden csippentés húzásnak számított, ezért nem lehetett átírni a feliratot) */ navDragTo(mkr, S0.o, S0.d); },
         up: () => { if (VRN.grab !== mkr) return; VRN.grab = null; if (mkr.moved) navDrop(mkr); }
       };
       hit.userData.navSign = true; XRP.extra.add(hit); VRN.list.push(mkr);
@@ -13292,7 +13292,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (!show) { if (P) P.g.visible = false; return; }
     const on = !!WS.navEdit, lang = (window.ZI18N && ZI18N.lang) || "hu";
     if (!P) { const g = new THREE.Group(), m = new THREE.Mesh(new THREE.PlaneGeometry(.26, .057), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })); m.position.set(0, 0, -.6); m.rotation.x = -.75; g.add(m);
-      m.userData.xr = { hover: (h) => { P.hov = h; if (h) { try { xrPulse(null, .2, 10); } catch (e) {} } }, click: () => { WS.navEdit = !WS.navEdit; NAV_OV_MSG = WS.navEdit ? "Csippentsd meg a narancs gyűrűt, és húzd a helyére." : ""; try { sfx("click"); } catch (e) {} } };
+      m.userData.xr = { hover: (h) => { P.hov = h; if (h) { try { xrPulse(null, .2, 10); } catch (e) {} } }, click: () => { WS.navEdit = !WS.navEdit; NAV_OV_MSG = WS.navEdit ? "Húzd a táblát a helyére – röviden rácsippentve átírhatod a feliratát." : ""; try { sfx("click"); } catch (e) {} } };
       sceneEl.object3D.add(g); XRP.extra.add(m); P = XRP.pill = { g, m, sig: "", yaw: null, hov: false }; }
     P.g.visible = true;
     const sig = on + "|" + lang; if (P.sig !== sig) { P.sig = sig; if (P.m.material.map) P.m.material.map.dispose(); P.m.material.map = xrPillTex(on ? "✓ Rendezés kész" : "✎ Táblák rendezése", on); P.m.material.needsUpdate = true; }
@@ -13357,7 +13357,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "51f52a07db"; let shown = false;
+  { const BV = "4f6222d1ab"; let shown = false;
     const chk = () => { if (shown || inVR || BV.indexOf("__") === 0) return; fetch("verzio.json?t=" + Date.now(), { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((j) => { if (!j || !j.v || j.v === BV || shown) return; shown = true;
       const b = document.createElement("button"); b.type = "button"; b.className = "zv-ujver"; b.textContent = "🔄 Új változat érhető el – koppints ide a frissítéshez"; b.addEventListener("click", () => { location.replace(location.pathname + "?v=" + j.v + location.hash); }); document.body.appendChild(b); }).catch(() => {}); };
     setTimeout(chk, 2500); setInterval(chk, 180000); document.addEventListener("visibilitychange", () => { if (!document.hidden) chk(); }); }
@@ -13386,7 +13386,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "82a9b5ae50"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "37be19ef90"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
