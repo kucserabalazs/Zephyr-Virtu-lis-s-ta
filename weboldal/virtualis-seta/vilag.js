@@ -7668,7 +7668,7 @@
         /* a fejhez (és a nézési irányhoz) képest jegyezzük meg – így akkor is jó helyre kerül, ha közben a hajó / a nézőpont elmozdult */
         const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw(), d = P.m.position.clone().sub(head).applyAxisAngle(new THREE.Vector3(0, 1, 0), -yaw);
         W.panelPos[W.kind] = { rel: d.toArray(), r: wrapA(P.m.rotation.y - yaw) };
-        try { localStorage.setItem("zephyr-panelpos", JSON.stringify(W.panelPos)); } catch (e) {} }
+        try { localStorage.setItem("zephyr-panelpos2", JSON.stringify(W.panelPos)); } catch (e) {} }
     };
     T.xr.extra.add(m);
     /* összecsukott állapot: kis fül, rámutatva/csippentve újra kinyílik */
@@ -7710,7 +7710,7 @@
       if (W.spec && W.spec.panel) W.spec.panel(api);
       /* fogantyú-jel a fejléc tetején (itt fogd meg a húzáshoz) és „⟲ ide” gomb (visszahívja magad elé) */
       { g.fillStyle = "rgba(255,255,255,.55)"; for (let k = 0; k < 6; k++) for (let r2 = 0; r2 < 2; r2++) { g.beginPath(); g.arc(PW / 2 - 50 + k * 20, 20 + r2 * 14, 4.5, 0, TAU); g.fill(); }
-        const x = PW - 240, y = 22, w = 96, h = 78, k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn: () => { if (W.panelPos) delete W.panelPos[W.kind]; try { localStorage.setItem("zephyr-panelpos", JSON.stringify(W.panelPos || {})); } catch (e) {} placePanel(true); } });
+        const x = PW - 240, y = 22, w = 96, h = 78, k = P.btns.length, hov = k === P.hov; P.btns.push({ x, y, w, h, fn: () => { if (W.panelPos) delete W.panelPos[W.kind]; try { localStorage.setItem("zephyr-panelpos2", JSON.stringify(W.panelPos || {})); } catch (e) {} placePanel(true); } });
         g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, 22) : g.rect(x, y, w, h); g.fillStyle = hov ? "#ffe08a" : "rgba(255,255,255,.14)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.4)"; g.stroke();
         g.fillStyle = hov ? "#0b2f5e" : "#fff"; g.font = "800 44px Inter, system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("⟲", x + w / 2, y + h / 2 + 2); }
       /* összecsukó gomb a jobb felső sarokban – a panel egy kis „☰ Panel” fülre zsugorodik */
@@ -7734,7 +7734,7 @@
   }
   function placePanel(fresh) {
     const P = W.panel; if (!P) return;
-    if (!W.panelPos) { try { W.panelPos = JSON.parse(localStorage.getItem("zephyr-panelpos") || "{}"); } catch (e) { W.panelPos = {}; } }
+    if (!W.panelPos) { try { W.panelPos = JSON.parse(localStorage.getItem("zephyr-panelpos2") || "{}"); } catch (e) { W.panelPos = {}; } }
     const saved = !fresh && W.panelPos[W.kind];
     if (saved && saved.rel) { const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw();
       P.m.position.copy(head).add(new THREE.Vector3().fromArray(saved.rel).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)); P.m.rotation.set(-.15, saved.r + yaw, 0, "YXZ"); T.sceneEl.object3D.add(P.m); return; }
@@ -7743,8 +7743,12 @@
     if (W.kind === "chess") { a = yaw + .62; d = 1.0; y = hy - .3; }
     if (W.kind === "sail") { a = yaw + .62; y = hy - .38; }
     if (W.kind === "race") { a = yaw - .75; d = 1.1; y = hy - .15; }   /* a verseny panelje balra-előre, hogy a kormány és az orr szabad maradjon */
+    /* 2026-11-11 10:51 TULAJDONOS: „VR-ben is állítsd vissza az alsó menüsort, mert mindig az a nagyon ronda jobb oldali menüsor van.” →
+       a világok menüje VR-ben ALUL, középen van (mint a 2D-s alsó gombsor): a látómező alatt, pultszerűen megdöntve – előre nézve nem takar, lenézve kéznél van. */
+    let tilt = -.2;
+    if (W.kind !== "race") { a = yaw; d = .62; y = hy - .56; tilt = -.82; }
     P.m.position.set(-Math.sin(a) * d, y, -Math.cos(a) * d);
-    P.m.rotation.set(-.2, a, 0, "YXZ");
+    P.m.rotation.set(tilt, a, 0, "YXZ");
     T.sceneEl.object3D.add(P.m);
   }
 
