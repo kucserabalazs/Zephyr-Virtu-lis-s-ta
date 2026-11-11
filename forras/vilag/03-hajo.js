@@ -30,7 +30,7 @@
       /* vitorlaszám és osztályjel */
       g.fillStyle = o.numCol || "#1b2c5e"; g.font = "900 120px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
       g.fillText(o.num, w * .48, h * .40);
-      if (o.logo) { g.font = "900 72px Georgia, serif"; g.fillStyle = "#c62828"; g.fillText(o.logo, w * .48, h * .58); }
+      if (o.logo) { g.font = "900 72px Georgia, serif"; g.fillStyle = /^#(d|e|c)[0-9a-f]1|^#d61f26/i.test(o.main) ? "#ffffff" : "#c62828"; g.fillText(o.logo, w * .48, h * .58); }
       g.font = "800 64px system-ui"; g.fillStyle = o.numCol || "#1b2c5e"; g.fillText(o.cls || "R27", w * .5, h * .2);
     }));
   }

@@ -556,3 +556,15 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
   `kraken` (tengeri szörny feje + csápok, vihar nélkül), `hurricane` (felhő, eső, víztölcsér, a magasban darabokra szedi), `laser` (a legközelebbi saját világítótorony vörös
   sugara), `magic` (szikrázva semmivé válik); véletlen villám-/sortűzszám, emelési magasság, kétféle szétesés. Teszt: `ZephyrWorld._chessTest.forceStyle("kraken")`.
   ELLENŐRIZVE képen: kraken feje, lézer. NEM láttam képen: hurrikán, varázslat (a tesztgép túl lassú) – a tulajdonosnak kell megnéznie. A 2D STÉGJÁTÉKOS sakk csatáihoz még nem nyúltam.
+- 2026-11-11 01:37 – A TULAJDONOS KRITIKÁJA a VR-versenyről (05b-vr-verseny.js): (1) a hajó „silány” – sokkal szebb, makettszerűbb, kidolgozottabb kell; (2) a bójakerülés
+  szabálya nincs betartatva (ellenfél és játékos is megúszhatja a kerülést) – megengedhetetlen; (3) útjog: backbordon (jobbcsapáson) jövőnek elsőbbsége van – az ellenfelek
+  térjenek ki, és ha a játékos szabálytalan, KIABÁLJANAK rá („Backbord!”); (4) a befutót ne bójakerülésnek jelezze – ott két bója KÖZÖTT kell áthaladni; (5) a segédnyilak túl
+  sűrűk – csak fordulásnál / ha nagyon eltér az iránytól jöjjenek elő, ne „sínen” menjünk; (6) a többi hajó is hibázzon, legyen életszerű.
+- 2026-11-11 02:15 – VR-VERSENY SZABÁLYAI (05b): `vrMarkO`/`vrRoundCheck` – bója csak valódi megkerüléssel (bal kéz felől, a külső félegyenes átlépése ≤45 m) számít, játékosnak
+  és gépnek egyformán; kihagyott/rossz irányú kerülésre figyelmeztetés. `vrGiveWay` útjog (ellentétes csapás: a szelet jobbról kapó útjogos; azonos: szél felőli tér ki);
+  gépi hajók kitérnek, a játékosra rákiáltanak („Backbord!” – beszédszintézis + üzenet), ütközésnél a vétkes büntetést kap. Gépi hibák (nem veszi észre, elrontott/késő
+  forduló, túl nagy ív). Útvonal-nyilak csak szakasz elején, forduláskor, vagy 5 mp-nél hosszabb nagy eltérésnél, ritkábban. Gyorsított próba: mind a 3 gépi hajó megkerüli
+  a bójákat és befut (199–307 s). Teszt: `ZephyrWorld._race`, `_raceTick`.
+  A Zephyr vitorlái a tulajdonos ÚJ közlése szerint: PIROS grósz (nagyvitorla), FEHÉR spinakker, „eredeti logó” – a VR-versenyben és a 2D regattában átállítva (a génua fehér lett).
+  FIGYELEM: ez ellentmond a korábbi feljegyzésnek (fehér nagyvitorla, piros génua) és a jóváhagyott 2D tervnek – megerősítést kértem. Az eredeti LOGÓ képe még nincs a vitorlán
+  (most „ZEPHYR” felirat). A hajó makettszerű kidolgozása (a tulajdonos szerint „silány”) MÉG HÁTRAVAN. A 2D stégjátékos regatta szabályaihoz nem nyúltam.

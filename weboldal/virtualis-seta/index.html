@@ -13053,7 +13053,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "eb06138f00"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "8caaf50b61"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
@@ -15298,7 +15298,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     /* magasabb nézőpont (mintha a stég melletti mólóról / kilátóról néznénk), hogy a hátsó bója kerülését ne takarják az elöl haladó hajók */
     const RACE_CAM = { h: 10, pitch: 14, yaw: .21 };   /* yaw: a stég hosszabbik oldaláról, 72°-kal elfordulva – szinte csak víz látszik, a stégből egy kis sarok */
     const CREW = [
-      { n: "Te (Zephyr)", sail: "#e2483d", sail2: "#a81d14", hull: "#0b2f5e", deck: "#d9b07a", num: "Z", me: true, spin: ["#e2483d", "#ffffff", "#0b2f5e"] },
+      { n: "Te (Zephyr)", sail: "#e2483d", sail2: "#a81d14", hull: "#0b2f5e", deck: "#d9b07a", num: "Z", me: true, spin: ["#ffffff", "#f4f4ef", "#ffffff"] },   /* 2026-11-11, a tulajdonos: a Zephyr grósza piros, a spinakkere fehér */
       { n: "Kék Fecske", sail: "#ffffff", sail2: "#c9d4df", hull: "#ffffff", deck: "#e6d2b0", num: "HUN 7", band: "#1f5fa8", spin: ["#1f5fa8", "#ffffff", "#7fc4ff"] },
       { n: "Sárga Szél", sail: "#fff6d6", sail2: "#e3cf8c", hull: "#f4f6f8", deck: "#cfa676", num: "HUN 21", band: "#f2b233", spin: ["#f2b233", "#ffffff", "#e2483d"] },
       { n: "Tihanyi Csillag", sail: "#ffffff", sail2: "#d2dbe3", hull: "#1f3d2a", deck: "#d9b07a", num: "HUN 3", band: "#2e7d32", spin: ["#2e7d32", "#ffffff", "#f2b233"] }
@@ -15512,13 +15512,13 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         g.strokeStyle = "rgba(0,0,0,.13)"; g.lineWidth = 1.5; for (let k = 1; k < 9; k++) { g.beginPath(); g.moveTo(0, h * k / 9 + 10); g.lineTo(w, h * k / 9 - 10); g.stroke(); }
         if (!jib) { g.strokeStyle = "rgba(0,0,0,.22)"; g.lineWidth = 3; [.26, .46, .66, .84].forEach((f) => { g.beginPath(); g.moveTo(w * .3, h * (1 - f) + 6); g.lineTo(w, h * (1 - f) - 8); g.stroke(); }); }
         g.fillStyle = "rgba(0,0,0,.10)"; g.beginPath(); g.moveTo(0, h); g.lineTo(46, h); g.lineTo(0, h - 60); g.fill(); g.beginPath(); g.moveTo(w, h); g.lineTo(w - 50, h); g.lineTo(w, h - 44); g.fill(); g.beginPath(); g.moveTo(0, 0); g.lineTo(30, 0); g.lineTo(0, 70); g.fill();
-        if (num) { g.fillStyle = big ? "#c0271c" : "#14202a"; g.font = `900 ${big ? 96 : 40}px ${big ? "Georgia, serif" : "Arial, sans-serif"}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(num, w * .4, h * .5); } });
+        if (num) { g.fillStyle = big ? "#ffffff" : "#14202a"; g.font = `900 ${big ? 96 : 40}px ${big ? "Georgia, serif" : "Arial, sans-serif"}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(num, w * .4, h * .5); } });
       const grid = (nu, nv, tex) => { const g = new T.BufferGeometry(), n = (nu + 1) * (nv + 1), pos = new Float32Array(n * 3), uv = new Float32Array(n * 2), col = new Float32Array(n * 3).fill(1), idx = []; for (let i = 0; i <= nu; i++) for (let j = 0; j <= nv; j++) { const k = i * (nv + 1) + j; uv[k * 2] = j / nv; uv[k * 2 + 1] = i / nu; if (i < nu && j < nv) idx.push(k, k + 1, k + nv + 2, k, k + nv + 2, k + nv + 1); }
         g.setAttribute("position", new T.BufferAttribute(pos, 3)); g.setAttribute("uv", new T.BufferAttribute(uv, 2)); g.setAttribute("color", new T.BufferAttribute(col, 3)); g.setIndex(idx); const m = new T.Mesh(g, new T.MeshBasicMaterial({ map: tex || null, vertexColors: true, side: T.DoubleSide })); m.frustumCulled = false; m.userData = { nu, nv }; return m; };
       /* a tulajdonos hajója (Zephyr, Raptor 27) a valóságban: FEHÉR nagyvitorla, PIROS génua – a modellen így van */
-      const main = grid(12, 8, sailTex(c.me ? "#ffffff" : c.sail, c.me ? "#d6dee7" : c.sail2, c.num, !!c.me, false)), jib = grid(10, 6, sailTex(c.me ? "#e2483d" : c.sail, c.me ? "#a81d14" : c.sail2, "", false, true)), spin = grid(10, 10, null);
+      const main = grid(12, 8, sailTex(c.sail, c.sail2, c.num, !!c.me, false)), jib = grid(10, 6, sailTex(c.me ? "#ffffff" : c.sail, c.me ? "#d6dee7" : c.sail2, "", false, true)), spin = grid(10, 10, null);
       { const cs3 = c.spin.map(bglCol), col = spin.geometry.attributes.color.array, nv = 10; for (let i = 0; i <= 10; i++) for (let j = 0; j <= nv; j++) { const k = i * (nv + 1) + j, q = cs3[Math.min(5, Math.floor(i / 10 * 6)) % 3], sh = .82 + .3 * Math.sin(Math.PI * j / nv) * (.6 + .4 * Math.sin(Math.PI * i / 10)); col[k * 3] = Math.min(1, q.r * sh); col[k * 3 + 1] = Math.min(1, q.g * sh); col[k * 3 + 2] = Math.min(1, q.b * sh); } }
-      const furl = new T.Group(); { const Fb = bglBag(); Fb.tube([0, 1.1, 4.1], [0, 9.6, .9], .09, .06, bglCol(c.me ? "#a81d14" : c.sail2), 6); furl.add(new T.Mesh(Fb.geo(), new T.MeshBasicMaterial({ vertexColors: true, side: T.DoubleSide }))); }
+      const furl = new T.Group(); { const Fb = bglBag(); Fb.tube([0, 1.1, 4.1], [0, 9.6, .9], .09, .06, bglCol(c.me ? "#d6dee7" : c.sail2), 6); furl.add(new T.Mesh(Fb.geo(), new T.MeshBasicMaterial({ vertexColors: true, side: T.DoubleSide }))); }
       const pole = new T.Line(new T.BufferGeometry().setAttribute("position", new T.BufferAttribute(new Float32Array(6), 3)), new T.LineBasicMaterial({ color: 0x9aa4ac })); pole.frustumCulled = false;
       const flag = new T.Mesh(new T.BufferGeometry().setAttribute("position", new T.BufferAttribute(new Float32Array(9), 3)), new T.MeshBasicMaterial({ color: bglCol(c.me ? "#f2b233" : c.band || "#e2483d"), side: T.DoubleSide })); flag.frustumCulled = false;
       G.add(main, jib, spin, furl, pole, flag);
@@ -15665,7 +15665,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const jf = 1 - .82 * gmClamp(b.spin * 1.6 - .3, 0, 1);   /* hátszélben a génuát felcsavarják */
       const jh = W3(0, 9.6, .9), jt = W3(0, 1.1, 4.1), jcF = W3(bS * 1.35 + luff * .4, 1.4, 1.25 - bC * .3), jbF = W3(bS * 1.25 + luff, 5, 2.6), fsP = W3(0, 5.3, 2.5);
       const lerpP = (a, c, f) => (a && c ? { x: a.x + (c.x - a.x) * f, y: a.y + (c.y - a.y) * f, s: a.s } : null), jc = lerpP(fsP, jcF, jf), jb = lerpP(fsP, jbF, jf);
-      const swp = b.c.me && BGL.ok;   /* a modellen a Zephyr nagyvitorlája fehér, a génuája piros – a tükörkép is ehhez igazodik */
+      const swp = false;   /* a modellen a Zephyr nagyvitorlája fehér, a génuája piros – a tükörkép is ehhez igazodik */
       if (jf > .14) sailFill([jt, jh, jc], jb, swp ? b.c.sail : b.c.me ? "#ffffff" : b.c.sail, swp ? b.c.sail2 : b.c.me ? "#d6dee7" : b.c.sail2, true, laJ);
       if (!mirror && jf < .96 && jt && jh) { g.strokeStyle = b.c.me ? "#d6dee7" : b.c.sail2; g.lineWidth = Math.max(2, c0.s * .16 * (1 - jf) + 1); g.lineCap = "round"; g.beginPath(); g.moveTo(jt.x, jt.y); g.lineTo(jh.x, jh.y); g.stroke(); }
       /* árbocjelző szalagok (telltale) a génuán: telt vitorlánál vízszintesen úsznak, belobogáskor csapkodnak */
