@@ -584,3 +584,12 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
   ahol lehet rajzos illusztrációval – sima, rajzolt (2D) felület, de szép és érthető; (c) a KORMÁNYZÁS nem jó: „folyton elszabadul a kormány” – megkérdeztem, melyik eszközön
   (szemüveg kézkövetéssel / telefon / gép) és összefügg a kerék → kormányrúd kérdéssel.
 - 2026-11-11 02:10 – SAKK: a tábla feszített víztükör (a hullám a tábla fölött 100%-ban kisimítva, a fényfodor nem mozog), az állandó víz-/szélzaj kikapcsolva (a csaták hangjai maradtak).
+- 2026-11-11 02:00–02:02 – TOVÁBBI KÉRÉSEK (NINCSENEK kész):
+  (d) SZÉL a versenyeken: futam közben változzon az irány (hol kicsit, néha nagyon) és az erősség is – mértékkel, életszerűen (nincs olyan, hogy erős északi, aztán ugyanolyan déli);
+      előbb nézzek meg balatoni széljelzéseket / mérési adatokat, és azokból modellezzek.
+  (e) SAKK nézőpont: az előttem álló bábu kitakarja a mezőket, nem érek el minden kockát.
+  (f) SAKK bábuk: nincsenek szépen megcsinálva, nem életszerűek – kidolgozottabbak kellenek.
+## NYITOTT MUNKÁK LISTÁJA (2026-11-11 02:05 állapot) – sorrendet a tulajdonostól kértem
+  1. Kormányzás (elszabadul a kormány) + kerék → kormányrúd döntés  2. Zephyr makett-minőségben a fotók alapján (új 2D terv jóváhagyásra)  3. Változó szél balatoni adatok alapján
+  4. Sakk: nézőpont, bábuk kidolgozása, telefonos könnyítés, 2D stégjátékos sakk csatái  5. Szabálymagyarázat gyerekeknek + rajzos vitorlás szótár  6. Makett hibája (emeleti terasz, Kalóz bejárat)
+  7. Jegyzék fordítása 23 nyelvre  8. Dekorációs kis regatta a modellekkel  9. 2D regatta szabályai (bójakerülés, útjog) – a VR-versenyben már kész
