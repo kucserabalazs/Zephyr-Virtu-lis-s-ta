@@ -13053,7 +13053,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "8caaf50b61"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "f0a890169e"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
@@ -15298,7 +15298,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     /* magasabb nézőpont (mintha a stég melletti mólóról / kilátóról néznénk), hogy a hátsó bója kerülését ne takarják az elöl haladó hajók */
     const RACE_CAM = { h: 10, pitch: 14, yaw: .21 };   /* yaw: a stég hosszabbik oldaláról, 72°-kal elfordulva – szinte csak víz látszik, a stégből egy kis sarok */
     const CREW = [
-      { n: "Te (Zephyr)", sail: "#e2483d", sail2: "#a81d14", hull: "#0b2f5e", deck: "#d9b07a", num: "Z", me: true, spin: ["#ffffff", "#f4f4ef", "#ffffff"] },   /* 2026-11-11, a tulajdonos: a Zephyr grósza piros, a spinakkere fehér */
+      { n: "Te (Zephyr)", sail: "#e2483d", sail2: "#a81d14", hull: "#f5f2e8", deck: "#b98a57", num: "Z", me: true, band: "#141d4d", spin: ["#ffffff", "#f4f4ef", "#ffffff"] },   /* 2026-11-11, a tulajdonos: a Zephyr grósza piros, a spinakkere fehér */
       { n: "Kék Fecske", sail: "#ffffff", sail2: "#c9d4df", hull: "#ffffff", deck: "#e6d2b0", num: "HUN 7", band: "#1f5fa8", spin: ["#1f5fa8", "#ffffff", "#7fc4ff"] },
       { n: "Sárga Szél", sail: "#fff6d6", sail2: "#e3cf8c", hull: "#f4f6f8", deck: "#cfa676", num: "HUN 21", band: "#f2b233", spin: ["#f2b233", "#ffffff", "#e2483d"] },
       { n: "Tihanyi Csillag", sail: "#ffffff", sail2: "#d2dbe3", hull: "#1f3d2a", deck: "#d9b07a", num: "HUN 3", band: "#2e7d32", spin: ["#2e7d32", "#ffffff", "#f2b233"] }
@@ -15460,7 +15460,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       /* a körvonal simítása (Catmull–Rom), hogy a hajótest íve folytonos legyen */
       const ST = []; { const cr = (p0, p1, p2, p3, t) => .5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t); const N = HULL.length; for (let i = 0; i < N - 1; i++) { const p0 = HULL[Math.max(0, i - 1)], p1 = HULL[i], p2 = HULL[i + 1], p3 = HULL[Math.min(N - 1, i + 2)]; for (let k = 0; k < 4; k++) { const t = k / 4; ST.push([Math.max(0, cr(p0[0], p1[0], p2[0], p3[0], t)), cr(p0[1], p1[1], p2[1], p3[1], t)]); } } ST.push(HULL[N - 1]); }
       const hw = (z) => { for (let i = 1; i < ST.length; i++) { const [x0, z0] = ST[i - 1], [x1, z1] = ST[i]; if (z <= z0 && z >= z1) return x0 + (x1 - x0) * (z0 - z) / (z0 - z1 || 1); } return z > 0 ? 0 : .6; };
-      const hullC = bglCol(c.hull), light = c.hull === "#ffffff" || c.hull === "#f4f6f8", boot = bglCol(c.me ? "#e2483d" : "#b0122a"), anti = bglCol(c.me ? "#7a1410" : "#5a0f1c"), band = bglCol(c.me ? "#f2b233" : c.band || "#1f5fa8"), white = bglCol("#f4f6f8");
+      const hullC = bglCol(c.hull), light = c.hull === "#ffffff" || c.hull === "#f4f6f8" || c.hull === "#f5f2e8", boot = bglCol(c.me ? "#141d4d" : "#b0122a"), anti = bglCol(c.me ? "#0d1436" : "#5a0f1c"), band = bglCol(c.band || (c.me ? "#f2b233" : "#1f5fa8")), white = bglCol("#f4f6f8");
       const B = bglBag();
       /* hajótest: keresztmetszetek (fenékvonal → vízvonal → oldal → perem), kétoldalt; a fényes csík és a vízvonal alatti sötétedés bele van sütve */
       const sec = (x, z) => { const sy = bglSheer(z), fl = 1 - .14 * Math.max(0, z) / 4.2; return [[0, -.42 + .3 * Math.pow(Math.max(0, z) / 4.2, 3), z * .9], [x * .5, -.3, z * .94], [x * .86, 0, z * .96], [x * .9, .18, z * .975], [x * .975 * fl + x * (1 - fl), sy * .55, z * .99], [x * .995, sy - .24, z], [x * .995, sy - .12, z], [x, sy, z]]; };

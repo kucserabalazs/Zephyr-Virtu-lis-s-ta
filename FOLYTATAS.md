@@ -568,3 +568,14 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
   A Zephyr vitorlái a tulajdonos ÚJ közlése szerint: PIROS grósz (nagyvitorla), FEHÉR spinakker, „eredeti logó” – a VR-versenyben és a 2D regattában átállítva (a génua fehér lett).
   FIGYELEM: ez ellentmond a korábbi feljegyzésnek (fehér nagyvitorla, piros génua) és a jóváhagyott 2D tervnek – megerősítést kértem. Az eredeti LOGÓ képe még nincs a vitorlán
   (most „ZEPHYR” felirat). A hajó makettszerű kidolgozása (a tulajdonos szerint „silány”) MÉG HÁTRAVAN. A 2D stégjátékos regatta szabályaihoz nem nyúltam.
+
+## 2026-11-11 01:50 – A VALÓDI ZEPHYR HAJÓ (a tulajdonos 10 fotója alapján; a fotókon emberek vannak → NEM kerülnek a nyilvános repóba)
+- TEST: törtfehér/krém, a perem alatt végigfutó SÖTÉTKÉK csík (kb. 12 cm), vízvonal alatt sötét; az ORRON kétoldalt a ZEPHYR logó (piros–sötétkék dőlt „Z” embléma + sötétkék
+  dőlt „ZEPHYR” felirat), a FARNÁL fekete „H-30381” lajstromszám. Nyitott, lekerekített tükör, középen KÜLMOTOR, mellette leemelhető kormánylapát, rozsdamentes farlétra.
+- KORMÁNY: KORMÁNYRÚD (pinna) hosszabbítóval – NEM kormánykerék! (A VR-versenyben most két kerék van – eltér a valóságtól; a tulajdonost megkérdeztem.)
+- FEDÉLZET: tíkfa a járófelületen és az orrfedélzeten (halszálkás orr-rész, fedélzeti nyílás keretezve), fehér kabintető világoskék csúszásgátló mezőkkel, nagy sötét tetőablak
+  elöl, ovális oldalablakok; árbóctalp a kabintetőn tíkbetétben. KOKPIT: tíkfa padló és padok, fehér falak, lejáró fa kerettel, bordó zsebek, nagyvitorla-shot a kokpit közepén (piros kötél, csigasor).
+- KORLÁT: rozsdamentes orr- és farkorlát, oszlopok kettős dróttal; hátul kék heveder a korlátok között. Kék puffer.
+- VITORLÁK: PIROS nagyvitorla (grósz) BORDÓ lazy-baggel a bumon, FEHÉR rollgénua (bordó UV-csíkkal feltekerve), ezüst árbóc egy szálingpárral, ezüst bum. Spinakker: fehér (a tulajdonos közlése).
+- A korábban jóváhagyott 2D terv (sötétkék test, arany csík, fehér nagyvitorla) ezért ÉRVÉNYTELEN – új terv kell a fotók alapján.
+- Azonnal átállítva: a Zephyr teste fehér, sötétkék csíkkal (VR-verseny és 2D regatta).
