@@ -7631,8 +7631,26 @@
       return;
     }
     sky.object3D.visible = false;
-    safe(() => { W.spec = kind === "race" ? buildVRace() : kind === "coaster" ? buildCoaster() : kind === "chess" ? buildChess() : kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
+    safe(() => { W.spec = kind === "race" ? buildVRace() : kind === "coaster" ? buildCoaster() : kind === "chess" ? lodBuild(buildChess) : kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
   };
+  /* 2026-11-11 TELEFONOS KÖNNYÍTÉS (a vitorlás sakk 865 ezer háromszöget rajzolt – ettől melegedett a telefon): telefonon (nem VR-ben) az építés idejére
+     a gömbök, hengerek, tóruszok, kapszulák, kúpok, esztergált és cső-testek felbontását kb. a felére vesszük – a formák ugyanazok, csak kevesebb lapból.
+     Kényszerítés teszthez: localStorage zephyr-lod = 1 (be) / 0 (ki). */
+  function lodBuild(fn) {
+    let on = false; try { const f = localStorage.getItem("zephyr-lod"); on = f === "1" || (f !== "0" && !T.inVR && document.documentElement.dataset.device === "phone"); } catch (e) {}
+    if (!on) return fn();
+    const R = (v, d, mn, k) => Math.max(mn, Math.round((v == null ? d : v) * (k || .5))), keep = {}, set = (n, f) => { keep[n] = THREE[n]; const O = THREE[n]; const N = function () { return f(O, Array.prototype.slice.call(arguments)); }; N.prototype = O.prototype; THREE[n] = N; };
+    try {
+      set("SphereGeometry", (O, a) => new O(a[0], R(a[1], 32, 7), R(a[2], 16, 5), a[3], a[4], a[5], a[6]));
+      set("CylinderGeometry", (O, a) => new O(a[0], a[1], a[2], R(a[3], 32, 5), a[4] > 2 ? R(a[4], 1, 1) : a[4], a[5], a[6], a[7]));
+      set("ConeGeometry", (O, a) => new O(a[0], a[1], R(a[2], 32, 5), a[3] > 2 ? R(a[3], 1, 1) : a[3], a[4], a[5], a[6]));
+      set("TorusGeometry", (O, a) => new O(a[0], a[1], R(a[2], 12, 4), R(a[3], 48, 8), a[4]));
+      set("CapsuleGeometry", (O, a) => new O(a[0], a[1], R(a[2], 4, 2), R(a[3], 8, 5)));
+      set("LatheGeometry", (O, a) => new O(a[0], R(a[1], 12, 7), a[2], a[3]));
+      set("TubeGeometry", (O, a) => new O(a[0], R(a[1], 64, 6, .6), a[2], R(a[3], 8, 3, .6), a[4]));
+    } catch (e) { Object.keys(keep).forEach((n) => { try { THREE[n] = keep[n]; } catch (e2) {} }); return fn(); }
+    try { return fn(); } finally { Object.keys(keep).forEach((n) => { try { THREE[n] = keep[n]; } catch (e2) {} }); }
+  }
   function finishOpen() {
     document.body.classList.add("world-on");
     W.hud = makeHud(); W.hud.el.style.display = T.inVR ? "none" : ""; W.hud.draw();
