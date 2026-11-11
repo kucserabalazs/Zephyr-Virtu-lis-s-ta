@@ -736,3 +736,9 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 - Alapból BE gépen és telefonon, KI Questen (ott az állomás „✨ Maximális részletesség” gombjával kapcsolható; localStorage `zephyr-hv-max` 1/0). A fák száma: `zephyr-hv-max-fa`.
 - ELLENŐRZÉS: a gépi (szoftveres) böngészőm a teljes változatot NEM bírta (időtúllépés) – csak 500 fával próbáltam: hiba nélkül fut, az árnyékok és a fények látszanak, ~1,5 millió háromszög. A teljes (6000 fás, becslésem szerint 3–4 millió háromszög) változatot valódi gépen/telefonon senki nem látta még. Telefonon lehet, hogy nagyon lassú vagy a böngésző újratölti az oldalt.
 - A látnivalók (apátság, kastély stb.) ebben a módban is a régi, kódból rakott formák – azokhoz kell a kép → 3D modell.
+
+## 2026-11-12 00:19–00:22 – „A látványosságokat meg kellene kerülni, ott egy kis időt eltölteni”; „a Zephyr makett körül is tehetne egy kört, és legyen 360-as teljes fordulat és minden – aki nem bírja, nem nézi”
+- KÉSZ (`hvTourPts`): mind a 14 látnivaló körül (a Zephyr-ház körül is) a pálya egy TELJES kört ír le lassan emelkedő csigavonalban (9 → 19 m), ~35 km/h-val (`HV.orbS`), körönként 15–35 mp.
+- KÉSZ: 3 függőleges HUROK (átfordulás, 16 m sugár) a hosszú szakaszok lejtőjének alján (`HV.loopS`); a hurokban nem lassít. Kapu nem kerül hurokba és a körökbe.
+- Pálya: 7908 m; nyugodt menet ~10,5 perc, vad ~3,7 perc (gépi próba, hiba nélkül).
+- ISMERT HIBA: néhány látnivaló köre átmegy egy kikötő fölött/hajóin (pl. Balatonfüred) – a kikötőket a pályától el kell tolni.

@@ -235,12 +235,28 @@
       for (let k = -Wd; k <= Wd; k++) { const q = P[(j + k + m) % m], w = Math.pow(Math.cos(k / (Wd + 1) * Math.PI / 2), 2); q[0] += tx * w; q[1] += tz * w; } });
     P.forEach((q) => S.forEach((a, i) => { const r = (R[i] || 30) * .92, d = Math.hypot(q[0] - a.x, q[1] - a.z); if (d < r && d > .01) { q[0] = a.x + (q[0] - a.x) / d * r; q[1] = a.z + (q[1] - a.z) / d * r; } }));
     J = S.map((a) => nearest(a.x, a.z)); for (let i = 1; i < n; i++) if (J[i] <= J[i - 1]) J[i] = Math.min(P.length - 2, J[i - 1] + 2);
+    /* 2026-11-12 00:19 (tulajdonos: „a látványosságokat meg kellene kerülni, ott egy kis időt eltölteni pályarésszel, hogy jól megfigyelhető legyen”):
+       minden látnivalónál a pálya egy TELJES KÖRT ír le körülötte (a megkerülési sugáron), lassan emelkedő csigavonalban (9 → 19 m, így nem keresztezi önmagát),
+       közben lassan megy (kb. 35 km/h) – egy-egy kör 20–35 mp; utána emelkedik tovább a következő felé. */
+    { const NP = [], NJ = [], RG = []; let si = 0; const ord = J.map((j, i) => [j, i]).sort((a, b) => a[0] - b[0]);
+      P.forEach((q, k) => { NP.push(q); while (si < ord.length && ord[si][0] === k) { const i = ord[si][1], a = S[i], r = Math.hypot(q[0] - a.x, q[1] - a.z) || (R[i] || 30), a0 = Math.atan2(q[1] - a.z, q[0] - a.x), pv = P[(k - 1 + P.length) % P.length], nx = P[(k + 1) % P.length], tx = nx[0] - pv[0], tz = nx[1] - pv[1], dir = ((q[0] - a.x) * tz - (q[1] - a.z) * tx) >= 0 ? 1 : -1, K = 10;
+          NJ[i] = NP.length - 1; const st = NP.length; for (let c = 1; c <= K; c++) { const an = a0 + dir * c / K * TAU; NP.push([a.x + Math.cos(an) * r, a.z + Math.sin(an) * r]); } RG.push([st - 1, NP.length - 1, i]); si++; } });
+      P = NP; J = NJ; HV.orbI = RG; }
     const m = P.length, cum = [0]; for (let i = 1; i <= m; i++) cum.push(cum[i - 1] + Math.hypot(P[i % m][0] - P[i - 1][0], P[i % m][1] - P[i - 1][1]));
-    const H = new Array(m).fill(10);
-    for (let i = 0; i < n; i++) { const a = J[i], b = i + 1 < n ? J[i + 1] : J[0] + m, gap = cum[Math.min(b, m)] - cum[a] + (b > m ? cum[b - m] : 0), peak = clamp(gap * .3, 16, 150);
-      for (let k = a; k <= b; k++) { const u = (k - a) / Math.max(1, b - a), sn = Math.sin(Math.PI * u); H[k % m] = 10 + peak * sn * sn + (gap > 320 ? peak * .13 * Math.sin(u * 6 * Math.PI) * sn : 0); } }
-    HV.pass = J.slice();
-    return P.map((q, i) => [q[0], H[i], q[1]]);
+    const H = new Array(m).fill(10), endOf = {}; HV.orbI.forEach(([a, b, i]) => { endOf[i] = b; });
+    for (let i = 0; i < n; i++) { const a = endOf[i], b = i + 1 < n ? J[i + 1] : J[0] + m, gap = cum[Math.min(b, m)] - cum[a] + (b > m ? cum[b - m] : 0), peak = clamp(gap * .3, 16, 150);
+      for (let k = a; k <= b; k++) { const u = (k - a) / Math.max(1, b - a), sn = Math.sin(Math.PI * u); H[k % m] = 19 * (1 - u) + 9 * u + peak * sn * sn + (gap > 320 ? peak * .13 * Math.sin(u * 6 * Math.PI) * sn : 0); } }
+    HV.orbI.forEach(([a, b]) => { for (let k = a; k <= b; k++) H[k] = 9 + 10 * (k - a) / Math.max(1, b - a); });
+    /* 2026-11-12 00:22 (tulajdonos: „legyen 360-as teljes fordulat és minden – aki nem bírja, nem nézi”): a hosszabb szakaszok végén, a lejtő alján
+       FÜGGŐLEGES HUROK (átfordulás, 16 m sugarú, kicsit oldalra csavarva, hogy ne keresztezze önmagát). A hurokban a kocsi nem lassít. */
+    const out = [], map = [], loops = [], lpAt = {}; 
+    for (let i = 0; i < n; i++) { const a = endOf[i], b = i + 1 < n ? J[i + 1] : J[0] + m, gap = cum[Math.min(b, m)] - cum[a] + (b > m ? cum[b - m] : 0); if (gap > 430 && b - a > 8) lpAt[(a + Math.round((b - a) * .84)) % m] = 1; }
+    P.forEach((q, k) => { map[k] = out.length; out.push([q[0], H[k], q[1]]);
+      if (lpAt[k]) { const nx = P[(k + 1) % m]; let dx = nx[0] - q[0], dz = nx[1] - q[1]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l; const sx = -dz, sz = dx, Rl = 16, y0 = H[k], st = out.length - 1; out[st][3] = [0, 1, 0];
+        for (let c = 1; c <= 8; c++) { const t = c / 8 * TAU, so = 7 * c / 8, x = q[0] + dx * Rl * Math.sin(t) + sx * so, y = y0 + Rl * (1 - Math.cos(t)), z = q[1] + dz * Rl * Math.sin(t) + sz * so; out.push([x, y, z, [q[0] + sx * so - x, y0 + Rl - y + (c === 8 ? Rl : 0), q[1] + sz * so - z]]); }
+        loops.push([st, out.length - 1]); } });
+    HV.pass = J.map((j) => map[j]); HV.orbI = HV.orbI.map(([a, b, i]) => [map[a], map[b], i]); HV.loopI = loops;
+    return out;
   }
   /* ---------- a két pálya ---------- */
   const HV_OZ = 1500;   /* a VAD menet „élményparkja” a térképtől délre, külön vízen (a korábbi díszletekkel) */
@@ -269,7 +285,7 @@
     /* 2026-11-11 23:55 (tulajdonos: „a vad menet ugyanazon a pályán menjen, ne külön pályán – egy legyen, de az jó”): EGY pálya van (a parti körút);
        a VAD menet ugyanezen megy, csak sokkal gyorsabban: nem lassít a látnivalóknál, a magasból szabadon zuhan (akár ~160 km/h), és ráz. A külön élménypark kivéve. */
     HV.calm = hvTrack(hvTourPts(), { bank: 6 }); HV.wild = HV.calm;
-    HV.passS = HV.pass.map((i) => HV.calm.sOf(i)); HV.s0 = HV.passS[0] - 4;
+    HV.passS = HV.pass.map((i) => HV.calm.sOf(i)); HV.s0 = HV.passS[0] - 4; HV.orbS = (HV.orbI || []).map(([a2, b2]) => [HV.calm.sOf(a2), HV.calm.sOf(b2)]); HV.loopS = (HV.loopI || []).map(([a2, b2]) => [HV.calm.sOf(a2), HV.calm.sOf(b2)]);
     const wg = new THREE.Group(); env.add(wg); HV.wildG = wg;
     hvRails(HV.calm, env, "#2b5ea8");
     { let ym = 0; HV.calm.P.forEach((q) => { ym = Math.max(ym, q.y); }); HV.yMax = ym; }
@@ -346,9 +362,11 @@
       /* BALATON-KÖRÚT: a látnivalóknál lelassít (bemutatás), utána az égbe emelkedik, és onnan csap le a következőre */
       const L2 = TR.L, sm = ((HV.s % L2) + L2) % L2; let near = 1e9, ahead = 1e9, ci = -1; HV.passS.forEach((ps, i) => { const da = ((ps - sm) % L2 + L2) % L2, dn = Math.min(da, L2 - da); if (dn < near) { near = dn; ci = i; } if (da < ahead) ahead = da; });
       const sl = HV.slope || 0; tgt = sl < -.12 ? 15 + 26 * Math.min(1, -sl * 1.3) : sl > .12 ? 15 : 21;
-      if (near < 22 || ahead < 46 || HV.v * HV.v > 26 + 2 * 13 * Math.max(0, ahead - 46)) tgt = 5;
+      const inOrb = (HV.orbS || []).some(([a2, b2]) => sm >= a2 - 6 && sm <= b2 + 4);   /* a látnivaló körül: lassú, nézelődős kör */
+      const inLoop = (HV.loopS || []).some(([a2, b2]) => sm >= a2 - 70 && sm <= b2 + 10);   /* a hurok előtt lendületet vesz, benne nem lassít */
+      if (inLoop) tgt = Math.max(tgt, 26); else if (inOrb) tgt = Math.min(tgt, 9.5); else if (ahead < 46 || HV.v * HV.v > 90 + 2 * 13 * Math.max(0, ahead - 46)) tgt = 9;
       if (HV.run > L2 - 30) tgt = Math.min(tgt, 1.5 + (L2 - HV.run) * .2);
-      HV.v += clamp(tgt - HV.v, -17 * dt, 9 * dt); if (near < 60 && ci !== HV.cur) { HV.cur = ci; W.panelDirty = 1; } HV.near = near; }
+      HV.v += clamp(tgt - HV.v, -17 * dt, (inLoop ? 16 : 9) * dt); if (near < 60 && ci !== HV.cur) { HV.cur = ci; W.panelDirty = 1; } HV.near = near; }
     { const d = Math.max(.4, HV.v) * dt; HV.s += d; HV.run = (HV.run || 0) + d; }
     if (HV.run >= TR.L - .5) { hvStop(); return; }
     HV.shake = HV.mode === "wild" ? clamp((HV.v - 8) / 22, 0, 1) : 0;
@@ -360,7 +378,7 @@
   function hvVoice() { let on = true; try { on = localStorage.getItem("zephyr-hv-hang") !== "0"; } catch (e) {} return on; }
   function hvInfo() {
     if (HV.st === "table") { const c = HV.sights[HVT.cur || 0] || HV.sights[0]; return `Balaton-terepasztal: a kis Zephyr körbejárja a tavat. Most itt jár: ${c.n} (${c.sub}). ${T.inVR ? "Sétáld körbe az asztalt, aztán szállj be!" : "Egy ujjal húzva mozgatod, két ujjal nagyítod és forgatod."}`; }
-    if (HV.st !== "ride") return HV.warn ? "⚠ VAD MENET: ugyanaz a parti körút, de száguldva – 170 m-es zuhanások, akár 160 km/h – erős gyomor kell! Rosszullétre hajlamosaknak, kisgyerekeknek NEM ajánlott. VR-ben ülj le!" : "Ülj be a csónakba! Balaton-körút: a parton megyünk körbe a tó körül, a látnivalók között az égbe emelkedünk – nyugodtan vagy vad menetben.";
+    if (HV.st !== "ride") return HV.warn ? "⚠ VAD MENET: ugyanaz a parti körút, de száguldva – 170 m-es zuhanások, akár 160 km/h – erős gyomor kell! Rosszullétre hajlamosaknak, kisgyerekeknek NEM ajánlott. VR-ben ülj le!" : "Ülj be a csónakba! Balaton-körút a parton: minden látnivalót körbejárunk, köztük az égbe emelkedünk, a lejtők alján hurok (átfordulás) – nyugodtan vagy vad menetben.";
     const TR = hvTrackNow(), kmh = Math.round(HV.v * 3.6), pct = Math.round((HV.run || 0) / TR.L * 100);
     if (HV.mode !== "wild") { const S = HV.sights, c = S[HV.cur] || S[0], nx = S[(HV.cur + 1) % S.length]; return (HV.near < 60 ? `${c.n} – ${c.txt}` : `Következő: ${nx.n} (${nx.sub})`) + ` · ${kmh} km/h · ${Math.round(HV.alt || 0)} m · ${pct}%`; }
     return `VAD MENET · ${kmh} km/h · magasság ${Math.round(HV.alt || 0)} m · ${pct}%`;

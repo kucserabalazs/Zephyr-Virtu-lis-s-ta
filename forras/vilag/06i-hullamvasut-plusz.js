@@ -58,6 +58,7 @@
     { HVP.rings = []; const NO = [7, 2, 20, 1, 6, 13, 14, 15, 3], RP = { 1: .625, 2: .7375, 3: .727, 6: .7105, 7: .7375, 13: .691, 14: .715, 15: .712, 20: .658 }, SZ = 34;
       const pg = new THREE.PlaneGeometry(SZ, SZ); W.disposables.push(pg);
       for (let k = 2; k < TR.M - 2; k++) { const y = TR.P[k].y; if (y < 40 || y < TR.P[k - 1].y || y <= TR.P[k + 1].y) continue; if (HVP.rings.length && TR.S[k] - HVP.rings[HVP.rings.length - 1].s < 160) continue;
+        if ((HV.loopS || []).some(([a2, b2]) => TR.S[k] > a2 - 60 && TR.S[k] < b2 + 60) || (HV.orbS || []).some(([a2, b2]) => TR.S[k] > a2 - 20 && TR.S[k] < b2 + 20)) continue;   /* hurokba és a látnivalók körébe nem kerül kapu */
         const no = NO[HVP.rings.length % NO.length], fr = TR.at(TR.S[k], { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }), g = new THREE.Group();
         g.position.copy(fr.p).addScaledVector(fr.u, 1.4); g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3().crossVectors(fr.u, fr.f).normalize(), fr.u, fr.f));
         const fm = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: .04, side: THREE.DoubleSide, fog: false, depthWrite: false, opacity: 0 }), im = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide, fog: false, depthWrite: false, opacity: 0 });
