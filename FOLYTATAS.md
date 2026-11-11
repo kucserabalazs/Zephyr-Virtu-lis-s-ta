@@ -730,3 +730,9 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 
 ## 2026-11-11 23:55 – „A vad menet ugyanazon a pályán menjen, ne külön pályán – egy legyen, de az jó”
 - KÉSZ: egyetlen pálya van (a parti körút). A VAD menet ugyanezen megy: nem lassít a látnivalóknál, a magasságból számolt sebességgel zuhan (gépi próbán 139 mp, max ~159 km/h; a nyugodt 372 mp, ~148 km/h), ráz. A külön élménypark, a piros pálya, a hurok, az alagút és a dugóhúzó NEM épül meg (a kódjuk – `hvPark`, `hvWildPts`, `hvTunnel` – bent maradt, de nincs meghívva). A kapuk mindkét módban élnek.
+
+## 2026-11-12 00:05 – „Mutasd meg a maximális kidolgozottságot, ne számítson a számítás és hogy mi bírja – a maximumot akarom látni”
+- KÉSZ: MAXIMÁLIS RÉSZLETESSÉG mód a hullámvasúton (`hvMaxOn`, `HVK.max`; 06j/06i/06h): valódi fények (nap + égbolt-fény) és 4096-os vetett árnyék a csónak körül ±210 m-en (`hvMaxLights`, `hvMaxTick`), a kész modellek megvilágítottak (MeshStandard), a talaj árnyékot fogad; 6000 fa 14-féle (részletes) modellből, aljnövényzet (fű, virágok 6-féle, gabona, kukorica, farakás, tuskó, sátor, gomba, szikla), városonként 22 ház mind a 21 típusból, 220 hajó, kikötőnként 6×4 hely.
+- Alapból BE gépen és telefonon, KI Questen (ott az állomás „✨ Maximális részletesség” gombjával kapcsolható; localStorage `zephyr-hv-max` 1/0). A fák száma: `zephyr-hv-max-fa`.
+- ELLENŐRZÉS: a gépi (szoftveres) böngészőm a teljes változatot NEM bírta (időtúllépés) – csak 500 fával próbáltam: hiba nélkül fut, az árnyékok és a fények látszanak, ~1,5 millió háromszög. A teljes (6000 fás, becslésem szerint 3–4 millió háromszög) változatot valódi gépen/telefonon senki nem látta még. Telefonon lehet, hogy nagyon lassú vagy a böngésző újratölti az oldalt.
+- A látnivalók (apátság, kastély stb.) ebben a módban is a régi, kódból rakott formák – azokhoz kell a kép → 3D modell.

@@ -15,7 +15,7 @@
       const c = new THREE.Color(col), n = g.attributes.position.count, a = new Float32Array(n * 3), N = g.attributes.normal;
       for (let i = 0; i < n; i++) { const d = N.getX(i) * HV_SUN.x + N.getY(i) * HV_SUN.y + N.getZ(i) * HV_SUN.z, k = .5 + .5 * Math.max(0, d) + .1 * N.getY(i); a[i * 3] = c.r * k; a[i * 3 + 1] = c.g * k; a[i * 3 + 2] = c.b * k * (1 + .06 * (1 - Math.max(0, d))); }
       g.setAttribute("color", new THREE.BufferAttribute(a, 3)); if (g.attributes.uv) g.deleteAttribute("uv"); return [g, new THREE.Matrix4()]; });
-    const m = mesh(mergeGeoms(list), basic(Object.assign({ vertexColors: true }, opt || {})), parent); m.matrixAutoUpdate = false; m.updateMatrix(); return m;
+    const m = mesh(mergeGeoms(list), basic(Object.assign({ vertexColors: true }, opt || {})), parent); m.matrixAutoUpdate = false; m.updateMatrix(); if (HVK.max && parent !== HV.ride) m.castShadow = true; return m;
   }
   const hvBX = (w, h, d) => new THREE.BoxGeometry(w, h, d), hvCY = (r1, r2, h, s) => new THREE.CylinderGeometry(r1, r2, h, s || 12), hvCO = (r, h, s) => new THREE.ConeGeometry(r, h, s || 10), hvSP = (r) => new THREE.SphereGeometry(r, 12, 9);
   function hvLabel(txt, sub, x, y, z, parent, sc) {
@@ -264,6 +264,7 @@
     const oldSky = makeSky(far); makeShores(far);
     HV.water = makeWater(env);
     try { HV.foto = makePhotoSky(far, oldSky, HV.water); } catch (e) {}   /* 2026-11-11: valódi égfotó a hullámvasúton is */
+    HVK.max = hvKitOn() && hvMaxOn(); HVK.sun = null; HVK.maxN = 6000; try { const q = +localStorage.getItem("zephyr-hv-max-fa"); if (q > 0) HVK.maxN = q; } catch (e) {}   /* a fák száma MAX-ban (gépi próbához csökkenthető) */ if (HVK.max) { try { hvMaxLights(env); } catch (e) { console.warn("hvMaxLights", e); HVK.max = false; } }
     { const mm = hvMap(env); try { hvGroundTex(mm); } catch (e) { console.warn("hvGroundTex", e); } } hvSights(env);
     /* 2026-11-11 23:55 (tulajdonos: „a vad menet ugyanazon a pályán menjen, ne külön pályán – egy legyen, de az jó”): EGY pálya van (a parti körút);
        a VAD menet ugyanezen megy, csak sokkal gyorsabban: nem lassít a látnivalóknál, a magasból szabadon zuhan (akár ~160 km/h), és ráz. A külön élménypark kivéve. */
@@ -325,7 +326,7 @@
     HV.env.matrix.copy(pre.multiply(m)); HV.env.matrixWorldNeedsUpdate = true;
     HV.far.position.set(fr.p.x, 0, fr.p.z);
     const wm = HV.water; wm.position.set(Math.round(fr.p.x / 40) * 40, 0, Math.round(fr.p.z / 40) * 40); const mat = wm.userData.mat; if (mat) { mat.uniforms.uT.value = W.t; mat.uniforms.uOff.value.set(wm.position.x, wm.position.z); if (mat.uniforms.uCam) { try { const cw = new THREE.Vector3(); T.camObj().getWorldPosition(cw); HV.env.updateMatrixWorld(true); mat.uniforms.uCam.value.copy(HV.env.worldToLocal(cw)); } catch (e) { mat.uniforms.uCam.value.copy(fr.p); } } }
-    HV.slope = fr.f.y; HV.alt = fr.p.y;
+    HV.slope = fr.f.y; HV.alt = fr.p.y; try { hvMaxTick(fr.p); } catch (e) {}
   }
   function hvStart(mode) { if (HVT.on) hvTableShow(false); HV.mode = mode; HV.st = "ride"; HV.s = HV.s0; HV.run = 0; HV.v = .5; HV.warn = false; HV.lap = 0; HV.t = 0; W.panelDirty = 1; try { T.sfx && T.sfx("click"); } catch (e) {} }
   function hvStop() { hvQuiet(); HV.st = "station"; HV.mode = "calm"; HV.s = HV.s0; HV.run = 0; HV.cur = 0; HV.v = 0; HV.warn = false; HV.shake = 0; hvApply(0); AU.set("rush", 0, .3); AU.set("wind", .015, .5); W.panelDirty = 1; }
@@ -369,7 +370,8 @@
     if (HV.warn) return [["✔ Vállalom – INDULJON a vad menet!", () => hvStart("wild")], ["Mégsem", () => { HV.warn = false; W.panelDirty = 1; }]];
     const hang = [hvVoice() ? "🔊 Idegenvezetés: be" : "🔇 Idegenvezetés: ki", () => { try { localStorage.setItem("zephyr-hv-hang", hvVoice() ? "0" : "1"); } catch (e) {} hvQuiet(); W.panelDirty = 1; }];
     if (HV.st === "table") return [["🎢 Beszállok – Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { hvToTable(false); HV.warn = true; W.panelDirty = 1; }], ["＋ Nagyítás", () => { HVT.zoomT = clamp(HVT.zoomT * 1.6, 1, 12); }], ["－ Kicsinyítés", () => { HVT.zoomT = clamp(HVT.zoomT / 1.6, 1, 12); }], [HVT.follow ? "✓ Követem a vonatot" : "🚆 Kövesd a vonatot", () => { HVT.follow = !HVT.follow; if (HVT.follow && HVT.zoomT < 3) HVT.zoomT = 4; W.panelDirty = 1; }], ["⌖ Alaphelyzet", () => { HVT.zoomT = 1; HVT.cx = HVT.cx0; HVT.cz = HVT.cz0; HVT.follow = false; HVT.pos = null; W.panelDirty = 1; }], [HVT.spin ? "⏸ Asztal megállítása" : "↻ Asztal forgatása", () => { HVT.spin = !HVT.spin; W.panelDirty = 1; }], ["‹ Vissza a sétához", () => W.close()]];
-    return [["🗺 Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], hang, ["‹ Vissza a sétához", () => W.close()]];
+    const mx = [hvMaxOn() ? "✨ Maximális részletesség: BE" : "✨ Maximális részletesség: ki", () => { try { localStorage.setItem("zephyr-hv-max", hvMaxOn() ? "0" : "1"); } catch (e) {} const k = W.kind; W.close(); setTimeout(() => { try { T.openWorld ? T.openWorld(k) : W.open(k); } catch (e) {} }, 900); }];
+    return [["🗺 Balaton-körút", () => hvStart("calm")], mx, ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], hang, ["‹ Vissza a sétához", () => W.close()]];
   }
   function hvPanel(P) {
     P.title(HV.st === "table" ? "Balaton-terepasztal" : "Balatoni hullámvasút", hvInfo());
