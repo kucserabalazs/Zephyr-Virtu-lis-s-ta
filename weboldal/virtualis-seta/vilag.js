@@ -1861,6 +1861,17 @@
   const HEEL_KR = 205;   /* felállító nyomaték (normált) – kb. 18° dőlés cirkálásban ~22 csomós látszólagos szélben */
   function heelEq(awa, aws) { const F = aws * aws * heelCs(awa); let th = .2; for (let i = 0; i < 4; i++) th = Math.asin(clamp(F * Math.pow(Math.cos(th), 1.3) / HEEL_KR, 0, .9)); return th; }
   const vrWave = (x, z, t) => waveAt(x + (VRR.fox || 0), z + (VRR.foz || 0), t);   /* a látható (gyorsított) vízmintával egyező hullámmagasság */
+  /* a hajó vízellenállása (N) a valódi sebesség (m/s) függvényében – a vitorlásjacht-tervezés szokásos módszere szerint:
+     • súrlódási ellenállás: R_f = ½·ρ·S·C_f·(1+k)·v², ahol C_f az ITTC-1957 képlet: 0,075 / (log10(Re) − 2)², Re = v·(0,7·L_vízvonal)/ν
+       (így számol a delfti jachttest-sorozat is);
+     • maradék (hullámkeltő) ellenállás: a vízkiszorítás súlyának hányada a Froude-szám (Fn = v/√(g·L)) függvényében – a delfti sorozat (DSYHS)
+       könnyű/közepes vízkiszorítású testeire jellemző, KÖZELÍTŐ görbe (nem ennek a hajónak a mért adata).
+     Adatok: tömeg 2300 kg (a tulajdonos adata), hozzáadott (együtt mozgó víz) tömeg +8%, vízvonalhossz 7,4 m, nedvesített felület ~13,5 m² (test + tőkesúly + kormány,
+     becslés: 2,7·√(V·L) + függelékek), édesvíz 15 °C (ρ = 1000 kg/m³, ν = 1,14·10⁻⁶ m²/s), alaktényező 1,10. */
+  const VR_HYD = { m: 2300, add: 1.08, Lwl: 7.4, Sw: 13.5, rho: 1000, nu: 1.14e-6, k1: 1.1, rr: [[.1, 0], [.15, .0002], [.2, .0006], [.25, .0018], [.3, .0042], [.35, .0095], [.4, .021], [.45, .042], [.5, .066], [.55, .086], [.6, .1], [.8, .13]] };
+  function vrHydR(v) { v = Math.abs(v); if (v < .02) return 0; const H = VR_HYD, Re = v * .7 * H.Lwl / H.nu, cf = .075 / Math.pow(Math.log10(Re) - 2, 2), Rf = .5 * H.rho * H.Sw * cf * H.k1 * v * v, Fn = v / Math.sqrt(9.81 * H.Lwl), T = H.rr;
+    let r = T[T.length - 1][1]; if (Fn <= T[0][0]) r = 0; else for (let i = 1; i < T.length; i++) if (Fn <= T[i][0]) { r = lerp(T[i - 1][1], T[i][1], (Fn - T[i - 1][0]) / (T[i][0] - T[i - 1][0])); break; }
+    return Rf + r * H.m * 9.81; }
   const VR_SPD = 1.95;   /* sebesség-szorzó: a 15 m-es versenyjacht 9–16 csomóval száguld (élmény), a pályák rövidebbek lesznek */   /* ütközéstől ütközésig ~2,5 fordulat (mint egy nagy jachton) */
   /* --------------------------------------------------------------- képkocka */
   /* ================= SZABÁLYOK (2026-11-11, a tulajdonos kritikája után) =================
@@ -1994,7 +2005,18 @@
     S.gk = S.gkW;   /* lökések és szélcsendesebb foltok (7–20 mp), lassú erősödés/gyengülés */
     const vt = polar(twa, spin) * KN * VR_SPD * (S.heelPen || 1) * (S.st === "pre" ? .7 : 1) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
     /* gyorsabban gyorsul (a nagy vitorlafelület húz), a kormány fékez egy kicsit, ha nagyon el van tekerve */
-    S.v += (vt - S.v) * Math.min(1, dt / (vt > S.v ? 2.8 : 5)); S.v *= 1 - Math.abs(S.del) * .16 * dt;
+    /* 2026-11-12 00:46 – A HAJÓ SIKLÁSA FIZIKAI MODELLEL (tulajdonos: „a hajó súlya 2300 kg … ha nem fújja a szél, azonnal megáll, miközben az életben még
+       csúszik tovább, míg a közegellenállás meg nem állítja – pontos számítás, élethű mozgás”). Newton: (m + hozzáadott tömeg) · dv/dt = F_hajtó − R_víz(v) − F_szél.
+       • R_víz = súrlódási + maradék (hullámkeltő) ellenállás – lásd vrHydR;  • F_hajtó: akkora erő, amely a polár szerinti sebességnél éppen egyensúlyt tart
+         a vízellenállással (R(v_polár)); a cél alatt a vitorlák kicsit jobban húznak;  • F_szél: ha a vitorlák nem húznak (szélbe állva lobognak), a szembeszél
+         a hajótestet, az árbocot és a lobogó vitorlákat fékezi (½·ρ_levegő·C_d·A·v²).
+       Ha a hajtóerő megszűnik, a hajó a lendületéből SIKLIK tovább: gyorsan veszít a hullámkeltő tartományban (5–6 csomó fölött), aztán hosszan, lassan csúszik. */
+    { const vR = S.v / VR_SPD, vtR = Math.max(0, vt / VR_SPD), mE = VR_HYD.m * VR_HYD.add;
+      let F = vtR > .05 ? vrHydR(vtR) * (1 + .6 * clamp(1 - vR / vtR, 0, 1)) : 0;
+      { const wv = vfwd(S.wf), fb = vfwd(S.b), hw = (wv[0] * fb[0] + wv[1] * fb[1]) * S.tws * S.gk + vR, fl = clamp((42 - twa) / 10, 0, 1); if (fl > 0 && hw > 0) F -= .5 * 1.2 * (2 + 3 * fl) * fl * hw * hw; }   /* C_d·A: test+árboc+kötélzet ~2 m², a lobogó vitorlák további ~3 m² (becslés) */
+      const Rw = vR > .08 ? 22 * Math.pow(S.tws * S.gk / 6, 2) : 0;   /* a hullámok okozta többletellenállás (a széllel nő) – ettől áll meg végül a sikló hajó */
+      const v2 = Math.max(0, vR + (F - vrHydR(vR) - Rw) / mE * dt); S.v = v2 * VR_SPD; S.dragN = vrHydR(v2) + Rw; }
+    S.v *= 1 - Math.abs(S.del) * .16 * dt;
     /* fordulás: sebességfüggő, de lassan is kormányozható; kis tehetetlenséggel (nem ugrik, de jól reagál) */
     { const yrT = Math.sin(S.del) * (.085 * S.v + .24); S.yr = (S.yr || 0) + (yrT - (S.yr || 0)) * Math.min(1, dt * 3.2); }
     S.b = (S.b + S.yr * dt + TAU) % TAU;
