@@ -673,3 +673,8 @@ Kérés: a Quest saját környezetének (bálna, teknős) szintjét szeretné: e
 - A homokozómból csak a GitHub és az npm érhető el (a Poly Haven közvetlenül nem) – a fotót GitHub-tükörből töltöttem le (8k HDR), magam alakítottam képpé (`/home/claude/build/assetpy/tm.py`, `cut.py`).
 - HÁTRAVAN a versenyben: a távoli partok „lebegő sávjai” (Tihany, Siófok felőli darab) – szebb, a vízhez érő part; a kormányoszlop még fekete; kész hajó-/part-modellek keresése (szabad licenccel, GitHubról elérhető) – még nem találtam megfelelőt; krómfelületek tükrözzék a fotó-eget.
 - Szemüvegben NEM ellenőrzött: az égfotó élessége/terhelése Questen (8192×2048-as kép).
+
+## 2026-11-11 11:52 – „VR-ben szépek a gömbök, de zavarók, mert nem lehet tőlük irányítani; a táblákat VR-ben még mindig nem tudom szerkeszteni és helyezni”
+- KÉSZ: az alsó képsor gömbjei alacsony elsőbbségűek (`userData.lowPri`): ha a sugár mögöttük nyilat/táblát is ér, az kapja; a sor lejjebb került (fej −0,56 m), a fogófelület kisebb.
+- KÉSZ: látható gomb a séta közben a képsor alatt: „✎ Táblák rendezése” / „✓ Rendezés kész” (`xrEditPill`) – eddig csak a Beállítások alján volt kapcsoló, és nyitott panel mellett a táblák nem voltak megfoghatók (a „Be” most be is zárja a panelt).
+- Szemüvegben NEM ellenőrzött. Ha így sem megy a táblák húzása, a közvetítésen meg kell nézni, mi történik csippentéskor.

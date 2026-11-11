@@ -10998,7 +10998,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
                 ["Ki", () => { try { if (typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused) toggleMusic(); } catch (e) {} setTimeout(() => { vrAudioMusic(); vrDraw(); }, 150); }, !(typeof MUSIC !== "undefined" && MUSIC && !MUSIC.paused)]]],
       ["Látnivalók a horizonton (strand, stég)", [["Be", () => { wsSet("lm", true); lmClear(); vrDraw(); }, WS.lm !== false], ["Ki", () => { wsSet("lm", false); lmClear(); vrDraw(); }, WS.lm === false]]],
       ["Ünnepi effektek (tűzijáték, zászlók)", [["Be", () => { wsSet("fx", true); vrDraw(); }, WS.fx !== false], ["Ki", () => { wsSet("fx", false); vrDraw(); }, WS.fx === false]]],
-      ["Útjelzők igazítása (csippentsd meg és húzd)", [["Be", () => { WS.navEdit = true; NAV_OV_MSG = "Csippentsd meg a narancs gyűrűt, és húzd a helyére."; vrDraw(); }, !!WS.navEdit], ["Ki", () => { WS.navEdit = false; NAV_OV_MSG = ""; vrDraw(); }, !WS.navEdit]]]
+      ["Útjelzők igazítása (csippentsd meg és húzd)", [["Be", () => { WS.navEdit = true; NAV_OV_MSG = "Csippentsd meg a narancs gyűrűt, és húzd a helyére."; vrClose(); }, !!WS.navEdit], ["Ki", () => { WS.navEdit = false; NAV_OV_MSG = ""; vrDraw(); }, !WS.navEdit]]]
     ];
     rows.forEach(([lab, opts], r) => {
       const y = 136 + r * 92; txt(g, lab, 60, y + 40, { fs: 30, w: 600 });
@@ -12422,7 +12422,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       try { _rc.camera = sceneEl.renderer.xr.getCamera(); } catch (e) {}
       const tg = key === "left" ? targets.filter((o) => o !== XRP.wrist && !(XRP.wristP && o === XRP.wristP.m)) : targets;
       const hits = tg.length ? _rc.intersectObjects(tg, true) : [];
-      for (const h of hits) { const t = xrResolve(h); if (t) { hit = h; tgt = t; break; } }
+      { let lo = null; for (const h of hits) { const t = xrResolve(h); if (!t) continue; if (t.kind === "obj" && t.o.userData.lowPri) { if (!lo) lo = [h, t]; continue; } hit = h; tgt = t; break; } if (!tgt && lo) { hit = lo[0]; tgt = lo[1]; } }   /* 2026-11-11: az alsó képsor gömbjei nem takarhatják el a mögöttük lévő nyilat/táblát – ami mögöttük van, az kapja a sugarat */
       xrSetHover(key, tgt, hit);
       const len = hit ? hit.distance : (dr ? 1.2 : 3.2);
       R.g.visible = true; R.g.position.copy(o); R.g.quaternion.setFromUnitVectors(_v1.set(0, 0, -1), d); R.beam.scale.set(1, 1, len);
@@ -13284,7 +13284,27 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function xrStripKill() { const S = XRP.strip; if (!S) return; S.items.forEach((m) => XRP.extra.delete(m)); S.g.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); if (S.g.parent) S.g.parent.remove(S.g); XRP.strip = null; }
   function xrStripLabel(txt, on) { const cv = document.createElement("canvas"); cv.width = 256; cv.height = 72; const g = cv.getContext("2d"); let t = vT(String(txt || "").replace(/\n/g, " ")); g.font = ZT.font(700, 30); while (t.length > 3 && g.measureText(t).width > 236) t = t.slice(0, -2) + "…";
     g.beginPath(); g.roundRect ? g.roundRect(4, 8, 248, 56, 26) : g.rect(4, 8, 248, 56); g.fillStyle = on ? "rgba(228,187,99,.96)" : "rgba(7,24,44,.86)"; g.fill(); g.fillStyle = on ? "#07182C" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(t, 128, 38); const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; return tx; }
+  /* 2026-11-11: jól látható gomb a séta közben – „Táblák rendezése” / „Rendezés kész” (a beállítások mélyén nem találta meg) */
+  function xrPillTex(txt, on) { const cv = document.createElement("canvas"); cv.width = 512; cv.height = 112; const g = cv.getContext("2d"); g.beginPath(); g.roundRect ? g.roundRect(6, 8, 500, 96, 44) : g.rect(6, 8, 500, 96); g.fillStyle = on ? "rgba(228,187,99,.97)" : "rgba(7,24,44,.9)"; g.fill(); g.lineWidth = 4; g.strokeStyle = "#E4BB63"; g.stroke(); g.font = ZT.font(700, 44); g.fillStyle = on ? "#07182C" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(vT(txt), 256, 58); const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; return tx; }
+  function xrEditPill() {
+    const show = inVR && !worldOn() && !smIsOpen() && !VRS.panel && WS.vrStrip !== false;
+    let P = XRP.pill;
+    if (!show) { if (P) P.g.visible = false; return; }
+    const on = !!WS.navEdit, lang = (window.ZI18N && ZI18N.lang) || "hu";
+    if (!P) { const g = new THREE.Group(), m = new THREE.Mesh(new THREE.PlaneGeometry(.26, .057), new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })); m.position.set(0, 0, -.6); m.rotation.x = -.75; g.add(m);
+      m.userData.xr = { hover: (h) => { P.hov = h; if (h) { try { xrPulse(null, .2, 10); } catch (e) {} } }, click: () => { WS.navEdit = !WS.navEdit; NAV_OV_MSG = WS.navEdit ? "Csippentsd meg a narancs gyűrűt, és húzd a helyére." : ""; try { sfx("click"); } catch (e) {} } };
+      sceneEl.object3D.add(g); XRP.extra.add(m); P = XRP.pill = { g, m, sig: "", yaw: null, hov: false }; }
+    P.g.visible = true;
+    const sig = on + "|" + lang; if (P.sig !== sig) { P.sig = sig; if (P.m.material.map) P.m.material.map.dispose(); P.m.material.map = xrPillTex(on ? "✓ Rendezés kész" : "✎ Táblák rendezése", on); P.m.material.needsUpdate = true; }
+    const sc = P.hov ? 1.12 : 1; P.m.scale.setScalar(P.m.scale.x + (sc - P.m.scale.x) * .2);
+    const h = headPos(new THREE.Vector3()), f = headDir(new THREE.Vector3()); f.y = 0; if (f.lengthSq() < 1e-6) return; f.normalize();
+    const yaw = Math.atan2(-f.x, -f.z); if (P.yaw == null) P.yaw = yaw;
+    let d = yaw - P.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+    if (Math.abs(d) > .6 || P.chase) { P.chase = Math.abs(d) > .03; P.yaw += d * .08; }
+    P.g.position.set(h.x, h.y - .72, h.z); P.g.rotation.set(0, P.yaw, 0);
+  }
   function xrStrip() {
+    try { xrEditPill(); } catch (e) {}
     const show = inVR && !worldOn() && !smIsOpen() && !navEditOn() && WS.vrStrip !== false;
     if (!show) { if (XRP.strip) XRP.strip.g.visible = false; return; }
     const sig = currentGroup + "|" + current + "|" + ((window.ZI18N && ZI18N.lang) || "hu");
@@ -13297,7 +13317,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         const orb = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), new THREE.MeshBasicMaterial({ map: tex })); grp.add(orb);
         const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 1.18, r * .09, 8, 32), new THREE.MeshBasicMaterial({ color: 0xE4BB63, transparent: true, opacity: .0 })); grp.add(ring);
         const lbl = new THREE.Mesh(new THREE.PlaneGeometry(r * 3.1, r * 3.1 * 72 / 256), new THREE.MeshBasicMaterial({ map: xrStripLabel(SCENES[k].n, false), transparent: true, depthWrite: false })); lbl.position.y = -r * 1.75; grp.add(lbl);
-        const hit = new THREE.Mesh(new THREE.SphereGeometry(r * 1.35, 10, 8), new THREE.MeshBasicMaterial({ visible: false })); grp.add(hit);
+        const hit = new THREE.Mesh(new THREE.SphereGeometry(r * 1.05, 10, 8), new THREE.MeshBasicMaterial({ visible: false })); hit.userData.lowPri = true; grp.add(hit);
         hit.userData.xr = { hover: (on) => { grp.userData.hov = on; if (on) { try { xrPulse(null, .2, 10); } catch (e) {} } }, click: () => { if (k !== current) { try { sndNav(); } catch (e) {} go(k, false); } } };
         grp.userData = { k, orb, ring, lbl, hov: false, on: null }; g.add(grp); items.push(hit); XRP.extra.add(hit); });
       /* fölötte: apró vitorlások versenye (dísz) egy halvány vízvonalon */
@@ -13315,7 +13335,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const yaw = Math.atan2(-f.x, -f.z); if (S.yaw == null) S.yaw = yaw;
     let d = yaw - S.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
     if (Math.abs(d) > .6 || S.chase) { S.chase = Math.abs(d) > .03; S.yaw += d * .08; }
-    S.g.position.set(h.x, h.y - .46, h.z); S.g.rotation.set(0, S.yaw, 0);
+    S.g.position.set(h.x, h.y - .56, h.z); S.g.rotation.set(0, S.yaw, 0);   /* lejjebb (−0,56 m), hogy a kéz sugara fölötte menjen el */
   }
   /* minden képkockában (VR-ben is) – A-Frame komponens a jeleneten */
   function regXR() {
@@ -13337,7 +13357,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "61e2b63f6e"; let shown = false;
+  { const BV = "51f52a07db"; let shown = false;
     const chk = () => { if (shown || inVR || BV.indexOf("__") === 0) return; fetch("verzio.json?t=" + Date.now(), { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((j) => { if (!j || !j.v || j.v === BV || shown) return; shown = true;
       const b = document.createElement("button"); b.type = "button"; b.className = "zv-ujver"; b.textContent = "🔄 Új változat érhető el – koppints ide a frissítéshez"; b.addEventListener("click", () => { location.replace(location.pathname + "?v=" + j.v + location.hash); }); document.body.appendChild(b); }).catch(() => {}); };
     setTimeout(chk, 2500); setInterval(chk, 180000); document.addEventListener("visibilitychange", () => { if (!document.hidden) chk(); }); }
