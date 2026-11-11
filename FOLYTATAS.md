@@ -580,3 +580,6 @@ Megjegyzés: a regatta vize a stégről készült fénykép (állókép, csak f�
 - A korábban jóváhagyott 2D terv (sötétkék test, arany csík, fehér nagyvitorla) ezért ÉRVÉNYTELEN – új terv kell a fotók alapján.
 - Azonnal átállítva: a Zephyr teste fehér, sötétkék csíkkal (VR-verseny és 2D regatta).
 - 2026-11-11 02:00 – A hivatalos logóból kivágva: img/zephyr-hajo-logo.png (az „Apartman” maradhatna is – a tulajdonos szerint nem baj); a VR Zephyr orrán kétoldalt a logó, a farnál „H-30381”, a vitorlán nincs felirat. A „Backbord!” rákiáltás háromszoros, dühös, kürttel. A logó elhelyezését képen NEM tudtam ellenőrizni (kívülről nem sikerült ránézni a hajóra).
+- 2026-11-11 01:56–01:57 – ÚJ KÉRÉSEK (még NINCSENEK kész): (a) SZABÁLYMAGYARÁZAT a versenyhez úgy, hogy egy gyerek is megértse; (b) VITORLÁS SZÓTÁR az összes vitorláskifejezéssel,
+  ahol lehet rajzos illusztrációval – sima, rajzolt (2D) felület, de szép és érthető; (c) a KORMÁNYZÁS nem jó: „folyton elszabadul a kormány” – megkérdeztem, melyik eszközön
+  (szemüveg kézkövetéssel / telefon / gép) és összefügg a kerék → kormányrúd kérdéssel.
