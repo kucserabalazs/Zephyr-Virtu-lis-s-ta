@@ -233,7 +233,7 @@
       return;
     }
     sky.object3D.visible = false;
-    safe(() => { W.spec = kind === "race" ? buildVRace() : kind === "chess" ? buildChess() : kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
+    safe(() => { W.spec = kind === "race" ? buildVRace() : kind === "coaster" ? buildCoaster() : kind === "chess" ? buildChess() : kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
   };
   function finishOpen() {
     document.body.classList.add("world-on");
