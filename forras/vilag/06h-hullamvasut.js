@@ -214,13 +214,16 @@
   }
   /* a körút pályája: minden látnivaló mellett alacsonyan elhalad, közöttük az égbe emelkedik, és onnan csap le a következőre */
   function hvTourPts() {
-    const S = HV.sights, n = S.length, pts = []; HV.pass = [];
-    for (let i = 0; i < n; i++) { const a = S[i], b = S[(i + 1) % n], p = S[(i - 1 + n) % n]; let dx = b.x - p.x, dz = b.z - p.z; const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
-      const sx = a.x - dz * 26, sz = a.z + dx * 26; pts.push([sx - dx * 20, 9.5, sz - dz * 20], [sx, 8.5, sz], [sx + dx * 20, 9.5, sz + dz * 20]); HV.pass.push(pts.length - 2);
-      const nb = S[(i + 1) % n], nn = S[(i + 2) % n]; let ex = nn.x - a.x, ez = nn.z - a.z; const el = Math.hypot(ex, ez) || 1; ex /= el; ez /= el; const tx = nb.x - ez * 26 - ex * 20, tz = nb.z + ex * 26 - ez * 20, fx = sx + dx * 20, fz = sz + dz * 20;
-      const dist = Math.hypot(tx - fx, tz - fz), peak = clamp(dist * .5, 24, 150);
-      if (dist > 70) [[.2, .55], [.42, 1], [.62, .95], [.84, .42]].forEach(([t, h]) => pts.push([fx + (tx - fx) * t, 9 + peak * h, fz + (tz - fz) * t]));
-      else pts.push([fx + (tx - fx) * .5, 9 + peak * .9, fz + (tz - fz) * .5]); }
+    /* 2026-11-11: a pálya SZEMBŐL közelíti meg a látnivalót (ráfordul, feléje zuhan), aztán lassan megkerüli, és továbbemelkedik */
+    const S = HV.sights, n = S.length, pts = []; HV.pass = []; const seg = [];
+    for (let i = 0; i < n; i++) { const a = S[i], b = S[(i + 1) % n], p = S[(i - 1 + n) % n]; let ix = a.x - p.x, iz = a.z - p.z; const il = Math.hypot(ix, iz) || 1; ix /= il; iz /= il; let ox = b.x - a.x, oz = b.z - a.z; const ol = Math.hypot(ox, oz) || 1; ox /= ol; oz /= ol;
+      let px = -iz, pz = ix; const sg = (px * ox + pz * oz) >= 0 ? 1 : -1; px *= sg; pz *= sg; const ap = Math.min(72, il * .42), ex = Math.min(34, ol * .3);
+      const R = [24, 22, 26, 30, 42, 32, 54, 54, 58, 27, 30, 46, 34, 34][i] || 30;   /* megkerülési sugár: a domb/épület mérete szerint */
+      seg.push([[a.x - ix * (ap + R * .5), 22, a.z - iz * (ap + R * .5)], [a.x - ix * (ap * .5 + R * .4) + px * R * .45, 12, a.z - iz * (ap * .5 + R * .4) + pz * R * .45], [a.x - ix * 6 + px * R, 9, a.z - iz * 6 + pz * R], [a.x + ox * (ex + R * .3) + px * R * .55, 10.5, a.z + oz * (ex + R * .3) + pz * R * .55]]); }
+    for (let i = 0; i < n; i++) { const A = seg[i], B = seg[(i + 1) % n]; A.forEach((q) => pts.push(q)); HV.pass.push(pts.length - 2);
+      const f = A[3], t = B[0], dist = Math.hypot(t[0] - f[0], t[2] - f[2]), peak = clamp(dist * .5, 14, 150);
+      if (dist > 90) [[.22, .6], [.45, 1], [.66, .92]].forEach(([u, h]) => pts.push([f[0] + (t[0] - f[0]) * u, 14 + peak * h, f[2] + (t[2] - f[2]) * u]));
+      else if (dist > 24) pts.push([f[0] + (t[0] - f[0]) * .5, 14 + peak * .8, f[2] + (t[2] - f[2]) * .5]); }
     return pts;
   }
   /* ---------- a két pálya ---------- */
@@ -296,7 +299,7 @@
       /* BALATON-KÖRÚT: a látnivalóknál lelassít (bemutatás), utána az égbe emelkedik, és onnan csap le a következőre */
       const L2 = TR.L, sm = ((HV.s % L2) + L2) % L2; let near = 1e9, ahead = 1e9, ci = -1; HV.passS.forEach((ps, i) => { const da = ((ps - sm) % L2 + L2) % L2, dn = Math.min(da, L2 - da); if (dn < near) { near = dn; ci = i; } if (da < ahead) ahead = da; });
       const sl = HV.slope || 0; tgt = sl < -.12 ? 13 + 24 * Math.min(1, -sl * 1.3) : sl > .12 ? 13 : 16;
-      if (near < 24 || HV.v * HV.v > 20 + 2 * 13 * Math.max(0, ahead - 22)) tgt = 4.5;
+      if (near < 22 || ahead < 46 || HV.v * HV.v > 26 + 2 * 13 * Math.max(0, ahead - 46)) tgt = 5;
       if (HV.run > L2 - 30) tgt = Math.min(tgt, 1.5 + (L2 - HV.run) * .2);
       HV.v += clamp(tgt - HV.v, -17 * dt, 9 * dt); if (near < 60 && ci !== HV.cur) { HV.cur = ci; W.panelDirty = 1; } HV.near = near; }
     { const d = Math.max(.4, HV.v) * dt; HV.s += d; HV.run = (HV.run || 0) + d; }
