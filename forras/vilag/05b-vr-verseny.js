@@ -320,7 +320,7 @@
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.msgL = labelSprite(["", ""], { size: 2.0, fs: 50, w: 1150 }); CK2.G.add(VRR.msgL);
       VRR.msgL.position.set(w0.ped.position.x * .6, CK2.deckY + 1.75, w0.ped.position.z + 2.2); VRR.msgL.visible = false; }
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Markold meg a kormányt!", "zárd ökölbe a kezed a peremén – nyitott tenyérrel engeded el · kontrollerrel: a hüvelykujjkar kormányoz"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
-    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrúd markolatát!", "zárd ökölbe a kezed a markolatnál · eltolod magadtól: jobbra fordul, magad felé húzod: balra · nyitott tenyérrel engeded el · kontrollerrel: hüvelykujjkar"], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.45, CK2.tiller.ty + .8, CK2.tiller.pz + 1.1); }
+    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrudat!", "zárd ökölbe a kezed a rúdon vagy a toldón, bárhol · eltolod magadtól: jobbra fordul, magad felé húzod: balra · nyitott tenyérrel engeded el · kontrollerrel: hüvelykujjkar"], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.45, CK2.tiller.ty + .8, CK2.tiller.pz + 1.1); }
     SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
     vrSetup(VRR.lvl || 1);
@@ -543,22 +543,30 @@
         if (!s0 || !pt) { if (G) { G.lost = (G.lost || 0) + dt; if (G.lost > 2.5) wheelRelease(h); } S.hold[h] = false; return; }
         const g = s0.hand ? curl(s0) : (squeeze(s0) ? 1 : 0), pin = !!s0.hand && pinchOf(s0, h);
         const holding = g > .45 || pin, open = (g >= 0 && g < .16) && !pin;
-        const lp = S.ck.G.worldToLocal(_wv.copy(pt));
+        const lp = S.ck.G.worldToLocal(_wv.copy(pt)).clone();
+        /* 2026-11-11 23:07 (tulajdonos: „a rudat lehessen több helyen megfogni, ahogy az életben”): a kormányrúd ÉS a toldó teljes hosszában fogható.
+           A kézhez legközelebbi pontot keressük a rúdon (forgáspont→csukló) és a toldón (csukló→markolat); ott fogod meg, és onnan mozgatod:
+           a rúdon fogva a kéz iránya a forgásponttól adja a szöget, a toldón fogva a fogás helyéig érő toldóhosszal számolunk. */
+        const c0t = S.wa / WA_MAX * TI.TMAX, tipX = Math.sin(c0t) * TI.TL, tipZ = TI.pz + Math.cos(c0t) * TI.TL;
+        const near = () => { const segP = (ax, ay, az, bx, by, bz) => { const vx = bx - ax, vy = by - ay, vz = bz - az, L2 = vx * vx + vy * vy + vz * vz, u = clamp(((lp.x - ax) * vx + (lp.y - ay) * vy + (lp.z - az) * vz) / L2, 0, 1), qx = ax + vx * u, qy = ay + vy * u, qz = az + vz * u; return { u, x: qx, y: qy, z: qz, d: Math.hypot(lp.x - qx, lp.y - qy, lp.z - qz) }; };
+          const a = segP(0, TI.py + .02, TI.pz, tipX, TI.ty, tipZ), dir = TI.dir || TI.rest, b = segP(tipX, TI.ty, tipZ, tipX + dir.x * TI.EL, TI.ty + dir.y * TI.EL, tipZ + dir.z * TI.EL);
+          return b.d <= a.d + .04 ? { d: b.d, q: b, s: Math.max(.12, b.u * TI.EL) } : { d: a.d, q: a, r: Math.max(.25, a.u * TI.TL) }; };
         if (G) {
           if (G.lp && G.lp.distanceTo(pt) > .3) { G.lost = (G.lost || 0) + dt; if (G.lost > 2.5) wheelRelease(h); else G.lp.lerp(pt, .08); return; }
           (G.lp || (G.lp = new THREE.Vector3())).copy(pt);
           G.lost = 0; if (open) { G.off = (G.off || 0) + dt; if (G.off > .6) { wheelRelease(h); S.hold[h] = holding; return; } } else G.off = 0;
           const ex = lp.x + G.ox, ey = lp.y + G.oy, ez = lp.z + G.oz;   /* a markolat kívánt helye (a fogás pillanatának eltolásával – nem ugrik) */
-          const dy = clamp(ey - TI.ty, -TI.EL * .85, TI.EL * .85), eh = Math.sqrt(TI.EL * TI.EL - dy * dy), dx = ex, dz = ez - TI.pz, d = Math.hypot(dx, dz) || 1e-4;
+          const EL = G.s || TI.EL, dy = clamp(ey - TI.ty, -EL * .85, EL * .85), eh = Math.sqrt(EL * EL - dy * dy), dx = ex, dz = ez - TI.pz, d = Math.hypot(dx, dz) || 1e-4;
           let th;
-          if (d >= TI.TL + eh - 1e-3 || d <= Math.abs(TI.TL - eh) + 1e-3) th = Math.atan2(dx, dz);   /* nem ér oda: a rúd a kéz felé mutat */
+          if (G.r) th = Math.atan2(dx, dz);   /* magát a rudat fogod */
+          else if (d >= TI.TL + eh - 1e-3 || d <= Math.abs(TI.TL - eh) + 1e-3) th = Math.atan2(dx, dz);   /* nem ér oda: a rúd a kéz felé mutat */
           else { const a = (TI.TL * TI.TL - eh * eh + d * d) / (2 * d), hh = Math.sqrt(Math.max(0, TI.TL * TI.TL - a * a)), mx = dx / d * a, mz = dz / d * a, px = -dz / d * hh, pz2 = dx / d * hh;
             const c0 = S.wa / WA_MAX * TI.TMAX, t1 = Math.atan2(mx + px, mz + pz2), t2 = Math.atan2(mx - px, mz - pz2); th = Math.abs(wrapA(t1 - c0)) < Math.abs(wrapA(t2 - c0)) ? t1 : t2; }
           const tgW = clamp(th, -TI.TMAX, TI.TMAX) / TI.TMAX * WA_MAX; S.wa += (tgW - S.wa) * Math.min(1, dt * 12); S.wv = 0;
-          G.e = (G.e || new THREE.Vector3()).set(ex, ey, ez);
-        } else if (holding && !S.hold[h] && lp.distanceTo(TI.end) < .34) {   /* fogás: a kéz a markolat közelében zárul (vagy csippent) */
-          S.grabs[h] = { tiller: true, key: h, ray: false, hist: [[W.t, S.wa]], ox: TI.end.x - lp.x, oy: TI.end.y - lp.y, oz: TI.end.z - lp.z }; S.wv = 0; try { flap(.02); X.pulse && X.pulse(h, .5, 30); } catch (e) {}
-        } else S.near = S.near || lp.distanceTo(TI.end) < .34;
+          if (G.s) G.e = (G.e || new THREE.Vector3()).set(ex, ey, ez);
+        } else if (holding && !S.hold[h]) { const n = near(); if (n.d < .3) {   /* fogás: a kéz a rúd vagy a toldó BÁRMELY pontja közelében zárul (vagy csippent) */
+          S.grabs[h] = { tiller: true, key: h, ray: false, hist: [[W.t, S.wa]], s: n.s || 0, r: n.r || 0, ox: n.q.x - lp.x, oy: n.q.y - lp.y, oz: n.q.z - lp.z }; S.wv = 0; try { flap(.02); X.pulse && X.pulse(h, .5, 30); } catch (e) {} }
+        } else S.near = S.near || near().d < .3;
         S.hold[h] = holding;
       });
       else ["right", "left"].forEach((h) => {
@@ -601,7 +609,7 @@
     S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; const want = S.grab && S.grab.w === w ? 1.6 : (VRR.wHover ? .25 : 0) + (!S.everGrab && S.st === "pre" && w.sd < 0 ? .25 + .25 * Math.sin(W.t * 4) : 0); w.gripM.emissiveIntensity += (want - w.gripM.emissiveIntensity) * Math.min(1, dt * 8); });
     if (S.tiller) { const TI = S.ck.tiller, th = S.wa / WA_MAX * TI.TMAX; TI.til.rotation.y = th;   /* a rúd a kormányállást mutatja; a toldó a csuklótól a kézig (vagy nyugalmi helyére) ér */
       const tx = Math.sin(th) * TI.TL, tz = TI.pz + Math.cos(th) * TI.TL, G = S.grab && S.grab.tiller ? S.grab : null;
-      if (G && G.e) _wv.set(G.e.x - tx, G.e.y - TI.ty, G.e.z - tz).normalize(); else _wv.copy(TI.rest);
+      { const Ge = Object.values(S.grabs || {}).find((q) => q.tiller && q.s && q.e); if (Ge) _wv.set(Ge.e.x - tx, Ge.e.y - TI.ty, Ge.e.z - tz).normalize(); else _wv.copy(TI.rest); } (TI.dir || (TI.dir = new THREE.Vector3())).copy(_wv);
       TI.ext.position.set(tx, TI.ty, tz); TI.ext.quaternion.setFromUnitVectors(_tz, _wv); TI.end.set(tx, TI.ty, tz).addScaledVector(_wv, TI.EL - .1);
       const want = G ? 1.5 : (S.near ? .6 : 0) + (!S.everGrab && S.st === "pre" ? .3 + .3 * Math.sin(W.t * 4) : 0); TI.gripM.emissiveIntensity += (want - TI.gripM.emissiveIntensity) * Math.min(1, dt * 8); }
     if (S.grab) S.everGrab = true;
