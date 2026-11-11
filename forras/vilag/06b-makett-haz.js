@@ -158,7 +158,7 @@
     const Y1 = FLOOR_H;
     /* födémek (alul vakolt mennyezet) */
     /* a középső lépcsőház két szint magas (a fotók szerint): az emeleti födémben a lépcső fölött és mellette nagy nyílás van */
-    const VOID = [WALL, Z_HALL + 1.2, 3.4, Z_B - PART];   /* x0, z0, x1, z1 – a légtér az emeleten */
+    const VOID = [WALL, Z_HALL + 1.2, WALL + 1.14, Z_B - PART];   /* 2026-11-11 (tulajdonos: „az emeleti terasz egy része hiányzik a lépcsőháznál, a Kalóz bejárata sincs ott”): a nyílás csak a lépcső fölött van (1,1 m széles sáv a nyugati falnál), mellette végig járófelület a Kalóz ajtajáig; korlát a lépcső mellett. Eredeti x1: 3.4 */ //   /* x0, z0, x1, z1 – a légtér az emeleten */
     box("plasterIn", 0, -.2, 0, OUT_W, 0, Z_END, 0);
     box("plasterIn", 0, -.2, 0, OUT_W, 0, VOID[1], 1); box("plasterIn", 0, -.2, VOID[3], OUT_W, 0, Z_END, 1); box("plasterIn", VOID[2], -.2, VOID[1], OUT_W, 0, VOID[3], 1); box("plasterIn", 0, -.2, VOID[1], WALL, 0, VOID[3], 1);
     /* nyílások a külső falakon: az alaprajzok ablakaiból és ajtóiból */
@@ -310,7 +310,7 @@
     tsetHall(add, box, 4.7, Z_B - PART - 1.2, 1);
     /* a Kalóz teraszán a közös nagy hűtő és két ágyneműs szekrény a fal mellett (a tulajdonos alaprajza szerint) */
     box("#f4f4f4", OUT_W - WALL - .75, .03, Z_B - PART - .75, OUT_W - WALL - .05, 1.85, Z_B - PART - .05, 1); box("#c9c9c9", OUT_W - WALL - .76, 1.2, Z_B - PART - .76, OUT_W - WALL - .04, 1.21, Z_B - PART - .04, 1); box("steel", OUT_W - WALL - .78, 1.3, Z_B - PART - .55, OUT_W - WALL - .76, 1.6, Z_B - PART - .52, 1);
-    box("#a8998a", VOID[2] + .1, .03, Z_B - PART - .65, VOID[2] + .9, 1.9, Z_B - PART - .05, 1);
+    box("#a8998a", OUT_W - WALL - 1.75, .03, Z_B - PART - .65, OUT_W - WALL - .95, 1.9, Z_B - PART - .05, 1);   /* a szekrény a hűtő mellett – a Kalóz ajtaja szabad */
     /* fali lámpák a bejárónál, házjel */
     [[OUT_W + .04, 1.9, Z_HALL + .4], [OUT_W + .04, 1.9, Z_B - .6]].forEach(([x, y, z]) => { box("frame", x - .04, y - .12, z - .06, x + .04, y + .12, z + .06, 0); box("bulb", x + .02, y - .08, z - .04, x + .06, y + .08, z + .04, 0); });
     /* elöl: Korvett terasza és a Fregatt erkélye üvegkorláttal */
