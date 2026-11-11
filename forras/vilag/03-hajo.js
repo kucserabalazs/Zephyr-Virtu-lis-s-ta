@@ -152,6 +152,11 @@
     const k = _lodS.x / Math.max(.05, _lodV.distanceTo(_lodC));
     for (let i = 0; i < L.length; i++) { const p = L[i], show = p.r * k > .0035; if (!show && p.o.visible) { p.o.visible = false; p.hid = true; } else if (show && p.hid) { p.o.visible = true; p.hid = false; } }
   }
+  function sailShade(g) {   /* a vitorla domborulata szerinti lágy árnyalás (kétoldalas: a normális előjele nem számít) */
+    const N = g.attributes.normal, C = g.attributes.color; if (!N || !C) return; const a = C.array;
+    for (let i = 0, n = N.count; i < n; i++) { const d = Math.abs(N.getX(i) * .52 + N.getY(i) * .35 + N.getZ(i) * .78), L = .8 + .26 * d; a[i * 3] = L; a[i * 3 + 1] = L; a[i * 3 + 2] = L * 1.02; }
+    C.needsUpdate = true;
+  }
   function makeBoat(o) {
     o = Object.assign({ detail: 0, hull: "#eeeeea", boot: "#1d3a8a", stripe: "#1d3a8a", main: "#f4f2ea", jib: "#efeee6", num: "HUN 1", crew: 3, spin: ["#e5262f", "#ffffff", "#1f5fa8"], deckCol: "#e6e7e6" }, o);
     const G = new THREE.Group(), body = new THREE.Group(); G.add(body);   /* body: dőlés + bólintás */
@@ -453,7 +458,7 @@
           pa[k + 2] = mastZ - .07 + dz * u * chord + Math.sin(tw) * depth * side;
         }
       }
-      mainG.attributes.position.needsUpdate = true; mainG.computeVertexNormals();
+      mainG.attributes.position.needsUpdate = true; mainG.computeVertexNormals(); if (G.userData.sailBaked) sailShade(mainG);
       boomG.rotation.y = -a;
     }
     const _cw = new THREE.Vector3();
@@ -489,7 +494,7 @@
           pa[k] = lx + (ex - lx) * u + _n.x * depth; pa[k + 1] = ly + (ey - ly) * u + _n.y * depth; pa[k + 2] = lz + (ez - lz) * u + _n.z * depth;
         }
       }
-      jibG.attributes.position.needsUpdate = true; jibG.computeVertexNormals();
+      jibG.attributes.position.needsUpdate = true; jibG.computeVertexNormals(); if (G.userData.sailBaked) sailShade(jibG);
       if (wg > .55 && jibM.visible) { poleM.visible = true; setPole(poleBase, clew); } else if (!(spinM && spinM.visible)) poleM.visible = false;
     }
     const _sn = new THREE.Vector3(), _sc = new THREE.Vector3();
@@ -526,7 +531,7 @@
           if (lim > .01) bulge += lim * F * .06 * flogW(u, v, om) + lim * .35 * Math.sin(S.t * 1.3 + v * 2);
           pa[k] = lx + (ex - lx) * u + _sn.x * bulge; pa[k + 1] = ly + (ey - ly) * u + bulge * .12 - lim * v * .2 * (1 - k0); pa[k + 2] = lz + (ez - lz) * u + _sn.z * bulge;
         } }
-      spinG.attributes.position.needsUpdate = true; spinG.computeVertexNormals();
+      spinG.attributes.position.needsUpdate = true; spinG.computeVertexNormals(); if (G.userData.sailBaked) sailShade(spinG);
       if (k0 > .25) { poleM.visible = true; setPole(poleBase, tack); }
     }
     function updCrew(dt) {
@@ -540,6 +545,11 @@
       });
     }
     G.userData.S = S;
+    /* 2026-11-11 VITORLÁK KISÜTÉSE: a vitorlák anyaga fény nélküli (MeshBasicMaterial), az árnyalást a hullámzó felület normálisaiból
+       csúcsszínként számoljuk (vitorlánként ~150 csúcs – elhanyagolható), így a hajón semmi sem kér futásidejű fényszámítást. */
+    G.userData.bakeSails = () => { if (G.userData.sailBaked) return; G.userData.sailBaked = true;
+      [mainM, jibM, spinM].forEach((m) => { if (!m) return; const o = m.material, n = new THREE.MeshBasicMaterial({ map: o.map || null, side: THREE.DoubleSide, vertexColors: true, transparent: o.transparent, opacity: o.opacity }); W.disposables.push(n);
+        const g = m.geometry, c = new Float32Array(g.attributes.position.count * 3).fill(1); g.setAttribute("color", new THREE.BufferAttribute(c, 3)); m.material = n; m.castShadow = m.receiveShadow = false; sailShade(g); }); };
     G.userData.update = (dt) => {
       S.t += dt;
       body.rotation.set(S.pitch, 0, S.heel, "YXZ");

@@ -17,7 +17,7 @@
     SAIL.water = makeWater(env);
     /* saját hajó: a felhasználó a kormánynál áll; a hajó orra −z felé */
     const boat = makeBoat({ detail: 1, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, outboard: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"] });
-    boat.rotation.y = Math.PI; root.add(boat); SAIL.boat = boat;
+    boat.rotation.y = Math.PI; root.add(boat); SAIL.boat = boat; try { vrBake(boat); } catch (e) {}   /* 2026-11-11: kisütött fény */
     SAIL.wake = makeWake(env, .7);
     /* a felhasználó helye: a kokpitban, a kormányrúd előtt */
     const helm = new THREE.Vector3(0, CK.sole, -1.9);   /* hajó-helyi */
@@ -29,7 +29,7 @@
     /* más vitorlások a környéken + a tihanyi komp + sirályok */
     SAIL.others = [0, 1, 2, 3, 4].map((k) => {
       const b = BOATS[(k + 1) % BOATS.length];
-      const g = makeBoat(Object.assign({ detail: 0, crew: 2 }, b)); env.add(g);
+      const g = makeBoat(Object.assign({ detail: 0, crew: 2 }, b)); env.add(g); try { vrBake(g); } catch (e) {}
       const a = rr(0, TAU), d = rr(350, 1400);
       return { g, x: Math.cos(a) * d, z: -1500 + Math.sin(a) * d, b: rr(0, TAU), v: 3, wp: null, ph: rand() * 9, wk: makeWake(env, .55) };
     });

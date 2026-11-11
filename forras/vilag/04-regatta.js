@@ -40,7 +40,7 @@
     const cb = add(makeCommittee(), ...REG.marks.C); cb.rotation.y = Math.atan2(Rv.x, Rv.z); REG.cb = cb;
     /* hajók */
     REG.boats = BOATS.map((b, i) => {
-      const g = makeBoat(Object.assign({ detail: 0, crew: 3 }, b)); course.add(g);
+      const g = makeBoat(Object.assign({ detail: 0, crew: 3 }, b)); course.add(g); try { vrBake(g); } catch (e) {}   /* 2026-11-11: kisütött fény a regatta hajóin is */
       const wk = makeWake(course, .6);
       /* láthatatlan, nagy „rámutatási” doboz a hajó körül */
       const hit = mesh(new THREE.BoxGeometry(4, 13, 10), basic({ visible: false }), g); hit.position.y = 6;

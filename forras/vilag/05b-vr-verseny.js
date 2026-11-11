@@ -89,7 +89,7 @@
       const spin = new THREE.Group(); wheel.add(spin);
       mesh(new THREE.TorusGeometry(WR, .028, 12, 72), carbon, spin);
       const gripM = std({ color: "#5a3a24", roughness: .7, emissive: new THREE.Color("#ffd166"), emissiveIntensity: 0 });
-      const grip = mesh(new THREE.TorusGeometry(WR, .034, 10, 72, TAU * .999), gripM, spin); grip.scale.set(1, 1, .85);
+      const grip = mesh(new THREE.TorusGeometry(WR, .034, 10, 72, TAU * .999), gripM, spin); grip.scale.set(1, 1, .85); grip.userData.noBake = true;   /* 2026-11-11: a markolat NEM süthető ki – a „fogom” jelzés (aranyló fény) az élő anyagán él; a kisütés eddig eltüntette */
       /* varrás-mintázat a bőrön: vékony világos gyűrű */
       mesh(new THREE.TorusGeometry(WR + .031, .004, 4, 96), std({ color: "#e8d9b8", roughness: .6 }), spin);
       for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; const sp = mesh(new THREE.BoxGeometry(.03, WR - .07, .022), carbon, spin); sp.position.set(Math.sin(a) * (WR - .07) / 2, Math.cos(a) * (WR - .07) / 2, 0); sp.rotation.z = -a; }
@@ -223,6 +223,7 @@
         g.setAttribute("color", new THREE.BufferAttribute(col, 3)); }
       o.material = nmat; o.castShadow = false; o.receiveShadow = false; cnt++;
     });
+    root.traverse((o) => { if (o.userData && o.userData.bakeSails) { try { o.userData.bakeSails(); cnt++; } catch (e) {} } });   /* a vitorlák is kisütve */
     return cnt;
   }
   function buildVRace() {
