@@ -412,7 +412,7 @@
     VRR.lineM.position.set(mx, .05, mz); VRR.lineM.scale.set(Math.hypot(C.line.b.x - C.line.a.x, C.line.b.z - C.line.a.z), 1, 1); VRR.lineM.rotation.z = -Math.atan2(C.line.b.z - C.line.a.z, C.line.b.x - C.line.a.x);
     /* a hajók a vonal alatt (szél alatt) 70–110 m-re, halzon; 45 mp a rajtig */
     const back = (d, s) => ({ x: -C.u[0] * d + C.c[0] * s, z: -C.u[1] * d + C.c[1] * s });
-    const p0 = back(95, 6); Object.assign(VRR, { x: p0.x, z: p0.z, b: C.wf + Math.PI * .5 - .3, v: 2.5, del: 0, wa: 0, heel: 0, lastSide: 0, tackT: 0, next: 0, t: -45, st: "pre", horns: {}, fin: null, msg: "Rajt 45 mp múlva – állj be a vonal mögé!", msgT: 6, ocs: 0, res: [], pen: 0, doneT: 0, prevSide: null, dnf: false, _mi: -1, nearMk: 0, hailT: 0, guideT: 0, offT: 0 });
+    const p0 = back(95, 6); Object.assign(VRR, { wx: null, fox: 0, foz: 0, x: p0.x, z: p0.z, b: C.wf + Math.PI * .5 - .3, v: 2.5, del: 0, wa: 0, heel: 0, lastSide: 0, tackT: 0, next: 0, t: -45, st: "pre", horns: {}, fin: null, msg: "Rajt 45 mp múlva – állj be a vonal mögé!", msgT: 6, ocs: 0, res: [], pen: 0, doneT: 0, prevSide: null, dnf: false, _mi: -1, nearMk: 0, hailT: 0, guideT: 0, offT: 0 });
     VRR.riv.forEach((r, i) => { const p = back([84, 102, 90][i], [-48, -22, 38][i]);   /* egymástól és tőled is legalább ~28 m-re (15 m-es hajók) */ Object.assign(r, { x: p.x, z: p.z, b: C.wf + (i % 2 ? 1 : -1) * Math.PI * .45, v: 2.4, next: 0, tack: i % 2 ? 1 : -1, lastTack: 0, fin: null, skill: 1, yr: 0, del: 0, spinOn: false, ph: rand() * 9, _mi: -1, errNext: 0, errGW: 0, penT: 0, wide: 0, _dS: null }); });
     if (VRR.podium) VRR.podium.visible = false;
     W.panelDirty = 1;
@@ -468,6 +468,7 @@
   function heelCs(awa) { if (awa < 18) return 0; if (awa < 30) return (awa - 18) / 12; if (awa < 55) return 1; if (awa < 90) return 1 - (awa - 55) / 35 * .2; if (awa < 130) return .8 - (awa - 90) / 40 * .5; return Math.max(.06, .3 - (awa - 130) / 50 * .24); }
   const HEEL_KR = 205;   /* felállító nyomaték (normált) – kb. 18° dőlés cirkálásban ~22 csomós látszólagos szélben */
   function heelEq(awa, aws) { const F = aws * aws * heelCs(awa); let th = .2; for (let i = 0; i < 4; i++) th = Math.asin(clamp(F * Math.pow(Math.cos(th), 1.3) / HEEL_KR, 0, .9)); return th; }
+  const vrWave = (x, z, t) => waveAt(x + (VRR.fox || 0), z + (VRR.foz || 0), t);   /* a látható (gyorsított) vízmintával egyező hullámmagasság */
   const VR_SPD = 1.95;   /* sebesség-szorzó: a 15 m-es versenyjacht 9–16 csomóval száguld (élmény), a pályák rövidebbek lesznek */   /* ütközéstől ütközésig ~2,5 fordulat (mint egy nagy jachton) */
   /* --------------------------------------------------------------- képkocka */
   /* ================= SZABÁLYOK (2026-11-11, a tulajdonos kritikája után) =================
@@ -543,10 +544,19 @@
       if (on) { const m = S.msg; let k = m.indexOf(" – "), L; if (k > 0) L = [m.slice(0, k), m.slice(k + 3)]; else if ((k = m.indexOf("! ")) > 0) L = [m.slice(0, k + 1), m.slice(k + 2)]; else L = [m, ""]; S.msgL.userData.set(L); } }   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
     /* fizika (a vitorlázás modellje, a nagyobb hajóhoz igazítva) */
     /* a szél lassan leng (±7°) – mint a Balatonon; a pálya ugyanaz marad */
-    S.wf = C.wf + Math.sin(S.t / 47 + C.lvl) * 7 * D2R + Math.sin(S.t / 13) * 2 * D2R;
+    /* 2026-11-11 VÁLTOZÓ SZÉL (balatoni minta: lökéses ÉNy-i szél, kis forgások, néha tartós szélfordulás, erősödés/gyengülés) */
+    if (!S.wx) { let sd = (C.lvl * 9301 + 49297 + ((Date.now() / 1000) | 0)) % 233280; const rnd = () => (sd = (sd * 9301 + 49297) % 233280) / 233280;
+      const big = rnd() < .18, n = 1 + (rnd() < .5 ? 1 : 0), sh = []; let t0 = 35 + rnd() * 50;
+      for (let i = 0; i < n; i++) { sh.push({ t: t0, d: 25 + rnd() * 30, a: (rnd() < .5 ? -1 : 1) * (i === 0 && big ? 26 + rnd() * 12 : 6 + rnd() * 9) * D2R }); t0 += 70 + rnd() * 80; }
+      const gu = []; let tg = -40 + rnd() * 20; while (tg < 1200) { const lull = rnd() < .3; gu.push({ t: tg, d: 7 + rnd() * 14, k: lull ? -(.14 + rnd() * .14) : .14 + rnd() * .2, a: (rnd() - .5) * 9 * D2R }); tg += 18 + rnd() * 40; }
+      S.wx = { sh, gu, ph: rnd() * 6, tr: rnd() < .5 ? 1 : -1 }; }
+    { const wx = S.wx; let wsh = 0, gdir = 0, gk = 1 + wx.tr * .12 * Math.sin(S.t / 140 + wx.ph) + .04 * Math.sin(S.t * 1.07);
+      for (const q of wx.sh) { const u = clamp((S.t - q.t) / q.d, 0, 1); wsh += q.a * u * u * (3 - 2 * u); }
+      for (const q of wx.gu) { const u = (S.t - q.t) / q.d; if (u > 0 && u < 1) { const e = Math.pow(Math.sin(u * Math.PI), .7); gk += q.k * e; gdir += q.a * e; } }
+      S.wf = C.wf + wsh + gdir + Math.sin(S.t / 47 + C.lvl) * 6 * D2R + Math.sin(S.t / 13) * 2 * D2R; S.gkW = clamp(gk, .6, 1.5); }
     const twa = Math.abs(wrapA(S.wf - S.b)) * R2D;
     S.spinOn = S.spinOn ? twa > 98 : twa > 108; const spin = S.spinOn && S.st === "race";   /* hátszélben (és széles hátszélben) felhúzzák a spinakkert */
-    S.gk = 1 + .13 * Math.sin(S.t * .31 + C.lvl) * Math.sin(S.t * .173 + 1) + .05 * Math.sin(S.t * 1.07);   /* széllökések: ±15% */
+    S.gk = S.gkW;   /* lökések és szélcsendesebb foltok (7–20 mp), lassú erősödés/gyengülés */
     const vt = polar(twa, spin) * KN * VR_SPD * (S.heelPen || 1) * (S.st === "pre" ? .7 : 1) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
     /* gyorsabban gyorsul (a nagy vitorlafelület húz), a kormány fékez egy kicsit, ha nagyon el van tekerve */
     S.v += (vt - S.v) * Math.min(1, dt / (vt > S.v ? 2.8 : 5)); S.v *= 1 - Math.abs(S.del) * .16 * dt;
@@ -580,7 +590,7 @@
       S.yr += Math.sign(wrapA(S.wf - S.b)) * Math.max(0, S.heel) * .1 * Math.min(1, S.v / 5) * dt * 3; }
     BS.heel = -side * S.heel * .78;   /* látványban kicsit visszafogva (a kormányos helye le van horgonyozva) */
     /* mozgás a hullámokon: a lassú hajót dobálja a víz (jobban ring), a száguldó hajó kisimul – csak néha ugrik meg egy-egy hullámon */
-    const hb = waveAt(S.x + fx * 6, S.z + fz * 6, W.t), hs2 = waveAt(S.x - fx * 6, S.z - fz * 6, W.t);
+    const hb = vrWave(S.x + fx * 6, S.z + fz * 6, W.t), hs2 = vrWave(S.x - fx * 6, S.z - fz * 6, W.t);
     const rockK = clamp(1.25 - S.v / 8, .28, 1.25);
     S.slam = (S.slam || 0) * Math.pow(.015, dt);
     if (S.v > 5 && S.prevHb != null && (hb - S.prevHb) / Math.max(dt, .001) > .45 && W.t - (S.slamT || 0) > 1.6 && Math.random() < .35) { S.slam = .03 + Math.random() * .02; S.slamT = W.t; S.sprayBurst = 1; }
@@ -590,12 +600,13 @@
     S.boat.position.y = (hb + hs2) / 2 * .5 * rockK + S.slam * 3 * Math.sin(Math.min(1, (W.t - (S.slamT || 0)) * 3) * Math.PI);
     S.boat.userData.update(dt);
     /* permet: a hajó a root-ban áll (a világ mozog), ezért a cseppek hátrafelé sodródnak a hajó sebességével */
-    if (S.spray) { const P = S.spray, bowZ = -HULL.L / 2 * VR_SC, k = clamp((S.v - 3.2) / 6, 0, 1.4), back = S.v * .85, bp = S.boat.position.y;
-      P.acc += dt * (k * 320 + (S.sprayBurst ? 900 : 0)); const burst = S.sprayBurst; S.sprayBurst = 0;
+    if (S.spray) { const P = S.spray, bowZ = -HULL.L / 2 * VR_SC, k = clamp((S.v - 2) / 4.5, 0, 1.6), back = S.v * 1.7, bp = S.boat.position.y;
+      P.acc += dt * (k * 520 + (S.sprayBurst ? 900 : 0)); const burst = S.sprayBurst; S.sprayBurst = 0;
       while (P.acc > 1) { P.acc -= 1; const i = P.i; P.i = (P.i + 1) % P.N; const sd = Math.random() < .5 ? -1 : 1, bow = Math.random() < .62, b = i * 3;
         const z0 = bow ? bowZ + 1.2 + Math.random() * 1.6 : bowZ + 3 + Math.random() * 4.5, x0 = sd * (bow ? .35 + Math.random() * .5 : 1.7 + Math.random() * .4);
         P.pos[b] = x0; P.pos[b + 1] = bp + .15 + Math.random() * .2; P.pos[b + 2] = z0;
-        const up = (bow ? 2.2 : 1.2) + Math.random() * 2.4 * (.5 + k) + (burst ? 2.5 : 0), out = (bow ? 1.6 : 1.1) + Math.random() * 2.2 * (.4 + k);
+        const fl = !bow && !burst && Math.random() < .55;   /* habpelyhek a vízen: laposan, gyorsan suhannak hátra a hajó mellett */
+        const up = fl ? .25 + Math.random() * .5 : (bow ? 2.2 : 1.2) + Math.random() * 2.4 * (.5 + k) + (burst ? 2.5 : 0), out = fl ? .5 + Math.random() * 1.6 : (bow ? 1.6 : 1.1) + Math.random() * 2.2 * (.4 + k);
         P.vel[b] = sd * out; P.vel[b + 1] = up; P.vel[b + 2] = back * (.6 + Math.random() * .4) - (bow ? 1.2 : 0);
         P.max[i] = P.life[i] = .7 + Math.random() * .8; }
       for (let i = 0; i < P.N; i++) { const b = i * 3; if (P.life[i] <= 0) { P.col[b] = P.col[b + 1] = P.col[b + 2] = 0; continue; }
@@ -614,7 +625,7 @@
     S.env.rotation.y = S.b; S.far.rotation.y = S.b;
     S.env.position.set(-S.x, 0, -S.z).applyAxisAngle(new THREE.Vector3(0, 1, 0), S.b);
     const wm = S.water; wm.position.set(Math.round(S.x / 40) * 40, 0, Math.round(S.z / 40) * 40);
-    const mat = wm.userData.mat; mat.uniforms.uT.value = W.t; mat.uniforms.uOff.value.set(wm.position.x, wm.position.z); mat.uniforms.uWind.value = Math.atan2(-wfv[1], -wfv[0]);
+    const mat = wm.userData.mat; mat.uniforms.uT.value = W.t; S.fox = (S.fox || 0) + fx * S.v * dt * 1.1; S.foz = (S.foz || 0) + fz * S.v * dt * 1.1; mat.uniforms.uOff.value.set(wm.position.x + S.fox, wm.position.z + S.foz);   /* sebességérzet: a víz mintázata ~2× gyorsabban fut el a hajó mellett (a fizika változatlan) */ mat.uniforms.uWind.value = Math.atan2(-wfv[1], -wfv[0]);
     const cw = new THREE.Vector3(); T.camObj().getWorldPosition(cw); mat.uniforms.uCam.value.copy(S.env.worldToLocal(cw));
     S.wake.push(S.x, S.z, Math.atan2(fx, fz), S.v, dt, .05);
     S.gulls.tick(dt, S.x, S.z);
@@ -654,7 +665,7 @@
       S.cdL.visible = S.st === "pre" || (S.st === "race" && S.t < 4); S.cdL.position.set(S.cb.position.x, 13 + Math.sin(W.t * 2) * .2, S.cb.position.z); S.cdL.userData.set(S.st === "pre" ? ["RAJT", mmss(S.t)] : ["RAJT!", "jó versenyt!"]); }
     S.lineM.material.opacity = S.st === "pre" || S.next >= S.marks.length ? .5 + .2 * Math.sin(W.t * 3) : .15;
     /* hangok */
-    AU.set("rush", clamp((S.v - 1) / 5, 0, 1) * .06, .4); AU.set("wind", clamp(aws / (16 * KN), 0, 1) * .045, .6); AU.set("water", .035, 1);
+    AU.set("rush", clamp((S.v - .8) / 4.5, 0, 1.25) * .11, .4); AU.set("wind", clamp(aws / (14 * KN), 0, 1.2) ** 1.5 * .07, .6); AU.set("water", .035, 1);
     /* 2026-11-11: a vízen és a levegőben NINCS több tábla, felirat, keringő jel, festett nyíl – csak a fényoszlop a következő célnál és a rajt-/célvonal két oszlopa */
     { const M = S.CM; if (M) { M.orbit.visible = false; M.sign.visible = false; if (M.gateL) M.gateL.visible = false; M.chev.visible = false; (M.garrows || []).forEach((m) => { m.visible = false; }); }
       S.arrow.visible = false; S.beamLbl.visible = false; S.beam.visible = !S.fin; }

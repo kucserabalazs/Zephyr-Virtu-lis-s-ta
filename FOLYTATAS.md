@@ -612,3 +612,5 @@ Megbeszélt döntések:
 - VR kormány: ökölfogás, csak nyitott tenyérre (0,5 mp) enged el, követésvesztés 2,5 mp-ig nem enged el, elengedve a kerék középre áll, lassabb/finomabb kormánylapát.
 - VR jelzések: kinti táblák, feliratok, vízre festett nyilak, keringő jelek kikapcsolva; maradt: egy fényoszlop a következő bóján, RADAR (felülnézet) és SZÉLMŰSZER a kormányállásban; üzenet csak szabálysértéskor.
 - Nem ellenőrizhető általam: valódi Quest kézkövetés.
+- (3) Sebességérzet: a víz mintája ~2× gyorsabban fut, több permet + lapos habpelyhek a hajó mellett, erősebb vízzúgás/szélzaj; a fizika változatlan. A vitorla csapkodása a szélerővel arányos (gyenge szélben csak lebben).
+- (4) Változó szél (`S.wx`, futamonként véletlen): 1–2 tartós szélfordulás (6–15°, 18% eséllyel 26–38°), 7–20 mp-es lökések (+14–34%) és szélcsendes foltok (−14–28%), lassú erősödés/gyengülés ±12%. Gyorsított futamban a riválisok befutnak (233 mp).

@@ -366,7 +366,7 @@
       if (lf <= .001) return depth;
       const fl = sstep(.55, 1, lf), bub = lf * (1 - fl), e = Math.exp(-u * 5.5);
       return depth * (1 - fl) - depth * bub * 1.7 * e
-        + chord * (.02 * bub * Math.exp(-u * 3.5) * Math.sin(om * 1.6 * S.t - u * 14 + v * 5) + amp * fl * flogW(u, v, om));
+        + chord * (.02 * bub * Math.exp(-u * 3.5) * Math.sin(om * 1.6 * S.t - u * 14 + v * 5) + amp * fl * flogW(u, v, om)) * clamp((S.awa != null ? S.aws : 6) / 8, .2, 1.15);   /* gyenge szélben a vitorla csak lustán lebben, nem csapkod viharosan */
     }
     function leechFlutter(u, v, U, lf) {   /* teli vitorla, erősebb szél: a felső hátsó él gyors, apró rezgése */
       if (u < .8 || v < .4) return 0;
