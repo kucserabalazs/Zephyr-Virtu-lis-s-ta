@@ -1524,6 +1524,13 @@ body.zx .tool-book, body.zx #btnBook { display: none !important; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px 10px 18px; border-radius: 18px; background: rgba(7,24,44,.92); border: 1.5px solid #D4A13A;
   color: #fff; font: 500 15px/1.35 Inter, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
 .zne-bar b { color: #E4BB63; font-weight: 750; }
+.zne-ren { position: fixed; inset: 0; z-index: 2147483100; display: grid; place-items: center; background: rgba(4,14,30,.45); font-family: Inter, system-ui, sans-serif; }
+.zne-ren form { width: min(420px, calc(100vw - 32px)); box-sizing: border-box; display: grid; gap: 12px; padding: 18px; border-radius: 18px; background: linear-gradient(180deg, #123a6b, #0a2347); border: 2px solid rgba(228,187,99,.85); color: #fff; box-shadow: 0 18px 50px rgba(0,0,0,.5); }
+.zne-ren b { color: #E4BB63; font-size: 17px; }
+.zne-ren input { font: 600 18px/1.2 Inter, system-ui, sans-serif; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.4); background: #fff; color: #0b2f5e; }
+.zne-ren div { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.zne-ren button { all: unset; cursor: pointer; padding: 11px 16px; border-radius: 999px; font: 700 14px/1 Inter, sans-serif; background: rgba(255,255,255,.14); color: #fff; }
+.zne-ren button.zne-ok { background: linear-gradient(180deg, #E8C26C, #D4A13A); color: #07182C; }
 .zne-bar .zne-msg { flex: 1 1 260px; color: #DDE8F2; }
 .zne-bar button { all: unset; cursor: pointer; padding: 9px 14px; border-radius: 999px; font: 700 14px/1 Inter, sans-serif; background: rgba(255,255,255,.12); color: #fff; }
 .zne-bar button.zne-ok { background: linear-gradient(180deg, #E8C26C, #D4A13A); color: #07182C; }

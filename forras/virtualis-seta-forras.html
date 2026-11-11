@@ -1619,6 +1619,13 @@ body.zx .tool-book, body.zx #btnBook { display: none !important; }
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px 10px 18px; border-radius: 18px; background: rgba(7,24,44,.92); border: 1.5px solid #D4A13A;
   color: #fff; font: 500 15px/1.35 Inter, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
 .zne-bar b { color: #E4BB63; font-weight: 750; }
+.zne-ren { position: fixed; inset: 0; z-index: 2147483100; display: grid; place-items: center; background: rgba(4,14,30,.45); font-family: Inter, system-ui, sans-serif; }
+.zne-ren form { width: min(420px, calc(100vw - 32px)); box-sizing: border-box; display: grid; gap: 12px; padding: 18px; border-radius: 18px; background: linear-gradient(180deg, #123a6b, #0a2347); border: 2px solid rgba(228,187,99,.85); color: #fff; box-shadow: 0 18px 50px rgba(0,0,0,.5); }
+.zne-ren b { color: #E4BB63; font-size: 17px; }
+.zne-ren input { font: 600 18px/1.2 Inter, system-ui, sans-serif; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.4); background: #fff; color: #0b2f5e; }
+.zne-ren div { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.zne-ren button { all: unset; cursor: pointer; padding: 11px 16px; border-radius: 999px; font: 700 14px/1 Inter, sans-serif; background: rgba(255,255,255,.14); color: #fff; }
+.zne-ren button.zne-ok { background: linear-gradient(180deg, #E8C26C, #D4A13A); color: #07182C; }
 .zne-bar .zne-msg { flex: 1 1 260px; color: #DDE8F2; }
 .zne-bar button { all: unset; cursor: pointer; padding: 9px 14px; border-radius: 999px; font: 700 14px/1 Inter, sans-serif; background: rgba(255,255,255,.12); color: #fff; }
 .zne-bar button.zne-ok { background: linear-gradient(180deg, #E8C26C, #D4A13A); color: #07182C; }
@@ -10254,6 +10261,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   ];
   function vrnShort(t) { if (window.ZI18N && ZI18N.lang && ZI18N.lang !== "hu") return t; for (const [re, to] of VRN_SHORT) { if (re.test(t)) return t.replace(re, to); } return t; }
   function vrnTitle(link) {
+    { const nm = navName(current, link[0]); if (nm) return { t: nm, sub: "" }; }   /* 2026-11-11: a tulajdonos által a térben átírt név */
     const hu = !(window.ZI18N && ZI18N.lang && ZI18N.lang !== "hu");
     const raw = String(link[3] || "").replace(/\n/g, " · ").trim(), sc = SCENES[link[0]];
     if (hu) { const sh = vrnShort(raw); if (sh && sh.length <= 16) return { t: sh, sub: "" }; const sn = sc ? vrnShort(String(sc.n || "").replace(/\n/g, " ")) : ""; if (sn && sn.length <= 16) return { t: sn, sub: raw }; }
@@ -10319,11 +10327,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const lgeo2 = new THREE.PlaneGeometry(1, 1).translate(0, .5, 0); geos.push(lgeo2); const leg = new THREE.Mesh(lgeo2, legM); leg.renderOrder = 985; m.add(leg);
       /* láthatatlan, bőkezű célterület (gyűrű + címke) */
       const hitM = new THREE.MeshBasicMaterial({ visible: false }); const hit = add(new THREE.CylinderGeometry(R * 1.6, R * 1.6, floor ? .9 : R * 3, 12), hitM); hit.position.y = floor ? .4 : 0;
-      const mkr = { link, to, m, ring, lbl, leg, cvs, lt, tt, kind, fill, floor, dist, hot: 0, hotDrawn: false, vis: 1, t0: Math.random() * 6, hit,
+      const mkr = { link, to, m, ring, lbl, leg, cvs, lt, tt, kind, fill, floor, dist, tilt, hot: 0, hotDrawn: false, vis: 1, t0: Math.random() * 6, hit,
         dispose() { geos.forEach((g2) => g2.dispose()); mats.forEach((q) => { if (q.map && q.map !== T.ring) q.map.dispose(); q.dispose(); }); } };
       hit.userData.xr = {
         hover: (on, h2, key) => { VRN.hov[key || "x"] = on ? mkr : null; if (on) { try { xrPulse(XRP.src[key] && XRP.src[key].src, .25, 14); } catch (e) {} } },
-        click: () => { if (navEditOn() || mkr.moved) { mkr.moved = false; return; } vrnGo(mkr); },
+        click: () => { if (navEditOn() || mkr.moved) { const mv = mkr.moved; mkr.moved = false; if (!mv && navEditOn() && inVR) navRename(mkr); return; } vrnGo(mkr); },
         /* ÚTJELZŐK IGAZÍTÁSA (Beállítások → „Útjelzők igazítása”): csippentve megfogod a gyűrűt, a sugárral a padlón máshová húzod, elengeded → elmentve */
         down: (hh, S0, key) => { if (!navEditOn()) return; VRN.grab = mkr; mkr.moved = false; try { sfx("click"); vrHaptic(null, .5, 30); } catch (e) {} },
         drag: (S0) => { if (VRN.grab !== mkr || !S0 || !S0.o) return; navDragTo(mkr, S0.o, S0.d); },
@@ -10473,7 +10481,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       mk.ring.material.opacity = menuOpen ? .15 : (.55 + .35 * Math.max(mk.vis, mk.hot));
       /* állandó látószög: a címke mérete a távolsággal arányos (≈1,7°-os betűmagasság) */
       const d3 = Math.max(.8, mk.m.position.distanceTo(h)), W = .64 * d3 * (1 + .06 * mk.hot) * (inVR ? 1 : device === "phone" ? .85 : .55), Hh = W * mk.cvs.height / mk.cvs.width;
-      mk.lbl.scale.set(W, W, 1); mk.lbl.material.opacity = mk.vis * (mk.dist < .8 && !hot ? 0 : 1); mk.lbl.visible = mk.lbl.material.opacity > .02;
+      mk.lbl.scale.set(W, W, 1); mk.lbl.material.opacity = mk.vis * (mk.dist < .45 && !hot && !navEditOn() ? 0 : 1); mk.lbl.visible = mk.lbl.material.opacity > .02;
       mk.liftCur = (mk.liftCur || 0) + ((mk.liftT || 0) - (mk.liftCur || 0)) * .18;   /* ütközéskerülő emelés (lásd lent), finoman beúszva */
       const legL = (mk.floor ? Math.max(.22, Math.min(1.1, .17 * d3)) : .3) + (mk.floor ? mk.liftCur * d3 : 0), yaw = Math.atan2(h.x - mk.m.position.x, h.z - mk.m.position.z);
       mk.lbl.position.set(0, mk.floor ? legL + Hh * .5 : -(.38 + Hh * .5 + mk.liftCur * d3), 0);
@@ -10504,9 +10512,14 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
      a panoráma-koordinátára (x, y), és elmentjük: (1) ezen az eszközön azonnal, (2) ha a tulajdonos be van jelentkezve, a szerverre is
      – így minden látogatónál ott lesz (a 2D-s nyíl is ugyanoda kerül, mert ugyanaz az adat). */
   function navDragTo(mk, o, d) {
-    const h = headPos(new THREE.Vector3()), floorY = h.y - PANO_EYE; let pos;
-    if (mk.floor) { if (d.y > -.02) return; const t = (floorY - o.y) / d.y; pos = o.clone().addScaledVector(d, t); const dx = pos.x - h.x, dz = pos.z - h.z, L = Math.hypot(dx, dz); if (L > 14) { pos.x = h.x + dx / L * 14; pos.z = h.z + dz / L * 14; } if (L < .5) return; pos.y = floorY + .01; }
-    else pos = h.clone().addScaledVector(d.clone().normalize(), 3.2);
+    /* 2026-11-11 (tulajdonos: „a tábla szárát nem tudom lerakni a földre, mert nem engedi”; „a felirat folyton eltűnik”):
+       a jelző húzás közben TÍPUST VÁLT – ha a sugár a padlóra mutat, padlón álló (szárral), ha a horizont fölé, falon függő lesz;
+       a lábhoz közel sem akad meg (0,5 m-nél megáll), a felirat igazítás közben mindig látszik. */
+    const h = headPos(new THREE.Vector3()), floorY = h.y - PANO_EYE; let pos; d = d.clone().normalize();
+    const fl = d.y < -.06;
+    if (fl !== mk.floor) { mk.floor = fl; if (mk.tilt) { if (fl) mk.tilt.rotation.set(-Math.PI / 2, 0, 0); else mk.tilt.rotation.set(0, 0, 0); } if (mk.hit) mk.hit.position.y = fl ? .4 : 0; mk.liftT = mk.liftCur = 0; }
+    if (fl) { const t = (floorY - o.y) / d.y; pos = o.clone().addScaledVector(d, t); let dx = pos.x - h.x, dz = pos.z - h.z, L = Math.hypot(dx, dz) || .001; const L2 = Math.max(.5, Math.min(14, L)); pos.x = h.x + dx / L * L2; pos.z = h.z + dz / L * L2; pos.y = floorY + .01; }
+    else { pos = h.clone().addScaledVector(d, 3.2); if (mk.tilt) { mk.tilt.rotation.y = Math.atan2(h.x - pos.x, h.z - pos.z); } }
     mk.m.position.copy(pos); mk.moved = true; mk.dist = Math.hypot(pos.x - h.x, pos.z - h.z);
   }
   function navXY(mk) {
@@ -10528,6 +10541,39 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     return Array.isArray(a) && a.length === 2 ? [+a[0], +a[1]] : [link[1], link[2]]; }
   function navLocSave() { try { localStorage.setItem("zephyr-nav-ov", JSON.stringify(NAV_LOC)); } catch (e) {} }
   function navMerged(mode) { const o = {}; [NAV_SRV[mode], NAV_LOC[mode]].forEach((L) => Object.keys(L).forEach((sc) => { o[sc] = Object.assign(o[sc] || {}, L[sc]); })); return o; }
+  /* ---- ÚTJELZŐK ÁTNEVEZÉSE A TÉRBEN (2026-11-11 02:42, tulajdonos: „a jelzőtáblákat a virtuális térben tudjam átnevezni”) ----
+     Igazítás módban a jelzőre KATTINTVA / csippentve (húzás nélkül) átírható a felirata: 2D-ben beviteli mező, VR-ben a virtuális billentyűzet.
+     A név ezen az eszközön azonnal elmentődik; tulajdonosként belépve a szerverre is (mindenkinek). VR és 2D közös. */
+  const NAV_NAMES = { srv: {}, loc: (() => { try { return JSON.parse(localStorage.getItem("zephyr-nav-nev") || "{}") || {}; } catch (e) { return {}; } })() };
+  function navName(sc, to) { const a = (NAV_NAMES.loc[sc] || {})[to], b = (NAV_NAMES.srv[sc] || {})[to]; return typeof a === "string" ? a : typeof b === "string" ? b : ""; }
+  function navNamesMerged() { const o = {}; [NAV_NAMES.srv, NAV_NAMES.loc].forEach((L) => Object.keys(L || {}).forEach((sc) => { o[sc] = Object.assign(o[sc] || {}, L[sc]); })); Object.keys(o).forEach((sc) => { Object.keys(o[sc]).forEach((to) => { if (!o[sc][to]) delete o[sc][to]; }); }); return o; }
+  function navRelabel(mk, txt) { mk.tt = txt != null ? { t: txt, sub: "" } : vrnTitle(mk.link); mk.fill = vrnLabelDraw(mk.cvs, mk.tt.t, mk.tt.sub, mk.kind, mk.hotDrawn); mk.lt.needsUpdate = true; }
+  function navSetName(mk, name) {
+    name = String(name || "").replace(/\s+/g, " ").trim().slice(0, 28);
+    NAV_NAMES.loc[current] = NAV_NAMES.loc[current] || {}; NAV_NAMES.loc[current][mk.to] = name;   /* üres = vissza az eredeti névre */
+    if (!name && NAV_NAMES.srv[current]) delete NAV_NAMES.srv[current][mk.to];
+    try { localStorage.setItem("zephyr-nav-nev", JSON.stringify(NAV_NAMES.loc)); } catch (e) {}
+    navRelabel(mk); try { sfx("pop"); } catch (e) {} navServerSave(navMode());
+  }
+  function navRename(mk) {
+    if (inVR) { VRN.ren = { mk, text: mk.tt.t || "", caps: false }; navRelabel(mk, VRN.ren.text + "▍"); try { bkKeyboard(true); } catch (e) {} navMsg("Írd át a jelző nevét, majd: Kész ⏎"); return; }
+    let d = document.querySelector(".zne-ren"); if (d) d.remove();
+    d = document.createElement("div"); d.className = "zne-ren";
+    d.innerHTML = `<form><b>Jelző átnevezése</b><input type="text" maxlength="28" autocomplete="off"><div><button type="button" data-r="orig">Eredeti név</button><button type="button" data-r="no">Mégse</button><button type="submit" class="zne-ok">Mentés</button></div></form>`;
+    const inp = d.querySelector("input"); inp.value = mk.tt.t || ""; document.body.appendChild(d); setTimeout(() => { try { inp.focus(); inp.select(); } catch (e) {} }, 30);
+    const close = () => d.remove();
+    d.addEventListener("click", (e) => { const t = e.target.closest("button[data-r]"); if (e.target === d || (t && t.dataset.r === "no")) close(); else if (t && t.dataset.r === "orig") { navSetName(mk, ""); close(); } });
+    d.querySelector("form").addEventListener("submit", (e) => { e.preventDefault(); navSetName(mk, inp.value); close(); });
+    d.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Escape") close(); });
+  }
+  function navRenKey(k) {   /* VR-billentyűzet → a jelző neve */
+    const R = VRN.ren; if (!R) return false;
+    if (k === "⇧") R.caps = !R.caps;
+    else if (k === "⌫") R.text = R.text.slice(0, -1);
+    else if (k === "Kész ⏎") { VRN.ren = null; try { bkKeyboard(false); } catch (e) {} navSetName(R.mk, R.text); return true; }
+    else { let ch = k === "space" ? " " : k; if (ch.length === 1 && (R.caps || !R.text)) { ch = ch.toUpperCase(); R.caps = false; } if (R.text.length < 28) R.text += ch; }
+    navRelabel(R.mk, R.text + "▍"); try { kbDraw(); } catch (e) {} return true;
+  }
   function navDrop(mk) {
     const [x, y] = navXY(mk), m = navMode(); if (!SCENES[current]) return;
     NAV_LOC[m][current] = NAV_LOC[m][current] || {}; NAV_LOC[m][current][mk.to] = [x, y]; navLocSave();
@@ -10543,7 +10589,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     setTimeout(async () => {
       const B = window.ZephyrBooking, url = B && B.apiUrl ? B.apiUrl("/nav") : null; if (!url) return;
       try { const r = await fetch(url, { cache: "no-store" }); if (!r.ok) return; const j = await r.json(); if (!j) return;
-        NAV_SRV.vr = j.nav || {}; NAV_SRV.d2 = j.nav2d || {};
+        NAV_SRV.vr = j.nav || {}; NAV_SRV.d2 = j.nav2d || {}; NAV_NAMES.srv = j.names && typeof j.names === "object" ? j.names : {};
         if (spots && current) vrnClear();
       } catch (e) {}
     }, 400);
@@ -10554,7 +10600,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     NAV_SAVE_T = setTimeout(async () => {
       const B = window.ZephyrBooking, url = B && B.apiUrl ? B.apiUrl("/nav_save") : null; let tok = ""; try { tok = localStorage.getItem("zephyr-admin-token") || ""; } catch (e) {}
       if (!url || !tok) { navMsg("Elmentve ezen az eszközön. Mindenkinek: lépj be tulajdonosként, és mozdítsd meg újra."); return; }
-      try { const all = navMerged(mode); const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-Zephyr-Token": tok }, body: JSON.stringify({ mode: mode === "vr" ? "vr" : "2d", nav: all }), cache: "no-store" });
+      try { const all = navMerged(mode); const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-Zephyr-Token": tok }, body: JSON.stringify({ mode: mode === "vr" ? "vr" : "2d", nav: all, names: navNamesMerged() }), cache: "no-store" });
         if (r.ok) NAV_SRV[mode] = all;
         navMsg(r.ok ? "Elmentve mindenkinek ✓" : r.status === 401 ? "Lejárt a belépés – elmentve ezen az eszközön." : "Nem sikerült a szerverre menteni – ezen az eszközön megvan.");
       } catch (e) { navMsg("Nincs kapcsolat – ezen az eszközön elmentve."); }
@@ -10571,7 +10617,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       b.addEventListener("click", (e) => { const t = e.target.closest("button"); if (!t) return; if (t.dataset.ne === "done") nav2dEdit(false); else if (t.dataset.ne === "reset") { navResetScene(); } });
       document.body.appendChild(b); NE2.bar = b;
     }
-    NE2.bar.hidden = false; NE2.bar.querySelector(".zne-msg").textContent = NAV_OV_MSG || "Fogd meg a narancs gyűrűt, és húzd oda, ahová a képen illik. Elengedve elmentődik.";
+    NE2.bar.hidden = false; NE2.bar.querySelector(".zne-msg").textContent = NAV_OV_MSG || "Húzd a narancs gyűrűt a helyére (elengedve elmentődik) · kattints rá: átnevezés.";
   }
   function nav2dEdit(on) { NE2.on = !!on; NAV_OV_MSG = ""; document.body.classList.toggle("nav-edit", NE2.on); nav2dBar(); }
   window.addEventListener("zephyr-nav-edit", () => nav2dEdit(true));
@@ -10597,7 +10643,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     cv.addEventListener("pointerdown", (ev) => { _vrnDown = { x: ev.clientX, y: ev.clientY, t: performance.now() };
       if (navEditOn() && !busy) { const mk = vrn2dPick(ev); if (mk) { NE2.grab = mk; mk.moved = false; lookEnable(false); try { cv.setPointerCapture(ev.pointerId); } catch (e) {} ev.stopPropagation(); try { sfx("click"); } catch (e) {} } } }, true);
     cv.addEventListener("pointermove", (ev) => { if (!NE2.grab) return; const ray = nav2dRay(ev); if (ray) navDragTo(NE2.grab, ray.origin, ray.direction); ev.stopPropagation(); }, true);
-    const neUp = (ev) => { if (!NE2.grab) return; const mk = NE2.grab; NE2.grab = null; lookEnable(true); if (mk.moved) navDrop(mk); mk.moved = false; ev.stopPropagation(); _vrnDown = null; };
+    const neUp = (ev) => { if (!NE2.grab) return; const mk = NE2.grab; NE2.grab = null; lookEnable(true); if (mk.moved) navDrop(mk); else navRename(mk); mk.moved = false; ev.stopPropagation(); _vrnDown = null; };
     cv.addEventListener("pointerup", neUp, true); cv.addEventListener("pointercancel", neUp, true);
     cv.addEventListener("pointerup", (ev) => { if (!nav2dOn() || !_vrnDown || busy) return; const d = Math.hypot(ev.clientX - _vrnDown.x, ev.clientY - _vrnDown.y); if (d > 8 || performance.now() - _vrnDown.t > 600) return; if (navEditOn()) return; const mk = vrn2dPick(ev); if (mk) { ev.stopPropagation(); vrnGo(mk); } });
   }
@@ -11717,7 +11763,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     kbDraw();
   }
   function kbDraw() {
-    const m = VRS.kb; if (!m) return; const g = m.userData.cv.getContext("2d"), B = VRS.book || {};
+    const m = VRS.kb; if (!m) return; const g = m.userData.cv.getContext("2d"), B = VRN.ren || VRS.book || {};
     g.clearRect(0, 0, KB_W, KB_H);
     const bg = g.createLinearGradient(0, 0, 0, KB_H); bg.addColorStop(0, "rgba(14,52,98,.97)"); bg.addColorStop(1, "rgba(7,28,58,.97)");
     rr(g, 4, 4, KB_W - 8, KB_H - 8, 34); g.fillStyle = bg; g.fill(); g.lineWidth = 5; g.strokeStyle = "rgba(255,209,102,.8)"; g.stroke();
@@ -11744,13 +11790,18 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     kbPlace();
   }
   function kbPlace() {
-    const m = VRS.kb; if (!m || !VRS.panel) return;
+    const m = VRS.kb; if (!m) return;
+    if (VRN.ren) {   /* átnevezés: a fej elé, kézmagasságba (a rig terében) */
+      try { const h = headPos(new THREE.Vector3()), f = headDir(new THREE.Vector3()); f.y = 0; f.normalize(); const w = h.clone().addScaledVector(f, .55); w.y = h.y - .5; rig.object3D.worldToLocal(w); m.position.copy(w); m.rotation.set(-.72, Math.atan2(-f.x, -f.z) - rig.object3D.rotation.y, 0, "YXZ"); } catch (e) {}
+      return; }
+    if (!VRS.panel) return;
     const p = VRS.panel.object3D, a = p.rotation.y;
     /* a panel alá, közelebb hozzád, mint egy asztalon fekvő billentyűzet (kb. 40°-ban megdöntve) */
     m.position.set(p.position.x + Math.sin(a) * .26, p.position.y - .58, p.position.z + Math.cos(a) * .26);
     m.rotation.set(-.72, a, 0, "YXZ");
   }
   function kbPress(k) {
+    if (VRN.ren) { navRenKey(k); return; }
     const B = VRS.book; if (!B || B.step !== "data") return;
     const f = B.field || "name", v = String(B.form[f] || "");
     const order = BK_FIELDS.map((x) => x[0]);

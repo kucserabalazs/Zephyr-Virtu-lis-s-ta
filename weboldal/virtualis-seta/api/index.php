@@ -1822,7 +1822,7 @@ case 'events_all':
     out(array('today' => today(), 'events' => $list, 'feeds' => isset($db['settings']['ev_feeds']) ? $db['settings']['ev_feeds'] : array(), 'updated' => isset($db['ev_sync']) ? $db['ev_sync'] : ''));
 
 case 'nav':   /* a VR-ben a tulajdonos által igazított útjelző-helyek (mindenkinek) – nyilvános, csak koordináták */
-    $db = db_load(); out(array('nav' => isset($db['nav']) && is_array($db['nav']) && $db['nav'] ? $db['nav'] : new stdClass(), 'nav2d' => isset($db['nav2d']) && is_array($db['nav2d']) && $db['nav2d'] ? $db['nav2d'] : new stdClass()));
+    $db = db_load(); out(array('nav' => isset($db['nav']) && is_array($db['nav']) && $db['nav'] ? $db['nav'] : new stdClass(), 'nav2d' => isset($db['nav2d']) && is_array($db['nav2d']) && $db['nav2d'] ? $db['nav2d'] : new stdClass(), 'names' => isset($db['navnames']) && is_array($db['navnames']) && $db['navnames'] ? $db['navnames'] : new stdClass()));
 case 'nav_save':   /* tulajdonos: útjelzők igazítása a VR-ben (jelenet → cél → [x, y] a panorámán) */
     if ($method !== 'POST') { fail('POST kell.', 405); }
     $db = db_load(); require_admin($db);
@@ -1836,7 +1836,14 @@ case 'nav_save':   /* tulajdonos: útjelzők igazítása a VR-ben (jelenet → c
         }
     }
     $key = (isset($P['mode']) && $P['mode'] === '2d') ? 'nav2d' : 'nav';   /* VR és 2D külön */
-    $db[$key] = $o; db_save($db); out(array('ok' => true, 'n' => $n, 'mode' => $key));
+    $db[$key] = $o;
+    /* 2026-11-11: a térben átírt jelzőnevek (jelenet → cél → név), VR és 2D közös */
+    if (isset($P['names']) && is_array($P['names'])) { $nm = array(); $k = 0;
+        foreach ($P['names'] as $sc => $tos) { if (!is_string($sc) || !preg_match('/^[a-z0-9-]{1,48}$/', $sc) || !is_array($tos)) { continue; }
+            foreach ($tos as $to => $v) { if (!is_string($to) || !preg_match('/^[a-z0-9-]{1,48}$/', $to) || !is_string($v)) { continue; }
+                $v = clean($v, 28); if ($v === '') { continue; } $nm[$sc][$to] = $v; if (++$k > 1500) { break 2; } } }
+        $db['navnames'] = $nm; }
+    db_save($db); out(array('ok' => true, 'n' => $n, 'mode' => $key));
 case 'events_save':
     if ($method !== 'POST') { fail('POST kell.', 405); }
     $db = db_load(); require_admin($db);
