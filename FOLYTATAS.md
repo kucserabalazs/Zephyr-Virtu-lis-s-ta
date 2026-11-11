@@ -642,3 +642,21 @@ Megbeszélt döntések:
 - 2026-11-11 10:21–10:33 TULAJDONOS: engedélyt adott a gép használatára a kijelzőtükrözéshez (LG fő monitor + BenQ projektor). Rendszerbeállítást NEM módosíthatok – csak megnéztem a Kijelzők panelt: a Mac akkor csak a BenQ PJ-t látta, az LG TV eltűnt a listából (kábel/bemenet/kikapcsolt TV). Teendő nála: LG bekapcsol, jó HDMI-bemenet, majd BenQ → Használat módja → Tükrözés: LG TV (vagy ⌘+F1).
 - 2026-11-11 10:43 „folytassuk a munkát” → hullámvasút: a körút pályája SZEMBŐL közelíti meg a látnivalókat, a domb/épület mérete szerinti sugárral megkerüli (nem megy bele a dombba), előtte lelassít. Pálya 3780 m, ~6 perc. Teszt: h2.js.
 - 2026-11-11 10:51 TULAJDONOS: „VR-ben is állítsd vissza az alsó menüsort, mert mindig az a nagyon ronda jobb oldali menüsor van. Ezen változtass most.” → ÉRTELMEZÉSEM (bizonytalan!): a 3D-világok VR-panelje eddig jobbra-előre állt; mostantól ALUL középen, pultszerűen megdöntve (07-vezerlo.js placePanel; a verseny panelje marad balra a kormány miatt). A régi mentett panelhelyek elévültek (kulcs: zephyr-panelpos2). Ha a SÉTA régi „↺ ☰ ↻” alsó sávjára gondolt (xrBar – most egyetlen „Menü” övgomb), azt külön vissza kell tenni. Headsetben nem tudtam kipróbálni.
+
+## 2026-11-11 ~11:00 HANGHÍVÁS (szemüvegből nézte) – a tulajdonos kérései, 11:11-kor írásban megerősítve: „Kérem a megbeszélt munka megkezdését.”
+1. SAKK-TÁBLA: „a víz felszínén / a tábla felszínén folyamatosan látok mozgást … apró vonalkás imitációt, és az ronda” – legyen valódi, mozdulatlan TÜKÖRSÍK, csak a mozgó hajó nyomhulláma látszódjon. A hajók ringása NEM baj, maradjon.
+2. SAKK-BÁBUK: a szemüvegben „nagyon csúnyán kidolgozott, részletszegény, rossz felbontású” – nagyobb, messziről is látható kidolgozás kell (nem apró díszek).
+3. FELBONTÁS: a környezet (hátsó részletek, az állvány/torony) legyen élesebb VR-ben.
+4. NÉZŐPONT: a négy kötött nézőpont nem tetszik. Quest-féle megoldást kér: a tábla pereméhez érve halvány vonal rajzolódik ki, arra rácsippentve megfogja az egész jelenetet, és oda teszi a térben, ahova akarja. Ez MINDENRE legyen igaz (panelek, táblácskák, világok).
+5. A bezárt menü „kis táblácskája” ott marad a képben, takar – bezárás után semmi ne maradjon.
+6. Kér egy könnyen elérhető linket/gombot, ami a szemüveg böngészőjében a legfrissebb oldalt nyitja („Legfrissebb teszt” gomb a nyitóoldalon).
+7. ÚTJELZŐ TÁBLÁK: nyújtani/méretezni is tudja őket (sarokcsippentés); a földre tétel szemüvegben még ellenőrizendő.
+- 11:12 TULAJDONOS (pontosítás): az „alsó menüsor” = a 2D-s alsó KÉPSOR (a helyszínek képei gömbként, fölötte a vitorlásverseny) – ugyanezt kéri VR-ben séta közben. 11:13: „a jelenleg jobb oldalt lévő, amit be se lehet zárni, azonnal tűnjön el”.
+- ELKÉSZÜLT (gépen ellenőrizve, szemüvegben NEM):
+  (1) Tábla = mozdulatlan tükörsík: a tábla fölött a fodrok (g, g3), szélfoltok, kausztika, tarajárnyalás nullázva (06e-sakk-c.js patchWater).
+  (3) VR-felbontás: framebufferScale 1,25 (munkamenet előtt), foveation .4 (vrEnter). Vissza: localStorage `zephyr-vr-eles`=0.
+  (4) Peremfogás a sakkban: halvány arany keret a tábla körül, csippentve az egész jelenet húzható (06e-sakk-e.js, CS.grab). CSAK a sakkban van kész; a panelek fejléce már korábban húzható volt; makett/hullámvasút: nincs.
+  (5) A bezárt világ-menü „Menü” füle megszűnt (07-vezerlo.js) – bezárás után semmi nem marad; a világok menüje alul középen nyílik.
+  (6) „Új változat” gomb: verzio.json + __BV__ (build.sh) – az oldal magától észreveszi az újabb változatot, egy koppintás a frissítés (u1.js).
+  (+) VR alsó képsor séta közben: `xrStrip` – a hely képei forgó gömbökként ívben a látómező alatt, csippentve odalép, fölötte apró vitorlások (kikapcs.: WS.vrStrip=false).
+- NEM KÉSZÜLT EL: (2) bábuk nagyobb, szemüvegben is látható kidolgozása; (7) útjelzők méretezése; peremfogás a többi világban. NEM TUDOM, mi a „jobb oldalt lévő, bezárhatatlan” elem, ha nem a világ-menü füle volt – meg kell kérdezni / képet kérni.

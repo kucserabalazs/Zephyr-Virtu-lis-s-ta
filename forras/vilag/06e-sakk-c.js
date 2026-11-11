@@ -39,14 +39,17 @@
     mat.fragmentShader = mat.fragmentShader
       .replace("uniform vec4 uW[5];", "uniform vec4 uW[5]; uniform sampler2D uHL, uBoard; uniform vec3 uLSq, uDSq; uniform float uPulse;")
       .replace("void main(){", damp + "void main(){")
-      .replace("float px = length(fwidth(vW)) + 1e-4;", "fadeD *= bDamp(vW); float px = length(fwidth(vW)) + 1e-4;")
+      .replace("float px = length(fwidth(vW)) + 1e-4;", "float bdm = bDamp(vW); fadeD *= bdm; fa *= bdm; fb *= bdm; float px = length(fwidth(vW)) + 1e-4;")
+      /* 2026-11-11 (tulajdonos, szemüvegből: „a tábla felszínén folyamatosan látok mozgást, apró vonalkás imitációt”): a tábla fölött az apró fodrok (g, g3),
+         a szélfoltok és a kausztika is nulla – mozdulatlan tükörsík; csak a hajók külön nyomhulláma mozog rajta */
+      .replace("n = normalize(n + vec3(-(g.x * fa", "gust *= bdm; n = normalize(n + vec3(-(g.x * fa")
       .replace(BASE, BASE + `
           vec3 bHL = vec3(0.); vec2 bq = vW / ${SQ.toFixed(1)} + 4.;
           if (bq.x > 0. && bq.x < 8. && bq.y > 0. && bq.y < 8.) {
             vec2 cell = floor(bq), fr = fract(bq) - .5; float lt = 1. - mod(cell.x + cell.y, 2.);
-            float shade = clamp(.62 + crest * 2.4 + n.x * 1.1, .2, 1.45);
+            float shade = .72;
             vec3 sqc = mix(uDSq, uLSq, lt) * shade * uLight;
-            float cau = lt * pow(vn(vW * 1.25) * vn(vW * 1.7) * 1.9, 2.2) * .2;
+            float cau = 0.;
             base = mix(base, sqc + cau * vec3(1., .86, .62), .88);
             float edge = max(abs(fr.x), abs(fr.y));
             vec4 hl = texture2D(uHL, (cell + .5) / 8.);

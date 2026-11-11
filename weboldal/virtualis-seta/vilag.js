@@ -5380,14 +5380,17 @@
     mat.fragmentShader = mat.fragmentShader
       .replace("uniform vec4 uW[5];", "uniform vec4 uW[5]; uniform sampler2D uHL, uBoard; uniform vec3 uLSq, uDSq; uniform float uPulse;")
       .replace("void main(){", damp + "void main(){")
-      .replace("float px = length(fwidth(vW)) + 1e-4;", "fadeD *= bDamp(vW); float px = length(fwidth(vW)) + 1e-4;")
+      .replace("float px = length(fwidth(vW)) + 1e-4;", "float bdm = bDamp(vW); fadeD *= bdm; fa *= bdm; fb *= bdm; float px = length(fwidth(vW)) + 1e-4;")
+      /* 2026-11-11 (tulajdonos, szemüvegből: „a tábla felszínén folyamatosan látok mozgást, apró vonalkás imitációt”): a tábla fölött az apró fodrok (g, g3),
+         a szélfoltok és a kausztika is nulla – mozdulatlan tükörsík; csak a hajók külön nyomhulláma mozog rajta */
+      .replace("n = normalize(n + vec3(-(g.x * fa", "gust *= bdm; n = normalize(n + vec3(-(g.x * fa")
       .replace(BASE, BASE + `
           vec3 bHL = vec3(0.); vec2 bq = vW / ${SQ.toFixed(1)} + 4.;
           if (bq.x > 0. && bq.x < 8. && bq.y > 0. && bq.y < 8.) {
             vec2 cell = floor(bq), fr = fract(bq) - .5; float lt = 1. - mod(cell.x + cell.y, 2.);
-            float shade = clamp(.62 + crest * 2.4 + n.x * 1.1, .2, 1.45);
+            float shade = .72;
             vec3 sqc = mix(uDSq, uLSq, lt) * shade * uLight;
-            float cau = lt * pow(vn(vW * 1.25) * vn(vW * 1.7) * 1.9, 2.2) * .2;
+            float cau = 0.;
             base = mix(base, sqc + cau * vec3(1., .86, .62), .88);
             float edge = max(abs(fr.x), abs(fr.y));
             vec4 hl = texture2D(uHL, (cell + .5) / 8.);
@@ -5973,6 +5976,24 @@
     CS.pick = mesh(new THREE.PlaneGeometry(2 * BH, 2 * BH).rotateX(-Math.PI / 2), basic({ visible: false }), env); CS.pick.position.y = .15;
     CS.pick.userData.xr = { hover: (on, h) => setHover(on && h ? sqFrom(h.point) : -1), move: (h) => { if (h) setHover(sqFrom(h.point)); }, click: (h) => { if (h) onSquare(sqFrom(h.point)); } };
     T.xr.extra.add(CS.pick); W.objs.push(CS.pick);
+    /* ---- PEREMFOGÁS (2026-11-11, tulajdonos a szemüvegből: „a négy kötött nézőpont nem tetszik … mint a Questben: a perem szélénél halványan
+       kirajzolódik egy vonal, arra rácsippentek, megfogom a teljes képet, és oda teszem a térben, ahova én akarom”) ----
+       A tábla körül halvány arany keret fut; rámutatva kifényesedik. Csippentve megfogod, és a sugárral az EGÉSZ jelenetet (tábla, tornyok, part) viszed:
+       oldalra-fel-le a kezed irányával, közelebb-távolabb a kezed előre-hátra mozdításával. Elengedve ott marad. Véletlenül nem indul: csak a kereten fog. */
+    { const fr = new THREE.Group(); env.add(fr); const eh = BF + 2.2, lm = basic({ color: "#ffe9a8", transparent: true, opacity: 0, depthWrite: false, fog: false }); CS.grabHov = 0; CS.grab = null;
+      [[0, -eh, 0], [0, eh, 0], [-eh, 0, 1], [eh, 0, 1]].forEach(([x, z, r]) => {
+        const ln = mesh(new THREE.BoxGeometry(2 * eh + .7, .22, .7), lm, fr); ln.position.set(x, .55, z); ln.rotation.y = r ? Math.PI / 2 : 0; ln.renderOrder = 6;
+        const ht = mesh(new THREE.BoxGeometry(2 * eh + 3, 2.4, 3.6), basic({ visible: false }), fr); ht.position.set(x, .6, z); ht.rotation.y = ln.rotation.y;
+        ht.userData.xr = {
+          hover: (on) => { CS.grabHov = Math.max(0, CS.grabHov + (on ? 1 : -1)); },
+          down: (h, S0, key) => { if (!h || !S0 || !S0.o) return; const head = T.headPos ? T.headPos() : null; CS.grab = { key, dist: h.distance, hd0: head ? S0.o.distanceTo(head) : 0, p0: h.point.clone(), r0: W.root.position.clone() }; if (T.xr.press) T.xr.press[key] = null; try { T.xr.pulse && T.xr.pulse(key, .5, 25); } catch (e) {} },
+          drag: (S0, key) => { const D = CS.grab; if (!D || D.key !== key || !S0 || !S0.o || !S0.d) return; const head = T.headPos ? T.headPos() : null;
+            const dist = clamp(D.dist + (head ? (S0.o.distanceTo(head) - D.hd0) * 150 : 0), 4, 240), tgt = S0.o.clone().addScaledVector(S0.d, dist);
+            const np = D.r0.clone().add(tgt.sub(D.p0)); np.y = clamp(np.y, -170, -2.2); W.root.position.lerp(np, .5); },
+          up: () => { CS.grab = null; }
+        };
+        T.xr.extra.add(ht); W.objs.push(ht); });
+      W.upd.push(() => { const tg = CS.grab ? 1 : CS.grabHov > 0 ? .9 : T.inVR ? .14 : 0; lm.opacity += (tg - lm.opacity) * .2; fr.visible = lm.opacity > .01; }); }
     CS.hovL = labelSprite(["", ""], { size: 1, fs: 54, w: 900 }); env.add(CS.hovL); CS.hovL.visible = false;
     CS.sign = labelSprite(["", ""], { size: 30, fs: 64, w: 1400, bg: "rgba(14,33,66,.82)", edge: "#c9a227" }); env.add(CS.sign); try { CS.noSign = localStorage.getItem("zephyr-sakk-tabla") === "0"; } catch (e) {} CS.sign.visible = !CS.noSign;
     /* elsötétítő gömb a nézőpontváltáshoz (a kamerán) */
@@ -7902,7 +7923,7 @@
     W.t += dt;
     W.upd.forEach((f) => f(dt));
     W.spec.tick(dt);
-    if (W.panel) { W.panel.m.visible = T.inVR && !W.panelHidden; if (W.panel.pill) W.panel.pill.visible = T.inVR && !!W.panelHidden; if (T.inVR) W.panel.tick(dt); }
+    if (W.panel) { W.panel.m.visible = T.inVR && !W.panelHidden; if (W.panel.pill) { W.panel.pill.visible = false; T.xr.extra.delete(W.panel.pill); }   /* 2026-11-11 (tulajdonos): a bezárt menü után SEMMI nem marad a térben – a kis „Menü” fül megszűnt; visszahozás: tenyérmozdulat, csuklóóra vagy lenézve az öv-gomb */ if (T.inVR) W.panel.tick(dt); }
     W.hudT += dt; if (!T.inVR && W.hud && W.hudT > .4) { W.hudT = 0; W.hud.draw(); }
   };
   W.togglePanel = function () {

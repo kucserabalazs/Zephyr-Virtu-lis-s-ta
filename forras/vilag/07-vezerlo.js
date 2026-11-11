@@ -272,7 +272,7 @@
     W.t += dt;
     W.upd.forEach((f) => f(dt));
     W.spec.tick(dt);
-    if (W.panel) { W.panel.m.visible = T.inVR && !W.panelHidden; if (W.panel.pill) W.panel.pill.visible = T.inVR && !!W.panelHidden; if (T.inVR) W.panel.tick(dt); }
+    if (W.panel) { W.panel.m.visible = T.inVR && !W.panelHidden; if (W.panel.pill) { W.panel.pill.visible = false; T.xr.extra.delete(W.panel.pill); }   /* 2026-11-11 (tulajdonos): a bezárt menü után SEMMI nem marad a térben – a kis „Menü” fül megszűnt; visszahozás: tenyérmozdulat, csuklóóra vagy lenézve az öv-gomb */ if (T.inVR) W.panel.tick(dt); }
     W.hudT += dt; if (!T.inVR && W.hud && W.hudT > .4) { W.hudT = 0; W.hud.draw(); }
   };
   W.togglePanel = function () {

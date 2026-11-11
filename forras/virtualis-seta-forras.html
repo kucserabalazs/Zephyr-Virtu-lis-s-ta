@@ -1636,6 +1636,7 @@ body.zx .tool-book, body.zx #btnBook { display: none !important; }
 .zsd-sec { margin: 22px 0 12px; font: 700 21px/1.2 Georgia, serif; color: #a3261f; display: flex; align-items: center; gap: 12px; } .zsd-sec:first-child { margin-top: 2px; } .zsd-sec::after { content: ""; flex: 1; border-top: 2px dotted rgba(20,29,77,.4); }
 .zsd-none { font: 600 17px Inter, sans-serif; text-align: center; padding: 40px 0; }
 :root[data-device="phone"] .zsd-sheet { width: 100vw; height: 100dvh; border-radius: 0; border-width: 0; } :root[data-device="phone"] .zsd-ttl b { font-size: 19px; } :root[data-device="phone"] .zsd nav button { padding: 10px 12px; font-size: 13.5px; }
+.zv-ujver { position: fixed; left: 50%; top: 84px; transform: translateX(-50%); z-index: 2147483200; cursor: pointer; border: 3px solid #fff; border-radius: 999px; padding: 20px 34px; font: 800 24px/1.2 Inter, system-ui, sans-serif; color: #07182C; background: linear-gradient(180deg, #F3D588, #D4A13A); box-shadow: 0 10px 34px rgba(0,0,0,.5); max-width: calc(100vw - 24px); }
 .zne-bar b { color: #E4BB63; font-weight: 750; }
 .zne-ren { position: fixed; inset: 0; z-index: 2147483100; display: grid; place-items: center; background: rgba(4,14,30,.45); font-family: Inter, system-ui, sans-serif; }
 .zne-ren form { width: min(420px, calc(100vw - 32px)); box-sizing: border-box; display: grid; gap: 12px; padding: 18px; border-radius: 18px; background: linear-gradient(180deg, #123a6b, #0a2347); border: 2px solid rgba(228,187,99,.85); color: #fff; box-shadow: 0 18px 50px rgba(0,0,0,.5); }
@@ -6906,6 +6907,8 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     } catch (e) {} };
     if (sceneEl.renderStarted) zvGov(); else sceneEl.addEventListener("renderstart", zvGov, { once: true });
     window.addEventListener("resize", () => setTimeout(zvPix, 250)); sceneEl.addEventListener("exit-vr", () => setTimeout(zvPix, 600));
+    /* VR-képméret: a munkamenet INDULÁSA előtt kell beállítani (lásd vrEnter megjegyzését) */
+    try { let on = true; try { on = localStorage.getItem("zephyr-vr-eles") !== "0"; } catch (e) {} const xr = sceneEl.renderer && sceneEl.renderer.xr; if (xr && on && xr.setFramebufferScaleFactor) xr.setFramebufferScaleFactor(1.25); } catch (e) {}
     sceneEl.addEventListener("enter-vr", () => { if (sceneEl.is("vr-mode") || sceneEl.is("ar-mode")) vrEnter(); });
     sceneEl.addEventListener("exit-vr", () => vrExit());
     return new Promise((res) => sceneEl.hasLoaded ? res() : sceneEl.addEventListener("loaded", res, { once: true })).then(() => {
@@ -10295,6 +10298,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     return { open };
   })();
   function vrEnter() {
+    /* 2026-11-11 (tulajdonos a szemüvegből: „rossz felbontású”, „legyen jobb felbontás a környezet”): VR-ben nagyobb képméret (1,25×) és gyengébb
+       szél-elmosás (foveation .4, az alap 1 helyett). Ha a Questen akadozna: localStorage zephyr-vr-eles = 0 visszaállítja az alapot. */
+    try { let on = true; try { on = localStorage.getItem("zephyr-vr-eles") !== "0"; } catch (e) {} const xr = sceneEl.renderer && sceneEl.renderer.xr; if (xr && on) { if (!xr.isPresenting && xr.setFramebufferScaleFactor) xr.setFramebufferScaleFactor(1.25); if (xr.setFoveation) xr.setFoveation(.4); } } catch (e) {}
     inVR = true;
     if (flat) return;
     document.body.classList.add("in-vr");
@@ -12281,6 +12287,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     Object.keys(XRP.hov).forEach((k) => xrSetHover(k, null)); XRP.hov = {}; XRP.press = {}; XRP.drag = {};
     if (XRP.wristP) { kill(XRP.wristP.g); XRP.wristP = null; XRP.wrist = null; }
     if (XRP.bar) { XRP.bar.items.forEach((m) => { XRP.extra.delete(m); (m.userData.tex || []).forEach((t) => t.dispose()); }); kill(XRP.bar.g); XRP.bar = null; }
+    try { xrStripKill(); } catch (e) {}
     XRP.spin = {}; XRP.stick = {}; XRP.tutTried = 0; XRP.tutWait = 0;
     if (XRP.loco) { Object.keys(XRP.loco).forEach((k) => kill(XRP.loco[k].g)); XRP.loco = null; }
     if (XRP.tut) { XRP.extra.delete(XRP.tut.m); kill(XRP.tut.g); XRP.tut = null; }
@@ -12415,7 +12422,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if ((seen.left || seen.right) && Object.keys(XRP.src).some((k) => XRP.src[k].hand) && !XRP.tutTried) { XRP.tutTried = 1; XRP.tutWait = performance.now() + 3500; }   /* előbb a rövid súgó jön (ha első belépés), a mozgás-bemutató utána */
     if (XRP.tutWait && performance.now() > XRP.tutWait && !VRS.panel && inVR) { XRP.tutWait = 0; if (WS.loco !== false) locoTutorial(false); }
     if (XRP.tut && Object.keys(XRP.src).some((k) => XRP.src[k].lc && XRP.src[k].lc.mode)) locoTutClose();
-    xrWrist(); xrBar();
+    xrWrist(); xrBar(); try { xrStrip(); } catch (e) { if (!XRP.stripErr) { XRP.stripErr = 1; console.warn("strip", e); } }
   }
   /* csukló-menü: a bal csukló fölött lebegő „☰ Menü” gomb, mindig a fejed felé fordul – a jobb kezeddel rámutatva, csippentéssel nyílik */
   function menuButton() { if (window.ZephyrWorld && ZephyrWorld.active) ZephyrWorld.togglePanel(); else vrToggle(); }
@@ -13249,6 +13256,48 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     B.g.position.set(h.x - Math.sin(B.yaw) * dist, h.y - drop, h.z - Math.cos(B.yaw) * dist);
     B.g.rotation.set(-Math.atan2(drop, dist), B.yaw, 0, "YXZ");
   }
+  /* ===================================================================================================
+     VR ALSÓ KÉPSOR (2026-11-11 11:12, tulajdonos: „az alsó menüsor … a kép legalján a felosztások, hogy éppen hol járunk, és azoknak a képei,
+     amiket később gömb alakra változtattunk a 2D-ben, és afölött megy a vitorlásverseny. Ugyanezt szeretném VR-ben is látni séta közben.”)
+     A 2D-s képsor VR-megfelelője: az aktuális lakás/hely képei kis forgó üveggömbökként egy ívben, a látómező alatt; rámutatva + csippentve
+     odalépsz; az aktuális hely arany gyűrűt kap. Fölötte apró vitorlások versenyeznek (dísz). Lassan követi a nézési irányt.
+     =================================================================================================== */
+  function xrStripKill() { const S = XRP.strip; if (!S) return; S.items.forEach((m) => XRP.extra.delete(m)); S.g.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); if (S.g.parent) S.g.parent.remove(S.g); XRP.strip = null; }
+  function xrStripLabel(txt, on) { const cv = document.createElement("canvas"); cv.width = 256; cv.height = 72; const g = cv.getContext("2d"); let t = vT(String(txt || "").replace(/\n/g, " ")); g.font = ZT.font(700, 30); while (t.length > 3 && g.measureText(t).width > 236) t = t.slice(0, -2) + "…";
+    g.beginPath(); g.roundRect ? g.roundRect(4, 8, 248, 56, 26) : g.rect(4, 8, 248, 56); g.fillStyle = on ? "rgba(228,187,99,.96)" : "rgba(7,24,44,.86)"; g.fill(); g.fillStyle = on ? "#07182C" : "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(t, 128, 38); const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; return tx; }
+  function xrStrip() {
+    const show = inVR && !worldOn() && !smIsOpen() && !navEditOn() && WS.vrStrip !== false;
+    if (!show) { if (XRP.strip) XRP.strip.g.visible = false; return; }
+    const sig = currentGroup + "|" + current + "|" + ((window.ZI18N && ZI18N.lang) || "hu");
+    if (XRP.strip && XRP.strip.grp !== currentGroup) xrStripKill();
+    if (!XRP.strip) {
+      const keys = Object.keys(SCENES).filter((k) => SCENES[k].g === currentGroup).slice(0, 18), g = new THREE.Group(), items = [], n = keys.length;
+      const R0 = .62, step = Math.min(.15, 1.75 / Math.max(1, n)), r = Math.min(.034, step * R0 * .4), ld = new THREE.TextureLoader();
+      keys.forEach((k, i) => { const a = (i - (n - 1) / 2) * step, grp = new THREE.Group(); grp.position.set(Math.sin(a) * R0, 0, -Math.cos(a) * R0); grp.rotation.y = -a;
+        const tex = ld.load(thumbUrl(k)); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1;
+        const orb = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), new THREE.MeshBasicMaterial({ map: tex })); grp.add(orb);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 1.18, r * .09, 8, 32), new THREE.MeshBasicMaterial({ color: 0xE4BB63, transparent: true, opacity: .0 })); grp.add(ring);
+        const lbl = new THREE.Mesh(new THREE.PlaneGeometry(r * 3.1, r * 3.1 * 72 / 256), new THREE.MeshBasicMaterial({ map: xrStripLabel(SCENES[k].n, false), transparent: true, depthWrite: false })); lbl.position.y = -r * 1.75; grp.add(lbl);
+        const hit = new THREE.Mesh(new THREE.SphereGeometry(r * 1.35, 10, 8), new THREE.MeshBasicMaterial({ visible: false })); grp.add(hit);
+        hit.userData.xr = { hover: (on) => { grp.userData.hov = on; if (on) { try { xrPulse(null, .2, 10); } catch (e) {} } }, click: () => { if (k !== current) { try { sndNav(); } catch (e) {} go(k, false); } } };
+        grp.userData = { k, orb, ring, lbl, hov: false, on: null }; g.add(grp); items.push(hit); XRP.extra.add(hit); });
+      /* fölötte: apró vitorlások versenye (dísz) egy halvány vízvonalon */
+      const W2 = Math.min(1.75, step * (n + 1)) * R0, boats = [], cols = ["#d61f26", "#ffffff", "#f5c542", "#3d7fc2", "#3fb37f"];
+      cols.forEach((c, i) => { const cv = document.createElement("canvas"); cv.width = 64; cv.height = 72; const q = cv.getContext("2d"); q.fillStyle = c; q.beginPath(); q.moveTo(30, 4); q.lineTo(30, 50); q.lineTo(6, 50); q.closePath(); q.fill(); q.fillStyle = "#ffffff"; q.beginPath(); q.moveTo(34, 12); q.lineTo(34, 50); q.lineTo(56, 50); q.closePath(); q.fill(); q.fillStyle = "#141d4d"; q.beginPath(); q.moveTo(4, 54); q.lineTo(60, 54); q.lineTo(52, 66); q.lineTo(12, 66); q.closePath(); q.fill();
+        const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; const m = new THREE.Mesh(new THREE.PlaneGeometry(.03, .034), new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false })); m.userData = { sp: .012 + i * .0035, off: i * .23 }; g.add(m); boats.push(m); });
+      sceneEl.object3D.add(g); XRP.strip = { g, items, boats, grp: currentGroup, sig: "", yaw: null, R0, W2, step, n, r };
+    }
+    const S = XRP.strip; S.g.visible = true;
+    if (S.sig !== sig) { S.sig = sig; S.g.children.forEach((c) => { const u = c.userData; if (!u || !u.k) return; const on = u.k === current; if (u.on !== on) { u.on = on; u.lbl.material.map.dispose(); u.lbl.material.map = xrStripLabel(SCENES[u.k].n, on); u.ring.material.opacity = on ? 1 : 0; } }); }
+    const t = performance.now() / 1000;
+    S.g.children.forEach((c) => { const u = c.userData; if (!u || !u.k) return; u.orb.rotation.y = t * .25; const sc = u.hov ? 1.3 : u.on ? 1.15 : 1; c.scale.setScalar(c.scale.x + (sc - c.scale.x) * .2); });
+    S.boats.forEach((m) => { const u = m.userData, half = S.step * (S.n + 1) / 2, a = ((t * u.sp + u.off) % 1) * 2 * half - half; m.position.set(Math.sin(a) * S.R0, S.r * 2.3 + Math.sin(t * 1.7 + u.off * 9) * .004, -Math.cos(a) * S.R0); m.rotation.set(0, -a, Math.sin(t * 1.3 + u.off * 7) * .08); });
+    const h = headPos(new THREE.Vector3()), f = headDir(new THREE.Vector3()); f.y = 0; if (f.lengthSq() < 1e-6) return; f.normalize();
+    const yaw = Math.atan2(-f.x, -f.z); if (S.yaw == null) S.yaw = yaw;
+    let d = yaw - S.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+    if (Math.abs(d) > .6 || S.chase) { S.chase = Math.abs(d) > .03; S.yaw += d * .08; }
+    S.g.position.set(h.x, h.y - .46, h.z); S.g.rotation.set(0, S.yaw, 0);
+  }
   /* minden képkockában (VR-ben is) – A-Frame komponens a jeleneten */
   function regXR() {
     if (!window.AFRAME || AFRAME.components["zephyr-xr"]) return;
@@ -13266,6 +13315,13 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---------- Híd a „Virtuális világ” modulhoz (vilag.js – csak megnyitáskor töltődik be) ---------- */
   /* közvetlen link a jegyzékhez: …/#leltar vagy …/#leltar-fregatt (vendégnek küldhető, telefonon is) */
   { const m = /#leltar(?:-([a-z]+))?\b/.exec(location.hash); if (m) { const tryOpen = (n) => { try { openBinder(GROUPS.some((q) => q.id === m[1]) ? m[1] : "korvett"); } catch (e) { if (n < 40) setTimeout(() => tryOpen(n + 1), 400); } }; setTimeout(() => tryOpen(0), 2500); } }
+  /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
+     Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
+     egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
+  { const BV = "__BV__"; let shown = false;
+    const chk = () => { if (shown || inVR || BV.indexOf("__") === 0) return; fetch("verzio.json?t=" + Date.now(), { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((j) => { if (!j || !j.v || j.v === BV || shown) return; shown = true;
+      const b = document.createElement("button"); b.type = "button"; b.className = "zv-ujver"; b.textContent = "🔄 Új változat érhető el – koppints ide a frissítéshez"; b.addEventListener("click", () => { location.replace(location.pathname + "?v=" + j.v + location.hash); }); document.body.appendChild(b); }).catch(() => {}); };
+    setTimeout(chk, 2500); setInterval(chk, 180000); document.addEventListener("visibilitychange", () => { if (!document.hidden) chk(); }); }
   window.ZephyrTour = { openDict: (t) => ZSD.open(t), openGame: (id) => gmOpen(id), stegMap: () => stegMapCard(), openInv: (g) => openBinder(g), goScene: (k) => { if (SCENES[k]) go(k, false); }, _t: { smPalm: () => smPalm(), SM, AK: () => AK, WS: () => WS, SCENES: () => SCENES, cur: () => current, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrOpen: (pg) => vrOpen(pg), vrCvs: () => VRS.cvs, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
