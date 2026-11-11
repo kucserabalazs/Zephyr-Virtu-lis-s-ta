@@ -1523,6 +1523,24 @@ body.zx .tool-book, body.zx #btnBook { display: none !important; }
 .zne-bar { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-width: calc(100vw - 24px); box-sizing: border-box;
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px 10px 18px; border-radius: 18px; background: rgba(7,24,44,.92); border: 1.5px solid #D4A13A;
   color: #fff; font: 500 15px/1.35 Inter, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+/* ---- Vitorlás szabályok és képes szótár (2026-11-11) ---- */
+.zsd { position: fixed; inset: 0; z-index: 2147483050; display: grid; place-items: center; background: rgba(6,18,38,.72); font-family: Inter, "Manrope", system-ui, sans-serif; -webkit-user-select: text; user-select: text; }
+.zsd-sheet { width: min(1180px, calc(100vw - 20px)); height: min(900px, calc(100dvh - 20px)); display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; color: #141d4d;
+  background: radial-gradient(120% 90% at 20% 0%, #fbf4e1 0%, #f1e6c9 60%, #e6d6ae 100%); border: 2px solid #c89b3c; box-shadow: 0 24px 70px rgba(0,0,0,.55), inset 0 0 0 6px rgba(255,255,255,.35); }
+.zsd header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px 12px; border-bottom: 2px solid rgba(20,29,77,.25); background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0)); }
+.zsd-ttl { display: flex; align-items: center; gap: 12px; margin-right: auto; } .zsd-ttl small { display: block; font: 700 11px/1.2 Inter, sans-serif; letter-spacing: .18em; color: #a3261f; } .zsd-ttl b { font: 700 24px/1.15 Georgia, "Times New Roman", serif; }
+.zsd nav { display: flex; gap: 8px; flex-wrap: wrap; } .zsd nav button, .zsd-x { all: unset; cursor: pointer; padding: 11px 16px; border-radius: 999px; font: 700 15px/1 Inter, sans-serif; color: #141d4d; border: 1.5px solid rgba(20,29,77,.45); background: rgba(255,255,255,.5); }
+.zsd nav button.on { background: #141d4d; color: #fbf4e1; border-color: #141d4d; } .zsd-x { padding: 11px 15px; }
+.zsd-search { padding: 12px 18px 0; } .zsd-search input { width: 100%; box-sizing: border-box; font: 600 17px/1.2 Inter, sans-serif; padding: 12px 16px; border-radius: 12px; border: 1.5px solid rgba(20,29,77,.4); background: rgba(255,255,255,.75); color: #141d4d; }
+.zsd-body { flex: 1 1 auto; overflow: auto; -webkit-overflow-scrolling: touch; padding: 16px 18px 26px; }
+.zsd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; } .zsd-grid.zsd-small { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.zsd-card { background: rgba(255,255,255,.62); border: 1.5px solid rgba(20,29,77,.28); border-radius: 16px; padding: 12px 14px 14px; box-shadow: 0 3px 0 rgba(20,29,77,.12); }
+.zsd-card h3 { margin: 10px 0 6px; font: 700 19px/1.25 Georgia, "Times New Roman", serif; color: #141d4d; } .zsd-small .zsd-card h3 { font-size: 17px; }
+.zsd-card p { margin: 0; font: 500 15.5px/1.5 Inter, sans-serif; color: #26304f; } .zsd-small .zsd-card p { font-size: 14.5px; }
+.zsd-svg { display: block; width: 100%; height: auto; } .zsd-t { font: 700 13px Inter, sans-serif; fill: #141d4d; } .zsd-w { font: 800 11px Inter, sans-serif; fill: #2d6f9e; letter-spacing: .08em; } .zsd-n { font: 800 11px Inter, sans-serif; fill: #141d4d; }
+.zsd-sec { margin: 22px 0 12px; font: 700 21px/1.2 Georgia, serif; color: #a3261f; display: flex; align-items: center; gap: 12px; } .zsd-sec:first-child { margin-top: 2px; } .zsd-sec::after { content: ""; flex: 1; border-top: 2px dotted rgba(20,29,77,.4); }
+.zsd-none { font: 600 17px Inter, sans-serif; text-align: center; padding: 40px 0; }
+:root[data-device="phone"] .zsd-sheet { width: 100vw; height: 100dvh; border-radius: 0; border-width: 0; } :root[data-device="phone"] .zsd-ttl b { font-size: 19px; } :root[data-device="phone"] .zsd nav button { padding: 10px 12px; font-size: 13.5px; }
 .zne-bar b { color: #E4BB63; font-weight: 750; }
 .zne-ren { position: fixed; inset: 0; z-index: 2147483100; display: grid; place-items: center; background: rgba(4,14,30,.45); font-family: Inter, system-ui, sans-serif; }
 .zne-ren form { width: min(420px, calc(100vw - 32px)); box-sizing: border-box; display: grid; gap: 12px; padding: 18px; border-radius: 18px; background: linear-gradient(180deg, #123a6b, #0a2347); border: 2px solid rgba(228,187,99,.85); color: #fff; box-shadow: 0 18px 50px rgba(0,0,0,.5); }

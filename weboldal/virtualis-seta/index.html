@@ -1634,6 +1634,24 @@ body.zx .tool-book, body.zx #btnBook { display: none !important; }
 .zne-bar { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-width: calc(100vw - 24px); box-sizing: border-box;
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px 10px 18px; border-radius: 18px; background: rgba(7,24,44,.92); border: 1.5px solid #D4A13A;
   color: #fff; font: 500 15px/1.35 Inter, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+/* ---- Vitorlás szabályok és képes szótár (2026-11-11) ---- */
+.zsd { position: fixed; inset: 0; z-index: 2147483050; display: grid; place-items: center; background: rgba(6,18,38,.72); font-family: Inter, "Manrope", system-ui, sans-serif; -webkit-user-select: text; user-select: text; }
+.zsd-sheet { width: min(1180px, calc(100vw - 20px)); height: min(900px, calc(100dvh - 20px)); display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; color: #141d4d;
+  background: radial-gradient(120% 90% at 20% 0%, #fbf4e1 0%, #f1e6c9 60%, #e6d6ae 100%); border: 2px solid #c89b3c; box-shadow: 0 24px 70px rgba(0,0,0,.55), inset 0 0 0 6px rgba(255,255,255,.35); }
+.zsd header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 14px 18px 12px; border-bottom: 2px solid rgba(20,29,77,.25); background: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0)); }
+.zsd-ttl { display: flex; align-items: center; gap: 12px; margin-right: auto; } .zsd-ttl small { display: block; font: 700 11px/1.2 Inter, sans-serif; letter-spacing: .18em; color: #a3261f; } .zsd-ttl b { font: 700 24px/1.15 Georgia, "Times New Roman", serif; }
+.zsd nav { display: flex; gap: 8px; flex-wrap: wrap; } .zsd nav button, .zsd-x { all: unset; cursor: pointer; padding: 11px 16px; border-radius: 999px; font: 700 15px/1 Inter, sans-serif; color: #141d4d; border: 1.5px solid rgba(20,29,77,.45); background: rgba(255,255,255,.5); }
+.zsd nav button.on { background: #141d4d; color: #fbf4e1; border-color: #141d4d; } .zsd-x { padding: 11px 15px; }
+.zsd-search { padding: 12px 18px 0; } .zsd-search input { width: 100%; box-sizing: border-box; font: 600 17px/1.2 Inter, sans-serif; padding: 12px 16px; border-radius: 12px; border: 1.5px solid rgba(20,29,77,.4); background: rgba(255,255,255,.75); color: #141d4d; }
+.zsd-body { flex: 1 1 auto; overflow: auto; -webkit-overflow-scrolling: touch; padding: 16px 18px 26px; }
+.zsd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; } .zsd-grid.zsd-small { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.zsd-card { background: rgba(255,255,255,.62); border: 1.5px solid rgba(20,29,77,.28); border-radius: 16px; padding: 12px 14px 14px; box-shadow: 0 3px 0 rgba(20,29,77,.12); }
+.zsd-card h3 { margin: 10px 0 6px; font: 700 19px/1.25 Georgia, "Times New Roman", serif; color: #141d4d; } .zsd-small .zsd-card h3 { font-size: 17px; }
+.zsd-card p { margin: 0; font: 500 15.5px/1.5 Inter, sans-serif; color: #26304f; } .zsd-small .zsd-card p { font-size: 14.5px; }
+.zsd-svg { display: block; width: 100%; height: auto; } .zsd-t { font: 700 13px Inter, sans-serif; fill: #141d4d; } .zsd-w { font: 800 11px Inter, sans-serif; fill: #2d6f9e; letter-spacing: .08em; } .zsd-n { font: 800 11px Inter, sans-serif; fill: #141d4d; }
+.zsd-sec { margin: 22px 0 12px; font: 700 21px/1.2 Georgia, serif; color: #a3261f; display: flex; align-items: center; gap: 12px; } .zsd-sec:first-child { margin-top: 2px; } .zsd-sec::after { content: ""; flex: 1; border-top: 2px dotted rgba(20,29,77,.4); }
+.zsd-none { font: 600 17px Inter, sans-serif; text-align: center; padding: 40px 0; }
+:root[data-device="phone"] .zsd-sheet { width: 100vw; height: 100dvh; border-radius: 0; border-width: 0; } :root[data-device="phone"] .zsd-ttl b { font-size: 19px; } :root[data-device="phone"] .zsd nav button { padding: 10px 12px; font-size: 13.5px; }
 .zne-bar b { color: #E4BB63; font-weight: 750; }
 .zne-ren { position: fixed; inset: 0; z-index: 2147483100; display: grid; place-items: center; background: rgba(4,14,30,.45); font-family: Inter, system-ui, sans-serif; }
 .zne-ren form { width: min(420px, calc(100vw - 32px)); box-sizing: border-box; display: grid; gap: 12px; padding: 18px; border-radius: 18px; background: linear-gradient(180deg, #123a6b, #0a2347); border: 2px solid rgba(228,187,99,.85); color: #fff; box-shadow: 0 18px 50px rgba(0,0,0,.5); }
@@ -10169,10 +10187,128 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       <button type="button" data-w="race"><b>⛵ Vitorlásverseny – a kormánynál</b><span>A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél</span></button>
       <button type="button" data-w="chess"><b>♞ Vitorlás sakk – életnagyságban</b><span>A tábla maga a Balaton naplementében, a bábuk igazi hajók · parancsnoki híd, stég, hőlégballon</span></button>
       <button type="button" data-w="maquette"><b>🏠 A ház makettje a regatta-bóján</b><span>A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig</span></button>
+      <button type="button" data-dict="rules"><b>📖 Szabályok és vitorlás szótár – képekkel</b><span>A verseny szabályai úgy, hogy egy gyerek is megértse · képes szótár az összes vitorlás kifejezéssel</span></button>
       <p>VR szemüvegben a legszebb (Meta Quest: „VR” gomb). Itt egérrel/ujjal nézel körbe.</p></div>`;
-    d.addEventListener("click", (e) => { const t = e.target.closest("[data-w]"); if (t) { d.remove(); openWorld(t.dataset.w); } else if (e.target === d || e.target.closest(".wp-x")) d.remove(); });
+    d.addEventListener("click", (e) => { const dc = e.target.closest("[data-dict]"); if (dc) { d.remove(); ZSD.open(dc.dataset.dict); return; } const t = e.target.closest("[data-w]"); if (t) { d.remove(); openWorld(t.dataset.w); } else if (e.target === d || e.target.closest(".wp-x")) d.remove(); });
     document.body.appendChild(d);
   }
+  /* =====================================================================================================
+     VITORLÁS SZABÁLYOK GYEREKEKNEK + KÉPES VITORLÁS SZÓTÁR (2026-11-11, tulajdonos: „legyen egy szabálymagyarázat … hogy egy
+     gyerek is felfogja, és egy vitorlás szótár, ahol az összes vitorláskifejezés szerepel, ahol lehet, képes illusztrációval.
+     Ez sima rajzolt felület legyen, de szép és értelmezhető”). Rajzolt (SVG) ábrák, régi tengeri térkép hangulat.
+     Megnyitás: Virtuális világ → „Szabályok és szótár”, vagy ZephyrTour.openDict("rules" | "dict").
+     ===================================================================================================== */
+  const ZSD = (() => {
+    const N = "#141d4d", R = "#d61f26", S = "#f6f4ec", G = "#c89b3c", W = "#2d6f9e";
+    /* felülnézeti hajó: x,y közép; a = orr iránya fokban (0 = felfelé); s = méret; c = testszín; boom = bum oldala (−1 bal, 1 jobb, 0 nincs) */
+    const boat = (x, y, a, c, boom, s, lab) => { s = s || 1; const b = boom || 0;
+      return `<g transform="translate(${x} ${y}) rotate(${a}) scale(${s})"><path d="M0 -26 C10 -14 11 8 7 24 L-7 24 C-11 8 -10 -14 0 -26 Z" fill="${c || S}" stroke="${N}" stroke-width="2"/><circle cx="0" cy="-4" r="2.6" fill="${N}"/>${b ? `<path d="M0 -4 Q${b * 13} 6 ${b * 15} 22" fill="none" stroke="${R}" stroke-width="3.4" stroke-linecap="round"/><path d="M0 -24 Q${b * 9} -14 ${b * 5} -6" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M0 -24 Q${b * 9} -14 ${b * 5} -6" fill="none" stroke="${N}" stroke-width="1" stroke-linecap="round"/>` : ""}</g>${lab ? `<text x="${x}" y="${y + 44 * s}" text-anchor="middle" class="zsd-t">${lab}</text>` : ""}`; };
+    const wind = (x, y, a, lab) => `<g transform="translate(${x} ${y}) rotate(${a || 180})"><path d="M0 22 L0 -14 M-8 -4 L0 -16 L8 -4" fill="none" stroke="${W}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g><text x="${x + 14}" y="${y - 8}" text-anchor="start" class="zsd-w">${lab || "SZÉL"}</text>`;
+    const buoy = (x, y, n) => `<circle cx="${x}" cy="${y}" r="9" fill="#ff8a1e" stroke="${N}" stroke-width="2"/><text x="${x}" y="${y + 4}" text-anchor="middle" class="zsd-n">${n || ""}</text>`;
+    const arc = (d, col) => `<path d="${d}" fill="none" stroke="${col || G}" stroke-width="3" stroke-dasharray="7 6" stroke-linecap="round"/>`;
+    const svg = (inner, w, h) => `<svg viewBox="0 0 ${w || 300} ${h || 190}" class="zsd-svg" role="img"><rect x="1" y="1" width="${(w || 300) - 2}" height="${(h || 190) - 2}" rx="12" fill="#dcebf0" stroke="rgba(20,29,77,.35)"/>${inner}</svg>`;
+    /* oldalnézeti hajó a részek megmutatásához: hl = kiemelt rész */
+    const side = (hl) => { const H = (k, on, off) => (hl === k ? on : off), hi = "#ffcf3f";
+      return svg(`<path d="M0 150 Q75 142 150 150 T300 150 V190 H0 Z" fill="#9fc9dc"/>
+        <path d="M150 28 V132" stroke="${H("arboc", hi, N)}" stroke-width="${H("arboc", 7, 4)}"/>
+        <path d="M150 122 H232" stroke="${H("bum", hi, N)}" stroke-width="${H("bum", 7, 4)}" stroke-linecap="round"/>
+        <path d="M154 34 Q214 78 230 118 H154 Z" fill="${H("nagyvitorla", hi, R)}" stroke="${N}" stroke-width="1.5"/>
+        <path d="M146 36 Q112 86 78 128 H146 Z" fill="${H("orrvitorla", hi, "#fff")}" stroke="${N}" stroke-width="1.5"/>
+        <path d="M150 28 L66 132" stroke="${H("orrmerevito", hi, "#555")}" stroke-width="${H("orrmerevito", 4, 1.5)}"/><path d="M150 28 L246 134" stroke="${H("hatsomerevito", hi, "#555")}" stroke-width="${H("hatsomerevito", 4, 1.5)}"/>
+        <path d="M58 132 H250 L238 154 Q150 166 76 154 Z" fill="${H("test", hi, S)}" stroke="${N}" stroke-width="2"/><path d="M62 140 H246" stroke="${N}" stroke-width="3"/>
+        <path d="M140 158 L132 186 H168 L160 158 Z" fill="${H("tokesuly", hi, "#3b4a66")}" stroke="${N}" stroke-width="1.5"/>
+        <path d="M236 152 L240 182 H228 L230 154 Z" fill="${H("kormanylapat", hi, "#3b4a66")}" stroke="${N}" stroke-width="1.5"/>
+        <path d="M234 132 L214 122" stroke="${H("kormanyrud", hi, "#8a5a30")}" stroke-width="${H("kormanyrud", 6, 3.5)}" stroke-linecap="round"/>
+        ${hl === "orr" ? `<circle cx="64" cy="140" r="16" fill="none" stroke="${hi}" stroke-width="5"/>` : ""}${hl === "tat" ? `<circle cx="244" cy="142" r="16" fill="none" stroke="${hi}" stroke-width="5"/>` : ""}
+        ${hl === "kokpit" ? `<rect x="196" y="124" width="40" height="12" rx="3" fill="${hi}" stroke="${N}"/>` : ""}${hl === "kajut" ? `<rect x="112" y="122" width="70" height="12" rx="4" fill="${hi}" stroke="${N}"/>` : `<rect x="112" y="124" width="70" height="9" rx="4" fill="#fff" stroke="${N}"/>`}
+        ${hl === "csorlo" ? `<circle cx="190" cy="128" r="7" fill="${hi}" stroke="${N}" stroke-width="2"/>` : ""}${hl === "sot" ? `<path d="M228 120 Q214 130 196 128" fill="none" stroke="${hi}" stroke-width="4"/>` : ""}${hl === "felhuzo" ? `<path d="M153 30 V120" stroke="${hi}" stroke-width="4" stroke-dasharray="6 5"/>` : ""}
+        ${hl === "szelzaszlo" ? `<path d="M150 28 V14 M150 14 l16 5 l-16 5" fill="${hi}" stroke="${N}" stroke-width="2"/>` : `<path d="M150 28 V18 M150 18 l10 3 l-10 3" fill="${R}" stroke="${N}" stroke-width="1"/>`}
+        ${hl === "szalingok" ? `<path d="M134 74 H166" stroke="${hi}" stroke-width="6" stroke-linecap="round"/>` : `<path d="M138 74 H162" stroke="${N}" stroke-width="2"/>`}
+        ${hl === "vantnik" ? `<path d="M150 30 L134 74 L140 132 M150 30 L166 74 L160 132" fill="none" stroke="${hi}" stroke-width="4"/>` : ""}
+        ${hl === "merules" ? `<path d="M270 150 V186 M264 156 l6 -6 l6 6 M264 180 l6 6 l6 -6" fill="none" stroke="${hi}" stroke-width="4"/>` : ""}`, 300, 190); };
+    /* szélirány-ábrák: a szél felülről fúj */
+    const course = (a, boom, lab, extra) => svg(`${wind(150, 40, 180)}${boat(150, 120, a, S, boom, 1.25)}${extra || ""}<text x="150" y="180" text-anchor="middle" class="zsd-t">${lab}</text>`);
+    const RULES = [
+      ["1. A szél a motorunk", "A vitorlás nem tud pontosan a széllel szembe menni. Ott, ahonnan a szél fúj, van egy „tiltott zóna” – oda csak cikk-cakkban (kreuzolva) lehet eljutni.",
+        svg(`${wind(150, 36, 180)}<path d="M150 150 L96 60 A62 62 0 0 1 204 60 Z" fill="rgba(214,31,38,.22)" stroke="${R}" stroke-dasharray="6 5"/><text x="150" y="92" text-anchor="middle" class="zsd-t" fill="${R}">tiltott zóna</text>${boat(86, 138, -45, S, 1, .9)}${boat(214, 138, 45, S, -1, .9)}`)],
+      ["2. Rajt: a vonal mögül", "A rajtvonal két bója (vagy egy bója és a rendezőhajó) között van. A dudaszó ELŐTT senki sem lépheti át! Aki túl korán megy, annak vissza kell fordulnia, és újra át kell mennie a vonalon.",
+        svg(`${wind(150, 30, 180)}${buoy(50, 90)}${buoy(250, 90)}<path d="M50 90 H250" stroke="${N}" stroke-width="2" stroke-dasharray="4 4"/>${boat(110, 140, -30, S, 1, .85)}${boat(190, 146, 20, "#cfe3f3", -1, .85)}<text x="150" y="82" text-anchor="middle" class="zsd-t">RAJTVONAL</text>`)],
+      ["3. A bójákat bal kéz felől kerüljük", "A pályán a bóják sorban jönnek: 1., 2., 3. … Mindegyiket úgy kell megkerülni, hogy a BAL kezed felé essen (óramutatóval ellentétesen). Aki kihagy egyet vagy rossz oldalról kerüli, annak vissza kell mennie.",
+        svg(`${buoy(150, 80, 1)}${arc("M210 160 C230 90 200 40 150 44 C110 46 96 84 110 130")}<path d="M110 130 l-8 -14 M110 130 l12 -9" stroke="${G}" stroke-width="3" fill="none" stroke-linecap="round"/>${boat(214, 150, -14, S, -1, .85)}<text x="74" y="76" text-anchor="middle" class="zsd-t">bal kéz</text><text x="74" y="92" text-anchor="middle" class="zsd-t">felől</text>`)],
+      ["4. „Backbord!” – a jobbcsapású hajónak van elsőbbsége", "Ha a szél a hajó JOBB oldala felől fúj (a bum a bal oldalon van), az a hajó „jobbcsapáson” megy, és ELSŐBBSÉGE van. A balcsapású hajónak ki kell térnie. Ilyenkor kiabálják: „Backbord!” – vagyis: „Térj ki, nekem van elsőbbségem!”",
+        svg(`${wind(150, 30, 180)}${boat(96, 122, 45, "#d7f0d7", -1, 1.05, "jobbcsapás ✔")}${boat(206, 122, -45, "#f6d5d5", 1, 1.05, "balcsapás – kitér")}<path d="M228 96 q22 -22 30 -52" fill="none" stroke="${R}" stroke-width="3" stroke-dasharray="6 5"/>`)],
+      ["5. Azonos csapáson: a szél felőli tér ki", "Ha két hajó ugyanazon az oldalon kapja a szelet, akkor a szélhez KÖZELEBBI (luv) hajónak kell kitérnie a szél alatti (lee) hajó elől.",
+        svg(`${wind(150, 30, 180)}${boat(120, 96, 50, "#f6d5d5", -1, 1, "")}${boat(170, 142, 50, "#d7f0d7", -1, 1, "")}<text x="58" y="92" text-anchor="middle" class="zsd-t">luv – kitér</text><text x="236" y="150" text-anchor="middle" class="zsd-t">lee ✔</text>`)],
+      ["6. Aki előz, az kerül", "Ha hátulról utolérsz egy másik hajót, NEKED kell kikerülnöd – ő mehet tovább egyenesen.",
+        svg(`${boat(150, 70, 0, "#d7f0d7", 1, 1)}${boat(150, 150, 0, "#f6d5d5", 1, 1)}${arc("M150 122 C190 110 196 60 176 30", R)}<text x="232" y="96" text-anchor="middle" class="zsd-t">az előző kerül</text>`)],
+      ["7. A bójánál hely jár a belsőnek", "Ha két hajó egyszerre ér a bójához, a bójához KÖZELEBBI (belső) hajónak helyet kell adni, hogy ő is megkerülhesse.",
+        svg(`${buoy(150, 70, 2)}${boat(176, 116, -30, "#d7f0d7", -1, .95)}${boat(222, 140, -30, "#f6d5d5", -1, .95)}<text x="92" y="130" text-anchor="middle" class="zsd-t">a belsőnek</text><text x="92" y="146" text-anchor="middle" class="zsd-t">hely jár</text>`)],
+      ["8. Ne koccanj!", "Az ütközést mindenkinek kerülnie kell – még annak is, akinek elsőbbsége van. Aki hibázik, büntetőfordulót tesz (körbefordul), és utána mehet tovább. A legszebb verseny az, ahol mindenki sportszerű.",
+        svg(`${boat(120, 100, 60, S, -1, 1)}${boat(184, 104, -60, S, 1, 1)}<path d="M150 74 l5 12 l13 -6 l-6 12 l12 6 l-13 4 l4 13 l-11 -8 l-9 10 l0 -14 l-13 -2 l11 -8 l-8 -11 l13 3 Z" fill="#ffcf3f" stroke="${R}" stroke-width="2"/>`)],
+      ["9. Befutó", "A célvonal is két jel között van. Aki az utolsó bója után elsőként halad át rajta az orrával, az nyer. Dudaszó jelzi a befutót!",
+        svg(`${buoy(50, 70)}${buoy(250, 70)}<path d="M50 70 H250" stroke="${N}" stroke-width="5" stroke-dasharray="10 10"/><path d="M50 70 H250" stroke="#fff" stroke-width="5" stroke-dasharray="10 10" stroke-dashoffset="10"/>${boat(150, 120, 0, "#fff3c4", 1, 1.1)}<text x="150" y="56" text-anchor="middle" class="zsd-t">CÉL</text>`)]
+    ];
+    const DICT = [
+      ["A hajó részei", [
+        ["Orr", "A hajó eleje.", () => side("orr")], ["Tat (far)", "A hajó hátulja.", () => side("tat")], ["Hajótest", "A hajó „teste”, ami a vízen úszik.", () => side("test")],
+        ["Árbóc", "A magas rúd, amelyre a vitorlákat felhúzzuk.", () => side("arboc")], ["Bum (baum)", "A nagyvitorla alsó, vízszintes rúdja. Vigyázz, forduláskor átlendül a fejek fölött!", () => side("bum")],
+        ["Nagyvitorla (grósz)", "Az árbóc mögötti nagy vitorla. A Zephyré piros.", () => side("nagyvitorla")], ["Orrvitorla (fok / génua)", "Az árbóc előtti vitorla. A nagyobb fajtája a génua; a Zephyré fehér és feltekerhető (rolós).", () => side("orrvitorla")],
+        ["Tőkesúly (kiel)", "Nehéz uszony a hajó alján: nem engedi felborulni és oldalra csúszni a hajót.", () => side("tokesuly")], ["Kormánylapát", "A víz alatti lapát a hajó végén – ezzel fordul a hajó.", () => side("kormanylapat")],
+        ["Kormányrúd (rúdkormány)", "A rúd, amellyel a kormánylapátot mozgatjuk. A nagyobb hajókon kormánykerék van helyette.", () => side("kormanyrud")],
+        ["Kokpit", "A hajó hátsó, süllyesztett része, ahol a legénység ül és kormányoz.", () => side("kokpit")], ["Kajüt", "A hajó „szobája” a fedélzet alatt.", () => side("kajut")],
+        ["Merülés", "Milyen mélyre ér le a hajó a víz alatt. A Balaton sekély, ezért fontos!", () => side("merules")]]],
+      ["Kötelek és szerelvények", [
+        ["Sót (szkóta)", "A kötél, amellyel a vitorlát behúzzuk vagy kiengedjük.", () => side("sot")], ["Felhúzó (fall)", "A kötél, amellyel a vitorlát felhúzzuk az árbócra.", () => side("felhuzo")],
+        ["Csörlő (vincsni)", "Dob alakú szerkezet: rátekerve könnyebb meghúzni a kötelet.", () => side("csorlo")], ["Vantnik", "Oldalsó drótkötelek, amelyek az árbócot tartják.", () => side("vantnik")],
+        ["Szálingok", "Az árbóc két kis „karja”, amelyek a vantnikat széttartják.", () => side("szalingok")], ["Orrmerevítő (forstág)", "Az árbócot előre tartó drótkötél – ezen fut az orrvitorla.", () => side("orrmerevito")],
+        ["Hátsó merevítő (achterstág)", "Az árbócot hátrafelé tartó drótkötél.", () => side("hatsomerevito")], ["Szélzászló (verklicker / windex)", "Kis zászló az árbóc tetején: megmutatja, honnan fúj a szél.", () => side("szelzaszlo")],
+        ["Spinakker", "Nagy, hasas, könnyű vitorla hátszélhez – olyan, mint egy ejtőernyő. A Zephyré fehér.", () => svg(`${wind(150, 36, 180)}${boat(150, 110, 180, S, 1, 1.2)}<path d="M118 150 Q150 196 182 150 Q150 164 118 150 Z" fill="#fff" stroke="${N}" stroke-width="2"/>`)],
+        ["Bak (kikötőbak)", "Erre kötjük ki a hajót a kikötőben.", () => svg(`<path d="M0 130 H300 V190 H0 Z" fill="#b98a55"/><path d="M110 122 H190 V132 H110 Z M128 132 V150 H138 V132 M162 132 V150 H172 V132" fill="#444" stroke="${N}"/><path d="M40 70 Q120 150 150 126 Q170 110 150 126 Q190 150 262 60" fill="none" stroke="#e8dcc0" stroke-width="6"/>`)],
+        ["Puffer (fender)", "Felfújt „párna” a hajó oldalán: kikötéskor védi a testet.", () => svg(`<path d="M0 150 Q75 142 150 150 T300 150 V190 H0 Z" fill="#9fc9dc"/><path d="M40 60 H260 L250 150 H50 Z" fill="${S}" stroke="${N}" stroke-width="2"/><rect x="140" y="80" width="22" height="66" rx="11" fill="#fff" stroke="${N}" stroke-width="2"/><path d="M151 60 V80" stroke="#e8dcc0" stroke-width="4"/>`)]]],
+      ["Oldalak és irányok", [
+        ["Backbord (bal oldal)", "A hajó BAL oldala (ha az orr felé nézel). Színe a piros.", () => svg(`${boat(150, 96, 0, S, 0, 2.2)}<path d="M150 40 C128 66 126 116 135 150 L150 150 Z" fill="rgba(214,31,38,.55)"/><text x="80" y="100" text-anchor="middle" class="zsd-t" fill="${R}">BACKBORD</text>`)],
+        ["Steuerbord (jobb oldal)", "A hajó JOBB oldala. Színe a zöld.", () => svg(`${boat(150, 96, 0, S, 0, 2.2)}<path d="M150 40 C172 66 174 116 165 150 L150 150 Z" fill="rgba(40,160,80,.55)"/><text x="226" y="100" text-anchor="middle" class="zsd-t" fill="#1d7a3c">STEUERBORD</text>`)],
+        ["Luv", "A hajónak az az oldala, amerről a szél fúj (szél felőli oldal).", () => svg(`${wind(60, 100, 90, "SZÉL")}${boat(170, 100, 0, S, 1, 1.6)}<text x="118" y="60" text-anchor="middle" class="zsd-t">LUV</text><text x="232" y="60" text-anchor="middle" class="zsd-t" opacity=".4">lee</text>`)],
+        ["Lee", "A hajó szél alatti oldala – amerre a vitorlák állnak.", () => svg(`${wind(60, 100, 90, "SZÉL")}${boat(170, 100, 0, S, 1, 1.6)}<text x="118" y="60" text-anchor="middle" class="zsd-t" opacity=".4">luv</text><text x="232" y="60" text-anchor="middle" class="zsd-t">LEE</text>`)],
+        ["Jobbcsapás", "A szél jobbról éri a hajót, a bum a bal oldalon van. Elsőbbsége van!", () => course(45, -1, "jobbcsapás")], ["Balcsapás", "A szél balról éri a hajót, a bum a jobb oldalon van. Ki kell térnie.", () => course(-45, 1, "balcsapás")]]],
+      ["Hogyan megyünk a szélhez képest?", [
+        ["Élesen szélnek (krajcolás)", "A lehető legközelebb a szélhez, behúzott vitorlákkal, cikk-cakkban haladunk a szél felé.", () => course(-42, 1, "élesen szélnek")],
+        ["Félszél", "A szél pontosan oldalról fúj. Gyors és kényelmes.", () => course(-90, 1, "félszél")], ["Raumszél (háromnegyed szél)", "A szél ferdén hátulról fúj – ez a leggyorsabb.", () => course(-135, 1, "raumszél")],
+        ["Hátszél", "A szél pontosan hátulról fúj; a vitorlák teljesen kiengedve, ilyenkor húzzák fel a spinakkert.", () => course(180, 1, "hátszél")],
+        ["Fordulás (venda)", "Irányváltás úgy, hogy a hajó ORRA megy át a szélen. A vitorlák átcsapnak a másik oldalra.", () => svg(`${wind(150, 30, 180)}${boat(86, 150, 45, S, -1, .8)}${boat(150, 96, 0, S, 0, .8)}${boat(214, 60, -45, S, 1, .8)}${arc("M96 138 C120 110 136 104 150 104 C170 104 190 90 204 72")}`)],
+        ["Perdülés (halzolás)", "Irányváltás úgy, hogy a hajó FARA megy át a szélen. A bum gyorsan átlendül – fejeket le!", () => svg(`${wind(150, 30, 180)}${boat(86, 70, 135, S, -1, .8)}${boat(150, 124, 180, S, 0, .8)}${boat(214, 150, -135, S, 1, .8)}${arc("M96 82 C120 110 136 116 150 116 C170 116 190 130 204 140")}`)],
+        ["Ejtés", "A hajó orrát elfordítjuk a széltől (a szél hátrébbról jön).", () => course(-100, 1, "ejtés →", arc("M118 120 q-20 26 -4 52", G))], ["Élesítés (luvolás)", "A hajó orrát a szél felé fordítjuk.", () => course(-60, 1, "← élesítés", arc("M128 96 q10 -26 34 -30", G))],
+        ["Lobogás", "Ha a vitorla nem kap jól szelet (túl közel vagyunk a szélhez), csapkodni kezd – a hajó lelassul.", () => course(-8, 0, "lobog a vitorla", `<path d="M150 98 q8 8 0 16 q-8 8 0 16 q8 8 0 16" fill="none" stroke="${R}" stroke-width="3.4"/>`)],
+        ["Dőlés", "A szél oldalra dönti a hajót. A legénység a szél felőli oldalra ül, hogy ellensúlyozza.", () => svg(`<path d="M0 140 Q75 132 150 140 T300 140 V190 H0 Z" fill="#9fc9dc"/><g transform="rotate(22 150 140)"><path d="M150 20 V124" stroke="${N}" stroke-width="4"/><path d="M154 26 Q204 80 214 120 H154 Z" fill="${R}" stroke="${N}"/><path d="M100 124 H200 L190 146 Q150 154 110 146 Z" fill="${S}" stroke="${N}" stroke-width="2"/><circle cx="112" cy="114" r="7" fill="#ff8a1e" stroke="${N}"/><circle cx="128" cy="114" r="7" fill="#ff8a1e" stroke="${N}"/></g>`)]]],
+      ["Szél és verseny", [
+        ["Széllökés (pöff)", "Hirtelen erősebb szél. A vízen sötétebb, fodrosabb folt jelzi – a Balatonon gyakori!", () => svg(`<path d="M0 60 H300 V190 H0 Z" fill="#9fc9dc"/><ellipse cx="190" cy="120" rx="80" ry="36" fill="#4e8fb0"/><path d="M130 112 q10 -8 20 0 M170 126 q10 -8 20 0 M210 110 q10 -8 20 0 M196 138 q10 -8 20 0" fill="none" stroke="#fff" stroke-width="2.4"/>${wind(60, 70, 110, "pöff")}`)],
+        ["Szélfordulás", "A szél iránya menet közben megváltozik. Az ügyes versenyző észreveszi, és jókor fordul.", () => svg(`${wind(110, 70, 180, "előtte")}${wind(200, 70, 150, "utána")}${arc("M124 96 q30 24 62 6", R)}`)],
+        ["Csomó", "A hajó sebességének mértéke: 1 csomó = 1,852 km/óra.", () => svg(`<path d="M30 100 C90 40 130 150 150 100 C170 50 210 160 270 100" fill="none" stroke="#b98a55" stroke-width="12" stroke-linecap="round"/><path d="M120 96 C140 60 170 130 186 100" fill="none" stroke="#8a5a30" stroke-width="12" stroke-linecap="round"/><text x="150" y="172" text-anchor="middle" class="zsd-t">1 csomó = 1,852 km/h</text>`)],
+        ["Bója", "Úszó jel a vízen. A versenypálya sarkait bóják jelölik.", () => svg(`<path d="M0 120 Q75 112 150 120 T300 120 V190 H0 Z" fill="#9fc9dc"/><path d="M130 124 L140 60 H160 L170 124 Z" fill="#ff8a1e" stroke="${N}" stroke-width="2"/><path d="M150 60 V34 l18 6 l-18 6" fill="${R}" stroke="${N}" stroke-width="1.5"/>`)],
+        ["Rajtvonal / célvonal", "Két jel közti képzeletbeli vonal: innen indul és ide érkezik a verseny.", () => RULES[1][2]], ["Pálya", "A bóják sorrendje, amelyet végig kell vitorlázni. Leggyakoribb a „fel-le” pálya: szembe a széllel fel, hátszélben vissza.", () => svg(`${wind(40, 50, 180)}${buoy(150, 36, 1)}${buoy(150, 150, 2)}${arc("M170 150 C230 110 110 80 162 40")}${arc("M138 40 C100 80 110 120 138 148", R)}`)],
+        ["Büntetőforduló", "Ha szabályt szegtél, egy teljes kört kell fordulnod a hajóval – utána versenyezhetsz tovább.", () => svg(`${boat(150, 96, 30, S, -1, 1)}<path d="M150 40 a56 56 0 1 1 -40 16" fill="none" stroke="${R}" stroke-width="3" stroke-dasharray="7 6"/><path d="M110 56 l-2 -16 M110 56 l15 -5" stroke="${R}" stroke-width="3" fill="none"/>`)],
+        ["Regatta", "Vitorlásverseny. A Balaton leghíresebb tókerülő versenye a Kékszalag.", () => svg(`<path d="M0 110 Q75 102 150 110 T300 110 V190 H0 Z" fill="#9fc9dc"/>${[[60, 0], [130, 1], [200, 0], [250, 1]].map(([x, k]) => `<path d="M${x} ${118 + k * 14} v-${60 - k * 10} l${26 - k * 4} ${56 - k * 10} Z" fill="${k ? "#fff" : R}" stroke="${N}"/><path d="M${x - 14} ${120 + k * 14} h44 l-6 10 h-32 Z" fill="${S}" stroke="${N}"/>`).join("")}`)],
+        ["Viharjelzés", "A Balaton partján villogó lámpák figyelmeztetnek az erős szélre: az I. fok lassabban, a II. fok gyorsabban villog. II. foknál fürödni tilos!", () => svg(`<path d="M0 150 H300 V190 H0 Z" fill="#9fc9dc"/><path d="M146 150 V70 H154 V150 Z" fill="#888" stroke="${N}"/><circle cx="150" cy="56" r="16" fill="#ffcf3f" stroke="${N}" stroke-width="2"/><path d="M150 26 V14 M176 34 l9 -9 M124 34 l-9 -9 M184 56 h12 M104 56 h12" stroke="#ffb300" stroke-width="4" stroke-linecap="round"/>`)]]]
+    ];
+    function open(tab) {
+      let d = document.querySelector(".zsd"); if (d) d.remove();
+      d = document.createElement("div"); d.className = "zsd"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Vitorlás szabályok és szótár");
+      const rules = () => `<div class="zsd-grid">${RULES.map(([t, x, pic]) => `<article class="zsd-card"><div class="zsd-pic">${pic}</div><h3>${vT(t)}</h3><p>${vT(x)}</p></article>`).join("")}</div>`;
+      const dict = (q) => { q = (q || "").trim().toLowerCase(); let n = 0;
+        const h = DICT.map(([sec, items]) => { const its = items.filter(([t, x]) => !q || (t + " " + x).toLowerCase().includes(q)); n += its.length; return its.length ? `<h2 class="zsd-sec"><span>${vT(sec)}</span></h2><div class="zsd-grid zsd-small">${its.map(([t, x, pic]) => `<article class="zsd-card"><div class="zsd-pic">${typeof pic === "function" ? pic() : pic}</div><h3>${vT(t)}</h3><p>${vT(x)}</p></article>`).join("")}</div>` : ""; }).join("");
+        return h || `<p class="zsd-none">Nincs ilyen szó a szótárban.</p>`; };
+      d.innerHTML = `<div class="zsd-sheet"><header><div class="zsd-ttl"><svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 4 V34 M24 6 L40 32 H24 M22 12 L10 32 H22" fill="none" stroke="${G}" stroke-width="2.6" stroke-linejoin="round"/><path d="M6 38 H42 L37 44 H11 Z" fill="${G}"/></svg><div><small>ZEPHYR · KIS VITORLÁS ISKOLA</small><b>Szabályok és vitorlás szótár</b></div></div>
+        <nav><button type="button" data-t="rules">A verseny szabályai – gyerekeknek</button><button type="button" data-t="dict">Képes vitorlás szótár</button></nav><button type="button" class="zsd-x" aria-label="Bezárás">✕</button></header>
+        <div class="zsd-search" hidden><input type="search" placeholder="Keresés a szótárban… pl. bum, luv, spinakker" aria-label="Keresés a szótárban"></div><div class="zsd-body"></div></div>`;
+      const body = d.querySelector(".zsd-body"), sr = d.querySelector(".zsd-search"), inp = sr.querySelector("input");
+      const show = (t) => { d.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.t === t)); sr.hidden = t !== "dict"; body.innerHTML = t === "dict" ? dict(inp.value) : rules(); body.scrollTop = 0; };
+      d.addEventListener("click", (e) => { const b = e.target.closest("nav button"); if (b) show(b.dataset.t); else if (e.target === d || e.target.closest(".zsd-x")) d.remove(); });
+      inp.addEventListener("input", () => { body.innerHTML = dict(inp.value); });
+      d.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Escape") d.remove(); });
+      document.body.appendChild(d); show(tab === "dict" ? "dict" : "rules");
+    }
+    return { open };
+  })();
   function vrEnter() {
     inVR = true;
     if (flat) return;
@@ -13145,7 +13281,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---------- Híd a „Virtuális világ” modulhoz (vilag.js – csak megnyitáskor töltődik be) ---------- */
   /* közvetlen link a jegyzékhez: …/#leltar vagy …/#leltar-fregatt (vendégnek küldhető, telefonon is) */
   { const m = /#leltar(?:-([a-z]+))?\b/.exec(location.hash); if (m) { const tryOpen = (n) => { try { openBinder(GROUPS.some((q) => q.id === m[1]) ? m[1] : "korvett"); } catch (e) { if (n < 40) setTimeout(() => tryOpen(n + 1), 400); } }; setTimeout(() => tryOpen(0), 2500); } }
-  window.ZephyrTour = { openGame: (id) => gmOpen(id), stegMap: () => stegMapCard(), openInv: (g) => openBinder(g), goScene: (k) => { if (SCENES[k]) go(k, false); }, _t: { smPalm: () => smPalm(), SM, AK: () => AK, WS: () => WS, SCENES: () => SCENES, cur: () => current, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrOpen: (pg) => vrOpen(pg), vrCvs: () => VRS.cvs, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
+  window.ZephyrTour = { openDict: (t) => ZSD.open(t), openGame: (id) => gmOpen(id), stegMap: () => stegMapCard(), openInv: (g) => openBinder(g), goScene: (k) => { if (SCENES[k]) go(k, false); }, _t: { smPalm: () => smPalm(), SM, AK: () => AK, WS: () => WS, SCENES: () => SCENES, cur: () => current, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrOpen: (pg) => vrOpen(pg), vrCvs: () => VRS.cvs, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
     get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
