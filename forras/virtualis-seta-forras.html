@@ -4390,6 +4390,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     run(); addEventListener("resize", run); addEventListener("orientationchange", () => setTimeout(run, 300));
   })();
   function detectDevice() {
+    /* 2026-11-11 (a tulajdonos Quest-képén láttam): a szemüveg böngészőjét eddig táblagépnek néztük – ezért volt jobb oldalt a bezárhatatlan „Helyek” fiók,
+       és hiányzott az alsó képsor. A Quest/Pico böngészője mostantól az ASZTALI nézetet kapja: alul a gömbös képsor a regattával, jobb oldali fiók nincs. */
+    try { if (/OculusBrowser|Quest|Pico/i.test(navigator.userAgent || "")) return "pc"; } catch (e) {}
     let coarse = false; try { coarse = matchMedia("(pointer: coarse)").matches; } catch (e) {}
     const touch = coarse || (navigator.maxTouchPoints || 0) > 1;
     const short = Math.min(screen.width || innerWidth, screen.height || innerHeight);

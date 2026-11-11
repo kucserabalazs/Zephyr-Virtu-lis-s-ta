@@ -4406,6 +4406,9 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     run(); addEventListener("resize", run); addEventListener("orientationchange", () => setTimeout(run, 300));
   })();
   function detectDevice() {
+    /* 2026-11-11 (a tulajdonos Quest-képén láttam): a szemüveg böngészőjét eddig táblagépnek néztük – ezért volt jobb oldalt a bezárhatatlan „Helyek” fiók,
+       és hiányzott az alsó képsor. A Quest/Pico böngészője mostantól az ASZTALI nézetet kapja: alul a gömbös képsor a regattával, jobb oldali fiók nincs. */
+    try { if (/OculusBrowser|Quest|Pico/i.test(navigator.userAgent || "")) return "pc"; } catch (e) {}
     let coarse = false; try { coarse = matchMedia("(pointer: coarse)").matches; } catch (e) {}
     const touch = coarse || (navigator.maxTouchPoints || 0) > 1;
     const short = Math.min(screen.width || innerWidth, screen.height || innerHeight);
@@ -13334,7 +13337,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "5896ee812d"; let shown = false;
+  { const BV = "429dfedadd"; let shown = false;
     const chk = () => { if (shown || inVR || BV.indexOf("__") === 0) return; fetch("verzio.json?t=" + Date.now(), { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((j) => { if (!j || !j.v || j.v === BV || shown) return; shown = true;
       const b = document.createElement("button"); b.type = "button"; b.className = "zv-ujver"; b.textContent = "🔄 Új változat érhető el – koppints ide a frissítéshez"; b.addEventListener("click", () => { location.replace(location.pathname + "?v=" + j.v + location.hash); }); document.body.appendChild(b); }).catch(() => {}); };
     setTimeout(chk, 2500); setInterval(chk, 180000); document.addEventListener("visibilitychange", () => { if (!document.hidden) chk(); }); }
