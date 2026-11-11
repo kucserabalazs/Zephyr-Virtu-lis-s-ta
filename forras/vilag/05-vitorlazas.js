@@ -16,7 +16,7 @@
     makeSky(far); makeShores(far);
     SAIL.water = makeWater(env);
     /* saját hajó: a felhasználó a kormánynál áll; a hajó orra −z felé */
-    const boat = makeBoat({ detail: 1, crew: 0, hull: "#eeeeea", boot: "#c62828", stripe: "#c62828", jib: "#d61f26", main: "#f6f4ec", num: "HUN 27", name: "ZEPHYR", logo: "ZEPHYR", cls: "R27", uv: "rgba(255,255,255,.9)" });
+    const boat = makeBoat({ detail: 1, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, outboard: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"] });
     boat.rotation.y = Math.PI; root.add(boat); SAIL.boat = boat;
     SAIL.wake = makeWake(env, .7);
     /* a felhasználó helye: a kokpitban, a kormányrúd előtt */

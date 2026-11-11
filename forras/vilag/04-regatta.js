@@ -11,7 +11,7 @@
   /* =================================================================== 1. REGATTA A NAPOZÓSTÉGNÉL */
   const REG = {};
   const BOATS = [
-    { name: "Zephyr", num: "HUN 27", hull: "#f7f7f4", boot: "#c62828", stripe: "#c62828", jib: "#d61f26", main: "#f6f4ec", spin: ["#d61f26", "#ffffff", "#d61f26"], skill: 1.02, logo: "ZEPHYR", uv: "rgba(255,255,255,.85)" },
+    { name: "Zephyr", num: " ", cls: " ", hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", spin: ["#ffffff", "#ffffff", "#f3f3ee"], skill: 1.02, logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, outboard: true }   /* 2026-11-11: a valódi hajó fotói szerint */,
     { name: "Szélvész", num: "HUN 113", hull: "#13305e", boot: "#ffffff", stripe: "#ffd166", jib: "#eeede6", main: "#f1efe6", spin: ["#13305e", "#ffd166", "#13305e"], skill: 1.03 },
     { name: "Kékszalag", num: "HUN 7", hull: "#f4f4f0", boot: "#1f5fa8", stripe: "#1f5fa8", jib: "#e9ecef", main: "#e8e4d8", spin: ["#1f5fa8", "#7fc8f8", "#ffffff"], skill: 1.0 },
     { name: "Balaton Nimfa", num: "HUN 88", hull: "#9aa5ae", boot: "#22272e", stripe: "#22272e", jib: "#d8d9d4", main: "#d9d7cf", spin: ["#3fb37f", "#ffffff", "#3fb37f"], skill: .98 },
