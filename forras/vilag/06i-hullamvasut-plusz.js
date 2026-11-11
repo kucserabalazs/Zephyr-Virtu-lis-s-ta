@@ -86,7 +86,7 @@
   function hvQuiet() { try { if ("speechSynthesis" in window) speechSynthesis.cancel(); } catch (e) {} }
   function hvPlusTick(dt) {
     HVP.t += dt; const ride = HV.st === "ride", v = ride ? HV.v : 0, TR = HV.calm;
-    { const sm = ((HV.s % TR.L) + TR.L) % TR.L, calm = HV.mode === "calm" && HV.st !== "table";
+    { const sm = ((HV.s % TR.L) + TR.L) % TR.L, calm = HV.st !== "table";
       HVP.rings.forEach((r, i) => { const da = ((r.s - sm) % TR.L + TR.L) % TR.L;   /* ennyi van még hátra a kapuig */
         if (!r.st && calm && (da < 900 || TR.L - da < 60)) { r.st = 1; const Ld = new THREE.TextureLoader(), nn = String(r.no).padStart(2, "0");
           Ld.load("img/kapu/k" + nn + "-keret.webp", (t) => { t.colorSpace = THREE.SRGBColorSpace; W.disposables.push(t); r.frame.material.map = t; r.frame.material.needsUpdate = true; r.st++; });
