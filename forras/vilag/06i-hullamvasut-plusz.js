@@ -42,13 +42,24 @@
       for (let i = 0; i < 400 && n < 70; i++) { const x = X0 + rnd() * (X1 - X0), z = Z0 + rnd() * (Z1 - Z0); if (!hvInLake(x, z)) continue; L.push([hvCY(.5, .7, 1.4, 8), n % 2 ? "#f5c542" : "#d61f26", T4(x, .6, z)], [hvCO(.5, .9, 8), "#f5f5f0", T4(x, 1.7, z)]); n++; }
       if (L.length) hvBake(L, env); }
     /* 5) felhők a pálya csúcsai körül – ezek között suhansz át */
-    { const L = []; let last = -1e9, n = 0; for (let k = 0; k < TR.M && n < 46; k++) { const p = TR.P[k]; if (p.y < 62 || TR.S[k] - last < 55) continue; last = TR.S[k]; const f = TR.F[k], sd = n % 2 ? 1 : -1, off = 20 + rnd() * 30, cx = p.x - f.z * sd * off, cz = p.z + f.x * sd * off, cy = p.y + (rnd() * 22 - 9);
+    /* 2026-11-11 23:31: a szögletes, kódból rakott felhők KIVÉVE – a valódi égfotó felhői mellett csúnyák voltak */
+    if (false) { const L = []; let last = -1e9, n = 0; for (let k = 0; k < TR.M && n < 46; k++) { const p = TR.P[k]; if (p.y < 62 || TR.S[k] - last < 55) continue; last = TR.S[k]; const f = TR.F[k], sd = n % 2 ? 1 : -1, off = 20 + rnd() * 30, cx = p.x - f.z * sd * off, cz = p.z + f.x * sd * off, cy = p.y + (rnd() * 22 - 9);
         for (let q = 0; q < 5; q++) { const g = hvSP(7 + rnd() * 7); g.scale(1.25, .55, 1); L.push([g, "#ffffff", T4(cx + (q - 2) * 8 + rnd() * 4, cy + (q % 2) * 2.4, cz + rnd() * 10 - 5)]); } n++; }
       if (L.length) { HVP.clouds = hvBake(L, env, { fog: false, transparent: true, opacity: .93 }); } }
-    /* 6) arany karikák a csúcsokon */
-    { HVP.rings = []; const geo = new THREE.TorusGeometry(10.5, .42, 7, 40); W.disposables.push(geo); const mat = basic({ color: "#ffd166", fog: false }), mat2 = basic({ color: "#fff3c4", fog: false });
-      for (let k = 2; k < TR.M - 2; k++) { const y = TR.P[k].y; if (y < 58 || y < TR.P[k - 1].y || y <= TR.P[k + 1].y) continue; if (HVP.rings.length && TR.S[k] - HVP.rings[HVP.rings.length - 1].s < 90) continue;
-        [0, 26].forEach((ds, j) => { const fr = TR.at(TR.S[k] + ds, { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }); const m = new THREE.Mesh(geo, j ? mat2 : mat); m.position.copy(fr.p).addScaledVector(fr.u, 5.2); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fr.f); if (j) m.scale.setScalar(.8); env.add(m); HVP.rings.push({ m, s: TR.S[k] + ds, sc: j ? .8 : 1 }); }); } }
+    /* 6) DIMENZIÓKAPUK a csúcsokon (2026-11-11 23:22, tulajdonos: „kidolgoztunk szép dimenziókapukat” – az arany karikák helyett):
+          a séta kilenc mesebeli kapuja (img/kapu/kNN-keret.webp + kNN-belso.jpg). A keret a pályára merőlegesen áll, a közepén a kapu világa
+          lassan örvénylik; áthaladáskor a kapu világa egy pillanatra körülvesz, aztán szétfoszlik. A képek csak közeledéskor töltődnek be. */
+    { HVP.rings = []; const NO = [7, 2, 20, 1, 6, 13, 14, 15, 3], RP = { 1: .625, 2: .7375, 3: .727, 6: .7105, 7: .7375, 13: .691, 14: .715, 15: .712, 20: .658 }, SZ = 34;
+      const pg = new THREE.PlaneGeometry(SZ, SZ); W.disposables.push(pg);
+      for (let k = 2; k < TR.M - 2; k++) { const y = TR.P[k].y; if (y < 40 || y < TR.P[k - 1].y || y <= TR.P[k + 1].y) continue; if (HVP.rings.length && TR.S[k] - HVP.rings[HVP.rings.length - 1].s < 160) continue;
+        const no = NO[HVP.rings.length % NO.length], fr = TR.at(TR.S[k], { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }), g = new THREE.Group();
+        g.position.copy(fr.p).addScaledVector(fr.u, 1.4); g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3().crossVectors(fr.u, fr.f).normalize(), fr.u, fr.f));
+        const fm = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: .04, side: THREE.DoubleSide, fog: false, depthWrite: false, opacity: 0 }), im = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide, fog: false, depthWrite: false, opacity: 0 });
+        const cg = new THREE.CircleGeometry(SZ / 2 * RP[no] * 1.03, 56); W.disposables.push(fm, im, cg);
+        const inner = new THREE.Mesh(cg, im), frame = new THREE.Mesh(pg, fm); inner.renderOrder = 3; frame.renderOrder = 4; frame.position.z = .05; g.add(inner); g.add(frame); g.visible = false; env.add(g);
+        HVP.rings.push({ m: g, inner, frame, s: TR.S[k], no, st: 0 }); }
+      const sg = new THREE.SphereGeometry(5, 24, 16), sm = new THREE.MeshBasicMaterial({ side: THREE.BackSide, transparent: true, opacity: 0, depthWrite: false, depthTest: false, fog: false }); W.disposables.push(sg, sm);
+      HVP.warp = new THREE.Mesh(sg, sm); HVP.warp.renderOrder = 50; HVP.warp.visible = false; HVP.warp.frustumCulled = false; root.add(HVP.warp); }
     /* 7) állomás az indulásnál: cölöpökön álló peronok, előtetők, zászlók, névtábla */
     { const fr = TR.at(HV.s0, { p: new THREE.Vector3(), f: new THREE.Vector3(), u: new THREE.Vector3() }), ry = Math.atan2(fr.f.x, fr.f.z), L = [], y = fr.p.y - .95;
       const M = (dx, dy, dz, r2) => { const m = new THREE.Matrix4().makeRotationY(ry + (r2 || 0)); m.setPosition(fr.p.x + dx * Math.cos(ry) + dz * Math.sin(ry), dy, fr.p.z - dx * Math.sin(ry) + dz * Math.cos(ry)); return m; };
@@ -69,7 +80,17 @@
   function hvQuiet() { try { if ("speechSynthesis" in window) speechSynthesis.cancel(); } catch (e) {} }
   function hvPlusTick(dt) {
     HVP.t += dt; const ride = HV.st === "ride", v = ride ? HV.v : 0, TR = HV.calm;
-    HVP.rings.forEach((r, i) => { r.m.rotateZ(dt * (i % 2 ? .9 : -.9)); const d = ride && HV.mode === "calm" ? Math.abs(r.s - (((HV.s % TR.L) + TR.L) % TR.L)) : 1e9; r.m.scale.setScalar(r.sc * (1 + .12 * Math.sin(HVP.t * 4 + i) + (d < 40 ? (40 - d) / 40 * .25 : 0))); });
+    { const sm = ((HV.s % TR.L) + TR.L) % TR.L, calm = HV.mode === "calm" && HV.st !== "table";
+      HVP.rings.forEach((r, i) => { const da = ((r.s - sm) % TR.L + TR.L) % TR.L;   /* ennyi van még hátra a kapuig */
+        if (!r.st && calm && (da < 900 || TR.L - da < 60)) { r.st = 1; const Ld = new THREE.TextureLoader(), nn = String(r.no).padStart(2, "0");
+          Ld.load("img/kapu/k" + nn + "-keret.webp", (t) => { t.colorSpace = THREE.SRGBColorSpace; W.disposables.push(t); r.frame.material.map = t; r.frame.material.needsUpdate = true; r.st++; });
+          Ld.load("img/kapu/k" + nn + "-belso.jpg", (t) => { t.colorSpace = THREE.SRGBColorSpace; W.disposables.push(t); r.inner.material.map = t; r.inner.material.needsUpdate = true; r.st++; }); }
+        const rdy = r.st >= 3 && calm; r.m.visible = rdy; if (!rdy) return;
+        const o = r.frame.material; o.opacity += (1 - o.opacity) * Math.min(1, dt * 1.5); r.inner.material.opacity = o.opacity * (.9 + .08 * Math.sin(HVP.t * 2.3 + i));
+        r.inner.rotation.z += dt * .22; r.frame.rotation.z = Math.sin(HVP.t * .5 + i) * .03; const pu = 1 + .025 * Math.sin(HVP.t * 2 + i); r.inner.scale.setScalar(pu);
+        if (ride && r.last != null && r.last < 30 && da > TR.L - 30) { HVP.warpT = 0; HVP.warp.material.map = r.inner.material.map; HVP.warp.material.needsUpdate = true; try { T.sfx && T.sfx("whoosh"); } catch (e) {} }   /* most haladtunk át rajta */
+        r.last = da; });
+      const wp = HVP.warp; if (wp) { if (HVP.warpT != null) { HVP.warpT += dt; const u = HVP.warpT / 1.3; if (u >= 1) { HVP.warpT = null; wp.visible = false; } else { wp.visible = true; wp.material.opacity = .9 * (1 - u) * (1 - u); wp.rotation.z += dt * 2.4; wp.rotation.y += dt * .8; try { const hp = T.headPos(); if (hp) wp.position.copy(hp); } catch (e) {} } } else wp.visible = false; } }
     const st = HVP.streak; if (st) { const op = clamp((v - 11) / 20, 0, .5); st.m.opacity += (op - st.m.opacity) * Math.min(1, dt * 4); st.ln.visible = st.m.opacity > .01;
       if (st.ln.visible) { const len = .5 + v * .07; for (let i = 0; i < st.N; i++) { const p = st.P[i]; p[2] += v * dt * 1.25; if (p[2] > 8) p[2] -= 52; const o = i * 6; st.pos[o] = p[0]; st.pos[o + 1] = p[1]; st.pos[o + 2] = p[2]; st.pos[o + 3] = p[0]; st.pos[o + 4] = p[1]; st.pos[o + 5] = p[2] - len; } st.ln.geometry.attributes.position.needsUpdate = true; } }
     if (ride && HV.mode === "calm" && HV.near < 58 && HVP.said !== HV.cur) { HVP.said = HV.cur; const c = HV.sights[HV.cur]; if (c) hvSay(c.n + ". " + c.txt); }

@@ -10178,7 +10178,6 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       <button type="button" data-w="chess"><b>♞ Vitorlás sakk – életnagyságban</b><span>A tábla maga a Balaton naplementében, a bábuk igazi hajók · parancsnoki híd, stég, hőlégballon</span></button>
       <button type="button" data-w="maquette"><b>🏠 A ház makettje a regatta-bóján</b><span>A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig</span></button>
       <button type="button" data-w="coaster"><b>🎢 Balatoni hullámvasút – a Zephyr fedélzetén</b><span>Balaton-körút 14 látnivalóval: az égbe emelkedsz, arany karikákon suhansz át, és mindenhová lecsapsz, idegenvezetéssel – vagy a VAD menet: zuhanás, hurok, dugóhúzó, alagút</span></button>
-      <button type="button" data-w="table"><b>🗺 Balaton-terepasztal – a hullámvasút makettje</b><span>Az egész tó asztalnyi makettként: települések, látnivalók, rajta körbejár a kis Zephyr. Sétáld körbe, aztán szállj be a hullámvasútba</span></button>
       <button type="button" data-dict="rules"><b>📖 Szabályok és vitorlás szótár – képekkel</b><span>A verseny szabályai úgy, hogy egy gyerek is megértse · képes szótár az összes vitorlás kifejezéssel</span></button>
       <p>VR szemüvegben a legszebb (Meta Quest: „VR” gomb). Itt egérrel/ujjal nézel körbe.</p></div>`;
     d.addEventListener("click", (e) => { const dc = e.target.closest("[data-dict]"); if (dc) { d.remove(); ZSD.open(dc.dataset.dict); return; } const t = e.target.closest("[data-w]"); if (t) { d.remove(); openWorld(t.dataset.w); } else if (e.target === d || e.target.closest(".wp-x")) d.remove(); });
@@ -11037,7 +11036,6 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     /* 2026-11-11 este: „VR játékok” – a hullámvasút és a terepasztal is ide került (a tulajdonos kérése) */
     const items = [["race", "⛵  Vitorlásverseny – a kormánynál", "Rajt, bójakerülés, három ellenfél, futamonként új pálya és szél."],
                    ["coaster", "🎢  Balatoni hullámvasút", "A Zephyr fedélzetén a tó 14 látnivalója között – vagy a vad menet."],
-                   ["table", "🗺  Balaton-terepasztal", "Az egész tó asztalnyi makettként, rajta körbejár a kis Zephyr."],
                    ["chess", "♞  Vitorlás sakk", "A tábla a Balaton naplementében, a bábuk életnagyságú hajók."],
                    ["maquette", "🏠  A ház makettje", "Egy regatta-bóján a tó közepén; széthúzva életnagyságú lesz."]];
     items.forEach(([k, t, d], i) => {
@@ -12478,7 +12476,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     let it = null;
     if (world && ZephyrWorld.spec && ZephyrWorld.spec.wrist) { try { it = ZephyrWorld.spec.wrist(); } catch (e) {} }
     if (!it && world) it = [["☰", "Panel", () => ZephyrWorld.togglePanel()], ["🧭", "Forgás", [["↺", "Balra 45°", () => vrTurn(TURN)], ["↻", "Jobbra 45°", () => vrTurn(-TURN)], ["⤾", "Megfordulok", () => vrTurn(Math.PI)]]],
-      ["🎮", "VR játékok", [["⛵", "Vitorlásverseny", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["🗺", "Terepasztal", () => openWorld("table")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "Makett", () => openWorld("maquette")]]],
+      ["🎮", "VR játékok", [["⛵", "Vitorlásverseny", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "Makett", () => openWorld("maquette")]]],
       ["‹", "A sétához", () => ZephyrWorld.close()], ["❔", "Súgó", () => { ZephyrWorld.close(() => vrOpen("help")); }], ["✕", "Kilépés", () => vrEndSession()]];
     if (!it) {
       const pg = (p, f) => () => { if (f) f(); vrOpen(p); VRS.page = p; vrDraw(); vrPlace(); };
@@ -12488,7 +12486,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         ["🏠", "Lakások", apts],
         ["📅", "Foglalás", [["📅", "Időpont és foglalás", pg("book", () => vrBookInit())], ["🗺", "Melyik lakás hol van", pg("map")], ["❔", "Hogyan foglalok?", pg("help")]]],
         ["☀", "Napállás", pg("sun", () => sunSet(true))],
-        ["🎮", "VR játékok", [["⛵", "Vitorlásverseny", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["🗺", "Terepasztal", () => openWorld("table")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "A ház makettje", () => openWorld("maquette")]]],
+        ["🎮", "VR játékok", [["⛵", "Vitorlásverseny", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "A ház makettje", () => openWorld("maquette")]]],
         ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)], ["☰", "Nagy menü", () => vrToggle()],
         ["❔", "Súgó", pg("help")], ["✕", "Kilépés", () => vrEndSession()]];
     }
