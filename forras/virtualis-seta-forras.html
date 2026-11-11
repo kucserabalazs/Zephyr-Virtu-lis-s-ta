@@ -6954,6 +6954,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     e.addEventListener("mouseenter", () => e.object3D.scale.setScalar(spotScale * 1.18));
     e.addEventListener("mouseleave", () => e.object3D.scale.setScalar(e === editSel ? spotScale * 1.35 : spotScale));
     e._arr = link; e._ix = 1; e._label = label;
+    try { if ((inVR || nav2dOn()) && e.object3D) { e.object3D.visible = false; VRN.hidden.push(e.object3D); } } catch (err) {}   /* a régi nyíl már születésekor rejtve, ha az új útjelzők élnek */
     e.addEventListener("click", () => { if (EDIT) { lastSpotClick = performance.now(); pick(e); return; } const gt = link[6] && WALKS[link[6]] && !walking && !busy && !flat && gateMotionOk() ? gateFor(current, to) : null; if (gt) { gateTo(gt).then((ok) => { if (!ok && current !== gt.to) walk(WALKS[link[6]]); }); return; } if (link[6] && WALKS[link[6]]) walk(WALKS[link[6]]); else go(to, false, arriveLook(to)); });
     return e;
   }
@@ -7115,6 +7116,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     root.setAttribute("position", `${p.x} ${p.y} ${p.z}`);
     root.setAttribute("rotation", `0 ${Math.atan2(-p.x, -p.z) * 180 / Math.PI} 0`);
     root._arr = sign; root._ix = 0; root._label = "Irányjelző tábla";
+    try { if ((inVR || nav2dOn()) && root.object3D) { root.object3D.visible = false; VRN.hidden.push(root.object3D); } } catch (err) {}
     const H = 4.6, W = H * SIGN_W / SIGN_H, k = H / SIGN_H;
     const plane = (canvas, w, h, x, y, z) => {
       const e = document.createElement("a-entity");
@@ -10288,7 +10290,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const rr = () => { g.beginPath(); g.moveTo(x0 + r, y0); g.arcTo(x0 + bw, y0, x0 + bw, y0 + bh, r); g.arcTo(x0 + bw, y0 + bh, x0, y0 + bh, r); g.arcTo(x0, y0 + bh, x0, y0, r); g.arcTo(x0, y0, x0 + bw, y0, r); g.closePath(); };
     g.save(); g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 22; g.shadowOffsetY = 6; rr();
     const bg = g.createLinearGradient(0, y0, 0, y0 + bh); bg.addColorStop(0, "rgba(16,42,68,.95)"); bg.addColorStop(1, "rgba(7,24,44,.95)"); g.fillStyle = bg; g.fill(); g.restore();
-    rr(); g.lineWidth = hot ? 5 : 2.5; g.strokeStyle = hot ? ZT.gold : "rgba(221,232,242,.35)"; g.stroke();
+    rr(); g.lineWidth = hot ? 7 : 5; g.strokeStyle = ZT.gold; g.stroke();   /* 2026-11-11: hajós névtábla – arany keret, belső szegély, sárgaréz szegecsek */
+    { const q = 9; g.save(); g.beginPath(); const r2 = r - q; g.moveTo(x0 + q + r2, y0 + q); g.arcTo(x0 + bw - q, y0 + q, x0 + bw - q, y0 + bh - q, r2); g.arcTo(x0 + bw - q, y0 + bh - q, x0 + q, y0 + bh - q, r2); g.arcTo(x0 + q, y0 + bh - q, x0 + q, y0 + q, r2); g.arcTo(x0 + q, y0 + q, x0 + bw - q, y0 + q, r2); g.closePath(); g.lineWidth = 1.5; g.strokeStyle = "rgba(255,236,190,.45)"; g.stroke(); g.restore();
+      [x0 + bw - 30].forEach((rx) => { const gr = g.createRadialGradient(rx - 3, y0 + bh / 2 - 3, 1, rx, y0 + bh / 2, 9); gr.addColorStop(0, "#fff3c4"); gr.addColorStop(1, "#b8862b"); g.beginPath(); g.arc(rx, y0 + bh / 2, 8, 0, Math.PI * 2); g.fillStyle = gr; g.fill(); }); }
     g.save(); rr(); g.clip(); const hi = g.createLinearGradient(0, y0, 0, y0 + 34); hi.addColorStop(0, "rgba(255,255,255,.16)"); hi.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = hi; g.fillRect(x0, y0, bw, 34); g.restore();
     const ic = x0 + 68, iy = y0 + 64; g.beginPath(); g.arc(ic, iy, 44, 0, Math.PI * 2); g.fillStyle = hot ? ZT.gold : "rgba(212,161,58,.18)"; g.fill(); g.lineWidth = 2.5; g.strokeStyle = ZT.gold; g.stroke();
     zIcon(g, kind, ic, iy, 52, hot ? ZT.mid : ZT.soft, 2.2);
@@ -10324,11 +10328,17 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const lbl = new THREE.Mesh(lgeo, lblM); lbl.renderOrder = 990; m.add(lbl);
       /* vékony összekötő vonal a gyűrű közepétől a címkéig (a ChatGPT látványterve szerint – egyértelmű, melyik címke melyik gyűrűé) */
       const legM = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .7, depthWrite: false, depthTest: false, fog: false }); mats.push(legM);
+      legM.map = T.pole || (T.pole = (() => { const c2 = document.createElement("canvas"); c2.width = 32; c2.height = 256; const q = c2.getContext("2d");
+        /* kikötőcölöp: sötétkék–fehér csavart csíkok, alul-felül sárgaréz gyűrű, a tetején gomb */
+        for (let y = 0; y < 256; y++) { for (let x = 0; x < 32; x++) { const k = ((y + x * 1.4) / 28) % 2 < 1; const sh = .62 + .38 * Math.sin(x / 31 * Math.PI); const cA = k ? [245, 240, 228] : [22, 48, 92]; q.fillStyle = `rgb(${cA[0] * sh | 0},${cA[1] * sh | 0},${cA[2] * sh | 0})`; q.fillRect(x, y, 1, 1); } }
+        const br = (y0, h) => { const gg = q.createLinearGradient(0, 0, 32, 0); gg.addColorStop(0, "#8a6420"); gg.addColorStop(.45, "#ffe9a8"); gg.addColorStop(1, "#8a6420"); q.fillStyle = gg; q.fillRect(0, y0, 32, h); };
+        br(0, 16); br(22, 5); br(236, 20); br(226, 5);
+        const t2 = new THREE.CanvasTexture(c2); t2.colorSpace = THREE.SRGBColorSpace; return t2; })());
       const lgeo2 = new THREE.PlaneGeometry(1, 1).translate(0, .5, 0); geos.push(lgeo2); const leg = new THREE.Mesh(lgeo2, legM); leg.renderOrder = 985; m.add(leg);
       /* láthatatlan, bőkezű célterület (gyűrű + címke) */
       const hitM = new THREE.MeshBasicMaterial({ visible: false }); const hit = add(new THREE.CylinderGeometry(R * 1.6, R * 1.6, floor ? .9 : R * 3, 12), hitM); hit.position.y = floor ? .4 : 0;
       const mkr = { link, to, m, ring, lbl, leg, cvs, lt, tt, kind, fill, floor, dist, tilt, hot: 0, hotDrawn: false, vis: 1, t0: Math.random() * 6, hit,
-        dispose() { geos.forEach((g2) => g2.dispose()); mats.forEach((q) => { if (q.map && q.map !== T.ring) q.map.dispose(); q.dispose(); }); } };
+        dispose() { geos.forEach((g2) => g2.dispose()); mats.forEach((q) => { if (q.map && q.map !== T.ring && q.map !== T.pole) q.map.dispose(); q.dispose(); }); } };
       hit.userData.xr = {
         hover: (on, h2, key) => { VRN.hov[key || "x"] = on ? mkr : null; if (on) { try { xrPulse(XRP.src[key] && XRP.src[key].src, .25, 14); } catch (e) {} } },
         click: () => { if (navEditOn() || mkr.moved) { const mv = mkr.moved; mkr.moved = false; if (!mv && navEditOn() && inVR) navRename(mkr); return; } vrnGo(mkr); },
@@ -10337,7 +10347,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         drag: (S0) => { if (VRN.grab !== mkr || !S0 || !S0.o) return; navDragTo(mkr, S0.o, S0.d); },
         up: () => { if (VRN.grab !== mkr) return; VRN.grab = null; if (mkr.moved) navDrop(mkr); }
       };
-      XRP.extra.add(hit); VRN.list.push(mkr);
+      hit.userData.navSign = true; XRP.extra.add(hit); VRN.list.push(mkr);
     });
     /* a betűtípus később töltődhet be: akkor újrarajzoljuk a címkéket */
     try { if (document.fonts && !VRN.fontOk) document.fonts.load(ZT.font(650, 64), "Á").then(() => { VRN.fontOk = true; VRN.list.forEach((q) => { q.fill = vrnLabelDraw(q.cvs, q.tt.t, q.tt.sub, q.kind, q.hot > .5); q.lt.needsUpdate = true; }); }); } catch (e) {}
@@ -10351,8 +10361,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function vrnClear() {
     if (VRN.g) { VRN.list.forEach((m) => { XRP.extra.delete(m.hit); m.dispose(); }); if (VRN.g.parent) VRN.g.parent.remove(VRN.g); }
     VRN.g = null; VRN.list = []; VRN.scene = null; VRN.hov = {};
-    VRN.hidden.forEach((o) => { o.visible = true; }); VRN.hidden = [];
+    /* 2026-11-11: a régi táblák/nyilak csak akkor jönnek vissza, ha tényleg kellenek (pl. kilépés VR-ből) – jelenetváltáskor NEM villannak fel */
+    VRN.hidden = VRN.hidden.filter((o) => { const el = o.el; if (el && el.isConnected && vrnOldHide(el)) return true; o.visible = true; return false; });
   }
+  function vrnOldHide(el) { return (inVR || nav2dOn()) && !worldOn() && (el._ix === 1 || (el._ix === 0 && (inVR || el._label === "Irányjelző tábla"))); }
   function vrnGo(mk) {
     if (busy) return; const link = mk.link;
     try { Object.keys(XRP.src).forEach((k) => xrPulse(XRP.src[k].src, .5, 30)); } catch (e) {}
@@ -10487,7 +10499,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       mk.lbl.position.set(0, mk.floor ? legL + Hh * .5 : -(.38 + Hh * .5 + mk.liftCur * d3), 0);
       mk._lay = mk.lbl.visible ? { az: Math.atan2(mk.m.position.x - h.x, mk.m.position.z - h.z), el: Math.atan2(mk.m.position.y + mk.lbl.position.y - mk.liftCur * d3 * (mk.floor ? 1 : -1) - h.y, dRing || .01), aw: W * (mk.fill || .6) / d3, ah: Hh * .62 / d3, d: d3 } : null;
       mk.lbl.rotation.set(0, yaw, 0);
-      mk.leg.visible = mk.floor && mk.lbl.visible; if (mk.leg.visible) { mk.leg.scale.set(.0028 * d3, legL - Hh * .18, 1); mk.leg.rotation.set(0, yaw, 0); mk.leg.material.opacity = .7 * mk.lbl.material.opacity; mk.leg.material.color.copy(white).lerp(gold, gl); }
+      mk.leg.visible = mk.floor && mk.lbl.visible; if (mk.leg.visible) { mk.leg.scale.set(.0105 * d3, legL - Hh * .18, 1); mk.leg.rotation.set(0, yaw, 0); mk.leg.material.opacity = .96 * mk.lbl.material.opacity; mk.leg.material.color.copy(white).lerp(gold, gl); }
     });
     /* A CÍMKÉK NE TAKARJÁK EGYMÁST (2026-11-10): a látszó címkéket közelről távol felé sorra vesszük; ha egy távolabbi címke
        (a nézőből nézve) rálógna egy már elhelyezettre, feljebb emeljük (padlón álló jelzőnél a szára megnyúlik; falon lévőnél lejjebb
@@ -11249,12 +11261,16 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         else if (n.free > 0) { B.ci = d; B.co = null; }
         B.err = ""; vrDraw();
       } });
+      /* 2026-11-11: mint a 2D-ben – az időszak összefüggő arany sáv, az érkezés és a távozás napja felirattal */
+      if (inR && !isCi) { g.fillStyle = "rgba(255,209,102,.42)"; g.fillRect(x - 1, y + 6, 6, ch - 12); }
+      if ((inR || isCi) && B.co && d < B.co && (i % 7) !== 6) { g.fillStyle = "rgba(255,209,102,.42)"; g.fillRect(x + cw - 5, y + 6, 6, ch - 12); }
       rr(g, x + 3, y, cw - 6, ch, 14);
       g.fillStyle = isCi || isCo ? "#ffd166" : inR ? "rgba(255,209,102,.42)" : past ? "rgba(255,255,255,.03)" : n.free === 0 ? (canCo ? "rgba(120,190,140,.18)" : "rgba(229,38,47,.16)") : hov ? "rgba(255,255,255,.3)" : "rgba(63,179,127,.26)";
       g.fill(); if (hov && ok) { g.lineWidth = 4; g.strokeStyle = "#ffd166"; g.stroke(); }
       const fc = isCi || isCo ? "#0b2f5e" : past ? "rgba(255,255,255,.25)" : "#fff";
       txt(g, String(k), x + 16, y + 24, { fs: 28, w: 800, c: fc });
-      if (!past) txt(g, n.free === 0 ? (canCo ? "távozás" : "foglalt") : n.free + " szabad", x + cw - 12, y + ch - 16, { a: "right", fs: 19, w: 600, c: isCi || isCo ? "#0b2f5e" : n.free === 0 ? "rgba(255,255,255,.55)" : "#bff0d5" });
+      if (isCi || isCo) txt(g, isCi ? "érkezés ▸" : "◂ távozás", x + cw - 12, y + ch - 16, { a: "right", fs: 21, w: 800, c: "#0b2f5e" });
+      else if (!past) txt(g, n.free === 0 ? (canCo ? "távozás" : "foglalt") : n.free + " szabad", x + cw - 12, y + ch - 16, { a: "right", fs: 19, w: 600, c: isCi || isCo ? "#0b2f5e" : n.free === 0 ? "rgba(255,255,255,.55)" : "#bff0d5" });
     }
     /* alul: kiválasztott időszak + létszám + tovább */
     const yb = VH - 128;
@@ -11705,9 +11721,12 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const P = VRS.panel.object3D, PW = akPW(), PH = PW * VH / VW, key = B.step + "|" + PW;
     if (!AK.g || AK.panel !== P || AK.key !== key) {
       akClear(); AK.g = new THREE.Group(); AK.g.name = "arany-kikoto"; P.add(AK.g); AK.panel = P; AK.key = key; AK.t0 = performance.now();
-      if (WS.fx !== false) AK.g.add(akGarland(PW, PH));   /* Beállítások → Ünnepi effektek: ki is kapcsolható (mozgásérzékenyeknek) */
-      if (B.step === "date" || B.step === "sum") AK.g.add(AK.parts.book = akBook(PW, PH));
-      if (B.step === "apts") { const T = akTable(); T.position.set(0, -PH / 2 - .34, .5); T.rotation.x = .08; AK.g.add(T); AK.parts.table = T; }
+      /* 2026-11-11 02:51–02:53 tulajdonos: „azt az ocsmány zászlós akármit vedd le”, „a terepasztal … használhatatlan a felület” →
+         a zászlófüzér, a hajónapló-keret és a Balaton-terepasztal KIKAPCSOLVA (visszakapcsolás: localStorage zephyr-ak = 1); a foglalás tiszta panelen megy. */
+      const akOld = (() => { try { return localStorage.getItem("zephyr-ak") === "1"; } catch (e) { return false; } })();
+      if (akOld && WS.fx !== false) AK.g.add(akGarland(PW, PH));
+      if (akOld && (B.step === "date" || B.step === "sum")) AK.g.add(AK.parts.book = akBook(PW, PH));
+      if (akOld && B.step === "apts") { const T = akTable(); T.position.set(0, -PH / 2 - .34, .5); T.rotation.x = .08; AK.g.add(T); AK.parts.table = T; }
       if (B.step === "sum") { const Wg = akWheel(); Wg.position.set(0, -PH / 2 - .27, .26); Wg.rotation.x = -.55; AK.g.add(Wg); }
       if (B.step === "done" && VRS.cvs) {   /* a hajójegy kézbe vehető 3D-tárgyként is: a panelről kivágva, aranyszegéllyel, átfutó fénycsíkkal */
         const c = document.createElement("canvas"); c.width = 1140; c.height = 470; c.getContext("2d").drawImage(VRS.cvs, 70, 140, 1140, 470, 0, 0, 1140, 470);
@@ -11726,7 +11745,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (AK.parts.flags) AK.parts.flags.forEach((f, i) => { f.rotation.x = Math.sin(t * 2.2 + i * .7) * .35; f.rotation.y = Math.sin(t * 1.3 + i) * .15; });
     if (AK.parts.ribbon) AK.parts.ribbon.rotation.z = Math.sin(t * 1.1) * .06;
     /* hónapváltás → lapozás */
-    if (B.step === "date" && AK.lastM !== B.m) { akFlipStart(PW, PH, B.m > AK.lastM ? 1 : -1); AK.lastM = B.m; }
+    if (B.step === "date" && AK.lastM !== B.m) { if (AK.parts.book) akFlipStart(PW, PH, B.m > AK.lastM ? 1 : -1); AK.lastM = B.m; }
     if (AK.flip) { const k = Math.min(1, (performance.now() - AK.flip.t0) / 520), e = k * k * (3 - 2 * k); AK.flip.m.rotation.y = -Math.PI * e * AK.flip.dir;
       AK.flip.m.material.opacity = k > .85 ? (1 - k) / .15 : 1; if (k >= 1) { AK.g.remove(AK.flip.m); AK.flip.m.geometry.dispose(); AK.flip.m.material.dispose(); AK.flip = null; } }
     /* makett */
@@ -12150,7 +12169,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (!_hsCache || ++_hsT > 30) { _hsT = 0; _hsCache = Array.from(document.querySelectorAll(".hotspot")); }
     const list = [];
     _hsCache.forEach((el) => { if (el.object3D && el.isConnected && isShown(el.object3D)) list.push(el.object3D); });
-    XRP.extra.forEach((o) => { if (isShown(o)) list.push(o); });
+    const panelOpen = !!(VRS.panel || (XRP.wristP && XRP.wristP.open));   /* 2026-11-11: nyitott panel (pl. foglalási naptár) mellett az útjelzők láthatatlan fogófelülete NEM viheti el a sugarat – ettől volt „nem jelölhető” a naptár nagy része */
+    XRP.extra.forEach((o) => { if (panelOpen && o.userData && o.userData.navSign) return; if (isShown(o)) list.push(o); });
     if (XRP.wrist && XRP.wrist.visible) list.push(XRP.wrist);
     if (XRP.wristP && XRP.wristP.m.visible) list.push(XRP.wristP.m);
     return list;
