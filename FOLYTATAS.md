@@ -742,3 +742,7 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 - KÉSZ: 3 függőleges HUROK (átfordulás, 16 m sugár) a hosszú szakaszok lejtőjének alján (`HV.loopS`); a hurokban nem lassít. Kapu nem kerül hurokba és a körökbe.
 - Pálya: 7908 m; nyugodt menet ~10,5 perc, vad ~3,7 perc (gépi próba, hiba nélkül).
 - ISMERT HIBA: néhány látnivaló köre átmegy egy kikötő fölött/hajóin (pl. Balatonfüred) – a kikötőket a pályától el kell tolni.
+
+## 2026-11-12 00:42 – (hangban) „A vitorlásverseny használhatatlan, rosszabb, mint valaha. A rudat nem kellett volna meghosszabbítani, az jó helyen volt – csináld vissza. A lényeg: a kezem normál mozdulatával végállásig érjek, ne essek ki a székből, ne kelljen lépnem.”
+- KÉSZ (05b): a kormányrúd és a toldó vissza az eredeti méretre (0,9 / 0,8 m, eredeti nyugalmi helyzet). A kormányzás a KÉZ ÚTJÁBÓL jön: megfogástól számítva 28 cm oldalra = teljes kitérés (`TIL.REACH`); eltolva magától (a hajó közepe felé) jobbra fordul, maga felé húzva balra. A rúd/toldó bárhol fogható maradt. A kétkörös (geometriai) számítás kikerült.
+- Szemüvegben NEM ellenőrzött; ha az irány fordítva jön ki, a `(lp.x - G.x0)` előjelét kell megfordítani; ha 28 cm sok/kevés: `REACH`.

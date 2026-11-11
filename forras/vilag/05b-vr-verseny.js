@@ -110,7 +110,10 @@
     /* 2026-11-11 18:54 (tulajdonos: „a kormányrúdnak legalább kétszer olyan hosszúnak kell lennie – nem tudom teljesen eltolni magamtól”): rúd 0,9 → 1,7 m,
        toldó 0,8 → 1,45 m (átlósan fut a kézhez, a markolat a test mellett van, így a teljes karhossz jut a tolásra), és a teljes kormánykitéréshez
        kisebb rúdszög kell (12°) – a markolatot kb. 35 cm-rel kell eltolni/meghúzni a végállásig. */
-    const TIL = { TL: 1.7, EL: 1.45, TMAX: .21, pz: hs.z - .95, py: deckY + .62, ty: deckY + .76 };
+    /* 2026-11-12 00:42 (tulajdonos: „a vitorlásverseny használhatatlan, rosszabb, mint valaha – a rúd jó helyen volt, csináld vissza úgy, ahogy volt; a lényeg:
+       a kezem egy normál mozdulatával végállásig tudjam tolni, ne essek ki a székből, ne kelljen lépnem”): a rúd és a toldó VISSZA az eredeti méretre (0,9 / 0,8 m),
+       és a kormányzás már nem a rúd geometriájából jön, hanem a KÉZ ÚTJÁBÓL: a megfogástól számítva 28 cm oldalra = teljes kitérés (TIL.REACH). */
+    const TIL = { TL: .9, EL: .8, TMAX: .62, REACH: .28, pz: hs.z - .95, py: deckY + .62, ty: deckY + .76 };
     { const wood = std({ color: "#8a5326", roughness: .38 }), til = new THREE.Group(); G.add(til); til.position.set(0, TIL.py, TIL.pz);
       const stock = mesh(new THREE.CylinderGeometry(.045, .055, .62, 16), chrome, til); stock.position.y = -.31;
       const headB = mesh(new THREE.BoxGeometry(.12, .1, .2), chrome, til); headB.position.set(0, .01, .04);
@@ -122,7 +125,7 @@
       const gripM = std({ color: "#2a2d33", roughness: .8, emissive: new THREE.Color("#ffd166"), emissiveIntensity: 0 });
       const grip = mesh(new THREE.CylinderGeometry(.021, .021, .22, 14), gripM, ext); grip.rotation.x = Math.PI / 2; grip.position.z = TIL.EL - .1; grip.userData.noBake = true;
       const ball = mesh(new THREE.SphereGeometry(.03, 14, 10), gripM, ext); ball.position.z = TIL.EL + .01; ball.userData.noBake = true;
-      Object.assign(TIL, { til, ext, gripM, rest: new THREE.Vector3(-.72, .3, -1.2).normalize(), end: new THREE.Vector3() }); til.visible = ext.visible = false; }
+      Object.assign(TIL, { til, ext, gripM, rest: new THREE.Vector3(-.86, .34, -.22).normalize(), end: new THREE.Vector3() }); til.visible = ext.visible = false; }
     /* utazósín (traveller) a kerekek előtt, keresztben; rajta a kocsi, a főszkóta felfut a bumra */
     const tz = hs.z + 2.25, trav = mesh(new THREE.BoxGeometry(2 * (sh(.2).hb - .5), .06, .12), grey, G); trav.position.set(0, sh(.2).y + .05, tz);
     const car = mesh(new THREE.BoxGeometry(.24, .1, .16), carbon, G); car.position.set(0, sh(.2).y + .12, tz);
@@ -320,7 +323,7 @@
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.msgL = labelSprite(["", ""], { size: 2.0, fs: 50, w: 1150 }); CK2.G.add(VRR.msgL);
       VRR.msgL.position.set(w0.ped.position.x * .6, CK2.deckY + 1.75, w0.ped.position.z + 2.2); VRR.msgL.visible = false; }
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Markold meg a kormányt!", "zárd ökölbe a kezed a peremén – nyitott tenyérrel engeded el · kontrollerrel: a hüvelykujjkar kormányoz"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
-    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrudat!", "zárd ökölbe a kezed a rúdon vagy a toldón, bárhol · eltolod magadtól: jobbra fordul, magad felé húzod: balra · nyitott tenyérrel engeded el · kontrollerrel: hüvelykujjkar"], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.45, CK2.tiller.ty + .8, CK2.tiller.pz + 1.1); }
+    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrudat!", "zárd ökölbe a kezed a rúdon vagy a toldón, bárhol · eltolod magadtól: jobbra fordul, magad felé húzod: balra · nyitott tenyérrel engeded el · kontrollerrel: hüvelykujjkar"], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.5, CK2.tiller.ty + .75, CK2.tiller.pz + CK2.tiller.TL); }
     SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
     vrSetup(VRR.lvl || 1);
@@ -556,13 +559,9 @@
           (G.lp || (G.lp = new THREE.Vector3())).copy(pt);
           G.lost = 0; if (open) { G.off = (G.off || 0) + dt; if (G.off > .6) { wheelRelease(h); S.hold[h] = holding; return; } } else G.off = 0;
           const ex = lp.x + G.ox, ey = lp.y + G.oy, ez = lp.z + G.oz;   /* a markolat kívánt helye (a fogás pillanatának eltolásával – nem ugrik) */
-          const EL = G.s || TI.EL, dy = clamp(ey - TI.ty, -EL * .85, EL * .85), eh = Math.sqrt(EL * EL - dy * dy), dx = ex, dz = ez - TI.pz, d = Math.hypot(dx, dz) || 1e-4;
-          let th;
-          if (G.r) th = Math.atan2(dx, dz);   /* magát a rudat fogod */
-          else if (d >= TI.TL + eh - 1e-3 || d <= Math.abs(TI.TL - eh) + 1e-3) th = Math.atan2(dx, dz);   /* nem ér oda: a rúd a kéz felé mutat */
-          else { const a = (TI.TL * TI.TL - eh * eh + d * d) / (2 * d), hh = Math.sqrt(Math.max(0, TI.TL * TI.TL - a * a)), mx = dx / d * a, mz = dz / d * a, px = -dz / d * hh, pz2 = dx / d * hh;
-            const c0 = S.wa / WA_MAX * TI.TMAX, t1 = Math.atan2(mx + px, mz + pz2), t2 = Math.atan2(mx - px, mz - pz2); th = Math.abs(wrapA(t1 - c0)) < Math.abs(wrapA(t2 - c0)) ? t1 : t2; }
-          const tgW = clamp(th, -TI.TMAX, TI.TMAX) / TI.TMAX * WA_MAX; S.wa += (tgW - S.wa) * Math.min(1, dt * 12); S.wv = 0;
+          /* a kéz oldalirányú elmozdulása a megfogás óta: 28 cm = teljes kitérés. Eltolod magadtól (a hajó közepe felé) → a rúd balra megy → a hajó JOBBRA fordul. */
+          if (G.x0 == null) { G.x0 = lp.x; G.wa0 = S.wa; }
+          const tgW = clamp(G.wa0 + (lp.x - G.x0) / TI.REACH * WA_MAX, -WA_MAX, WA_MAX); S.wa += (tgW - S.wa) * Math.min(1, dt * 12); S.wv = 0;
           if (G.s) G.e = (G.e || new THREE.Vector3()).set(ex, ey, ez);
         } else if (holding && !S.hold[h]) { const n = near(); if (n.d < .3) {   /* fogás: a kéz a rúd vagy a toldó BÁRMELY pontja közelében zárul (vagy csippent) */
           S.grabs[h] = { tiller: true, key: h, ray: false, hist: [[W.t, S.wa]], s: n.s || 0, r: n.r || 0, ox: n.q.x - lp.x, oy: n.q.y - lp.y, oz: n.q.z - lp.z }; S.wv = 0; try { flap(.02); X.pulse && X.pulse(h, .5, 30); } catch (e) {} }
