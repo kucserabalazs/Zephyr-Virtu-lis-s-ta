@@ -785,20 +785,86 @@
   }
 
   /* ------------------------------------------------------------------ BÓJA, RENDEZŐHAJÓ */
+  /* 2026-11-12 10:10 (tulajdonos: „a bóják legyenek sokkal élethűbbek, sokkal szebbek”): felfújható versenybója – esztergált, hasas test lekerekített vállal és
+     kúpos tetővel, függőleges varratok, fényvisszaverő szalag, fekete nehezék-gallér a vízvonalon habgyűrűvel, emelőfülek kötélhurokkal, a tetején rúd lobogóval és
+     villogó lámpával, horgonykötél a víz alá. */
   function makeBuoy(color, h) {
-    const g = new THREE.Group(), m = std({ color, roughness: .55 });
-    const c = mesh(new THREE.CylinderGeometry(.55, .75, h || 1.8, 20), m, g); c.position.y = (h || 1.8) / 2 - .2;
-    const t = mesh(new THREE.SphereGeometry(.55, 16, 8, 0, TAU, 0, Math.PI / 2), m, g); t.position.y = (h || 1.8) - .2;
-    const band = mesh(new THREE.CylinderGeometry(.62, .66, .16, 20), std({ color: "#ffffff" }), g); band.position.y = .55;
+    const g = new THREE.Group(), H = h || 1.8, m = std({ color, roughness: .5 }), dk = std({ color: "#15181c", roughness: .7 }), wt = std({ color: "#f4f4f0", roughness: .5 }), ch = std({ color: "#d9dee3", roughness: .25, metalness: .8 });
+    const prof = [[.0, -.35], [.5, -.35], [.74, -.22], [.8, .05], [.8, H * .45], [.74, H * .72], [.56, H * .9], [.3, H * 1.0], [.1, H * 1.05], [0, H * 1.06]].map(([r, y]) => new THREE.Vector2(r, y));
+    mesh(new THREE.LatheGeometry(new THREE.SplineCurve(prof).getPoints(26), 28), m, g);
+    const parts = [], I = new THREE.Matrix4();
+    for (let k = 0; k < 8; k++) { const a = k / 8 * TAU, sg = new THREE.BoxGeometry(.02, H * .95, .03); sg.translate(0, H * .42, .8); sg.rotateY(a); parts.push([sg, I]); }   /* varratok */
+    { const col = new THREE.TorusGeometry(.8, .11, 10, 28); col.rotateX(Math.PI / 2); col.translate(0, -.02, 0); parts.push([col, I]); }
+    mesh(mergeGeoms(parts), dk, g);
+    { const b1 = new THREE.CylinderGeometry(.812, .812, .2, 28, 1, true); b1.translate(0, H * .5, 0); const b2 = new THREE.CylinderGeometry(.812, .812, .07, 28, 1, true); b2.translate(0, H * .5 - .22, 0); mesh(mergeGeoms([[b1, I], [b2, I]]), wt, g); }
+    { const cp = []; for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .4, lg = new THREE.TorusGeometry(.09, .018, 6, 12); lg.translate(0, H * .78, .7); lg.rotateY(a); cp.push([lg, I]); }
+      const pole = new THREE.CylinderGeometry(.022, .022, 1.5, 8); pole.translate(0, H * 1.06 + .75, 0); cp.push([pole, I]); mesh(mergeGeoms(cp), ch, g); }
+    const fl = mesh(new THREE.PlaneGeometry(.62, .42, 4, 1), basic({ color, side: THREE.DoubleSide }), g); fl.position.set(.33, H * 1.06 + 1.25, 0); fl.userData.noBake = true;
+    const lamp = mesh(new THREE.SphereGeometry(.06, 10, 8), basic({ color: "#fff3b0" }), g); lamp.position.y = H * 1.06 + 1.53; lamp.userData.noBake = true;
+    const foam = mesh(new THREE.RingGeometry(.82, 1.25, 28), basic({ color: "#ffffff", transparent: true, opacity: .35, depthWrite: false, side: THREE.DoubleSide }), g); foam.rotation.x = -Math.PI / 2; foam.position.y = .03; foam.userData.noBake = true;
+    const rope = new THREE.CylinderGeometry(.02, .02, 2.2, 6); rope.translate(0, -1.4, 0); rope.rotateZ(.25); mesh(rope, wt, g);
+    return g;
+  }
+  /* 2026-11-12 10:10 (tulajdonos: „a zsűrihajók és a nézelődő hajók ne legyenek ennyire rondák – legyenek ugyanolyan szép kidolgozottságúak, mint a vitorlásaink”):
+     motoros jacht – a vitorlások ívelt, lakkozott hajóteste (vízvonal-csíkkal), fedélzet, áramvonalas felépítmény döntött szélvédővel és sötét ablaksávval, flybridge
+     keménytetővel és radarívvel, körbefutó rozsdamentes korlát, orrkorlát, tíkfa fürdőplató létrával, ütközőpuffer-sor, antennák, helyzetfények, farzászló, emberek. */
+  function makeMotorYacht(o) {
+    o = Object.assign({ hull: "#f4f4f0", stripe: "#1f3a6a", people: 3, num: " " }, o); o.boot = o.boot || o.stripe;
+    const g = new THREE.Group(), SX = 1.3, SY = 1.35, SZ = 1.3, I = new THREE.Matrix4();
+    const hb = new THREE.Group(); hb.scale.set(SX, SY, SZ); g.add(hb);
+    const hm = new THREE.MeshPhysicalMaterial({ map: hullTex(o), roughness: .3, metalness: 0, clearcoat: 1, clearcoatRoughness: .08, side: THREE.DoubleSide }); W.disposables.push(hm); hm.map.colorSpace = THREE.SRGBColorSpace;
+    mesh(buildHull(o), hm, hb); mesh(buildDeck(0, false), std({ color: "#e3e5e2", map: nonslipTex(), roughness: .9 }), hb);
+    const dy = (u) => hullShape(u).sheer * SY + .08, zz = (u) => hullShape(u).z * SZ, hx = (u) => hullShape(u).hb * SX;
+    const white = std({ color: o.hull, roughness: .35 }), glass = std({ color: "#101a24", roughness: .06, metalness: .7 }), chrome = std({ color: "#e6eaee", roughness: .15, metalness: 1 }), teak = std({ map: teakTex(), roughness: .7 }), acc = std({ color: o.stripe, roughness: .45 });
+    const ext = (pts, w, mat, x0) => { const sp = new THREE.Shape(); pts.forEach(([z, y], i) => (i ? sp.lineTo(z, y) : sp.moveTo(z, y))); sp.closePath(); const eg = new THREE.ExtrudeGeometry(sp, { depth: w, bevelEnabled: true, bevelThickness: .05, bevelSize: .05, bevelSegments: 2 }); eg.translate(0, 0, -w / 2 + (x0 || 0)); eg.rotateY(-Math.PI / 2); W.disposables.push(eg); return eg; };
+    const d0 = dy(.45), wC = hx(.45) * 2 - 1.0;
+    /* felépítmény: szalon döntött szélvédővel; ablaksáv; flybridge-perem; keménytető oszlopokon; radarív */
+    const cab = mesh(ext([[2.9, 0], [2.9, 1.0], [1.9, 1.32], [-1.2, 1.32], [-2.6, .55], [-3.0, 0]].map(([z, y]) => [-z, y]), wC, white), white, g); cab.position.y = d0;
+    const gl = mesh(ext([[2.75, .5], [2.75, .95], [1.85, 1.2], [-1.25, 1.2], [-2.2, .68], [-2.3, .5]].map(([z, y]) => [-z, y]), wC + .08, glass), glass, g); gl.position.y = d0;
+    const ws = mesh(ext([[-1.32, 1.3], [-2.55, .62], [-2.5, .58], [-1.28, 1.24]].map(([z, y]) => [-z, y]), wC - .25, glass), glass, g); ws.position.y = d0 + .04;
+    const fb = mesh(ext([[2.6, 1.42], [2.6, 1.8], [2.45, 1.8], [2.45, 1.5], [-.6, 1.5], [-.9, 1.85], [-1.05, 1.85], [-.8, 1.42]].map(([z, y]) => [-z, y]), wC - .1, white), white, g); fb.position.y = d0;
+    const top = mesh(ext([[2.3, 2.75], [2.3, 2.83], [-.9, 2.83], [-1.2, 2.75]].map(([z, y]) => [-z, y]), wC, acc), acc, g); top.position.y = d0;
+    const mt = [];
+    [[-1, 2.1], [1, 2.1], [-1, -.4], [1, -.4]].forEach(([sd, z]) => mt.push(rodGeom(new THREE.Vector3(sd * (wC / 2 - .12), d0 + 1.5, -z), new THREE.Vector3(sd * (wC / 2 - .16), d0 + 2.76, -z + .1), .035, 8)));
+    { const arch = new THREE.TorusGeometry(wC / 2 - .1, .06, 8, 20, Math.PI); arch.translate(0, d0 + 2.8, 2.0); mt.push([arch, I]); const rad = new THREE.CylinderGeometry(.32, .32, .12, 16); rad.translate(0, d0 + 3.55, 2.0); mt.push([rad, I]);
+      mt.push(rodGeom(new THREE.Vector3(.5, d0 + 2.83, 1.6), new THREE.Vector3(.5, d0 + 4.6, 1.75), .012, 5)); mt.push(rodGeom(new THREE.Vector3(-.5, d0 + 2.83, 1.6), new THREE.Vector3(-.5, d0 + 4.1, 1.75), .012, 5)); }
+    /* korlát körben + orrkorlát */
+    [-1, 1].forEach((sd) => { let prev = null; for (let k = 0; k <= 14; k++) { const u = .06 + k / 14 * .92, p = new THREE.Vector3(sd * (hx(u) - .09), dy(u), zz(u)), t = p.clone(); t.y += .68; mt.push(rodGeom(p, t, .016, 6)); if (prev) { mt.push(rodGeom(prev[1], t, .016, 6)); mt.push(rodGeom(prev[0].clone().setY(prev[0].y + .36), p.clone().setY(p.y + .36), .008, 5)); } prev = [p, t]; } });
+    { const s9 = .985; mt.push(rodGeom(new THREE.Vector3(-(hx(s9) - .09), dy(s9) + .68, zz(s9)), new THREE.Vector3(hx(s9) - .09, dy(s9) + .68, zz(s9)), .016, 6)); }
+    mesh(mergeGeoms(mt), chrome, g);
+    /* fürdőplató, létra, kormányállás, ülések, napozópárna, ütközők */
+    const wd = [], wh = [], st = [];
+    { const pz = zz(0) - .55, p = new THREE.BoxGeometry(hx(.02) * 2 - .2, .07, 1.1); p.translate(0, .32, pz); wd.push([p, I]);
+      const aft = new THREE.BoxGeometry(wC, .05, 1.6); aft.translate(0, dy(.12) + .01, zz(.12)); wd.push([aft, I]);
+      [-1, 1].forEach((sd) => st.push(rodGeom(new THREE.Vector3(sd * .25, .34, pz - .5), new THREE.Vector3(sd * .25, -.55, pz - .62), .018, 6))); for (let k = 0; k < 3; k++) st.push(rodGeom(new THREE.Vector3(-.25, .1 - k * .24, pz - .53 - k * .03), new THREE.Vector3(.25, .1 - k * .24, pz - .53 - k * .03), .016, 6));
+      const helm = new THREE.BoxGeometry(.9, .5, .4); helm.translate(0, d0 + 1.72, -.45); wh.push([helm, I]); const seat = new THREE.BoxGeometry(1.5, .45, .5); seat.translate(0, d0 + 1.7, .9); wh.push([seat, I]); const pad = new THREE.BoxGeometry(wC - .5, .09, 1.8); pad.translate(0, dy(.8) + .04, zz(.8)); wh.push([pad, I]);
+      const bs = new THREE.BoxGeometry(wC - .2, .42, .5); bs.translate(0, dy(.1) + .22, zz(.04) + .1); wh.push([bs, I]);
+      const whl = new THREE.TorusGeometry(.2, .025, 6, 16); whl.rotateX(-.5); whl.translate(0, d0 + 2.02, -.2); st.push([whl, I]);
+      [-1, 1].forEach((sd) => [.25, .45, .65].forEach((u) => { const fd = new THREE.CapsuleGeometry(.11, .42, 3, 8); fd.translate(sd * (hx(u) + .1), dy(u) - .5, zz(u)); wh.push([fd, I]); st.push(rodGeom(new THREE.Vector3(sd * (hx(u) + .1), dy(u) - .2, zz(u)), new THREE.Vector3(sd * (hx(u) - .09), dy(u) + .3, zz(u)), .008, 4)); })); }
+    mesh(mergeGeoms(wd), teak, g); mesh(mergeGeoms(wh), white, g); mesh(mergeGeoms(st), chrome, g);
+    /* helyzetfények és farzászló */
+    [[-1, "#ff2a2a"], [1, "#22e055"]].forEach(([sd, c]) => { const l = mesh(new THREE.BoxGeometry(.08, .07, .12), basic({ color: c }), g); l.position.set(sd * (wC / 2 + .02), d0 + 1.1, -1.6); l.userData.noBake = true; });
+    { const ft = canvasTex(96, 64, (gg) => { gg.fillStyle = "#ce2939"; gg.fillRect(0, 0, 96, 22); gg.fillStyle = "#ffffff"; gg.fillRect(0, 21, 96, 22); gg.fillStyle = "#477050"; gg.fillRect(0, 42, 96, 22); });
+      mesh(mergeGeoms([rodGeom(new THREE.Vector3(.6, dy(.03), zz(.02)), new THREE.Vector3(.6, dy(.03) + 1.3, zz(.02) - .35), .014, 5)]), chrome, g);
+      const fl = mesh(new THREE.PlaneGeometry(.7, .46, 5, 1), basic({ map: ft, side: THREE.DoubleSide }), g); fl.position.set(.6, dy(.03) + 1.08, zz(.02) - .68); fl.rotation.y = Math.PI / 2; fl.userData.noBake = true; g.userData.flag = fl; }
+    /* emberek: a flybridge-en a kormányos, a hátsó fedélzeten nézők (álló/ülő), karral, hajjal, sapkával */
+    const SK = ["#e0b08f", "#c98f6b", "#ecc3a3", "#d6a37e"], TS = ["#e5262f", "#1f5fa8", "#ffd166", "#f4f4f0", "#2fa85a", "#ff7a1a"], HR = ["#3a2414", "#15110e", "#c9a55a", "#6b4a2a", "#8a8a8a"];
+    const byM = {}; const put = (geo, col) => { (byM[col] || (byM[col] = [])).push([geo, I]); };
+    const person = (x, y, z, ry, sit, k) => { const R = (geo) => { geo.rotateY(ry); geo.translate(x, y, z); return geo; }, sk = SK[k % 4], ts = TS[(k + (o.seed || 0)) % 6], hr = HR[(k * 2 + (o.seed || 0)) % 5], hh = sit ? .55 : .95;
+      if (sit) { [-1, 1].forEach((sd) => { const th = new THREE.CapsuleGeometry(.075, .3, 3, 6); th.rotateX(Math.PI / 2); th.translate(sd * .09, .5, .2); put(R(th), "#27303c"); const sn = new THREE.CapsuleGeometry(.06, .3, 3, 6); sn.translate(sd * .09, .26, .4); put(R(sn), "#27303c"); }); }
+      else [-1, 1].forEach((sd) => { const lg = new THREE.CapsuleGeometry(.075, .68, 3, 6); lg.translate(sd * .09, .45, 0); put(R(lg), "#27303c"); });
+      const to = new THREE.CapsuleGeometry(.16, .34, 4, 10); to.scale(1, 1, .75); to.translate(0, hh + .2, 0); put(R(to), ts);
+      [-1, 1].forEach((sd) => { const ar = new THREE.CapsuleGeometry(.05, .42, 3, 6); ar.rotateZ(sd * (k % 2 && sd > 0 ? 2.6 : .18)); ar.translate(sd * (k % 2 && sd > 0 ? .3 : .22), hh + (k % 2 && sd > 0 ? .55 : .18), 0); put(R(ar), ts); });
+      const nk = new THREE.CylinderGeometry(.05, .055, .08, 8); nk.translate(0, hh + .5, 0); put(R(nk), sk); const hd = new THREE.SphereGeometry(.115, 14, 10); hd.scale(.92, 1.08, 1); hd.translate(0, hh + .64, 0); put(R(hd), sk);
+      const hair = new THREE.SphereGeometry(.122, 14, 8, 0, TAU, 0, Math.PI * .55); hair.rotateX(-.3); hair.translate(0, hh + .655, -.012); put(R(hair), k % 3 === 0 ? "#ffffff" : hr);
+      const sg = new THREE.BoxGeometry(.16, .035, .02); sg.translate(0, hh + .66, .105); put(R(sg), "#0d0f12"); };
+    person(0, d0 + 1.5, .35, Math.PI, false, 0);
+    const aftY = dy(.12) + .03; for (let k = 1; k <= o.people; k++) person(-.75 + ((k * 7) % 5) * .38, aftY, zz(.14) + ((k * 3) % 4) * .28 - .3, (k % 2 ? 1 : -1) * Math.PI / 2 + (k * .7 % 1 - .5), k % 3 === 2, k);
+    Object.keys(byM).forEach((c) => mesh(mergeGeoms(byM[c]), std({ color: c, roughness: .8 }), g));
     return g;
   }
   function makeCommittee() {
-    const g = new THREE.Group(), w = std({ color: "#f5f5f2", roughness: .35 }), b = std({ color: "#123b74", roughness: .4 });
-    const hull = mesh(new THREE.BoxGeometry(3.6, 1.2, 11), w, g); hull.position.y = .4;
-    const bow = mesh(new THREE.ConeGeometry(1.8, 3.2, 4, 1), w, g); bow.rotation.x = Math.PI / 2; bow.rotation.y = Math.PI / 4; bow.position.set(0, .4, 6.9); bow.scale.set(1, 1, .45);
-    const stripe = mesh(new THREE.BoxGeometry(3.62, .18, 11.02), b, g); stripe.position.y = .55;
-    const house = mesh(new THREE.BoxGeometry(2.8, 1.6, 4.6), w, g); house.position.set(0, 1.8, -.2);
-    const win = mesh(new THREE.BoxGeometry(2.84, .5, 3.8), std({ color: "#1d2a36", roughness: .1, metalness: .5 }), g); win.position.set(0, 2.05, -.1);
+    const g = makeMotorYacht({ hull: "#f5f5f2", stripe: "#123b74", people: 3, seed: 3 });   /* 2026-11-12 10:10: a rendezőhajó is szép motoros jacht (előtte dobozokból állt) */
     const mastG = mesh(new THREE.CylinderGeometry(.05, .05, 4.5, 8), std({ color: "#ddd", metalness: .7, roughness: .3 }), g); mastG.position.set(0, 4.6, -.5);
     /* jelzőzászlók (P, osztályjel, narancs rajtvonal-zászló) */
     const flags = [];

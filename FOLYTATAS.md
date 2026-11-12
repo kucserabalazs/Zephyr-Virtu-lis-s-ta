@@ -852,3 +852,11 @@ Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mi
 - Műszerek: a térképplotter mindkét módban a kormányoszlop tetején; a szélműszer botkormánynál közvetlenül alatta, az oszlop fejébe építve; keréknél a kerék közepén.
 - „Vájat a legénység alatt, látszik a víz” (harmadszor kérte): a tíkborítástól előre NEM VOLT fedélzet (vis:false miatt a makeBoat fedélzete nem épül). Most teljes fehér fedélzet u .33–1 között (vrCockpit). Felülnézeti tesztképen zárt.
 - Következő kérés: a legénység bábui legyenek emberszerűek (lobogó haj stb.).
+
+## 2026-11-12 10:00–10:16
+- Legénység: emberszerű alakok (arc, haj: hosszú lobogó / lófarok / rövid / sapka, karok könyökkel, lábak, cipő), a haj és a gallér a szélben lobog, a fej körbenéz, a kezek a szkótát húzzák. Csak a saját hajón (vrCockpit CREWDEF); az ellenfelek bábui a régiek.
+- ZEPHYR mellény a legénységen (tulajdonos: „mi gyártjuk, a reklám legyen jól jelezve”): a zephyr-mentomelleny repo termékfotói (kepek/wave-rb.webp, wave-yb.webp, hatoldal.webp, logo.webp → weboldal/virtualis-seta/img/melleny/). Elöl a Wave 50N fotója (piros-fekete / sárga-fekete), a háton nagy fehér ZEPHYR-logó. A mellényoldal a „Mentomellenyek.hu” beszélgetésben / kucserabalazs/zephyr-mentomelleny repóban van.
+- Bóják: esztergált, varratos versenybója gallérral, szalaggal, lobogóval, lámpával (makeBuoy, mindenhol).
+- Rendező- és nézőhajók: makeMotorYacht (lakkozott hajótest, felépítmény, flybridge, korlát, fürdőplató, emberek).
+- Befutó: a kapu mindkét vége bója (pin2 a rendezőhajó előtt), mindkettő fényoszlopot kap; a térképen „CÉL – a két bója KÖZÖTT”, mindkét kapubója kockás zászlóval.
+- Bója fölötti keringő nyílkoszorú 190 m-en belül (ringUp) – a 11-11-i „semmi jel a vízen” szabályt ez a kérés felülírja.
