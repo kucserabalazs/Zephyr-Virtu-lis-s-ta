@@ -826,3 +826,7 @@ Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mi
 - Tulajdonos: a műszer ne takarja a horizontot (ne „tévé” a kép közepén); lefelé nézve inkább a hajótestet takarja; lehet kisebb.
 - Botkormánynál: alacsony konzol (y .84), a középvonal felé (x .8), erősen felfelé döntve, 80% méret.
 - Kormánykeréknél: a műszer a kerék KÖZEPÉBEN, álló tengelycsonkon (nem forog a kerékkel), 60% méret, napellenző és kapaszkodó nélkül. Váltás: G.userData.podSet(tiller).
+
+## 2026-11-12 08:52 – hangban kért módosítások
+- Keréknél a két műszer helyet cserélt: a szélműszer a kerék közepében (álló, kerek házban), a térképplotter fölötte, a kormányoszlop tetején (62% méret). Botkormánynál változatlan.
+- Vitorlaablakok (win: true, csak a saját VR-hajón): grószban és fockban az alsó panelben két egymás melletti átlátszó fóliamező, köztük varratszalag, körben fehér szegő cikkcakk-öltéssel (sailWindow, 03-hajo.js). Netes minta: az ablak az alsó panelekben, a varratok között, több szegmensben ül.

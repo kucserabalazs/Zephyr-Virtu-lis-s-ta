@@ -120,11 +120,15 @@
           const mW = new THREE.Group(); ped.add(mW);
           { const st = mesh(new THREE.CylinderGeometry(.034, .04, .2, 16), carbon, mW); st.rotation.x = Math.PI / 2; st.position.set(0, .8, -.5);
             const col2 = mesh(new THREE.CylinderGeometry(.058, .058, .022, 20), chrome, mW); col2.rotation.x = Math.PI / 2; col2.position.set(0, .8, -.565);
-            const yk = mesh(new THREE.TorusGeometry(.105, .011, 8, 24, Math.PI), chrome, mW); yk.position.set(0, .76, -.585); yk.rotation.set(Math.PI / 2 - .3, 0, 0); }
+            const hb = mesh(new THREE.CylinderGeometry(.135, .12, .03, 28), carbon, mW); hb.position.set(0, .815, -.585); hb.rotation.set(.55 - Math.PI / 2, 0, 0);
+            const rg = mesh(new THREE.TorusGeometry(.128, .009, 8, 32), chrome, mW); rg.position.set(0, .815, -.6); rg.rotation.set(.55, 0, 0);
+            const pst = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), carbon, mW); pst.position.set(0, 1.2, -.12); pst.rotation.x = -.35; }
           const rail = pod.children.filter((m) => m.material === chrome), hood = pod.children.filter((m) => m.geometry && m.geometry.type === "BoxGeometry" && m.material === carbon);
           G.userData.podSet = (til) => { mT.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = !!til; }); hood.forEach((m) => { m.visible = !!til; });
             if (til) { pod.position.set(-.8 * sd, .84, -.3); pod.rotation.set(.9, Math.PI - .5 * sd, 0); pod.scale.setScalar(.8); }
-            else { pod.position.set(0, .815, -.635); pod.rotation.set(.6, Math.PI, 0); pod.scale.setScalar(.6); } };
+            else { pod.position.set(0, 1.35, -.2); pod.rotation.set(.3, Math.PI, 0); pod.scale.setScalar(.62); }
+            /* 2026-11-12 08:52 (tulajdonos, hangban: „a keréknél a szélműszer és a nagy kijelző cseréljen helyet – a szélműszer kerüljön a kormányra, fölé a kijelző”) */
+            if (til) { scr.position.set(0, 1.2, -.2); scr.rotation.set(-.5, Math.PI, 0); scr.scale.setScalar(1); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
           G.userData.podSet(true); } }
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
       const [gb, mb] = rodGeom(new THREE.Vector3(-.22, 0, .25), new THREE.Vector3(-.22, .95, .1), .016, 8); mesh(gb, chrome, ped).applyMatrix4(mb);
@@ -314,7 +318,7 @@
     const oldSky = makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
     VRR.foto = makePhotoSky(far, oldSky, VRR.water);   /* valódi égfotó + a víz ezt tükrözi */
-    const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
+    const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, win: true });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
     boat.scale.setScalar(VR_SC); boat.rotation.y = Math.PI; root.add(boat); VRR.boat = boat;
     const CK2 = vrCockpit(boat); VRR.ck = CK2; VRR.baked = vrBake(boat);
     /* a felhasználó helye: a jobb oldali (styrbord) kerék mögött; a hajó orra −z felé néz (a hajó π-vel elforgatva) */

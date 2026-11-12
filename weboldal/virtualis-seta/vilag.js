@@ -407,7 +407,7 @@
     }, { repeat: [6, 6] }));
   }
   function sailTex(o) {
-    const key = "s" + o.num + o.main;
+    const key = "s" + o.num + o.main + (o.win ? "w" : "");
     return TEXC[key] || (TEXC[key] = canvasTex(1024, 1024, (g, w, h) => {
       g.fillStyle = o.main; g.fillRect(0, 0, w, h);
       /* vízszintes panelvarratok, finom szövet */
@@ -420,15 +420,31 @@
       g.fillText(o.num, w * .48, h * .40);
       if (o.logo) { g.font = "900 72px Georgia, serif"; g.fillStyle = /^#(d|e|c)[0-9a-f]1|^#d61f26/i.test(o.main) ? "#ffffff" : "#c62828"; g.fillText(o.logo, w * .48, h * .58); }
       g.font = "800 64px system-ui"; g.fillStyle = o.numCol || "#1b2c5e"; g.fillText(o.cls || "R27", w * .5, h * .2);
+      if (o.win) sailWindow(g, w, h, [[.2, .49], [.515, .8]], .05, .15, 12);
     }));
   }
+  /* 2026-11-12 08:52 (tulajdonos, hangban: „a versenyvitorlák alsó részébe átlátszó ablakot varrnak, hogy a kormányos kilásson a hajó elé; túl nagy nem lehet, mert gyengíti
+     a vitorlát; két részletben legyen bevarrva, élethűen – a grószba és a fockba is”). A valódi vitorlákon az ablak az alsó panelekben, a varratok KÖZÖTT ül, több
+     szegmensben, átlátszó fóliából, körben rávarrt szegőszalaggal (kb. 45 cm magas, 1,2 m hosszú). Itt: két egymás melletti fóliamező az alsó panelben, köztük
+     függőleges varratszalag; a fólia majdnem teljesen átlátszó, halvány kékes csillogással; körben fehér szegőszalag cikkcakk-öltéssel. */
+  function sailWindow(g, w, h, cols, v0, v1, tape) {
+    const y1 = h * (1 - v0), y0 = h * (1 - v1), sk = h * .006;
+    cols.forEach(([u0, u1], k) => { const x0 = w * u0, x1 = w * u1, r = tape * 1.6;
+      const path = () => { g.beginPath(); g.moveTo(x0 + r, y0 + sk * k); g.lineTo(x1 - r, y0 + sk * (k + 1)); g.quadraticCurveTo(x1, y0 + sk * (k + 1), x1, y0 + sk * (k + 1) + r); g.lineTo(x1, y1 + sk * (k + 1) - r); g.quadraticCurveTo(x1, y1 + sk * (k + 1), x1 - r, y1 + sk * (k + 1)); g.lineTo(x0 + r, y1 + sk * k); g.quadraticCurveTo(x0, y1 + sk * k, x0, y1 + sk * k - r); g.lineTo(x0, y0 + sk * k + r); g.quadraticCurveTo(x0, y0 + sk * k, x0 + r, y0 + sk * k); g.closePath(); };
+      g.save(); path(); g.clip(); g.clearRect(x0 - 2, y0 - 2, x1 - x0 + 4, y1 - y0 + sk * 3 + 4);
+      g.fillStyle = "rgba(205,232,248,.10)"; g.fillRect(x0, y0, x1 - x0, y1 - y0 + sk * 3);
+      const gl = g.createLinearGradient(x0, y0, x1, y1); gl.addColorStop(0, "rgba(255,255,255,0)"); gl.addColorStop(.42, "rgba(255,255,255,.16)"); gl.addColorStop(.5, "rgba(255,255,255,0)"); gl.addColorStop(.78, "rgba(255,255,255,.09)"); gl.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gl; g.fillRect(x0, y0, x1 - x0, y1 - y0 + sk * 3); g.restore();
+      path(); g.strokeStyle = "rgba(250,250,246,.97)"; g.lineWidth = tape; g.stroke();
+      path(); g.strokeStyle = "rgba(60,66,78,.75)"; g.lineWidth = Math.max(1.5, tape * .16); g.setLineDash([tape * .5, tape * .45]); g.stroke(); g.setLineDash([]); });
+  }
   function jibTex(o) {
-    const key = "j" + o.jib;
+    const key = "j" + o.jib + (o.win ? "w" : "");
     return TEXC[key] || (TEXC[key] = canvasTex(512, 512, (g, w, h) => {
       g.fillStyle = o.jib; g.fillRect(0, 0, w, h);
       for (let k = 1; k < 9; k++) { g.strokeStyle = "rgba(0,0,0,.1)"; g.lineWidth = 2; g.beginPath(); g.moveTo(0, k * h / 9); g.lineTo(w, k * h / 9 - 10); g.stroke(); }
       /* UV-védőcsík az achterliken és az alsó élen */
       g.fillStyle = o.uv || "rgba(40,48,60,.85)"; g.fillRect(w - 26, 0, 26, h); g.fillRect(0, h - 22, w, 22);
+      if (o.win) sailWindow(g, w, h, [[.2, .47], [.495, .76]], .075, .215, 7);
     }));
   }
   function spinTex(cols) {
@@ -689,8 +705,8 @@
     { const cap = new THREE.SphereGeometry(.05, 10, 8); cap.scale(1, 1.5, 1); cap.translate(0, 0, -3.45); mesh(cap, alu, boomG); }
     if (o.detail) { const vang = rodBetween(new THREE.Vector3(0, -.85, -.05), new THREE.Vector3(0, -.05, -.85), .01, dark, boomG); }
     /* vitorlák */
-    const mainMat = std({ map: sailTex(o), side: THREE.DoubleSide, roughness: .85 });
-    const jibMat = std({ map: jibTex(o), side: THREE.DoubleSide, roughness: .85 });
+    const mainMat = std({ map: sailTex(o), side: THREE.DoubleSide, roughness: .85, transparent: !!o.win });
+    const jibMat = std({ map: jibTex(o), side: THREE.DoubleSide, roughness: .85, transparent: !!o.win });
     const mainG = sailGeom(10, 14), jibG = sailGeom(9, 12);
     const mainM = mesh(mainG, mainMat, body), jibM = mesh(jibG, jibMat, body);
     mainM.frustumCulled = jibM.frustumCulled = false;
@@ -1512,11 +1528,15 @@
           const mW = new THREE.Group(); ped.add(mW);
           { const st = mesh(new THREE.CylinderGeometry(.034, .04, .2, 16), carbon, mW); st.rotation.x = Math.PI / 2; st.position.set(0, .8, -.5);
             const col2 = mesh(new THREE.CylinderGeometry(.058, .058, .022, 20), chrome, mW); col2.rotation.x = Math.PI / 2; col2.position.set(0, .8, -.565);
-            const yk = mesh(new THREE.TorusGeometry(.105, .011, 8, 24, Math.PI), chrome, mW); yk.position.set(0, .76, -.585); yk.rotation.set(Math.PI / 2 - .3, 0, 0); }
+            const hb = mesh(new THREE.CylinderGeometry(.135, .12, .03, 28), carbon, mW); hb.position.set(0, .815, -.585); hb.rotation.set(.55 - Math.PI / 2, 0, 0);
+            const rg = mesh(new THREE.TorusGeometry(.128, .009, 8, 32), chrome, mW); rg.position.set(0, .815, -.6); rg.rotation.set(.55, 0, 0);
+            const pst = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), carbon, mW); pst.position.set(0, 1.2, -.12); pst.rotation.x = -.35; }
           const rail = pod.children.filter((m) => m.material === chrome), hood = pod.children.filter((m) => m.geometry && m.geometry.type === "BoxGeometry" && m.material === carbon);
           G.userData.podSet = (til) => { mT.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = !!til; }); hood.forEach((m) => { m.visible = !!til; });
             if (til) { pod.position.set(-.8 * sd, .84, -.3); pod.rotation.set(.9, Math.PI - .5 * sd, 0); pod.scale.setScalar(.8); }
-            else { pod.position.set(0, .815, -.635); pod.rotation.set(.6, Math.PI, 0); pod.scale.setScalar(.6); } };
+            else { pod.position.set(0, 1.35, -.2); pod.rotation.set(.3, Math.PI, 0); pod.scale.setScalar(.62); }
+            /* 2026-11-12 08:52 (tulajdonos, hangban: „a keréknél a szélműszer és a nagy kijelző cseréljen helyet – a szélműszer kerüljön a kormányra, fölé a kijelző”) */
+            if (til) { scr.position.set(0, 1.2, -.2); scr.rotation.set(-.5, Math.PI, 0); scr.scale.setScalar(1); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
           G.userData.podSet(true); } }
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
       const [gb, mb] = rodGeom(new THREE.Vector3(-.22, 0, .25), new THREE.Vector3(-.22, .95, .1), .016, 8); mesh(gb, chrome, ped).applyMatrix4(mb);
@@ -1706,7 +1726,7 @@
     const oldSky = makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
     VRR.foto = makePhotoSky(far, oldSky, VRR.water);   /* valódi égfotó + a víz ezt tükrözi */
-    const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
+    const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, win: true });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
     boat.scale.setScalar(VR_SC); boat.rotation.y = Math.PI; root.add(boat); VRR.boat = boat;
     const CK2 = vrCockpit(boat); VRR.ck = CK2; VRR.baked = vrBake(boat);
     /* a felhasználó helye: a jobb oldali (styrbord) kerék mögött; a hajó orra −z felé néz (a hajó π-vel elforgatva) */
