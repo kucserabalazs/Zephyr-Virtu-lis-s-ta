@@ -926,3 +926,10 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 ## 2026-11-12 14:09
 - Kötelek: a laza fockszkóta, a kocsi→csörlő szakasz és a bumon futó piros/zöld reffkötelek lekerültek. Megmaradt: főszkóta (bum → utazósín), bumlehúzó (árboctő → bum), a húzott fockszkóta (szkótasarok → sínkocsi csigája), alsóél-feszítő. Ha a tulajdonos még lát indokolatlan kötelet, kérdezni kell, MELYIK az (szín, honnan hová).
 - A saját hajó 5%-kal gyorsabb (csak a megtett út × 1,05; a fizika, a vitorlák és a kijelzett sebesség változatlan) – a tulajdonos kifejezett kérése a versenyélményért.
+
+## 2026-11-12 19:21–20:01 – KORMÁNYZÁS ÚJRAGONDOLVA (kutatás + a tulajdonos jóváhagyása)
+- Panasz: megfogja, de sokszor elengedi; a kerék „visszahúz”, a végállást (nála ±45°) nem éri el, csak ~30°-ig; alig fordul a hajó; szélben áll, mire elindul, mindenki elment. „Ha nem tudjuk megcsinálni az irányítást, le lehet törölni.”
+- Kutatás (Shed Racer WebXR-autóverseny, kamerás virtuális kormányok, MarineVerse, Meta kézkövetési elvek): a levegőben megfogott kormány a kézkövetés leggyengébb pontja; a bevált megoldások nem fogatnak meg semmit, a kéz HELYE a vezérlő; követésvesztésre tervezni kell; hang/fény visszajelzés kell.
+- Jóváhagyva („az illúzió fontos: az öklömmel vezérlek, de a mozgást kövesse a kormány és a rúd is”): ÖKÖLVEZÉRLÉS – zárt ököl bárhol a test előtt = a kormány a kézben; az ököl oldalirányú elmozdulása kormányoz (zárás helye = közép, ±15 cm = teljes kitérés, egyenes vonalban); 1:1 követés, nincs rugó; egy kéz elég, két kéznél a jobban mozduló vezet; elengedés csak 1,5 mp nyitott tenyérre; követésvesztésnél 8 mp-ig tart; elengedve a kormány ott marad; a kerék és a rúd a kormányállást mutatja. A régi megfogásos kód (rúd/kerék eltalálása) megszűnt.
+- Kijutás a szélből: álló hajón a holtszögben a hajó leesik arra, amerre a kormányt tartod (mintha a legénység ellentartaná a fockot). EZT A PONTOT A TULAJDONOS NEM HAGYTA JÓVÁ KÜLÖN – ha nem kell, a yrT-hez adott tagot kell kivenni.
+- SZEMÜVEGBEN NINCS ELLENŐRIZVE (a kézkövetést a gépi teszt nem tudja utánozni).
