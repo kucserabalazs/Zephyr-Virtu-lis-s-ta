@@ -767,3 +767,10 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 - KÉSZ: a tesztoldal (github.io) MAGÁTÓL frissül, ha újabb változat van (betöltéskor, 45 mp-enként, visszatéréskor, VR-ből kilépve; legfeljebb 3 próbálkozás munkamenetenként). Az éles oldalon marad a gomb.
 - KÉSZ: a verseny fejléce és a kormány súgófelirata kiírja a futó változat 5 jegyű jelét (`window.ZEPHYR_BV`) – így a tulajdonos és én is látjuk, melyik fut.
 - NYITOTT: az „elmozdultam az irányítási helyről” megjegyzést nem értem biztosan (a kormányos helye a kódban nem változott; a forgáspont került hátrébb) – a közvetítésen kell megnézni.
+
+## 2026-11-12 01:05–01:15 – közvetítés (Quest cast) + új kormány-visszajelzés
+- A közvetítésen LÁTTAM: a szemüvegben a 18:54-es RÉGI változat futott (hosszú rúd + hosszú csukló toldó). A Meta VR Developer Hub „Browser → Run” mezőjével megnyitottam a szemüvegben a friss oldalt; utána a panel fejlécében megjelent a jel (b2eb7), az új kormány futott. (Hozzáférés: com.oculus.odh + com.meta.magicisland, a tulajdonos kérésére: „Gyere be és nézd az adást!”. A kapcsolat USB/ADB – „Disconnected”, ha a szemüveg alszik.)
+- Visszajelzés a FRISS változatról (01:14): „nagyon rövid a rúd, amiben kapaszkodhatok, ezért nehezen tudom balra eltolni; a rudat mellkasnál fogják, nem a végét, hanem beljebb; behúzva koppanásig fordul, kitolva megint teljes fordulat – ehhez igazítsd.”
+- KÉSZ (05b): a merev toldó a kormányos mellkasa elé ér (deck + 1,20 m, 36 cm-rel a test előtt) és 30 cm-rel túlnyúlik; 60 cm-es vastag markolat; a kormányzás a toldó tengelye menti tolás/húzás (`TIL.ax`), ±26 cm = végállás (`REACH`), látszó elfordulás ±14°. Eltolva jobbra, behúzva balra fordul.
+- A kézmozdulatát a közvetítésen NEM láttam (akkor épp a böngészőben volt, és állóképeket kapok) – a 26 cm és az irány becslés; szemüvegben ő ellenőrzi.
+- Hanghívást kért („nem jön ki a jel”) – azt én nem tudom indítani.
