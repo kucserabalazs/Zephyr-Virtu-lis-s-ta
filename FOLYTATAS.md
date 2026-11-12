@@ -912,3 +912,10 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 ## 2026-11-12 13:37 – bekiabálás emberi hangon
 - A fűrészfog-csipogás megszűnt. vrHail: ha van weboldal/virtualis-seta/hang/bekbord.mp3 (és protest.mp3), azt játssza le kétszer; különben a böngésző magyar beszédhangja (a Questen nincs → csak felirat). A tulajdonos felajánlotta, hogy felveszi a saját hangját – a felvételt a beszélgetésbe csatolja, én teszem be mp3-ként. A figyelmeztetés 4,5 mp-enként ismétlődik, amíg közeledik a hajó.
 - vrSetup most az ellenfelek büntetőit is nullázza (pen, spinA, penLast).
+
+## 2026-11-12 13:44 – a Vitorlázás Versenyszabályai beépítve (tulajdonos kérése)
+- vrRule(a,b): 21. (büntetést végző / korai rajt után visszatérő kitér) → 13. (forduló közben) → 10. (ellentétes csapás: bal csapás kitér) → 12. (azonos csapás, fedés nélkül: a hátsó kitér) → 11. (fedésben: a szél felőli kitér); 15. (aki szél alatt, hátulról létesített fedést, 3 mp-ig helyet ad). 14. szabály szövege mindig megjelenik. NINCS beépítve: 16., 17., 18–20. (jelnél/akadálynál adandó hely).
+- Az ellenfelek kitérési döntése is ezt használja (vrGiveWay = vrRule).
+- Ütközés: hajótest-alakú (12 m-es szakasz, 2,3 m sugár – vrHullGap), így az orr–far érintés valós helyen történik; a korábbi 7,5 m-es kör megszűnt.
+- Kijelzés: a fedélzeti térképen keretes ismertető – ki kivel ütközött, ki a hibás, a szabály száma, címe és szövege, a büntetés; a saját büntetésnél a letudásáig látszik, az ellenfélénél 15 mp-ig. A figyelmeztető kiáltás szövege is szabály szerinti (bekbord / szél alatt vagyok / előtted vagyok / fordulsz).
+- Gépi teszt: 10. (mindkét irány), 12. (mindkét irány), 11. (mindkét irány) jól dől el. A 13., 15., 21. eset nincs külön tesztelve.
