@@ -919,3 +919,6 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 - Ütközés: hajótest-alakú (12 m-es szakasz, 2,3 m sugár – vrHullGap), így az orr–far érintés valós helyen történik; a korábbi 7,5 m-es kör megszűnt.
 - Kijelzés: a fedélzeti térképen keretes ismertető – ki kivel ütközött, ki a hibás, a szabály száma, címe és szövege, a büntetés; a saját büntetésnél a letudásáig látszik, az ellenfélénél 15 mp-ig. A figyelmeztető kiáltás szövege is szabály szerinti (bekbord / szél alatt vagyok / előtted vagyok / fordulsz).
 - Gépi teszt: 10. (mindkét irány), 12. (mindkét irány), 11. (mindkét irány) jól dől el. A 13., 15., 21. eset nincs külön tesztelve.
+
+## 2026-11-12 14:05 – 18. szabály (hely a jelnél) beépítve
+- A páros első hajójának zónába érésekor (45 m = 3 hajóhossz) rögzül a jogosult (r._mk): fedésben a belső (a jelhez közelebbi) hajó, fedés nélkül a tisztán elöl lévő; ellentétes csapáson cirkáló szakaszon nem él (18.1(a)); rajtjelnél nem él. A zónában a jogosult elől a másik tér ki (vrRule → 18), ütközésnél a nem jogosult a hibás; kiáltás: „Helyet a bójánál!”. Csak a játékos–ellenfél párokra; ellenfél–ellenfél között nincs rögzítés. A „belső” meghatározása egyszerűsített (a jelhez közelebbi hajó). Gépi teszt: fedésben mindkét eset jól dőlt el.

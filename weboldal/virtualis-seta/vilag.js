@@ -2265,7 +2265,7 @@
     /* a hajók a vonal alatt (szél alatt) 70–110 m-re, halzon; 45 mp a rajtig */
     const back = (d, s) => ({ x: -C.u[0] * d + C.c[0] * s, z: -C.u[1] * d + C.c[1] * s });
     const p0 = back(95, 6); Object.assign(VRR, { wx: null, fox: 0, foz: 0, x: p0.x, z: p0.z, b: C.wf + Math.PI * .5 - .3, v: 2.5, del: 0, wa: 0, heel: 0, lastSide: 0, tackT: 0, next: 0, t: -45, st: "pre", horns: {}, fin: null, started: false, ocs: 0, sp: null, msg: "Rajt 45 mp múlva – állj be a vonal mögé!", msgT: 6, ocs: 0, res: [], pen: 0, penAcc: 0, penLast: 0, foul: null, _tkg: false, _sd0: null, doneT: 0, prevSide: null, dnf: false, _mi: -1, nearMk: 0, hailT: 0, guideT: 0, offT: 0 });
-    VRR.riv.forEach((r, i) => { const p = back([84, 102, 90][i], [-48, -22, 38][i]);   /* egymástól és tőled is legalább ~28 m-re (15 m-es hajók) */ Object.assign(r, { x: p.x, z: p.z, b: C.wf + (i % 2 ? 1 : -1) * Math.PI * .45, v: 2.4, next: 0, tack: i % 2 ? 1 : -1, lastTack: 0, fin: null, skill: 1, yr: 0, del: 0, spinOn: false, ph: rand() * 9, _mi: -1, errNext: 0, errGW: 0, penT: 0, pen: 0, spinA: null, penLast: 0, _tkg: false, _sd0: null, _rel: null, _ovT: 0, _ovBy: null, wide: 0, _dS: null, started: false, prevSide: null, _ls0: null }); });
+    VRR.riv.forEach((r, i) => { const p = back([84, 102, 90][i], [-48, -22, 38][i]);   /* egymástól és tőled is legalább ~28 m-re (15 m-es hajók) */ Object.assign(r, { x: p.x, z: p.z, b: C.wf + (i % 2 ? 1 : -1) * Math.PI * .45, v: 2.4, next: 0, tack: i % 2 ? 1 : -1, lastTack: 0, fin: null, skill: 1, yr: 0, del: 0, spinOn: false, ph: rand() * 9, _mi: -1, errNext: 0, errGW: 0, penT: 0, pen: 0, spinA: null, penLast: 0, _tkg: false, _sd0: null, _rel: null, _ovT: 0, _ovBy: null, _mk: null, wide: 0, _dS: null, started: false, prevSide: null, _ls0: null }); });
     if (VRR.podium) VRR.podium.visible = false;
     /* oktató futam: nincs visszaszámlálás és nincs ellenfél – a hajó a vonal alól indul, azonnal „versenyben” */
     VRR.setup = vrSetup;   /* (teszteléshez elérhető) */
@@ -2368,6 +2368,7 @@
     12: ["12. szabály – Azonos csapáson, fedés nélkül", "Amikor a hajók azonos csapáson vannak, és nincsenek fedésben, a tisztán hátul lévő hajónak ki kell térnie a tisztán elöl lévő hajó elől."],
     13: ["13. szabály – Forduló közben", "Miután egy hajó túljutott a szélben álláson, ki kell térnie a többi hajó elől mindaddig, amíg élesen szélnek nem vitorlázik."],
     15: ["15. szabály – Útjog megszerzése", "Amikor egy hajó útjogot szerez, kezdetben helyet kell adnia a másik hajónak a kitérésre."],
+    18: ["18. szabály – Hely a jelnél", "Ha a hajók fedésben érik el a zónát (három hajóhossz a jeltől), a külső hajónak helyet kell adnia a belső hajónak a jel megkerüléséhez. Ha nincsenek fedésben, a tisztán hátul lévő hajónak kell helyet adnia a tisztán elöl lévőnek."],
     21: ["21. szabály – Rajthiba; büntetés végrehajtása", "A büntetőfordulót végző, illetve a korai rajt után a rajtvonal mögé visszatérő hajónak ki kell térnie a szabályosan vitorlázó hajók elől."] };
   const VR_R14 = "14. szabály: az érintkezést minden hajónak el kell kerülnie, ha ez ésszerűen lehetséges.";
   const vrNm = (o) => (o === VRR ? "Zephyr (te)" : o.o.name);
@@ -2385,6 +2386,8 @@
     const S = VRR, pen = (o) => (o === S ? (S.ocs === 1 || (S.pen > 0 && Math.abs(S.penAcc || 0) > .7)) : o.spinA != null);
     if (pen(a) !== pen(b)) return { keep: pen(a) ? a : b, n: 21 };
     if (!!a._tkg !== !!b._tkg) return { keep: a._tkg ? a : b, n: 13 };
+    /* 18. szabály: a zónában a jel-helyre jogosult hajó elől a másiknak kell kitérnie (a párosra a zónába éréskor rögzített állapot dönt) */
+    { const r = a === S ? b : b === S ? a : null; if (r && r._mk && r._mk.ent) { const m = S.marks[r._mk.i]; if (m && Math.hypot(S.x - m.x, S.z - m.z) < 50 && Math.hypot(r.x - m.x, r.z - m.z) < 50) return { keep: r._mk.ent === a ? b : a, n: 18 }; } }
     const as = vrStb(a.b), bs = vrStb(b.b); if (as !== bs) return { keep: as ? b : a, n: 10 };
     if (vrAstern(a, b)) return { keep: a, n: 12 }; if (vrAstern(b, a)) return { keep: b, n: 12 };
     const uw = vfwd(S.wf), aW = (a.x - b.x) * uw[0] + (a.z - b.z) * uw[1] > 0; return { keep: aW ? a : b, n: 11 };
@@ -2764,7 +2767,7 @@
       const brg = wrapA(Math.atan2(dx, -dz) - r.b), ahead = Math.abs(brg) < 1.9, racing = S.st === "race" && !r.fin && !o.fin, gw = racing ? vrGiveWay(r, o) : true, careless = (r.errGW || 0) > W.t;
       if (gw && !careless) { if (d < 36 && ahead) want += (brg > 0 ? -1 : 1) * .7 * (1 - d / 36); }
       else if (d < 9) want += (brg > 0 ? -1 : 1) * .35 * (1 - d / 9);   /* az útjogos tartja az irányát, csak az utolsó pillanatban tér ki */
-      if (o === S && racing && !gw) { const closing = r._dS != null && d < r._dS - .002; if (d < 26 && closing && Math.abs(wrapA(Math.atan2(-dx, dz) - S.b)) < 1.7 && (!S.hailT || W.t - S.hailT > 4.5)) { S.hailT = W.t; const rn = vrRule(S, r).n, sh = { 10: "BEKBORD!!! BEKBORD!!!", 11: "SZÉL ALATT VAGYOK – FEL, FEL!", 12: "ELŐTTED VAGYOK – NE GYERE BELÉM!", 13: "FORDULSZ – TÉRJ KI!", 21: "BÜNTETŐT FUTSZ – TÉRJ KI!" }[rn] || "TÉRJ KI!";
+      if (o === S && racing && !gw) { const closing = r._dS != null && d < r._dS - .002; if (d < 26 && closing && Math.abs(wrapA(Math.atan2(-dx, dz) - S.b)) < 1.7 && (!S.hailT || W.t - S.hailT > 4.5)) { S.hailT = W.t; const rn = vrRule(S, r).n, sh = { 10: "BEKBORD!!! BEKBORD!!!", 11: "SZÉL ALATT VAGYOK – FEL, FEL!", 12: "ELŐTTED VAGYOK – NE GYERE BELÉM!", 13: "FORDULSZ – TÉRJ KI!", 18: "HELYET A BÓJÁNÁL! HELYET!", 21: "BÜNTETŐT FUTSZ – TÉRJ KI!" }[rn] || "TÉRJ KI!";
           S.msg = `„${sh}” – a(z) ${r.o.name} hajónak útjoga van (${VR_RRS[rn] ? VR_RRS[rn][0] : "útjog"}): TÉRJ KI AZONNAL!`; S.msgT = 6; vrHail(rn === 10 ? "Bekbord!" : "Térj ki!"); } }
       if (o === S) r._dS = d; });
     /* a kitérés se fordítsa a hajót a szélbe (holtszög): legalább 40°-kal a szél mellett maradjon */
@@ -2796,6 +2799,7 @@
            aki hátulról jött bele, az a hibás. Egyébként az útjogra kötelezett hajó a hibás. Aki a figyelmeztetésre időben kitér, és nincs ütközés, nem kap büntetést. */
         const racing2 = S.st === "race" && !S.fin && !r.fin; let rule = racing2 ? vrRule(S, r) : null;
         /* 15. szabály: aki tisztán hátulról, szél alatt létesített fedést, és ezzel útjogot szerzett, kezdetben helyet kell adnia – ha 3 mp-en belül ütköznek, ő a hibás */
+        if (rule && rule.n === 18) { /* a jel-hely szabálya dönt */ } else
         if (rule && (rule.n === 11 || rule.n === 12)) { const bowS = hg.ta > .8 && hg.tb < .25, bowR = hg.tb > .8 && hg.ta < .25, fresh = r._ovT && W.t - r._ovT < 3;
           if (bowS && (rule.n === 12 || fresh || r._rel !== "O")) rule = { keep: S, n: 12 };            /* az én orrom érte az ő farát: én jöttem bele hátulról */
           else if (bowR && (rule.n === 12 || fresh || r._rel !== "O")) rule = { keep: r, n: 12 };       /* az ő orra érte az én faromat */
@@ -2804,6 +2808,15 @@
         else if (rule.keep === S) { vrFoulMe(r, rule.n); vrHail(rule.n === 10 ? "Bekbord! Protest!" : "Protest!"); }
         else vrFoulRiv(r, rule.n); } } }
     /* a fedés kialakulásának követése (a 15. szabályhoz) és a forduló-állapot (a 13. szabályhoz) */
+    /* 2026-11-12 14:05 (tulajdonos: „a helyadás a bójánál betehető”) – 18. szabály: amikor a páros első hajója eléri a zónát (3 hajóhossz = 45 m), rögzítjük, ki jogosult
+       a jel-helyre: fedésben a BELSŐ (a jelhez közelebbi) hajó, fedés nélkül a tisztán ELÖL lévő. Nem alkalmazandó ellentétes csapáson, cirkáló szakaszon (18.1(a)),
+       és a rajtjelnél. A jogosultság addig él, amíg mindketten el nem hagyják a zónát. */
+    { const mi = S.next, m = S.st === "race" && S.started && r.started && mi < S.marks.length && r.next === mi ? S.marks[mi] : null;
+      if (!m) r._mk = null; else { const dS = Math.hypot(S.x - m.x, S.z - m.z), dR = Math.hypot(r.x - m.x, r.z - m.z), Z = 45;
+        if (r._mk && r._mk.i !== mi) r._mk = null;
+        if (!r._mk && (dS < Z || dR < Z)) { const opp = vrStb(S.b) !== vrStb(r.b), beat = vrTwa(S) < Math.PI / 2 && vrTwa(r) < Math.PI / 2;
+          const ent = opp && beat ? null : vrAstern(S, r) ? r : vrAstern(r, S) ? S : (dS < dR ? S : r); r._mk = { i: mi, ent, ovl: !vrAstern(S, r) && !vrAstern(r, S) }; }
+        else if (r._mk && dS > Z + 12 && dR > Z + 12) r._mk = null; } }
     { vrTackState(r); const sameT = vrStb(S.b) === vrStb(r.b), rel = !sameT ? "X" : vrAstern(S, r) ? "A" : vrAstern(r, S) ? "B" : "O";
       if (rel === "O" && (r._rel === "A" || r._rel === "B")) { r._ovT = W.t; r._ovBy = r._rel === "A" ? S : r; } if (rel !== "O") r._ovT = 0; r._rel = rel; }
     /* (2026-11-12 13:36: a „közeli keresztezés is szabálytalanság” szabály törölve – ütközés nélkül nincs büntetés) */
