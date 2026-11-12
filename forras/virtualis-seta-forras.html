@@ -13410,6 +13410,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       #gameHub .gh-recs td{padding:7px 14px 7px 0;border-bottom:1px solid rgba(255,255,255,.1)}
       #gameHub .gh-recs p{font-size:19px;color:#cfe3f2;margin:14px 0 0}
       #gameHub.gh-hide{display:none}`; document.head.appendChild(css);
+    { const lk = document.createElement("link"); lk.rel = "manifest"; lk.href = "jatek.webmanifest"; document.head.appendChild(lk); document.title = "Zephyr Sailing VR"; }   /* 9. lépés előkészítése: a csomagoló (Bubblewrap) ebből a leírásból dolgozik */
     const hub = document.createElement("div"); hub.id = "gameHub"; hub.setAttribute("role", "dialog"); hub.setAttribute("aria-label", "Játékok");
     const DIFF = { kezdo: "Kezdő", halado: "Haladó", verseny: "Versenyző" }, ls = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
     const mmss = (t) => { t = Math.max(0, Math.round(t)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };

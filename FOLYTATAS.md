@@ -889,3 +889,8 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 - 5. Pályák: 10 pályatípus (új: Trapéz, Hosszú cirkáló, Balatoni átkelés, Cikkcakk, Kékszalag-kör); futamonként időjárás (gyenge / közepes / friss szél). Napszak-váltás NINCS kész.
 - 6. Rekordok: a kezdőképernyőn pályánkénti legjobb idők + bajnokság állása.
 - Hátravan: 7. sakk / hullámvasút / 2D regatta csiszolása; 8. képfrissítés a Questen (tulajdonos); 9. csomagolás, áruházi oldal, beadás (fejlesztői fiók és Mac-es eszközök kellenek hozzá – a tulajdonossal együtt).
+
+### 9. lépés – előkészítve (12:14 menet)
+- aruhaz/BEADAS.md: a Meta hivatalos oldalairól ellenőrzött tények (30% jutalék, 100 USD küszöb, Bubblewrap-csomagolás, W-8), a hátralévő lépések és az áruházi leírás vázlata.
+- jatek.webmanifest + ikonok (img/jatek). A tényleges csomagoláshoz fejlesztői fiók, végleges domain és a Mac kell – a tulajdonossal együtt.
+### 7. lépés (sakk, hullámvasút, 2D regatta csiszolása) – NEM kezdtem el ebben a menetben.

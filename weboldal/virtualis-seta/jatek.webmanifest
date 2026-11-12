@@ -1,0 +1,17 @@
+{
+  "name": "Zephyr Sailing VR",
+  "short_name": "Zephyr Sailing",
+  "description": "Valódi vitorlázás a Balatonon: kézzel kormányzott versenyhajó, élethű szél és vitorlák, versenyszabályok. Vitorlásverseny, vitorlás sakk, balatoni hullámvasút.",
+  "lang": "hu",
+  "start_url": "./?jatek",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#041326",
+  "theme_color": "#06203a",
+  "categories": ["games", "sports"],
+  "icons": [
+    { "src": "img/jatek/ikon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/jatek/ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
