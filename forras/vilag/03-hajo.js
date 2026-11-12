@@ -683,7 +683,7 @@
         const tb = []; [-1, 1].forEach((sd) => { const s6 = hullShape(.6); tb.push(rodGeom(V(sd * (HULL.B / 2 - .1), s6.sheer + .06, mastZ - .2), V(sd * (HULL.B / 2 - .1) * .985, s6.sheer + .3, mastZ - .2), .014, 8)); });
         const bw = V(0, hullShape(1).sheer + .05, HULL.L / 2 - .12); tb.push(rodGeom(bw, V(0, bw.y + .16, bw.z - .012), .05, 14));   /* fockroller dobja */
         mesh(mergeGeoms(tb), chrome, body);
-        const hl = [[.035, rR], [-.035, rB], [0, rG]].map(([x, m2]) => { const mm = mesh(mergeGeoms([rodGeom(V(x, mastBase + .2, mastZ + .1), V(x * .6, mastBase + mastH - .15, mastZ + .085), .0055, 5)]), m2, body); mm.userData.noBake = true; return mm; }); }
+        /* (2026-11-12 09:55, tulajdonos: az árbocon nem futnak fel színes kötelek – zavaró, nincs ott; levéve) */ }
       /* --- szélzászló (Windex) és kanalas szélmérő az árboccsúcson */
       const vane = new THREE.Group(); vane.position.set(0, mastBase + mastH + .34, mastZ - .16); body.add(vane);
       { mesh(mergeGeoms([rodGeom(V(0, mastBase + mastH + .04, mastZ - .16), V(0, mastBase + mastH + .34, mastZ - .16), .006, 5)]), dark, body);
@@ -701,7 +701,11 @@
       /* --- fockszkóták: 2 szakasz a húzott oldalon (sarok → kocsi → csörlő), 3 a lazán (sarok → árboc előtt → kocsi → csörlő) */
       const jsW = [rodM(.008, rR), rodM(.008, rR)], jsL = [rodM(.008, rB), rodM(.008, rB), rodM(.008, rB)];
       const carP = (sd) => { const q = hullShape(.42); return V(sd * (q.hb - .32), q.sheer + .11, q.z); }, winP = (sd) => { const q = hullShape(.28); return V(sd * (q.hb - .3) , q.sheer + .22, q.z); };
-      const cars = [-1, 1].map((sd) => { const c = mesh(new THREE.BoxGeometry(.07, .06, .12), dark, body); c.position.copy(carP(sd)); c.position.y -= .03; return c; });
+      const cars = [-1, 1].map((sd) => { const c = mesh(new THREE.BoxGeometry(.07, .06, .12), dark, body); c.position.copy(carP(sd)); c.position.y -= .03;
+        /* csigák: álló csiga a sínkocsin (ezen fordul a szkóta a csörlő felé) és terelőcsiga a csörlő előtt */
+        const sh1 = mesh(new THREE.CylinderGeometry(.045, .045, .028, 16), chrome, body); sh1.rotation.z = Math.PI / 2; sh1.position.copy(carP(sd)); sh1.position.y += .02;
+        const ck1 = mesh(new THREE.BoxGeometry(.012, .12, .1), dark, body); ck1.position.copy(sh1.position); ck1.position.x += sd * .02; const ck2 = mesh(new THREE.BoxGeometry(.012, .12, .1), dark, body); ck2.position.copy(sh1.position); ck2.position.x -= sd * .02;
+        const tb2 = mesh(new THREE.CylinderGeometry(.035, .035, .03, 14), chrome, body); tb2.position.copy(winP(sd)); tb2.position.z += .22; tb2.position.y -= .1; return c; });
       /* --- jelzőszálak: fock belépő él (piros a bal, zöld a jobb oldalon), grósz hátsó él (piros szalagok) */
       const tell = [];
       [.3, .5, .7].forEach((v) => { [-1, 1].forEach((sd) => tell.push({ m: rodM(.0045, sd > 0 ? rG : rR), jib: true, u: .1, v, sd, L: .2, ph: Math.random() * 9 })); });
@@ -720,7 +724,7 @@
         const nuJ = jibG.userData.nu; vtx(jibG, nuJ, 0, _cl);
         const ws = S.sj != null && S.sj !== 0 ? Math.sign(S.sj) : S.side, wg2 = S.wing > .5 ? -1 : 1, w = ws * wg2;
         _t0.copy(carP(w)); _t1.copy(winP(w)); setRod(jsW[0], _cl, _t0); setRod(jsW[1], _t0, _t1);
-        _m1.set(-w * .12, mastBase + .55 + .25 * Math.sin(S.t * 1.7), mastZ + .55); _m1.y -= .25;   /* a laza szkóta az árboc előtt, belógva */
+        _m1.set(-w * .3, hullShape(.6).sheer + .2, mastZ + .75);   /* 2026-11-12 09:55: a laza szkóta nem az árbocon fut – a fedélzeten fekszik az árboc előtt, és a túloldali csigán (sínkocsin) megy át */
         _t2.copy(carP(-w)); _t3.copy(winP(-w)); setRod(jsL[0], _cl, _m1); setRod(jsL[1], _m1, _t2); setRod(jsL[2], _t2, _t3);
         /* jelzőszálak */
         const U = S.aws || 6, flow = clamp(U / 7, .25, 1);

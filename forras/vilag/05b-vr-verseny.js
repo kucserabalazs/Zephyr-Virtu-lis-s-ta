@@ -57,6 +57,13 @@
         for (let i = 0; i < N; i++) { const a = b0 + i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } });
       const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals();
       const mm = std({ color: "#f1f1ec", roughness: .45, side: THREE.DoubleSide }); mesh(ge, mm, G).receiveShadow = true; }
+    /* 2026-11-12 10:00 (tulajdonos, harmadszor: „ahol a versenyzők ülnek, a fenekük alatt vájat látszik a hajón, és alatta a víz – a hajó ott mintha ki lenne vágva”):
+       a tíkborítás csak a hajó hátsó harmadát fedte, attól ELŐRE (a kajüt mellett, a legénység alatt és az orrfedélzeten) egyáltalán nem volt fedélzet – be lehetett látni
+       a hajótestbe. Most teljes szélességű, domború, fehér csúszásgátló fedélzet zárja le a hajót a tík végétől az orrig. */
+    { const N = 44, M = 12, pos = [], idx = []; for (let i = 0; i <= N; i++) { const u = .33 + (.998 - .33) * i / N, s = sh(u); for (let j = 0; j <= M; j++) { const f = j / M * 2 - 1; pos.push(f * (s.hb + .01), s.y - .07 * VR_SC + .07 * VR_SC * (1 - f * f) * .9 + .003, s.z); } }
+      for (let i = 0; i < N; i++) for (let j = 0; j < M; j++) { const a = i * (M + 1) + j, b = a + 1, c = a + M + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals();
+      mesh(ge, std({ color: "#eceee9", roughness: .85, side: THREE.DoubleSide }), G).receiveShadow = true; }
     const helmU = .14, hs = sh(helmU), deckY = hs.y + .02;
     /* a kajüttető lapos, versenyhajós (TP52-szerű) – a makeBoat túraszerű kajütjét alacsonyabbra nyomjuk, sötét ablaksávot és lejárót kap */
     body.children.forEach((m) => { if (m.isMesh && m.geometry && m.geometry.type === "ExtrudeGeometry") { m.scale.y = .58; } });
@@ -124,11 +131,14 @@
             const rg = mesh(new THREE.TorusGeometry(.128, .009, 8, 32), chrome, mW); rg.position.set(0, .815, -.6); rg.rotation.set(.55, 0, 0);
             const pst = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), carbon, mW); pst.position.set(0, 1.2, -.12); pst.rotation.x = -.35; }
           const rail = pod.children.filter((m) => m.material === chrome), hood = pod.children.filter((m) => m.geometry && m.geometry.type === "BoxGeometry" && m.material === carbon);
-          G.userData.podSet = (til) => { mT.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = !!til; }); hood.forEach((m) => { m.visible = !!til; });
-            if (til) { pod.position.set(-.8 * sd, .84, -.3); pod.rotation.set(.9, Math.PI - .5 * sd, 0); pod.scale.setScalar(.8); }
-            else { pod.position.set(0, 1.35, -.2); pod.rotation.set(.3, Math.PI, 0); pod.scale.setScalar(.62); }
-            /* 2026-11-12 08:52 (tulajdonos, hangban: „a keréknél a szélműszer és a nagy kijelző cseréljen helyet – a szélműszer kerüljön a kormányra, fölé a kijelző”) */
-            if (til) { scr.position.set(0, 1.2, -.2); scr.rotation.set(-.5, Math.PI, 0); scr.scale.setScalar(1); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
+          /* 2026-11-12 09:55 (tulajdonos: „botkormánynál is cseréld fel a két műszert”): a térképplotter MINDIG a kormányoszlop tetején ül; a szélműszer botkormánynál az
+             alacsony oldalkonzolon (kerek házban), keréknél a kerék közepében. */
+          const dh = new THREE.Group(); ped.add(dh); dh.position.set(0, 1.07, -.185); dh.rotation.set(.2, Math.PI, 0); dh.scale.setScalar(.6);   /* 2026-11-12 10:02 (tulajdonos): botkormánynál a szélműszer KÖZVETLENÜL a térkép alatt ül, a kormányoszlop fejébe építve – nem oldalra kitolva */
+          { const d1 = mesh(new THREE.CylinderGeometry(.215, .19, .05, 32), carbon, dh); d1.rotation.x = Math.PI / 2; d1.position.z = -.03; const r1 = mesh(new THREE.TorusGeometry(.2, .012, 8, 36), chrome, dh); r1.position.z = -.004; }
+          { const pst2 = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), carbon, ped); pst2.position.set(0, 1.2, -.12); pst2.rotation.x = -.35; }
+          G.userData.podSet = (til) => { mT.visible = false; dh.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = false; }); hood.forEach((m) => { m.visible = false; });
+            pod.position.set(0, 1.35, -.2); pod.rotation.set(.3, Math.PI, 0); pod.scale.setScalar(.62);
+            if (til) { scr.position.set(0, 1.07, -.185); scr.rotation.set(.2, Math.PI, 0); scr.scale.setScalar(.48); scr.translateZ(.002); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
           G.userData.podSet(true); } }
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
       const [gb, mb] = rodGeom(new THREE.Vector3(-.22, 0, .25), new THREE.Vector3(-.22, .95, .1), .016, 8); mesh(gb, chrome, ped).applyMatrix4(mb);
@@ -173,7 +183,7 @@
        → a toldó a rúd végétől a kormányos MELLKASA ELÉ ér (mellmagasság, kb. 36 cm-rel a test előtt), és azon 30 cm-rel túlnyúlik – így nem a végét, hanem beljebb fogod;
          a fogórész hosszú (60 cm), vastag markolat. A kormányzás a toldó TENGELYE mentén történő tolás/húzás: a mellkastól eltolva (a hajó közepe felé) jobbra, behúzva balra fordul;
          a semleges helyzet a mellkas előtt van, onnan mindkét irányba 26 cm a végállás. A merev toldó a kezeddel együtt mozdul (látszó elfordulás ±14°). */
-    const TIL = { TL: .68, EL: .8, TMAX: .25, REACH: .26, pz: hs.z - 1.35, py: deckY + .62, ty: deckY + .76 };
+    const TIL = { TL: .68, EL: .8, TMAX: .25, REACH: .15, pz: hs.z - 1.35, py: deckY + .62, ty: deckY + .76 };
     { const tip = new THREE.Vector3(0, TIL.ty, TIL.pz + TIL.TL), chest = new THREE.Vector3(-(hs.hb - .74), deckY + 1.12, hs.z - .62 + .36)   /* 2026-11-12 01:34: 8 cm-rel lejjebb (a tulajdonos: „5–10 centivel állítsuk lejjebb az egészet, kényelmesebb”) */, d = chest.clone().sub(tip); TIL.EL = d.length() + .3; TIL.restV = d.normalize(); TIL.ax = new THREE.Vector3(-d.x, 0, -d.z).normalize(); }
     { const wood = std({ color: "#8a5326", roughness: .38 }), til = new THREE.Group(); G.add(til); til.position.set(0, TIL.py, TIL.pz);
       const stock = mesh(new THREE.CylinderGeometry(.045, .055, .62, 16), chrome, til); stock.position.y = -.31;
@@ -654,7 +664,7 @@
                a megfogás helye a középállás; +26 cm-re eltolva végállás (jobbra fordul), a vállhoz visszahúzva (−26 cm-nyi együttes út) végállás a másik irányba.
                Testtartástól független: mindegy, merre nézel, az „el a testemtől / vissza a vállamhoz” mozdulat számít. */
           let bodyR = 0; try { const hp = T.headPos && T.headPos(); if (hp) { const hl = S.ck.G.worldToLocal(_wb.copy(hp)); bodyR = Math.hypot(lp.x - hl.x, lp.z - hl.z); } } catch (e) {}
-          const meas = bodyR + lp.x;   /* +x = a hajó közepe (bal oldala) felé – a kormányos a jobb oldalon áll */
+          const meas = lp.x;   /* 2026-11-12 09:56 (tulajdonos, helyesbítés): VÍZSZINTES, oldalirányú ökölmozgás a test előtt kormányoz, ahogy a valódi botkormánynál – a megfogás helye a közép; balra 15 cm / jobbra 15 cm a teljes kitérés. Balra (a hajó közepe felé) tolva a rúd balra megy → a hajó jobbra fordul. */
           if (G.x0 == null) { G.x0 = meas; G.wa0 = S.wa; }
           const tgW = clamp(G.wa0 + (meas - G.x0) / TI.REACH * WA_MAX, -WA_MAX, WA_MAX); S.wa += (tgW - S.wa) * Math.min(1, dt * 12); S.wv = 0;
           if (G.s) G.e = (G.e || new THREE.Vector3()).set(ex, ey, ez);
@@ -836,7 +846,7 @@
     S.env.rotation.y = S.b; S.far.rotation.y = S.b;
     S.env.position.set(-S.x, 0, -S.z).applyAxisAngle(new THREE.Vector3(0, 1, 0), S.b);
     const wm = S.water; wm.position.set(Math.round(S.x / 40) * 40, 0, Math.round(S.z / 40) * 40);
-    const mat = wm.userData.mat; S.wt = (S.wt == null ? W.t : S.wt) + dt * (.4 + .6 * clamp(S.v / 3, 0, 1)); mat.uniforms.uT.value = S.wt;   /* 2026-11-11: álló/lassú hajónál a hullámkép lassabban vonul – a keresztben futó hullámok „oldalra csúszás” érzetét keltették */ S.fox = (S.fox || 0) + fx * S.v * dt * 1.1; S.foz = (S.foz || 0) + fz * S.v * dt * 1.1; mat.uniforms.uOff.value.set(wm.position.x + S.fox, wm.position.z + S.foz);   /* sebességérzet: a víz mintázata ~2× gyorsabban fut el a hajó mellett (a fizika változatlan) */ mat.uniforms.uWind.value = Math.atan2(-wfv[1], -wfv[0]);
+    const mat = wm.userData.mat; S.wt = (S.wt == null ? W.t : S.wt) + dt * (.2 + .14 * clamp(S.v / 3, 0, 1)); mat.uniforms.uFlk.value = 1;   /* 2026-11-12 09:55: a hullámok lassabban vonulnak, és a vízhez RÖGZÍTETT habpelyhek/szélcsíkok mutatják a valódi haladást (ne tűnjön oldalra/hátra csúszásnak) */ mat.uniforms.uT.value = S.wt;   /* 2026-11-11: álló/lassú hajónál a hullámkép lassabban vonul – a keresztben futó hullámok „oldalra csúszás” érzetét keltették */ S.fox = (S.fox || 0) + fx * S.v * dt * 1.1; S.foz = (S.foz || 0) + fz * S.v * dt * 1.1; mat.uniforms.uOff.value.set(wm.position.x + S.fox, wm.position.z + S.foz);   /* sebességérzet: a víz mintázata ~2× gyorsabban fut el a hajó mellett (a fizika változatlan) */ mat.uniforms.uWind.value = Math.atan2(-wfv[1], -wfv[0]);
     const cw = new THREE.Vector3(); T.camObj().getWorldPosition(cw); mat.uniforms.uCam.value.copy(S.env.worldToLocal(cw));
     S.wake.push(S.x, S.z, Math.atan2(fx, fz), S.v, dt, .05);
     S.gulls.tick(dt, S.x, S.z);

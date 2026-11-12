@@ -241,7 +241,7 @@
       uniforms: { uT: { value: 0 }, uOff: { value: new THREE.Vector2() }, uWind: { value: WIND_DIR }, uW: { value: wv }, uSun: { value: opt.sun || SUN }, uCam: { value: new THREE.Vector3() }, uGust: { value: new THREE.Vector2(1, 0) },
         /* színek (a makett-világ napszakhoz igazítja őket; az alapértékek a vitorlázás délutánja) */
         uSkyH: { value: new THREE.Color(.70, .80, .87) }, uSkyZ: { value: new THREE.Color(.25, .45, .75) }, uDeep: { value: new THREE.Color(.06, .25, .27) }, uShallow: { value: new THREE.Color(.18, .44, .41) },
-        uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 } },
+        uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 }, uFlk: { value: 0 } },
       vertexShader: `
         uniform float uT, uWind; uniform vec2 uOff; uniform vec4 uW[5];
         varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
@@ -259,7 +259,7 @@
           gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        uniform sampler2D uSkyT; uniform float uSkyOn; uniform vec2 uSkyRot; uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5];
+        uniform sampler2D uSkyT; uniform float uSkyOn, uFlk; uniform vec2 uSkyRot; uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5];
         varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*f*(f*(f*6.-15.)+10.); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
@@ -305,6 +305,13 @@
           float streak = smoothstep(.62, .9, vn(vec2(dot(vW, wd) * .35, dot(vW, vec2(-wd.y, wd.x)) * 2.2) - vec2(uT * .25, 0.)));
           float foam = clamp(steep * (.35 + .65 * streak) * fa + gust * steep * .2, 0., 1.);
           col = mix(col, vec3(.93, .96, .97) * uLight, foam * .55);
+          if (uFlk > 0.) {   /* a VÍZHEZ rögzített habpelyhek, buborékfoltok és szélcsíkok: nem vonulnak a hullámokkal – ezek mutatják a hajó valódi haladását */
+            float nearF = 1. - smoothstep(14., 110., vDist), aa = clamp(1.4 - 5.3 * px, 0., 1.);
+            float f1 = smoothstep(.58, .84, vn(vW * .85)) * smoothstep(.42, .78, vn(vW * 5.3 + 7.)) * aa;
+            float f2 = smoothstep(.8, .95, vn(vW * 2.9 + 31.)) * aa;
+            float rows = smoothstep(.66, .9, vn(vec2(dot(vW, wd) * .07, dot(vW, vec2(-wd.y, wd.x)) * 1.1) + 3.)) * (.55 + .45 * vn(vW * 3.1));
+            col = mix(col, vec3(.95, .97, .98) * uLight, clamp(f1 * .5 + f2 * .3 + rows * .22, 0., 1.) * nearF * uFlk);
+          }
           float hz = smoothstep(250., 1550., vDist);
           col = mix(col, uHaze, hz * .85);
           gl_FragColor = vec4(col, 1.);
@@ -1071,7 +1078,7 @@
         const tb = []; [-1, 1].forEach((sd) => { const s6 = hullShape(.6); tb.push(rodGeom(V(sd * (HULL.B / 2 - .1), s6.sheer + .06, mastZ - .2), V(sd * (HULL.B / 2 - .1) * .985, s6.sheer + .3, mastZ - .2), .014, 8)); });
         const bw = V(0, hullShape(1).sheer + .05, HULL.L / 2 - .12); tb.push(rodGeom(bw, V(0, bw.y + .16, bw.z - .012), .05, 14));   /* fockroller dobja */
         mesh(mergeGeoms(tb), chrome, body);
-        const hl = [[.035, rR], [-.035, rB], [0, rG]].map(([x, m2]) => { const mm = mesh(mergeGeoms([rodGeom(V(x, mastBase + .2, mastZ + .1), V(x * .6, mastBase + mastH - .15, mastZ + .085), .0055, 5)]), m2, body); mm.userData.noBake = true; return mm; }); }
+        /* (2026-11-12 09:55, tulajdonos: az árbocon nem futnak fel színes kötelek – zavaró, nincs ott; levéve) */ }
       /* --- szélzászló (Windex) és kanalas szélmérő az árboccsúcson */
       const vane = new THREE.Group(); vane.position.set(0, mastBase + mastH + .34, mastZ - .16); body.add(vane);
       { mesh(mergeGeoms([rodGeom(V(0, mastBase + mastH + .04, mastZ - .16), V(0, mastBase + mastH + .34, mastZ - .16), .006, 5)]), dark, body);
@@ -1089,7 +1096,11 @@
       /* --- fockszkóták: 2 szakasz a húzott oldalon (sarok → kocsi → csörlő), 3 a lazán (sarok → árboc előtt → kocsi → csörlő) */
       const jsW = [rodM(.008, rR), rodM(.008, rR)], jsL = [rodM(.008, rB), rodM(.008, rB), rodM(.008, rB)];
       const carP = (sd) => { const q = hullShape(.42); return V(sd * (q.hb - .32), q.sheer + .11, q.z); }, winP = (sd) => { const q = hullShape(.28); return V(sd * (q.hb - .3) , q.sheer + .22, q.z); };
-      const cars = [-1, 1].map((sd) => { const c = mesh(new THREE.BoxGeometry(.07, .06, .12), dark, body); c.position.copy(carP(sd)); c.position.y -= .03; return c; });
+      const cars = [-1, 1].map((sd) => { const c = mesh(new THREE.BoxGeometry(.07, .06, .12), dark, body); c.position.copy(carP(sd)); c.position.y -= .03;
+        /* csigák: álló csiga a sínkocsin (ezen fordul a szkóta a csörlő felé) és terelőcsiga a csörlő előtt */
+        const sh1 = mesh(new THREE.CylinderGeometry(.045, .045, .028, 16), chrome, body); sh1.rotation.z = Math.PI / 2; sh1.position.copy(carP(sd)); sh1.position.y += .02;
+        const ck1 = mesh(new THREE.BoxGeometry(.012, .12, .1), dark, body); ck1.position.copy(sh1.position); ck1.position.x += sd * .02; const ck2 = mesh(new THREE.BoxGeometry(.012, .12, .1), dark, body); ck2.position.copy(sh1.position); ck2.position.x -= sd * .02;
+        const tb2 = mesh(new THREE.CylinderGeometry(.035, .035, .03, 14), chrome, body); tb2.position.copy(winP(sd)); tb2.position.z += .22; tb2.position.y -= .1; return c; });
       /* --- jelzőszálak: fock belépő él (piros a bal, zöld a jobb oldalon), grósz hátsó él (piros szalagok) */
       const tell = [];
       [.3, .5, .7].forEach((v) => { [-1, 1].forEach((sd) => tell.push({ m: rodM(.0045, sd > 0 ? rG : rR), jib: true, u: .1, v, sd, L: .2, ph: Math.random() * 9 })); });
@@ -1108,7 +1119,7 @@
         const nuJ = jibG.userData.nu; vtx(jibG, nuJ, 0, _cl);
         const ws = S.sj != null && S.sj !== 0 ? Math.sign(S.sj) : S.side, wg2 = S.wing > .5 ? -1 : 1, w = ws * wg2;
         _t0.copy(carP(w)); _t1.copy(winP(w)); setRod(jsW[0], _cl, _t0); setRod(jsW[1], _t0, _t1);
-        _m1.set(-w * .12, mastBase + .55 + .25 * Math.sin(S.t * 1.7), mastZ + .55); _m1.y -= .25;   /* a laza szkóta az árboc előtt, belógva */
+        _m1.set(-w * .3, hullShape(.6).sheer + .2, mastZ + .75);   /* 2026-11-12 09:55: a laza szkóta nem az árbocon fut – a fedélzeten fekszik az árboc előtt, és a túloldali csigán (sínkocsin) megy át */
         _t2.copy(carP(-w)); _t3.copy(winP(-w)); setRod(jsL[0], _cl, _m1); setRod(jsL[1], _m1, _t2); setRod(jsL[2], _t2, _t3);
         /* jelzőszálak */
         const U = S.aws || 6, flow = clamp(U / 7, .25, 1);
@@ -1606,6 +1617,13 @@
         for (let i = 0; i < N; i++) { const a = b0 + i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } });
       const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals();
       const mm = std({ color: "#f1f1ec", roughness: .45, side: THREE.DoubleSide }); mesh(ge, mm, G).receiveShadow = true; }
+    /* 2026-11-12 10:00 (tulajdonos, harmadszor: „ahol a versenyzők ülnek, a fenekük alatt vájat látszik a hajón, és alatta a víz – a hajó ott mintha ki lenne vágva”):
+       a tíkborítás csak a hajó hátsó harmadát fedte, attól ELŐRE (a kajüt mellett, a legénység alatt és az orrfedélzeten) egyáltalán nem volt fedélzet – be lehetett látni
+       a hajótestbe. Most teljes szélességű, domború, fehér csúszásgátló fedélzet zárja le a hajót a tík végétől az orrig. */
+    { const N = 44, M = 12, pos = [], idx = []; for (let i = 0; i <= N; i++) { const u = .33 + (.998 - .33) * i / N, s = sh(u); for (let j = 0; j <= M; j++) { const f = j / M * 2 - 1; pos.push(f * (s.hb + .01), s.y - .07 * VR_SC + .07 * VR_SC * (1 - f * f) * .9 + .003, s.z); } }
+      for (let i = 0; i < N; i++) for (let j = 0; j < M; j++) { const a = i * (M + 1) + j, b = a + 1, c = a + M + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals();
+      mesh(ge, std({ color: "#eceee9", roughness: .85, side: THREE.DoubleSide }), G).receiveShadow = true; }
     const helmU = .14, hs = sh(helmU), deckY = hs.y + .02;
     /* a kajüttető lapos, versenyhajós (TP52-szerű) – a makeBoat túraszerű kajütjét alacsonyabbra nyomjuk, sötét ablaksávot és lejárót kap */
     body.children.forEach((m) => { if (m.isMesh && m.geometry && m.geometry.type === "ExtrudeGeometry") { m.scale.y = .58; } });
@@ -1673,11 +1691,14 @@
             const rg = mesh(new THREE.TorusGeometry(.128, .009, 8, 32), chrome, mW); rg.position.set(0, .815, -.6); rg.rotation.set(.55, 0, 0);
             const pst = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), carbon, mW); pst.position.set(0, 1.2, -.12); pst.rotation.x = -.35; }
           const rail = pod.children.filter((m) => m.material === chrome), hood = pod.children.filter((m) => m.geometry && m.geometry.type === "BoxGeometry" && m.material === carbon);
-          G.userData.podSet = (til) => { mT.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = !!til; }); hood.forEach((m) => { m.visible = !!til; });
-            if (til) { pod.position.set(-.8 * sd, .84, -.3); pod.rotation.set(.9, Math.PI - .5 * sd, 0); pod.scale.setScalar(.8); }
-            else { pod.position.set(0, 1.35, -.2); pod.rotation.set(.3, Math.PI, 0); pod.scale.setScalar(.62); }
-            /* 2026-11-12 08:52 (tulajdonos, hangban: „a keréknél a szélműszer és a nagy kijelző cseréljen helyet – a szélműszer kerüljön a kormányra, fölé a kijelző”) */
-            if (til) { scr.position.set(0, 1.2, -.2); scr.rotation.set(-.5, Math.PI, 0); scr.scale.setScalar(1); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
+          /* 2026-11-12 09:55 (tulajdonos: „botkormánynál is cseréld fel a két műszert”): a térképplotter MINDIG a kormányoszlop tetején ül; a szélműszer botkormánynál az
+             alacsony oldalkonzolon (kerek házban), keréknél a kerék közepében. */
+          const dh = new THREE.Group(); ped.add(dh); dh.position.set(0, 1.07, -.185); dh.rotation.set(.2, Math.PI, 0); dh.scale.setScalar(.6);   /* 2026-11-12 10:02 (tulajdonos): botkormánynál a szélműszer KÖZVETLENÜL a térkép alatt ül, a kormányoszlop fejébe építve – nem oldalra kitolva */
+          { const d1 = mesh(new THREE.CylinderGeometry(.215, .19, .05, 32), carbon, dh); d1.rotation.x = Math.PI / 2; d1.position.z = -.03; const r1 = mesh(new THREE.TorusGeometry(.2, .012, 8, 36), chrome, dh); r1.position.z = -.004; }
+          { const pst2 = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), carbon, ped); pst2.position.set(0, 1.2, -.12); pst2.rotation.x = -.35; }
+          G.userData.podSet = (til) => { mT.visible = false; dh.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = false; }); hood.forEach((m) => { m.visible = false; });
+            pod.position.set(0, 1.35, -.2); pod.rotation.set(.3, Math.PI, 0); pod.scale.setScalar(.62);
+            if (til) { scr.position.set(0, 1.07, -.185); scr.rotation.set(.2, Math.PI, 0); scr.scale.setScalar(.48); scr.translateZ(.002); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
           G.userData.podSet(true); } }
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
       const [gb, mb] = rodGeom(new THREE.Vector3(-.22, 0, .25), new THREE.Vector3(-.22, .95, .1), .016, 8); mesh(gb, chrome, ped).applyMatrix4(mb);
@@ -1722,7 +1743,7 @@
        → a toldó a rúd végétől a kormányos MELLKASA ELÉ ér (mellmagasság, kb. 36 cm-rel a test előtt), és azon 30 cm-rel túlnyúlik – így nem a végét, hanem beljebb fogod;
          a fogórész hosszú (60 cm), vastag markolat. A kormányzás a toldó TENGELYE mentén történő tolás/húzás: a mellkastól eltolva (a hajó közepe felé) jobbra, behúzva balra fordul;
          a semleges helyzet a mellkas előtt van, onnan mindkét irányba 26 cm a végállás. A merev toldó a kezeddel együtt mozdul (látszó elfordulás ±14°). */
-    const TIL = { TL: .68, EL: .8, TMAX: .25, REACH: .26, pz: hs.z - 1.35, py: deckY + .62, ty: deckY + .76 };
+    const TIL = { TL: .68, EL: .8, TMAX: .25, REACH: .15, pz: hs.z - 1.35, py: deckY + .62, ty: deckY + .76 };
     { const tip = new THREE.Vector3(0, TIL.ty, TIL.pz + TIL.TL), chest = new THREE.Vector3(-(hs.hb - .74), deckY + 1.12, hs.z - .62 + .36)   /* 2026-11-12 01:34: 8 cm-rel lejjebb (a tulajdonos: „5–10 centivel állítsuk lejjebb az egészet, kényelmesebb”) */, d = chest.clone().sub(tip); TIL.EL = d.length() + .3; TIL.restV = d.normalize(); TIL.ax = new THREE.Vector3(-d.x, 0, -d.z).normalize(); }
     { const wood = std({ color: "#8a5326", roughness: .38 }), til = new THREE.Group(); G.add(til); til.position.set(0, TIL.py, TIL.pz);
       const stock = mesh(new THREE.CylinderGeometry(.045, .055, .62, 16), chrome, til); stock.position.y = -.31;
@@ -2203,7 +2224,7 @@
                a megfogás helye a középállás; +26 cm-re eltolva végállás (jobbra fordul), a vállhoz visszahúzva (−26 cm-nyi együttes út) végállás a másik irányba.
                Testtartástól független: mindegy, merre nézel, az „el a testemtől / vissza a vállamhoz” mozdulat számít. */
           let bodyR = 0; try { const hp = T.headPos && T.headPos(); if (hp) { const hl = S.ck.G.worldToLocal(_wb.copy(hp)); bodyR = Math.hypot(lp.x - hl.x, lp.z - hl.z); } } catch (e) {}
-          const meas = bodyR + lp.x;   /* +x = a hajó közepe (bal oldala) felé – a kormányos a jobb oldalon áll */
+          const meas = lp.x;   /* 2026-11-12 09:56 (tulajdonos, helyesbítés): VÍZSZINTES, oldalirányú ökölmozgás a test előtt kormányoz, ahogy a valódi botkormánynál – a megfogás helye a közép; balra 15 cm / jobbra 15 cm a teljes kitérés. Balra (a hajó közepe felé) tolva a rúd balra megy → a hajó jobbra fordul. */
           if (G.x0 == null) { G.x0 = meas; G.wa0 = S.wa; }
           const tgW = clamp(G.wa0 + (meas - G.x0) / TI.REACH * WA_MAX, -WA_MAX, WA_MAX); S.wa += (tgW - S.wa) * Math.min(1, dt * 12); S.wv = 0;
           if (G.s) G.e = (G.e || new THREE.Vector3()).set(ex, ey, ez);
@@ -2385,7 +2406,7 @@
     S.env.rotation.y = S.b; S.far.rotation.y = S.b;
     S.env.position.set(-S.x, 0, -S.z).applyAxisAngle(new THREE.Vector3(0, 1, 0), S.b);
     const wm = S.water; wm.position.set(Math.round(S.x / 40) * 40, 0, Math.round(S.z / 40) * 40);
-    const mat = wm.userData.mat; S.wt = (S.wt == null ? W.t : S.wt) + dt * (.4 + .6 * clamp(S.v / 3, 0, 1)); mat.uniforms.uT.value = S.wt;   /* 2026-11-11: álló/lassú hajónál a hullámkép lassabban vonul – a keresztben futó hullámok „oldalra csúszás” érzetét keltették */ S.fox = (S.fox || 0) + fx * S.v * dt * 1.1; S.foz = (S.foz || 0) + fz * S.v * dt * 1.1; mat.uniforms.uOff.value.set(wm.position.x + S.fox, wm.position.z + S.foz);   /* sebességérzet: a víz mintázata ~2× gyorsabban fut el a hajó mellett (a fizika változatlan) */ mat.uniforms.uWind.value = Math.atan2(-wfv[1], -wfv[0]);
+    const mat = wm.userData.mat; S.wt = (S.wt == null ? W.t : S.wt) + dt * (.2 + .14 * clamp(S.v / 3, 0, 1)); mat.uniforms.uFlk.value = 1;   /* 2026-11-12 09:55: a hullámok lassabban vonulnak, és a vízhez RÖGZÍTETT habpelyhek/szélcsíkok mutatják a valódi haladást (ne tűnjön oldalra/hátra csúszásnak) */ mat.uniforms.uT.value = S.wt;   /* 2026-11-11: álló/lassú hajónál a hullámkép lassabban vonul – a keresztben futó hullámok „oldalra csúszás” érzetét keltették */ S.fox = (S.fox || 0) + fx * S.v * dt * 1.1; S.foz = (S.foz || 0) + fz * S.v * dt * 1.1; mat.uniforms.uOff.value.set(wm.position.x + S.fox, wm.position.z + S.foz);   /* sebességérzet: a víz mintázata ~2× gyorsabban fut el a hajó mellett (a fizika változatlan) */ mat.uniforms.uWind.value = Math.atan2(-wfv[1], -wfv[0]);
     const cw = new THREE.Vector3(); T.camObj().getWorldPosition(cw); mat.uniforms.uCam.value.copy(S.env.worldToLocal(cw));
     S.wake.push(S.x, S.z, Math.atan2(fx, fz), S.v, dt, .05);
     S.gulls.tick(dt, S.x, S.z);

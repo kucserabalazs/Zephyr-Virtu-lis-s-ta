@@ -844,3 +844,11 @@ Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mi
 ## 2026-11-12 09:39–09:40
 - Tulajdonos: menet közben botkormányra váltva nem lehetett megfogni a rudat („tehetetlen”). Valószínű ok: a (láthatatlan) kerék sugaras fogása (vrGrab/vrDrag, rgrab) tovább élt és összeakadt a rúd fogásával. Javítás: botkormánynál vrGrab/vrDrag tiltva, átváltáskor minden fogás/ráfutás törlődik (xrForget), kerékről maradt fogás elengedve; bővebb fogási zóna (42 cm), a már zárt kéz is megfogja 20 cm-en belül. SZEMÜVEGBEN NINCS ELLENŐRIZVE – ha továbbra is rossz, a közvetítésen kell megnézni.
 - Fock: a teljes alsó sáv átlátszó, három szegmensben, szegőszalaggal.
+
+## 2026-11-12 09:55–10:02
+- Szkóták: az árbocon futó színes kötelek levéve; a laza fockszkóta a fedélzeten fut a túloldali csigához; csigák a sínkocsikon és a csörlők előtt.
+- Oldalra/hátra csúszás érzete: a hullámkép lassabban vonul (uT sebesség .2–.34), és a vízhez RÖGZÍTETT habpelyhek + szélcsíkok (uFlk, 02-kornyezet.js) mutatják a valódi haladást.
+- Botkormány vezérlése (végleges kérés 09:58): VÍZSZINTES, oldalirányú ökölmozgás a test előtt; a megfogás helye a közép; balra 15 cm / jobbra 15 cm a teljes kitérés (meas = lp.x, REACH .15). Az előre-hátra tolás NEM jó (ő maga vonta vissza).
+- Műszerek: a térképplotter mindkét módban a kormányoszlop tetején; a szélműszer botkormánynál közvetlenül alatta, az oszlop fejébe építve; keréknél a kerék közepén.
+- „Vájat a legénység alatt, látszik a víz” (harmadszor kérte): a tíkborítástól előre NEM VOLT fedélzet (vis:false miatt a makeBoat fedélzete nem épül). Most teljes fehér fedélzet u .33–1 között (vrCockpit). Felülnézeti tesztképen zárt.
+- Következő kérés: a legénység bábui legyenek emberszerűek (lobogó haj stb.).
