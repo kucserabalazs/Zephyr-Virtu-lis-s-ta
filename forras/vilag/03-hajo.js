@@ -32,13 +32,43 @@
       g.fillText(o.num, w * .48, h * .40);
       if (o.logo) { g.font = "900 72px Georgia, serif"; g.fillStyle = /^#(d|e|c)[0-9a-f]1|^#d61f26/i.test(o.main) ? "#ffffff" : "#c62828"; g.fillText(o.logo, w * .48, h * .58); }
       g.font = "800 64px system-ui"; g.fillStyle = o.numCol || "#1b2c5e"; g.fillText(o.cls || "R27", w * .5, h * .2);
-      if (o.win) sailWindow(g, w, h, [[.2, .49], [.515, .8]], .05, .15, 12);
+      if (o.win) { sailDetail(g, w, h, true); sailWindow(g, w, h, [[.2, .49], [.515, .8]], .05, .15, 12); }
     }));
   }
   /* 2026-11-12 08:52 (tulajdonos, hangban: „a versenyvitorlák alsó részébe átlátszó ablakot varrnak, hogy a kormányos kilásson a hajó elé; túl nagy nem lehet, mert gyengíti
      a vitorlát; két részletben legyen bevarrva, élethűen – a grószba és a fockba is”). A valódi vitorlákon az ablak az alsó panelekben, a varratok KÖZÖTT ül, több
      szegmensben, átlátszó fóliából, körben rávarrt szegőszalaggal (kb. 45 cm magas, 1,2 m hosszú). Itt: két egymás melletti fóliamező az alsó panelben, köztük
      függőleges varratszalag; a fólia majdnem teljesen átlátszó, halvány kékes csillogással; körben fehér szegőszalag cikkcakk-öltéssel. */
+  /* 2026-11-12 09:13 (tulajdonos: „a grósz és a fock legyen legalább annyira kidolgozott, mint a spinakker – makettszerű, részletes”): vitorlakészítői részletek a vásznon –
+     sugaras sarokerősítések (fej, nyak, szkótasarok), élszalagok, lécsebek végsapkával, reffsorok kauszokkal, trimmcsíkok, jelzőszál-ablakok. */
+  function sailDetail(g, w, h, main) {
+    const k = w / 1024, fan = (x, y, a0, a1, R, n) => { for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; g.strokeStyle = "rgba(0,0,0,.13)"; g.lineWidth = 2 * k; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * R, y + Math.sin(a) * R); g.stroke(); }
+      g.fillStyle = "rgba(255,255,255,.10)"; g.beginPath(); g.moveTo(x, y); g.arc(x, y, R, Math.min(a0, a1), Math.max(a0, a1)); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.2)"; g.lineWidth = 3 * k; g.beginPath(); g.arc(x, y, R, Math.min(a0, a1), Math.max(a0, a1)); g.stroke();
+      g.fillStyle = "#c9ced4"; g.beginPath(); g.arc(x + Math.cos((a0 + a1) / 2) * 34 * k, y + Math.sin((a0 + a1) / 2) * 34 * k, 13 * k, 0, TAU); g.fill(); g.fillStyle = "rgba(0,0,0,.55)"; g.beginPath(); g.arc(x + Math.cos((a0 + a1) / 2) * 34 * k, y + Math.sin((a0 + a1) / 2) * 34 * k, 6 * k, 0, TAU); g.fill(); };
+    /* sarokerősítések: nyak (bal alsó), szkótasarok (jobb alsó), fej (fent) */
+    fan(0, h, -Math.PI / 2, 0, 190 * k, 9); fan(w, h, -Math.PI, -Math.PI / 2, 210 * k, 9); fan(main ? w * .06 : 0, 0, 0, Math.PI / 2, 170 * k, 8);
+    /* élszalagok: belépő él (árbocsín / előstag), hátsó él, alsó él */
+    g.fillStyle = "rgba(255,255,255,.55)"; g.fillRect(0, 0, 13 * k, h); g.fillStyle = "rgba(0,0,0,.16)"; g.fillRect(13 * k, 0, 2 * k, h);
+    g.fillStyle = "rgba(0,0,0,.14)"; g.fillRect(w - 12 * k, 0, 12 * k, h); g.fillRect(0, h - 10 * k, w, 10 * k);
+    for (let y = 30 * k; y < h; y += 46 * k) { g.fillStyle = "rgba(40,44,52,.5)"; g.fillRect(3 * k, y, 7 * k, 14 * k); }   /* csúszkák / lovasok az élen */
+    /* trimmcsíkok (draft stripes) */
+    [.3, .52, .74].forEach((v) => { g.strokeStyle = "rgba(15,20,30,.55)"; g.lineWidth = 7 * k; g.beginPath(); g.moveTo(w * .06, h * (1 - v)); g.quadraticCurveTo(w * .4, h * (1 - v) - 10 * k, w * (main ? .86 : .9), h * (1 - v) + 4 * k); g.stroke(); });
+    if (main) {
+      /* lécsebek: teljes hosszú felső lécek, végükön feszítősapka */
+      [.24, .46, .66, .84].forEach((v, i) => { const y = h * (1 - v), x0 = w * (i > 1 ? .04 : .5); g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(x0, y - 9 * k, w - x0, 18 * k); g.strokeStyle = "rgba(0,0,0,.28)"; g.lineWidth = 2 * k; g.strokeRect(x0, y - 9 * k, w - x0, 18 * k);
+        g.fillStyle = "#20242b"; g.fillRect(w - 30 * k, y - 13 * k, 30 * k, 26 * k); if (i > 1) g.fillRect(x0 - 4 * k, y - 12 * k, 22 * k, 24 * k); });
+      /* két reffsor: erősítősáv, kauszok, reffkötélkék */
+      [.2, .34].forEach((v) => { const y = h * (1 - v); g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(0, y - 12 * k, w, 24 * k); g.strokeStyle = "rgba(0,0,0,.16)"; g.lineWidth = 2 * k; g.strokeRect(0, y - 12 * k, w, 24 * k);
+        for (let x = w * .1; x < w * .95; x += w * .105) { g.fillStyle = "#c9ced4"; g.beginPath(); g.arc(x, y, 7 * k, 0, TAU); g.fill(); g.fillStyle = "rgba(0,0,0,.6)"; g.beginPath(); g.arc(x, y, 3.2 * k, 0, TAU); g.fill(); g.strokeStyle = "rgba(245,245,240,.85)"; g.lineWidth = 3 * k; g.beginPath(); g.moveTo(x, y + 6 * k); g.lineTo(x - 3 * k, y + 40 * k); g.stroke(); }
+        [[20 * k, y], [w - 26 * k, y]].forEach(([x, yy]) => { g.fillStyle = "#c9ced4"; g.beginPath(); g.arc(x, yy, 13 * k, 0, TAU); g.fill(); g.fillStyle = "rgba(0,0,0,.6)"; g.beginPath(); g.arc(x, yy, 6 * k, 0, TAU); g.fill(); }); });
+      /* vitorlakészítő-címke a nyaknál */
+      g.fillStyle = "rgba(255,255,255,.85)"; g.fillRect(w * .05, h * .905, 120 * k, 40 * k); g.fillStyle = "#16306b"; g.font = `800 ${22 * k}px system-ui`; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText("ZEPHYR", w * .05 + 10 * k, h * .905 + 21 * k);
+    } else {
+      /* jelzőszál-ablakok a belépő él mögött (itt látszanak a szél alatti szálak) */
+      [.3, .5, .7].forEach((v) => { const x = w * .1, y = h * (1 - v); g.save(); g.beginPath(); g.ellipse(x, y, 34 * k, 16 * k, 0, 0, TAU); g.clip(); g.clearRect(x - 36 * k, y - 18 * k, 72 * k, 36 * k); g.fillStyle = "rgba(210,235,250,.12)"; g.fillRect(x - 36 * k, y - 18 * k, 72 * k, 36 * k); g.restore();
+        g.strokeStyle = "rgba(250,250,246,.95)"; g.lineWidth = 5 * k; g.beginPath(); g.ellipse(x, y, 34 * k, 16 * k, 0, 0, TAU); g.stroke(); });
+    }
+  }
   function sailWindow(g, w, h, cols, v0, v1, tape) {
     const y1 = h * (1 - v0), y0 = h * (1 - v1), sk = h * .006;
     cols.forEach(([u0, u1], k) => { const x0 = w * u0, x1 = w * u1, r = tape * 1.6;
@@ -56,7 +86,7 @@
       for (let k = 1; k < 9; k++) { g.strokeStyle = "rgba(0,0,0,.1)"; g.lineWidth = 2; g.beginPath(); g.moveTo(0, k * h / 9); g.lineTo(w, k * h / 9 - 10); g.stroke(); }
       /* UV-védőcsík az achterliken és az alsó élen */
       g.fillStyle = o.uv || "rgba(40,48,60,.85)"; g.fillRect(w - 26, 0, 26, h); g.fillRect(0, h - 22, w, 22);
-      if (o.win) sailWindow(g, w, h, [[.2, .47], [.495, .76]], .075, .215, 7);
+      if (o.win) { sailDetail(g, w, h, false); sailWindow(g, w, h, [[.2, .47], [.495, .76]], .075, .215, 7); }
     }));
   }
   function spinTex(cols) {
@@ -319,7 +349,8 @@
     /* vitorlák */
     const mainMat = std({ map: sailTex(o), side: THREE.DoubleSide, roughness: .85, transparent: !!o.win });
     const jibMat = std({ map: jibTex(o), side: THREE.DoubleSide, roughness: .85, transparent: !!o.win });
-    const mainG = sailGeom(10, 14), jibG = sailGeom(9, 12);
+    const FINE = !!o.fine;   /* a saját (VR) hajó: sűrűbb vászonháló, rugós bum, lécek „átpattanása”, kötelek, jelzőszálak, szélzászló */
+    const mainG = FINE ? sailGeom(20, 30) : sailGeom(10, 14), jibG = FINE ? sailGeom(18, 26) : sailGeom(9, 12);
     const mainM = mesh(mainG, mainMat, body), jibM = mesh(jibG, jibMat, body);
     mainM.frustumCulled = jibM.frustumCulled = false;
     let spinM = null, spinG = null;
@@ -430,7 +461,7 @@
          a trimmer folyamatosan engedi a szkótát, amíg a belépő él közepe enyhén be nem hajlik (luff curl), majd visszahúzza;
          hátszélben a spinakker a szél felőli oldalra fordul, szemben a grósszal – ez a spinakkeres „pillangó”. Túl éles szögnél összeesik. */
     const S = { boom: .15, jib: .2, side: 1, luff: 0, heel: 0, pitch: 0, spin: 0, t: 0, crewSide: 1,
-      awa: null, aws: 6, gust: 1, tackT: 0, wing: 0, boomS: null, jibA: null, lfM: 0, lfJ: 0, bl: 0, jc: 0, scurl: 0 };
+      awa: null, aws: 6, gust: 1, tackT: 0, wing: 0, boomS: null, jibA: null, lfM: 0, lfJ: 0, bl: 0, jc: 0, scurl: 0, boomV: 0, lift: 0, sv: null, sj: null, sideP: null, dt: 0 };
     const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
     /* rúd: hátszélben a génua kitolásához (pillangó), spinakkerrel a spinakker rúdja */
     const poleG = new THREE.CylinderGeometry(.03, .03, 1, 8); poleG.translate(0, .5, 0); const poleM = mesh(poleG, alu, body); poleM.visible = false;
@@ -446,6 +477,13 @@
       const bT = clamp(A - 18, 4, 82) * sd;
       if (S.boomS == null) S.boomS = bT;
       /* fordulóban/perdülésben a bum gyorsan átvág, egyébként a szkótás folyamatosan követi a szelet */
+      if (FINE) {   /* rugós-csillapított bum: perdülésnél/fordulónál átvág, a szkóta végén megrándul és visszarúg; egyébként a szkótás puhán követi a szelet */
+        const cross = Math.sign(bT) !== Math.sign(S.boomS) && Math.abs(bT - S.boomS) > 6, h2 = Math.min(dt, .05);
+        S.boomV += ((bT - S.boomS) * (cross ? 30 : 9) - S.boomV * (cross ? 5.2 : 5)) * h2; S.boomS += S.boomV * h2;
+        if (Math.abs(S.boomS) > 84) { S.boomS = Math.sign(S.boomS) * 84; S.boomV *= -.35; }
+        if (S.sideP !== sd) { if (S.sideP != null) S.jibA = 46; S.sideP = sd; }   /* forduló: a fockszkótát kiengedik, a túloldalon csörlőzik be */
+        const lT = .015 + .06 * clamp(Math.abs(S.boomS) / 80, 0, 1) + clamp(Math.abs(S.boomV) * .0009, 0, .06) + .01 * (S.gust - 1) / .15; S.lift += (lT - S.lift) * Math.min(1, dt * 4);
+      } else
       S.boomS += (bT - S.boomS) * Math.min(1, dt * (Math.sign(bT) !== Math.sign(S.boomS) ? 3.2 : 1.6));
       S.boom = S.boomS * D2R;
       const jT = clamp(A - 21, 9, 46); if (S.jibA == null) S.jibA = jT; S.jibA += (jT - S.jibA) * k; S.jib = S.jibA * D2R;
@@ -479,25 +517,34 @@
       const y0 = mastBase + .92, yh = mastBase + mastH - .25, foot = 3.3, a = S.boom, side = S.side;
       const auto = S.awa != null, U = auto ? S.aws : 6, lf = auto ? S.lfM : S.luff, om = TAU * (.9 + U * .16);
       const gk = .955 + .045 * clamp((S.gust - 1) / .15, -1, 1);   /* széllökésben a vitorla „megtelik” */
-      const twist = auto ? .16 + .1 * clamp((S.awa - 30) / 120, 0, 1) : .22;   /* hátszélben nyitottabb felső rész */
+      let twist = auto ? .16 + .1 * clamp((S.awa - 30) / 120, 0, 1) : .22;   /* hátszélben nyitottabb felső rész */
+      if (FINE) { twist += .07 * clamp((S.gust - 1) / .15, -1, 1) + .5 * S.lift;   /* lökésben és megemelt bumnál a hátsó él kinyílik */
+        if (!S.sv) S.sv = new Float32Array(nv + 1).fill(side); }
+      const dxp = FINE ? .72 + .1 * clamp(U / 10, 0, 1) : .8, clewUp = FINE ? Math.sin(S.lift) * foot : 0;
       for (let j = 0; j <= nv; j++) {
         const v = j / nv, y = y0 + (yh - y0) * v;
         const chord = foot * ((1 - v) * (1 + .26 * Math.sin(Math.PI * v))) + .16 * v;
-        const tw = a + side * twist * v;   /* a vitorla csavarodása felfelé */
+        /* FINE: a vitorla oldalváltása alulról felfelé fut végig – a lécek egymás után „pattannak át”, közben a vászon laposan csapkod */
+        let sdj = side, lfj = lf;
+        if (FINE) { const r = (4.6 - 2.6 * v) * S.dt, d = side - S.sv[j]; S.sv[j] += clamp(d, -r, r); const q = S.sv[j]; sdj = Math.sign(q) * Math.pow(Math.abs(q), .45); lfj = Math.max(lf, (1 - Math.abs(q)) * .95); }
+        const tw = a + sdj * twist * v;   /* a vitorla csavarodása felfelé */
         const dx = Math.sin(tw), dz = -Math.cos(tw);
-        const camber = .11 * (1 - v * .35) * gk;
+        const camber = .11 * (1 - v * .35) * gk * (FINE ? .45 + .55 * sstep(0, .1, v) : 1);   /* az alsó él a bumhoz simul */
+        const bend = FINE ? -.09 * Math.sin(Math.PI * v) * clamp(U / 9, .2, 1.2) : 0;   /* árbochajlás: a belépő él közepe előre ível */
         for (let i = 0; i <= nu; i++) {
           const u = i / nu, k = (j * (nu + 1) + i) * 3;
-          let depth = chord * camber * Math.sin(Math.PI * Math.pow(u, .8));
-          depth = luffDepth(depth, chord, u, v, lf, om, .07);
-          if (auto) depth += leechFlutter(u, v, U, lf);
-          pa[k] = dx * u * chord + Math.cos(tw) * depth * side;
-          pa[k + 1] = y - u * .12 * (1 - v);
-          pa[k + 2] = mastZ - .07 + dz * u * chord + Math.sin(tw) * depth * side;
+          let depth = chord * camber * Math.sin(Math.PI * Math.pow(u, dxp));
+          depth = luffDepth(depth, chord, u, v, lfj, om, .07);
+          if (auto) depth += leechFlutter(u, v, U, lfj);
+          if (FINE) depth += .012 * Math.exp(-u * 7) * Math.sin(v * 58 + u * 9) * clamp(1.2 - U / 7, 0, 1) * (1 - lfj)   /* gyenge szélben ráncok a belépő él mögött */
+            + chord * .006 * Math.sin(S.t * 2.1 + v * 4 - u * 5) * (S.gust - .85);                                        /* a vászon „lélegzik” a lökésekben */
+          pa[k] = dx * u * chord + Math.cos(tw) * depth * sdj;
+          pa[k + 1] = y - u * .12 * (1 - v) + u * clewUp * Math.pow(1 - v, 1.5);
+          pa[k + 2] = mastZ - .07 + dz * u * chord + Math.sin(tw) * depth * sdj + bend * (1 - u);
         }
       }
       mainG.attributes.position.needsUpdate = true; mainG.computeVertexNormals(); if (G.userData.sailBaked) sailShade(mainG);
-      boomG.rotation.y = -a;
+      boomG.rotation.y = -a; if (FINE) { boomG.rotation.order = "YXZ"; boomG.rotation.x = S.lift; }
     }
     const _cw = new THREE.Vector3();
     function updJib() {
@@ -505,7 +552,10 @@
       const tack = _a.set(0, hullShape(1).sheer + .1, HULL.L / 2 - .25);
       const head = _b.set(0, foreH - .25, mastZ + .1 + (HULL.L / 2 - .25 - mastZ - .1) * .03);
       const auto = S.awa != null, ja = S.jib, side = S.side, foot = 4.55, U = auto ? S.aws : 6, om = TAU * (1 + U * .17);
-      const clew = _c.set(tack.x + Math.sin(ja) * foot * side, hullShape(.5).sheer + .42 + ja * .5, tack.z - Math.cos(ja) * foot);
+      /* FINE: forduláskor a fock nem „ugrik át” – a szkótasarok az árboc ELŐTT ível át a túloldalra, közben a vászon csapkod, aztán becsörlőzik */
+      if (FINE) { if (S.sj == null) S.sj = side; S.sj += clamp(side - S.sj, -1.35 * S.dt, 1.35 * S.dt); }
+      const sx = FINE ? Math.sign(S.sj) * Math.pow(Math.abs(S.sj), .6) : side, midT = FINE ? 1 - Math.abs(S.sj) : 0;
+      const clew = _c.set(tack.x + Math.sin(ja) * foot * sx, hullShape(.5).sheer + .42 + ja * .5 + midT * .55, tack.z - Math.cos(ja) * foot + midT * 2.3);
       /* pillangó: a szkótapont a rúd végén, a szél felőli oldalon, kb. merőlegesen a hajóra */
       const wg = auto ? sstep(0, 1, S.wing) : 0;
       if (wg > 0) {
@@ -513,9 +563,10 @@
         /* átvitel közben a szkótapont a hajó előtt ível át */
         const mid = Math.sin(Math.PI * wg); clew.lerp(_cw, wg); clew.z += mid * .9; clew.y += mid * .4;
       }
-      const jsd = wg > .5 ? -side : side;
+      const jsd = wg > .5 ? -side : (FINE && S.sj ? Math.sign(S.sj) : side);
       _n.subVectors(head, tack).cross(_p.subVectors(clew, tack)).normalize(); if (_n.x * jsd < 0) _n.negate();
-      const lf = auto ? S.lfJ * (1 - wg) : S.luff, cross = auto ? Math.abs(1 - 2 * wg) : 1;   /* átvitel közben ernyedt */
+      const lf = Math.max(auto ? S.lfJ * (1 - wg) : S.luff, midT), cross = auto ? Math.abs(1 - 2 * wg) : 1;   /* átvitel közben ernyedt */
+      const sag = FINE ? .075 * clamp(U / 9, .3, 1.3) * (1 - midT) : 0;   /* az előstag a szél alá hasasodik */
       const jc = auto ? S.jc : 0;
       for (let j = 0; j <= nv; j++) {
         const v = j / nv;
@@ -529,6 +580,8 @@
           depth = luffDepth(depth, chord, u, v, lf, om, .085);
           if (jc > 0) depth = depth * (1 - 1.35 * jc) + chord * jc * .05 * Math.sin(S.t * 1.4 + u * 3 + v * 2.2);   /* szélárnyékban ernyedten leng */
           if (auto) depth += leechFlutter(u, v, U, Math.max(lf, jc));
+          if (FINE) depth += sag * Math.sin(Math.PI * v) * (1 - u) + chord * .012 * sstep(.75, 1, u) * Math.sin(S.t * 5.2 + v * 11) * clamp(U / 8, .2, 1) * (1 - lf)   /* a hátsó él finoman pödrődik */
+            + chord * .006 * Math.sin(S.t * 2.3 + v * 5 - u * 4) * (S.gust - .85);
           pa[k] = lx + (ex - lx) * u + _n.x * depth; pa[k + 1] = ly + (ey - ly) * u + _n.y * depth; pa[k + 2] = lz + (ez - lz) * u + _n.z * depth;
         }
       }
@@ -593,15 +646,103 @@
     G.userData.S = S;
     /* 2026-11-11 VITORLÁK KISÜTÉSE: a vitorlák anyaga fény nélküli (MeshBasicMaterial), az árnyalást a hullámzó felület normálisaiból
        csúcsszínként számoljuk (vitorlánként ~150 csúcs – elhanyagolható), így a hajón semmi sem kér futásidejű fényszámítást. */
+    /* ===== 2026-11-12 09:13 – a saját hajó makettszerű kötélzete és vitorlaszerelvényei (FINE) =====
+       mozgó részek: főszkóta négyszeres áttétellel a bum és az utazósín kocsija között (a kocsi a szél alá csúszik), fockszkóták a szkótasaroktól a sínkocsikon át a csörlőkig
+       (a terheletlen szkóta lazán belóg), jelzőszálak a fock belépő élén és a grósz hátsó élén (áramlanak, belobogáskor táncolnak), szélzászló és kanalas szélmérő az árboccsúcson;
+       álló részek: lúdnyak, árbocsín, felhúzókötelek, bumlehúzó (kicker) csigasorral, alsóél-feszítő, reffkötelek, bumvég görgővel, feszítőcsavarok, fockroller dobja, fockkocsik sínen. */
+    let updRig = () => {};
+    if (FINE) {
+      const ropeMat = (c) => { const m = basic({ color: c }); return m; }, rW = ropeMat("#f2f2ec"), rR = ropeMat("#c92a2a"), rB = ropeMat("#2456a6"), rK = ropeMat("#22262c"), rG = ropeMat("#2fa85a");
+      const rodM = (r, mat, par) => { const g = new THREE.CylinderGeometry(r, r, 1, 6, 1, true); g.translate(0, .5, 0); const m = mesh(g, mat, par || body); m.frustumCulled = false; m.userData.noBake = true; return m; };
+      const setRod = (m, a, b) => { _q.subVectors(b, a); const L = Math.max(_q.length(), 1e-4); m.position.copy(a); m.scale.set(1, L, 1); m.quaternion.setFromUnitVectors(_up, _q.multiplyScalar(1 / L)); };
+      const V = (x, y, z) => new THREE.Vector3(x, y, z), y0 = mastBase + .92;
+      /* --- álló szerelvények a bumon (a bum helyi terében: a bum −z felé nyúlik) */
+      { const pr = [], I = new THREE.Matrix4(), bxg = (w, h2, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h2, d); g.translate(x, y, z); return [g, I]; };
+        pr.push(bxg(.09, .16, .1, 0, 0, .0));                                   /* lúdnyak-villa */
+        pr.push(bxg(.07, .1, .12, 0, .0, -3.42));                               /* bumvég-fej */
+        pr.push(bxg(.05, .05, .16, 0, .09, -3.1));                              /* alsóél-feszítő kocsi */
+        [-.9, -2.0, -2.85].forEach((z) => pr.push(bxg(.035, .06, .09, 0, -.09, z)));   /* szkótakengyelek a bum alján */
+        [-.55, -1.25].forEach((z) => { pr.push(bxg(.03, .03, .1, .06, -.02, z)); pr.push(bxg(.03, .03, .1, -.06, -.02, z)); });   /* reffkötél-szorítók */
+        mesh(mergeGeoms(pr), dark, boomG);
+        const sh2 = new THREE.CylinderGeometry(.045, .045, .03, 14); sh2.rotateZ(Math.PI / 2); sh2.translate(0, .0, -3.46); mesh(sh2, chrome, boomG);   /* bumvég-görgő */
+        const lines = [rodGeom(V(0, .09, -3.1), V(0, .07, -3.44), .007, 5), rodGeom(V(.06, -.02, -.5), V(.05, .1, -3.0), .006, 5), rodGeom(V(-.06, -.02, -1.2), V(-.05, .1, -3.2), .006, 5)];
+        mesh(mergeGeoms(lines.slice(0, 1)), rK, boomG).userData.noBake = true; mesh(mergeGeoms(lines.slice(1, 2)), rR, boomG).userData.noBake = true; mesh(mergeGeoms(lines.slice(2, 3)), rG, boomG).userData.noBake = true;
+        /* bumlehúzó (kicker): csigasoros kötél az árboctőtől a bum aljáig + két csiga */
+        if (!o.detail) { const k0 = V(0, -.8, -.06), k1 = V(0, -.09, -.9); const kk = [-.02, 0, .02].map((x) => rodGeom(V(x, k0.y, k0.z), V(x, k1.y, k1.z), .006, 5)); mesh(mergeGeoms(kk), rB, boomG).userData.noBake = true;
+          mesh(mergeGeoms([bxg(.06, .08, .05, 0, -.76, -.1), bxg(.06, .08, .05, 0, -.14, -.86)]), dark, boomG); } }
+      /* --- álló szerelvények az árbocon és a fedélzeten */
+      { const pr = [], I = new THREE.Matrix4(), bxg = (w, h2, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h2, d); g.translate(x, y, z); return [g, I]; };
+        pr.push(bxg(.022, mastH - 1.1, .02, 0, mastBase + .9 + (mastH - 1.1) / 2, mastZ - .105));    /* árbocsín */
+        pr.push(bxg(.1, .12, .12, 0, y0, mastZ - .1));                                                /* lúdnyak-tartó */
+        pr.push(bxg(.12, .05, .3, 0, mastBase + mastH + .02, mastZ - .06));                           /* árboccsúcs-daru */
+        [.25, .5].forEach((q) => pr.push(bxg(.16, .035, .05, 0, mastBase + q, mastZ + .11)));         /* kötélterelők az árboc tövén */
+        [-1, 1].forEach((sd) => { pr.push(bxg(.05, .05, .05, sd * .78, mastBase + mastH * .52, mastZ - .08));   /* szálingvég */
+          const s6 = hullShape(.6); pr.push(bxg(.03, .2, .03, sd * (HULL.B / 2 - .1), s6.sheer + .15, mastZ - .2));                                  /* feszítőcsavar */
+          const s45 = hullShape(.47), s38 = hullShape(.38); pr.push(bxg(.035, .025, s45.z - s38.z + .5, sd * (s45.hb - .32), s45.sheer + .085, (s45.z + s38.z) / 2)); });   /* focksín */
+        mesh(mergeGeoms(pr), dark, body);
+        const tb = []; [-1, 1].forEach((sd) => { const s6 = hullShape(.6); tb.push(rodGeom(V(sd * (HULL.B / 2 - .1), s6.sheer + .06, mastZ - .2), V(sd * (HULL.B / 2 - .1) * .985, s6.sheer + .3, mastZ - .2), .014, 8)); });
+        const bw = V(0, hullShape(1).sheer + .05, HULL.L / 2 - .12); tb.push(rodGeom(bw, V(0, bw.y + .16, bw.z - .012), .05, 14));   /* fockroller dobja */
+        mesh(mergeGeoms(tb), chrome, body);
+        const hl = [[.035, rR], [-.035, rB], [0, rG]].map(([x, m2]) => { const mm = mesh(mergeGeoms([rodGeom(V(x, mastBase + .2, mastZ + .1), V(x * .6, mastBase + mastH - .15, mastZ + .085), .0055, 5)]), m2, body); mm.userData.noBake = true; return mm; }); }
+      /* --- szélzászló (Windex) és kanalas szélmérő az árboccsúcson */
+      const vane = new THREE.Group(); vane.position.set(0, mastBase + mastH + .34, mastZ - .16); body.add(vane);
+      { mesh(mergeGeoms([rodGeom(V(0, mastBase + mastH + .04, mastZ - .16), V(0, mastBase + mastH + .34, mastZ - .16), .006, 5)]), dark, body);
+        const ar = new THREE.BoxGeometry(.012, .012, .42); mesh(ar, rK, vane).userData.noBake = true; const tip = new THREE.ConeGeometry(.022, .07, 8); tip.rotateX(Math.PI / 2); tip.translate(0, 0, .23); mesh(tip, rR, vane).userData.noBake = true;
+        const fin = new THREE.BoxGeometry(.004, .09, .14); fin.translate(0, .02, -.2); mesh(fin, rR, vane).userData.noBake = true;
+        [-1, 1].forEach((sd) => { const tab = mesh(new THREE.BoxGeometry(.03, .004, .03), rR, body); tab.position.set(sd * .11, mastBase + mastH + .3, mastZ - .16 - .2); tab.userData.noBake = true;
+          const arm = mesh(mergeGeoms([rodGeom(V(0, mastBase + mastH + .3, mastZ - .16), V(sd * .11, mastBase + mastH + .3, mastZ - .36), .003, 4)]), dark, body); }); }
+      const cups = new THREE.Group(); cups.position.set(0, mastBase + mastH + .16, mastZ + .12); body.add(cups);
+      { mesh(mergeGeoms([rodGeom(V(0, mastBase + mastH + .04, mastZ + .12), V(0, mastBase + mastH + .16, mastZ + .12), .006, 5)]), dark, body);
+        for (let q = 0; q < 3; q++) { const a = q * TAU / 3, c = new THREE.SphereGeometry(.022, 8, 6, 0, Math.PI); c.rotateY(a); c.translate(Math.cos(a) * .07, 0, -Math.sin(a) * .07); mesh(c, rK, cups).userData.noBake = true;
+          mesh(mergeGeoms([rodGeom(V(0, 0, 0), V(Math.cos(a) * .07, 0, -Math.sin(a) * .07), .003, 4)]), rK, cups).userData.noBake = true; } }
+      /* --- főszkóta: négyszeres áttétel a bum és az utazósín kocsija között */
+      const sp = o.sheetPt || [0, hullShape(.2).sheer + .14, hullShape(.2).z], trW = o.travHalf != null ? o.travHalf : .55;
+      const ms = [-.03, -.01, .01, .03].map(() => rodM(.0075, rW)), blkT = mesh(new THREE.BoxGeometry(.07, .1, .06), dark, body), blkB = mesh(new THREE.BoxGeometry(.08, .1, .07), dark, body); blkT.userData.noBake = blkB.userData.noBake = true;
+      /* --- fockszkóták: 2 szakasz a húzott oldalon (sarok → kocsi → csörlő), 3 a lazán (sarok → árboc előtt → kocsi → csörlő) */
+      const jsW = [rodM(.008, rR), rodM(.008, rR)], jsL = [rodM(.008, rB), rodM(.008, rB), rodM(.008, rB)];
+      const carP = (sd) => { const q = hullShape(.42); return V(sd * (q.hb - .32), q.sheer + .11, q.z); }, winP = (sd) => { const q = hullShape(.28); return V(sd * (q.hb - .3) , q.sheer + .22, q.z); };
+      const cars = [-1, 1].map((sd) => { const c = mesh(new THREE.BoxGeometry(.07, .06, .12), dark, body); c.position.copy(carP(sd)); c.position.y -= .03; return c; });
+      /* --- jelzőszálak: fock belépő él (piros a bal, zöld a jobb oldalon), grósz hátsó él (piros szalagok) */
+      const tell = [];
+      [.3, .5, .7].forEach((v) => { [-1, 1].forEach((sd) => tell.push({ m: rodM(.0045, sd > 0 ? rG : rR), jib: true, u: .1, v, sd, L: .2, ph: Math.random() * 9 })); });
+      [.26, .48, .68, .86].forEach((v) => tell.push({ m: rodM(.006, rR), jib: false, u: 1, v, sd: 0, L: .26, ph: Math.random() * 9 }));
+      const _t0 = new THREE.Vector3(), _t1 = new THREE.Vector3(), _t2 = new THREE.Vector3(), _t3 = new THREE.Vector3(), _be = new THREE.Vector3(), _cp = new THREE.Vector3(), _cl = new THREE.Vector3(), _m1 = new THREE.Vector3();
+      const vtx = (G2, i, j, out) => { const nu = G2.userData.nu, pa = G2.attributes.position.array, k = (j * (nu + 1) + i) * 3; return out.set(pa[k], pa[k + 1], pa[k + 2]); };
+      let vaneA = 0;
+      updRig = (dt) => {
+        const a = S.boom, Lb = 2.85;
+        /* főszkóta */
+        _be.set(Math.sin(a) * Lb, y0 - .1 + Math.sin(S.lift) * Lb, mastZ - Math.cos(a) * Lb * Math.cos(S.lift));
+        _cp.set(clamp(Math.sin(a) * 1.6, -trW, trW), sp[1], sp[2]);
+        blkT.position.copy(_be); blkT.position.y -= .05; blkB.position.copy(_cp); blkB.position.y += .06; blkB.lookAt(body.localToWorld(_t0.copy(_be))); blkT.rotation.y = -a;
+        ms.forEach((m, i) => { const off = (i - 1.5) * .018; _t0.copy(_be); _t0.y -= .1; _t0.x += off * Math.cos(a); _t0.z += off * Math.sin(a); _t1.copy(_cp); _t1.y += .11; _t1.x += off; setRod(m, _t1, _t0); });
+        /* fockszkóták */
+        const nuJ = jibG.userData.nu; vtx(jibG, nuJ, 0, _cl);
+        const ws = S.sj != null && S.sj !== 0 ? Math.sign(S.sj) : S.side, wg2 = S.wing > .5 ? -1 : 1, w = ws * wg2;
+        _t0.copy(carP(w)); _t1.copy(winP(w)); setRod(jsW[0], _cl, _t0); setRod(jsW[1], _t0, _t1);
+        _m1.set(-w * .12, mastBase + .55 + .25 * Math.sin(S.t * 1.7), mastZ + .55); _m1.y -= .25;   /* a laza szkóta az árboc előtt, belógva */
+        _t2.copy(carP(-w)); _t3.copy(winP(-w)); setRod(jsL[0], _cl, _m1); setRod(jsL[1], _m1, _t2); setRod(jsL[2], _t2, _t3);
+        /* jelzőszálak */
+        const U = S.aws || 6, flow = clamp(U / 7, .25, 1);
+        tell.forEach((q) => { const G2 = q.jib ? jibG : mainG, nu = G2.userData.nu, nv = G2.userData.nv, i = Math.round(q.u * nu), j = Math.round(q.v * nv);
+          vtx(G2, i, j, _t0); vtx(G2, Math.max(0, i - 1), j, _t1); if (q.jib) vtx(G2, i + 1, j, _t2); else _t2.copy(_t0).add(_t3.subVectors(_t0, _t1));
+          _t3.subVectors(_t2, q.jib ? _t0 : _t1).normalize();   /* a húr iránya hátrafelé */
+          const lfq = q.jib ? Math.max(S.lfJ, S.sj != null ? 1 - Math.abs(S.sj) : 0) : S.lfM, wob = .16 + 1.5 * lfq, t = S.t * (7 + 5 * lfq) + q.ph;
+          _t1.copy(_t3).multiplyScalar(q.L * flow); _t1.y += q.L * ((1 - flow) * -.8 + wob * Math.sin(t) * .5 + lfq * .35); _t1.x += q.L * (q.sd * .1 + wob * .4 * Math.sin(t * 1.31 + 1)); _t1.z += q.L * wob * .3 * Math.sin(t * .83);
+          if (q.sd) _t0.x += q.sd * .012; _t1.add(_t0); setRod(q.m, _t0, _t1); });
+        /* szélzászló a látszólagos szélbe fordul, a kanalak a szélsebességgel pörögnek */
+        const tA = S.awa != null ? -S.side * S.awa * D2R : 0; vaneA += wrapA(tA - vaneA) * Math.min(1, dt * 3.5); vane.rotation.y = vaneA + .05 * Math.sin(S.t * 6.1) * flow; cups.rotation.y -= dt * (2 + U * 2.2);
+      };
+    }
     G.userData.bakeSails = () => { if (G.userData.sailBaked) return; G.userData.sailBaked = true;
       [mainM, jibM, spinM].forEach((m) => { if (!m) return; const o = m.material, n = new THREE.MeshBasicMaterial({ map: o.map || null, side: THREE.DoubleSide, vertexColors: true, transparent: o.transparent, opacity: o.opacity }); W.disposables.push(n);
         const g = m.geometry, c = new Float32Array(g.attributes.position.count * 3).fill(1); g.setAttribute("color", new THREE.BufferAttribute(c, 3)); m.material = n; m.castShadow = m.receiveShadow = false; sailShade(g); }); };
     G.userData.update = (dt) => {
-      S.t += dt;
+      S.t += dt; S.dt = Math.min(dt, .1);
       body.rotation.set(S.pitch, 0, S.heel, "YXZ");
       if (S.awa != null) autoTrim(dt);
       if (!(spinM && spinM.visible) && !(S.awa != null && S.wing > .55)) poleM.visible = false;
-      updMain(); updJib(); updSpin(); updCrew(dt);
+      updMain(); updJib(); updSpin(); updCrew(dt); if (FINE) updRig(dt);
     };
     G.userData.mats = [hullMat, deckMat, white, dark, alu, chrome, wire, teak, glass, mainMat, jibMat].concat(spinM ? [spinM.material] : []);
     G.userData.body = body; G.userData.deckY = deckY;

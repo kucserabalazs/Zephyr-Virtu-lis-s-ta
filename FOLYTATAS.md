@@ -830,3 +830,9 @@ Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mi
 ## 2026-11-12 08:52 – hangban kért módosítások
 - Keréknél a két műszer helyet cserélt: a szélműszer a kerék közepében (álló, kerek házban), a térképplotter fölötte, a kormányoszlop tetején (62% méret). Botkormánynál változatlan.
 - Vitorlaablakok (win: true, csak a saját VR-hajón): grószban és fockban az alsó panelben két egymás melletti átlátszó fóliamező, köztük varratszalag, körben fehér szegő cikkcakk-öltéssel (sailWindow, 03-hajo.js). Netes minta: az ablak az alsó panelekben, a varratok között, több szegmensben ül.
+
+## 2026-11-12 09:13 – grósz, fock és kötélzet kidolgozása (FINE, csak a saját VR-hajón: makeBoat fine:true)
+- Tulajdonos: a grósz és a fock mozgása, a bum és az egész szerkezet legyen legalább olyan kidolgozott, mint a spinakker – élethű, makettszerű.
+- Mozgás: sűrűbb vászonháló (grósz 20×30, fock 18×26); rugós-csillapított bum (átvág, megrándul, visszarúg), bum-emelkedés; a grósz oldalváltása alulról felfelé fut (lécek átpattannak), árbochajlás, ráncok gyenge szélben, lökésben nyíló hátsó él; a fock szkótasarka az árboc előtt ível át, csapkod, majd becsörlőzik; előstag-belógás, hátsó él pödrődése.
+- Kötélzet (updRig): főszkóta 4-szeres áttétel + csúszó kocsi, fockszkóták (húzott + laza), jelzőszálak (fock belépő él, grósz hátsó él), Windex + kanalas szélmérő, lúdnyak, árbocsín, felhúzókötelek, kicker, alsóél-feszítő, reffkötelek, feszítőcsavarok, fockroller, focksín és kocsik.
+- Vászon (sailDetail): sarokerősítések, élszalagok, lécsebek, reffsorok, trimmcsíkok, jelzőszál-ablakok, címke.
