@@ -904,3 +904,11 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 - A ?jatek kezdőképernyő, a jatek.webmanifest és az aruhaz/BEADAS.md a repóban marad ALVÓ állapotban (csak a „?jatek” címen jön elő, a séta és a menü változatlan) – nyárig nem nyúlok hozzá, nem mutatom, nem linkelem.
 - Indító linknek mindig a SIMA sétát kell adni (paraméter: csak ?v=…), a játék a séta saját „VR játékok” menüjéből indul, ahogy eddig.
 - A munkasorrend 2. (kezdőképernyő) és 9. (csomagolás) pontja FELFÜGGESZTVE nyárig. Marad: a játék minősége (kormány, hajóviselkedés, látvány, hangok), a sakk / hullámvasút / 2D regatta, és a weboldal.
+
+## 2026-11-12 13:36 – büntetési szabály pontosítva (tulajdonos)
+- Büntetés CSAK ütközésért jár (a „közeli keresztezés” szabály törölve). Aki a „bekbord” figyelmeztetésre időben kitér, nem kap büntetést; ha mégis ütközik (későn rántott), büntetés.
+- Hátulról történő ütközésnél nem az útjog dönt: aki hátulról ment bele a másikba, az a hibás (rivRear / meRear a vrRivalTick ütközés-ágában).
+
+## 2026-11-12 13:37 – bekiabálás emberi hangon
+- A fűrészfog-csipogás megszűnt. vrHail: ha van weboldal/virtualis-seta/hang/bekbord.mp3 (és protest.mp3), azt játssza le kétszer; különben a böngésző magyar beszédhangja (a Questen nincs → csak felirat). A tulajdonos felajánlotta, hogy felveszi a saját hangját – a felvételt a beszélgetésbe csatolja, én teszem be mp3-ként. A figyelmeztetés 4,5 mp-enként ismétlődik, amíg közeledik a hajó.
+- vrSetup most az ellenfelek büntetőit is nullázza (pen, spinA, penLast).
