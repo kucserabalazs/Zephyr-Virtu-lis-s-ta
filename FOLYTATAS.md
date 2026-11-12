@@ -922,3 +922,7 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 
 ## 2026-11-12 14:05 – 18. szabály (hely a jelnél) beépítve
 - A páros első hajójának zónába érésekor (45 m = 3 hajóhossz) rögzül a jogosult (r._mk): fedésben a belső (a jelhez közelebbi) hajó, fedés nélkül a tisztán elöl lévő; ellentétes csapáson cirkáló szakaszon nem él (18.1(a)); rajtjelnél nem él. A zónában a jogosult elől a másik tér ki (vrRule → 18), ütközésnél a nem jogosult a hibás; kiáltás: „Helyet a bójánál!”. Csak a játékos–ellenfél párokra; ellenfél–ellenfél között nincs rögzítés. A „belső” meghatározása egyszerűsített (a jelhez közelebbi hajó). Gépi teszt: fedésben mindkét eset jól dőlt el.
+
+## 2026-11-12 14:09
+- Kötelek: a laza fockszkóta, a kocsi→csörlő szakasz és a bumon futó piros/zöld reffkötelek lekerültek. Megmaradt: főszkóta (bum → utazósín), bumlehúzó (árboctő → bum), a húzott fockszkóta (szkótasarok → sínkocsi csigája), alsóél-feszítő. Ha a tulajdonos még lát indokolatlan kötelet, kérdezni kell, MELYIK az (szín, honnan hová).
+- A saját hajó 5%-kal gyorsabb (csak a megtett út × 1,05; a fizika, a vitorlák és a kijelzett sebesség változatlan) – a tulajdonos kifejezett kérése a versenyélményért.

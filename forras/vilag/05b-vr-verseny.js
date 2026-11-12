@@ -911,7 +911,9 @@
       if (S.penAcc && Math.sign(dB) !== Math.sign(S.penAcc) && Math.abs(dB) > 1e-5 && Math.abs(S.yr) > .12) S.penAcc = 0;
       S.penAcc = (S.penAcc || 0) + dB;
       if (Math.abs(S.penAcc) >= TAU) { S.pen--; S.penAcc = 0; horn(.3, .1); S.msg = S.pen ? `✓ Büntetőforduló kész – még ${S.pen} van hátra.` : "✓ Büntetőforduló letudva – tiszta vagy, mehet a verseny!"; S.msgT = 6; W.panelDirty = 1; } }
-    const [fx, fz] = vfwd(S.b); S.x += fx * S.v * dt; S.z += fz * S.v * dt;
+    /* 2026-11-12 14:09 (tulajdonos: „apró kis csalás a versenyélmény fenntartására – minden fizika megtartása mellett a mi hajónk legyen 5%-kal gyorsabb a többinél”):
+       a fizika, a vitorlák és a kijelzett sebesség változatlan; csak a megtett út 5%-kal több */
+    const [fx, fz] = vfwd(S.b); S.x += fx * S.v * 1.05 * dt; S.z += fz * S.v * 1.05 * dt;
     /* látszólagos szél, vitorlák, dőlés */
     const wfv = vfwd(S.wf), tw = [wfv[0] * S.tws * S.gk, wfv[1] * S.tws * S.gk], aw = [tw[0] + fx * S.v, tw[1] + fz * S.v], aws = Math.hypot(aw[0], aw[1]);
     const awa = Math.acos(clamp((aw[0] * fx + aw[1] * fz) / (aws || 1), -1, 1)) * R2D;

@@ -1078,7 +1078,7 @@
         mesh(mergeGeoms(pr), dark, boomG);
         const sh2 = new THREE.CylinderGeometry(.045, .045, .03, 14); sh2.rotateZ(Math.PI / 2); sh2.translate(0, .0, -3.46); mesh(sh2, chrome, boomG);   /* bumvég-görgő */
         const lines = [rodGeom(V(0, .09, -3.1), V(0, .07, -3.44), .007, 5), rodGeom(V(.06, -.02, -.5), V(.05, .1, -3.0), .006, 5), rodGeom(V(-.06, -.02, -1.2), V(-.05, .1, -3.2), .006, 5)];
-        mesh(mergeGeoms(lines.slice(0, 1)), rK, boomG).userData.noBake = true; mesh(mergeGeoms(lines.slice(1, 2)), rR, boomG).userData.noBake = true; mesh(mergeGeoms(lines.slice(2, 3)), rG, boomG).userData.noBake = true;
+        mesh(mergeGeoms(lines.slice(0, 1)), rK, boomG).userData.noBake = true;   /* (a bumon végigfutó piros/zöld reffkötelek lekerültek – 2026-11-12 14:09) */
         /* bumlehúzó (kicker): csigasoros kötél az árboctőtől a bum aljáig + két csiga */
         if (!o.detail) { const k0 = V(0, -.8, -.06), k1 = V(0, -.09, -.9); const kk = [-.02, 0, .02].map((x) => rodGeom(V(x, k0.y, k0.z), V(x, k1.y, k1.z), .006, 5)); mesh(mergeGeoms(kk), rB, boomG).userData.noBake = true;
           mesh(mergeGeoms([bxg(.06, .08, .05, 0, -.76, -.1), bxg(.06, .08, .05, 0, -.14, -.86)]), dark, boomG); } }
@@ -1135,9 +1135,9 @@
         /* fockszkóták */
         const nuJ = jibG.userData.nu; vtx(jibG, nuJ, 0, _cl);
         const ws = S.sj != null && S.sj !== 0 ? Math.sign(S.sj) : S.side, wg2 = S.wing > .5 ? -1 : 1, w = ws * wg2;
-        _t0.copy(carP(w)); _t1.copy(winP(w)); setRod(jsW[0], _cl, _t0); setRod(jsW[1], _t0, _t1);
-        _m1.set(-w * .3, hullShape(.6).sheer + .2, mastZ + .75);   /* 2026-11-12 09:55: a laza szkóta nem az árbocon fut – a fedélzeten fekszik az árboc előtt, és a túloldali csigán (sínkocsin) megy át */
-        _t2.copy(carP(-w)); _t3.copy(winP(-w)); setRod(jsL[0], _cl, _m1); setRod(jsL[1], _m1, _t2); setRod(jsL[2], _t2, _t3);
+        /* 2026-11-12 14:09 (tulajdonos: „verseny közben még mindig látok indokolatlan helyen kötelet”): csak a HÚZOTT fockszkóta látszik, a szkótasaroktól a sínkocsi
+           csigájáig (onnan a fedélzet alatt megy a csörlőhöz); a laza szkóta és a fedélzeten átfutó szakaszok lekerültek */
+        _t0.copy(carP(w)); _t0.y += .04; setRod(jsW[0], _cl, _t0); jsW[1].visible = false; jsL.forEach((m) => { m.visible = false; });
         /* jelzőszálak */
         const U = S.aws || 6, flow = clamp(U / 7, .25, 1);
         tell.forEach((q) => { const G2 = q.jib ? jibG : mainG, nu = G2.userData.nu, nv = G2.userData.nv, i = Math.round(q.u * nu), j = Math.round(q.v * nv);
@@ -2554,7 +2554,9 @@
       if (S.penAcc && Math.sign(dB) !== Math.sign(S.penAcc) && Math.abs(dB) > 1e-5 && Math.abs(S.yr) > .12) S.penAcc = 0;
       S.penAcc = (S.penAcc || 0) + dB;
       if (Math.abs(S.penAcc) >= TAU) { S.pen--; S.penAcc = 0; horn(.3, .1); S.msg = S.pen ? `✓ Büntetőforduló kész – még ${S.pen} van hátra.` : "✓ Büntetőforduló letudva – tiszta vagy, mehet a verseny!"; S.msgT = 6; W.panelDirty = 1; } }
-    const [fx, fz] = vfwd(S.b); S.x += fx * S.v * dt; S.z += fz * S.v * dt;
+    /* 2026-11-12 14:09 (tulajdonos: „apró kis csalás a versenyélmény fenntartására – minden fizika megtartása mellett a mi hajónk legyen 5%-kal gyorsabb a többinél”):
+       a fizika, a vitorlák és a kijelzett sebesség változatlan; csak a megtett út 5%-kal több */
+    const [fx, fz] = vfwd(S.b); S.x += fx * S.v * 1.05 * dt; S.z += fz * S.v * 1.05 * dt;
     /* látszólagos szél, vitorlák, dőlés */
     const wfv = vfwd(S.wf), tw = [wfv[0] * S.tws * S.gk, wfv[1] * S.tws * S.gk], aw = [tw[0] + fx * S.v, tw[1] + fz * S.v], aws = Math.hypot(aw[0], aw[1]);
     const awa = Math.acos(clamp((aw[0] * fx + aw[1] * fz) / (aws || 1), -1, 1)) * R2D;
