@@ -327,7 +327,7 @@
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.msgL = labelSprite(["", ""], { size: 2.0, fs: 50, w: 1150 }); CK2.G.add(VRR.msgL);
       VRR.msgL.position.set(w0.ped.position.x * .6, CK2.deckY + 1.75, w0.ped.position.z + 2.2); VRR.msgL.visible = false; }
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Markold meg a kormányt!", "zárd ökölbe a kezed a peremén – nyitott tenyérrel engeded el · kontrollerrel: a hüvelykujjkar kormányoz"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
-    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrudat!", "zárd ökölbe a kezed a rúdon vagy a toldón, bárhol · eltolod magadtól: jobbra fordul, magad felé húzod: balra · nyitott tenyérrel engeded el · kontrollerrel: hüvelykujjkar"], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.5, CK2.tiller.ty + .75, CK2.tiller.pz + CK2.tiller.TL); }
+    if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrudat!", "zárd ökölbe a kezed a rúdon, bárhol · eltolod magadtól: jobbra fordul · nyitott tenyérrel engeded el · változat: " + String(window.ZEPHYR_BV || "?").slice(0, 5)], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.5, CK2.tiller.ty + .75, CK2.tiller.pz + CK2.tiller.TL); }
     SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
     vrSetup(VRR.lvl || 1);
@@ -938,7 +938,7 @@
   /* --------------------------------------------------------------- panel, csuklómenü, 2D */
   function vrPanel(P) {
     const S = VRR;
-    P.title(`Vitorlásverseny · ${S.lvl}. futam · ${S.C.name}`, `${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · szél ${(S.tws / KN).toFixed(0)} csomó`);
+    P.title(`Vitorlásverseny · ${S.lvl}. futam · ${S.C.name} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · szél ${(S.tws / KN).toFixed(0)} csomó`);
     P.row(0, S.msgT > 0 ? S.msg : "Fogd meg a kormánykereket (csippentés), és forgasd: jobbra = jobbra fordul.", "#ffd166");
     P.row(1, S.ocs ? "KORAI RAJT – menj vissza a rajtvonal mögé, aztán lépd át újra" : S.st === "pre" ? "Rajt előtt maradj a vonal mögött – a rajtjelre (hosszú kürt) lépd át" : S.next < S.marks.length ? `Következő: ${S.next + 1}. bója (${S.marks.length} van) – bal kéz felől kerüld` : "Utolsó szakasz: át a rajtvonalon!", "#ffffff");
     P.row(2, S.st === "done" ? S.res.map((q, i) => `${i + 1}. ${q.n} ${mmss(q.t)}`).join(" · ") : "A sárga fényoszlop mutatja a következő bóját.", "#7fd3ff");
@@ -956,7 +956,7 @@
   }
   function vrHud(H) {
     const S = VRR;
-    H.title(`Vitorlásverseny · ${S.lvl}. futam · ${S.C.name}`, `${S.msgT > 0 ? S.msg + " · " : ""}${S.st === "pre" ? "rajt " + mmss(-S.t) : "idő " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · ${S.next < S.marks.length ? (S.next + 1) + ". bója" : "befutó"}`);
+    H.title(`Vitorlásverseny · ${S.lvl}. futam · ${S.C.name} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.msgT > 0 ? S.msg + " · " : ""}${S.st === "pre" ? "rajt " + mmss(-S.t) : "idő " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · ${S.next < S.marks.length ? (S.next + 1) + ". bója" : "befutó"}`);
     if (S.st === "done") H.steer([["↻ Újra", () => vrSetup(S.lvl)], ["Tovább ▸", () => vrSetup(S.lvl + 1)]], () => { S.wa = 0; });
     else H.steer([["↻ Újrakezdés", () => vrSetup(S.lvl)], [S.noSigns ? "🪧 Táblák" : "🪧 Táblák ✕", vrSigns]], () => { S.wa = 0; });
     H.hint("Kormány: ◀ ▶ gomb vagy ← → (A / D) · a sárga fényoszlop a következő bója · bal kéz felől kerüld");

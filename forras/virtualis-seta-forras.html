@@ -13340,10 +13340,15 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "__BV__"; let shown = false;
+  { const BV = "__BV__"; let shown = false; window.ZEPHYR_BV = BV;
+    /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
+       A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
+       Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
+    const AUTO = /github\.io$/.test(location.hostname);
     const chk = () => { if (shown || inVR || BV.indexOf("__") === 0) return; fetch("verzio.json?t=" + Date.now(), { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((j) => { if (!j || !j.v || j.v === BV || shown) return; shown = true;
+      if (AUTO && !inVR) { let n = 0; try { n = +sessionStorage.getItem("zephyr-autofriss") || 0; sessionStorage.setItem("zephyr-autofriss", String(n + 1)); } catch (e) {} if (n < 3) { location.replace(location.pathname + "?v=" + j.v + location.hash); return; } }
       const b = document.createElement("button"); b.type = "button"; b.className = "zv-ujver"; b.textContent = "🔄 Új változat érhető el – koppints ide a frissítéshez"; b.addEventListener("click", () => { location.replace(location.pathname + "?v=" + j.v + location.hash); }); document.body.appendChild(b); }).catch(() => {}); };
-    setTimeout(chk, 2500); setInterval(chk, 180000); document.addEventListener("visibilitychange", () => { if (!document.hidden) chk(); }); }
+    setTimeout(chk, AUTO ? 400 : 2500); setInterval(chk, AUTO ? 45000 : 180000); document.addEventListener("visibilitychange", () => { if (!document.hidden) chk(); }); try { sceneEl.addEventListener("exit-vr", () => setTimeout(chk, 600)); } catch (e) {} setTimeout(() => { try { sessionStorage.removeItem("zephyr-autofriss"); } catch (e) {} }, 20000); }
   window.ZephyrTour = { openDict: (t) => ZSD.open(t), openGame: (id) => gmOpen(id), stegMap: () => stegMapCard(), openInv: (g) => openBinder(g), goScene: (k) => { if (SCENES[k]) go(k, false); }, _t: { smPalm: () => smPalm(), SM, AK: () => AK, WS: () => WS, SCENES: () => SCENES, cur: () => current, bxCel: () => bxCelebrate(VRS.book), BX, free: (B) => bkFreeAptsNow(B), spin: (k, S0, fr, ref) => { XRP.spin[k] = XRP.spin[k] || { a0: null, done: 0 }; xrSpinTick(k, S0, fr, ref); }, lm: LM }, vrn: VRN, vrt: VRT, vrOpen: (pg) => vrOpen(pg), vrCvs: () => VRS.cvs, vrnGo: (i) => VRN.list[i] && vrnGo(VRN.list[i]),
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },

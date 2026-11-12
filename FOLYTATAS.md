@@ -761,3 +761,9 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 ## 2026-11-12 01:00 – „Raptor 27-es, megtalálhatod a kért adatokat a neten”
 - Megkerestem: teljes hossz 8,23 m, vízvonalhossz 8,00 m, vízvonal-szélesség 2,20 m, merülés 0,35–1,50 m (forgó uszony), vitorlafelület 32 m² (nagyvitorla ~20, fock 12), ballaszt 650–800 kg, tömeg a hirdetésekben 2500 kg (a tulajdonos 2300 kg-ot adott meg – azt használom). Források: jachtserwis.pl (gyártói táblázat), sailor.pl, bofort.pl, yachtall.com.
 - Beírva a `VR_HYD`-be: Lwl 8,0 m, nedvesített felület 14 m² (ez továbbra is becslés, gyári adat nincs rá).
+
+## 2026-11-12 01:03–01:04 – „A kormány nem jó… nem merev, most is egy toldó csetlik-botlik és hosszabb a rúd, én viszont elmozdultam az irányítási helyről”
+- VIZSGÁLAT: a szerveren az új változat van (merev toldó, 68 cm-es rúd – ellenőriztem a kint lévő vilag.js-ben). Amit leír, az a 18:54–23:07 közti régi változat → a szemüveg szinte biztosan gyorsítótárból a régit futtatta (VR-ben az „Új változat” gomb nem jelenik meg).
+- KÉSZ: a tesztoldal (github.io) MAGÁTÓL frissül, ha újabb változat van (betöltéskor, 45 mp-enként, visszatéréskor, VR-ből kilépve; legfeljebb 3 próbálkozás munkamenetenként). Az éles oldalon marad a gomb.
+- KÉSZ: a verseny fejléce és a kormány súgófelirata kiírja a futó változat 5 jegyű jelét (`window.ZEPHYR_BV`) – így a tulajdonos és én is látjuk, melyik fut.
+- NYITOTT: az „elmozdultam az irányítási helyről” megjegyzést nem értem biztosan (a kormányos helye a kódban nem változott; a forgáspont került hátrébb) – a közvetítésen kell megnézni.
