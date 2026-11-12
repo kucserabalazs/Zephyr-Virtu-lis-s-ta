@@ -86,7 +86,9 @@
       /* 2026-11-12 08:29 (tulajdonos: „a fedélzeti computer kinézetre legyen a hajó része – ne odabiggyesztett kirajzolás, hanem úgy legyen megtervezve, mintha a hajóhoz
          tartozna”): beépített műszerkonzol – a kormányoszlop fejéből kinövő, öntött karbon nyak és merevítő, lekerekített ház, szatén keret, napellenző, gombsor,
          forgatógomb, állapot-LED, rozsdamentes kapaszkodókeret; a képernyő a keretbe süllyesztve ül. */
-      if (sd < 0) { const pod = new THREE.Group(); ped.add(pod); pod.position.set(-.4 * sd, 1.42, -.24); pod.rotation.set(-.45, Math.PI - .35 * sd, 0);
+      if (sd < 0) { const pod = new THREE.Group(); ped.add(pod); pod.position.set(-.8 * sd, .84, -.3); pod.rotation.set(.9, Math.PI - .5 * sd, 0); pod.scale.setScalar(.8);
+        /* 2026-11-12 08:36 (tulajdonos: „a műszer ne zavarja a kilátást – lefelé nézve inkább a hajótestet takarja, ne a horizontot; lehet kisebb is, ne a kellős közepén
+           legyen, mint egy tévé”): a konzol alacsonyan (csípőmagasságban), a hajó középvonala felé, erősen felfelé döntve ül, 20%-kal kisebb – a horizont szabad. */
         const rrect = (w, h, r) => { const sp = new THREE.Shape(), x = -w / 2, y = -h / 2; sp.moveTo(x + r, y); sp.lineTo(x + w - r, y); sp.quadraticCurveTo(x + w, y, x + w, y + r); sp.lineTo(x + w, y + h - r); sp.quadraticCurveTo(x + w, y + h, x + w - r, y + h); sp.lineTo(x + r, y + h); sp.quadraticCurveTo(x, y + h, x, y + h - r); sp.lineTo(x, y + r); sp.quadraticCurveTo(x, y, x + r, y); return sp; };
         const satin = std({ color: "#8d949b", roughness: .35, metalness: .85 }), rubber = std({ color: "#15181c", roughness: .9 });
         /* ház (hátrafelé vastagodó, lekerekített élekkel) */
@@ -108,9 +110,22 @@
           [[-.31, .12], [.31, .12]].forEach((q) => { const st = mesh(new THREE.CylinderGeometry(.011, .011, .1, 8), chrome, pod); st.rotation.x = Math.PI / 2; st.position.set(q[0], q[1], -.02); }); }
         /* öntött karbon nyak a kormányoszlop fejéből a ház hátuljába + merevítő az oszlop derekáról, rozsdamentes gallérokkal */
         { pod.updateMatrix(); const back = new THREE.Vector3(0, -.06, -.1).applyMatrix4(pod.matrix), low = new THREE.Vector3(0, -.26, -.09).applyMatrix4(pod.matrix);
-          mesh(mergeGeoms([rodGeom(new THREE.Vector3(0, 1.08, -.02), back, .05, 14), rodGeom(new THREE.Vector3(0, .72, 0), low, .028, 10)]), carbon, ped);
-          const c1 = mesh(new THREE.SphereGeometry(.062, 14, 10), carbon, ped); c1.position.copy(back); const c2 = mesh(new THREE.TorusGeometry(.082, .012, 8, 20), chrome, ped); c2.rotation.x = Math.PI / 2; c2.position.set(0, .72, 0);
-          const c3 = mesh(new THREE.SphereGeometry(.036, 12, 8), carbon, ped); c3.position.copy(low); } }
+          const mT = new THREE.Group(); ped.add(mT);
+          mesh(mergeGeoms([rodGeom(new THREE.Vector3(0, .9, -.02), back, .045, 14), rodGeom(new THREE.Vector3(0, .5, 0), low, .026, 10)]), carbon, mT);
+          const c1 = mesh(new THREE.SphereGeometry(.062, 14, 10), carbon, mT); c1.position.copy(back); const c2 = mesh(new THREE.TorusGeometry(.082, .012, 8, 20), chrome, mT); c2.rotation.x = Math.PI / 2; c2.position.set(0, .5, 0);
+          const c3 = mesh(new THREE.SphereGeometry(.036, 12, 8), carbon, mT); c3.position.copy(low);
+          /* 2026-11-12 08:38 (tulajdonos: „a kormánykerekes változatnál a műszer a kormánykerék KÖZEPÉBEN legyen – ott nem takar; mindig fix: ha forgatom a kormányt, a műszer
+             ne forduljon vele; legyen úgy megtervezve, mintha egy kis konzol tartaná”): kerékkel a ház az agy előtt ül, az álló tengelycsonkon (a kerék körülötte forog),
+             a kormányos felé és kissé felfelé döntve; rozsdamentes gallér és tartókengyel fogja. Botkormánnyal: alacsony konzol a középvonal felé. */
+          const mW = new THREE.Group(); ped.add(mW);
+          { const st = mesh(new THREE.CylinderGeometry(.034, .04, .2, 16), carbon, mW); st.rotation.x = Math.PI / 2; st.position.set(0, .8, -.5);
+            const col2 = mesh(new THREE.CylinderGeometry(.058, .058, .022, 20), chrome, mW); col2.rotation.x = Math.PI / 2; col2.position.set(0, .8, -.565);
+            const yk = mesh(new THREE.TorusGeometry(.105, .011, 8, 24, Math.PI), chrome, mW); yk.position.set(0, .76, -.585); yk.rotation.set(Math.PI / 2 - .3, 0, 0); }
+          const rail = pod.children.filter((m) => m.material === chrome), hood = pod.children.filter((m) => m.geometry && m.geometry.type === "BoxGeometry" && m.material === carbon);
+          G.userData.podSet = (til) => { mT.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = !!til; }); hood.forEach((m) => { m.visible = !!til; });
+            if (til) { pod.position.set(-.8 * sd, .84, -.3); pod.rotation.set(.9, Math.PI - .5 * sd, 0); pod.scale.setScalar(.8); }
+            else { pod.position.set(0, .815, -.635); pod.rotation.set(.6, Math.PI, 0); pod.scale.setScalar(.6); } };
+          G.userData.podSet(true); } }
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
       const [gb, mb] = rodGeom(new THREE.Vector3(-.22, 0, .25), new THREE.Vector3(-.22, .95, .1), .016, 8); mesh(gb, chrome, ped).applyMatrix4(mb);
       const [gb2, mb2] = rodGeom(new THREE.Vector3(.22, 0, .25), new THREE.Vector3(.22, .95, .1), .016, 8); mesh(gb2, chrome, ped).applyMatrix4(mb2);
@@ -366,6 +381,7 @@
     VRR.lights = addLights(SUN.clone());
     /* a kerekek fogása sugárral (csippentés / ravasz) */
     VRR.tiller = (() => { try { return localStorage.getItem("zephyr-kormany") !== "kerek"; } catch (e) { return true; } })();
+    if (CK2.G.userData.podSet) CK2.G.userData.podSet(VRR.tiller);
     if (VRR.tiller) { CK2.wheels.forEach((w) => { w.wheel.visible = false; w.axle.visible = false; }); CK2.tiller.til.visible = CK2.tiller.ext.visible = true; }
     else CK2.wheels.forEach((w) => { w.hit.userData.xr = { hover: (on) => { VRR.wHover = on; }, down: (h, src, key) => vrGrab(w, src, key, true), drag: (src) => vrDrag(w, src), up: () => { VRR.rgrab = null; } }; T.xr.extra.add(w.hit); W.objs.push(w.hit); });
     /* első alkalommal: felirat a jobb oldali kerék fölött – amíg meg nem fogod */
@@ -1121,6 +1137,7 @@
   /* kormánymód váltása: botkormány (alap) ↔ kormánykerék; megjegyzi (localStorage „zephyr-kormany”: bot / kerek) */
   function vrSteerMode() { const S = VRR, CK2 = S.ck; if (!CK2) return; try { vrRelease(); } catch (e) {} S.tiller = !S.tiller; S.wa = 0; S.wOver = 0;
     try { localStorage.setItem("zephyr-kormany", S.tiller ? "bot" : "kerek"); } catch (e) {}
+    if (CK2.G.userData.podSet) CK2.G.userData.podSet(S.tiller);
     CK2.wheels.forEach((w) => { w.wheel.visible = !S.tiller; w.axle.visible = !S.tiller; if (S.tiller) T.xr.extra.delete(w.hit); else { if (!w.hit.userData.xr) w.hit.userData.xr = { hover: (on) => { VRR.wHover = on; }, down: (h, src, key) => vrGrab(w, src, key, true), drag: (src) => vrDrag(w, src), up: () => { VRR.rgrab = null; } }; T.xr.extra.add(w.hit); if (W.objs.indexOf(w.hit) < 0) W.objs.push(w.hit); } });
     CK2.tiller.til.visible = CK2.tiller.ext.visible = S.tiller; if (S.helpL) S.helpL.visible = false; S.everGrab = true;
     S.msg = S.tiller ? "Botkormány: fogd meg a mellkasod előtt – eltolod: jobbra, a válladhoz húzod: balra." : "Kormánykerék: fogd meg a peremét, és fordítsd – negyed fordulat (90°) a végállás."; S.msgT = 7; W.panelDirty = 1; }

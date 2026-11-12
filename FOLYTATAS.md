@@ -821,3 +821,8 @@ Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mi
 - vrChart újraírva: felső sáv (cél, távolság, érkezés, kormányzási utasítás, állapotjelző: rajtig/verseny/büntető/hibás rajt), térkép (iránytűgyűrű É/K/D/Ny, távolsággyűrűk, szélnyíl, holtszög-cikk, cirkálóhatárok, pálya, nyomvonal, 26 m-es kerülési zóna + futó nyilas kerülési ív, ellenfelek névvel/sebességvektorral, rajt-/célkapu), rangsor, szél, alsó sáv (idő, hely, csomó, VMG, irány).
 - Beépített műszerkonzol (vrCockpit, sd<0): öntött karbon ház, szatén keret, napellenző, gombsor, forgatógomb, LED, rozsdamentes kapaszkodókeret, karbon nyak + merevítő a kormányoszlopból.
 - Kérte: indító link mindig, és az indítás a VR-be (MVDH Browser/Run).
+
+## 2026-11-12 08:36–08:38 – a műszer helye
+- Tulajdonos: a műszer ne takarja a horizontot (ne „tévé” a kép közepén); lefelé nézve inkább a hajótestet takarja; lehet kisebb.
+- Botkormánynál: alacsony konzol (y .84), a középvonal felé (x .8), erősen felfelé döntve, 80% méret.
+- Kormánykeréknél: a műszer a kerék KÖZEPÉBEN, álló tengelycsonkon (nem forog a kerékkel), 60% méret, napellenző és kapaszkodó nélkül. Váltás: G.userData.podSet(tiller).
