@@ -840,3 +840,7 @@ Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mi
 ## 2026-11-12 09:35–09:37
 - Tulajdonos: MINDEN munka végén indító linket kér a válaszban.
 - Vitorlaablak: a grószról lekerült (elég magasan van), a fockon a legalsó panelbe került (v .05–.17), szélesebb.
+
+## 2026-11-12 09:39–09:40
+- Tulajdonos: menet közben botkormányra váltva nem lehetett megfogni a rudat („tehetetlen”). Valószínű ok: a (láthatatlan) kerék sugaras fogása (vrGrab/vrDrag, rgrab) tovább élt és összeakadt a rúd fogásával. Javítás: botkormánynál vrGrab/vrDrag tiltva, átváltáskor minden fogás/ráfutás törlődik (xrForget), kerékről maradt fogás elengedve; bővebb fogási zóna (42 cm), a már zárt kéz is megfogja 20 cm-en belül. SZEMÜVEGBEN NINCS ELLENŐRIZVE – ha továbbra is rossz, a közvetítésen kell megnézni.
+- Fock: a teljes alsó sáv átlátszó, három szegmensben, szegőszalaggal.

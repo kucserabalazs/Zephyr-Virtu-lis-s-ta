@@ -86,7 +86,7 @@
       for (let k = 1; k < 9; k++) { g.strokeStyle = "rgba(0,0,0,.1)"; g.lineWidth = 2; g.beginPath(); g.moveTo(0, k * h / 9); g.lineTo(w, k * h / 9 - 10); g.stroke(); }
       /* UV-védőcsík az achterliken és az alsó élen */
       g.fillStyle = o.uv || "rgba(40,48,60,.85)"; g.fillRect(w - 26, 0, 26, h); g.fillRect(0, h - 22, w, 22);
-      if (o.win) { sailDetail(g, w, h, false); sailWindow(g, w, h, [[.14, .46], [.485, .82]], .05, .17, 7); }   /* 2026-11-12 09:37 (tulajdonos): az ablak a fock LEGALSÓ részén legyen, ott segíti a kilátást */
+      if (o.win) { sailDetail(g, w, h, false); sailWindow(g, w, h, [[.035, .335], [.345, .645], [.655, .945]], .05, .185, 7); }   /* 2026-11-12 09:40 (tulajdonos): a fock TELJES alsó sávja átlátszó, három szegmensben, körben szegve */   /* 2026-11-12 09:37 (tulajdonos): az ablak a fock LEGALSÓ részén legyen, ott segíti a kilátást */
     }));
   }
   function spinTex(cols) {

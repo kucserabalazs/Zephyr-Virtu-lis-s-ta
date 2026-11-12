@@ -525,12 +525,13 @@
     const lp = w.wheel.worldToLocal(_wv.copy(p)); return Math.atan2(-lp.x, lp.y);   /* a kormányos felől nézve jobbra = a hajó helyi −x */
   }
   function vrGrab(w, src, key, ray) {
+    if (VRR.tiller) { VRR.rgrab = null; return; }   /* 2026-11-12 09:39: botkormánynál a (láthatatlan) kerék sugaras fogása nem élhet – ez akadt össze a rúd fogásával átváltás után */
     let p = null; if (ray) { const pl = new THREE.Plane(); const n = new THREE.Vector3(0, 0, 1).transformDirection(w.wheel.matrixWorld); const c = w.wheel.getWorldPosition(new THREE.Vector3()); pl.setFromNormalAndCoplanarPoint(n, c); p = new THREE.Ray(src.o, src.d).intersectPlane(pl, new THREE.Vector3()); }
     else p = src.tip;
     if (!p) return; VRR.rgrab = { w, a: wheelAngleOf(w, p), key, ray }; try { flap(.02); } catch (e) {}
   }
   function vrDrag(w, src) {
-    const G = VRR.rgrab; if (!G || !G.ray) return;
+    const G = VRR.rgrab; if (VRR.tiller) { VRR.rgrab = null; return; } if (!G || !G.ray) return;
     const pl = new THREE.Plane(); const n = new THREE.Vector3(0, 0, 1).transformDirection(w.wheel.matrixWorld); const c = w.wheel.getWorldPosition(new THREE.Vector3()); pl.setFromNormalAndCoplanarPoint(n, c);
     const p = new THREE.Ray(src.o, src.d).intersectPlane(pl, new THREE.Vector3()); if (!p) return;
     const a = wheelAngleOf(w, p); VRR.wa = clamp(VRR.wa + wrapA(a - G.a) * (WA_MAX / (Math.PI / 2)), -WA_MAX, WA_MAX); G.a = a;
@@ -628,6 +629,7 @@
     S.near = false;
     if (T.inVR && X && X.src) {
       if (S.tiller) ["right", "left"].forEach((h) => {   /* BOTKORMÁNY: a kéz a toldó markolatát fogja; a rúd a kéz helyéből számolódik */
+        if (S.grabs[h] && !S.grabs[h].tiller) wheelRelease(h);   /* kerékről itt maradt fogás nem zavarhat be */
         const TI = S.ck.tiller, s0 = X.src[h], G = S.grabs[h], pt = s0 && (s0.palmC || s0.wristJ || s0.tip);
         if (!s0 || !pt) { if (G) { G.lost = (G.lost || 0) + dt; if (G.lost > 2.5) wheelRelease(h); } S.hold[h] = false; return; }
         const g = s0.hand ? curl(s0) : (squeeze(s0) ? 1 : 0), pin = !!s0.hand && pinchOf(s0, h);
@@ -656,12 +658,13 @@
           if (G.x0 == null) { G.x0 = meas; G.wa0 = S.wa; }
           const tgW = clamp(G.wa0 + (meas - G.x0) / TI.REACH * WA_MAX, -WA_MAX, WA_MAX); S.wa += (tgW - S.wa) * Math.min(1, dt * 12); S.wv = 0;
           if (G.s) G.e = (G.e || new THREE.Vector3()).set(ex, ey, ez);
-        } else if (holding && !S.hold[h]) { const n = near(); if (n.d < .3) {   /* fogás: a kéz a rúd vagy a toldó BÁRMELY pontja közelében zárul (vagy csippent) */
+        } else if (holding) { const n = near(); if (n.d < (S.hold[h] ? .2 : .42)) {   /* fogás: a kéz a rúd vagy a toldó BÁRMELY pontja közelében zárul (vagy csippent) – 2026-11-12 09:39: bővebb fogási zóna (42 cm), és a már zárt kéz is megfogja, ha a rúdhoz ér (20 cm) */
           S.grabs[h] = { tiller: true, key: h, ray: false, hist: [[W.t, S.wa]], s: n.s || 0, r: n.r || 0, ox: n.q.x - lp.x, oy: n.q.y - lp.y, oz: n.q.z - lp.z }; S.wv = 0; try { flap(.02); X.pulse && X.pulse(h, .5, 30); } catch (e) {} }
-        } else S.near = S.near || near().d < .3;
+        } else S.near = S.near || near().d < .42;
         S.hold[h] = holding;
       });
       else ["right", "left"].forEach((h) => {
+        if (S.grabs[h] && S.grabs[h].tiller) wheelRelease(h);
         const s0 = X.src[h], G = S.grabs[h], pt = s0 && (s0.palmC || s0.wristJ || s0.tip);
         if (!s0 || !pt) { if (G) { G.lost = (G.lost || 0) + dt; if (G.lost > 2.5) wheelRelease(h); } S.hold[h] = false; return; }   /* 2026-11-11: a kézkövetés elvesztése 2,5 mp-ig NEM engedi el a kormányt */
         const g = s0.hand ? curl(s0) : (squeeze(s0) ? 1 : 0), pin = !!s0.hand && pinchOf(s0, h);
@@ -1139,7 +1142,8 @@
     P.buttons([[S.tiller ? "☸ Kormánykerékre váltok" : "⎯ Botkormányra váltok", vrSteerMode]], 1);
   }
   /* kormánymód váltása: botkormány (alap) ↔ kormánykerék; megjegyzi (localStorage „zephyr-kormany”: bot / kerek) */
-  function vrSteerMode() { const S = VRR, CK2 = S.ck; if (!CK2) return; try { vrRelease(); } catch (e) {} S.tiller = !S.tiller; S.wa = 0; S.wOver = 0;
+  function vrSteerMode() { const S = VRR, CK2 = S.ck; if (!CK2) return; try { vrRelease(); } catch (e) {} S.tiller = !S.tiller; S.wa = 0; S.wOver = 0; S.wv = 0;
+    S.rgrab = null; S.grabs = {}; S.grab = null; S.hold = {}; S.near = false; S.wHover = false; try { if (T.xrForget) T.xrForget(CK2.wheels.map((w) => w.hit)); } catch (e) {}   /* 2026-11-12 09:39: átváltáskor minden korábbi fogás és ráfutás törlődik */
     try { localStorage.setItem("zephyr-kormany", S.tiller ? "bot" : "kerek"); } catch (e) {}
     if (CK2.G.userData.podSet) CK2.G.userData.podSet(S.tiller);
     CK2.wheels.forEach((w) => { w.wheel.visible = !S.tiller; w.axle.visible = !S.tiller; if (S.tiller) T.xr.extra.delete(w.hit); else { if (!w.hit.userData.xr) w.hit.userData.xr = { hover: (on) => { VRR.wHover = on; }, down: (h, src, key) => vrGrab(w, src, key, true), drag: (src) => vrDrag(w, src), up: () => { VRR.rgrab = null; } }; T.xr.extra.add(w.hit); if (W.objs.indexOf(w.hit) < 0) W.objs.push(w.hit); } });
