@@ -266,19 +266,10 @@
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
     const oldSky = makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
-    VRR.foto = makePhotoSky(far, oldSky, VRR.water);
-    VRR.water.renderOrder = 9;   /* a hajó „fedele” (mélységmaszk) után rajzolódjon */   /* valódi égfotó + a víz ezt tükrözi */
+    VRR.foto = makePhotoSky(far, oldSky, VRR.water);   /* valódi égfotó + a víz ezt tükrözi */
     const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
     boat.scale.setScalar(VR_SC); boat.rotation.y = Math.PI; root.add(boat); VRR.boat = boat;
     const CK2 = vrCockpit(boat); VRR.ck = CK2; VRR.baked = vrBake(boat);
-    /* 2026-11-12 01:49 (tulajdonos: „a hajó belső részén vannak hibás részek, ahol látom a vizet – elfogadhatatlan”): dőléskor a szél alatti oldal a vízszint alá kerül,
-       és a víz felülete a fedélzet FÖLÖTT rajzolódott ki. Megoldás: láthatatlan „fedél” a hajótest peremének vonalában, amely csak a mélységet írja – mögötte (alatta)
-       a víz nem rajzolódik ki, a fedélzet és a kokpit viszont látszik. A víz a fedél után rajzolódik. */
-    { const pts = []; const N = 28; for (let i = 0; i < N; i++) { const u0 = i / N, u1 = (i + 1) / N, a0 = hullShape(u0), a1 = hullShape(u1), y0 = a0.sheer + .1, y1 = a1.sheer + .1, k = 1.0;
-        pts.push(-a0.hb * k, y0, a0.z, a0.hb * k, y0, a0.z, a1.hb * k, y1, a1.z, -a0.hb * k, y0, a0.z, a1.hb * k, y1, a1.z, -a1.hb * k, y1, a1.z); }
-      const lg = new THREE.BufferGeometry(); lg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pts), 3)); W.disposables.push(lg);
-      const lm = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: true, side: THREE.DoubleSide }); W.disposables.push(lm);
-      const lid = new THREE.Mesh(lg, lm); lid.renderOrder = 8; lid.frustumCulled = false; lid.userData.noBake = true; (boat.userData.body || boat).add(lid); VRR.lid = lid; }
     /* a felhasználó helye: a jobb oldali (styrbord) kerék mögött; a hajó orra −z felé néz (a hajó π-vel elforgatva) */
     const hp = CK2.helm.clone().multiplyScalar(1 / VR_SC); hp.x = -hp.x;   /* styrbord = a hajó helyi −x oldala */
     /* 2026-11-10: telefonon (álló képernyő, 2D) a kormánytól nézve a hajó kitakarta a pályát – ott magasabbról és hátrébbról nézünk
@@ -860,20 +851,18 @@
       else { tx = mx + C.u[0] * 16; tz = mz + C.u[1] * 16; } }             /* a vonal mögül: a két bója között át */
     if (r.fin) { tx = r.x + vfwd(r.b)[0] * 50; tz = r.z + vfwd(r.b)[1] * 50; }
     /* életszerű hibák: néha nem veszi észre a másik hajót, elrontja a fordulót, késve fordul vagy túl nagy ívben kerül */
-    if (S.st === "race" && !r.fin) { if (!r.errNext) r.errNext = W.t + rr(18, 45); if (W.t > r.errNext) { r.errNext = W.t + rr(25, 60); const k = rand(); if (k < .3) r.errGW = W.t + 9; else if (k < .55) { r.v *= .5; if (Math.hypot(S.x - r.x, S.z - r.z) > 40) { r.tack = -r.tack; r.lastTack = W.t; } } else if (k < .8) r.lastTack = W.t - 2; else r.wide = rr(20, 38); } }
-    const nearMe = Math.hypot(S.x - r.x, S.z - r.z) < 32;   /* a közeledben nem fordulhat (nem vághat eléd / nem fordulhat rád) – megvárja, míg elmész */
+    if (S.st === "race" && !r.fin) { if (!r.errNext) r.errNext = W.t + rr(18, 45); if (W.t > r.errNext) { r.errNext = W.t + rr(25, 60); const k = rand(); if (k < .3) r.errGW = W.t + 9; else if (k < .55) { r.v *= .5; r.tack = -r.tack; r.lastTack = W.t; } else if (k < .8) r.lastTack = W.t - 2; else r.wide = rr(20, 38); } }
     const brgW = Math.atan2(tx - r.x, -(tz - r.z));
     let want = brgW;
     const rel = wrapA(brgW - S.wf);
     const cross = (r.x * C.c[0] + r.z * C.c[1]);
     if (Math.abs(rel) < 44 * D2R) { want = S.wf + r.tack * 44 * D2R;
-      if (!nearMe && W.t - r.lastTack > 10 && ((r.tack > 0 && rel <= -40 * D2R) || (r.tack < 0 && rel >= 40 * D2R) || (Math.abs(cross) > 170 && Math.sign(cross) === r.tack))) { r.tack = -r.tack; r.lastTack = W.t; want = S.wf + r.tack * 44 * D2R; } }
+      if (W.t - r.lastTack > 10 && ((r.tack > 0 && rel <= -40 * D2R) || (r.tack < 0 && rel >= 40 * D2R) || (Math.abs(cross) > 170 && Math.sign(cross) === r.tack))) { r.tack = -r.tack; r.lastTack = W.t; want = S.wf + r.tack * 44 * D2R; } }
     else if (Math.abs(rel) > 155 * D2R && S.st === "race") { want = S.wf + Math.PI - r.tack * 25 * D2R; const relD = wrapA(brgW - S.wf - Math.PI);
-      if (!nearMe && W.t - r.lastTack > 14 && ((r.tack > 0 && relD >= 22 * D2R) || (r.tack < 0 && relD <= -22 * D2R))) { r.tack = -r.tack; r.lastTack = W.t; } }
+      if (W.t - r.lastTack > 14 && ((r.tack > 0 && relD >= 22 * D2R) || (r.tack < 0 && relD <= -22 * D2R))) { r.tack = -r.tack; r.lastTack = W.t; } }
     /* ütközés elkerülése (a saját hajónkkal és egymással) */
-    [S].concat(S.riv).forEach((o) => { if (o === r) return; const dx = o.x - r.x, dz = o.z - r.z, d = Math.hypot(dx, dz); if (d >= (o === S ? 60 : 40)) return;
-      if (o === S) { const br0 = wrapA(Math.atan2(dx, -dz) - r.b); if (d < 55 && Math.abs(br0) < 2.2) want += (br0 > 0 ? -1 : 1) * 1.0 * (1 - d / 55); }   /* tőled nagy ívben, már messziről kitér */
-      const brg = wrapA(Math.atan2(dx, -dz) - r.b), ahead = Math.abs(brg) < 1.9, racing = S.st === "race" && !r.fin && !o.fin, gw = o === S ? true : (racing ? vrGiveWay(r, o) : true), careless = o === S ? false : (r.errGW || 0) > W.t;   /* a te hajód előtt MINDIG az ellenfél tér ki */
+    [S].concat(S.riv).forEach((o) => { if (o === r) return; const dx = o.x - r.x, dz = o.z - r.z, d = Math.hypot(dx, dz); if (d >= 40) return;
+      const brg = wrapA(Math.atan2(dx, -dz) - r.b), ahead = Math.abs(brg) < 1.9, racing = S.st === "race" && !r.fin && !o.fin, gw = racing ? vrGiveWay(r, o) : true, careless = (r.errGW || 0) > W.t;
       if (gw && !careless) { if (d < 36 && ahead) want += (brg > 0 ? -1 : 1) * .7 * (1 - d / 36); }
       else if (d < 9) want += (brg > 0 ? -1 : 1) * .35 * (1 - d / 9);   /* az útjogos tartja az irányát, csak az utolsó pillanatban tér ki */
       if (o === S && racing && !gw) { const closing = r._dS != null && d < r._dS - .002; if (d < 26 && closing && Math.abs(wrapA(Math.atan2(-dx, dz) - S.b)) < 1.7 && (!S.hailT || W.t - S.hailT > 8)) { S.hailT = W.t; S.msg = `„BACKBORD!!! BACKBORD!!!” – a(z) ${r.o.name} hajónak útjoga van: TÉRJ KI AZONNAL!`; S.msgT = 6; vrHail("Bekbord!"); } }
@@ -899,12 +888,11 @@
     if (S.st === "race" && !r.fin && r.started) { if (!fin) { if (vrRoundCheck(r, r.next) === 1) { r.next++; r.wide = 0; } } else if (crossLine(r)) { r.fin = S.t; S.res.push({ n: r.o.name, t: S.t }); horn(.4, .06); } }
     r.prevSide = lineSide(r);
     /* ütközés a saját hajónkkal: szétlöki a két hajót, mindkettő lelassul, koppanás és kiabálás helyett kürt */
-    /* 2026-11-12 01:49 (tulajdonos: „az én hajóm irányítása minden más hajótól TELJESEN FÜGGETLEN, semmi nem végez rajta befolyást… soha ne kötődjön az én mozgásom a többiekéhez”):
-       a te hajódat SEMMI nem löki el és nem lassítja – ha egy ellenfél túl közel kerül, ŐT toljuk el teljes egészében, ő lassul, ő kap büntetőt. */
-    { const dx = r.x - S.x, dz = r.z - S.z, d = Math.hypot(dx, dz); if (d < 7.5 && d > .01) { const k = (7.5 - d); r.x += dx / d * k; r.z += dz / d * k;
-      if (!r.bumpT || W.t - r.bumpT > 3) { r.bumpT = W.t; r.v *= .6; try { const a2 = T.ac(); if (a2) { const s2 = a2.createBufferSource(); s2.buffer = T.noiseBuf(.6); const f2 = a2.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = 220; const g2 = a2.createGain(); g2.gain.setValueAtTime(.35, a2.currentTime); g2.gain.exponentialRampToValueAtTime(.001, a2.currentTime + .6); s2.connect(f2).connect(g2).connect(T.outBus()); s2.start(); } } catch (e) {} const mine = S.st === "race" && !S.fin && !r.fin ? vrGiveWay(S, r) : false;
+    { const dx = r.x - S.x, dz = r.z - S.z, d = Math.hypot(dx, dz); if (d < 7.5 && d > .01) { const k = (7.5 - d) / 2; r.x += dx / d * k; r.z += dz / d * k; S.x -= dx / d * k; S.z -= dz / d * k;
+      if (!r.bumpT || W.t - r.bumpT > 3) { r.bumpT = W.t; r.v *= .6; S.v *= .6; try { const a2 = T.ac(); if (a2) { const s2 = a2.createBufferSource(); s2.buffer = T.noiseBuf(.6); const f2 = a2.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = 220; const g2 = a2.createGain(); g2.gain.setValueAtTime(.35, a2.currentTime); g2.gain.exponentialRampToValueAtTime(.001, a2.currentTime + .6); s2.connect(f2).connect(g2).connect(T.outBus()); s2.start(); } } catch (e) {} const mine = S.st === "race" && !S.fin && !r.fin ? vrGiveWay(S, r) : false;
         if (S.st !== "race" || S.fin || r.fin) { S.msg = "Koccanás a(z) " + r.o.name + " hajóval!"; S.msgT = 3; }
-        else { r.penT = W.t + 7; r.v *= .5; if (mine) { /* (a hajód ettől sem lassul) */ } S.msg = `A(z) ${r.o.name} szabálytalan volt (neked volt útjogod) – büntetőt kap.`; S.msgT = 6; } } } }
+        else if (mine) { S.v *= .5; S.msg = `⚠ SZABÁLYSÉRTÉS! A(z) ${r.o.name} hajónak útjoga volt – büntetésből lelassultál.`; S.msgT = 6; vrHail("Bekbord! Protest!"); }
+        else { r.penT = W.t + 7; r.v *= .5; S.msg = `A(z) ${r.o.name} szabálytalan volt (neked volt útjogod) – büntetőt kap.`; S.msgT = 6; } } } }
     /* megjelenítés */
     r.g.position.set(r.x, Math.sin(W.t * 1.5 + r.ph) * .06, r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);
     const OS = r.g.userData.S, wfv = vfwd(S.wf), yaw = r.g.rotation.y, Xv = [Math.cos(yaw), -Math.sin(yaw)];
