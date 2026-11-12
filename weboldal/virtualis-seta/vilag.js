@@ -2464,8 +2464,10 @@
         S.hold[h] = holding;
       });
       if (lead) { const REACH = .15; Object.values(S.grabs).forEach((G) => { if (G !== lead && G.fist) { G.x0 = G.m; G.wa0 = S.wa; } });   /* a nem vezető kéz csendben hozzáigazodik */
-        const tgW = lead.wa0 + (lead.m - lead.x0) / REACH * WA_MAX; S.wa = clamp(tgW, -WA_MAX, WA_MAX); S.wv = 0; S.wOver = 0;
-        if (tgW > WA_MAX) lead.x0 = lead.m - (WA_MAX - lead.wa0) * REACH / WA_MAX; else if (tgW < -WA_MAX) lead.x0 = lead.m - (-WA_MAX - lead.wa0) * REACH / WA_MAX;   /* a végállásnál nem „gyűlik fel” túlhúzás: visszafelé azonnal reagál */
+        /* 2026-11-13 00:40 (tulajdonos: „fordítottan működik a kormánykerék … arrafelé forduljon a hajó, amerre fordítom a kormányt”): a hajó helyi +x-e a BAL oldal,
+           ezért KERÉKNÉL az előjel fordított: ököl jobbra = a kerék jobbra fordul = a hajó jobbra megy. BOTKORMÁNYNÁL marad a valós irány (rúd jobbra = a hajó balra). */
+        const sg = lead.tiller ? 1 : -1, tgW = lead.wa0 + sg * (lead.m - lead.x0) / REACH * WA_MAX; S.wa = clamp(tgW, -WA_MAX, WA_MAX); S.wv = 0; S.wOver = 0;
+        if (tgW > WA_MAX) lead.x0 = lead.m - sg * (WA_MAX - lead.wa0) * REACH / WA_MAX; else if (tgW < -WA_MAX) lead.x0 = lead.m - sg * (-WA_MAX - lead.wa0) * REACH / WA_MAX;   /* a végállásnál nem „gyűlik fel” túlhúzás: visszafelé azonnal reagál */
         Object.values(S.grabs).forEach((G) => { if (G.hist) { G.hist.push([W.t, S.wa]); while (G.hist.length > 2 && W.t - G.hist[0][0] > .2) G.hist.shift(); } }); }
     }
     S.grab = S.grabs.right || S.grabs.left || null;
@@ -2526,7 +2528,7 @@
     { let yrT = Math.sin(S.del) * (.085 * S.v + .24);
       /* 2026-11-12 20:01 (tulajdonos: „szélben állok órákig, mire elindul, addigra minden hajó elment”): kijutás a szélből – álló hajón, a holtszögben a legénység
          ellentartja a fockot, ezért a hajó orra leesik arra, amerre a kormányt tartod (ha a kormány középen áll: arra, amerre már amúgy is áll). Menetben nincs hatása. */
-      const relW = wrapA(S.wf - S.b); if (S.st !== "done" && Math.abs(relW) < .62 && S.v < 1.6) { const kI = (1 - S.v / 1.6) * (1 - Math.abs(relW) / .62 * .5); yrT += (Math.abs(S.del) > .04 ? Math.sign(S.del) : -Math.sign(relW || 1)) * .27 * kI; }
+      const relW = wrapA(S.wf - S.b); if (S.st !== "done" && Math.abs(relW) < .62 && S.v < 1.6) { const kI = (1 - S.v / 1.6) * (1 - Math.abs(relW) / .62 * .5); if (Math.abs(S.del) > .04) yrT += Math.sign(S.del) * .27 * kI; }   /* 2026-11-13: csak arra segít, amerre a kormányt tartod – középen álló kormánynál a hajó magától NEM fordul */
       S.yr = (S.yr || 0) + (yrT - (S.yr || 0)) * Math.min(1, dt * 3.2); }
     S.b = (S.b + S.yr * dt + TAU) % TAU;
     if (S.pen > 0 && S.st === "race") { const dB = S.yr * dt; if (Math.abs(S.yr) < .05) { S.penSt = (S.penSt || 0) + dt; if (S.penSt > 4) S.penAcc = 0; } else S.penSt = 0;
@@ -2575,8 +2577,9 @@
       if (BS.spin > .5) M += Math.sin(.065) * Math.sin(W.t * 1.25) * clamp(aws / 9, 0, 1.4) * BS.spin;   /* spinakker alatt hátszélben ringatózás (oldalra-oldalra) */
       S.heelV = (S.heelV || 0) + (M * w0 * w0 - 2 * zeta * w0 * (S.heelV || 0)) * dt; S.heel = clamp(th + S.heelV * dt, -.2, .62);
       S.heelPen = S.heel > 22 * D2R ? 1 - (S.heel - 22 * D2R) / (30 * D2R) * .3 : 1;   /* túl nagy dőlésnél a hajó nem gyorsul tovább (kevésbé hatékony) */
-      /* luvgierigkeit: dőlésben a hajó a szél felé „húz” – a kormánnyal kell ellentartani */
-      S.yr += Math.sign(wrapA(S.wf - S.b)) * Math.max(0, S.heel) * .1 * Math.min(1, S.v / 5) * dt * 3; }
+      /* 2026-11-13 00:39 (tulajdonos, ALAPSZABÁLY): „amerre kormányzom a hajót, arra megy, ez alól nincs kivétel; a kormánymozdulat irányítja a hajót, nem löki félre semmi –
+         egyetlen kivétel az ütközés.” Ezért a saját hajón a szélbe húzás (luvgierigkeit: dőlésben a hajó a szél felé fordult) MEGSZŰNT; a széllökés csak dönt és gyorsít,
+         az irányt (S.b) kizárólag a kormány változtatja. Ide SEMMI olyan tagot ne tegyél vissza, amely a kormánytól függetlenül forgatja a saját hajót. */ }
     BS.heel = -side * S.heel * .78;   /* látványban kicsit visszafogva (a kormányos helye le van horgonyozva) */
     /* mozgás a hullámokon: a lassú hajót dobálja a víz (jobban ring), a száguldó hajó kisimul – csak néha ugrik meg egy-egy hullámon */
     const hb = vrWave(S.x + fx * 6, S.z + fz * 6, W.t), hs2 = vrWave(S.x - fx * 6, S.z - fz * 6, W.t);
