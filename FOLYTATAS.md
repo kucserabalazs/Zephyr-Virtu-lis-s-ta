@@ -894,3 +894,7 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 - aruhaz/BEADAS.md: a Meta hivatalos oldalairól ellenőrzött tények (30% jutalék, 100 USD küszöb, Bubblewrap-csomagolás, W-8), a hátralévő lépések és az áruházi leírás vázlata.
 - jatek.webmanifest + ikonok (img/jatek). A tényleges csomagoláshoz fejlesztői fiók, végleges domain és a Mac kell – a tulajdonossal együtt.
 ### 7. lépés (sakk, hullámvasút, 2D regatta csiszolása) – NEM kezdtem el ebben a menetben.
+
+## 2026-11-12 13:29
+- Tulajdonos: a kezdőképernyőről indítva nem lépett VR-be → a kártya megnyomása szemüvegben azonnal VR-be lép (sceneEl.enterVR a kattintásban), kilépéskor kilép a VR-ből, és visszaadja a kezdőképernyőt. SZEMÜVEGBEN NINCS ELLENŐRIZVE.
+- A kezdőképernyőt „ronda képnek” nevezte, és megerősítést kért: a séta a szokott címen (paraméter nélkül) változatlanul a sétával indul, a kezdőképernyő CSAK a „?jatek” címen jön be. A böngészőpanelt a sima sétára kell állítani, nem a ?jatek-re. A kezdőképernyő kinézetéről ő dönt – át kell tervezni, ha megmondja, milyet szeretne.

@@ -13436,8 +13436,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         <div class="gh-row"><button class="gh-pill" data-a="tut">🎓 Oktató futam</button><button class="gh-pill" data-a="diff">Nehézség: ${DIFF[ls("zephyr-vr-nehezseg", "halado")] || "Haladó"}</button><button class="gh-pill" data-a="steer">Kormány: ${ls("zephyr-kormany", "bot") === "kerek" ? "kormánykerék" : "botkormány"}</button></div>
         ${recTable()}
         <p class="gh-foot">VR-szemüvegben: indítsd el a játékot, aztán nyomd meg a „VR” gombot. Kézkövetéssel és kontrollerrel is játszható; szemüveg nélkül billentyűzettel vagy érintéssel.<br>Zephyr Sailing VR · ${String(window.ZEPHYR_BV || "").slice(0, 5)}</p></div>`; };
-    const open = (kind, tut) => { hub.classList.add("gh-hide"); if (tut) window.__ghTut = 1; openWorld(kind);
-      const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function () { const r = c0.apply(this, arguments); setTimeout(() => { draw(); hub.classList.remove("gh-hide"); }, 50); return r; }; }
+    const open = (kind, tut) => { hub.classList.add("gh-hide"); if (tut) window.__ghTut = 1;
+      /* 2026-11-12 13:29 (tulajdonos: „ha elindítom, nem lép be a VR-be”): szemüvegben a kártya megnyomása azonnal VR-be lép (a kattintás a szükséges felhasználói művelet) */
+      try { if (VRS.ok && sceneEl && !sceneEl.is("vr-mode")) sceneEl.enterVR(); } catch (e) {}
+      openWorld(kind);
+      const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function () { const r = c0.apply(this, arguments); try { if (sceneEl && sceneEl.is("vr-mode")) sceneEl.exitVR(); } catch (e) {} setTimeout(() => { draw(); hub.classList.remove("gh-hide"); }, 50); return r; }; }
         if (window.__ghTut && Z.vrr && Z.vrSetup && Z.vrr.C) { window.__ghTut = 0; try { Z.vrSetup(0); } catch (e) {} } if (!window.__ghTut) clearInterval(iv); }, 400); setTimeout(() => clearInterval(iv), 60000); };
     hub.addEventListener("click", (ev) => { const c = ev.target.closest("[data-g]"), a = ev.target.closest("[data-a]");
       if (c) open(c.getAttribute("data-g"));
