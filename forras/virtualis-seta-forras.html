@@ -13404,6 +13404,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       #gameHub .gh-pill{all:unset;cursor:pointer;font-size:19px;font-weight:750;padding:12px 20px;border-radius:999px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22)}
       #gameHub .gh-pill:hover{border-color:#E4BB63}
       #gameHub .gh-foot{margin-top:26px;font-size:16px;color:#8fb3d1;line-height:1.5}
+      #gameHub .gh-recs{margin-top:30px;padding:22px 26px;border-radius:22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
+      #gameHub .gh-recs h2{margin:0 0 12px;font-size:26px;color:#E4BB63}
+      #gameHub .gh-recs table{border-collapse:collapse;font-size:20px;width:100%;max-width:640px}
+      #gameHub .gh-recs td{padding:7px 14px 7px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+      #gameHub .gh-recs p{font-size:19px;color:#cfe3f2;margin:14px 0 0}
       #gameHub.gh-hide{display:none}`; document.head.appendChild(css);
     const hub = document.createElement("div"); hub.id = "gameHub"; hub.setAttribute("role", "dialog"); hub.setAttribute("aria-label", "Játékok");
     const DIFF = { kezdo: "Kezdő", halado: "Haladó", verseny: "Versenyző" }, ls = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
@@ -13412,6 +13417,13 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const ts = Object.keys(best).map((k) => best[k]).filter((v) => v > 0), parts = [];
       if (ts.length) parts.push(`${ts.length} pályán van időd · legjobb: ${mmss(Math.min.apply(null, ts))}`); if (ch && ch.won) parts.push(`🏆 megnyert bajnokság: ${ch.won}`); if (ch && ch.n && ch.n < 5) parts.push(`bajnokság: ${ch.n}/5 futam`);
       if (!ls("zephyr-vr-oktato", "")) parts.unshift("Először vagy itt? Kezdd az oktató futammal!"); return parts.join(" · "); };
+    /* 6. lépés: rekordok – pályánkénti legjobb idők és a bajnokság állása */
+    const CN = ["Felszél–hátszél", "Háromszög", "Szlalom", "Tihanyi kör", "Nagy ív", "Trapéz", "Hosszú cirkáló", "Balatoni átkelés", "Cikkcakk", "Kékszalag-kör"];
+    const recTable = () => { let best = {}, ch = null; try { best = JSON.parse(ls("zephyr-vr-verseny", "{}")); ch = JSON.parse(ls("zephyr-vr-bajnoksag", "null")); } catch (e) {}
+      const ks = Object.keys(best).map(Number).filter((k) => k > 0 && best[k] > 0).sort((a, b) => a - b); if (!ks.length && !(ch && ch.n)) return "";
+      const rows = ks.map((k) => `<tr><td>${k}. futam</td><td>${CN[(k - 1) % CN.length]}</td><td><b>${mmss(best[k])}</b></td></tr>`).join("");
+      const tb = ch && ch.pts ? Object.keys(ch.pts).map((n) => [n, ch.pts[n]]).sort((a, b) => a[1] - b[1]).map((q, i) => `${i + 1}. ${q[0]} – ${q[1]} pont`).join(" · ") : "";
+      return `<div class="gh-recs"><h2>Rekordjaid</h2>${rows ? `<table>${rows}</table>` : ""}${tb ? `<p>${ch.n >= 5 ? "🏆 Bajnokság végeredménye" : "Bajnokság " + ch.n + "/5 futam után"}: ${tb}</p>` : ""}</div>`; };
     const draw = () => { hub.innerHTML = `<div class="gh-wrap">
         <div class="gh-top"><div class="gh-logo"><svg viewBox="0 0 64 64" width="70%" height="70%" aria-hidden="true"><path d="M30 6v44H10z" fill="#fff"/><path d="M34 14v36h20z" fill="#ffd9a0"/><path d="M6 54h52l-6 6H12z" fill="#fff"/></svg></div>
           <div><h1>Zephyr <span>Sailing VR</span></h1><p class="gh-tag">Valódi vitorlázás a Balatonon – kézzel kormányzott versenyhajó, élethű szél és vitorlák, versenyszabályok.</p></div></div>
@@ -13421,6 +13433,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           <button class="gh-card" data-g="coaster"><span class="gh-ic">🎢</span><b>Balatoni hullámvasút</b><p>Körbe a Balaton partján, 14 látnivalóval és 33 kikötővel – nyugodt városnézés vagy vad menet hurkokkal.</p><span class="gh-go">Beszállok ▸</span></button>
         </div>
         <div class="gh-row"><button class="gh-pill" data-a="tut">🎓 Oktató futam</button><button class="gh-pill" data-a="diff">Nehézség: ${DIFF[ls("zephyr-vr-nehezseg", "halado")] || "Haladó"}</button><button class="gh-pill" data-a="steer">Kormány: ${ls("zephyr-kormany", "bot") === "kerek" ? "kormánykerék" : "botkormány"}</button></div>
+        ${recTable()}
         <p class="gh-foot">VR-szemüvegben: indítsd el a játékot, aztán nyomd meg a „VR” gombot. Kézkövetéssel és kontrollerrel is játszható; szemüveg nélkül billentyűzettel vagy érintéssel.<br>Zephyr Sailing VR · ${String(window.ZEPHYR_BV || "").slice(0, 5)}</p></div>`; };
     const open = (kind, tut) => { hub.classList.add("gh-hide"); if (tut) window.__ghTut = 1; openWorld(kind);
       const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function () { const r = c0.apply(this, arguments); setTimeout(() => { draw(); hub.classList.remove("gh-hide"); }, 50); return r; }; }

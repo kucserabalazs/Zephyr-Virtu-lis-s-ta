@@ -1664,7 +1664,13 @@
     { n: "Háromszög", m: [[-1, .95], [1, .7]] },
     { n: "Szlalom", m: [[-.6, .55], [.6, .75], [-.4, 1]] },
     { n: "Tihanyi kör", m: [[1, 1], [-1, 1], [0, .5]] },
-    { n: "Nagy ív", m: [[1, .6], [.3, 1], [-1, .8]] }
+    { n: "Nagy ív", m: [[1, .6], [.3, 1], [-1, .8]] },
+    /* 2026-11-12 12:14 – 5. lépés: öt új pályatípus (6–10. futam) */
+    { n: "Trapéz", m: [[-.8, 1], [-1, .3], [.8, .3]] },
+    { n: "Hosszú cirkáló", m: [[0, 1.35], [0, .15]] },
+    { n: "Balatoni átkelés", m: [[.9, 1.2], [-.9, .6]] },
+    { n: "Cikkcakk", m: [[-.7, .4], [.7, .6], [-.7, .85], [.6, 1.1]] },
+    { n: "Kékszalag-kör", m: [[1, .5], [1, 1.1], [-1, 1.1], [-1, .5]] }
   ];
   const vrRng = (seed) => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t2 = Math.imul(seed ^ seed >>> 15, 1 | seed); t2 = t2 + Math.imul(t2 ^ t2 >>> 7, 61 | t2) ^ t2; return ((t2 ^ t2 >>> 14) >>> 0) / 4294967296; };
   const vfwd = (b) => [Math.sin(b), -Math.cos(b)];
@@ -1678,7 +1684,9 @@
     const D = 300 + R() * 60, A = 120 + R() * 40;
     const marks = tp.m.map(([x, z]) => ({ x: u[0] * D * z + c[0] * A * x * (.85 + R() * .3), z: u[1] * D * z + c[1] * A * x * (.85 + R() * .3) }));
     const L = 70;   /* a rajtvonal hossza */
-    return { name: tp.n, lvl, wf, tws: (10 + R() * 6) * KN, marks, u, c, line: { a: { x: -c[0] * L / 2, z: -c[1] * L / 2 }, b: { x: c[0] * L / 2, z: c[1] * L / 2 } } };
+    /* időjárás futamonként (külön véletlen-sorozat, hogy a pályák bójái a korábbiak maradjanak): gyenge / közepes / friss szél */
+    const Rw = vrRng(lvl * 31 + 7), w0 = lvl <= 2 ? .5 : Rw(), wxn = w0 < .25 ? "gyenge szél" : w0 < .7 ? "közepes szél" : "friss szél", wk = w0 < .25 ? 6.5 + Rw() * 2 : w0 < .7 ? 10 + R() * 6 : 16 + Rw() * 4;
+    return { name: tp.n, wxn, lvl, wf, tws: wk * KN, marks, u, c, line: { a: { x: -c[0] * L / 2, z: -c[1] * L / 2 }, b: { x: c[0] * L / 2, z: c[1] * L / 2 } } };
   }
   /* --------------------------------------------------------------- a nagy versenyjacht kokpitja (méterben, a skálázott hajó helyi terében) */
   function vrCockpit(boat) {
@@ -2509,7 +2517,7 @@
     const wfv = vfwd(S.wf), tw = [wfv[0] * S.tws * S.gk, wfv[1] * S.tws * S.gk], aw = [tw[0] + fx * S.v, tw[1] + fz * S.v], aws = Math.hypot(aw[0], aw[1]);
     const awa = Math.acos(clamp((aw[0] * fx + aw[1] * fz) / (aws || 1), -1, 1)) * R2D;
     const port = [fz, -fx], side = (wfv[0] * port[0] + wfv[1] * port[1]) > 0 ? -1 : 1;
-    if (side !== S.lastSide) { if (S.lastSide) { S.tackT = 3.4; flap(.16); setTimeout(winch, 1500); setTimeout(winch, 2300); } S.lastSide = side; }
+    if (side !== S.lastSide) { if (S.lastSide) { S.tackT = 3.4; flap(.16); setTimeout(winch, 1500); setTimeout(winch, 2300); if ((S.twa || 0) > 115) setTimeout(vrSlam, 350); } S.lastSide = side; }
     S.tackT = Math.max(0, S.tackT - dt);
     const BS = S.boat.userData.S; BS.side = side; BS.boom = clamp((awa - 22) * .72, 5, 80) * D2R * side; BS.jib = clamp((awa - 22) * .5, 7, 50) * D2R;
     BS.luff = Math.max(clamp(1 - (awa - 16) / 16, 0, 1), S.tackT > 1.4 ? .7 : 0); 
@@ -2623,7 +2631,7 @@
         else if (rc === -1 && (!S.wrongT || W.t - S.wrongT > 6)) { S.wrongT = W.t; S.msg = "⚠ Rossz irány! A bóját BAL kéz felől kell megkerülni – fordulj vissza, és kerüld meg az óramutatóval ellentétesen"; S.msgT = 6; S.guideT = W.t + 12; beep(); }
         else if (S.nearMk === S.next + 1 && d > 80) { S.nearMk = 0; S.msg = `⚠ Nem kerülted meg a(z) ${S.next + 1}. bóját! Vissza kell menned – enélkül nincs érvényes futam.`; S.msgT = 7; S.guideT = W.t + 15; beep(); setTimeout(beep, 250); } }
       else if (crossLine(S) && S.pen > 0) { S.msg = `⚠ ÉRVÉNYTELEN BEFUTÓ! Még ${S.pen} büntetőforduló (360°) hátravan – tedd meg, aztán fuss be újra.`; S.msgT = 9; beep(); setTimeout(beep, 250); }
-      else if (crossLine(S)) { S.fin = S.t; S.res.push({ n: "Zephyr (te)", t: S.t, me: true }); horn(1.2, .2); S.msg = "BEFUTÓ!"; S.msgT = 6; }
+      else if (crossLine(S)) { S.fin = S.t; S.res.push({ n: "Zephyr (te)", t: S.t, me: true }); horn(1.2, .2); vrApplause(4.5); S.msg = "BEFUTÓ!"; S.msgT = 6; }
     }
     S.prevSide = lineSide(S);
     /* ellenfelek: a regatta mesterséges intelligenciája (cirkálás laylinig, hátszélben jibbelés), bóják bal kéz felől */
@@ -2644,6 +2652,7 @@
       S.cdL.visible = S.st === "pre" || (S.st === "race" && S.t < 4); S.cdL.position.set(S.cb.position.x, 13 + Math.sin(W.t * 2) * .2, S.cb.position.z); S.cdL.userData.set(S.st === "pre" ? ["RAJT", mmss(S.t)] : ["RAJT!", "jó versenyt!"]); }
     S.lineM.material.opacity = S.st === "pre" || S.next >= S.marks.length ? .5 + .2 * Math.sin(W.t * 3) : .15;
     /* hangok */
+    vrSfx(dt, aws);
     AU.set("rush", clamp((S.v - .8) / 4.5, 0, 1.25) * .11, .4); AU.set("wind", clamp(aws / (14 * KN), 0, 1.2) ** 1.5 * .07, .6); AU.set("water", .035, 1);
     /* 2026-11-11: a vízen és a levegőben NINCS több tábla, felirat, keringő jel, festett nyíl – csak a fényoszlop a következő célnál és a rajt-/célvonal két oszlopa */
     { const M = S.CM; if (M) { M.orbit.visible = false; M.sign.visible = false; if (M.gateL) M.gateL.visible = false; M.chev.visible = false; (M.garrows || []).forEach((m) => { m.visible = false; }); }
@@ -2669,6 +2678,24 @@
     const along = (o.x - C.line.a.x) * C.c[0] + (o.z - C.line.a.z) * C.c[1], L = Math.hypot(C.line.b.x - C.line.a.x, C.line.b.z - C.line.a.z);
     return was != null && was > 0 && s <= 0 && along > -8 && along < L + 8;
   }
+  /* ================= 2026-11-12 12:14 – 4. lépés: gazdagabb hangkép (mind szintetizált, nincs letöltött hangfájl) =================
+     folyamatos: vitorlacsattogás belobogáskor (zaj + 9 Hz-es lüktetés), kötélzet-süvítés erős szélben; esemény: hullámcsapás a hajótesten (sebességgel sűrűsödik),
+     bum-csattanás perdüléskor, sirályok, taps és éljenzés a befutónál. */
+  function vrSfx(dt, aws) { const S = VRR, a = T.ac(); if (!a) return; const X2 = S.sfx || (S.sfx = { slapT: 3, gullT: 12 });
+    if (!X2.flog || AU.nodes.indexOf(X2.flog) < 0) { try { const out = T.outBus(), mk = (fr, q) => { const n = a.createBufferSource(); n.buffer = T.noiseBuf(4); n.loop = true; const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = fr; f.Q.value = q; const g = a.createGain(); g.gain.value = 0; n.connect(f).connect(g).connect(out); n.start(); const o = { n, f, g }; AU.nodes.push(o); return o; };
+        X2.flog = mk(950, .8); const lfo = a.createOscillator(), lg = a.createGain(); lfo.type = "square"; lfo.frequency.value = 9; lg.gain.value = 0; lfo.connect(lg).connect(X2.flog.g.gain); lfo.start(); X2.lfoG = lg; X2.flog.n2 = lfo; X2.whis = mk(2700, 16); } catch (e) { return; } }
+    const BS = S.boat && S.boat.userData.S, lf = BS ? Math.max(BS.lfM || 0, BS.lfJ || 0, S.tackT > 2 ? .7 : 0) : 0, t = a.currentTime;
+    X2.flog.g.gain.setTargetAtTime(lf * .05, t, .12); X2.lfoG.gain.setTargetAtTime(lf * .05, t, .12); X2.flog.n2.frequency.setTargetAtTime(7 + 5 * lf + 2 * Math.sin(W.t * 1.7), t, .2);
+    X2.whis.g.gain.setTargetAtTime(clamp((aws / KN - 15) / 12, 0, 1) * .022 * (.7 + .3 * Math.sin(W.t * .9)), t, .5);
+    /* hullámcsapás */
+    X2.slapT -= dt * clamp(S.v / 2.2, .3, 2.2); if (X2.slapT <= 0 && S.v > 1) { X2.slapT = 1.6 + rand() * 2.2; try { const n = a.createBufferSource(); n.buffer = T.noiseBuf(.5); const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 260 + rand() * 160; const g = a.createGain(), v0 = .05 + .05 * clamp(S.v / 6, 0, 1); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v0, t + .03); g.gain.exponentialRampToValueAtTime(.0008, t + .45); n.connect(f).connect(g).connect(T.outBus()); n.start(t); n.stop(t + .5); } catch (e) {} }
+    /* sirályok */
+    X2.gullT -= dt; if (X2.gullT <= 0) { X2.gullT = 22 + rand() * 40; try { [0, .22, .5].forEach((d, i) => { const o = a.createOscillator(), g = a.createGain(), t0 = t + d; o.type = "sawtooth"; o.frequency.setValueAtTime(1900 - i * 120, t0); o.frequency.exponentialRampToValueAtTime(1150, t0 + .17); const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1700; f.Q.value = 3; g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.012, t0 + .03); g.gain.exponentialRampToValueAtTime(.0005, t0 + .2); o.connect(f).connect(g).connect(T.outBus()); o.start(t0); o.stop(t0 + .22); }); } catch (e) {} } }
+  function vrSlam() { const a = T.ac(); if (!a) return; try { const t = a.currentTime, o = a.createOscillator(), g = a.createGain(); o.type = "sine"; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(48, t + .22); g.gain.setValueAtTime(.16, t); g.gain.exponentialRampToValueAtTime(.001, t + .3); o.connect(g).connect(T.outBus()); o.start(t); o.stop(t + .32);
+      const n = a.createBufferSource(); n.buffer = T.noiseBuf(.2); const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1300; const g2 = a.createGain(); g2.gain.setValueAtTime(.07, t); g2.gain.exponentialRampToValueAtTime(.001, t + .12); n.connect(f).connect(g2).connect(T.outBus()); n.start(t); n.stop(t + .15); } catch (e) {} }
+  function vrApplause(sec) { const a = T.ac(); if (!a) return; try { const t = a.currentTime, n = a.createBufferSource(); n.buffer = T.noiseBuf(4); n.loop = true; const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2100; f.Q.value = .6; const g = a.createGain(); g.gain.setValueAtTime(0, t);
+      for (let k = 0; k < sec * 22; k++) { const tt = t + k / 22 + rand() * .03, env = Math.sin(Math.PI * Math.min(1, k / (sec * 22))) ; g.gain.linearRampToValueAtTime((.02 + rand() * .05) * (.3 + env), tt); } g.gain.linearRampToValueAtTime(0, t + sec + .3); n.connect(f).connect(g).connect(T.outBus()); n.start(t); n.stop(t + sec + .4);
+      [0, .5, 1.1].forEach((d) => { const o = a.createOscillator(), og = a.createGain(), t0 = t + d + .3; o.type = "triangle"; o.frequency.setValueAtTime(520, t0); o.frequency.linearRampToValueAtTime(780, t0 + .35); og.gain.setValueAtTime(0, t0); og.gain.linearRampToValueAtTime(.02, t0 + .1); og.gain.exponentialRampToValueAtTime(.0006, t0 + .5); o.connect(og).connect(T.outBus()); o.start(t0); o.stop(t0 + .55); }); } catch (e) {} }
   function beep() { const a = T.ac(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = "square"; o.frequency.value = 880; g.gain.setValueAtTime(.06, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + .18); o.connect(g).connect(T.outBus()); o.start(); o.stop(a.currentTime + .2); }
   function vrRivalTick(r, dt) {
     const S = VRR, C = S.C;
@@ -2904,7 +2931,7 @@
   /* --------------------------------------------------------------- panel, csuklómenü, 2D */
   function vrPanel(P) {
     const S = VRR;
-    P.title(`Vitorlásverseny · ${S.lvl ? S.lvl + ". futam" : "🎓"} · ${S.C.name} · ${vrDiff().n} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · szél ${(S.tws / KN).toFixed(0)} csomó`);
+    P.title(`Vitorlásverseny · ${S.lvl ? S.lvl + ". futam" : "🎓"} · ${S.C.name} · ${vrDiff().n} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · ${S.C.wxn || "szél"} ${(S.tws / KN).toFixed(0)} csomó`);
     P.row(0, S.msgT > 0 ? S.msg : S.tiller ? "Botkormány: fogd meg a mellkasod előtt – eltolod: jobbra, a válladhoz húzod: balra." : "Kormánykerék: fogd meg a peremét – negyed fordulat (90°) a végállás.", "#ffd166");
     P.row(1, S.pen > 0 ? `⚠ BÜNTETŐ: ${S.pen} × 360° forduló hátravan (${Math.round(Math.abs(S.penAcc || 0) * R2D)}° megvan) – enélkül a befutó érvénytelen` : S.ocs ? "KORAI RAJT – menj vissza a rajtvonal mögé, aztán lépd át újra" : S.st === "pre" ? "Rajt előtt maradj a vonal mögött – a rajtjelre (hosszú kürt) lépd át" : S.next < S.marks.length ? `Következő: ${S.next + 1}. bója (${S.marks.length} van) – bal kéz felől kerüld` : "Utolsó szakasz: át a rajtvonalon!", "#ffffff");
     P.row(2, S.st === "done" ? S.res.map((q, i) => `${i + 1}. ${q.n} ${mmss(q.t)}`).join(" · ") : "A sárga fényoszlop mutatja a következő bóját.", "#7fd3ff");

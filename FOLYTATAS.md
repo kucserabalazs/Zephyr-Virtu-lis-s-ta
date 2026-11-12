@@ -883,3 +883,9 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 ### 2. lépés – kész: kezdőképernyő (12:14)
 - A cím végére „?jatek” (vagy „#jatek”): önálló játék-kezdőképernyő (gameHub a forrás-html-ben), a sétát eltakarja; kártyák: Vitorlásverseny, Vitorlás sakk, Balatoni hullámvasút; gombok: Oktató futam, Nehézség, Kormány; rekordok sora; játékból kilépve ide tér vissza. Név: „Zephyr Sailing VR” – MUNKACÍM, a tulajdonos dönt. A 2D parti regatta még nincs a kártyák között (a séta stég-jelenetéhez kötött).
 ### 3. lépés – kész: minden hajó legénysége emberszerű (03-hajo.js), Zephyr mellényben (fekete hab, piros/sárga V-betét, ZEPHYR a háton), anyagonként összevonva.
+
+### 4–6. lépés – első változat kész (12:14 menet)
+- 4. Hangok (vrSfx, mind szintetizált): vitorlacsattogás belobogáskor, kötélzet-süvítés erős szélben, hullámcsapás a hajótesten, bum-csattanás perdüléskor, sirályok, taps és éljenzés a befutónál. HANGOT A GÉPI TESZTEN NEM LEHET HALLANI – a tulajdonos füle dönt.
+- 5. Pályák: 10 pályatípus (új: Trapéz, Hosszú cirkáló, Balatoni átkelés, Cikkcakk, Kékszalag-kör); futamonként időjárás (gyenge / közepes / friss szél). Napszak-váltás NINCS kész.
+- 6. Rekordok: a kezdőképernyőn pályánkénti legjobb idők + bajnokság állása.
+- Hátravan: 7. sakk / hullámvasút / 2D regatta csiszolása; 8. képfrissítés a Questen (tulajdonos); 9. csomagolás, áruházi oldal, beadás (fejlesztői fiók és Mac-es eszközök kellenek hozzá – a tulajdonossal együtt).
