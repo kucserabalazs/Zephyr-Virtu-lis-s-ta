@@ -815,3 +815,9 @@ Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mi
 - „Átlátszó csík a hajótest szélénél”: a tík széle és a perem közti rést fehér szegélyfedélzet zárja (vrCockpit). A korábbi mélységmaszk-fedél NEM kell.
 - Tatra felcsapó víz megmaradt, látványosabb (1500 csepp, tat-sarkoknál magas permet).
 - Szemüvegben nincs ellenőrizve.
+
+## 2026-11-12 08:27–08:30 – fedélzeti computer
+- Tulajdonos: a fedélzeti computer legyen rendkívül kidolgozott, részletgazdag (saját hajó, többi hajó, bója, a kerülés módja), és kinézetre a HAJÓ RÉSZE legyen, ne odabiggyesztett tábla.
+- vrChart újraírva: felső sáv (cél, távolság, érkezés, kormányzási utasítás, állapotjelző: rajtig/verseny/büntető/hibás rajt), térkép (iránytűgyűrű É/K/D/Ny, távolsággyűrűk, szélnyíl, holtszög-cikk, cirkálóhatárok, pálya, nyomvonal, 26 m-es kerülési zóna + futó nyilas kerülési ív, ellenfelek névvel/sebességvektorral, rajt-/célkapu), rangsor, szél, alsó sáv (idő, hely, csomó, VMG, irány).
+- Beépített műszerkonzol (vrCockpit, sd<0): öntött karbon ház, szatén keret, napellenző, gombsor, forgatógomb, LED, rozsdamentes kapaszkodókeret, karbon nyak + merevítő a kormányoszlopból.
+- Kérte: indító link mindig, és az indítás a VR-be (MVDH Browser/Run).
