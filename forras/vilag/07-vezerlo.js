@@ -36,8 +36,8 @@
         if (T.xr.press) T.xr.press[key] = null; try { T.xr.pulse && T.xr.pulse(key, .4, 20); } catch (e) {} },
       drag: (S0, key) => { const D = P.drag; if (!D || D.key !== key || !S0 || !S0.o || !S0.d) return; const head = T.headPos ? T.headPos() : null;
         let dh = head ? S0.o.distanceTo(head) - D.hd0 : 0; if (performance.now() - D.t0 < 350) { D.hd0 += dh; dh = 0; }   /* a csippentés első pillanatának kézrándulása nem számít */
-        dh = Math.abs(dh) < .05 ? 0 : (dh - Math.sign(dh) * .05) * 2;
-        const dist = clamp(D.dist + dh, .3, 4.5); const tgt = S0.o.clone().addScaledVector(S0.d, dist).add(D.off);
+        dh = Math.abs(dh) < .03 ? 0 : (dh - Math.sign(dh) * .03) * 3.2;   /* a kéz előre-hátra mozdulata felnagyítva – egészen közel húzható, messzire tolható (mint a Quest ablakai) */
+        const dist = clamp(D.dist + dh, .22, 5); const tgt = S0.o.clone().addScaledVector(S0.d, dist).add(D.off);
         P.m.position.lerp(tgt, .5); if (head) { const dx = P.m.position.x - head.x, dz = P.m.position.z - head.z; P.m.rotation.set(D.tilt, Math.atan2(-dx, -dz), 0, "YXZ"); } },
       up: () => { if (!P.drag) return; P.drag = null; W.panelPos = W.panelPos || {};
         /* a fejhez (és a nézési irányhoz) képest jegyezzük meg – így akkor is jó helyre kerül, ha közben a hajó / a nézőpont elmozdult */
@@ -61,6 +61,9 @@
       W.disposables.push(bg, bm, hg, hm); const bar = new THREE.Mesh(bg, bm), hit = new THREE.Mesh(hg, hm); bar.renderOrder = 996; bar.position.set(0, -hh / 2 - .04, .002); hit.position.copy(bar.position); m.add(bar); m.add(hit); P.bar = bar; P.barHit = hit;
       hit.userData.xr = { hover: (on) => { P.barHov = !!on; }, down: (h, S0, key) => m.userData.xr.down(h, S0, key, true), drag: (S0, key) => m.userData.xr.drag(S0, key), up: () => m.userData.xr.up() };
       W.upd.push((dt) => { const t = P.drag ? 1 : P.barHov ? .7 : 0; bar.material.opacity += ((.55 + .45 * t) - bar.material.opacity) * Math.min(1, dt * 10); const sx = 1 + .35 * t; bar.scale.x += (sx - bar.scale.x) * Math.min(1, dt * 10); bar.scale.y = 1 + .5 * t;
+        /* 2026-11-12 01:41 – a tulajdonos bemutatóján (Quest-közvetítés) LÁTTAM: megfogás közben a Quest ablaka ÁTTETSZŐVÉ válik (látszik mögötte a tér), minden irányba
+           követi a kezet, egészen közel húzható és messzire tolható, közben feléd fordul; elengedve újra tömör lesz, és ott marad. Ugyanez itt: */
+        { const o = P.drag ? .3 : 1; m.material.opacity += (o - m.material.opacity) * Math.min(1, dt * 9); }
         bar.material.color.set(P.drag ? "#e4bb63" : "#ffffff"); if (T.inVR && m.parent && !W.panelHidden) T.xr.extra.add(hit); else T.xr.extra.delete(hit); }); }
     P.draw = () => {
       const g = cv.getContext("2d"); P.btns = []; g.clearRect(0, 0, PW, PH);
