@@ -898,3 +898,9 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 ## 2026-11-12 13:29
 - Tulajdonos: a kezdőképernyőről indítva nem lépett VR-be → a kártya megnyomása szemüvegben azonnal VR-be lép (sceneEl.enterVR a kattintásban), kilépéskor kilép a VR-ből, és visszaadja a kezdőképernyőt. SZEMÜVEGBEN NINCS ELLENŐRIZVE.
 - A kezdőképernyőt „ronda képnek” nevezte, és megerősítést kért: a séta a szokott címen (paraméter nélkül) változatlanul a sétával indul, a kezdőképernyő CSAK a „?jatek” címen jön be. A böngészőpanelt a sima sétára kell állítani, nem a ?jatek-re. A kezdőképernyő kinézetéről ő dönt – át kell tervezni, ha megmondja, milyet szeretne.
+
+## 2026-11-12 13:31 – IRÁNYVÁLTÁS (tulajdonos)
+- „Egyelőre hagyjuk”: NEM kell játék-kezdőképernyő, csomagolás, áruházi előkészítés – „majd csak nyáron” térünk vissza rá, amikor minden elkészült. Addig a WEBOLDALT fejlesztjük, és azt, hogy a JÁTÉK JÓ legyen. Ilyet ne csináljak kérés nélkül.
+- A ?jatek kezdőképernyő, a jatek.webmanifest és az aruhaz/BEADAS.md a repóban marad ALVÓ állapotban (csak a „?jatek” címen jön elő, a séta és a menü változatlan) – nyárig nem nyúlok hozzá, nem mutatom, nem linkelem.
+- Indító linknek mindig a SIMA sétát kell adni (paraméter: csak ?v=…), a játék a séta saját „VR játékok” menüjéből indul, ahogy eddig.
+- A munkasorrend 2. (kezdőképernyő) és 9. (csomagolás) pontja FELFÜGGESZTVE nyárig. Marad: a játék minősége (kormány, hajóviselkedés, látvány, hangok), a sakk / hullámvasút / 2D regatta, és a weboldal.
