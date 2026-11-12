@@ -17,8 +17,10 @@
   /* ------------------------------------------------------------------ VR-PANEL (vászon-textúra; kéz/kontroller sugarával kezelhető) */
   const PW = 1100, PH = 760;
   function makePanel() {
-    const cv = document.createElement("canvas"); cv.width = PW; cv.height = PH;
-    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; W.disposables.push(tex);
+    /* 2026-11-12 01:43 (tulajdonos: a Quest ablaka „bárhonnan nézem, mindig éles… nálad ez nagyon rosszul kidolgozott”): a panel vászna KÉTSZERES felbontású
+       (2200×1520), a legerősebb szűréssel – közelről és ferdén nézve is éles marad a szöveg. */
+    const PSS = 2, cv = document.createElement("canvas"); cv.width = PW * PSS; cv.height = PH * PSS;
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; try { tex.anisotropy = T.sceneEl.renderer.capabilities.getMaxAnisotropy(); } catch (e) { tex.anisotropy = 8; } W.disposables.push(tex);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(.78, .78 * PH / PW), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
     W.disposables.push(m.geometry, m.material); m.renderOrder = 995;
     const P = { m, cv, tex, btns: [], hov: -1, uv: null };
@@ -32,17 +34,19 @@
         /* 2026-11-11 18:54 (tulajdonos: „a csippentés pillanatában eltávolodik tőlem, nem abból az állásból indul, ahol van”): a fogás a kéz PILLANATNYI sugarához
            képest rögzül (nem a korábbi találati ponthoz), a dőlése megmarad, és a kéz előre-hátra mozgása csak 5 cm holtjáték után, szelídebben (×2) tol rajta. */
         const head = T.headPos ? T.headPos() : null, dist0 = S0.d ? Math.max(.15, P.m.position.clone().sub(S0.o).dot(S0.d)) : h.distance, hp = S0.d ? S0.o.clone().addScaledVector(S0.d, dist0) : h.point.clone();
-        P.drag = { key, dist: dist0, off: P.m.position.clone().sub(hp), hd0: head ? S0.o.distanceTo(head) : 0, tilt: P.m.rotation.x, t0: performance.now() };
+        P.drag = { key, dist: dist0, off: P.m.position.clone().sub(hp), hd0: head ? S0.o.distanceTo(head) : 0, tilt: P.m.rotation.x, t0: performance.now(), sc0: P.m.scale.x };
         if (T.xr.press) T.xr.press[key] = null; try { T.xr.pulse && T.xr.pulse(key, .4, 20); } catch (e) {} },
       drag: (S0, key) => { const D = P.drag; if (!D || D.key !== key || !S0 || !S0.o || !S0.d) return; const head = T.headPos ? T.headPos() : null;
         let dh = head ? S0.o.distanceTo(head) - D.hd0 : 0; if (performance.now() - D.t0 < 350) { D.hd0 += dh; dh = 0; }   /* a csippentés első pillanatának kézrándulása nem számít */
         dh = Math.abs(dh) < .03 ? 0 : (dh - Math.sign(dh) * .03) * 3.2;   /* a kéz előre-hátra mozdulata felnagyítva – egészen közel húzható, messzire tolható (mint a Quest ablakai) */
         const dist = clamp(D.dist + dh, .22, 5); const tgt = S0.o.clone().addScaledVector(S0.d, dist).add(D.off);
+        /* távolabb tolva a panel NŐ (a betűk is), közelebb húzva kisebb lesz – így bármilyen távolságban olvasható marad, mint a Quest ablakai */
+        { const sc = clamp(D.sc0 * Math.pow(dist / Math.max(.15, D.dist), .8), .45, 6); P.m.scale.setScalar(P.m.scale.x + (sc - P.m.scale.x) * .5); }
         P.m.position.lerp(tgt, .5); if (head) { const dx = P.m.position.x - head.x, dz = P.m.position.z - head.z; P.m.rotation.set(D.tilt, Math.atan2(-dx, -dz), 0, "YXZ"); } },
       up: () => { if (!P.drag) return; P.drag = null; W.panelPos = W.panelPos || {};
         /* a fejhez (és a nézési irányhoz) képest jegyezzük meg – így akkor is jó helyre kerül, ha közben a hajó / a nézőpont elmozdult */
         const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw(), d = P.m.position.clone().sub(head).applyAxisAngle(new THREE.Vector3(0, 1, 0), -yaw);
-        W.panelPos[W.kind] = { rel: d.toArray(), r: wrapA(P.m.rotation.y - yaw), t: P.m.rotation.x };
+        W.panelPos[W.kind] = { rel: d.toArray(), r: wrapA(P.m.rotation.y - yaw), t: P.m.rotation.x, s: P.m.scale.x };
         try { localStorage.setItem("zephyr-panelpos2", JSON.stringify(W.panelPos)); } catch (e) {} }
     };
     T.xr.extra.add(m);
@@ -66,7 +70,7 @@
         { const o = P.drag ? .3 : 1; m.material.opacity += (o - m.material.opacity) * Math.min(1, dt * 9); }
         bar.material.color.set(P.drag ? "#e4bb63" : "#ffffff"); if (T.inVR && m.parent && !W.panelHidden) T.xr.extra.add(hit); else T.xr.extra.delete(hit); }); }
     P.draw = () => {
-      const g = cv.getContext("2d"); P.btns = []; g.clearRect(0, 0, PW, PH);
+      const g = cv.getContext("2d"); g.setTransform(PSS, 0, 0, PSS, 0, 0); P.btns = []; g.clearRect(0, 0, PW, PH);
       const bg = g.createLinearGradient(0, 0, 0, PH); bg.addColorStop(0, "rgba(16,42,68,.97)"); bg.addColorStop(1, "rgba(7,24,44,.97)");   /* VR 2.0 „Nautical Glass” */
       g.beginPath(); g.roundRect ? g.roundRect(5, 5, PW - 10, PH - 10, 40) : g.rect(5, 5, PW - 10, PH - 10); g.fillStyle = bg; g.fill(); g.lineWidth = 2.5; g.strokeStyle = "rgba(221,232,242,.30)"; g.stroke();
       let rowY = 0;
@@ -123,7 +127,7 @@
     if (!W.panelPos) { try { W.panelPos = JSON.parse(localStorage.getItem("zephyr-panelpos2") || "{}"); } catch (e) { W.panelPos = {}; } }
     const saved = !fresh && W.panelPos[W.kind];
     if (saved && saved.rel) { const head = (T.headPos && T.headPos()) || new THREE.Vector3(0, T.headY(), 0), yaw = T.camYaw();
-      P.m.position.copy(head).add(new THREE.Vector3().fromArray(saved.rel).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)); P.m.rotation.set(typeof saved.t === "number" ? saved.t : -.15, saved.r + yaw, 0, "YXZ"); T.sceneEl.object3D.add(P.m); return; }
+      P.m.position.copy(head).add(new THREE.Vector3().fromArray(saved.rel).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw)); P.m.rotation.set(typeof saved.t === "number" ? saved.t : -.15, saved.r + yaw, 0, "YXZ"); P.m.scale.setScalar(typeof saved.s === "number" ? clamp(saved.s, .45, 6) : 1); T.sceneEl.object3D.add(P.m); return; }
     const yaw = T.camYaw(), hy = T.headY();
     let a = yaw + (W.kind === "maquette" ? .62 : .55), d = W.kind === "sail" ? .85 : 1.05, y = hy - .25;
     if (W.kind === "chess") { a = yaw + .62; d = 1.0; y = hy - .3; }
@@ -135,6 +139,7 @@
     if (W.kind !== "race") { a = yaw; d = .62; y = hy - .56; tilt = -.82; }
     P.m.position.set(-Math.sin(a) * d, y, -Math.cos(a) * d);
     P.m.rotation.set(tilt, a, 0, "YXZ");
+    P.m.scale.setScalar(1);
     T.sceneEl.object3D.add(P.m);
   }
 

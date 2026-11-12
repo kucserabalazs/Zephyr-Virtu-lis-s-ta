@@ -792,3 +792,6 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 - 01:39 „nézd a bemutatót legalább 1 percig” – NEM sikerült: a Mac nem adott képet a közvetítés ablakáról (valószínűleg elaludt/zárolt a kijelző). A séta saját VR-paneljeire (VRS) a fogósáv még nincs rátéve.
 - 01:41 A közvetítésen VÉGIGNÉZTEM a bemutatóját (16 állókép): a Quest ablakát az alsó szélénél, csippentő kézzel fogja meg; fogás közben az ablak ÁTTETSZŐ lesz; minden irányba követi a kezet (fel, le, oldalra, köré fordulva), egészen közel húzható (óriásira nő) és messzire tolható; mindig felé néz; elengedve tömör lesz és ott marad.
   KÉSZ a világ-panelen: fogás közben 30%-os áttetszőség, az előre-hátra kézmozdulat ×3,2-szeresen hat (3 cm holtjáték), távolság 0,22–5 m.
+- 01:43 „Egyszerűen oda teszem, ahova akarom, akkora, amekkorának akarom, és mindenhonnan éles, mert hátrébb téve nőnek a betűk is… nálad ez nagyon rosszul kidolgozott – ezt másold le.”
+  KÉSZ (07): a panel távolabb tolva NŐ (méret ∝ távolság^0,8, 0,45–6×), közelebb húzva kisebb; a méretet is megjegyzi (`s`); a panel vászna kétszeres felbontású (2200×1520) a legerősebb anizotróp szűréssel. VR-ben nem ellenőrzött.
+  NINCS KÉSZ: ugyanez a séta saját VR-paneljeire (foglalás, beállítások – `VRS`), és a sakk/makett jelenetének megfogása nem változott.
