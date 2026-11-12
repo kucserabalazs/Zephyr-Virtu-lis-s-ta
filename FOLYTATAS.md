@@ -807,3 +807,11 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 
 ## 2026-11-12 08:08 – visszavonás
 Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mindig kitérnek, nincs büntető) és a „víz nem látszik a hajóban” (mélységmaszk-fedél) módosítást VISSZA kellett csinálni – „nem jól értelmezted a kérést”. Visszaállítva a 3996cfb előtti viselkedés (ütközés, útjog, büntető, fedél nélkül). Megmaradt: érvényes rajt, radar-nyíl, kerék, spinakker. A két kérés helyes értelmezését tőle kell megtudni, addig nem nyúlni hozzá.
+
+## 2026-11-12 08:18 – büntetőforduló, szegélyfedélzet, tatpermet
+- Tulajdonos: a „független hajó” parancs HIBÁS volt, figyelmen kívül hagyni (eredeti állapot visszaállítva, nem nyúlni hozzá).
+- Büntetés: szabálytalanságért 360°-os forduló a saját tengely körül, LASSÍTÁS NINCS. Bármikor letudható; amíg van hátralék, a befutó érvénytelen. Több is gyűlhet; 25 mp-en belüli (csoportban jövő hajók) sértés egynek számít (vrFoulMe / vrFoulRiv, S.pen, S.penAcc). Kijelzés: panel 2. sora, árbockijelző középső mezője (piros „BÜNTETŐ 360° × n”), széljelző alatti piros sáv. Az ellenfelek is szabálytalankodnak néha, ők is fordulót tesznek (r.pen, r.spinA), lassító büntető megszűnt.
+- Szabálytalanság: koccanás VAGY 12 m-en belüli közeledő keresztezés az útjogos orra előtt.
+- „Átlátszó csík a hajótest szélénél”: a tík széle és a perem közti rést fehér szegélyfedélzet zárja (vrCockpit). A korábbi mélységmaszk-fedél NEM kell.
+- Tatra felcsapó víz megmaradt, látványosabb (1500 csepp, tat-sarkoknál magas permet).
+- Szemüvegben nincs ellenőrizve.
