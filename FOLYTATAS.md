@@ -860,3 +860,22 @@ Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mi
 - Rendező- és nézőhajók: makeMotorYacht (lakkozott hajótest, felépítmény, flybridge, korlát, fürdőplató, emberek).
 - Befutó: a kapu mindkét vége bója (pin2 a rendezőhajó előtt), mindkettő fényoszlopot kap; a térképen „CÉL – a két bója KÖZÖTT”, mindkét kapubója kockás zászlóval.
 - Bója fölötti keringő nyílkoszorú 190 m-en belül (ringUp) – a 11-11-i „semmi jel a vízen” szabályt ez a kérés felülírja.
+
+## 2026-11-12 10:42 – „A NAGY MUNKA”: a játékok piacképessé tétele (hangban megbeszélve)
+Cél (tulajdonos): a VR vitorlásverseny, a vitorlás sakk, a hullámvasút és a 2D parti regatta önálló csomagként, az apartmanos részek NÉLKÜL kerüljön a Meta áruházba (~5 USD), egyéni vállalkozóként, Revolut Business dollárszámlára. Elsődleges cél a vitorlázás népszerűsítése és az ÉLETHŰ hajóviselkedés (ő ötszörös magyar bajnok, utánpótlás-edző – a hajó viselkedéséről az ő szava dönt). Most még FEJLESZTÜNK, a beadás későbbi.
+FIGYELEM: a hanghívásban elhangzott áruházi adatok (30% jutalék, ~100 USD kifizetési küszöb, Quest 2 kifutása, W-8BEN) NINCSENEK ellenőrizve – beadás előtt a Meta hivatalos oldalairól kell megerősíteni.
+Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden végén indító link):
+1. Játékszerkezet a VR versenyben: oktató futam, nehézségi szintek, bajnokság – ELSŐ VÁLTOZAT KÉSZ (lásd lent).
+2. Kezdőképernyő / főmenü a játékcsomaghoz (önálló név, logó, játékválasztó), az apartmanos séta nélkül indítható belépési pont.
+3. Az ellenfelek hajóin is emberszerű legénység; ellenfél-vitorlák részletei.
+4. Hangok: szél, hullám, csörlő, vitorlacsattogás, kürtök, kiáltások – átnézés, gazdagítás.
+5. Több pálya, időjárás (szélerősség, hullám), napszak.
+6. Ranglista / rekordok képernyő.
+7. Vitorlás sakk, hullámvasút, 2D regatta csiszolása ugyanilyen szintre.
+8. Teljesítmény a Questen (képfrissítés mérése a szemüvegben – csak a tulajdonos tudja ellenőrizni).
+9. Csomagolás telepíthető Quest-alkalmazásba, áruházi oldal (képek, leírás), beadás.
+
+### 1. lépés – kész (első változat)
+- OKTATÓ FUTAM (0. futam, vrSetup(0), panel: „🎓 Oktató futam”): ellenfél és visszaszámlálás nélkül, 7 lépés: kormány, holtszög, leejtés, forduló, bójakerülés, perdülés, befutó (VR_TUT, vrTutTick). A gépi teszten az 1→2. lépés váltását láttam; a többit a lassú tesztidő miatt nem tudtam végigjátszani.
+- NEHÉZSÉG (panel: „Szint: …”, localStorage zephyr-vr-nehezseg): Kezdő / Haladó / Versenyző. A fizika mindenkire azonos marad; az ellenfelek kormányosa hibázik többet/kevesebbet, kezdő szinten a szél szelídebb.
+- BAJNOKSÁG: 5 futam, helyezési pontok (1.=1 … 4.=4, nem ért be=5), a legkevesebb pont nyer; állás a panel 4. sorában; localStorage zephyr-vr-bajnoksag.

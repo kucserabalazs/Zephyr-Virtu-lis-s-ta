@@ -1653,6 +1653,8 @@
   const vfwd = (b) => [Math.sin(b), -Math.cos(b)];
   /* pálya + szél egy futamhoz: a rajtvonal közepe (0,0); a szél iránya és ereje futamonként más */
   function vrCourse(lvl) {
+    if (!lvl) { const wf = 320 * D2R, u = vfwd(wf), c = [-u[1], u[0]], L = 70;   /* OKTATÓ FUTAM: egyetlen bója szél felé, 170 m-re; egyenletes, közepes szél */
+      return { name: "Oktató futam", lvl: 0, wf, tws: 9 * KN, marks: [{ x: u[0] * 170, z: u[1] * 170 }], u, c, line: { a: { x: -c[0] * L / 2, z: -c[1] * L / 2 }, b: { x: c[0] * L / 2, z: c[1] * L / 2 } } }; }
     const R = vrRng(lvl * 7919 + 13), tp = VR_TPL[(lvl - 1) % VR_TPL.length];
     const wf = (300 + R() * 60) * D2R, side = R() < .3 ? (R() < .5 ? -1 : 1) * (.35 + R() * .3) : (R() - .5) * .25;   /* néha oldalszél: a pálya tengelye elfordul */
     const axis = wf + side, u = vfwd(axis), c = [-u[1], u[0]];   /* u: a pálya „felfelé” iránya; c: jobbra */
@@ -2189,8 +2191,39 @@
     M.chev.count = n; M.chev.instanceMatrix.needsUpdate = true; M.chev.visible = !S.fin;
   }
   /* új futam: pálya, szél, kiinduló helyzet a rajtvonal mögött */
+  /* ================= 2026-11-12 10:42 – JÁTÉKSZERKEZET (a tulajdonos kérése: legyen piacképes, önálló játék) =================
+     • NEHÉZSÉG (Kezdő / Haladó / Versenyző): a fizika mindenkire ugyanaz marad (a tulajdonos 2026-11-09-i szabálya) – a különbség az ellenfelek KORMÁNYOSÁBAN van:
+       kezdő szinten sokat hibáznak (elrontott forduló, széles bójakerülés, késői reakció), versenyző szinten alig; kezdő szinten a szél is szelídebb.
+     • BAJNOKSÁG: 5 futam (az öt pályatípus), helyezési pontokkal (1. = 1 pont … 4. = 4, aki nem ér be: 5) – a legkevesebb pont nyer; az állás megmarad (localStorage).
+     • OKTATÓ FUTAM (0. futam): ellenfelek nélkül, lépésenként tanít: kormányzás, holtszög, leejtés, forduló, bójakerülés, perdülés, befutó. */
+  const VR_DIFF = { kezdo: { n: "Kezdő", err: .32, wind: .82 }, halado: { n: "Haladó", err: .7, wind: 1 }, verseny: { n: "Versenyző", err: 1.5, wind: 1.08 } };
+  const vrDiff = () => VR_DIFF[VRR.diff] || VR_DIFF.halado;
+  function vrDiffNext() { const k = Object.keys(VR_DIFF); VRR.diff = k[(k.indexOf(VRR.diff) + 1) % k.length]; try { localStorage.setItem("zephyr-vr-nehezseg", VRR.diff); } catch (e) {} vrSetup(VRR.lvl); }
+  function vrChampLoad() { try { const c = JSON.parse(localStorage.getItem("zephyr-vr-bajnoksag") || "null"); if (c && c.pts) return c; } catch (e) {} return { n: 0, pts: {}, won: 0 }; }
+  function vrChampSave() { try { localStorage.setItem("zephyr-vr-bajnoksag", JSON.stringify(VRR.champ)); } catch (e) {} }
+  function vrChampTable() { const c = VRR.champ, names = ["Zephyr (te)"].concat(VRR.riv.map((r) => r.o.name)); return names.map((n) => [n, c.pts[n] || 0]).sort((a, b) => a[1] - b[1]); }
+  function vrChampNew() { VRR.champ = { n: 0, pts: {}, won: VRR.champ.won || 0 }; vrChampSave(); vrSetup(1); }
+  const VR_TUT = [
+    ["1/7 · KORMÁNY", "Fogd meg a kormányt, és mozdítsd ki egészen balra, aztán egészen jobbra."],
+    ["2/7 · HOLTSZÖG", "Kormányozz a SZÉL FELÉ (a kék nyíl felé a műszeren), amíg a vitorla lobogni kezd, és a hajó lelassul. Szél ellen nem megy a hajó!"],
+    ["3/7 · LEEJTÉS", "Most kormányozz EL a széltől, amíg a vitorla megtelik, és a sebesség 5 csomó fölé nő."],
+    ["4/7 · FORDULÓ", "Fordulj át a szélen: vidd át a hajó orrát a szélirányon a másik oldalra. A vitorla átvág – ez a forduló (cirkálás)."],
+    ["5/7 · BÓJAKERÜLÉS", "Cirkálj fel az 1. bójához, és kerüld meg úgy, hogy a bója a BAL kezed felől maradjon (a nyilak mutatják)."],
+    ["6/7 · HÁTSZÉL, PERDÜLÉS", "Hátszélben a spinakker magától felmegy. Vidd át a hajó FARÁT a szélen (perdülés): a bum átvág a másik oldalra."],
+    ["7/7 · BEFUTÓ", "Fuss be a két kapubója KÖZÖTT (a térképen kockás zászlók jelzik)."]];
+  function vrTutTick(dt) { const S = VRR, T2 = S.tut; if (!T2 || S.st !== "race") return; const rel = wrapA(S.wf - S.b), sd = Math.sign(rel) || 1, twa = Math.abs(rel) * R2D, st = T2.step;
+    const next = () => { T2.step++; T2.hold = 0; T2.sd0 = sd; T2.l = T2.r = false; horn(.25, .08); W.panelDirty = 1; };
+    if (st === 0) { if (S.wa > WA_MAX * .6) T2.r = true; if (S.wa < -WA_MAX * .6) T2.l = true; if (T2.l && T2.r) next(); }
+    else if (st === 1) { T2.hold = twa < 36 ? (T2.hold || 0) + dt : 0; if (T2.hold > 1.5) next(); }
+    else if (st === 2) { if (twa > 42 && S.v / KN > 5) next(); }
+    else if (st === 3) { if (T2.sd0 == null) T2.sd0 = sd; if (sd !== T2.sd0 && twa > 30 && twa < 95) next(); if (twa > 120) T2.sd0 = sd; }
+    else if (st === 4) { if (S.next >= 1) next(); }
+    else if (st === 5) { if (T2.sd0 == null || twa < 110) T2.sd0 = sd; else if (sd !== T2.sd0 && twa > 120) next(); if (S.fin) T2.step = 6; }
+    if (T2.step < VR_TUT.length && !S.fin && S.msgT < 1.5 && !/^⚠/.test(S.msg || "")) { S.msg = VR_TUT[T2.step][0] + " – " + VR_TUT[T2.step][1]; S.msgT = 1.6; if (T2.shown !== T2.step) { T2.shown = T2.step; W.panelDirty = 1; } } }
   function vrSetup(lvl) {
-    const C = VRR.C = vrCourse(lvl); VRR.lvl = lvl;
+    if (!VRR.diff) { try { VRR.diff = localStorage.getItem("zephyr-vr-nehezseg") || "halado"; } catch (e) { VRR.diff = "halado"; } } if (!VR_DIFF[VRR.diff]) VRR.diff = "halado";
+    if (!VRR.champ) VRR.champ = vrChampLoad();
+    const C = VRR.C = vrCourse(lvl); VRR.lvl = lvl; if (lvl) C.tws *= vrDiff().wind;
     VRR.wf = C.wf; VRR.tws = C.tws;
     while (VRR.markG.children.length) VRR.markG.remove(VRR.markG.children[0]);
     VRR.marks = C.marks.map((m, i) => { const b = makeBuoy(i === C.marks.length - 1 && C.marks.length > 2 ? "#ffd166" : "#ff7a00", 2.4); b.scale.setScalar(1.5); b.position.set(m.x, 0, m.z); VRR.markG.add(b); try { vrBake(b); } catch (e) {}
@@ -2209,6 +2242,10 @@
     const p0 = back(95, 6); Object.assign(VRR, { wx: null, fox: 0, foz: 0, x: p0.x, z: p0.z, b: C.wf + Math.PI * .5 - .3, v: 2.5, del: 0, wa: 0, heel: 0, lastSide: 0, tackT: 0, next: 0, t: -45, st: "pre", horns: {}, fin: null, started: false, ocs: 0, sp: null, msg: "Rajt 45 mp múlva – állj be a vonal mögé!", msgT: 6, ocs: 0, res: [], pen: 0, doneT: 0, prevSide: null, dnf: false, _mi: -1, nearMk: 0, hailT: 0, guideT: 0, offT: 0 });
     VRR.riv.forEach((r, i) => { const p = back([84, 102, 90][i], [-48, -22, 38][i]);   /* egymástól és tőled is legalább ~28 m-re (15 m-es hajók) */ Object.assign(r, { x: p.x, z: p.z, b: C.wf + (i % 2 ? 1 : -1) * Math.PI * .45, v: 2.4, next: 0, tack: i % 2 ? 1 : -1, lastTack: 0, fin: null, skill: 1, yr: 0, del: 0, spinOn: false, ph: rand() * 9, _mi: -1, errNext: 0, errGW: 0, penT: 0, wide: 0, _dS: null, started: false, prevSide: null, _ls0: null }); });
     if (VRR.podium) VRR.podium.visible = false;
+    /* oktató futam: nincs visszaszámlálás és nincs ellenfél – a hajó a vonal alól indul, azonnal „versenyben” */
+    VRR.setup = vrSetup;   /* (teszteléshez elérhető) */
+    VRR.tut = lvl ? null : { step: 0 }; VRR.riv.forEach((r) => { r.g.visible = !!lvl; if (!lvl) { r.x += 9000; r.z += 9000; r.lbl.visible = false; } });
+    if (!lvl) Object.assign(VRR, { t: 0, st: "race", started: true, msg: "OKTATÓ FUTAM – lépésről lépésre megtanulod a hajót. Nincs ellenfél, nincs időnyomás.", msgT: 6 });
     W.panelDirty = 1;
   }
   /* --------------------------------------------------------------- kormány */
@@ -2573,10 +2610,10 @@
     }
     S.prevSide = lineSide(S);
     /* ellenfelek: a regatta mesterséges intelligenciája (cirkálás laylinig, hátszélben jibbelés), bóják bal kéz felől */
-    S.riv.forEach((r) => vrRivalTick(r, dt));
-    if (S.st === "race" && S.res.length === S.riv.length + 1 && !S.doneT) { S.doneT = S.t; vrFinish(); }
+    if (S.lvl) S.riv.forEach((r) => vrRivalTick(r, dt)); else vrTutTick(dt);
+    if (S.st === "race" && (S.lvl ? S.res.length === S.riv.length + 1 : !!S.fin) && !S.doneT) { S.doneT = S.t; vrFinish(); }
     /* ha az ellenfelek már rég beértek (5 perce – kezdőknek is legyen idejük), a futam véget ér – feladtad (DNF) */
-    if (S.st === "race" && !S.fin && !S.doneT && S.riv.every((r) => r.fin) && S.t - Math.max(...S.riv.map((r) => r.fin)) > 300) { S.doneT = S.t; S.dnf = true; S.res.push({ n: "Zephyr (te)", t: S.t, me: true, dnf: true }); vrFinish(); }
+    if (S.lvl && S.st === "race" && !S.fin && !S.doneT && S.riv.every((r) => r.fin) && S.t - Math.max(...S.riv.map((r) => r.fin)) > 300) { S.doneT = S.t; S.dnf = true; S.res.push({ n: "Zephyr (te)", t: S.t, me: true, dnf: true }); vrFinish(); }
     S.msgT = Math.max(0, (S.msgT || 0) - dt);
     /* a következő bója jelzése */
     const tgt = S.ocs === 1 ? { x: (C.line.a.x + C.line.b.x) / 2 - C.u[0] * 30, z: (C.line.a.z + C.line.b.z) / 2 - C.u[1] * 30 } : S.next < S.marks.length ? S.marks[S.next] : { x: (C.line.a.x + C.line.b.x) / 2, z: (C.line.a.z + C.line.b.z) / 2 };
@@ -2629,7 +2666,7 @@
       else { tx = mx + C.u[0] * 16; tz = mz + C.u[1] * 16; } }             /* a vonal mögül: a két bója között át */
     if (r.fin) { tx = r.x + vfwd(r.b)[0] * 50; tz = r.z + vfwd(r.b)[1] * 50; }
     /* életszerű hibák: néha nem veszi észre a másik hajót, elrontja a fordulót, késve fordul vagy túl nagy ívben kerül */
-    if (S.st === "race" && !r.fin) { if (!r.errNext) r.errNext = W.t + rr(18, 45); if (W.t > r.errNext) { r.errNext = W.t + rr(25, 60); const k = rand(); if (k < .36) r.errGW = W.t + 10; else if (k < .55) { r.v *= .5; r.tack = -r.tack; r.lastTack = W.t; } else if (k < .8) r.lastTack = W.t - 2; else r.wide = rr(20, 38); } }
+    if (S.st === "race" && !r.fin) { if (!r.errNext) r.errNext = W.t + rr(18, 45) * vrDiff().err; if (W.t > r.errNext) { r.errNext = W.t + rr(25, 60) * vrDiff().err; const k = rand(); if (k < .36) r.errGW = W.t + 10; else if (k < .55) { r.v *= .5; r.tack = -r.tack; r.lastTack = W.t; } else if (k < .8) r.lastTack = W.t - 2; else r.wide = rr(20, 38); } }
     const brgW = Math.atan2(tx - r.x, -(tz - r.z));
     let want = brgW;
     const rel = wrapA(brgW - S.wf);
@@ -2691,6 +2728,11 @@
   }
   function vrFinish() {
     const S = VRR, me = S.res.findIndex((q) => q.me);
+    if (!S.lvl) { S.st = "done"; try { localStorage.setItem("zephyr-vr-oktato", "1"); } catch (e) {} S.msg = "🎓 OKTATÁS KÉSZ! Tudsz kormányozni, fordulni, bóját kerülni és befutni. Jöhet az 1. futam!"; S.msgT = 999; W.panelDirty = 1;
+      S.podium.userData.set(["🎓 Oktatás kész!", "Kormányzás ✓  Holtszög ✓  Forduló ✓", "Bójakerülés ✓  Perdülés ✓  Befutó ✓", "Időd: " + mmss(S.t), "Jöhet az 1. futam!"]); S.podium.visible = true; return; }
+    /* bajnokság: helyezési pontok (a nem befutó 5 pontot kap); 5 futam után a legkevesebb pont nyer */
+    { const c = S.champ; if (c.n >= 5) { c.n = 0; c.pts = {}; } S.res.forEach((q, i) => { c.pts[q.n] = (c.pts[q.n] || 0) + (q.dnf ? 5 : i + 1); }); c.n++; c.last = S.lvl;
+      if (c.n >= 5) { const tb = vrChampTable(); c.champion = tb[0][0]; if (tb[0][0] === "Zephyr (te)") c.won = (c.won || 0) + 1; } vrChampSave(); }
     const best = S.best[S.lvl]; if (me >= 0 && !S.dnf && (!best || S.res[me].t < best)) { S.best[S.lvl] = S.res[me].t; try { localStorage.setItem("zephyr-vr-verseny", JSON.stringify(S.best)); } catch (e) {} }
     S.st = "done"; S.msg = S.dnf ? "Nem értél be – próbáld újra!" : me === 0 ? "🏆 GYŐZELEM!" : `${me + 1}. hely`; S.msgT = 999; W.panelDirty = 1;
     /* eredménytábla a kormány fölött, előtted */
@@ -2845,14 +2887,15 @@
   /* --------------------------------------------------------------- panel, csuklómenü, 2D */
   function vrPanel(P) {
     const S = VRR;
-    P.title(`Vitorlásverseny · ${S.lvl}. futam · ${S.C.name} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · szél ${(S.tws / KN).toFixed(0)} csomó`);
+    P.title(`Vitorlásverseny · ${S.lvl ? S.lvl + ". futam" : "🎓"} · ${S.C.name} · ${vrDiff().n} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · szél ${(S.tws / KN).toFixed(0)} csomó`);
     P.row(0, S.msgT > 0 ? S.msg : S.tiller ? "Botkormány: fogd meg a mellkasod előtt – eltolod: jobbra, a válladhoz húzod: balra." : "Kormánykerék: fogd meg a peremét – negyed fordulat (90°) a végállás.", "#ffd166");
     P.row(1, S.pen > 0 ? `⚠ BÜNTETŐ: ${S.pen} × 360° forduló hátravan (${Math.round(Math.abs(S.penAcc || 0) * R2D)}° megvan) – enélkül a befutó érvénytelen` : S.ocs ? "KORAI RAJT – menj vissza a rajtvonal mögé, aztán lépd át újra" : S.st === "pre" ? "Rajt előtt maradj a vonal mögött – a rajtjelre (hosszú kürt) lépd át" : S.next < S.marks.length ? `Következő: ${S.next + 1}. bója (${S.marks.length} van) – bal kéz felől kerüld` : "Utolsó szakasz: át a rajtvonalon!", "#ffffff");
     P.row(2, S.st === "done" ? S.res.map((q, i) => `${i + 1}. ${q.n} ${mmss(q.t)}`).join(" · ") : "A sárga fényoszlop mutatja a következő bóját.", "#7fd3ff");
-    P.row(3, S.best[S.lvl] ? `Legjobb időd ezen a pályán: ${mmss(S.best[S.lvl])}` : "Szél ellen nem lehet menni: cikcakkban (cirkálva) haladj!", "#c9a24a");
-    if (S.st === "done") P.buttons([["↻ Újra", () => vrSetup(S.lvl)], ["Tovább ▸ " + (S.lvl + 1) + ". futam", () => vrSetup(S.lvl + 1)], ["‹ Vissza a sétához", () => W.close()]]);
+    { const c = S.champ || { n: 0, pts: {} }, tb = vrChampTable().map((q, i) => `${i + 1}. ${q[0].replace(" (te)", "")} ${q[1]}p`).join(" · ");
+      P.row(3, c.n >= 5 ? `🏆 BAJNOK: ${c.champion} – végeredmény: ${tb}` : c.n ? `Bajnokság ${c.n}/5 futam után: ${tb}` : S.best[S.lvl] ? `Legjobb időd ezen a pályán: ${mmss(S.best[S.lvl])} · Bajnokság: 5 futam, a legkevesebb pont nyer` : "Bajnokság: 5 futam, helyezési pontok – a legkevesebb pont nyer", "#c9a24a"); }
+    if (S.st === "done") P.buttons((S.champ && S.champ.n >= 5 && S.lvl) ? [["🏆 Új bajnokság", vrChampNew], ["↻ Újra", () => vrSetup(S.lvl)], ["‹ Vissza", () => W.close()]] : [["↻ Újra", () => vrSetup(S.lvl)], ["Tovább ▸ " + (S.lvl + 1) + ". futam", () => vrSetup(S.lvl + 1)], ["‹ Vissza", () => W.close()]]);
     else P.buttons([["Egyenesbe", () => { S.wa = 0; }], ["↻ Újrakezdés", () => vrSetup(S.lvl)], [S.seated ? "🧍 Álló mód" : "🪑 Ülő mód", () => vrSeat()], ["‹ Vissza", () => W.close()]]);
-    P.buttons([[S.tiller ? "☸ Kormánykerékre váltok" : "⎯ Botkormányra váltok", vrSteerMode]], 1);
+    P.buttons([[S.tiller ? "☸ Kerékre váltok" : "⎯ Botra váltok", vrSteerMode], ["🎓 Oktató futam", () => vrSetup(0), !S.lvl], ["Szint: " + vrDiff().n, vrDiffNext]], 1);
   }
   /* kormánymód váltása: botkormány (alap) ↔ kormánykerék; megjegyzi (localStorage „zephyr-kormany”: bot / kerek) */
   function vrSteerMode() { const S = VRR, CK2 = S.ck; if (!CK2) return; try { vrRelease(); } catch (e) {} S.tiller = !S.tiller; S.wa = 0; S.wOver = 0; S.wv = 0;
