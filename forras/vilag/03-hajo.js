@@ -32,7 +32,7 @@
       g.fillText(o.num, w * .48, h * .40);
       if (o.logo) { g.font = "900 72px Georgia, serif"; g.fillStyle = /^#(d|e|c)[0-9a-f]1|^#d61f26/i.test(o.main) ? "#ffffff" : "#c62828"; g.fillText(o.logo, w * .48, h * .58); }
       g.font = "800 64px system-ui"; g.fillStyle = o.numCol || "#1b2c5e"; g.fillText(o.cls || "R27", w * .5, h * .2);
-      if (o.win) { sailDetail(g, w, h, true); sailWindow(g, w, h, [[.2, .49], [.515, .8]], .05, .15, 12); }
+      if (o.win) sailDetail(g, w, h, true);   /* 2026-11-12 09:37 (tulajdonos): a grósz elég magasan van, oda nem kell ablak */
     }));
   }
   /* 2026-11-12 08:52 (tulajdonos, hangban: „a versenyvitorlák alsó részébe átlátszó ablakot varrnak, hogy a kormányos kilásson a hajó elé; túl nagy nem lehet, mert gyengíti
@@ -86,7 +86,7 @@
       for (let k = 1; k < 9; k++) { g.strokeStyle = "rgba(0,0,0,.1)"; g.lineWidth = 2; g.beginPath(); g.moveTo(0, k * h / 9); g.lineTo(w, k * h / 9 - 10); g.stroke(); }
       /* UV-védőcsík az achterliken és az alsó élen */
       g.fillStyle = o.uv || "rgba(40,48,60,.85)"; g.fillRect(w - 26, 0, 26, h); g.fillRect(0, h - 22, w, 22);
-      if (o.win) { sailDetail(g, w, h, false); sailWindow(g, w, h, [[.2, .47], [.495, .76]], .075, .215, 7); }
+      if (o.win) { sailDetail(g, w, h, false); sailWindow(g, w, h, [[.14, .46], [.485, .82]], .05, .17, 7); }   /* 2026-11-12 09:37 (tulajdonos): az ablak a fock LEGALSÓ részén legyen, ott segíti a kilátást */
     }));
   }
   function spinTex(cols) {
@@ -347,7 +347,7 @@
     { const cap = new THREE.SphereGeometry(.05, 10, 8); cap.scale(1, 1.5, 1); cap.translate(0, 0, -3.45); mesh(cap, alu, boomG); }
     if (o.detail) { const vang = rodBetween(new THREE.Vector3(0, -.85, -.05), new THREE.Vector3(0, -.05, -.85), .01, dark, boomG); }
     /* vitorlák */
-    const mainMat = std({ map: sailTex(o), side: THREE.DoubleSide, roughness: .85, transparent: !!o.win });
+    const mainMat = std({ map: sailTex(o), side: THREE.DoubleSide, roughness: .85 });
     const jibMat = std({ map: jibTex(o), side: THREE.DoubleSide, roughness: .85, transparent: !!o.win });
     const FINE = !!o.fine;   /* a saját (VR) hajó: sűrűbb vászonháló, rugós bum, lécek „átpattanása”, kötelek, jelzőszálak, szélzászló */
     const mainG = FINE ? sailGeom(20, 30) : sailGeom(10, 14), jibG = FINE ? sailGeom(18, 26) : sailGeom(9, 12);

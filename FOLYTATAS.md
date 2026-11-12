@@ -836,3 +836,7 @@ Tulajdonos: a „független hajó” (ellenfelek nem lökhetnek/fékezhetnek, mi
 - Mozgás: sűrűbb vászonháló (grósz 20×30, fock 18×26); rugós-csillapított bum (átvág, megrándul, visszarúg), bum-emelkedés; a grósz oldalváltása alulról felfelé fut (lécek átpattannak), árbochajlás, ráncok gyenge szélben, lökésben nyíló hátsó él; a fock szkótasarka az árboc előtt ível át, csapkod, majd becsörlőzik; előstag-belógás, hátsó él pödrődése.
 - Kötélzet (updRig): főszkóta 4-szeres áttétel + csúszó kocsi, fockszkóták (húzott + laza), jelzőszálak (fock belépő él, grósz hátsó él), Windex + kanalas szélmérő, lúdnyak, árbocsín, felhúzókötelek, kicker, alsóél-feszítő, reffkötelek, feszítőcsavarok, fockroller, focksín és kocsik.
 - Vászon (sailDetail): sarokerősítések, élszalagok, lécsebek, reffsorok, trimmcsíkok, jelzőszál-ablakok, címke.
+
+## 2026-11-12 09:35–09:37
+- Tulajdonos: MINDEN munka végén indító linket kér a válaszban.
+- Vitorlaablak: a grószról lekerült (elég magasan van), a fockon a legalsó panelbe került (v .05–.17), szélesebb.
