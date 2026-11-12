@@ -757,3 +757,7 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 ## 2026-11-12 00:50 – „Ha balra tolom a rudat, a toldó ráhajlik a kormányra és becsukódik… a toldó csak látszatra legyen toldó, a kormány merev egészének része; a rúd legyen rövidebb, a vége ott legyen, ahol az én vonalam kezdődik, inkább picit hátrébb”
 - KÉSZ (05b): a toldó MEREV (a rúddal együtt fordul, `TI.rest` elforgatva), nem csuklik. Forgáspont hátrébb (hs.z − 1,35), rúd 0,68 m – a vége a kormányos vonala mögött ~5 cm-rel. Látszó elfordulás ±21° (`TMAX` .37), hogy a markolat a kéz 28 cm-es útjával együtt mozogjon. A kormányzás változatlanul a kéz oldalirányú útjából jön.
 - Szemüvegben nem ellenőrzött.
+
+## 2026-11-12 01:00 – „Raptor 27-es, megtalálhatod a kért adatokat a neten”
+- Megkerestem: teljes hossz 8,23 m, vízvonalhossz 8,00 m, vízvonal-szélesség 2,20 m, merülés 0,35–1,50 m (forgó uszony), vitorlafelület 32 m² (nagyvitorla ~20, fock 12), ballaszt 650–800 kg, tömeg a hirdetésekben 2500 kg (a tulajdonos 2300 kg-ot adott meg – azt használom). Források: jachtserwis.pl (gyártói táblázat), sailor.pl, bofort.pl, yachtall.com.
+- Beírva a `VR_HYD`-be: Lwl 8,0 m, nedvesített felület 14 m² (ez továbbra is becslés, gyári adat nincs rá).

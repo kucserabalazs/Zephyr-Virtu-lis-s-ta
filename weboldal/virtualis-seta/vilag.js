@@ -1871,9 +1871,12 @@
        (így számol a delfti jachttest-sorozat is);
      • maradék (hullámkeltő) ellenállás: a vízkiszorítás súlyának hányada a Froude-szám (Fn = v/√(g·L)) függvényében – a delfti sorozat (DSYHS)
        könnyű/közepes vízkiszorítású testeire jellemző, KÖZELÍTŐ görbe (nem ennek a hajónak a mért adata).
-     Adatok: tömeg 2300 kg (a tulajdonos adata), hozzáadott (együtt mozgó víz) tömeg +8%, vízvonalhossz 7,4 m, nedvesített felület ~13,5 m² (test + tőkesúly + kormány,
+     Adatok: tömeg 2300 kg (a tulajdonos adata), hozzáadott (együtt mozgó víz) tömeg +8%, vízvonalhossz 8,0 m (Raptor 27), nedvesített felület ~14 m² (test + tőkesúly + kormány,
      becslés: 2,7·√(V·L) + függelékek), édesvíz 15 °C (ρ = 1000 kg/m³, ν = 1,14·10⁻⁶ m²/s), alaktényező 1,10. */
-  const VR_HYD = { m: 2300, add: 1.08, Lwl: 7.4, Sw: 13.5, rho: 1000, nu: 1.14e-6, k1: 1.1, rr: [[.1, 0], [.15, .0002], [.2, .0006], [.25, .0018], [.3, .0042], [.35, .0095], [.4, .021], [.45, .042], [.5, .066], [.55, .086], [.6, .1], [.8, .13]] };
+  /* 2026-11-12 01:00 – a tulajdonos hajója RAPTOR 27; gyári/hirdetési adatok (jachtserwis.pl gyártói táblázat, sailor.pl, yachtall.com):
+     teljes hossz 8,23 m, VÍZVONALHOSSZ 8,00 m, vízvonal-szélesség 2,20 m, merülés 0,35–1,50 m (forgó uszony), vitorlafelület 32 m² (nagyvitorla ~20, fock 12),
+     ballaszt 650–800 kg. Tömeg: a tulajdonos adata 2300 kg (a hirdetésekben 2500 kg). Nedvesített felület: 2,7·√(2,3·8,0) ≈ 11,6 m² + uszony és kormány ≈ 14 m² (becslés). */
+  const VR_HYD = { m: 2300, add: 1.08, Lwl: 8.0, Sw: 14, rho: 1000, nu: 1.14e-6, k1: 1.1, rr: [[.1, 0], [.15, .0002], [.2, .0006], [.25, .0018], [.3, .0042], [.35, .0095], [.4, .021], [.45, .042], [.5, .066], [.55, .086], [.6, .1], [.8, .13]] };
   function vrHydR(v) { v = Math.abs(v); if (v < .02) return 0; const H = VR_HYD, Re = v * .7 * H.Lwl / H.nu, cf = .075 / Math.pow(Math.log10(Re) - 2, 2), Rf = .5 * H.rho * H.Sw * cf * H.k1 * v * v, Fn = v / Math.sqrt(9.81 * H.Lwl), T = H.rr;
     let r = T[T.length - 1][1]; if (Fn <= T[0][0]) r = 0; else for (let i = 1; i < T.length; i++) if (Fn <= T[i][0]) { r = lerp(T[i - 1][1], T[i][1], (Fn - T[i - 1][0]) / (T[i][0] - T[i - 1][0])); break; }
     return Rf + r * H.m * 9.81; }
