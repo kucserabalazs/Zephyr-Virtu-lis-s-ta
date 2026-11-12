@@ -50,6 +50,28 @@
       g.strokeStyle = "rgba(0,0,0,.12)"; for (let k = 0; k < 16; k++) { g.beginPath(); g.moveTo(k * w / 16, 0); g.lineTo(k * w / 16, h); g.stroke(); }
     }));
   }
+  /* 2026-11-12 01:34 – DÍSZSPINAKKER (tulajdonos: „csodálatos Zephyres vagy nemzeti színű, vagy mindkettő”): piros–fehér–zöld sávok, a fehér mezőben a Zephyr-logó,
+     háromsugaras (tri-radial) szabásvonalakkal, sötétkék szegőcsíkokkal. A vászon teteje a vitorla csúcsa. */
+  function spinArtTex(logo) {
+    const cv = document.createElement("canvas"); cv.width = cv.height = 1024; const g = cv.getContext("2d"), w = 1024, h = 1024, tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; W.disposables.push(tex);
+    const paint = (img) => {
+      g.fillStyle = "#fbfbf6"; g.fillRect(0, 0, w, h);
+      const rg = g.createLinearGradient(0, 0, 0, h * .33); rg.addColorStop(0, "#b3141d"); rg.addColorStop(1, "#e2232d"); g.fillStyle = rg; g.fillRect(0, 0, w, h * .33);
+      const gg = g.createLinearGradient(0, h * .72, 0, h); gg.addColorStop(0, "#2f9a55"); gg.addColorStop(1, "#1d7a41"); g.fillStyle = gg; g.fillRect(0, h * .72, w, h * .28);
+      g.fillStyle = "#141d4d"; g.fillRect(0, h * .33 - 7, w, 14); g.fillRect(0, h * .72 - 7, w, 14); g.fillRect(0, h - 16, w, 16); g.fillRect(0, 0, 12, h); g.fillRect(w - 12, 0, 12, h);
+      if (img) { const iw = w * .74, ih = iw * img.height / img.width, ih2 = Math.min(ih, h * .33); g.save(); g.translate(w, 0); g.scale(-1, 1); g.drawImage(img, (w - iw * ih2 / ih) / 2, h * .525 - ih2 / 2, iw * ih2 / ih, ih2); g.restore(); }   /* tükrözve: a KORMÁNYTÓL (a vitorla háta felől) nézve olvasható a felirat */
+      /* szabásvonalak: a csúcsból, a két alsó sarokból sugarasan, középen vízszintes panelek */
+      g.strokeStyle = "rgba(20,30,60,.16)"; g.lineWidth = 2;
+      for (let k = 0; k <= 12; k++) { g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(k * w / 12, h * .36); g.stroke(); }
+      for (let k = 1; k <= 7; k++) { g.beginPath(); g.moveTo(0, h); g.lineTo(k * w / 16, h * .68); g.stroke(); g.beginPath(); g.moveTo(w, h); g.lineTo(w - k * w / 16, h * .68); g.stroke(); }
+      for (let k = 0; k < 6; k++) { const y = h * (.39 + k * .055); g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+      /* finom szövetfény */
+      const sh = g.createLinearGradient(0, 0, w, 0); sh.addColorStop(0, "rgba(0,0,0,.10)"); sh.addColorStop(.5, "rgba(255,255,255,.06)"); sh.addColorStop(1, "rgba(0,0,0,.10)"); g.fillStyle = sh; g.fillRect(0, 0, w, h);
+      tex.needsUpdate = true; };
+    paint(null);
+    if (logo) { const im = new Image(); im.onload = () => paint(im); im.src = logo; }
+    return tex;
+  }
   function nameTex(name, col) {
     return canvasTex(1024, 192, (g, w, h) => {
       g.clearRect(0, 0, w, h); g.font = "italic 900 130px Georgia, 'Times New Roman', serif"; g.textAlign = "center"; g.textBaseline = "middle";
@@ -285,7 +307,7 @@
     const mainM = mesh(mainG, mainMat, body), jibM = mesh(jibG, jibMat, body);
     mainM.frustumCulled = jibM.frustumCulled = false;
     let spinM = null, spinG = null;
-    if (o.spin && !o.detail) { spinG = sailGeom(10, 12); spinM = mesh(spinG, std({ map: spinTex(o.spin), side: THREE.DoubleSide, roughness: .8 }), body); spinM.visible = false; spinM.frustumCulled = false; }
+    if (o.spin && !o.detail) { spinG = o.spinArt ? sailGeom(24, 28) : sailGeom(10, 12); spinM = mesh(spinG, std({ map: o.spinArt ? spinArtTex(o.logoImg) : spinTex(o.spin), side: THREE.DoubleSide, roughness: .8 }), body); spinM.visible = false; spinM.frustumCulled = false; }
     /* hajónév a tat két oldalán */
     if (o.name) {
       const nt = nameTex(o.name, o.nameCol);
@@ -503,15 +525,18 @@
       jibM.visible = S.spin < .6;
       const pa = spinG.attributes.position.array, { nu, nv } = spinG.userData, side = S.side, k0 = S.spin;
       const auto = S.awa != null, A = auto ? S.awa : 150, U = auto ? S.aws : 6;
-      const fill = sstep(.4, 1, k0) * (1 - clamp((96 - A) / 16, 0, 1) * .85);   /* túl élesen összeesik */
+      /* 2026-11-12: a versenyben a spinakker-JELENET külön vezérli a felhúzást (spH), a szétterülést (spS), a telítődést (spF) és a „kipattanást” (spPop) */
+      const hoist = S.spH != null ? S.spH : Math.min(1, k0 * 1.5), spread = S.spS != null ? S.spS : 1, pop = S.spPop || 0;
+      const fill = (S.spF != null ? S.spF : sstep(.4, 1, k0)) * (1 - clamp((96 - A) / 16, 0, 1) * .85);   /* túl élesen összeesik */
       /* rúd: merőleges a látszólagos szélre – hátszélben hátrahúzva (a szél felőli oldalon), bővszélben az előstag felé;
          a hajó ringásával a trimmer együtt mozgatja */
       const thp = clamp(A - 92 + S.heel * side * 25, 4, 82) * D2R, Lp = 3.1;
       const tack = _a.set(-side * Lp * Math.sin(thp), poleBase.y + .25, poleBase.z + Lp * Math.cos(thp));
-      const topY = mastBase + mastH * .97, headY = deckY + (topY - deckY) * Math.min(1, k0 * 1.5);
+      if (spread < 1) { const q = 1 - spread; tack.x *= spread; tack.y -= .25 * q; tack.z += (poleBase.z + Lp * .9 - tack.z) * q; }   /* felhúzáskor az orrfedélzeti zsákból, „kolbászként” jön fel */
+      const topY = mastBase + mastH * .97, headY = deckY + (topY - deckY) * hoist;
       const head = _b.set(-side * .25 * Math.sin(thp), headY, mastZ + .55);
       /* a talp húrja: bővszélben a hajó mentén hátra-hátszél felé, hátszélben keresztben; a domborulat a szél áramlásával előre */
-      const dl = clamp(A - 38, 45, 92) * D2R, F = 5.7 * (.45 + .55 * fill);
+      const dl = clamp(A - 38, 45, 92) * D2R, F = 5.7 * (.45 + .55 * fill) * (.07 + .93 * spread);
       _sc.set(side * Math.sin(dl), 0, -Math.cos(dl)); _sn.set(side * Math.cos(dl), 0, Math.sin(dl));
       const clew = _c.copy(tack).addScaledVector(_sc, F); clew.y = poleBase.y + .45 + (A < 125 ? .5 : .15);
       /* luff curl: a trimmer engedi a szkótát, amíg a belépő él közepe be nem hajlik, majd visszahúzza (~3,5 s ciklus) */
@@ -526,7 +551,7 @@
           let bulge = F * .44 * fill * Math.pow(Math.sin(Math.PI * u), .85) * Math.pow(Math.sin(Math.PI * Math.min(1, v * 1.03 + .04)), .6) * (1 + .025 * Math.sin(S.t * 3.1 + v * 6));
           /* belépő él (a rúd felőli szél) behajlása – a vitorla közepe táján a legerősebb */
           const ce = u < .3 ? (1 - u / .3) ** 2 * Math.max(0, Math.sin(Math.PI * clamp((v - .18) / .72, 0, 1))) : 0;
-          bulge -= ce * S.scurl * 1.1 * fill;
+          bulge -= ce * S.scurl * 1.1 * fill; bulge *= 1 + pop;
           /* ernyedt (felhúzás közben / túl éles szögnél): lengő, csapkodó szövet */
           if (lim > .01) bulge += lim * F * .06 * flogW(u, v, om) + lim * .35 * Math.sin(S.t * 1.3 + v * 2);
           pa[k] = lx + (ex - lx) * u + _sn.x * bulge; pa[k + 1] = ly + (ey - ly) * u + bulge * .12 - lim * v * .2 * (1 - k0); pa[k + 2] = lz + (ez - lz) * u + _sn.z * bulge;

@@ -779,3 +779,12 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 „A toldót a mellkasomnál fogom, nem a legvégét (a toldó túllóg a kezemen). Középállás, ahol tartom. Ha teljesen eltolom magamtól → végállás, a hajó teljes mértékben fordul. Ha visszahúzom egészen a vállamig → az ellenkező irányba teljes fordulat. Ki – közép – föl.”
 - KÉSZ (05b): a kormány a kéz TESTTŐL mért vízszintes távolságát (a fejtől) + a hajó közepe felé eső oldalirányú elmozdulást figyeli (`meas = bodyR + lp.x`); a megfogás helye a közép; ±26 cm együttes út = végállás. Eltolva jobbra, a vállhoz húzva balra fordul. A toldó a mellkas előtt van, 60 cm-es markolattal (előző lépés).
 - A kézmozdulatot a közvetítésen NEM láttam (a Quest kezdőkörnyezetében a kéz nem látszik a képen) – a leírás alapján készült; szemüvegben ő ellenőrzi. Hangolható: `REACH` (.26), az irány (`meas` előjele).
+
+## 2026-11-12 01:25–01:37 – (hangban) visszajelzés + új kérések
+- „Határozottan jobb az élmény, végre nem engedem el a kormányt, és ki bírtam tolni végállásig.” → a testtávolság-alapú kormányzás BEVÁLT (2ea93a8).
+- Kérés: az egész kormány kerüljön 5–10 cm-rel lejjebb (a vállig húzás kényelmesebb legyen). KÉSZ: a markolat mellmagassága deck+1,20 → 1,12 m.
+- Kérés: SPINAKKER-jelenet – a kinyílás, lobogás, kifeszülés legyen gyönyörű, látványos; Zephyres vagy nemzeti színű, vagy mindkettő; a bevétel (leesés) is legyen kidolgozott.
+  KÉSZ: `spinArtTex` (03-hajo): piros–fehér–zöld, középen a Zephyr-logó (a kormánytól olvashatóan tükrözve), szabásvonalak; finomabb háló (24×28).
+  Jelenet (05b, `S.sp`): felhúzás 1,8 mp (zsákból „kolbászként”) → szétterülés 1,7 mp (lobog) → kipattanás 0,8 mp (túllendül, a kezek rezgést kapnak) → repül; bevétel: összeesik 0,9 mp → lecsúszik 2,1 mp. A spinakker csak a kipattanástól húz (polár). A vitorlamodell új paraméterei: `spH`, `spS`, `spF`, `spPop`.
+  Gépi próba: a szakaszok rendben lefutnak, hiba nélkül; szemüvegben nem láttam.
+- Kérés (01:37): a Quest saját ablakmozgatása (fogósáv az ablak alatt, csippentve követi a kezet, felénk fordul) → ugyanígy a mi VR-paneljeinkre. MÉG NINCS KÉSZ – következő lépés (07-vezerlo.js: fogósáv a világ-panel alá).

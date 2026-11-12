@@ -438,6 +438,28 @@
       g.strokeStyle = "rgba(0,0,0,.12)"; for (let k = 0; k < 16; k++) { g.beginPath(); g.moveTo(k * w / 16, 0); g.lineTo(k * w / 16, h); g.stroke(); }
     }));
   }
+  /* 2026-11-12 01:34 – DÍSZSPINAKKER (tulajdonos: „csodálatos Zephyres vagy nemzeti színű, vagy mindkettő”): piros–fehér–zöld sávok, a fehér mezőben a Zephyr-logó,
+     háromsugaras (tri-radial) szabásvonalakkal, sötétkék szegőcsíkokkal. A vászon teteje a vitorla csúcsa. */
+  function spinArtTex(logo) {
+    const cv = document.createElement("canvas"); cv.width = cv.height = 1024; const g = cv.getContext("2d"), w = 1024, h = 1024, tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; W.disposables.push(tex);
+    const paint = (img) => {
+      g.fillStyle = "#fbfbf6"; g.fillRect(0, 0, w, h);
+      const rg = g.createLinearGradient(0, 0, 0, h * .33); rg.addColorStop(0, "#b3141d"); rg.addColorStop(1, "#e2232d"); g.fillStyle = rg; g.fillRect(0, 0, w, h * .33);
+      const gg = g.createLinearGradient(0, h * .72, 0, h); gg.addColorStop(0, "#2f9a55"); gg.addColorStop(1, "#1d7a41"); g.fillStyle = gg; g.fillRect(0, h * .72, w, h * .28);
+      g.fillStyle = "#141d4d"; g.fillRect(0, h * .33 - 7, w, 14); g.fillRect(0, h * .72 - 7, w, 14); g.fillRect(0, h - 16, w, 16); g.fillRect(0, 0, 12, h); g.fillRect(w - 12, 0, 12, h);
+      if (img) { const iw = w * .74, ih = iw * img.height / img.width, ih2 = Math.min(ih, h * .33); g.save(); g.translate(w, 0); g.scale(-1, 1); g.drawImage(img, (w - iw * ih2 / ih) / 2, h * .525 - ih2 / 2, iw * ih2 / ih, ih2); g.restore(); }   /* tükrözve: a KORMÁNYTÓL (a vitorla háta felől) nézve olvasható a felirat */
+      /* szabásvonalak: a csúcsból, a két alsó sarokból sugarasan, középen vízszintes panelek */
+      g.strokeStyle = "rgba(20,30,60,.16)"; g.lineWidth = 2;
+      for (let k = 0; k <= 12; k++) { g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(k * w / 12, h * .36); g.stroke(); }
+      for (let k = 1; k <= 7; k++) { g.beginPath(); g.moveTo(0, h); g.lineTo(k * w / 16, h * .68); g.stroke(); g.beginPath(); g.moveTo(w, h); g.lineTo(w - k * w / 16, h * .68); g.stroke(); }
+      for (let k = 0; k < 6; k++) { const y = h * (.39 + k * .055); g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+      /* finom szövetfény */
+      const sh = g.createLinearGradient(0, 0, w, 0); sh.addColorStop(0, "rgba(0,0,0,.10)"); sh.addColorStop(.5, "rgba(255,255,255,.06)"); sh.addColorStop(1, "rgba(0,0,0,.10)"); g.fillStyle = sh; g.fillRect(0, 0, w, h);
+      tex.needsUpdate = true; };
+    paint(null);
+    if (logo) { const im = new Image(); im.onload = () => paint(im); im.src = logo; }
+    return tex;
+  }
   function nameTex(name, col) {
     return canvasTex(1024, 192, (g, w, h) => {
       g.clearRect(0, 0, w, h); g.font = "italic 900 130px Georgia, 'Times New Roman', serif"; g.textAlign = "center"; g.textBaseline = "middle";
@@ -673,7 +695,7 @@
     const mainM = mesh(mainG, mainMat, body), jibM = mesh(jibG, jibMat, body);
     mainM.frustumCulled = jibM.frustumCulled = false;
     let spinM = null, spinG = null;
-    if (o.spin && !o.detail) { spinG = sailGeom(10, 12); spinM = mesh(spinG, std({ map: spinTex(o.spin), side: THREE.DoubleSide, roughness: .8 }), body); spinM.visible = false; spinM.frustumCulled = false; }
+    if (o.spin && !o.detail) { spinG = o.spinArt ? sailGeom(24, 28) : sailGeom(10, 12); spinM = mesh(spinG, std({ map: o.spinArt ? spinArtTex(o.logoImg) : spinTex(o.spin), side: THREE.DoubleSide, roughness: .8 }), body); spinM.visible = false; spinM.frustumCulled = false; }
     /* hajónév a tat két oldalán */
     if (o.name) {
       const nt = nameTex(o.name, o.nameCol);
@@ -891,15 +913,18 @@
       jibM.visible = S.spin < .6;
       const pa = spinG.attributes.position.array, { nu, nv } = spinG.userData, side = S.side, k0 = S.spin;
       const auto = S.awa != null, A = auto ? S.awa : 150, U = auto ? S.aws : 6;
-      const fill = sstep(.4, 1, k0) * (1 - clamp((96 - A) / 16, 0, 1) * .85);   /* túl élesen összeesik */
+      /* 2026-11-12: a versenyben a spinakker-JELENET külön vezérli a felhúzást (spH), a szétterülést (spS), a telítődést (spF) és a „kipattanást” (spPop) */
+      const hoist = S.spH != null ? S.spH : Math.min(1, k0 * 1.5), spread = S.spS != null ? S.spS : 1, pop = S.spPop || 0;
+      const fill = (S.spF != null ? S.spF : sstep(.4, 1, k0)) * (1 - clamp((96 - A) / 16, 0, 1) * .85);   /* túl élesen összeesik */
       /* rúd: merőleges a látszólagos szélre – hátszélben hátrahúzva (a szél felőli oldalon), bővszélben az előstag felé;
          a hajó ringásával a trimmer együtt mozgatja */
       const thp = clamp(A - 92 + S.heel * side * 25, 4, 82) * D2R, Lp = 3.1;
       const tack = _a.set(-side * Lp * Math.sin(thp), poleBase.y + .25, poleBase.z + Lp * Math.cos(thp));
-      const topY = mastBase + mastH * .97, headY = deckY + (topY - deckY) * Math.min(1, k0 * 1.5);
+      if (spread < 1) { const q = 1 - spread; tack.x *= spread; tack.y -= .25 * q; tack.z += (poleBase.z + Lp * .9 - tack.z) * q; }   /* felhúzáskor az orrfedélzeti zsákból, „kolbászként” jön fel */
+      const topY = mastBase + mastH * .97, headY = deckY + (topY - deckY) * hoist;
       const head = _b.set(-side * .25 * Math.sin(thp), headY, mastZ + .55);
       /* a talp húrja: bővszélben a hajó mentén hátra-hátszél felé, hátszélben keresztben; a domborulat a szél áramlásával előre */
-      const dl = clamp(A - 38, 45, 92) * D2R, F = 5.7 * (.45 + .55 * fill);
+      const dl = clamp(A - 38, 45, 92) * D2R, F = 5.7 * (.45 + .55 * fill) * (.07 + .93 * spread);
       _sc.set(side * Math.sin(dl), 0, -Math.cos(dl)); _sn.set(side * Math.cos(dl), 0, Math.sin(dl));
       const clew = _c.copy(tack).addScaledVector(_sc, F); clew.y = poleBase.y + .45 + (A < 125 ? .5 : .15);
       /* luff curl: a trimmer engedi a szkótát, amíg a belépő él közepe be nem hajlik, majd visszahúzza (~3,5 s ciklus) */
@@ -914,7 +939,7 @@
           let bulge = F * .44 * fill * Math.pow(Math.sin(Math.PI * u), .85) * Math.pow(Math.sin(Math.PI * Math.min(1, v * 1.03 + .04)), .6) * (1 + .025 * Math.sin(S.t * 3.1 + v * 6));
           /* belépő él (a rúd felőli szél) behajlása – a vitorla közepe táján a legerősebb */
           const ce = u < .3 ? (1 - u / .3) ** 2 * Math.max(0, Math.sin(Math.PI * clamp((v - .18) / .72, 0, 1))) : 0;
-          bulge -= ce * S.scurl * 1.1 * fill;
+          bulge -= ce * S.scurl * 1.1 * fill; bulge *= 1 + pop;
           /* ernyedt (felhúzás közben / túl éles szögnél): lengő, csapkodó szövet */
           if (lim > .01) bulge += lim * F * .06 * flogW(u, v, om) + lim * .35 * Math.sin(S.t * 1.3 + v * 2);
           pa[k] = lx + (ex - lx) * u + _sn.x * bulge; pa[k + 1] = ly + (ey - ly) * u + bulge * .12 - lim * v * .2 * (1 - k0); pa[k + 2] = lz + (ez - lz) * u + _sn.z * bulge;
@@ -1485,7 +1510,7 @@
          a fogórész hosszú (60 cm), vastag markolat. A kormányzás a toldó TENGELYE mentén történő tolás/húzás: a mellkastól eltolva (a hajó közepe felé) jobbra, behúzva balra fordul;
          a semleges helyzet a mellkas előtt van, onnan mindkét irányba 26 cm a végállás. A merev toldó a kezeddel együtt mozdul (látszó elfordulás ±14°). */
     const TIL = { TL: .68, EL: .8, TMAX: .25, REACH: .26, pz: hs.z - 1.35, py: deckY + .62, ty: deckY + .76 };
-    { const tip = new THREE.Vector3(0, TIL.ty, TIL.pz + TIL.TL), chest = new THREE.Vector3(-(hs.hb - .74), deckY + 1.2, hs.z - .62 + .36), d = chest.clone().sub(tip); TIL.EL = d.length() + .3; TIL.restV = d.normalize(); TIL.ax = new THREE.Vector3(-d.x, 0, -d.z).normalize(); }
+    { const tip = new THREE.Vector3(0, TIL.ty, TIL.pz + TIL.TL), chest = new THREE.Vector3(-(hs.hb - .74), deckY + 1.12, hs.z - .62 + .36)   /* 2026-11-12 01:34: 8 cm-rel lejjebb (a tulajdonos: „5–10 centivel állítsuk lejjebb az egészet, kényelmesebb”) */, d = chest.clone().sub(tip); TIL.EL = d.length() + .3; TIL.restV = d.normalize(); TIL.ax = new THREE.Vector3(-d.x, 0, -d.z).normalize(); }
     { const wood = std({ color: "#8a5326", roughness: .38 }), til = new THREE.Group(); G.add(til); til.position.set(0, TIL.py, TIL.pz);
       const stock = mesh(new THREE.CylinderGeometry(.045, .055, .62, 16), chrome, til); stock.position.y = -.31;
       const headB = mesh(new THREE.BoxGeometry(.12, .1, .2), chrome, til); headB.position.set(0, .01, .04);
@@ -1629,7 +1654,7 @@
     const oldSky = makeSky(far); makeShores(far);
     VRR.water = makeWater(env);
     VRR.foto = makePhotoSky(far, oldSky, VRR.water);   /* valódi égfotó + a víz ezt tükrözi */
-    const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"] });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
+    const boat = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true });   /* 2026-11-11, a tulajdonos: a grósz (nagyvitorla) piros, a spinakker fehér, rajta az eredeti logó */
     boat.scale.setScalar(VR_SC); boat.rotation.y = Math.PI; root.add(boat); VRR.boat = boat;
     const CK2 = vrCockpit(boat); VRR.ck = CK2; VRR.baked = vrBake(boat);
     /* a felhasználó helye: a jobb oldali (styrbord) kerék mögött; a hajó orra −z felé néz (a hajó π-vel elforgatva) */
@@ -2025,7 +2050,7 @@
     const twa = Math.abs(wrapA(S.wf - S.b)) * R2D;
     S.spinOn = S.spinOn ? twa > 98 : twa > 108; const spin = S.spinOn && S.st === "race";   /* hátszélben (és széles hátszélben) felhúzzák a spinakkert */
     S.gk = S.gkW;   /* lökések és szélcsendesebb foltok (7–20 mp), lassú erősödés/gyengülés */
-    const vt = polar(twa, spin) * KN * VR_SPD * (S.heelPen || 1) * (S.st === "pre" ? .7 : 1) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
+    const vt = polar(twa, spin && S.sp && (S.sp.st === "fly" || S.sp.st === "pop")) * KN * VR_SPD * (S.heelPen || 1) * (S.st === "pre" ? .7 : 1) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
     /* gyorsabban gyorsul (a nagy vitorlafelület húz), a kormány fékez egy kicsit, ha nagyon el van tekerve */
     /* 2026-11-12 00:46 – A HAJÓ SIKLÁSA FIZIKAI MODELLEL (tulajdonos: „a hajó súlya 2300 kg … ha nem fújja a szél, azonnal megáll, miközben az életben még
        csúszik tovább, míg a közegellenállás meg nem állítja – pontos számítás, élethű mozgás”). Newton: (m + hozzáadott tömeg) · dv/dt = F_hajtó − R_víz(v) − F_szél.
@@ -2050,7 +2075,24 @@
     if (side !== S.lastSide) { if (S.lastSide) { S.tackT = 3.4; flap(.16); setTimeout(winch, 1500); setTimeout(winch, 2300); } S.lastSide = side; }
     S.tackT = Math.max(0, S.tackT - dt);
     const BS = S.boat.userData.S; BS.side = side; BS.boom = clamp((awa - 22) * .72, 5, 80) * D2R * side; BS.jib = clamp((awa - 22) * .5, 7, 50) * D2R;
-    BS.luff = Math.max(clamp(1 - (awa - 16) / 16, 0, 1), S.tackT > 1.4 ? .7 : 0); BS.spin += ((spin ? 1 : 0) - BS.spin) * Math.min(1, dt * .4);
+    BS.luff = Math.max(clamp(1 - (awa - 16) / 16, 0, 1), S.tackT > 1.4 ? .7 : 0); 
+    /* SPINAKKER-JELENET (2026-11-12 01:34, tulajdonos: „hátszélben a spinakker kinyílása különösen szép – ahogy kibomlik, lobog, majd kifeszül a hajó fölött; ebből semmi nem
+       jelenik meg… legyen gyönyörű, látványos jelenet, és amikor kijövök a hátszélből és leesik, az is legyen kidolgozott”):
+       FELHÚZÁS (1,8 mp): az orrfedélzeti zsákból keskeny „kolbászként” kúszik fel az árboccsúcsig, csörlő kattog, a vászon verdes;
+       SZÉTTERÜLÉS (1,7 mp): a rudat hátrahúzzák, a szkótát behúzzák – a vitorla szétnyílik és hevesen lobog;
+       KIPATTANÁS (0,8 mp): a szél belekap, egy rántással kifeszül (túllendül, majd beáll), a hajó meglódul (a spinakker csak innentől húz);
+       REPÜL: lélegzik, a belépő éle időnként behajlik;
+       BEVÉTEL: előbb összeesik és lobog (0,9 mp), aztán összegyűjtve lecsúszik az orrfedélzetre (2,1 mp), és visszajön a fock. */
+    { const SP = S.sp || (S.sp = { st: "down", t: 0 }), es = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }; SP.t += dt;
+      const up = SP.st === "hoist" || SP.st === "spread" || SP.st === "pop" || SP.st === "fly";
+      if (spin && !up) { SP.st = "hoist"; SP.t = 0; try { winch(); setTimeout(winch, 500); setTimeout(winch, 1000); flap(.08); } catch (e) {} }
+      else if (!spin && up) { SP.st = "drop"; SP.t = 0; SP.h0 = BS.spH || 0; SP.f0 = BS.spF || 0; SP.s0 = BS.spS || 0; try { flap(.2); } catch (e) {} }
+      if (SP.st === "hoist") { const u = SP.t / 1.8; BS.spH = es(u); BS.spS = .05 + .1 * u; BS.spF = 0; BS.spPop = 0; if (u >= 1) { SP.st = "spread"; SP.t = 0; try { flap(.14); winch(); } catch (e) {} } }
+      else if (SP.st === "spread") { const u = SP.t / 1.7; BS.spH = 1; BS.spS = .15 + .85 * es(u); BS.spF = .28 * u; if (Math.floor(SP.t / .4) !== SP.fk) { SP.fk = Math.floor(SP.t / .4); try { flap(.07 + .05 * u); } catch (e) {} } if (u >= 1) { SP.st = "pop"; SP.t = 0; try { flap(.3); T.xr && T.xr.pulse && (T.xr.pulse("left", .6, 60), T.xr.pulse("right", .6, 60)); } catch (e) {} } }
+      else if (SP.st === "pop") { const u = SP.t / .8; BS.spH = 1; BS.spS = 1; BS.spF = .28 + .72 * (1 - Math.pow(1 - clamp(u, 0, 1), 3)); BS.spPop = .24 * Math.sin(Math.PI * clamp(u, 0, 1)) * (1 - .4 * u); if (u >= 1) { SP.st = "fly"; SP.t = 0; } }
+      else if (SP.st === "fly") { BS.spH = 1; BS.spS = 1; BS.spF = 1; BS.spPop = .035 * Math.sin(W.t * .9) * Math.exp(-SP.t * .15); }
+      else if (SP.st === "drop") { const u1 = SP.t / .9, u2 = (SP.t - .7) / 2.1; BS.spF = SP.f0 * (1 - es(u1)); BS.spPop = 0; BS.spH = SP.h0 * (1 - es(u2)); BS.spS = SP.s0 + (.1 - SP.s0) * es(u2); if (u2 > .2 && Math.floor(SP.t / .5) !== SP.fk) { SP.fk = Math.floor(SP.t / .5); try { flap(.06); } catch (e) {} } if (u2 >= 1) { SP.st = "down"; SP.t = 0; } }
+      if (SP.st === "down") { BS.spH = 0; BS.spS = .05; BS.spF = 0; BS.spPop = 0; BS.spin = 0; } else BS.spin = clamp(.08 + BS.spH * .35 + BS.spF * .6, .05, 1); }
     /* DŐLÉS – fizikai modell (kutatás alapján): a dőlő nyomaték ∝ látszólagos szélsebesség² × oldalerő-tényező(látszólagos szélszög) × cos^1,3(dőlés),
        a felállító nyomaték ∝ sin(dőlés). Az oldalerő éles szélben (cirkálás, 25–55°) a legnagyobb, félszélben kisebb (több hajtás, kevesebb dőlés),
        hátszélben szinte nulla (ott a spinakker inkább ringat). Felfelé fordulva nő a látszólagos szél és a dőlés, leesve csökken.
