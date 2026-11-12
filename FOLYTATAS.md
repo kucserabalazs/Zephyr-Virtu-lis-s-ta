@@ -774,3 +774,8 @@ Kérés szó szerint: ne a vízen menjen, hanem a PARTON, körbe a Balaton térk
 - KÉSZ (05b): a merev toldó a kormányos mellkasa elé ér (deck + 1,20 m, 36 cm-rel a test előtt) és 30 cm-rel túlnyúlik; 60 cm-es vastag markolat; a kormányzás a toldó tengelye menti tolás/húzás (`TIL.ax`), ±26 cm = végállás (`REACH`), látszó elfordulás ±14°. Eltolva jobbra, behúzva balra fordul.
 - A kézmozdulatát a közvetítésen NEM láttam (akkor épp a böngészőben volt, és állóképeket kapok) – a 26 cm és az irány becslés; szemüvegben ő ellenőrzi.
 - Hanghívást kért („nem jön ki a jel”) – azt én nem tudom indítani.
+
+## 2026-11-12 01:20 – (hangban) a kormánymozdulat pontos leírása
+„A toldót a mellkasomnál fogom, nem a legvégét (a toldó túllóg a kezemen). Középállás, ahol tartom. Ha teljesen eltolom magamtól → végállás, a hajó teljes mértékben fordul. Ha visszahúzom egészen a vállamig → az ellenkező irányba teljes fordulat. Ki – közép – föl.”
+- KÉSZ (05b): a kormány a kéz TESTTŐL mért vízszintes távolságát (a fejtől) + a hajó közepe felé eső oldalirányú elmozdulást figyeli (`meas = bodyR + lp.x`); a megfogás helye a közép; ±26 cm együttes út = végállás. Eltolva jobbra, a vállhoz húzva balra fordul. A toldó a mellkas előtt van, 60 cm-es markolattal (előző lépés).
+- A kézmozdulatot a közvetítésen NEM láttam (a Quest kezdőkörnyezetében a kéz nem látszik a képen) – a leírás alapján készült; szemüvegben ő ellenőrzi. Hangolható: `REACH` (.26), az irány (`meas` előjele).
