@@ -13356,7 +13356,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "086abe0550"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "a5d0993018"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -13390,9 +13390,64 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "745beea877"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "1ddfc2f0ee"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
+
+  /* ================= 2026-11-12 12:14 – ÖNÁLLÓ JÁTÉKCSOMAG KEZDŐKÉPERNYŐJE (a tulajdonos kérése: a játékok az apartmanos részek nélkül, önálló csomagként) =================
+     A cím végére írt „?jatek” (vagy „#jatek”) a sétát eltakaró, saját kezdőképernyőt nyit: cím, mottó, három játék kártyája, rekordok, beállítás (nehézség). A játékból
+     kilépve ide térünk vissza, nem a sétába. A név („Zephyr Sailing VR”) MUNKACÍM – a tulajdonos dönt róla. A sima cím (paraméter nélkül) változatlanul a sétát nyitja. */
+  (function gameHub() {
+    if (!/[?&#]jatek/.test(location.search + location.hash)) return;
+    const css = document.createElement("style"); css.textContent = `
+      #gameHub{position:fixed;inset:0;z-index:99990;overflow:auto;color:#fff;font-family:Inter,system-ui,sans-serif;background:radial-gradient(1200px 700px at 70% -10%,#1d5c8f 0%,rgba(29,92,143,0) 60%),linear-gradient(180deg,#06203a 0%,#041326 55%,#020a16 100%)}
+      #gameHub .gh-wrap{max-width:1180px;margin:0 auto;padding:clamp(18px,4vw,48px)}
+      #gameHub .gh-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+      #gameHub .gh-logo{width:clamp(64px,9vw,104px);height:clamp(64px,9vw,104px);border-radius:24px;background:linear-gradient(160deg,#e3262a,#8f1216);display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+      #gameHub h1{margin:0;font-size:clamp(34px,6vw,68px);font-weight:900;letter-spacing:-.02em;line-height:1}
+      #gameHub h1 span{color:#E4BB63}
+      #gameHub .gh-tag{margin:8px 0 0;font-size:clamp(17px,2.2vw,24px);color:#b9d6ee;max-width:60ch}
+      #gameHub .gh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;margin-top:clamp(22px,4vw,44px)}
+      #gameHub .gh-card{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;min-height:300px;border-radius:26px;padding:26px;background:linear-gradient(170deg,rgba(40,90,140,.55),rgba(12,36,62,.9));border:2px solid rgba(228,187,99,.28);box-shadow:0 18px 50px rgba(0,0,0,.4);transition:transform .18s,border-color .18s}
+      #gameHub .gh-card:hover,#gameHub .gh-card:focus-visible{transform:translateY(-6px);border-color:#E4BB63}
+      #gameHub .gh-ic{font-size:64px;line-height:1}
+      #gameHub .gh-card b{display:block;font-size:30px;font-weight:850;margin-top:14px}
+      #gameHub .gh-card p{margin:10px 0 0;font-size:19px;line-height:1.45;color:#cfe3f2;flex:1}
+      #gameHub .gh-rec{margin-top:14px;font-size:17px;color:#E4BB63;font-weight:700;min-height:22px}
+      #gameHub .gh-go{margin-top:14px;align-self:flex-start;background:#E4BB63;color:#0b1b2a;font-weight:850;font-size:21px;padding:13px 22px;border-radius:999px}
+      #gameHub .gh-main{grid-column:1/-1;min-height:340px;background:linear-gradient(120deg,rgba(227,38,42,.5),rgba(12,36,62,.92) 55%)}
+      #gameHub .gh-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:28px}
+      #gameHub .gh-pill{all:unset;cursor:pointer;font-size:19px;font-weight:750;padding:12px 20px;border-radius:999px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22)}
+      #gameHub .gh-pill:hover{border-color:#E4BB63}
+      #gameHub .gh-foot{margin-top:26px;font-size:16px;color:#8fb3d1;line-height:1.5}
+      #gameHub.gh-hide{display:none}`; document.head.appendChild(css);
+    const hub = document.createElement("div"); hub.id = "gameHub"; hub.setAttribute("role", "dialog"); hub.setAttribute("aria-label", "Játékok");
+    const DIFF = { kezdo: "Kezdő", halado: "Haladó", verseny: "Versenyző" }, ls = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+    const mmss = (t) => { t = Math.max(0, Math.round(t)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+    const recs = () => { let best = {}, ch = null; try { best = JSON.parse(ls("zephyr-vr-verseny", "{}")); ch = JSON.parse(ls("zephyr-vr-bajnoksag", "null")); } catch (e) {}
+      const ts = Object.keys(best).map((k) => best[k]).filter((v) => v > 0), parts = [];
+      if (ts.length) parts.push(`${ts.length} pályán van időd · legjobb: ${mmss(Math.min.apply(null, ts))}`); if (ch && ch.won) parts.push(`🏆 megnyert bajnokság: ${ch.won}`); if (ch && ch.n && ch.n < 5) parts.push(`bajnokság: ${ch.n}/5 futam`);
+      if (!ls("zephyr-vr-oktato", "")) parts.unshift("Először vagy itt? Kezdd az oktató futammal!"); return parts.join(" · "); };
+    const draw = () => { hub.innerHTML = `<div class="gh-wrap">
+        <div class="gh-top"><div class="gh-logo"><svg viewBox="0 0 64 64" width="70%" height="70%" aria-hidden="true"><path d="M30 6v44H10z" fill="#fff"/><path d="M34 14v36h20z" fill="#ffd9a0"/><path d="M6 54h52l-6 6H12z" fill="#fff"/></svg></div>
+          <div><h1>Zephyr <span>Sailing VR</span></h1><p class="gh-tag">Valódi vitorlázás a Balatonon – kézzel kormányzott versenyhajó, élethű szél és vitorlák, versenyszabályok.</p></div></div>
+        <div class="gh-grid">
+          <button class="gh-card gh-main" data-g="race"><span class="gh-ic">⛵</span><b>Vitorlásverseny</b><p>Állj a Zephyr kormányához: rajt a két bója között, cirkálás, bójakerülés, spinakker, befutó. Három ellenfél, öt pálya, ötfutamos bajnokság, oktató futam kezdőknek.</p><span class="gh-rec">${recs()}</span><span class="gh-go">Vízre szállok ▸</span></button>
+          <button class="gh-card" data-g="chess"><span class="gh-ic">♞</span><b>Vitorlás sakk</b><p>A tábla maga a Balaton naplementében, a bábuk igazi hajók. Parancsnoki hídról vagy hőlégballonból vezényelsz.</p><span class="gh-go">Játszom ▸</span></button>
+          <button class="gh-card" data-g="coaster"><span class="gh-ic">🎢</span><b>Balatoni hullámvasút</b><p>Körbe a Balaton partján, 14 látnivalóval és 33 kikötővel – nyugodt városnézés vagy vad menet hurkokkal.</p><span class="gh-go">Beszállok ▸</span></button>
+        </div>
+        <div class="gh-row"><button class="gh-pill" data-a="tut">🎓 Oktató futam</button><button class="gh-pill" data-a="diff">Nehézség: ${DIFF[ls("zephyr-vr-nehezseg", "halado")] || "Haladó"}</button><button class="gh-pill" data-a="steer">Kormány: ${ls("zephyr-kormany", "bot") === "kerek" ? "kormánykerék" : "botkormány"}</button></div>
+        <p class="gh-foot">VR-szemüvegben: indítsd el a játékot, aztán nyomd meg a „VR” gombot. Kézkövetéssel és kontrollerrel is játszható; szemüveg nélkül billentyűzettel vagy érintéssel.<br>Zephyr Sailing VR · ${String(window.ZEPHYR_BV || "").slice(0, 5)}</p></div>`; };
+    const open = (kind, tut) => { hub.classList.add("gh-hide"); if (tut) window.__ghTut = 1; openWorld(kind);
+      const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function () { const r = c0.apply(this, arguments); setTimeout(() => { draw(); hub.classList.remove("gh-hide"); }, 50); return r; }; }
+        if (window.__ghTut && Z.vrr && Z.vrSetup && Z.vrr.C) { window.__ghTut = 0; try { Z.vrSetup(0); } catch (e) {} } if (!window.__ghTut) clearInterval(iv); }, 400); setTimeout(() => clearInterval(iv), 60000); };
+    hub.addEventListener("click", (ev) => { const c = ev.target.closest("[data-g]"), a = ev.target.closest("[data-a]");
+      if (c) open(c.getAttribute("data-g"));
+      else if (a) { const k = a.getAttribute("data-a"); if (k === "tut") open("race", true);
+        else if (k === "diff") { const o = ["kezdo", "halado", "verseny"], i = o.indexOf(ls("zephyr-vr-nehezseg", "halado")); try { localStorage.setItem("zephyr-vr-nehezseg", o[(i + 1) % 3]); } catch (e) {} draw(); }
+        else if (k === "steer") { try { localStorage.setItem("zephyr-kormany", ls("zephyr-kormany", "bot") === "kerek" ? "bot" : "kerek"); } catch (e) {} draw(); } } });
+    const mount = () => { draw(); document.body.appendChild(hub); }; if (document.body) mount(); else document.addEventListener("DOMContentLoaded", mount);
+  })();
 
   /* ---------- Szerkesztő ---------- */
   const flatLabel = (t) => String(t).replace(/\n/g, " ");

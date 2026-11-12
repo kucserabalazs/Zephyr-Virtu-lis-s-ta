@@ -879,3 +879,7 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 - OKTATÓ FUTAM (0. futam, vrSetup(0), panel: „🎓 Oktató futam”): ellenfél és visszaszámlálás nélkül, 7 lépés: kormány, holtszög, leejtés, forduló, bójakerülés, perdülés, befutó (VR_TUT, vrTutTick). A gépi teszten az 1→2. lépés váltását láttam; a többit a lassú tesztidő miatt nem tudtam végigjátszani.
 - NEHÉZSÉG (panel: „Szint: …”, localStorage zephyr-vr-nehezseg): Kezdő / Haladó / Versenyző. A fizika mindenkire azonos marad; az ellenfelek kormányosa hibázik többet/kevesebbet, kezdő szinten a szél szelídebb.
 - BAJNOKSÁG: 5 futam, helyezési pontok (1.=1 … 4.=4, nem ért be=5), a legkevesebb pont nyer; állás a panel 4. sorában; localStorage zephyr-vr-bajnoksag.
+
+### 2. lépés – kész: kezdőképernyő (12:14)
+- A cím végére „?jatek” (vagy „#jatek”): önálló játék-kezdőképernyő (gameHub a forrás-html-ben), a sétát eltakarja; kártyák: Vitorlásverseny, Vitorlás sakk, Balatoni hullámvasút; gombok: Oktató futam, Nehézség, Kormány; rekordok sora; játékból kilépve ide tér vissza. Név: „Zephyr Sailing VR” – MUNKACÍM, a tulajdonos dönt. A 2D parti regatta még nincs a kártyák között (a séta stég-jelenetéhez kötött).
+### 3. lépés – kész: minden hajó legénysége emberszerű (03-hajo.js), Zephyr mellényben (fekete hab, piros/sárga V-betét, ZEPHYR a háton), anyagonként összevonva.

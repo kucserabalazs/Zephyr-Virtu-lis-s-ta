@@ -431,20 +431,35 @@
     /* legénység (kikötve ülnek a szél felőli oldalon) */
     const crew = [];
     const skin = std({ color: "#d9a988", roughness: .7 });
+    /* 2026-11-12 12:14 (tulajdonos: a bábuk legyenek emberszerűek; a versenyzőkön ZEPHYR mellény, piros-fekete és sárga-fekete): minden hajó legénysége
+       emberi arányú – fej arccal, fülekkel, változatos haj (rövid / lófarok / sapka), fekete habmellény színes V-betéttel és ZEPHYR felirattal a háton, karok a kötélen,
+       két láb térddel és cipővel. A részek anyagonként össze vannak vonva (hajónként kevés rajzolási hívás – a Quest miatt). */
+    const zephyrBack = TEXC.zb || (TEXC.zb = canvasTex(256, 80, (g) => { g.clearRect(0, 0, 256, 80); g.fillStyle = "#ffffff"; g.font = "italic 900 54px system-ui"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("ZEPHYR", 128, 44); }));
+    const SKINS = ["#e0b08f", "#c98f6b", "#ecc3a3", "#d6a37e"], HAIRS = ["#3a2414", "#15110e", "#c9a55a", "#6b4a2a"];
     for (let k = 0; k < (o.crew || 0); k++) {
-      const c = new THREE.Group(); const vest = std({ color: o.crewCol || ["#ff7a00", "#e5262f", "#ffd166"][k % 3], roughness: .7 });
-      /* vitorlázó: sötét vízálló dzseki, rajta élénk mentőmellény, karok a kötélen, sapka napellenzővel, napszemüveg */
-      const jacket = std({ color: "#20252c", roughness: .8 });
-      const torso = mesh(new THREE.CapsuleGeometry(.14, .36, 4, 10), jacket, c); torso.position.y = .42;
-      const vestM = mesh(new THREE.CapsuleGeometry(.155, .2, 4, 10), vest, c); vestM.position.y = .5; vestM.scale.set(1, 1, .9);
-      [-1, 1].forEach((sd) => { const arm = mesh(new THREE.CapsuleGeometry(.045, .32, 3, 6), jacket, c); arm.position.set(sd * .17, .52, .1); arm.rotation.set(1.0, 0, -sd * .25); const hand = mesh(new THREE.SphereGeometry(.04, 8, 6), skin, c); hand.position.set(sd * .2, .4, .27); });
-      const neck = mesh(new THREE.CylinderGeometry(.045, .05, .07, 8), skin, c); neck.position.y = .74;
-      const head = mesh(new THREE.SphereGeometry(.1, 12, 10), skin, c); head.position.y = .84; head.scale.set(.95, 1.05, 1);
-      const cap = mesh(new THREE.SphereGeometry(.105, 12, 8, 0, TAU, 0, Math.PI / 2), std({ color: "#ffffff" }), c); cap.position.y = .87;
-      const visor = mesh(new THREE.BoxGeometry(.14, .012, .1), std({ color: "#0b2f5e" }), c); visor.position.set(0, .875, .11);
-      const shades = mesh(new THREE.BoxGeometry(.15, .03, .02), std({ color: "#0d0f12", roughness: .1, metalness: .6 }), c); shades.position.set(0, .845, .095);
-      const legs = mesh(new THREE.CapsuleGeometry(.08, .55, 3, 8), std({ color: "#2b3445" }), c); legs.position.set(0, .18, .0); legs.rotation.z = Math.PI / 2.4;
-      body.add(c); crew.push({ g: c, z: -2.6 + k * .75, legs });
+      const c = new THREE.Group(), I = new THREE.Matrix4(), seed = (k * 7 + (o.num ? String(o.num).length : 0) + (o.i || 0)) | 0;
+      const vcol = o.crewCol || ["#e3262a", "#f2b01e"][(k + seed) % 2], byM = {}, put = (geo, col) => { (byM[col] || (byM[col] = [])).push([geo, I]); };
+      const sk = SKINS[(k + seed) % 4], hr = HAIRS[(k * 3 + seed) % 4], JK = "#20252c", FO = "#17181b";
+      { const t = new THREE.CylinderGeometry(.17, .14, .42, 12); t.scale(1, 1, .78); t.translate(0, .45, 0); put(t, JK); const sh = new THREE.SphereGeometry(.18, 12, 8); sh.scale(1.08, .42, .72); sh.translate(0, .66, 0); put(sh, JK);
+        const vf = new THREE.BoxGeometry(.33, .36, .1); vf.translate(0, .48, .08); put(vf, FO); const vb = new THREE.BoxGeometry(.33, .38, .09); vb.translate(0, .49, -.08); put(vb, FO);
+        [-1, 1].forEach((sd) => { const vp = new THREE.BoxGeometry(.1, .36, .02); vp.rotateZ(sd * .28); vp.translate(sd * .085, .5, .135); put(vp, vcol); const st = new THREE.BoxGeometry(.08, .05, .24); st.translate(sd * .11, .67, 0); put(st, vcol);
+          const ua = new THREE.CapsuleGeometry(.048, .2, 3, 6); ua.rotateX(.9); ua.translate(sd * .2, .56, .08); put(ua, JK); const fa = new THREE.CapsuleGeometry(.042, .2, 3, 6); fa.rotateX(1.5); fa.translate(sd * .2, .45, .26); put(fa, JK);
+          const hd = new THREE.SphereGeometry(.042, 8, 6); hd.translate(sd * .2, .44, .39); put(hd, sk);
+          const th = new THREE.CapsuleGeometry(.07, .28, 3, 6); th.rotateX(Math.PI / 2); th.translate(sd * .09, .25, .2); put(th, "#27303c"); const sn = new THREE.CapsuleGeometry(.058, .28, 3, 6); sn.translate(sd * .09, .06, .4); put(sn, "#27303c");
+          const shoe = new THREE.BoxGeometry(.085, .055, .19); shoe.translate(sd * .09, -.12, .45); put(shoe, "#f2f2ee");
+          const ear = new THREE.SphereGeometry(.026, 6, 5); ear.scale(.5, 1, .8); ear.translate(sd * .1, .86, 0); put(ear, sk); });
+        const belt = new THREE.BoxGeometry(.34, .04, .2); belt.translate(0, .36, 0); put(belt, "#0d0f12");
+        const nk = new THREE.CylinderGeometry(.047, .053, .08, 8); nk.translate(0, .75, 0); put(nk, sk); const hd2 = new THREE.SphereGeometry(.105, 14, 10); hd2.scale(.92, 1.08, 1); hd2.translate(0, .86, 0); put(hd2, sk);
+        const jw = new THREE.SphereGeometry(.078, 10, 8); jw.scale(.95, .8, .9); jw.translate(0, .805, .022); put(jw, sk); const ns = new THREE.ConeGeometry(.018, .045, 6); ns.rotateX(Math.PI / 2 - .35); ns.translate(0, .855, .108); put(ns, sk);
+        const mo = new THREE.BoxGeometry(.04, .008, .01); mo.translate(0, .808, .09); put(mo, "#9b4a44"); const sg = new THREE.BoxGeometry(.155, .034, .022); sg.translate(0, .88, .096); put(sg, "#0d0f12");
+        const hair = new THREE.SphereGeometry(.112, 14, 8, 0, TAU, 0, Math.PI * .56); hair.scale(.95, 1.06, 1.04); hair.rotateX(-.28); hair.translate(0, .872, -.012); put(hair, hr);
+        if ((k + seed) % 3 === 0) { const cp = new THREE.SphereGeometry(.118, 14, 8, 0, TAU, 0, Math.PI / 2); cp.translate(0, .89, 0); put(cp, "#ffffff"); const vz = new THREE.BoxGeometry(.14, .012, .1); vz.rotateX(.12); vz.translate(0, .9, .14); put(vz, "#0b2f5e"); } }
+      Object.keys(byM).forEach((col) => mesh(mergeGeoms(byM[col]), std({ color: col, roughness: .78 }), c));
+      const lg = mesh(new THREE.PlaneGeometry(.26, .08), basic({ map: zephyrBack, transparent: true, depthWrite: false }), c); lg.position.set(0, .55, -.127); lg.rotation.y = Math.PI; lg.userData.noBake = true;
+      /* lófarok / hosszabb haj: külön csoport, a szélben leng */
+      let tail = null; if ((k + seed) % 3 === 1) { tail = new THREE.Group(); tail.position.set(0, .9, -.1); c.add(tail); const tg = new THREE.ConeGeometry(.035, .3, 6); tg.rotateX(-Math.PI / 2); tg.translate(0, 0, -.15); const tm = mesh(tg, std({ color: hr, roughness: .9 }), tail); tm.userData.noBake = true; }
+      const legs = new THREE.Group(); c.add(legs);
+      body.add(c); crew.push({ g: c, z: -2.6 + k * .75, legs, tail, ph: k * 1.7 });
     }
     /* ================= VITORLÁK – életszerű trimm és lobogás (2026. nov. 9., szakirodalom alapján) =================
        • A vitorla a LÁTSZÓLAGOS szélhez (awa, aws – a valódi, gyorsítás nélküli hajósebességből) áll be: a legénység úgy trimmel,
@@ -639,8 +654,10 @@
       crew.forEach((c, k) => {
         const u = (c.z + HULL.L / 2) / HULL.L, s = hullShape(clamp(u, 0, 1));
         c.g.position.set(ws * (s.hb - .05), s.sheer + .02, c.z);
-        c.g.rotation.set(0, 0, -ws * clamp(.25 + Math.abs(S.heel) * 1.6, .2, .95));
-        c.legs.rotation.z = Math.PI / 2.4; c.legs.position.x = ws * .02;
+        c.g.rotation.order = "YXZ";
+        c.g.rotation.y = ws > 0 ? Math.PI / 2 : -Math.PI / 2;   /* kifelé néznek, a lábuk a peremen kívül lóg (kiülés) */
+        c.g.rotation.z = 0; c.g.rotation.x = -clamp(.1 + Math.abs(S.heel) * 1.2, .1, .6) + .03 * Math.sin(S.t * 1.3 + c.ph);
+        if (c.tail) { c.tail.rotation.y = -(ws > 0 ? 1 : -1) * 1.2 + .35 * Math.sin(S.t * 7 + c.ph); c.tail.rotation.x = .25 * Math.sin(S.t * 5.3 + c.ph); }
       });
     }
     G.userData.S = S;
