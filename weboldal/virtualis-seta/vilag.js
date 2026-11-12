@@ -936,13 +936,18 @@
         for (let i = 0; i <= nu; i++) { const u = i / nu, k = (j * (nu + 1) + i) * 3;
           const lx = tack.x + (head.x - tack.x) * v, ly = tack.y + (head.y - tack.y) * v, lz = tack.z + (head.z - tack.z) * v;
           const ex = clew.x + (head.x - clew.x) * v, ey = clew.y + (head.y - clew.y) * v, ez = clew.z + (head.z - clew.z) * v;
-          let bulge = F * .44 * fill * Math.pow(Math.sin(Math.PI * u), .85) * Math.pow(Math.sin(Math.PI * Math.min(1, v * 1.03 + .04)), .6) * (1 + .025 * Math.sin(S.t * 3.1 + v * 6));
+          /* 2026-11-12 01:52 (tulajdonos: „a spinakker legyen sokkal tökéletesebb, kidolgozottabb”): teltebb has (a húr 58%-a), széles „vállak” (a vitorla a közepén a talpnál is
+             szélesebb – nem háromszög, hanem ballon), ívelt talp, a kilépő él finoman pereg, az egész lassan lélegzik a széllel. */
+          let bulge = F * .58 * fill * Math.pow(Math.sin(Math.PI * u), .8) * Math.pow(Math.sin(Math.PI * Math.min(1, v * .98 + .05)), .55) * (1 + .03 * Math.sin(S.t * 1.15) + .02 * Math.sin(S.t * 3.1 + v * 6));
+          const sh = (u - .5) * F * .62 * fill * Math.pow(Math.sin(Math.PI * clamp(v * 1.02, 0, 1)), .9);                    /* vállak: oldalra szélesedik */
+          const roach = v < .16 ? (1 - v / .16) * Math.sin(Math.PI * u) * .42 * fill : 0;                                     /* ívelt, lelógó talp */
+          const lee = u > .84 ? (u - .84) / .16 * .05 * F * fill * Math.sin(S.t * 8.5 + v * 15) * Math.sin(Math.PI * v) : 0;   /* a kilépő él pergése */
           /* belépő él (a rúd felőli szél) behajlása – a vitorla közepe táján a legerősebb */
           const ce = u < .3 ? (1 - u / .3) ** 2 * Math.max(0, Math.sin(Math.PI * clamp((v - .18) / .72, 0, 1))) : 0;
           bulge -= ce * S.scurl * 1.1 * fill; bulge *= 1 + pop;
           /* ernyedt (felhúzás közben / túl éles szögnél): lengő, csapkodó szövet */
           if (lim > .01) bulge += lim * F * .06 * flogW(u, v, om) + lim * .35 * Math.sin(S.t * 1.3 + v * 2);
-          pa[k] = lx + (ex - lx) * u + _sn.x * bulge; pa[k + 1] = ly + (ey - ly) * u + bulge * .12 - lim * v * .2 * (1 - k0); pa[k + 2] = lz + (ez - lz) * u + _sn.z * bulge;
+          pa[k] = lx + (ex - lx) * u + _sn.x * (bulge + lee) + _sc.x * sh; pa[k + 1] = ly + (ey - ly) * u + bulge * .16 - roach - lim * v * .2 * (1 - k0); pa[k + 2] = lz + (ez - lz) * u + _sn.z * (bulge + lee) + _sc.z * sh;
         } }
       spinG.attributes.position.needsUpdate = true; spinG.computeVertexNormals(); if (G.userData.sailBaked) sailShade(spinG);
       if (k0 > .25) { poleM.visible = true; setPole(poleBase, tack); }
@@ -1877,7 +1882,7 @@
     const G = VRR.rgrab; if (!G || !G.ray) return;
     const pl = new THREE.Plane(); const n = new THREE.Vector3(0, 0, 1).transformDirection(w.wheel.matrixWorld); const c = w.wheel.getWorldPosition(new THREE.Vector3()); pl.setFromNormalAndCoplanarPoint(n, c);
     const p = new THREE.Ray(src.o, src.d).intersectPlane(pl, new THREE.Vector3()); if (!p) return;
-    const a = wheelAngleOf(w, p); VRR.wa = clamp(VRR.wa + wrapA(a - G.a), -WA_MAX, WA_MAX); G.a = a;
+    const a = wheelAngleOf(w, p); VRR.wa = clamp(VRR.wa + wrapA(a - G.a) * (WA_MAX / (Math.PI / 2)), -WA_MAX, WA_MAX); G.a = a;
   }
   function wheelRelease(h) {
     const S = VRR, G = S.grabs && S.grabs[h]; if (!G) return; delete S.grabs[h];
@@ -2019,12 +2024,18 @@
              Most: megfogás után a kezed bárhol lehet; 25 cm oldalra = majdnem teljes kitérítés; a kerék simán követ. Elengedés: CSAK nyitott tenyérrel. */
           const lp = G.w.wheel.worldToLocal(_wv.copy(pt));
           if (Math.hypot(lp.x, lp.y, lp.z) > 1.4) { wheelRelease(h); S.hold[h] = holding; return; }
-          if (G.x0 == null) { G.x0 = lp.x; G.wa0 = S.wa; }
-          const tgW = clamp(G.wa0 - (lp.x - G.x0) * (WA_MAX * .8 / .25), -WA_MAX, WA_MAX); S.wa += (tgW - S.wa) * Math.min(1, dt * 8); S.wv = 0;
+          /* 2026-11-12 01:52 (tulajdonos: „választható legyen a hagyományos nagy kormánykerék is. Megfogás után ne kelljen nagy kézmozdulat: a végállás a középtől 90–90 fok
+             legyen; a kerék tudjon egy kicsit tovább fordulni, és ha a végállásnál tovább húzom a kezem, NE engedje el a kormányt”):
+             a kerék a kéz ELFORDULÁSÁT követi a tengely körül (a megfogástól számítva, lépésenként összegezve); ±90° = teljes kormánykitérés; +12°-ot még túlfordul (látszik),
+             de a kormány ott megáll, és a fogás megmarad – elengedni csak nyitott tenyérrel lehet. A tengelyhez túl közel (14 cm-en belül) a szög nem számít (ott ugrálna). */
+          { const rr2 = Math.hypot(lp.x, lp.y), aN = Math.atan2(-lp.x, lp.y), Q = Math.PI / 2;
+            if (G.aP == null) { G.aP = aN; G.wAng = S.wa / WA_MAX * Q; }
+            if (rr2 > .14) { G.wAng = clamp(G.wAng + wrapA(aN - G.aP), -Q - .21, Q + .21); G.aP = aN; }
+            const tgW = clamp(G.wAng / Q, -1, 1) * WA_MAX; S.wa += (tgW - S.wa) * Math.min(1, dt * 14); S.wv = 0; S.wOver = G.wAng - clamp(G.wAng, -Q, Q); }
           G.hist.push([W.t, S.wa]); while (G.hist.length > 2 && W.t - G.hist[0][0] > .2) G.hist.shift();
         } else if (holding && !S.hold[h]) {   /* fogás kezdete: a kéz a perem mellett zárul (vagy csippent) */
           S.ck.wheels.forEach((w) => { if (S.grabs[h]) return; const lp = w.wheel.worldToLocal(_wv.copy(pt)), r = Math.hypot(lp.x, lp.y);
-            if (Math.abs(lp.z) < .36 && r > w.WR - .34 && r < w.WR + .34) { const a0 = Math.atan2(-lp.x, lp.y); S.grabs[h] = { w, a: a0, f: a0, key: h, ray: false, hist: [[W.t, S.wa]] }; S.wv = 0; vrGripHand(w, h, a0 - S.wa); try { flap(.02); X.pulse && X.pulse(h, .5, 30); } catch (e) {} } });
+            if (Math.abs(lp.z) < .36 && r > w.WR - .34 && r < w.WR + .34) { const a0 = Math.atan2(-lp.x, lp.y); S.grabs[h] = { w, a: a0, f: a0, key: h, ray: false, hist: [[W.t, S.wa]] }; S.wv = 0; vrGripHand(w, h, a0 - (S.wVis || 0)); try { flap(.02); X.pulse && X.pulse(h, .5, 30); } catch (e) {} } });
         }
         S.hold[h] = holding;
       });
@@ -2042,7 +2053,9 @@
       S.wv = 0; S.wa += (0 - S.wa) * Math.min(1, dt * 1.6); if (Math.abs(S.wa) < .004) S.wa = 0;   /* 2026-11-11: elengedve a kormány simán középre áll – a hajó egyenesben marad, nem fordul tovább */
     }
     { const dT = S.wa / WA_MAX * .55; S.del = (S.del || 0) + (dT - (S.del || 0)) * Math.min(1, dt * 4.5); }   /* a lapát simán, kis késéssel követi a kereket (nagy hajó) */
-    S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wa; const want = S.grab && S.grab.w === w ? 1.6 : (VRR.wHover ? .25 : 0) + (!S.everGrab && S.st === "pre" && w.sd < 0 ? .25 + .25 * Math.sin(W.t * 4) : 0); w.gripM.emissiveIntensity += (want - w.gripM.emissiveIntensity) * Math.min(1, dt * 8); });
+    if (!S.grab) S.wOver = (S.wOver || 0) * Math.max(0, 1 - dt * 8);
+    S.wVis = S.wa / WA_MAX * (Math.PI / 2) + (S.wOver || 0);   /* a kerék látszó elfordulása: ±90° a végállás (+ kis túlfordulás) */
+    S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wVis; const want = S.grab && S.grab.w === w ? 1.6 : (VRR.wHover ? .25 : 0) + (!S.everGrab && S.st === "pre" && w.sd < 0 ? .25 + .25 * Math.sin(W.t * 4) : 0); w.gripM.emissiveIntensity += (want - w.gripM.emissiveIntensity) * Math.min(1, dt * 8); });
     if (S.tiller) { const TI = S.ck.tiller, th = S.wa / WA_MAX * TI.TMAX; TI.til.rotation.y = th;   /* a rúd a kormányállást mutatja; a toldó a csuklótól a kézig (vagy nyugalmi helyére) ér */
       const tx = Math.sin(th) * TI.TL, tz = TI.pz + Math.cos(th) * TI.TL, G = S.grab && S.grab.tiller ? S.grab : null;
       _wv.copy(TI.rest).applyAxisAngle(_ty, th);   /* a toldó MEREV: a rúddal együtt fordul, nem csuklik */ (TI.dir || (TI.dir = new THREE.Vector3())).copy(_wv);
@@ -2393,19 +2406,25 @@
   function vrPanel(P) {
     const S = VRR;
     P.title(`Vitorlásverseny · ${S.lvl}. futam · ${S.C.name} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · szél ${(S.tws / KN).toFixed(0)} csomó`);
-    P.row(0, S.msgT > 0 ? S.msg : "Fogd meg a kormánykereket (csippentés), és forgasd: jobbra = jobbra fordul.", "#ffd166");
+    P.row(0, S.msgT > 0 ? S.msg : S.tiller ? "Botkormány: fogd meg a mellkasod előtt – eltolod: jobbra, a válladhoz húzod: balra." : "Kormánykerék: fogd meg a peremét – negyed fordulat (90°) a végállás.", "#ffd166");
     P.row(1, S.ocs ? "KORAI RAJT – menj vissza a rajtvonal mögé, aztán lépd át újra" : S.st === "pre" ? "Rajt előtt maradj a vonal mögött – a rajtjelre (hosszú kürt) lépd át" : S.next < S.marks.length ? `Következő: ${S.next + 1}. bója (${S.marks.length} van) – bal kéz felől kerüld` : "Utolsó szakasz: át a rajtvonalon!", "#ffffff");
     P.row(2, S.st === "done" ? S.res.map((q, i) => `${i + 1}. ${q.n} ${mmss(q.t)}`).join(" · ") : "A sárga fényoszlop mutatja a következő bóját.", "#7fd3ff");
     P.row(3, S.best[S.lvl] ? `Legjobb időd ezen a pályán: ${mmss(S.best[S.lvl])}` : "Szél ellen nem lehet menni: cikcakkban (cirkálva) haladj!", "#c9a24a");
     if (S.st === "done") P.buttons([["↻ Újra", () => vrSetup(S.lvl)], ["Tovább ▸ " + (S.lvl + 1) + ". futam", () => vrSetup(S.lvl + 1)], ["‹ Vissza a sétához", () => W.close()]]);
     else P.buttons([["Egyenesbe", () => { S.wa = 0; }], ["↻ Újrakezdés", () => vrSetup(S.lvl)], [S.seated ? "🧍 Álló mód" : "🪑 Ülő mód", () => vrSeat()], ["‹ Vissza", () => W.close()]]);
-    P.buttons([[S.noSigns ? "🪧 Táblák mutatása" : "🪧 Táblák elrejtése", vrSigns]], 1);
+    P.buttons([[S.tiller ? "☸ Kormánykerékre váltok" : "⎯ Botkormányra váltok", vrSteerMode]], 1);
   }
+  /* kormánymód váltása: botkormány (alap) ↔ kormánykerék; megjegyzi (localStorage „zephyr-kormany”: bot / kerek) */
+  function vrSteerMode() { const S = VRR, CK2 = S.ck; if (!CK2) return; try { vrRelease(); } catch (e) {} S.tiller = !S.tiller; S.wa = 0; S.wOver = 0;
+    try { localStorage.setItem("zephyr-kormany", S.tiller ? "bot" : "kerek"); } catch (e) {}
+    CK2.wheels.forEach((w) => { w.wheel.visible = !S.tiller; w.axle.visible = !S.tiller; if (S.tiller) T.xr.extra.delete(w.hit); else { if (!w.hit.userData.xr) w.hit.userData.xr = { hover: (on) => { VRR.wHover = on; }, down: (h, src, key) => vrGrab(w, src, key, true), drag: (src) => vrDrag(w, src), up: () => { VRR.rgrab = null; } }; T.xr.extra.add(w.hit); if (W.objs.indexOf(w.hit) < 0) W.objs.push(w.hit); } });
+    CK2.tiller.til.visible = CK2.tiller.ext.visible = S.tiller; if (S.helpL) S.helpL.visible = false; S.everGrab = true;
+    S.msg = S.tiller ? "Botkormány: fogd meg a mellkasod előtt – eltolod: jobbra, a válladhoz húzod: balra." : "Kormánykerék: fogd meg a peremét, és fordítsd – negyed fordulat (90°) a végállás."; S.msgT = 7; W.panelDirty = 1; }
   function vrSigns() { VRR.noSigns = !VRR.noSigns; try { localStorage.setItem("zephyr-verseny-tablak", VRR.noSigns ? "0" : "1"); } catch (e) {} W.panelDirty = 1; }
   function vrSeat() { VRR.seated = !VRR.seated; try { localStorage.setItem("zephyr-vr-ules", VRR.seated ? "1" : "0"); } catch (e) {} W.root.position.y = VRR.baseY - (VRR.seated && T.inVR ? .45 : 0); W.panelDirty = 1; }
   function vrWrist() {
     const S = VRR;
-    return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", "Következő futam", () => vrSetup(S.lvl + 1)], ["◂", "Előző futam", () => vrSetup(Math.max(1, S.lvl - 1))], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
+    return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", "Következő futam", () => vrSetup(S.lvl + 1)], ["◂", "Előző futam", () => vrSetup(Math.max(1, S.lvl - 1))], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
       ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
   }
   function vrHud(H) {

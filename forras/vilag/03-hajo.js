@@ -548,13 +548,18 @@
         for (let i = 0; i <= nu; i++) { const u = i / nu, k = (j * (nu + 1) + i) * 3;
           const lx = tack.x + (head.x - tack.x) * v, ly = tack.y + (head.y - tack.y) * v, lz = tack.z + (head.z - tack.z) * v;
           const ex = clew.x + (head.x - clew.x) * v, ey = clew.y + (head.y - clew.y) * v, ez = clew.z + (head.z - clew.z) * v;
-          let bulge = F * .44 * fill * Math.pow(Math.sin(Math.PI * u), .85) * Math.pow(Math.sin(Math.PI * Math.min(1, v * 1.03 + .04)), .6) * (1 + .025 * Math.sin(S.t * 3.1 + v * 6));
+          /* 2026-11-12 01:52 (tulajdonos: „a spinakker legyen sokkal tökéletesebb, kidolgozottabb”): teltebb has (a húr 58%-a), széles „vállak” (a vitorla a közepén a talpnál is
+             szélesebb – nem háromszög, hanem ballon), ívelt talp, a kilépő él finoman pereg, az egész lassan lélegzik a széllel. */
+          let bulge = F * .58 * fill * Math.pow(Math.sin(Math.PI * u), .8) * Math.pow(Math.sin(Math.PI * Math.min(1, v * .98 + .05)), .55) * (1 + .03 * Math.sin(S.t * 1.15) + .02 * Math.sin(S.t * 3.1 + v * 6));
+          const sh = (u - .5) * F * .62 * fill * Math.pow(Math.sin(Math.PI * clamp(v * 1.02, 0, 1)), .9);                    /* vállak: oldalra szélesedik */
+          const roach = v < .16 ? (1 - v / .16) * Math.sin(Math.PI * u) * .42 * fill : 0;                                     /* ívelt, lelógó talp */
+          const lee = u > .84 ? (u - .84) / .16 * .05 * F * fill * Math.sin(S.t * 8.5 + v * 15) * Math.sin(Math.PI * v) : 0;   /* a kilépő él pergése */
           /* belépő él (a rúd felőli szél) behajlása – a vitorla közepe táján a legerősebb */
           const ce = u < .3 ? (1 - u / .3) ** 2 * Math.max(0, Math.sin(Math.PI * clamp((v - .18) / .72, 0, 1))) : 0;
           bulge -= ce * S.scurl * 1.1 * fill; bulge *= 1 + pop;
           /* ernyedt (felhúzás közben / túl éles szögnél): lengő, csapkodó szövet */
           if (lim > .01) bulge += lim * F * .06 * flogW(u, v, om) + lim * .35 * Math.sin(S.t * 1.3 + v * 2);
-          pa[k] = lx + (ex - lx) * u + _sn.x * bulge; pa[k + 1] = ly + (ey - ly) * u + bulge * .12 - lim * v * .2 * (1 - k0); pa[k + 2] = lz + (ez - lz) * u + _sn.z * bulge;
+          pa[k] = lx + (ex - lx) * u + _sn.x * (bulge + lee) + _sc.x * sh; pa[k + 1] = ly + (ey - ly) * u + bulge * .16 - roach - lim * v * .2 * (1 - k0); pa[k + 2] = lz + (ez - lz) * u + _sn.z * (bulge + lee) + _sc.z * sh;
         } }
       spinG.attributes.position.needsUpdate = true; spinG.computeVertexNormals(); if (G.userData.sailBaked) sailShade(spinG);
       if (k0 > .25) { poleM.visible = true; setPole(poleBase, tack); }
