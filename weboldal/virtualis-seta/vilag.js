@@ -1693,12 +1693,12 @@
           const rail = pod.children.filter((m) => m.material === chrome), hood = pod.children.filter((m) => m.geometry && m.geometry.type === "BoxGeometry" && m.material === carbon);
           /* 2026-11-12 09:55 (tulajdonos: „botkormánynál is cseréld fel a két műszert”): a térképplotter MINDIG a kormányoszlop tetején ül; a szélműszer botkormánynál az
              alacsony oldalkonzolon (kerek házban), keréknél a kerék közepében. */
-          const dh = new THREE.Group(); ped.add(dh); dh.position.set(0, 1.07, -.185); dh.rotation.set(.2, Math.PI, 0); dh.scale.setScalar(.6);   /* 2026-11-12 10:02 (tulajdonos): botkormánynál a szélműszer KÖZVETLENÜL a térkép alatt ül, a kormányoszlop fejébe építve – nem oldalra kitolva */
+          const dh = new THREE.Group(); ped.add(dh); dh.position.set(0, .88, -.14); dh.rotation.set(.38, Math.PI, 0); dh.scale.setScalar(.6);   /* 2026-11-12 10:02 (tulajdonos): botkormánynál a szélműszer KÖZVETLENÜL a térkép alatt ül, a kormányoszlop fejébe építve – nem oldalra kitolva */
           { const d1 = mesh(new THREE.CylinderGeometry(.215, .19, .05, 32), carbon, dh); d1.rotation.x = Math.PI / 2; d1.position.z = -.03; const r1 = mesh(new THREE.TorusGeometry(.2, .012, 8, 36), chrome, dh); r1.position.z = -.004; }
           { const pst2 = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), carbon, ped); pst2.position.set(0, 1.2, -.12); pst2.rotation.x = -.35; }
           G.userData.podSet = (til) => { mT.visible = false; dh.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = false; }); hood.forEach((m) => { m.visible = false; });
             pod.position.set(0, 1.35, -.2); pod.rotation.set(.3, Math.PI, 0); pod.scale.setScalar(.62);
-            if (til) { scr.position.set(0, 1.07, -.185); scr.rotation.set(.2, Math.PI, 0); scr.scale.setScalar(.48); scr.translateZ(.002); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
+            if (til) { scr.position.set(0, .88, -.14); scr.rotation.set(.38, Math.PI, 0); scr.scale.setScalar(.48);   /* 2026-11-12 10:05 (tulajdonos): lejjebb, hogy a két műszer ne takarja egymást – kis rés legyen köztük */ scr.translateZ(.002); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
           G.userData.podSet(true); } }
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
       const [gb, mb] = rodGeom(new THREE.Vector3(-.22, 0, .25), new THREE.Vector3(-.22, .95, .1), .016, 8); mesh(gb, chrome, ped).applyMatrix4(mb);
