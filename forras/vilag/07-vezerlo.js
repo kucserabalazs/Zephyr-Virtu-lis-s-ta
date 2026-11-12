@@ -28,7 +28,7 @@
       click: (h) => { if (!h || !h.uv) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; const b = P.btns.find((q) => x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) { b.fn(); P.draw(); } },
       /* ÁTHELYEZÉS (2026. nov. 9., a tulajdonos kérése: „mindig útban van”): a panel fejlécét megfogva (csippentve) bárhová húzható a térben;
          a kéz előre-hátra mozdításával közelebb/távolabb tolható; elengedve ott marad, és a helyét világonként megjegyzi. */
-      down: (h, S0, key) => { if (!h || !h.uv || !S0 || !S0.o) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; if (y > 165 || x > PW - 250) return;
+      down: (h, S0, key, bar) => { if (!S0 || !S0.o) return; if (!bar) { if (!h || !h.uv) return; const x = h.uv.x * PW, y = (1 - h.uv.y) * PH; if (y > 165 || x > PW - 250) return; }
         /* 2026-11-11 18:54 (tulajdonos: „a csippentés pillanatában eltávolodik tőlem, nem abból az állásból indul, ahol van”): a fogás a kéz PILLANATNYI sugarához
            képest rögzül (nem a korábbi találati ponthoz), a dőlése megmarad, és a kéz előre-hátra mozgása csak 5 cm holtjáték után, szelídebben (×2) tol rajta. */
         const head = T.headPos ? T.headPos() : null, dist0 = S0.d ? Math.max(.15, P.m.position.clone().sub(S0.o).dot(S0.d)) : h.distance, hp = S0.d ? S0.o.clone().addScaledVector(S0.d, dist0) : h.point.clone();
@@ -54,6 +54,14 @@
       pd(false); pm.visible = false;
       pm.userData.xr = { hover: (on) => pd(on), click: () => { W.togglePanel(); pd(false); } };
       P.pill = pm; }
+    /* 2026-11-12 01:37 – FOGÓSÁV a panel alatt, a Quest saját ablakaihoz hasonlóan (tulajdonos: „mutatom, hogy működik itt a menü, amikor megfogom és elmozdítom a térben –
+       le tudnád ugyanígy modellezni a saját oldalunkra?”): kis fehér sáv a panel alatt; rámutatva kifényesedik és megnő; rácsippentve és tartva a panel a kéz sugarát követi
+       (ugyanabban a távolságban, mindig feléd fordulva), a kéz előre-hátra mozdítása közelebb/távolabb viszi; elengedve ott marad, és megjegyzi a helyét. */
+    { const hh = .78 * PH / PW, bg = new THREE.PlaneGeometry(.2, .016), bm = new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: .6, depthTest: false, depthWrite: false }), hg = new THREE.PlaneGeometry(.34, .09), hm = new THREE.MeshBasicMaterial({ visible: false });
+      W.disposables.push(bg, bm, hg, hm); const bar = new THREE.Mesh(bg, bm), hit = new THREE.Mesh(hg, hm); bar.renderOrder = 996; bar.position.set(0, -hh / 2 - .04, .002); hit.position.copy(bar.position); m.add(bar); m.add(hit); P.bar = bar; P.barHit = hit;
+      hit.userData.xr = { hover: (on) => { P.barHov = !!on; }, down: (h, S0, key) => m.userData.xr.down(h, S0, key, true), drag: (S0, key) => m.userData.xr.drag(S0, key), up: () => m.userData.xr.up() };
+      W.upd.push((dt) => { const t = P.drag ? 1 : P.barHov ? .7 : 0; bar.material.opacity += ((.55 + .45 * t) - bar.material.opacity) * Math.min(1, dt * 10); const sx = 1 + .35 * t; bar.scale.x += (sx - bar.scale.x) * Math.min(1, dt * 10); bar.scale.y = 1 + .5 * t;
+        bar.material.color.set(P.drag ? "#e4bb63" : "#ffffff"); if (T.inVR && m.parent && !W.panelHidden) T.xr.extra.add(hit); else T.xr.extra.delete(hit); }); }
     P.draw = () => {
       const g = cv.getContext("2d"); P.btns = []; g.clearRect(0, 0, PW, PH);
       const bg = g.createLinearGradient(0, 0, 0, PH); bg.addColorStop(0, "rgba(16,42,68,.97)"); bg.addColorStop(1, "rgba(7,24,44,.97)");   /* VR 2.0 „Nautical Glass” */
