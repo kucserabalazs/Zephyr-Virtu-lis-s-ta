@@ -690,7 +690,6 @@ Kérés: (1) álló hajónál úgy érzi, a hajó oldalra csúszik; (2) „a kor
 - Kérés: a kormányrúd legalább kétszer olyan hosszú legyen (nem tudja teljesen eltolni magától, hogy jobbra forduljon). KÉSZ: rúd 0,9 → 1,7 m, toldó 0,8 → 1,45 m (átlósan fut a kézhez, markolat a test mellett), teljes kitérés 12° rúdszögnél (kb. 35 cm kézút). `TIL` a 05b-ben.
 - Kérés: a sakknál (és bármely világ-menünél) a menü szélére csippentve a panel azonnal eltávolodik, nem a jelenlegi helyéről indul. KÉSZ (07-vezerlo.js): a fogás a kéz pillanatnyi sugarához rögzül, a panel dőlése megmarad (eddig −0,15-re ugrott), az első 0,35 mp kézrándulása nem számít, az előre-hátra tolás 5 cm holtjátékkal és ×2 (volt ×4). A mentett helyzet a dőlést is tárolja (`t`).
 - Szemüvegben nem ellenőrzött.
-<<<<<<< HEAD
 ## 2026-11-11 18:56 – „A hullámvasutat fejleszd ennél sokkal jobbra, tedd a VR játékok közé a terepasztallal együtt, és legyen elérhető a menüből a VR játékok”
 (A kérés a mentőmellényes projekt beszélgetésébe érkezett; ott készült el, erre a tárolóra feltöltve.)
 - MENÜ: a „3D világ / Virtuális világ” neve mindenhol **VR játékok** (2D választó, fejléc-gomb, VR-főmenü csempéje „🎮 VR játékok”, VR-körmenü). A VR-menü „VR játékok” oldalán most 5 játék van: Vitorlásverseny, Hullámvasút, Terepasztal, Vitorlás sakk, Makett (eddig a hullámvasút a VR-panelről hiányzott).
@@ -704,12 +703,10 @@ Kérés: (1) álló hajónál úgy érzi, a hajó oldalra csúszik; (2) „a kor
   A hullámvasút állomásáról is elérhető („Terepasztal” gomb). A vad pálya élményparkja az asztalon nem látszik.
 - Teszt: gépi böngészőben (2D) a hullámvasút és a terepasztal megnyílik, a menet elindul, hiba nélkül. **Szemüvegben NEM próbáltam**: az asztal magassága/távolsága (szem alatt 62 cm, 1,85 m-re), a karikák mérete, a felolvasás a Quest böngszőjében és a terhelés ellenőrizendő.
 - Őszintén: ez több részletet és életet ad, de a Quest saját környezetének (modellezett, kisütött glTF-világ) szintjét kódból rakott formákkal továbbra sem éri el.
-=======
 
 ## 2026-11-11 23:07 – „A rudat lehessen több helyen megfogni, ahogy az életben”
 - KÉSZ (05b): a kormányrúd és a toldó teljes hosszában fogható (a kézhez legközelebbi pont, 30 cm-en belül). Rúdon fogva: a kéz iránya a forgásponttól adja a szöget; toldón fogva: a fogás helyéig érő toldóhosszal számol (`G.r` / `G.s`). Két kézzel is fogható. Szemüvegben nem ellenőrzött.
 - 18:57-kor kérte a zephyrmellény.hu elérhetővé tételét és kimásolását, majd 18:58-kor „stopp” – azzal NEM kezdtem el semmit, újabb utasításra vár.
->>>>>>> d631647 (VR verseny: a kormányrúd és a toldó bárhol megfogható)
 
 ## 2026-11-11 23:17 – terepasztal telefonon: „nem mozdítható, nem tudok ráközelíteni, nem látszik semmi, használhatatlan, kidolgozatlan”
 - KÉSZ (06i): a tó tölti ki az asztalt (`hvTableFit`: a partvonal főtengelye az asztal hosszába fordul, lépték a tó hosszához); egy ujjal húzva csúszik, két ujjal nagyít és forgat, gépen egér + görgő (`hvTable2D`); gombok: Nagyítás, Kicsinyítés, Kövesd a vonatot, Alaphelyzet; az asztal széle levágja, ami kilógna (`hvTableClip`, vágósíkok); telefonon felülről döntve, álló képnél az asztal hossza a képernyő hosszában. Gépi telefon-méretű próbán működik; valódi telefonon/szemüvegben nem ellenőrzött.
@@ -947,3 +944,10 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 - Megcsinálva (05b-vr-verseny.js): (1) a szélbe húzás a saját hajóról törölve – a széllökés csak dönt és gyorsít; (2) szélben állva a hajó középen álló kormánnyal már NEM esik le magától (a 11-12 20:01-es „kijutás a szélből” csak arra segít, amerre a kormányt tartod); (3) az ellenfelek (vrRivalTick) fizikája változatlan.
 - Kormánykerék iránya (00:40: „fordítottan működik … arrafelé forduljon a hajó, amerre fordítom a kormányt”): az ökölvezérlés a hajó helyi x-ét használta, ami BAL felé pozitív → keréknél az ököl jobbra vitele balra kormányzott. Most KERÉKNÉL ököl jobbra = kerék jobbra = hajó jobbra. BOTKORMÁNYNÁL szándékosan maradt a valós irány (rúd jobbra = hajó balra) – ha a tulajdonos ezt is fordítva kéri, a `sg` előjelet kell egységesen −1-re tenni.
 - Gépi teszt: dőlésben, egyenes kormánnyal 3 mp alatt az irány változása 0; szélben állva 0; pozitív kormányállásra jobbra fordul, a kerék az óramutató szerint. Az ököl irányát gép nem tudja utánozni – SZEMÜVEGBEN NINCS ELLENŐRIZVE.
+## 2026-11-13 00:51–01:20 – SZERKESZTŐ (táblák + kezdő nézet + kezdő kép)
+- Kérés: „eltűnt a szerkesztőm… nem tudom a képeket is beállítani, hogy kezdő képernyő meg társai. Csináljunk egy rendes szerkesztőt, hogy ne mindenért téged kelljen kérni.”
+- KÉSZ: az „Útjelzők igazítása” sávból egységes **✎ Szerkesztő** lett (`#szerkeszto`, a régi `#utjelzok` is nyitja): tábla húzása = áthelyezés, kattintás = átírás, „📍 Ez legyen a kezdő nézet” (képenként, `zephyr-kezdo-nezet`), „🏠 Ez legyen a kezdő kép” (`zephyr-kezdo-kep`), „Ennek a helynek: eredeti”, „Kész”.
+- Nem tűnik el: képváltás/újratöltés után is bekapcsolva marad (sessionStorage `zephyr-szerk`) a „Kész”-ig; ahol egyszer megnyitották, bal alul kis „✎ Szerkesztő” gomb marad (localStorage `zephyr-szerk-eszkoz`; vendég nem látja).
+- Mentés: azonnal, ezen az eszközön; tulajdonosként belépve a szerverre is (`nav_save` új mezői: `views`, `start`; a `nav` válaszban is). A GitHub-tesztoldalon nincs szerver → ott csak eszközre ment. Az élő oldalra NEM került fel.
+- A régi `#szerkesztes` (alaprajz/bútorok, „Változások másolása”) változatlanul megvan.
+- Gépi teszt: e1.js rendben (megnyitás, kezdő nézet, újratöltés, kezdő kép, Kész, gomb). Teendő: FOLYTATAS.md-ben egy `<<<<<<< HEAD` jelölő maradt a 2026-11-11 18:56 résznél – takarítandó.

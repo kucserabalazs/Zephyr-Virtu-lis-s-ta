@@ -1662,7 +1662,7 @@ body.zx .tool-book, body.zx #btnBook { display: none !important; }
 .zne-ren button { all: unset; cursor: pointer; padding: 11px 16px; border-radius: 999px; font: 700 14px/1 Inter, sans-serif; background: rgba(255,255,255,.14); color: #fff; }
 .zne-ren button.zne-ok { background: linear-gradient(180deg, #E8C26C, #D4A13A); color: #07182C; }
 .zne-bar .zne-msg { flex: 1 1 260px; color: #DDE8F2; }
-.zne-bar button { all: unset; cursor: pointer; padding: 9px 14px; border-radius: 999px; font: 700 14px/1 Inter, sans-serif; background: rgba(255,255,255,.12); color: #fff; }
+.zne-bar button { all: unset; cursor: pointer; padding: 11px 15px; border-radius: 999px; font: 700 16px/1 Inter, sans-serif; background: rgba(255,255,255,.12); color: #fff; }
 .zne-bar button.zne-ok { background: linear-gradient(180deg, #E8C26C, #D4A13A); color: #07182C; }
 .zne-bar button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 body.nav-edit .zx-book, body.nav-edit .hint { display: none !important; }
@@ -10764,6 +10764,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const B = window.ZephyrBooking, url = B && B.apiUrl ? B.apiUrl("/nav") : null; if (!url) return;
       try { const r = await fetch(url, { cache: "no-store" }); if (!r.ok) return; const j = await r.json(); if (!j) return;
         NAV_SRV.vr = j.nav || {}; NAV_SRV.d2 = j.nav2d || {}; NAV_NAMES.srv = j.names && typeof j.names === "object" ? j.names : {};
+        try { ED.vSrv = j.views && typeof j.views === "object" ? j.views : {}; ED.sSrv = typeof j.start === "string" ? j.start : ""; edApplyViews(); try { localStorage.setItem("zephyr-kezdo-kep-srv", ED.sSrv); } catch (e2) {} } catch (e2) {}
         if (spots && current) vrnClear();
       } catch (e) {}
     }, 400);
@@ -10774,7 +10775,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     NAV_SAVE_T = setTimeout(async () => {
       const B = window.ZephyrBooking, url = B && B.apiUrl ? B.apiUrl("/nav_save") : null; let tok = ""; try { tok = localStorage.getItem("zephyr-admin-token") || ""; } catch (e) {}
       if (!url || !tok) { navMsg("Elmentve ezen az eszközön. Mindenkinek: lépj be tulajdonosként, és mozdítsd meg újra."); return; }
-      try { const all = navMerged(mode); const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-Zephyr-Token": tok }, body: JSON.stringify({ mode: mode === "vr" ? "vr" : "2d", nav: all, names: navNamesMerged() }), cache: "no-store" });
+      try { const all = navMerged(mode); const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-Zephyr-Token": tok }, body: JSON.stringify({ mode: mode === "vr" ? "vr" : "2d", nav: all, names: navNamesMerged(), views: edViewsMerged(), start: edStart() }), cache: "no-store" });
         if (r.ok) NAV_SRV[mode] = all;
         navMsg(r.ok ? "Elmentve mindenkinek ✓" : r.status === 401 ? "Lejárt a belépés – elmentve ezen az eszközön." : "Nem sikerült a szerverre menteni – ezen az eszközön megvan.");
       } catch (e) { navMsg("Nincs kapcsolat – ezen az eszközön elmentve."); }
@@ -10787,15 +10788,35 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (!NE2.on) { if (NE2.bar) NE2.bar.hidden = true; return; }
     if (!NE2.bar) {
       const b = document.createElement("div"); b.className = "zne-bar"; b.setAttribute("role", "status");
-      b.innerHTML = `<b>Útjelzők igazítása (2D)</b><span class="zne-msg"></span><button type="button" data-ne="reset">Ennek a helynek: eredeti</button><button type="button" data-ne="done" class="zne-ok">Kész</button>`;
-      b.addEventListener("click", (e) => { const t = e.target.closest("button"); if (!t) return; if (t.dataset.ne === "done") nav2dEdit(false); else if (t.dataset.ne === "reset") { navResetScene(); } });
+      b.innerHTML = `<b>✎ Szerkesztő</b><span class="zne-msg"></span><button type="button" data-ne="view">📍 Ez legyen a kezdő nézet</button><button type="button" data-ne="start">🏠 Ez legyen a kezdő kép</button><button type="button" data-ne="reset">Ennek a helynek: eredeti</button><button type="button" data-ne="done" class="zne-ok">Kész</button>`;
+      b.addEventListener("click", (e) => { const t = e.target.closest("button"); if (!t) return; const a = t.dataset.ne; if (a === "done") nav2dEdit(false); else if (a === "reset") { edViewSet(current, null); navResetScene(); } else if (a === "view") edViewNow(); else if (a === "start") edStartSet(current); });
       document.body.appendChild(b); NE2.bar = b;
     }
-    NE2.bar.hidden = false; NE2.bar.querySelector(".zne-msg").textContent = NAV_OV_MSG || "Húzd a narancs gyűrűt a helyére (elengedve elmentődik) · kattints rá: átnevezés.";
+    NE2.bar.hidden = false; NE2.bar.querySelector(".zne-msg").textContent = NAV_OV_MSG || (nav2dOn() ? "Tábla: húzd a narancs gyűrűt a helyére · kattints rá: átírás. Minden magától elmentődik." : "Ebben a nézetben a táblák nem húzhatók – a kezdő nézet és a kezdő kép itt is beállítható.");
   }
-  function nav2dEdit(on) { NE2.on = !!on; NAV_OV_MSG = ""; document.body.classList.toggle("nav-edit", NE2.on); nav2dBar(); }
+  /* ---- SZERKESZTŐ (2026-11-13, tulajdonos: „csináljunk egy rendes szerkesztőt, hogy ne mindenért téged kelljen kérni”) ----
+     Egy sáv: táblák áthelyezése és átírása, a kép kezdő nézete, a séta kezdő képe. Minden azonnal elmentődik (ezen az eszközön; tulajdonosként belépve a szerverre is).
+     Bekapcsolva marad képváltás és újratöltés után is, amíg a „Kész” gombot meg nem nyomod. Ahol egyszer megnyitották, ott kis „✎ Szerkesztő” gomb marad (a vendégek nem látják). */
+  const ED = { vLoc: (() => { try { return JSON.parse(localStorage.getItem("zephyr-kezdo-nezet") || "{}") || {}; } catch (e) { return {}; } })(), vSrv: {}, sSrv: "", pill: null };
+  function edApplyViews() { Object.keys(SCENES).forEach((id) => { const sc = SCENES[id]; if (!("_s0" in sc)) sc._s0 = sc.s; const v = typeof ED.vLoc[id] === "number" ? ED.vLoc[id] : typeof ED.vSrv[id] === "number" ? ED.vSrv[id] : null; if (v == null) { if (sc._s0 === undefined) delete sc.s; else sc.s = sc._s0; } else sc.s = v; }); }
+  function edViewsMerged() { return Object.assign({}, ED.vSrv, ED.vLoc); }
+  function edViewSet(id, x) { if (!id) return; if (x == null) { delete ED.vLoc[id]; delete ED.vSrv[id]; } else ED.vLoc[id] = x; try { localStorage.setItem("zephyr-kezdo-nezet", JSON.stringify(ED.vLoc)); } catch (e) {} edApplyViews(); }
+  function edViewNow() { let x = null;
+    if (flat && flatEl) { const t = flatEl.firstChild, w = t.scrollWidth / 2; x = ((t.scrollLeft + t.clientWidth / 2) / w) % 1; }
+    else if (sceneEl && sceneEl.camera) { const v = new THREE.Vector3(); sceneEl.camera.getWorldDirection(v); x = ((Math.atan2(v.z, v.x) / (2 * Math.PI)) + 1) % 1; }
+    if (x === null || !current) return; edViewSet(current, Math.round(x * 1000) / 1000); try { sfx("pop"); } catch (e) {} navMsg("Kezdő nézet beállítva: " + SCENES[current].n + "."); navServerSave(navMode()); }
+  function edStartSet(id) { if (!id) return; try { localStorage.setItem("zephyr-kezdo-kep", id); } catch (e) {} try { sfx("pop"); } catch (e) {} navMsg("A séta mostantól itt indul: " + SCENES[id].n + "."); navServerSave(navMode()); }
+  function edStart() { let a = ""; try { a = localStorage.getItem("zephyr-kezdo-kep") || ""; } catch (e) {} return a || ED.sSrv || ""; }
+  function edPill() { let dev = ""; try { dev = localStorage.getItem("zephyr-szerk-eszkoz") || ""; } catch (e) {}
+    if (!dev || NE2.on) { if (ED.pill) ED.pill.hidden = true; return; }
+    if (!ED.pill) { const p = document.createElement("button"); p.type = "button"; p.textContent = "✎ Szerkesztő"; p.style.cssText = "position:fixed;z-index:59;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:11px 16px;border-radius:999px;border:2px solid rgba(228,187,99,.9);background:rgba(7,28,58,.9);color:#E4BB63;font:700 16px/1 Inter,system-ui,sans-serif;cursor:pointer"; p.addEventListener("click", () => nav2dEdit(true)); document.body.appendChild(p); ED.pill = p; }
+    ED.pill.hidden = false; }
+  function nav2dEdit(on) { NE2.on = !!on; NAV_OV_MSG = ""; document.body.classList.toggle("nav-edit", NE2.on); try { sessionStorage.setItem("zephyr-szerk", NE2.on ? "1" : ""); if (NE2.on) localStorage.setItem("zephyr-szerk-eszkoz", "1"); } catch (e) {} nav2dBar(); edPill(); }
   window.addEventListener("zephyr-nav-edit", () => nav2dEdit(true));
-  if (/#utjelzok\b/.test(location.hash)) setTimeout(() => nav2dEdit(true), 800);
+  { const want = () => /#(utjelzok|szerkeszto)\b/.test(location.hash); let keep = ""; try { keep = sessionStorage.getItem("zephyr-szerk") || ""; } catch (e) {}
+    try { edApplyViews(); } catch (e) {}
+    if (want() || keep) setTimeout(() => nav2dEdit(true), 800); else setTimeout(edPill, 1200);
+    window.addEventListener("hashchange", () => { if (want()) nav2dEdit(true); }); }
   function nav2dRay(ev) {
     const r = sceneEl.canvas.getBoundingClientRect(), x = ((ev.clientX - r.left) / r.width) * 2 - 1, y = -((ev.clientY - r.top) / r.height) * 2 + 1;
     const rc = _vrnRC || (_vrnRC = new THREE.Raycaster()), c = camObj(); if (!c) return null; rc.setFromCamera({ x, y }, c); return rc.ray;
@@ -13356,7 +13377,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "81530a6a70"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "fbb2f89aec"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -18038,7 +18059,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     wireTools();
     wireCube();
     const hash = decodeURIComponent((location.hash || "").slice(1));
-    const firstId = isVisible(hash) ? hash : "utca";
+    const firstId = isVisible(hash) ? hash : (() => { let a = ""; try { a = localStorage.getItem("zephyr-kezdo-kep") || localStorage.getItem("zephyr-kezdo-kep-srv") || ""; } catch (e) {} return a && isVisible(a) ? a : "utca"; })();   /* 2026-11-13: a szerkesztőben beállított kezdő kép */
     if (EDIT) renderEdit();
     let ok = true;
     try { await loadScript(0); } catch (e) { ok = false; }
