@@ -951,3 +951,8 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 - Mentés: azonnal, ezen az eszközön; tulajdonosként belépve a szerverre is (`nav_save` új mezői: `views`, `start`; a `nav` válaszban is). A GitHub-tesztoldalon nincs szerver → ott csak eszközre ment. Az élő oldalra NEM került fel.
 - A régi `#szerkesztes` (alaprajz/bútorok, „Változások másolása”) változatlanul megvan.
 - Gépi teszt: e1.js rendben (megnyitás, kezdő nézet, újratöltés, kezdő kép, Kész, gomb). Teendő: FOLYTATAS.md-ben egy `<<<<<<< HEAD` jelölő maradt a 2026-11-11 18:56 résznél – takarítandó.
+
+## 2026-11-13 01:14 – mini vitorlásverseny: viharfelhő
+- Kérés: „csináld meg a felhőt, hogy ne rángatózzanak a hajók alatta… és férjen el a saját kereteiben és legyen szép”.
+- OK: a hajók ringásának ÜTEME a vihar erejével szorzódott (`sin(t * (2 + sk*2))`) → ahogy a felhő közeledett, a fázis ugrált. Most az ütem állandó, csak a kilengés nő (kisebb mértékben). A hátszél-lökés 4,2× ki-be kapcsolása helyett lágy, legfeljebb 2,3× átmenet; villámcsapásnál 5× helyett 2,2×.
+- A felhő laposabb (62×17·Z) és lejjebb ül (`cy = ch*1.24 + 4.5`), így a teteje nem lóg ki a 104 px-es sávból (eddig ~18 px le volt vágva). Próba: `#vihar`. Gépi képen belefér; a mozgást élőben nem láttam.

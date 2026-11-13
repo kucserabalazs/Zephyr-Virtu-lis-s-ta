@@ -7337,7 +7337,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     }
     function buoyAt(x, y, n, sc, rot) { g.save(); g.translate(x, y); g.rotate(rot || 0); g.scale(sc, sc); buoy(0, 0, null, n); g.restore(); }
     function buoy(x, y, t, n) {  /* versenybója: felfújható henger, varratok, fehér sáv, csillanás, fodrozódó víz */
-      const sk = t == null ? 0 : stormAt(x), tt = t == null ? 0 : t, b = t == null ? 0 : Math.sin(tt * (2 + sk * 2) + x) * 1.2 * (1 + sk * 2.2), tilt = t == null ? 0 : Math.sin(tt * (1.6 + sk * 2.5) + x * .7) * .07 * (1 + sk * 4);  /* viharban erősen hánykolódik */
+      const sk = t == null ? 0 : stormAt(x), tt = t == null ? 0 : t, b = t == null ? 0 : Math.sin(tt * 2.4 + x) * 1.2 * (1 + sk * 1.3), tilt = t == null ? 0 : Math.sin(tt * 1.9 + x * .7) * .07 * (1 + sk * 1.8);  /* viharban erősen hánykolódik */
       const yel = n % 2, col = yel ? "#f2c21b" : "#e5262f", hi = yel ? "#ffe680" : "#ff7a70", dk = yel ? "#a87f08" : "#8e1717";
       if (t != null) {  /* tükörkép és táguló gyűrűk */
         g.save(); for (let k = 0; k < 4; k++) { g.globalAlpha = .26 - k * .05; g.fillStyle = k % 2 ? hi : col; g.fillRect(x - 4.5 + k * .6 + Math.sin(tt * 3 + k * 1.7 + x) * 1.3, y + 2.2 + k * 1.5, 9 - k * 1.8, .8); } g.restore();
@@ -8469,20 +8469,20 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
           if (p.ph === "away" && (e.hx < -.08 || e.hx > 1.08)) { extra = null; }
         }
       } else if (extra && extra.kind === "storm") {  /* kis viharfelhő (hajónyi): villámokat szór, alatta a vitorlások elszáguldanak */
-        const e = extra, cw = 58 * Z, ch = 20 * Z;
+        const e = extra, cw = 62 * Z, ch = 17 * Z;   /* 2026-11-13: laposabb, hogy teljes egészében beleférjen a sávba */
         if (e.t0 == null) { e.t0 = ts; e.cx = e.dir > 0 ? -.06 : 1.06; e.nb = ts + rnd(1, 2.5); e.bolt = 0; e.flash = 0; e.thunder = 0; e.drops = []; }
         e.cx += e.dir * .03 * dt;
-        const cxp = e.cx * W, cy = 18 + Math.sin(ts * .9) * 1.5, x0 = cxp - cw / 2;
+        const cxp = e.cx * W, cy = ch * 1.24 + 4.5 + Math.sin(ts * .9) * 1.2, x0 = cxp - cw / 2;   /* a felhő teteje a sáv felső szélén belül marad */
         /* a felhő alatt (és kicsit mögötte) a vitorlások hátszelet kapnak */
         stormNow = { x: cxp, y: cy, w: cw, dir: e.dir, k: Math.max(0, Math.min(1, Math.min(e.cx + .06, 1.06 - e.cx) * 5)) };
-        boats.forEach((b) => { const dx = (b.x * W - cxp) * e.dir; if (!b.turn && !b.hold && !b.sink && dx > -cw * .9 && dx < cw * .5) b.bt = 4.2; });
+        boats.forEach((b) => { const dx = (b.x * W - cxp) * e.dir; if (!b.turn && !b.hold && !b.sink) { const kk = Math.max(0, 1 - Math.abs(dx + cw * .2) / (cw * .9)); if (kk > 0) b.bt = 1 + 1.3 * kk * kk * (3 - 2 * kk); } });   /* lágy átmenetű hátszél (eddig 4,2× ugrott ki-be → rángatás) */
         /* villámok: néha; a mennydörgés csak egyszer, a jelenet közepén (a felhő a pálya közepén jár) */
         const mid = Math.abs(e.cx - .5) < .03;
         if (ts > e.nb || (mid && !e.thunder)) {
           e.nb = ts + rnd(1.6, 3.8); e.bolt = .3; e.flash = .3;
           let px = cxp + rnd(-cw * .3, cw * .3), py = cy + ch * .45; e.path = [[px, py]]; e.fork = null;
           while (py < wy - 2) { py += rnd(4, 8); px += rnd(-5, 5); e.path.push([px, Math.min(py, wy - 2)]); if (!e.fork && py > cy + 30) e.fork = [[px, py], [px + rnd(6, 10) * (Math.random() < .5 ? -1 : 1), py + rnd(8, 14)]]; }
-          const last2 = e.path[e.path.length - 1]; if (last2[1] >= wy - 2.5) { e.hit = { x: last2[0], t: ts }; boats.forEach((b) => { if (Math.abs(b.x * W - last2[0]) < 30 && !b.sink) { b.lf = 1; b.bt = 5; } }); }
+          const last2 = e.path[e.path.length - 1]; if (last2[1] >= wy - 2.5) { e.hit = { x: last2[0], t: ts }; boats.forEach((b) => { if (Math.abs(b.x * W - last2[0]) < 30 && !b.sink) { b.lf = 1; b.bt = 2.2; } }); }
           if (mid && !e.thunder) { e.thunder = 1; e.flash = .55; e.bolt = .45; if (audioOn()) { fxBurst(2600, .12, .35, "bandpass", .8, 900); setTimeout(() => { fxBurst(80, 3, .55, "lowpass", .6, 35); fxBurst(300, .9, .3, "lowpass", .7, 80); }, 260); } }
         }
         e.bolt = Math.max(0, e.bolt - dt); e.flash = Math.max(0, e.flash - dt * 1.4);
@@ -8709,7 +8709,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       const order = boats.slice().sort((p, q) => p.wy - q.wy);
       order.forEach((b) => { if (!b.sink) wake(b, ts); });
       const drawBoat = (b) => {
-        const skd = stormAt(b.x * W), bst = (b.boost || 1) - 1, bob = Math.sin(ts * (2.2 + skd * 2) + b.ph) * (1.2 + bst * .4 + skd * 1.4), heel = Math.sin(ts * (1.4 + skd * 2) + b.ph) * (.06 + skd * .1) + (b.turn ? -b.dir * .1 : 0) + bst * .07;
+        const skd = stormAt(b.x * W), bst = (b.boost || 1) - 1, bob = Math.sin(ts * 2.4 + b.ph) * (1.2 + bst * .4 + skd * 1.1), heel = Math.sin(ts * 1.7 + b.ph) * (.06 + skd * .07)   /* 2026-11-13: a ringás ÜTEME állandó (eddig a vihar erejével változott → rángatózott), csak a kilengés nő */ + (b.turn ? -b.dir * .1 : 0) + bst * .07;
         if (bst > .5) { const bx = b.x * W + b.dir * 12 * b.s * Z, by = wy - 1 - b.lane * 3; for (let k = 0; k < 6; k++) { const q = ((ts * 3 + k / 6 + b.ph) % 1); g.fillStyle = `rgba(255,255,255,${.85 * (1 - q) * Math.min(1, bst / 2)})`; g.beginPath(); g.arc(bx + b.dir * q * 6, by + 3 - Math.sin(q * Math.PI) * 6, .7 + q * 1.2, 0, Math.PI * 2); g.fill(); } }
         if (b.sink) {  /* süllyedő hajó: a vízvonal alatt eltűnik, megbillen */
           g.save(); g.beginPath(); g.rect(0, 0, W, wy + 2); g.clip();
