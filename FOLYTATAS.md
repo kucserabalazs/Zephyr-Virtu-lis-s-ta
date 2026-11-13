@@ -966,3 +966,10 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 ## 2026-11-13 02:26 – szerkesztő: tábla törlése és létrehozása
 - KÉSZ: „➕ Új tábla” gomb a szerkesztősávon (cél kiválasztása listából + felirat; oda kerül, amerre épp nézel, onnan húzható); a táblára kattintva a párbeszédben „🗑 Tábla törlése”. Tárolás: localStorage `zephyr-tablak` ({del, add}), szerveren `navdel` / `navadd` (`nav_save`, `nav`). `vrnLinks` szűri/kiegészíti. „Ennek a helynek: eredeti” ezeket is visszaállítja.
 - Gépi teszt (e3.js): létrehozás → megjelenik → törlés rendben. VR-ben a törlés/létrehozás NINCS (csak 2D-ben); a VR a 2D-ben beállított táblákat mutatja.
+
+## 2026-11-13 02:33 – szerkesztő bővítése; a „kezdő kép” gomb törölve
+- A tulajdonos: a „🏠 A séta ezzel a képpel induljon” gombot SENKI nem kérte, zavaró → TÖRÖLVE (a séta mindig az utcán indul, mint eddig). Tanulság: ne találjak ki funkciót; a „kezdő képernyő” nála a kép kezdő NÉZETÉT jelentette.
+- Kérés: egy gomb, ami a teljes szerkesztőfelületet nyitja; tábla létrehozás/törlés, sárga jelzések átrakása és újak létrehozása; a táblának ne csak a rúdja, hanem maga a tábla is vigyen tovább.
+- KÉSZ a ✎ Szerkesztő sávon: ➕ Új tábla · 📍 Nézet rögzítése ennél a képnél · ➕ Új sárga jelzés (listából sárga piktogram, vagy saját felirat) · 🗺 Alaprajz szerkesztő (a régi `#szerkesztes`, onnan „✎ Táblák, jelzések, nézetek” gomb vissza) · Ennek a helynek: eredeti · Kész. Sárga jelzés: rákattintás = kiválasztás → kattintás a képre = áthelyezés; kiválasztva megjelenik „🗑 Jelzés törlése” és (saját feliratnál) „✏ Jelzés szövege”. Tárolás: `zephyr-jelzesek` (mv/del/tx/add), szerveren `navmarks`.
+- KÉSZ: a felirat-tábla (`lbl`) is kattintható/megfogható VR-ben (XRP.extra); 2D-ben a `vrn2dPick` már eddig is figyelte – gépi teszt: a „Kapu” táblára kattintva átvisz.
+- Gépi teszt: e4.js, e5.js rendben. VR-ben nem ellenőrzött. Az alaprajz-szerkesztő továbbra is „Változások másolása” elven működik (nem ment magától) – ez még hátravan, ha kéri.

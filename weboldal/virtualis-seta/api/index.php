@@ -1822,7 +1822,7 @@ case 'events_all':
     out(array('today' => today(), 'events' => $list, 'feeds' => isset($db['settings']['ev_feeds']) ? $db['settings']['ev_feeds'] : array(), 'updated' => isset($db['ev_sync']) ? $db['ev_sync'] : ''));
 
 case 'nav':   /* a VR-ben a tulajdonos által igazított útjelző-helyek (mindenkinek) – nyilvános, csak koordináták */
-    $db = db_load(); out(array('nav' => isset($db['nav']) && is_array($db['nav']) && $db['nav'] ? $db['nav'] : new stdClass(), 'nav2d' => isset($db['nav2d']) && is_array($db['nav2d']) && $db['nav2d'] ? $db['nav2d'] : new stdClass(), 'names' => isset($db['navnames']) && is_array($db['navnames']) && $db['navnames'] ? $db['navnames'] : new stdClass(), 'views' => isset($db['navviews']) && is_array($db['navviews']) && $db['navviews'] ? $db['navviews'] : new stdClass(), 'start' => isset($db['navstart']) && is_string($db['navstart']) ? $db['navstart'] : '', 'del' => isset($db['navdel']) && is_array($db['navdel']) && $db['navdel'] ? $db['navdel'] : new stdClass(), 'add' => isset($db['navadd']) && is_array($db['navadd']) && $db['navadd'] ? $db['navadd'] : new stdClass()));
+    $db = db_load(); out(array('nav' => isset($db['nav']) && is_array($db['nav']) && $db['nav'] ? $db['nav'] : new stdClass(), 'nav2d' => isset($db['nav2d']) && is_array($db['nav2d']) && $db['nav2d'] ? $db['nav2d'] : new stdClass(), 'names' => isset($db['navnames']) && is_array($db['navnames']) && $db['navnames'] ? $db['navnames'] : new stdClass(), 'views' => isset($db['navviews']) && is_array($db['navviews']) && $db['navviews'] ? $db['navviews'] : new stdClass(), 'start' => isset($db['navstart']) && is_string($db['navstart']) ? $db['navstart'] : '', 'marks' => isset($db['navmarks']) && is_array($db['navmarks']) && $db['navmarks'] ? $db['navmarks'] : new stdClass(), 'del' => isset($db['navdel']) && is_array($db['navdel']) && $db['navdel'] ? $db['navdel'] : new stdClass(), 'add' => isset($db['navadd']) && is_array($db['navadd']) && $db['navadd'] ? $db['navadd'] : new stdClass()));
 case 'nav_save':   /* tulajdonos: útjelzők igazítása a VR-ben (jelenet → cél → [x, y] a panorámán) */
     if ($method !== 'POST') { fail('POST kell.', 405); }
     $db = db_load(); require_admin($db);
@@ -1855,6 +1855,19 @@ case 'nav_save':   /* tulajdonos: útjelzők igazítása a VR-ben (jelenet → c
                 else { $o2[$sc][$to] = $v ? 1 : 0; if ($pk === 'add' && $v) { unset($o2[$sc][$to]); } }
                 if (++$k > 1500) { break 2; } } }
         $db[$dk] = $o2; }
+    /* 2026-11-13: szerkesztő – sárga jelzések (jelenet → mv / del / tx / add) */
+    if (isset($P['marks']) && is_array($P['marks'])) { $mk = array(); $k = 0;
+        foreach ($P['marks'] as $sc => $o) { if (!is_string($sc) || !preg_match('/^[a-z0-9-]{1,48}$/', $sc) || !is_array($o)) { continue; }
+            $r = array('mv' => new stdClass(), 'del' => new stdClass(), 'tx' => new stdClass(), 'add' => array());
+            foreach (array('mv', 'del', 'tx') as $f) { if (!isset($o[$f]) || !is_array($o[$f])) { continue; } $tmp = array();
+                foreach ($o[$f] as $i => $v) { if (!preg_match('/^\d{1,3}$/', (string) $i)) { continue; }
+                    if ($f === 'mv') { if (is_array($v) && count($v) === 2) { $tmp['i' . $i] = array(round((float) $v[0], 4), round((float) $v[1], 4)); } }
+                    elseif ($f === 'del') { if ($v) { $tmp['i' . $i] = 1; } }
+                    elseif (is_string($v) && clean($v, 60) !== '') { $tmp['i' . $i] = clean($v, 60); } }
+                if ($tmp) { $obj = new stdClass(); foreach ($tmp as $ki => $vv) { $nk = substr($ki, 1); $obj->$nk = $vv; } $r[$f] = $obj; } }
+            if (isset($o['add']) && is_array($o['add'])) { foreach ($o['add'] as $a2) { if (is_array($a2) && count($a2) >= 3 && is_string($a2[2])) { $r['add'][] = array(round((float) $a2[0], 4), round((float) $a2[1], 4), clean($a2[2], 60)); } else { $r['add'][] = null; } if (++$k > 600) { break 2; } } }
+            $mk[$sc] = $r; }
+        $db['navmarks'] = $mk; }
     if (isset($P['start']) && is_string($P['start']) && preg_match('/^[a-z0-9-]{0,48}$/', $P['start'])) { $db['navstart'] = $P['start']; }
     db_save($db); out(array('ok' => true, 'n' => $n, 'mode' => $key));
 case 'events_save':
