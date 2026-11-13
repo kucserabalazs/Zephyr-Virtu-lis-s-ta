@@ -956,3 +956,9 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 - Kérés: „csináld meg a felhőt, hogy ne rángatózzanak a hajók alatta… és férjen el a saját kereteiben és legyen szép”.
 - OK: a hajók ringásának ÜTEME a vihar erejével szorzódott (`sin(t * (2 + sk*2))`) → ahogy a felhő közeledett, a fázis ugrált. Most az ütem állandó, csak a kilengés nő (kisebb mértékben). A hátszél-lökés 4,2× ki-be kapcsolása helyett lágy, legfeljebb 2,3× átmenet; villámcsapásnál 5× helyett 2,2×.
 - A felhő laposabb (62×17·Z) és lejjebb ül (`cy = ch*1.24 + 4.5`), így a teteje nem lóg ki a 104 px-es sávból (eddig ~18 px le volt vágva). Próba: `#vihar`. Gépi képen belefér; a mozgást élőben nem láttam.
+
+## 2026-11-13 02:23–02:30 – Schooner kép törlése; a szerkesztő „nem menti” hibája
+- Kérés: „A hálószoba.ajtót képet töröljük a schoonerből” → a `schooner-halo2` („Hálószoba · ajtó”) jelenet törölve, a rá mutató „Szekrény felől” tábla is; a kezdőoldal galériájának hivatkozása a `schooner-halo`-ra mutat. (A képfájl a tárolóban maradt.)
+- Panasz: „a beállított képeket nem menti el; miért van 2 rögzítő”; kreditet kér vissza (megmondtam: nem tudok adni, ügyfélszolgálat / 👎).
+- OK: a rögzített nézet csak közvetlen megnyitáskor érvényesült; tábláról érkezve az `arriveLook` (haladási irány) felülírta. JAVÍTVA: ahol van rögzített nézet, ott mindig az érvényes. Gombok átnevezve: „📍 Nézet rögzítése ennél a képnél”, „🏠 A séta ezzel a képpel induljon”; mentés után „✓ … Elmentve ezen az eszközön.” Gépi teszt (e2.js): rögzítés → másik kép → vissza → újratöltés: a nézet megmarad.
+- Új kérés (02:26): „Tudjak táblát törölni is és létrehozni” → folyamatban.
