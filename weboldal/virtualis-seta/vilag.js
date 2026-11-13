@@ -2450,12 +2450,16 @@
         if (!s0 || !pt) { if (G) { G.lost = (G.lost || 0) + dt; if (G.lost > 8) wheelRelease(h); } S.hold[h] = false; return; }   /* követésvesztés: 8 mp-ig tartjuk a fogást és a kormányállást */
         const g = s0.hand ? curl(s0) : (squeeze(s0) ? 1 : 0), pin = !!s0.hand && pinchOf(s0, h);
         const holding = g > .42 || pin, open = (g >= 0 && g < .14) && !pin;
-        const lp = S.ck.G.worldToLocal(_wv.copy(pt)), mx = lp.x;
+        /* 2026-11-13 12:58 (tulajdonos: „ha tartom a kormányt összezárt ökölben, egy helyben, mégis kifordul belőle … maradjon úgy, ahogy én tartom”):
+           az ököl helyét eddig a DŐLŐ, hullámzó hajó saját rendszerében mértük – a kéz ~1 m-rel a dőléstengely fölött van, így 10° dőlés ~17 cm „elmozdulásnak” látszott
+           (a teljes kormánykitérés 15 cm!), vagyis a mozdulatlan kéz mellett minden széllökés és hullám elfordította a kormányt. Most az ököl oldalirányú helyét a SZOBÁBAN
+           (a világ vízszintes síkjában, a hajó keresztirányára vetítve) mérjük: a hajó dőlése, bólintása és ringása nem számít bele – ha a kéz nem mozdul, a kormány sem. */
+        const lp = S.ck.G.worldToLocal(_wv.copy(pt)); { const me = S.ck.G.matrixWorld.elements; let ax = me[0], az = me[2]; const al = Math.hypot(ax, az) || 1; ax /= al; az /= al; var mx = pt.x * ax + pt.z * az; }
         if (G) {
           if (G.lp && G.lp.distanceTo(pt) > .35) { G.jump = (G.jump || 0) + dt; if (G.jump < .25) return; }   /* valószerűtlen ugrás = követési hiba: negyed mp-ig nem hiszünk neki */
           G.jump = 0; (G.lp || (G.lp = new THREE.Vector3())).copy(pt); G.lost = 0;
           if (open) { G.off = (G.off || 0) + dt; if (G.off > 1.5) { wheelRelease(h); S.hold[h] = holding; try { beep(); } catch (e) {} return; } } else G.off = 0;
-          G.m += (mx - G.m) * Math.min(1, dt * 40);   /* csak a remegést szűrjük */
+          { const dm = mx - G.m, HB = .005; if (Math.abs(dm) > HB) G.m += (dm - Math.sign(dm) * HB) * Math.min(1, dt * 40); }   /* 2026-11-13: 5 mm-es holtjáték – a nyugodtan tartott kéz apró remegése és a követés zaja nem mozdítja a kormányt */
           const mv = Math.abs(G.m - (G.mP == null ? G.m : G.mP)); G.mP = G.m; if (mv > leadMv) { leadMv = mv; lead = G; }
           if (G.s) (G.e || (G.e = new THREE.Vector3())).copy(lp);
         } else if (holding && !S.hold[h]) {   /* a kéz bezárult → a kormány a kézben van */
