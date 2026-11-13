@@ -3,3 +3,8 @@
 *.log
 .DS_Store
 weboldal/uj/preview.html
+
+# az ökölvezérlés gépi próbáinak helyi csomagjai és kimenete
+forras/tools/okol-teszt/node_modules/
+forras/tools/okol-teszt/package*.json
+forras/tools/okol-teszt/ki.json

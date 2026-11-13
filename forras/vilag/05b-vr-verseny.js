@@ -478,7 +478,8 @@
       VRR.msgL.position.set(w0.ped.position.x * .6, CK2.deckY + 1.75, w0.ped.position.z + 2.2); VRR.msgL.visible = false; }
     { const w0 = CK2.wheels.find((w) => w.sd < 0) || CK2.wheels[0]; VRR.helpL = labelSprite(["Zárd ökölbe a kezed magad előtt!", "az öklöd balra-jobbra mozdítva kormányoz (15–15 cm) · nyitott tenyér: elengeded · kontrollerrel: a hüvelykujjkar kormányoz"], { size: .55, fs: 56, w: 820 }); w0.wheel.add(VRR.helpL); VRR.helpL.position.set(0, .95, 0); }
     if (VRR.tiller) { VRR.helpL.parent.remove(VRR.helpL); VRR.helpL = labelSprite(["Fogd meg a kormányrudat!", "fogd meg a mellkasod előtt (ököl) · eltolod magadtól: végállás jobbra · a válladhoz húzod: végállás balra · nyitott tenyér: elenged · változat: " + String(window.ZEPHYR_BV || "?").slice(0, 5)], { size: .55, fs: 56, w: 820 }); CK2.G.add(VRR.helpL); VRR.helpL.position.set(-.6, CK2.deckY + 1.75, CK2.tiller.pz + 1.6); }
-    SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup;   /* (tesztekhez) */
+    SAIL.keys = {}; W.vrr = VRR; W.vrSetup = vrSetup; W.vrFist = FIST;   /* (tesztekhez) */
+    VRR.grabs = {}; VRR.grab = null; VRR.hold = {}; VRR.fm = null; VRR.pRef = {}; VRR.pLast = {}; VRR.rgrab = null;   /* minden megnyitáskor tiszta lappal: előző alkalomról nem maradhat „fogás” */
     VRR.best = (() => { try { return JSON.parse(localStorage.getItem("zephyr-vr-verseny") || "{}"); } catch (e) { return {}; } })();
     vrSetup(VRR.lvl || 1);
     faceYaw(0);
@@ -636,15 +637,18 @@
     W.panelDirty = 1;
   }
   /* --------------------------------------------------------------- kormány */
-  const _wv = new THREE.Vector3();
+  const _wv = new THREE.Vector3(), _wc = new THREE.Vector3();
   const _tz = new THREE.Vector3(0, 0, 1);
   const _ty = new THREE.Vector3(0, 1, 0);
   const _wb = new THREE.Vector3();
   function wheelAngleOf(w, p) {   /* a kéz/sugár pontja a kerék síkjában: óramutató szerinti szög a kormányos szemszögéből */
-    const lp = w.wheel.worldToLocal(_wv.copy(p)); return Math.atan2(-lp.x, lp.y);   /* a kormányos felől nézve jobbra = a hajó helyi −x */
+    /* 2026-11-13 13:05: a szöget a SZOBÁBAN mérjük (függőleges + a hajó keresztiránya), nem a dőlő kerék saját rendszerében – különben a mozdulatlan kontroller mellett is elfordulna a kerék, ahogy a hajó megdől */
+    const c = w.wheel.getWorldPosition(_wc), me = VRR.boat.matrixWorld.elements, al = Math.hypot(me[0], me[2]) || 1;
+    return Math.atan2(-((p.x - c.x) * me[0] + (p.z - c.z) * me[2]) / al, p.y - c.y);   /* a kormányos felől nézve jobbra = a hajó helyi −x */
   }
   function vrGrab(w, src, key, ray) {
     if (VRR.tiller) { VRR.rgrab = null; return; }   /* 2026-11-12 09:39: botkormánynál a (láthatatlan) kerék sugaras fogása nem élhet – ez akadt össze a rúd fogásával átváltás után */
+    if (src && src.hand) { VRR.rgrab = null; return; }   /* 2026-11-13 13:05: KÉZZEL a kereket csak az ökölvezérlés mozgathatja – a kerékre mutató kéz véletlen csippentése (zárt ökölnél a hüvelyk a mutatóujjhoz ér) ne forgathassa a kormányt; a kontroller ravasza továbbra is megfoghatja */
     let p = null; if (ray) { const pl = new THREE.Plane(); const n = new THREE.Vector3(0, 0, 1).transformDirection(w.wheel.matrixWorld); const c = w.wheel.getWorldPosition(new THREE.Vector3()); pl.setFromNormalAndCoplanarPoint(n, c); p = new THREE.Ray(src.o, src.d).intersectPlane(pl, new THREE.Vector3()); }
     else p = src.tip;
     if (!p) return; VRR.rgrab = { w, a: wheelAngleOf(w, p), key, ray }; try { flap(.02); } catch (e) {}
@@ -654,6 +658,76 @@
     const pl = new THREE.Plane(); const n = new THREE.Vector3(0, 0, 1).transformDirection(w.wheel.matrixWorld); const c = w.wheel.getWorldPosition(new THREE.Vector3()); pl.setFromNormalAndCoplanarPoint(n, c);
     const p = new THREE.Ray(src.o, src.d).intersectPlane(pl, new THREE.Vector3()); if (!p) return;
     const a = wheelAngleOf(w, p); VRR.wa = clamp(VRR.wa + wrapA(a - G.a) * (WA_MAX / (Math.PI / 2)), -WA_MAX, WA_MAX); G.a = a;
+  }
+  /* ---- ZAVARTŰRŐ ÖKÖLKÖVETÉS (2026-11-13 13:05; a leírás a vrTick-ben). Minden érték méterben, a szoba vízszintes síkjában, a hajó keresztirányán mérve. ----
+     REACH: ekkora oldalmozdulat a teljes kormánykitérés · MINC/BETA/DC: a sebességfüggő simítás (álló kéznél erős, mozgó kéznél alig késik) ·
+     JUMP0 (+JUMPV·sebesség): ennél nagyobb „űr” a régi és az új hely között = követési ugrás · HOLD: eddig várunk, hogy visszaugrik-e · STALE: ennél hosszabb
+     adatkimaradás után a kéz új helye a viszonyítás · TAKE: ekkora határozott, sima mozdulattal veszi át a kormányt a másik (nem vezető) ököl.
+     GÉPI PRÓBA (a munkakörnyezetben, nem a repóban): a W.tick-et kézzel, 36/72/90 Hz-en hajtva, a T.xr.src-be kitalált kézadatot téve 33 eset – álló ököl dőlés és
+     csapásváltás közben, zaj, tüske, ugrás, kimaradás, két ököl, pihenő / zajos másik kéz, elernyedő és nyíló kéz, menü-csippentés, lassú és gyors kormányzás –,
+     plusz a valódi VR-útvonal az IWER WebXR-emulátorral (Quest 2, kézkövetés; ökölhöz T.xr.fakeJ). Ha itt bármit állítasz, ezeket újra le kell futtatni. */
+  const FIST = { REACH: .15, MINC: 1.4, BETA: 30, DC: 3, JUMP0: .022, JUMPV: .07, HOLD: .3, STALE: .12, TAKE: .03 };
+  const fistA = (dt, fc) => 1 / (1 + 1 / (TAU * fc * dt));
+  function fistNew(h, x, ax, az) { const t = W.t; return { fist: true, tiller: !!VRR.tiller, key: h, ray: false, s: 1, t0: t, ax, az, q: [[t, x]], xr: x, xr1: x, nz: 0, tc: t, tcp: t - 9, xm: x, xp: x, f: x, f2: x, fv: 0, vd: 0, m: x, lk: 0, sl: 0, r0: x, armed: 0, x0: x, wa0: VRR.wa, wl: null, st: 0, jH: 0, jRef: x, jStep: 0, pl: 0, hh: [[t, x, 0]], bad: 0, badT: -9, off: 0, fz: 0, g: 1, gp: 1, weak: 0, arm: .15, actT: -99 }; }
+  function fistShift(G, d) { G.xm += d; G.xp += d; G.f += d; G.f2 += d; G.m += d; G.r0 += d; G.x0 += d; G.hh.forEach((e) => { e[1] += d; }); }   /* a viszonyítási hely eltolása – a kormány állása NEM változik */
+  function fistAgo(G, sec) { const hh = G.hh, t = W.t; let k = hh.length - 1; while (k > 0 && t - hh[k][0] < sec) k--; return hh[k]; }   /* a kéz (simított) helye ennyi másodperccel ezelőtt */
+  function fistTrack(G, x, fresh, dt) {
+    const t = W.t, F = FIST; G.bad *= Math.max(0, 1 - dt / 3);
+    if (!fresh) { G.st += dt; return; }   /* nincs új adat a kézről: a kormány áll */
+    if (G.st > F.STALE) { fistShift(G, x - G.xm); G.q.length = 0; G.fv = 0; G.jH = 0; G.bad++; G.badT = t; G.xr = G.xr1 = x; G.tc = t; }   /* a követés kimaradt és most visszajött: bárhol „kerül elő” a kéz, a kormány nem mozdul */
+    G.st = 0;
+    /* a kéz TÉNYLEGES (irányított) sebessége az utolsó tizedmásodpercben – a zaj ide-oda ugrál, ebben kiátlagolódik */
+    let vd = 0; { const e = fistAgo(G, .1); if (t - e[0] > .03) vd = Math.abs(G.f - e[1]) / (t - e[0]); } G.vd = vd;
+    /* 1) időablakos medián: a rövid tüskék el sem jutnak a kormányig (csak akkor lép, ha az ablak TÖBBSÉGE már az új helyen van).
+          Álló (zárt) kormánynál 100 ms az ablak (50 ms-nál rövidebb tüske hatástalan), mozgó kéznél 40 ms (alig késik). A sor (q) mindig 130 ms-ot őriz. */
+    if (x !== G.xr) {   /* új minta a kézkövetéstől */
+      /* a követés ZAJA: a nyers minták „második különbsége” – sima mozgásnál (a szándékos apró korrekcióknál is) közel nulla, ugráló követésnél nagy */
+      const dd = Math.abs(x - 2 * G.xr + G.xr1); G.nz += (Math.min(dd, .06) - G.nz) * Math.min(1, (t - G.tc) / .35); G.xr1 = G.xr;
+      G.tcp = G.tc; G.tc = t; G.xr = x; }
+    const q = G.q; q.push([t, x]); while (q.length > 1 && t - q[0][0] > .13) q.shift();
+    const win = G.lk ? .1 : vd > .1 ? .04 : .085, v = []; for (let i = q.length - 1; i >= 0 && (t - q[i][0] <= win || v.length < 1); i--) v.push(q[i][1]);
+    v.sort((a, b) => a - b); const n = v.length, lo = v[(n - 1) >> 1], hi = v[n >> 1], med = Math.abs(lo - G.xm) <= Math.abs(hi - G.xm) ? lo : hi;
+    /* 2) követési ugrás: a medián úgy lépett, hogy a régi és az új hely KÖZÖTT nincs minta (a valódi mozgás – a leggyorsabb is – képkockáról képkockára halad,
+          a „teleportálás” viszont egyetlen lépés). A küszöb a képkockaidővel (és a kézkövetés saját mintavételi idejével) arányos. */
+    if (G.jH) {   /* próbaidő: a kormány áll, amíg ki nem derül, mi történt */
+      G.jH += dt; const d = med - G.jRef;
+      if (Math.abs(d) < F.JUMP0 * .6) G.jH = 0;   /* visszaugrott → követési hiba volt, megyünk tovább */
+      else if (G.jH < .16 && d * G.jStep > 0 && Math.abs(d) > Math.abs(G.jStep) * 1.6) G.jH = 0;   /* a mozgás folytatódik → valódi gyors rántás: követjük */
+      else if (G.jH > F.HOLD) { fistShift(G, med - G.xm); G.jH = 0; }   /* tartósan máshol van → követési eltolódás: az új hely a viszonyítás, a kormány nem mozdul */
+      else return;
+    } else if (med !== G.xm) {
+      const a = Math.min(G.xm, med), b = Math.max(G.xm, med), w = [a, b]; for (let i = 0; i < q.length; i++) { const y = q[i][1]; if (y > a && y < b) w.push(y); } w.sort((c, d) => c - d);
+      let gap = 0; for (let i = 1; i < w.length; i++) gap = Math.max(gap, w[i] - w[i - 1]);
+      const dtr = G.tc - G.tcp < .06 ? Math.max(dt, Math.min(.05, G.tc - G.tcp)) : dt;
+      if (gap > Math.max(F.JUMP0, 1.5 * dtr) + F.JUMPV * vd) { G.jH = dt; G.jRef = G.xm; G.jStep = med - G.xm; G.bad++; G.badT = t; return; } }
+    G.xm = med;
+    /* 3) sebességfüggő simítás („one-euro”): álló kéznél a zaj eltűnik, mozgó kéznél a késés néhány ezredmásodperc */
+    const d2 = Math.max(dt, .004), dxr = (G.xm - G.xp) / d2; G.xp = G.xm;
+    G.fv += (dxr - G.fv) * fistA(d2, F.DC);
+    const f0 = G.f; G.f += (G.xm - G.f) * fistA(d2, F.MINC + F.BETA * Math.abs(G.fv));
+    G.pl += Math.abs(G.f - f0);   /* a megtett út (a határozott, egyirányú mozdulat felismeréséhez: fistMoved) */
+    /* 4) nyugalmi zár: ha a kéz negyed másodpercig áll, a kormány ZÁR (semmilyen maradék zaj nem mozdítja). Oldás: ha a kéz lassan, de tartósan elmozdul
+          (a lassú átlag 2,5 mm-rel odébb van), vagy gyorsan 5 mm-nél többet lép – ekkor a kormány azonnal a kéz valódi helyére áll, így nincs holtjáték és
+          nincs elveszett út (irányváltáskor sem). A zárást és az oldást a lassú átlag (f2) dönti el, ezért az erősebb követési zaj sem oldja ki. */
+    G.f2 += (G.f - G.f2) * fistA(d2, 1);
+    if (G.lk) { if (Math.abs(G.f2 - G.m) > .0025 || Math.abs(G.f - G.m) > .005) { G.lk = 0; G.sl = 0; G.r0 = G.f2; } }
+    if (!G.lk) { G.m = G.f; if (Math.abs(G.f2 - G.r0) > .001) { G.r0 = G.f2; G.sl = 0; } else if ((G.sl += dt) > .25) { G.lk = 1; G.m = G.f2; } }
+    const hh = G.hh; hh.push([t, G.f, G.pl]); while (hh.length > 2 && t - hh[0][0] > .5) hh.shift();
+  }
+  /* határozott (sima, egyirányú, már legalább egy tizedmásodperce tartó) mozdulatot tett-e a kéz az utolsó fél másodpercben? */
+  function fistMoved(G, min) { const e = G.hh[0], net = Math.abs(G.f - e[1]); return net >= min && net >= .75 * (G.pl - e[2]) && Math.abs(fistAgo(G, .12)[1] - e[1]) >= .4 * min; }
+  /* „ugrál-e” (zajos-e) a kéz követése? – az ilyen kéz nem veheti át a kormányt, és ha van mellette tisztán követett ököl, nem is tarthatja meg */
+  function fistRough(G) { return G.nz > .01; }
+  /* átveheti-e a kormányt a másik (O) ököl a vezetőtől (M)? – minden váltás ugrás nélküli (az új kéz mostani helye = a kormány mostani állása) */
+  function fistTakeover(O, M) {
+    const t = W.t; if (O.st > 0 || O.jH || t - O.t0 < O.arm) return false;   /* a másik kéz adata most nem megbízható, vagy épp csak bezárult */
+    if (M.st > .3) return true;   /* 1) a vezető kéz eltűnt a kamerák elől → a másik viszi tovább */
+    if (fistRough(O) || t - O.badT < .8) return false;   /* ugráló, zajos kéz nem veheti át */
+    const mMove = fistMoved(M, .012), qO = Math.min(O.g, .8), qM = Math.min(M.g, .8);   /* szorosság: 0,8 fölött már egyformán „szoros ököl” */
+    if (t - O.t0 < 1.5 && qO >= qM + .25) return true;   /* 2) most zárult, a vezetőnél jóval SZOROSABB ököl: ez a valódi fogás (a lazán tartott, pihenő kéz nem tarthatja meg a kormányt mellette) */
+    if (qO < qM - .25) return false;   /* a vezetőnél jóval lazábban tartott kéz semmilyen mozdulattal nem veheti át */
+    if (O.bad < .5 && (M.bad >= 2 || fistRough(M)) && t - M.t0 > .6) return true;   /* 3) a vezető kéz követése akadozik / zajos, a másiké tiszta */
+    return !mMove && fistMoved(O, t - M.actT < 10 ? FIST.TAKE * 2 : FIST.TAKE);   /* 4) a másik kéz határozottan elmozdult, a vezető közben áll (ha a vezető az imént még kormányzott: kétszer akkora mozdulat kell) */
   }
   function wheelRelease(h) {
     const S = VRR, G = S.grabs && S.grabs[h]; if (!G) return; delete S.grabs[h];
@@ -800,36 +874,65 @@
            • elengedés: csak ha a kéz 1,5 mp-ig tisztán NYITVA van; követésvesztéskor a kormány megtartja az állását, és a fogás megmarad;
            • elengedve a kormány OTT MARAD, ahol hagytad (nem áll vissza középre);
            • a kormánykerék és a botkormány a kormányállást mutatja, tehát együtt mozog a kezeddel; fogáskor hang és markolatfény jelez. */
-      let lead = null, leadMv = -1;
+      /* ================= 2026-11-13 13:05 – ZAVARTŰRŐ ÖKÖLKÖVETÉS (tulajdonos: „a kormánykerék folyton magától elforog … magam előtt tartom a kezemet,
+         egyszerűen nem úgy mozog azzal együtt … maradjon úgy, ahogy én tartom, ne húzza ki semmi a kezemből”) =================
+         A kormányt KIZÁRÓLAG a kéz valódi, folyamatos oldalirányú mozgása fordíthatja. Ami nem az, azt kiszűrjük (fistTrack):
+           1) a kéz helyét a SZOBÁBAN mérjük, a fogás pillanatában rögzített vízszintes tengelyen – a hajó dőlése, bólintása, ringása nem számít bele;
+           2) a kézkövetés zaja: időablakos medián + sebességfüggő simítás + „nyugalmi zár” (az álló kéznél a kormány zár, mozdulatra azonnal old – holtjáték
+              nélkül) → álló kéz mellett a kerék áll;
+           3) a kézkövetés UGRÁSA (a kéz egy pillanat alatt több centit „teleportál”): amíg tart, a kormány áll; ha a kéz visszaugrik, megy tovább; ha tartósan
+              máshol marad, az új hely lesz a viszonyítás – a kormány ettől SEM mozdul (a valódi gyors rántást arról ismerjük fel, hogy a mozgás folytatódik);
+           4) a követés KIMARADÁSA (a kéz kikerül a kamerák látóteréből): a kormány áll; amikor a kéz újra látszik – bárhol –, onnan megy tovább, ugrás nélkül;
+           5) KÉT ÖKÖL: mindig csak EGY kéz kormányoz (a vezető: amelyik előbb zárult). A másik kéz semmit nem mozdíthat a kormányon; csak akkor veszi át, ha a
+              vezető kéz eltűnt / kinyílt, vagy ha a másik kéz határozottan (≥ 3 cm) elmozdul, miközben a vezető áll – és átvételkor sincs ugrás.
+              (Addig „amelyik jobban mozdul, az vezet” volt: a rosszabbul követett – pl. ölben pihenő, félig zárt – kéz minden rezdülése elforgatta a kormányt,
+               a gépi próbán a teljes kitérésig; ráadásul vezetőváltáskor az előző képkocka mozdulata elveszett.) A most záruló, jóval szorosabb ököl azonnal
+               átveszi a lazán tartott kéztől; a zajosan / akadozva követett kéz nem vezethet, ha van mellette tisztán követett ököl;
+           6) ELENGEDÉS: a nyíló kéz azonnal „leválik” a kormányról (az elhúzott kéz nem rántja magával), a kilazult kéz 1 mp után elenged – nem kell hozzá
+              kinyújtott tenyér (addig az elernyedt, félig nyitott kéz „fogta” tovább a kormányt, és minden mozdulata kormányzott);
+           7) a menüre mutató kéz csippentése kattintás, nem fogás; a kerék sugaras (csippentős) megfogása kézzel megszűnt (kontrollerrel megmaradt).
+         SZABÁLY: ide soha ne kerüljön a hajótesthez (body / ck.G) kötött helyi koordináta, se „amelyik kéz jobban mozog” típusú döntés. */
+      const pr = S.pRef || (S.pRef = {}), pl = S.pLast || (S.pLast = {});
       ["right", "left"].forEach((h) => {
         const s0 = X.src[h], pt = s0 && (s0.palmC || s0.wristJ || s0.tip); let G = S.grabs[h];
-        if (G && !G.fist) { wheelRelease(h); G = null; }
-        if (!s0 || !pt) { if (G) { G.lost = (G.lost || 0) + dt; if (G.lost > 8) wheelRelease(h); } S.hold[h] = false; return; }   /* követésvesztés: 8 mp-ig tartjuk a fogást és a kormányállást */
+        if (G && (!G.fist || W.t < G.t0)) { wheelRelease(h); G = null; }
+        if (!s0 || !pt) { if (G) { G.st += dt; if (G.st > 8) wheelRelease(h); } S.hold[h] = false; return; }   /* nincs adat a kézről: a kormány áll; 8 mp után a fogás megszűnik (a kormány ott marad) */
+        /* friss-e az adat? (ha a kéz nem látszik, a séta a legutóbbi helyét hagyja meg – azt nem szabad mozdulatlan kéznek, sem zárt ökölnek venni) */
+        const fresh = pt !== pr[h] || !pl[h] || !pl[h].equals(pt); pr[h] = pt; (pl[h] || (pl[h] = new THREE.Vector3())).copy(pt);
         const g = s0.hand ? curl(s0) : (squeeze(s0) ? 1 : 0), pin = !!s0.hand && pinchOf(s0, h);
-        const holding = g > .42 || pin, open = (g >= 0 && g < .14) && !pin;
-        /* 2026-11-13 12:58 (tulajdonos: „ha tartom a kormányt összezárt ökölben, egy helyben, mégis kifordul belőle … maradjon úgy, ahogy én tartom”):
-           az ököl helyét eddig a DŐLŐ, hullámzó hajó saját rendszerében mértük – a kéz ~1 m-rel a dőléstengely fölött van, így 10° dőlés ~17 cm „elmozdulásnak” látszott
-           (a teljes kormánykitérés 15 cm!), vagyis a mozdulatlan kéz mellett minden széllökés és hullám elfordította a kormányt. Most az ököl oldalirányú helyét a SZOBÁBAN
-           (a világ vízszintes síkjában, a hajó keresztirányára vetítve) mérjük: a hajó dőlése, bólintása és ringása nem számít bele – ha a kéz nem mozdul, a kormány sem. */
-        const lp = S.ck.G.worldToLocal(_wv.copy(pt)); { const me = S.ck.G.matrixWorld.elements; let ax = me[0], az = me[2]; const al = Math.hypot(ax, az) || 1; ax /= al; az /= al; var mx = pt.x * ax + pt.z * az; }
+        const holding = g > .42 || pin, ge = Math.max(g, pin ? .8 : 0);   /* ge: mennyire „fog” a kéz (ököl szorossága; a tartott csippentés = határozott fogás) */
         if (G) {
-          if (G.lp && G.lp.distanceTo(pt) > .35) { G.jump = (G.jump || 0) + dt; if (G.jump < .25) return; }   /* valószerűtlen ugrás = követési hiba: negyed mp-ig nem hiszünk neki */
-          G.jump = 0; (G.lp || (G.lp = new THREE.Vector3())).copy(pt); G.lost = 0;
-          if (open) { G.off = (G.off || 0) + dt; if (G.off > 1.5) { wheelRelease(h); S.hold[h] = holding; try { beep(); } catch (e) {} return; } } else G.off = 0;
-          { const dm = mx - G.m, HB = .005; if (Math.abs(dm) > HB) G.m += (dm - Math.sign(dm) * HB) * Math.min(1, dt * 40); }   /* 2026-11-13: 5 mm-es holtjáték – a nyugodtan tartott kéz apró remegése és a követés zaja nem mozdítja a kormányt */
-          const mv = Math.abs(G.m - (G.mP == null ? G.m : G.mP)); G.mP = G.m; if (mv > leadMv) { leadMv = mv; lead = G; }
-          if (G.s) (G.e || (G.e = new THREE.Vector3())).copy(lp);
-        } else if (holding && !S.hold[h]) {   /* a kéz bezárult → a kormány a kézben van */
-          S.grabs[h] = { fist: true, tiller: !!S.tiller, key: h, ray: false, hist: [[W.t, S.wa]], s: 1, m: mx, mP: mx, x0: mx, wa0: S.wa }; S.wv = 0; S.everGrab = true; S.fistStay = true;
-          try { flap(.03); X.pulse && X.pulse(h, .6, 40); } catch (e) {} }
-        S.hold[h] = holding;
+          if (fresh) {
+            if (g > .42) G.weak = 0; G.g += (ge - G.g) * (G.weak ? 1 : Math.min(1, dt * 8)); if (G.g > G.gp) G.gp = G.g;
+            if (!pin && g < .3) G.fz = 1; else if (pin || g > .42) G.fz = 0;   /* NYÍLÓ kéz: abban a pillanatban, ahogy az ujjak nyílni kezdenek, a kéz már nem kormányoz – így elengedéskor az elhúzott kéz nem rántja magával a kormányt */
+            /* ELENGEDÉS: ha a kéz a fogásához képest érezhetően KILAZUL (a legszorosabb állapot 55%-a alá, de legalább félig nyitva) – nem kell hozzá teljesen
+               kinyújtott tenyér. (Addig csak a tisztán nyitott tenyér engedett el: az elernyedt, félig nyitott kéz „fogta” tovább a kormányt, és minden mozdulata
+               kormányzott.) A vezető kéznél 1 mp, a másik kéznél 0,5 mp, a csak csippentéssel indult fogásnál 0,4 mp után; a kilazult kéz már negyed másodperc után sem kormányoz. */
+            if (G.g < Math.max(.14, Math.min(.35, .55 * G.gp))) { G.off += dt; if (G.off > (G.weak ? .4 : S.fm === h ? 1 : .5)) { const wasM = S.fm === h; wheelRelease(h); S.hold[h] = false; if (wasM) { try { beep(); } catch (e) {} } return; } } else G.off = 0;
+          } else if (G.st > 8) { wheelRelease(h); S.hold[h] = false; return; }
+          fistTrack(G, pt.x * G.ax + pt.z * G.az, fresh, dt);
+        } else if (fresh && holding && !S.hold[h]) {   /* a kéz bezárult → a kormány a kézben van */
+          /* a menüre / táblára mutató kéz csippentése KATTINTÁS, nem fogás (különben a menü kezelése közben a kéz „megfogná” a kormányt) */
+          const hv = X.hov && X.hov[h], ui = !!hv && !(hv.kind === "obj" && S.ck.wheels.some((w) => w.hit === hv.o)), pinOnly = pin && g <= .42;
+          if (!(pinOnly && ui)) {
+            const me = S.boat.matrixWorld.elements, al = Math.hypot(me[0], me[2]) || 1, ax = me[0] / al, az = me[2] / al;   /* a hajó keresztiránya a szobában (csak az iránya – a hajótest nem dől, a dőlés a „body”-n van) */
+            const N = S.grabs[h] = fistNew(h, pt.x * ax + pt.z * az, ax, az); N.g = N.gp = ge; N.weak = pinOnly ? 1 : 0; N.arm = pinOnly ? .3 : .15;
+            S.wv = 0; S.everGrab = true; S.fistStay = true; S.padUsed = false;
+            try { flap(.03); X.pulse && X.pulse(h, .6, 40); } catch (e) {} } }
+        if (fresh) S.hold[h] = holding;
       });
-      if (lead) { const REACH = .15; Object.values(S.grabs).forEach((G) => { if (G !== lead && G.fist) { G.x0 = G.m; G.wa0 = S.wa; } });   /* a nem vezető kéz csendben hozzáigazodik */
-        /* 2026-11-13 00:40 (tulajdonos: „fordítottan működik a kormánykerék … arrafelé forduljon a hajó, amerre fordítom a kormányt”): a hajó helyi +x-e a BAL oldal,
-           ezért KERÉKNÉL az előjel fordított: ököl jobbra = a kerék jobbra fordul = a hajó jobbra megy. BOTKORMÁNYNÁL marad a valós irány (rúd jobbra = a hajó balra). */
-        const sg = lead.tiller ? 1 : -1, tgW = lead.wa0 + sg * (lead.m - lead.x0) / REACH * WA_MAX; S.wa = clamp(tgW, -WA_MAX, WA_MAX); S.wv = 0; S.wOver = 0;
-        if (tgW > WA_MAX) lead.x0 = lead.m - sg * (WA_MAX - lead.wa0) * REACH / WA_MAX; else if (tgW < -WA_MAX) lead.x0 = lead.m - sg * (-WA_MAX - lead.wa0) * REACH / WA_MAX;   /* a végállásnál nem „gyűlik fel” túlhúzás: visszafelé azonnal reagál */
-        Object.values(S.grabs).forEach((G) => { if (G.hist) { G.hist.push([W.t, S.wa]); while (G.hist.length > 2 && W.t - G.hist[0][0] > .2) G.hist.shift(); } }); }
+      { const GR = S.grabs.right, GL = S.grabs.left; let M = S.fm ? S.grabs[S.fm] : null;
+        const lead = (G) => { M = G; S.fm = G.key; G.x0 = G.m; G.wa0 = S.wa; G.wl = null; };   /* vezetőváltás: az új kéz MOSTANI helye = a kormány MOSTANI állása (nincs ugrás) */
+        if (!M) { const G = GR && GL ? (GR.t0 <= GL.t0 ? GR : GL) : (GR || GL || null); if (G) lead(G); else S.fm = null; }
+        if (M) { const O = M === GR ? GL : GR; if (O && fistTakeover(O, M)) lead(O);
+          if (fistMoved(M, .012)) M.actT = W.t;
+          const arming = !M.armed && (W.t - M.t0 < M.arm || !(M.lk || M.vd > .05 || W.t - M.t0 > .45)), wasArmed = M.armed; if (!arming) M.armed = 1;
+          if ((M.wl != null && S.wa !== M.wl) || !wasArmed || M.fz || M.off > (M.weak ? 0 : .25)) { M.x0 = M.m; M.wa0 = S.wa; }   /* a kormányt közben más állította (pl. „Egyenesbe”, újrakezdés): onnan megyünk tovább · „beállás”: a zárás után, amíg a kéz meg nem áll (vagy határozottan el nem indul; legalább 0,15, csippentésnél 0,3, legfeljebb 0,45 mp) – az ökölbe záródó kéz pár millimétert mozdul – · és a kilazult kéz: ezek sem fordíthatnak a kormányon */
+          /* 2026-11-13 00:40 (tulajdonos: „fordítottan működik a kormánykerék … arrafelé forduljon a hajó, amerre fordítom a kormányt”): a hajó helyi +x-e a BAL oldal,
+             ezért KERÉKNÉL az előjel fordított: ököl jobbra = a kerék jobbra fordul = a hajó jobbra megy. BOTKORMÁNYNÁL marad a valós irány (rúd jobbra = a hajó balra). */
+          const REACH = FIST.REACH, sg = M.tiller ? 1 : -1, tgW = M.wa0 + sg * (M.m - M.x0) / REACH * WA_MAX; S.wa = clamp(tgW, -WA_MAX, WA_MAX); S.wv = 0; S.wOver = 0;
+          if (tgW > WA_MAX) M.x0 = M.m - sg * (WA_MAX - M.wa0) * REACH / WA_MAX; else if (tgW < -WA_MAX) M.x0 = M.m - sg * (-WA_MAX - M.wa0) * REACH / WA_MAX;   /* a végállásnál nem „gyűlik fel” túlhúzás: visszafelé azonnal reagál */
+          M.wl = S.wa; } }
     }
     S.grab = S.grabs.right || S.grabs.left || null;
     if (dN) { S.wa = clamp(S.wa + dSum / dN * 1.5, -WA_MAX, WA_MAX);   /* érzékenyebb áttétel: kis kézmozdulat is kormányoz */ Object.values(S.grabs).forEach((G) => { G.hist.push([W.t, S.wa]); while (G.hist.length > 2 && W.t - G.hist[0][0] > .2) G.hist.shift(); }); }
@@ -843,7 +946,9 @@
     else if (!S.grab && !S.rgrab && !(T.inVR && S.fistStay && !S.padUsed)) {   /* ökölvezérlésnél elengedve a kormány OTT MARAD, ahol hagytad */
       S.wv = 0; S.wa += (0 - S.wa) * Math.min(1, dt * 1.6); if (Math.abs(S.wa) < .004) S.wa = 0;   /* 2026-11-11: elengedve a kormány simán középre áll – a hajó egyenesben marad, nem fordul tovább */
     }
-    { const dT = S.wa / WA_MAX * .55; S.del = (S.del || 0) + (dT - (S.del || 0)) * Math.min(1, dt * 4.5); }   /* a lapát simán, kis késéssel követi a kereket (nagy hajó) */
+    /* 2026-11-13 13:05: VR-ben a kerék középállása körül ±3% (az ökölnek ±4,5 mm) „egyenes sáv” van: itt a lapát pontosan középen áll, a hajó nyílegyenesen megy –
+       a levegőben tartott kéz milliméteres eltérése ne fordítsa lassan a hajót. A kerék maga a sávban is együtt mozog a kézzel; a sáv szélétől a lapát folytonosan indul. */
+    { const u = S.wa / WA_MAX, dz = T.inVR ? .03 : 0, ue = Math.abs(u) <= dz ? 0 : Math.sign(u) * (Math.abs(u) - dz) / (1 - dz), dT = ue * .55; S.del = (S.del || 0) + (dT - (S.del || 0)) * Math.min(1, dt * 4.5); }   /* a lapát simán, kis késéssel követi a kereket (nagy hajó) */
     if (!S.grab) S.wOver = (S.wOver || 0) * Math.max(0, 1 - dt * 8);
     S.wVis = S.wa / WA_MAX * (Math.PI / 2) + (S.wOver || 0);   /* a kerék látszó elfordulása: ±90° a végállás (+ kis túlfordulás) */
     S.ck.wheels.forEach((w) => { w.spin.rotation.z = S.wVis; const want = S.grab && (S.grab.fist || S.grab.w === w) ? 1.6 : (VRR.wHover ? .25 : 0) + (!S.everGrab && S.st === "pre" && w.sd < 0 ? .25 + .25 * Math.sin(W.t * 4) : 0); w.gripM.emissiveIntensity += (want - w.gripM.emissiveIntensity) * Math.min(1, dt * 8); });
@@ -1375,7 +1480,7 @@
   }
   /* kormánymód váltása: botkormány (alap) ↔ kormánykerék; megjegyzi (localStorage „zephyr-kormany”: bot / kerek) */
   function vrSteerMode() { const S = VRR, CK2 = S.ck; if (!CK2) return; try { vrRelease(); } catch (e) {} S.tiller = !S.tiller; S.wa = 0; S.wOver = 0; S.wv = 0;
-    S.rgrab = null; S.grabs = {}; S.grab = null; S.hold = {}; S.near = false; S.wHover = false; try { if (T.xrForget) T.xrForget(CK2.wheels.map((w) => w.hit)); } catch (e) {}   /* 2026-11-12 09:39: átváltáskor minden korábbi fogás és ráfutás törlődik */
+    S.rgrab = null; S.grabs = {}; S.grab = null; S.hold = {}; S.fm = null; S.near = false; S.wHover = false; try { if (T.xrForget) T.xrForget(CK2.wheels.map((w) => w.hit)); } catch (e) {}   /* 2026-11-12 09:39: átváltáskor minden korábbi fogás és ráfutás törlődik */
     try { localStorage.setItem("zephyr-kormany", S.tiller ? "bot" : "kerek"); } catch (e) {}
     if (CK2.G.userData.podSet) CK2.G.userData.podSet(S.tiller);
     CK2.wheels.forEach((w) => { w.wheel.visible = !S.tiller; w.axle.visible = !S.tiller; if (S.tiller) T.xr.extra.delete(w.hit); else { if (!w.hit.userData.xr) w.hit.userData.xr = { hover: (on) => { VRR.wHover = on; }, down: (h, src, key) => vrGrab(w, src, key, true), drag: (src) => vrDrag(w, src), up: () => { VRR.rgrab = null; } }; T.xr.extra.add(w.hit); if (W.objs.indexOf(w.hit) < 0) W.objs.push(w.hit); } });

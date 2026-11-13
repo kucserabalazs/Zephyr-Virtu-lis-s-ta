@@ -1,0 +1,26 @@
+
+const o=JSON.parse(require('fs').readFileSync(process.argv[2],'utf8'));
+const a=Math.abs, bad=[]; const chk=(n,c,v)=>{ if(!c) bad.push(n+' '+JSON.stringify(v)); };
+chk('A',o.A_allo_okol_doles_csapasvaltas.kerekMaxPct===0&&o.A_allo_okol_doles_csapasvaltas.fogva,o.A_allo_okol_doles_csapasvaltas);
+chk('B',o.B_zaj_2mm.kerekMaxPct<1,o.B_zaj_2mm); chk('B2',o.B2_zaj_5mm.kerekMaxPct<7,o.B2_zaj_5mm);
+for(const k of ['C_ugras_8cm_1kepkocka_es_10cm_02mp','C2_kis_tuske_2_5cm_45ms','D_kimarad_2mp_majd_4cmrel_arrebb','D2_eltunik_2mp_majd_4cmrel_arrebb','D3_tartos_6cm_ugras']) chk(k,o[k].kerekMaxPct<0.5&&a(o[k].vegPct)<0.5,o[k]);
+chk('E',o.E_ket_okol_zaj_2mm.kerekMaxPct<1,o.E_ket_okol_zaj_2mm); chk('E2',o.E2_ket_okol_rossz_bal_kez.kerekMaxPct<2,o.E2_ket_okol_rossz_bal_kez);
+chk('E3',a(a(o['E3_pihenő_kéz_zárult_előbb_majd_eltűnt'].jobbKez10cmUtanPct)-66.7)<1.5,o['E3_pihenő_kéz_zárult_előbb_majd_eltűnt']);
+chk('E4',o['E4_pihenő_rossz_kéz_a_vezető'].alloKerekMaxPct<8,o['E4_pihenő_rossz_kéz_a_vezető']);
+const I=o.I_ket_kez_egyutt_10cm_majd_jobb_elenged_bal_vissza_5cm; chk('I',a(a(I.egyuttPct)-66.7)<1&&a(I.jobbElengedUtanPct-I.egyuttPct)<0.5&&a(a(I.balVissza5cmPct)-33.4)<1.5,I);
+const F=o.F_jobbra_10cm_05mp; chk('F',a(a(F.tartvaPct)-66.7)<1&&a(F.visszaKozepenPct)<1&&a(F.iranyValtozasFok)>25,F);
+chk('F2',a(a(o.F2_lassan_10cm_5mp.pct)-66.7)<1,o.F2_lassan_10cm_5mp); chk('F3',a(a(o.F3_gyors_rantas_12cm_01mp.vegPct)-80)<1,o.F3_gyors_rantas_12cm_01mp);
+chk('F4',a(a(o.F4_30Hz_kovetes_10cm.sebesseg_05ms_pct)-66.7)<1&&a(a(o.F4_30Hz_kovetes_10cm.sebesseg_1ms_pct)-66.7)<1,o.F4_30Hz_kovetes_10cm);
+chk('H',a(o.H_vegallas_tulhuzas_20cm_majd_vissza_5cm.vegallasPct)===100&&a(a(o.H_vegallas_tulhuzas_20cm_majd_vissza_5cm.vissza5cmPct)-66.7)<6,o.H_vegallas_tulhuzas_20cm_majd_vissza_5cm);
+const G=o.G_kinyit_25mp_ujrazar_majd_3cm; chk('G',G.elengedve&&a(G.nyitvaPct-G.tartvaPct)<0.5&&a(a(G.ujra3cmUtanPct)-60)<1.5,G);
+chk('N',a(o.N_egyenesbe_gomb_fogas_kozben.utanaPct)<0.5,o.N_egyenesbe_gomb_fogas_kozben);
+const S1=o.S1_elernyedt_kez_15cm_mozog; chk('S1',S1.elengedve&&a(S1.elernyedveMozgasUtanPct-S1.okollelPct)<1&&a(a(S1.ujraOkol3cmJobbraPct)-60)<1.5,S1);
+chk('S2',o.S2_menure_csippentes_kozben_8cm.kerekMaxPct===0&&!o.S2_menure_csippentes_kozben_8cm.fogva,o.S2_menure_csippentes_kozben_8cm);
+chk('S3',o.S3_rovid_csippentes_a_levegoben_8cm.kerekMaxPct<0.5,o.S3_rovid_csippentes_a_levegoben_8cm); chk('S3b',a(a(o.S3b_tartott_csippentessel_kormanyzas_6cm.pct)-40)<1,o.S3b_tartott_csippentessel_kormanyzas_6cm);
+const S4=o.S4_laza_kez_fogott_elobb_majd_szoros_okol; chk('S4',S4.szorosOkolMellettTovabbiElmozdulasPct<5&&S4.vezeto==='right',S4);
+const S5=o.S5_aktiv_vezeto_mellett_masik_okol_4cm; chk('S5',a(S5.utanaPct-S5.elottePct)<0.5&&S5.vezeto==='right',S5);
+const S6=o.S6_elengedes_kozben_elhuzott_kez_30cm_s; chk('S6',S6.elengedve&&a(S6.utanaPct-S6.okollelPct)<12,S6);
+chk('P',o.P_apro_korrekciok_1cm_1Hz.kerekMaxPct>5&&o.P_apro_korrekciok_1cm_1Hz.kerekMinPct<-5,o.P_apro_korrekciok_1cm_1Hz); chk('P2',a(a(o.P2_jobbra_5cm_rogton_vissza_2cm.pct)-20)<1,o.P2_jobbra_5cm_rogton_vissza_2cm);
+chk('Q',o.Q_akadozo_vezeto_kez_mellett_tiszta_masik.alloKerekMaxPct<10,o.Q_akadozo_vezeto_kez_mellett_tiszta_masik); chk('Q2',o.Q2_zajos_15mm_vezeto_kez.alloKerekMaxPct<10&&o.Q2_zajos_15mm_vezeto_kez.vezetoVegul==='right',o.Q2_zajos_15mm_vezeto_kez);
+chk('R',a(a(o.R_100ms_akadas_kozben_mozgas.pct)-53.3)<1,o.R_100ms_akadas_kozben_mozgas); chk('O',a(o.O_egyenes_tartas_60mp.iranyElteresFok)<0.5,o.O_egyenes_tartas_60mp); chk('errs',o.errs.length===0,o.errs);
+console.log(o.mode, o.fps, bad.length? 'PROBLÉMÁK:\n  '+bad.join('\n  ') : 'MIND RENDBEN ('+(Object.keys(o).length-4)+' próba)', '| S6:', JSON.stringify(o.S6_elengedes_kozben_elhuzott_kez_30cm_s));
