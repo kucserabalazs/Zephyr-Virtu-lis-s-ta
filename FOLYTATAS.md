@@ -962,3 +962,7 @@ Munkasorrend (kérdezés nélkül haladni, verziónként feltölteni, minden vé
 - Panasz: „a beállított képeket nem menti el; miért van 2 rögzítő”; kreditet kér vissza (megmondtam: nem tudok adni, ügyfélszolgálat / 👎).
 - OK: a rögzített nézet csak közvetlen megnyitáskor érvényesült; tábláról érkezve az `arriveLook` (haladási irány) felülírta. JAVÍTVA: ahol van rögzített nézet, ott mindig az érvényes. Gombok átnevezve: „📍 Nézet rögzítése ennél a képnél”, „🏠 A séta ezzel a képpel induljon”; mentés után „✓ … Elmentve ezen az eszközön.” Gépi teszt (e2.js): rögzítés → másik kép → vissza → újratöltés: a nézet megmarad.
 - Új kérés (02:26): „Tudjak táblát törölni is és létrehozni” → folyamatban.
+
+## 2026-11-13 02:26 – szerkesztő: tábla törlése és létrehozása
+- KÉSZ: „➕ Új tábla” gomb a szerkesztősávon (cél kiválasztása listából + felirat; oda kerül, amerre épp nézel, onnan húzható); a táblára kattintva a párbeszédben „🗑 Tábla törlése”. Tárolás: localStorage `zephyr-tablak` ({del, add}), szerveren `navdel` / `navadd` (`nav_save`, `nav`). `vrnLinks` szűri/kiegészíti. „Ennek a helynek: eredeti” ezeket is visszaállítja.
+- Gépi teszt (e3.js): létrehozás → megjelenik → törlés rendben. VR-ben a törlés/létrehozás NINCS (csak 2D-ben); a VR a 2D-ben beállított táblákat mutatja.

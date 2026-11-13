@@ -10501,7 +10501,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function vrnLinks(sc) {
     /* minden kimenő irány: nyilak (l), telefonos nyilak (pl – a tábla sorai pontos helyen), séta-irányok (wl) */
     const out = [], seen = new Set();
-    [].concat(sc.l || [], sc.pl || [], sc.wl || []).forEach((l) => { if (!l || !isVisible(l[0]) || seen.has(l[0])) return; seen.add(l[0]); out.push(l); });
+    /* 2026-11-13: a szerkesztőben törölt (D) és újonnan létrehozott (A) táblák */
+    let D = {}, A = {}; try { const id = sc === SCENES[current] ? current : Object.keys(SCENES).find((k) => SCENES[k] === sc); D = tbGet("del", id); A = tbGet("add", id); } catch (e) {}
+    [].concat(sc.l || [], sc.pl || [], sc.wl || []).forEach((l) => { if (!l || !isVisible(l[0]) || seen.has(l[0])) return; seen.add(l[0]); if (D[l[0]]) return; out.push(l); });
+    Object.keys(A).forEach((to) => { const v = A[to]; if (!v || !isVisible(to) || seen.has(to)) return; seen.add(to); out.push([to, v[0], v[1], SCENES[to].n]); });
     return out;
   }
   function vrnClear() {
@@ -10717,10 +10720,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (inVR) { VRN.ren = { mk, text: mk.tt.t || "", caps: false }; navRelabel(mk, VRN.ren.text + "▍"); try { bkKeyboard(true); } catch (e) {} navMsg("Írd át a jelző nevét, majd: Kész ⏎"); return; }
     let d = document.querySelector(".zne-ren"); if (d) d.remove();
     d = document.createElement("div"); d.className = "zne-ren";
-    d.innerHTML = `<form><b>Jelző átnevezése</b><input type="text" maxlength="28" autocomplete="off"><div><button type="button" data-r="orig">Eredeti név</button><button type="button" data-r="no">Mégse</button><button type="submit" class="zne-ok">Mentés</button></div></form>`;
+    d.innerHTML = `<form><b>Tábla felirata</b><input type="text" maxlength="28" autocomplete="off"><div><button type="button" data-r="del" style="background:#a3261f">🗑 Tábla törlése</button><button type="button" data-r="orig">Eredeti név</button><button type="button" data-r="no">Mégse</button><button type="submit" class="zne-ok">Mentés</button></div></form>`;
     const inp = d.querySelector("input"); inp.value = mk.tt.t || ""; document.body.appendChild(d); setTimeout(() => { try { inp.focus(); inp.select(); } catch (e) {} }, 30);
     const close = () => d.remove();
-    d.addEventListener("click", (e) => { const t = e.target.closest("button[data-r]"); if (e.target === d || (t && t.dataset.r === "no")) close(); else if (t && t.dataset.r === "orig") { navSetName(mk, ""); close(); } });
+    d.addEventListener("click", (e) => { const t = e.target.closest("button[data-r]"); if (e.target === d || (t && t.dataset.r === "no")) close(); else if (t && t.dataset.r === "orig") { navSetName(mk, ""); close(); } else if (t && t.dataset.r === "del") { close(); tbDelete(mk); } });
     d.querySelector("form").addEventListener("submit", (e) => { e.preventDefault(); navSetName(mk, inp.value); close(); });
     d.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Escape") close(); });
   }
@@ -10748,6 +10751,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const B = window.ZephyrBooking, url = B && B.apiUrl ? B.apiUrl("/nav") : null; if (!url) return;
       try { const r = await fetch(url, { cache: "no-store" }); if (!r.ok) return; const j = await r.json(); if (!j) return;
         NAV_SRV.vr = j.nav || {}; NAV_SRV.d2 = j.nav2d || {}; NAV_NAMES.srv = j.names && typeof j.names === "object" ? j.names : {};
+        try { TB.srv.del = j.del && typeof j.del === "object" ? j.del : {}; TB.srv.add = j.add && typeof j.add === "object" ? j.add : {}; } catch (e2) {}
         try { ED.vSrv = j.views && typeof j.views === "object" ? j.views : {}; ED.sSrv = typeof j.start === "string" ? j.start : ""; edApplyViews(); try { localStorage.setItem("zephyr-kezdo-kep-srv", ED.sSrv); } catch (e2) {} } catch (e2) {}
         if (spots && current) vrnClear();
       } catch (e) {}
@@ -10759,7 +10763,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     NAV_SAVE_T = setTimeout(async () => {
       const B = window.ZephyrBooking, url = B && B.apiUrl ? B.apiUrl("/nav_save") : null; let tok = ""; try { tok = localStorage.getItem("zephyr-admin-token") || ""; } catch (e) {}
       if (!url || !tok) { navMsg((NAV_OV_MSG && /^✓/.test(NAV_OV_MSG) ? NAV_OV_MSG + " " : "✓ ") + "Elmentve ezen az eszközön."); return; }
-      try { const all = navMerged(mode); const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-Zephyr-Token": tok }, body: JSON.stringify({ mode: mode === "vr" ? "vr" : "2d", nav: all, names: navNamesMerged(), views: edViewsMerged(), start: edStart() }), cache: "no-store" });
+      try { const all = navMerged(mode); const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-Zephyr-Token": tok }, body: JSON.stringify({ mode: mode === "vr" ? "vr" : "2d", nav: all, names: navNamesMerged(), views: edViewsMerged(), start: edStart(), del: tbMerged("del"), add: tbMerged("add") }), cache: "no-store" });
         if (r.ok) NAV_SRV[mode] = all;
         navMsg(r.ok ? "Elmentve mindenkinek ✓" : r.status === 401 ? "Lejárt a belépés – elmentve ezen az eszközön." : "Nem sikerült a szerverre menteni – ezen az eszközön megvan.");
       } catch (e) { navMsg("Nincs kapcsolat – ezen az eszközön elmentve."); }
@@ -10767,16 +10771,41 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
   /* ---- 2D igazítás: egérrel / ujjal megfogod a gyűrűt és a helyére húzod (a tulajdonosi felület „Útjelzők” gombjával, vagy #utjelzok) ---- */
   const NE2 = { on: false, grab: null, bar: null };
+  /* ---- TÁBLÁK TÖRLÉSE ÉS LÉTREHOZÁSA (2026-11-13, tulajdonos: „tudjak táblát törölni is és létrehozni”) ----
+     del: jelenet → cél → 1 (törölve) / 0 (visszaállítva); add: jelenet → cél → [x, y] (új tábla) / 0 (eltávolítva). Ezen az eszközön azonnal, tulajdonosként a szerverre is. */
+  const TB = { loc: (() => { try { const o = JSON.parse(localStorage.getItem("zephyr-tablak") || "{}") || {}; return { del: o.del || {}, add: o.add || {} }; } catch (e) { return { del: {}, add: {} }; } })(), srv: { del: {}, add: {} } };
+  function tbGet(kind, id) { return Object.assign({}, (TB.srv[kind] || {})[id] || {}, (TB.loc[kind] || {})[id] || {}); }
+  function tbMerged(kind) { const o = {}; [TB.srv[kind], TB.loc[kind]].forEach((L) => Object.keys(L || {}).forEach((sc) => { o[sc] = Object.assign(o[sc] || {}, L[sc]); })); return o; }
+  function tbSet(kind, id, to, v) { TB.loc[kind][id] = TB.loc[kind][id] || {}; TB.loc[kind][id][to] = v; try { localStorage.setItem("zephyr-tablak", JSON.stringify(TB.loc)); } catch (e) {} }
+  function tbDelete(mk) { const A = tbGet("add", current); if (A[mk.to]) tbSet("add", current, mk.to, 0); else tbSet("del", current, mk.to, 1);
+    try { sfx("pop"); } catch (e) {} vrnClear(); navMsg("✓ Tábla törölve: " + (mk.tt && mk.tt.t || mk.to) + "."); navServerSave(navMode()); }
+  function tbCreate(to, name) { if (!to || !SCENES[to] || to === current) return; let x = .5;
+    try { const v = new THREE.Vector3(); sceneEl.camera.getWorldDirection(v); x = Math.round(((((Math.atan2(v.z, v.x) / (2 * Math.PI)) + 1) % 1)) * 1000) / 1000; } catch (e) {}
+    const orig = [].concat(SCENES[current].l || [], SCENES[current].pl || [], SCENES[current].wl || []).some((l) => l && l[0] === to);
+    const m = navMode(); NAV_LOC[m][current] = NAV_LOC[m][current] || {}; NAV_LOC[m][current][to] = [x, .64]; navLocSave();   /* oda kerül, amerre most nézel; onnan húzható */
+    if (orig) tbSet("del", current, to, 0); else tbSet("add", current, to, [x, .64]);
+    name = String(name || "").replace(/\s+/g, " ").trim().slice(0, 28);
+    if (name) { NAV_NAMES.loc[current] = NAV_NAMES.loc[current] || {}; NAV_NAMES.loc[current][to] = name; try { localStorage.setItem("zephyr-nav-nev", JSON.stringify(NAV_NAMES.loc)); } catch (e) {} }
+    try { sfx("pop"); } catch (e) {} vrnClear(); navMsg("✓ Új tábla: " + (name || SCENES[to].n) + " – húzd a helyére."); navServerSave(m); }
+  function tbNewDialog() { let d = document.querySelector(".zne-ren"); if (d) d.remove(); d = document.createElement("div"); d.className = "zne-ren";
+    const have = new Set(vrnLinks(SCENES[current]).map((l) => l[0])), esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const opts = GROUPS.filter((g) => !g.hidden && !g.lock).map((g) => { const ids = Object.keys(SCENES).filter((k) => SCENES[k].g === g.id && k !== current && !have.has(k)); return ids.length ? `<optgroup label="${esc(g.name)}">${ids.map((k) => `<option value="${k}"${SCENES[current].g === g.id ? "" : ""}>${esc(SCENES[k].n)}</option>`).join("")}</optgroup>` : ""; }).join("");
+    d.innerHTML = `<form><b>Új tábla – hová vezessen?</b><select style="font:600 18px/1.2 Inter,system-ui,sans-serif;padding:12px 10px;border-radius:12px;background:#fff;color:#0b2f5e">${opts}</select><input type="text" maxlength="28" autocomplete="off" placeholder="Felirat (üresen: a kép neve)"><div><button type="button" data-r="no">Mégse</button><button type="submit" class="zne-ok">Létrehozás</button></div></form>`;
+    document.body.appendChild(d); const sel = d.querySelector("select"), inp = d.querySelector("input"), close = () => d.remove();
+    { const o = sel.querySelector(`optgroup[label="${(GROUPS.find((g) => g.id === SCENES[current].g) || {}).name || ""}"] option`); if (o) sel.value = o.value; }
+    d.addEventListener("click", (e) => { const t = e.target.closest("button[data-r]"); if (e.target === d || t) close(); });
+    d.querySelector("form").addEventListener("submit", (e) => { e.preventDefault(); const to = sel.value, nm = inp.value; close(); tbCreate(to, nm); });
+    d.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Escape") close(); }); }
   function navEditOn() { return inVR ? !!WS.navEdit : NE2.on && nav2dOn(); }
   function nav2dBar() {
     if (!NE2.on) { if (NE2.bar) NE2.bar.hidden = true; return; }
     if (!NE2.bar) {
       const b = document.createElement("div"); b.className = "zne-bar"; b.setAttribute("role", "status");
-      b.innerHTML = `<b>✎ Szerkesztő</b><span class="zne-msg"></span><button type="button" data-ne="view">📍 Nézet rögzítése ennél a képnél</button><button type="button" data-ne="start">🏠 A séta ezzel a képpel induljon</button><button type="button" data-ne="reset">Ennek a helynek: eredeti</button><button type="button" data-ne="done" class="zne-ok">Kész</button>`;
-      b.addEventListener("click", (e) => { const t = e.target.closest("button"); if (!t) return; const a = t.dataset.ne; if (a === "done") nav2dEdit(false); else if (a === "reset") { edViewSet(current, null); navResetScene(); } else if (a === "view") edViewNow(); else if (a === "start") edStartSet(current); });
+      b.innerHTML = `<b>✎ Szerkesztő</b><span class="zne-msg"></span><button type="button" data-ne="new">➕ Új tábla</button><button type="button" data-ne="view">📍 Nézet rögzítése ennél a képnél</button><button type="button" data-ne="start">🏠 A séta ezzel a képpel induljon</button><button type="button" data-ne="reset">Ennek a helynek: eredeti</button><button type="button" data-ne="done" class="zne-ok">Kész</button>`;
+      b.addEventListener("click", (e) => { const t = e.target.closest("button"); if (!t) return; const a = t.dataset.ne; if (a === "done") nav2dEdit(false); else if (a === "reset") { edViewSet(current, null); ["del", "add"].forEach((k) => { delete TB.loc[k][current]; if (TB.srv[k]) delete TB.srv[k][current]; }); try { localStorage.setItem("zephyr-tablak", JSON.stringify(TB.loc)); } catch (e2) {} navResetScene(); } else if (a === "new") tbNewDialog(); else if (a === "view") edViewNow(); else if (a === "start") edStartSet(current); });
       document.body.appendChild(b); NE2.bar = b;
     }
-    NE2.bar.hidden = false; NE2.bar.querySelector(".zne-msg").textContent = NAV_OV_MSG || (nav2dOn() ? "Tábla: húzd a narancs gyűrűt a helyére · kattints rá: átírás. Minden magától elmentődik." : "Ebben a nézetben a táblák nem húzhatók – a kezdő nézet és a kezdő kép itt is beállítható.");
+    NE2.bar.hidden = false; NE2.bar.querySelector(".zne-msg").textContent = NAV_OV_MSG || (nav2dOn() ? "Tábla: húzd a helyére · kattints rá: átírás vagy törlés. Minden magától elmentődik." : "Ebben a nézetben a táblák nem húzhatók – a kezdő nézet és a kezdő kép itt is beállítható.");
   }
   /* ---- SZERKESZTŐ (2026-11-13, tulajdonos: „csináljunk egy rendes szerkesztőt, hogy ne mindenért téged kelljen kérni”) ----
      Egy sáv: táblák áthelyezése és átírása, a kép kezdő nézete, a séta kezdő képe. Minden azonnal elmentődik (ezen az eszközön; tulajdonosként belépve a szerverre is).

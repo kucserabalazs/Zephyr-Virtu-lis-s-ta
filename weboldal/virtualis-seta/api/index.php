@@ -1822,7 +1822,7 @@ case 'events_all':
     out(array('today' => today(), 'events' => $list, 'feeds' => isset($db['settings']['ev_feeds']) ? $db['settings']['ev_feeds'] : array(), 'updated' => isset($db['ev_sync']) ? $db['ev_sync'] : ''));
 
 case 'nav':   /* a VR-ben a tulajdonos által igazított útjelző-helyek (mindenkinek) – nyilvános, csak koordináták */
-    $db = db_load(); out(array('nav' => isset($db['nav']) && is_array($db['nav']) && $db['nav'] ? $db['nav'] : new stdClass(), 'nav2d' => isset($db['nav2d']) && is_array($db['nav2d']) && $db['nav2d'] ? $db['nav2d'] : new stdClass(), 'names' => isset($db['navnames']) && is_array($db['navnames']) && $db['navnames'] ? $db['navnames'] : new stdClass(), 'views' => isset($db['navviews']) && is_array($db['navviews']) && $db['navviews'] ? $db['navviews'] : new stdClass(), 'start' => isset($db['navstart']) && is_string($db['navstart']) ? $db['navstart'] : ''));
+    $db = db_load(); out(array('nav' => isset($db['nav']) && is_array($db['nav']) && $db['nav'] ? $db['nav'] : new stdClass(), 'nav2d' => isset($db['nav2d']) && is_array($db['nav2d']) && $db['nav2d'] ? $db['nav2d'] : new stdClass(), 'names' => isset($db['navnames']) && is_array($db['navnames']) && $db['navnames'] ? $db['navnames'] : new stdClass(), 'views' => isset($db['navviews']) && is_array($db['navviews']) && $db['navviews'] ? $db['navviews'] : new stdClass(), 'start' => isset($db['navstart']) && is_string($db['navstart']) ? $db['navstart'] : '', 'del' => isset($db['navdel']) && is_array($db['navdel']) && $db['navdel'] ? $db['navdel'] : new stdClass(), 'add' => isset($db['navadd']) && is_array($db['navadd']) && $db['navadd'] ? $db['navadd'] : new stdClass()));
 case 'nav_save':   /* tulajdonos: útjelzők igazítása a VR-ben (jelenet → cél → [x, y] a panorámán) */
     if ($method !== 'POST') { fail('POST kell.', 405); }
     $db = db_load(); require_admin($db);
@@ -1847,6 +1847,14 @@ case 'nav_save':   /* tulajdonos: útjelzők igazítása a VR-ben (jelenet → c
     if (isset($P['views']) && is_array($P['views'])) { $vw = array(); $k = 0;
         foreach ($P['views'] as $sc => $v) { if (!is_string($sc) || !preg_match('/^[a-z0-9-]{1,48}$/', $sc) || !is_numeric($v)) { continue; } $v = (float) $v; if ($v < 0 || $v > 1) { continue; } $vw[$sc] = round($v, 3); if (++$k > 500) { break; } }
         $db['navviews'] = $vw; }
+    /* 2026-11-13: szerkesztő – törölt (del: jelenet → cél → 0/1) és új táblák (add: jelenet → cél → [x, y] vagy 0) */
+    foreach (array('del' => 'navdel', 'add' => 'navadd') as $pk => $dk) { if (!isset($P[$pk]) || !is_array($P[$pk])) { continue; } $o2 = array(); $k = 0;
+        foreach ($P[$pk] as $sc => $tos) { if (!is_string($sc) || !preg_match('/^[a-z0-9-]{1,48}$/', $sc) || !is_array($tos)) { continue; }
+            foreach ($tos as $to => $v) { if (!is_string($to) || !preg_match('/^[a-z0-9-]{1,48}$/', $to)) { continue; }
+                if ($pk === 'add' && is_array($v) && count($v) === 2) { $x = (float) $v[0]; $y = (float) $v[1]; if ($x < 0 || $x > 1 || $y < 0 || $y > 1) { continue; } $o2[$sc][$to] = array(round($x, 4), round($y, 4)); }
+                else { $o2[$sc][$to] = $v ? 1 : 0; if ($pk === 'add' && $v) { unset($o2[$sc][$to]); } }
+                if (++$k > 1500) { break 2; } } }
+        $db[$dk] = $o2; }
     if (isset($P['start']) && is_string($P['start']) && preg_match('/^[a-z0-9-]{0,48}$/', $P['start'])) { $db['navstart'] = $P['start']; }
     db_save($db); out(array('ok' => true, 'n' => $n, 'mode' => $key));
 case 'events_save':
