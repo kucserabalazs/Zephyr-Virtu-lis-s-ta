@@ -31,6 +31,13 @@ Kész (main):
 - Rövid címek: /uj/ és /virtualis-seta/ a tároló gyökerében átirányít a weboldal/ alá.
 Hátra (javaslatok): iránytű-lépésjelző és ±3 nap bóják a VR-ben, kapitányi adatpult (billentyűzet 3D), fókuszcsapda a 2D párbeszédablakokban, valódi Quest 2-es mérés.
 
+## 2026-11-15: Balaton Mahjong – tározós szabály, új lapkészlet, zöld filc
+- **Lapok:** a tulajdonos „Balaton Mahjong” mintaképéből (kék-fehér porcelán; `forras/referencia/mahjong/balaton-mahjong-minta.png`) kivágva, 58 féle: 9 látnivaló, nád/vitorlás/naplemente/hal 1–9, Kelet/Dél/Nyugat/Észak, levendula, szőlő, bor, tavirózsa, hattyú, sirály, vitorlás, naplemente, horgony. Kép: `weboldal/virtualis-seta/img/mahjong-balaton.webp` (8×8 rács, 200×280-as cellák; újragyártás: `at2.py` + `at4.py`). Minden fajta csak önmagával párosítható; fajtánként 4 lap. Lap: elefántcsont, vastag krém él, kékes fényél (`drawTile`; a régi rajzolt készlet `drawTileOld`/`face` – már nem használt).
+- **Tározó (a tulajdonos szabálya):** felül 4 helyes, aranykeretes fadoboz (`drawBuf`, `bufGeo`, `BUF_N`). Ha a két kijelölt lap nem pár, mindkettő a tározóba repül (`toBuffer`, `S.fly`, `land`); a tározóban az egyforma lapok kiváltják egymást; tározóbeli lap a tábla szabad lapjával is párosítható. Ha a tározó megtelik (4 lap, pár nélkül): „Megtelt a tározó” – Visszalépek / Új játék. Visszalépés pillanatképből (`snap`), a tározót is visszaállítja. Keverés: a páratlanul maradt lapok (párjuk a tározóban) is kiosztódnak (`deal` egyedüli lappal). „Nincs szabad pár” panel: Keverés / Kockáztatok.
+- **Alakzat:** új alap a **Kikötő** (6×6 alap + félig eltolt 5×5 + 3×3, 70 lap; `LAYOUTS.kik`, `half`), telefonon a teljes szélességet kitöltő nagy lapokkal; a régi Hajóablak/Vitorlás/Teknős a menüben maradt. Lap arány `AR = 1.38`.
+- **Háttér:** zöld kártyafilc (`felt`: sugaras zöld, szálas textúra, sötétedő szélek) a panoráma helyett.
+- Teszt: Playwright, telefon + gép: szándékos tévesztés → tározó 2/4 → 4/4 = vége → Visszalépek → végigjátszás győzelemig.
+
 ## 1. Mi ez a projekt?
 A Zephyr Apartmanház (8621 Zamárdi, Gáspár András utca 58., tulajdonos: Kucsera Balázs) weboldalának megújítása:
 - **360°-os virtuális séta** (A-Frame), 3D-s forgatható üveg téglatesttel a bal felső sarokban;

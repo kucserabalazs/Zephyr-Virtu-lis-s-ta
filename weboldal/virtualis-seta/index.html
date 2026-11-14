@@ -13472,7 +13472,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "94e489a9d6"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "25e38823d0"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -16528,18 +16528,26 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const WINDS = ["É", "K", "D", "NY"], FLAGS = ["A", "B", "K", "N"], BOATS = ["DINGI", "KORVETT", "FREGATT", "SCHOONER"];
     const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
     const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = rnd() * (i + 1) | 0; const x = a[i]; a[i] = a[j]; a[j] = x; } return a; };
-    const grpOf = (k) => (k[0] === "l" ? "L" : k);
+    const grpOf = (k) => k;
+    /* Balaton Mahjong készlet (2026. nov. 15., a tulajdonos mintaképe alapján, kék-fehér porcelán stílus) – 58 féle lap, a képek: img/mahjong-balaton.webp (8×8 rács, 200×280-as cellák)
+       0–8 látnivalók · 9–17 nád 1–9 · 18–26 vitorlás 1–9 · 27–35 naplemente 1–9 · 36–44 hal 1–9 · 45–48 Kelet, Dél, Nyugat, Észak · 49–57 levendula, szőlő, bor, tavirózsa, hattyú, sirály, vitorlás, naplemente, horgony */
+    const MJ_NAMES = ["Tihany", "Boglári Gömbkilátó", "Zamárdi kikötő", "Badacsony", "Siófok", "Keszthely", "Balatonfüred", "Szigliget", "Fonyód"];
+    ["nád", "vitorlás", "naplemente", "hal"].forEach((sn) => { for (let v = 1; v <= 9; v++) MJ_NAMES.push(v + " " + sn); });
+    MJ_NAMES.push("Kelet", "Dél", "Nyugat", "Észak", "Levendula", "Szőlő", "Bor", "Tavirózsa", "Hattyú", "Sirály", "Vitorlás", "Naplemente", "Horgony");
+    const tName = (k) => MJ_NAMES[+k.slice(1)] || "";
+    const MJ_AT = new Image(); let mjAtOk = false;
+    MJ_AT.onload = () => { mjAtOk = true; IMG.w = 0; IMG2.m = {}; IMG2.n = 0; }; MJ_AT.src = "img/mahjong-balaton.webp";
+    const BUF_N = 4, AR = 1.38;   /* tározó helyei · a lap magassága / szélessége */
     const mix = (hex, to, k) => { const a = parseInt(hex.slice(1), 16), b = parseInt(to.slice(1), 16); const c = (s) => Math.round(((a >> s) & 255) * (1 - k) + ((b >> s) & 255) * k); return `rgb(${c(16)},${c(8)},${c(0)})`; };
-    function pairDeck() {   /* 72 pár = 144 lap */
-      const P = [];
-      ["r", "s", "n"].forEach((s) => { for (let v = 1; v <= 9; v++) P.push([s + v, s + v], [s + v, s + v]); });
-      for (let i = 0; i < 6; i++) P.push(["a" + i, "a" + i], ["a" + i, "a" + i]);   /* apartmanhajók */
-      P.push(["zz", "zz"], ["zz", "zz"]);   /* Zephyr-embléma */
-      const l = shuffle(["l0", "l0", "l1", "l1", "l2", "l2", "l3", "l3"]); for (let i = 0; i < 8; i += 2) P.push([l[i], l[i + 1]]);   /* tájak */
+    function pairDeck() {   /* fajtánként 2 pár (4 lap); a képes lapok és a számos lapok váltakozva, véletlen sorrendben */
+      const pics = shuffle([...Array(9).keys(), ...Array.from({ length: 13 }, (_, i) => 45 + i)].map((i) => "p" + i)), nums = shuffle(Array.from({ length: 36 }, (_, i) => "p" + (9 + i)));
+      const kinds = []; while (pics.length || nums.length) { if (pics.length) kinds.push(pics.pop()); if (nums.length) kinds.push(nums.pop()); }
+      const P = []; kinds.forEach((k) => P.push([k, k], [k, k]));
       return P;
     }
     /* alakzatok: [réteg, [[sor, első oszlop, utolsó oszlop], …]] egész lapnyi rácson; extra: félrácson [hx, hy, réteg] */
     const LAYOUTS = {
+      kik: { n: "Kikötő", rows: [[0, [[0, 0, 5], [1, 0, 5], [2, 0, 5], [3, 0, 5], [4, 0, 5], [5, 0, 5]]]], extra: [], half: [[1, 0, 4, 0, 4], [2, 1, 3, 1, 3]] },
       hab: { n: "Hajóablak", rows: [[0, [[0, 2, 3], [1, 1, 4], [2, 0, 5], [3, 0, 5], [4, 0, 5], [5, 1, 4], [6, 2, 3]]], [1, [[1, 2, 3], [2, 1, 4], [3, 1, 4], [4, 1, 4], [5, 2, 3]]], [2, [[2, 2, 3], [3, 2, 3], [4, 2, 3]]], [3, [[3, 2, 3]]]], extra: [] },
       vit: { n: "Vitorlás", rows: [[0, [[0, 5, 5], [1, 5, 6], [2, 4, 7], [3, 3, 8], [4, 2, 9], [5, 5, 5], [6, 0, 10], [7, 1, 9], [8, 2, 8]]],
         [1, [[2, 5, 6], [3, 4, 7], [4, 3, 8], [6, 2, 8], [7, 3, 7]]], [2, [[3, 5, 6], [4, 4, 7], [6, 4, 6], [7, 5, 5]]], [3, [[4, 5, 6]]]], extra: [[10, 13, 3]] },
@@ -16551,6 +16559,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const Ld = LAYOUTS[key], out = [];
       Ld.rows.forEach(([z, rows]) => rows.forEach(([y, a, b]) => { for (let x = a; x <= b; x++) out.push({ hx: x * 2, hy: y * 2, z }); }));
       Ld.extra.forEach(([hx, hy, z]) => out.push({ hx, hy, z }));
+      (Ld.half || []).forEach(([z, xa, xb, ya, yb]) => { for (let y = ya; y <= yb; y++) for (let x = xa; x <= xb; x++) out.push({ hx: x * 2 + z, hy: y * 2 + z, z }); });   /* félig eltolt rétegek */
       if (tr) out.forEach((p) => { const t = p.hx; p.hx = p.hy; p.hy = t; });   /* álló képernyőn a teknős elforgatva fér el */
       return out;
     }
@@ -16568,54 +16577,90 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       for (let at = 0; at < 120; at++) {
         const T = pos.map((p) => ({ hx: p.hx, hy: p.hy, z: p.z, k: null, gone: false })), ord = shuffle(pairs.slice()); let ok = true;
         for (const pr of ord) {
-          const fr = T.filter((t) => !t.gone && freeIn(T, t)); if (fr.length < 2) { ok = false; break; }
+          const fr = T.filter((t) => !t.gone && freeIn(T, t)); if (fr.length < pr.length) { ok = false; break; }
           fr.forEach((t) => (t.sc = t.z + rnd() * 1.6)); fr.sort((a, b) => b.sc - a.sc);
-          const a = fr[0], rest = fr.slice(1), b = rest[rnd() * rest.length | 0];
-          a.k = pr[0]; b.k = pr[1]; a.gone = b.gone = true;
+          const a = fr[0]; a.k = pr[0]; a.gone = true;
+          if (pr.length > 1) { const rest = fr.slice(1), b = rest[rnd() * rest.length | 0]; b.k = pr[1]; b.gone = true; }
         }
         if (ok) { T.forEach((t) => { t.gone = false; delete t.sc; }); return T; }
       }
       return null;
     }
     const BEST_KEY = "zephyr-mahjong";
-    const NEXT = { hab: "vit", vit: "tek", tek: "hab" };
-    const S = { lay: null, zoom: 1, px: 0, py: 0, zoomAt: 0, menu: false, ptr: {}, pinch: null, drag: null, panHint: false, T: [], sel: null, hint: null, hintT: 0, undo: [], fx: [], sp: [], conf: [], el: 0, run: false, st: "new", msg: "", msgT: 0, moves: 0, btn: [], tr: false, best: {}, shufT: 0, shake: null };
+    const NEXT = { kik: "hab", hab: "vit", vit: "tek", tek: "kik" };
+    const S = { lay: null, zoom: 1, px: 0, py: 0, zoomAt: 0, menu: false, ptr: {}, pinch: null, drag: null, panHint: false, T: [], sel: null, hint: null, hintT: 0, undo: [], fx: [], sp: [], conf: [], el: 0, run: false, st: "new", msg: "", msgT: 0, moves: 0, btn: [], tr: false, best: {}, shufT: 0, shake: null, buf: [], fly: [], stuckOK: false, B: null };
     try { S.best = JSON.parse(localStorage.getItem(BEST_KEY) || "{}") || {}; } catch (e) { S.best = {}; }
-    if (window.__zephyrTest) window.__zephyrTest.mahj = { S, freeIn, grpOf, tile: (g, x, y, w, k) => drawTile(g, x, y, w, w * 1.32, w * .13, k) };   /* csak automatikus teszthez */
+    if (window.__zephyrTest) window.__zephyrTest.mahj = { S, freeIn, grpOf, tile: (g, x, y, w, k) => drawTile(g, x, y, w, w * AR, w * .14, k), tName };   /* csak automatikus teszthez */
     function newGame(lay, W, H) {
-      if (lay) S.lay = lay; if (!S.lay) S.lay = W < 600 ? "hab" : "vit";   /* telefonon a kisebb, nagy lapos Hajóablak az alap */
+      if (lay) S.lay = lay; if (!S.lay) S.lay = "kik";   /* a nagy lapos Kikötő az alap (telefonon és gépen) */
       S.tr = S.lay === "tek" && H > W * 1.1; S.zoom = 1; S.px = 0; S.py = 0;
       const pos = positions(S.lay, S.tr); let T = null;
-      for (let i = 0; i < 6 && !T; i++) T = deal(pos, shuffle(pairDeck()).slice(0, pos.length / 2));
-      S.T = T || []; S.sel = null; S.hint = null; S.undo = []; S.fx = []; S.sp = []; S.conf = []; S.el = 0; S.run = false; S.st = "play"; S.msg = ""; S.ghost = null;
+      for (let i = 0; i < 6 && !T; i++) T = deal(pos, pairDeck().slice(0, pos.length / 2));
+      S.T = T || []; S.buf = []; S.fly = []; S.stuckOK = false; S.sel = null; S.hint = null; S.undo = []; S.fx = []; S.sp = []; S.conf = []; S.el = 0; S.run = false; S.st = "play"; S.msg = ""; S.ghost = null;
       refresh();
     }
     function refresh() {
       const fr = S.T.filter((t) => !t.gone); S.T.forEach((t) => (t.free = !t.gone && freeIn(S.T, t)));
-      const m = {}; fr.forEach((t) => { if (t.free) m[grpOf(t.k)] = (m[grpOf(t.k)] || 0) + 1; });
-      S.moves = Object.values(m).reduce((s, n) => s + n * (n - 1) / 2, 0); S.left = fr.length;
+      const m = {}; fr.forEach((t) => { if (t.free) m[t.k] = (m[t.k] || 0) + 1; });
+      S.moves = Object.values(m).reduce((s, n) => s + n * (n - 1) / 2, 0) + S.buf.reduce((s, b) => s + (m[b.k] || 0), 0); S.left = fr.length;
     }
-    function findPair() { const m = {}; for (const t of S.T) { if (t.gone || !t.free) continue; const g = grpOf(t.k); if (m[g]) return [m[g], t]; m[g] = t; } return null; }
+    function findPair() {   /* előbb a tározót ürítjük */
+      for (const b of S.buf) { const t = S.T.find((o) => !o.gone && o.free && o.k === b.k); if (t) return [b, t]; }
+      const m = {}; for (const t of S.T) { if (t.gone || !t.free) continue; if (m[t.k]) return [m[t.k], t]; m[t.k] = t; } return null;
+    }
+    function snap() { S.undo.push({ g: S.T.map((t) => t.gone), b: S.buf.slice() }); if (S.undo.length > 500) S.undo.shift(); }
+    function sparks(x, y) { for (let i = 0; i < 14; i++) { const an = rnd() * TAU, v = 40 + rnd() * 120; S.sp.push({ x, y, vx: Math.cos(an) * v, vy: Math.sin(an) * v - 30, l: .5 + rnd() * .5, c: rnd() < .5 ? "#ffd978" : "#ffffff" }); } }
+    function checkEnd() {
+      if (S.buf.length >= BUF_N) { S.st = "full"; S.run = false; S.sel = null; gmSnd.thunk(); setTimeout(() => gmSnd.thunk(), 160); return; }
+      if (S.fly.length) return;
+      if (!S.left && !S.buf.length) { S.st = "win"; S.run = false; gmSnd.win(); const k = S.lay + (S.tr ? "t" : ""); if (!S.best[k] || S.el < S.best[k]) { S.best[k] = S.el; S.rec = true; try { localStorage.setItem(BEST_KEY, JSON.stringify(S.best)); } catch (e) {} } else S.rec = false;
+        for (let i = 0; i < 90; i++) S.conf.push({ x: rnd(), y: -rnd() * .6, vy: .12 + rnd() * .18, vx: (rnd() - .5) * .06, r: rnd() * TAU, vr: (rnd() - .5) * 6, f: rnd() * 4 | 0 }); return; }
+      if (!S.moves && !S.stuckOK && S.left) S.st = "stuck";
+    }
+    /* a nem összeillő lapok a tározóba repülnek; amelyiknek ott van a párja, az megy előbb (és kiváltják egymást) */
+    function toBuffer(list) {
+      list.sort((a, b) => (S.buf.some((x) => x.k === b.k) ? 1 : 0) - (S.buf.some((x) => x.k === a.k) ? 1 : 0));
+      list.forEach((t, i) => { t.gone = true; S.fly.push({ t, x: t.sx, y: t.sy, w: t.sw || (G ? G.w : 50), a: -i * .12 }); });
+      S.hint = null; refresh(); gmSnd.thunk();
+      flash(list.length > 1 ? "Nem pár – mindkét lap a tározóba került." : "Nem pár – a lap a tározóba került.", 2);
+    }
+    function slotXY(B, i) { return [B.x + B.pad + i * (B.sw + B.gap), B.y + B.pad]; }
+    function land(t) {
+      if (S.st === "full") { t.gone = false; refresh(); return; }   /* közben megtelt: ez a lap a táblán marad */
+      const p = S.buf.find((b) => b.k === t.k);
+      if (p) {
+        const B = S.B; S.buf.splice(S.buf.indexOf(p), 1); p.buf = false;
+        if (B) { S.fx.push({ k: p.k, x: p.sx, y: p.sy, w: B.sw, t: 0 }); sparks(p.sx + B.sw / 2, p.sy + B.sh / 2); sparks(p.sx + B.sw / 2, p.sy + B.sh / 2); }
+        gmSnd.pop(); setTimeout(() => gmSnd.coin(), 90); S.stuckOK = false; flash(`Két „${tName(t.k)}” kiváltotta egymást a tározóban!`, 2.2);
+      } else {
+        t.buf = true; S.buf.push(t); gmSnd.click();
+        if (S.buf.length === BUF_N - 1) flash("Vigyázz: már csak egy hely maradt a tározóban!", 2.6);
+      }
+      refresh(); checkEnd();
+    }
     function flash(m, sec) { S.msg = m; S.msgT = sec || 2.6; }
     function remove(a, b) {
-      a.gone = b.gone = true; S.undo.push([a, b]); S.hint = null; gmSnd.pop(); setTimeout(() => gmSnd.coin(), 90);
-      [a, b].forEach((t) => { S.fx.push({ k: t.k, x: t.sx, y: t.sy, t: 0 }); for (let i = 0; i < 12; i++) { const an = rnd() * TAU, v = 40 + rnd() * 110; S.sp.push({ x: t.sx + (S.G ? S.G.w / 2 : 0), y: t.sy + (S.G ? S.G.h / 2 : 0), vx: Math.cos(an) * v, vy: Math.sin(an) * v - 30, l: .5 + rnd() * .5, c: rnd() < .5 ? "#ffd978" : "#ffffff" }); } });
-      refresh();
-      if (!S.left) { S.st = "win"; S.run = false; gmSnd.win(); const k = S.lay + (S.tr ? "t" : ""); if (!S.best[k] || S.el < S.best[k]) { S.best[k] = S.el; S.rec = true; try { localStorage.setItem(BEST_KEY, JSON.stringify(S.best)); } catch (e) {} } else S.rec = false;
-        for (let i = 0; i < 90; i++) S.conf.push({ x: rnd(), y: -rnd() * .6, vy: .12 + rnd() * .18, vx: (rnd() - .5) * .06, r: rnd() * TAU, vr: (rnd() - .5) * 6, f: rnd() * 4 | 0 }); }
-      else if (!S.moves) S.st = "stuck";
+      [a, b].forEach((t) => { if (t.buf) { S.buf.splice(S.buf.indexOf(t), 1); t.buf = false; } t.gone = true; });
+      S.hint = null; S.stuckOK = false; gmSnd.pop(); setTimeout(() => gmSnd.coin(), 90);
+      [a, b].forEach((t) => { const w = t.sw || (G ? G.w : 50); S.fx.push({ k: t.k, x: t.sx, y: t.sy, w, t: 0 }); sparks(t.sx + w / 2, t.sy + w * AR / 2); });
+      refresh(); checkEnd();
     }
     function tap(t) {
-      if (!t.free) { gmSnd.thunk(); S.shake = { t, a: 0 }; flash("Ez a lap még nem szabad – fölötte vagy mindkét oldalán lap van."); return; }
+      if (S.fly.length || S.st !== "play") return;
+      if (!t.buf && !t.free) { gmSnd.thunk(); S.shake = { t, a: 0 }; flash("Ez a lap még nem szabad – fölötte vagy mindkét oldalán lap van."); return; }
       S.run = true;
       if (!S.sel) { S.sel = t; gmSnd.click(); return; }
       if (S.sel === t) { S.sel = null; gmSnd.click(); return; }
-      if (grpOf(S.sel.k) === grpOf(t.k)) { const a = S.sel; S.sel = null; remove(a, t); return; }
-      S.sel = t; gmSnd.click();
+      const a = S.sel; S.sel = null;
+      if (a.k === t.k) { snap(); remove(a, t); return; }
+      if (a.buf && t.buf) { S.sel = t; gmSnd.click(); return; }   /* két tározóbeli lap: csak átjelölünk */
+      snap(); toBuffer([a, t].filter((x) => !x.buf));
     }
     function undo() {
+      if (S.fly.length) return;
       const p = S.undo.pop(); if (!p) { flash("Nincs mit visszavonni."); return; }
-      p[0].gone = p[1].gone = false; S.sel = null; S.hint = null; if (S.st !== "play") S.st = "play"; refresh(); gmSnd.click();
+      S.T.forEach((t, i) => { t.gone = p.g[i]; t.buf = false; }); S.buf = p.b.slice(); S.buf.forEach((t) => (t.buf = true));
+      S.sel = null; S.hint = null; S.st = "play"; S.stuckOK = false; S.msgT = 0; refresh(); gmSnd.click();
     }
     function hint() {
       const p = findPair(); if (!p) { flash("Nincs szabad pár – keverjük meg a lapokat!"); return; }
@@ -16623,8 +16668,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     }
     function reshuffle() {
       const rem = S.T.filter((t) => !t.gone); if (rem.length < 2) return;
-      const by = {}; rem.forEach((t) => (by[grpOf(t.k)] = by[grpOf(t.k)] || []).push(t.k));
-      const pairs = []; Object.values(by).forEach((ks) => { shuffle(ks); for (let i = 0; i + 1 < ks.length; i += 2) pairs.push([ks[i], ks[i + 1]]); });
+      if (S.fly.length) return;
+      const by = {}; rem.forEach((t) => (by[t.k] = by[t.k] || []).push(t.k));
+      const pairs = []; Object.values(by).forEach((ks) => { for (let i = 0; i < ks.length; i += 2) pairs.push(ks.slice(i, i + 2)); });   /* páratlan: a párja a tározóban van */
       let T2 = deal(rem, pairs);
       if (!T2) {   /* pl. egymás tetején maradt lapok: a maradékot egymás mellé, sorokba rakjuk ki – így mindig megoldható */
         let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; S.T.forEach((t) => { x0 = Math.min(x0, t.hx); x1 = Math.max(x1, t.hx); y0 = Math.min(y0, t.hy); y1 = Math.max(y1, t.hy); });
@@ -16634,7 +16680,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       }
       if (!T2) { S.st = "dead"; S.sel = null; gmSnd.thunk(); return; }   /* pl. egymás tetején maradt lapok: keveréssel sem oldható meg */
       rem.forEach((t, i) => { t.k = T2[i].k; });
-      S.undo = []; S.sel = null; S.hint = null; S.st = "play"; S.shufT = .6; refresh(); gmSnd.reel(); setTimeout(() => gmSnd.reel(), 120); setTimeout(() => gmSnd.reel(), 240);
+      S.undo = []; S.sel = null; S.hint = null; S.st = "play"; S.stuckOK = false; S.shufT = .6; refresh(); gmSnd.reel(); setTimeout(() => gmSnd.reel(), 120); setTimeout(() => gmSnd.reel(), 240);
       flash("Megkevertem a maradék lapokat – a visszalépés törlődött.");
     }
 
@@ -16889,6 +16935,25 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       if (c === "a" || c === "z" || c === "l") { g.save(); g.scale(bw / 100, bh / 140); PIC[k](g); g.restore(); }
     }
     function drawTile(g, x, y, w, h, d, k) {
+      const r = w * .12, i = +k.slice(1);
+      /* árnyék a filcen, majd a lap vastagsága: krémszínű csont, alul-jobbra sötétedő éllel */
+      g.save(); g.shadowColor = "rgba(0,18,6,.55)"; g.shadowBlur = d * 2.2; g.shadowOffsetX = d * .7; g.shadowOffsetY = d * 1.1; rrp(g, x + d, y + d, w, h, r); g.fillStyle = "#8f8166"; g.fill(); g.restore();
+      const side = g.createLinearGradient(x, y, x + w + d, y + h + d); side.addColorStop(0, "#f3ead6"); side.addColorStop(.6, "#d9cba8"); side.addColorStop(1, "#a8987a");
+      rrp(g, x + d, y + d, w, h, r); g.fillStyle = side; g.fill(); g.lineWidth = Math.max(.6, w * .012); g.strokeStyle = "rgba(90,74,48,.55)"; g.stroke();
+      rrp(g, x + d * .66, y + d * .66, w, h, r); g.fillStyle = "#e4d8bd"; g.fill();
+      rrp(g, x + d * .33, y + d * .33, w, h, r); g.fillStyle = "#efe6d1"; g.fill();
+      g.strokeStyle = "rgba(120,170,215,.35)"; g.lineWidth = Math.max(.6, d * .16); rrp(g, x + d * .5, y + d * .5, w, h, r); g.stroke();   /* kékes fényél, mint a mintán */
+      const fg = g.createLinearGradient(x, y, x + w * .7, y + h); fg.addColorStop(0, "#fffef9"); fg.addColorStop(1, "#f1e8d4");
+      rrp(g, x, y, w, h, r); g.fillStyle = fg; g.fill();
+      if (mjAtOk && i >= 0 && i < 58) {
+        const ix = w * .03; g.save(); rrp(g, x + ix, y + ix, w - ix * 2, h - ix * 2, r * .8); g.clip(); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";
+        g.drawImage(MJ_AT, (i % 8) * 200, Math.floor(i / 8) * 280, 200, 280, x + ix, y + ix, w - ix * 2, h - ix * 2); g.restore();
+      } else { g.fillStyle = "#1b3d8f"; g.font = `700 ${w * .17}px ${SER}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(tName(k), x + w / 2, y + h / 2, w * .9); }
+      rrp(g, x, y, w, h, r); g.lineWidth = Math.max(.7, w * .016); g.strokeStyle = "rgba(110,90,55,.6)"; g.stroke();
+      g.save(); rrp(g, x, y, w, h, r); g.clip(); const hl = g.createLinearGradient(x, y, x + w * .5, y + h * .4); hl.addColorStop(0, "rgba(255,255,255,.55)"); hl.addColorStop(.3, "rgba(255,255,255,0)"); g.fillStyle = hl; g.fillRect(x, y, w, h);
+      g.lineWidth = Math.max(1, w * .03); g.strokeStyle = "rgba(255,255,255,.7)"; g.beginPath(); g.moveTo(x + r, y + w * .012); g.lineTo(x + w - r, y + w * .012); g.stroke(); g.restore();
+    }
+    function drawTileOld(g, x, y, w, h, d, k) {
       const r = w * .13;
       g.save(); g.shadowColor = "rgba(0,8,22,.5)"; g.shadowBlur = d * 1.8; g.shadowOffsetX = d * .6; g.shadowOffsetY = d * .8; rrp(g, x + d, y + d, w, h, r); g.fillStyle = "#0a2a4a"; g.fill(); g.restore();
       const back = g.createLinearGradient(x, y, x + w + d, y + h + d); back.addColorStop(0, "#2a7fc0"); back.addColorStop(1, "#0a2f57");
@@ -16912,12 +16977,66 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       return (IMG.m[k] = { c, pad, cw, ch });
     }
     function blit(g, k, x, y, dpr) { const im = tileImg(k, G, dpr), q = G.w / IMG.w; g.drawImage(im.c, x - im.pad * q, y - im.pad * q, im.cw * q, im.ch * q); }
+    const IMG2 = { m: {}, n: 0 };
+    function blitAt(g, k, x, y, w, dpr, base) {   /* tetszőleges méret (tározó, repülő lap); a „base” méretű gyorsítótárból nagyítva */
+      base = base || w; const key = k + "|" + Math.round(base * 4) + "|" + dpr; let im = IMG2.m[key];
+      if (!im) { if (++IMG2.n > 200) { IMG2.m = {}; IMG2.n = 1; } const h = base * AR, d = base * .14, pad = Math.ceil(d * 2 + 6), cw = base + d + pad * 2, ch = h + d + pad * 2;
+        const c = document.createElement("canvas"); c.width = Math.ceil(cw * dpr); c.height = Math.ceil(ch * dpr); const gg = c.getContext("2d"); gg.scale(dpr, dpr); drawTile(gg, pad, pad, base, h, d, k); im = IMG2.m[key] = { c, pad, cw, ch }; }
+      const q = w / base; g.drawImage(im.c, x - im.pad * q, y - im.pad * q, im.cw * q, im.ch * q);
+    }
+    function bufGeo(W) {
+      const ph = W < 600, sw = Math.round(Math.max(38, Math.min(ph ? 46 : 62, W * .12))), sh = Math.round(sw * AR), gap = Math.round(sw * .16), pad = Math.round(sw * .17);
+      const fw = BUF_N * sw + (BUF_N - 1) * gap + pad * 2, fh = sh + pad * 2 + Math.round(sw * .14);
+      return { sw, sh, gap, pad, fw, fh, x: Math.round(W / 2 - fw / 2), y: GM_TOP + 4 };
+    }
+    let FELT = null;
+    function felt(g, W, H) {   /* zöld kártyafilc: mélyzöld, középen világosabb, finom szálas textúrával, sötétedő szélekkel */
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (!FELT || FELT.W !== W || FELT.H !== H || FELT.dpr !== dpr) {
+        const c = document.createElement("canvas"); c.width = Math.ceil(W * dpr); c.height = Math.ceil(H * dpr); const f = c.getContext("2d"); f.scale(dpr, dpr);
+        const bg = f.createRadialGradient(W / 2, H * .42, 10, W / 2, H * .45, Math.max(W, H) * .78); bg.addColorStop(0, "#3fa35a"); bg.addColorStop(.55, "#2b8645"); bg.addColorStop(1, "#164d27");
+        f.fillStyle = bg; f.fillRect(0, 0, W, H);
+        const n = Math.min(70000, Math.round(W * H / 12)); for (let i = 0; i < n; i++) { const x = rnd() * W, y = rnd() * H, a = rnd() * TAU, l = .8 + rnd() * 2.2; f.strokeStyle = rnd() < .5 ? "rgba(255,255,255,.045)" : "rgba(0,30,10,.07)"; f.lineWidth = .6; f.beginPath(); f.moveTo(x, y); f.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); f.stroke(); }
+        for (let i = 0; i < 26; i++) { const x = rnd() * W, y = rnd() * H, rr = 30 + rnd() * 90, gr = f.createRadialGradient(x, y, 0, x, y, rr); gr.addColorStop(0, rnd() < .5 ? "rgba(255,255,255,.035)" : "rgba(0,20,6,.05)"); gr.addColorStop(1, "rgba(0,0,0,0)"); f.fillStyle = gr; f.fillRect(x - rr, y - rr, rr * 2, rr * 2); }
+        const vg = f.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .8); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,22,8,.42)"); f.fillStyle = vg; f.fillRect(0, 0, W, H);
+        FELT = { c, W, H, dpr };
+      }
+      g.drawImage(FELT.c, 0, 0, W, H);
+    }
+    function drawBuf(g, B, t, dpr) {   /* a felső tározó: aranykeretes, sötét fa doboz 4 mélyedéssel */
+      const warn = S.buf.length >= BUF_N - 1 && S.st === "play", full = S.st === "full", pl = .5 + .5 * Math.sin(t * 7);
+      g.save(); g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 16; g.shadowOffsetY = 6;
+      const fr = g.createLinearGradient(0, B.y - 5, 0, B.y + B.fh + 5); fr.addColorStop(0, "#fbe7a6"); fr.addColorStop(.3, "#d9a441"); fr.addColorStop(.7, "#a8701e"); fr.addColorStop(1, "#6e4511");
+      rrp(g, B.x - 5, B.y - 5, B.fw + 10, B.fh + 10, 16); g.fillStyle = fr; g.fill(); g.restore();
+      g.lineWidth = 1; g.strokeStyle = "rgba(255,240,190,.8)"; rrp(g, B.x - 4, B.y - 4, B.fw + 8, B.fh + 8, 15); g.stroke();
+      const wd = g.createLinearGradient(0, B.y, 0, B.y + B.fh); wd.addColorStop(0, "#5a3519"); wd.addColorStop(1, "#2e190a");
+      rrp(g, B.x, B.y, B.fw, B.fh, 12); g.fillStyle = wd; g.fill();
+      g.save(); rrp(g, B.x, B.y, B.fw, B.fh, 12); g.clip(); g.globalAlpha = .16; g.strokeStyle = "#c98b4e"; g.lineWidth = 1;
+      for (let i = 0; i < 9; i++) { const yy = B.y + 4 + i * B.fh / 9; g.beginPath(); g.moveTo(B.x, yy); g.bezierCurveTo(B.x + B.fw * .3, yy + 3, B.x + B.fw * .6, yy - 3, B.x + B.fw, yy + 1); g.stroke(); } g.restore();
+      for (let i = 0; i < BUF_N; i++) { const [sx, sy] = slotXY(B, i);
+        const sg = g.createLinearGradient(sx, sy, sx, sy + B.sh); sg.addColorStop(0, "#1c0e05"); sg.addColorStop(1, "#3d2410");
+        rrp(g, sx, sy, B.sw, B.sh, B.sw * .12); g.fillStyle = sg; g.fill(); g.lineWidth = 1.2; g.strokeStyle = "rgba(255,214,140,.22)"; g.stroke(); }
+      if (warn || full) { g.save(); g.shadowColor = "#ff4a3a"; g.shadowBlur = 14 + pl * 10; g.lineWidth = 2.5; g.strokeStyle = `rgba(255,${full ? 60 : 110},70,${.55 + .45 * pl})`; rrp(g, B.x - 5, B.y - 5, B.fw + 10, B.fh + 10, 16); g.stroke(); g.restore(); }
+      const tw = B.sw * 1.18;   /* a lapok a mélyedésből kicsit kiemelkedve */
+      S.buf.forEach((b, i) => { const [sx, sy] = slotXY(B, i); b.sx = sx; b.sy = sy - B.sw * .04; b.sw = B.sw;
+        blitAt(g, b.k, b.sx, b.sy, B.sw, dpr);
+        const hn = S.hint && (S.hint[0] === b || S.hint[1] === b);
+        if (b === S.sel || hn) { g.save(); rrp(g, b.sx - 1, b.sy - 1, B.sw + 2, B.sh + 2, B.sw * .13); g.shadowColor = b === S.sel ? "#ffd23f" : "#4fe3ff"; g.shadowBlur = 14; g.lineWidth = 3; g.strokeStyle = b === S.sel ? "#ffcc33" : `rgba(79,227,255,${.6 + .4 * pl})`; g.stroke(); g.restore(); } });
+      void tw;
+      /* felirat a doboz alatt */
+      /* számláló jelvény a doboz jobb alsó sarkán */
+      { const lbl = `${S.buf.length}/${BUF_N}`; g.font = `900 ${W_PH ? 13 : 14}px ${SANS}`; const bw2 = g.measureText(lbl).width + 16, bh2 = W_PH ? 22 : 24, bx = B.x + B.fw - bw2 + 10, by = B.y + B.fh - bh2 / 2 + 3;
+        g.save(); g.shadowColor = "rgba(0,0,0,.4)"; g.shadowBlur = 6; rrp(g, bx, by, bw2, bh2, bh2 / 2); g.fillStyle = full ? "#c62f25" : warn ? "#e0702a" : "#0f5130"; g.fill(); g.restore();
+        g.lineWidth = 1.5; g.strokeStyle = "#f2cf74"; rrp(g, bx, by, bw2, bh2, bh2 / 2); g.stroke();
+        g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(lbl, bx + bw2 / 2, by + bh2 / 2 + .5); }
+    }
+    let W_PH = false;
     function geo(W, H) {
-      const ph = W < 600, top = GM_TOP + 2, bot = 66;
+      const ph = W < 600, top = GM_TOP + 4 + bufGeo(W).fh + 14, bot = 62;
       let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, zm = 0;
       S.T.forEach((t) => { x0 = Math.min(x0, t.hx); x1 = Math.max(x1, t.hx + 2); y0 = Math.min(y0, t.hy); y1 = Math.max(y1, t.hy + 2); zm = Math.max(zm, t.z); });
-      const AR = 1.32, DK = .13, sx = (x1 - x0) / 2, sy = (y1 - y0) / 2, aw = W - 12, ah = H - top - bot;
-      const fit = Math.max(14, Math.min(aw / (sx + DK * (zm + 1.3)), ah / (sy * AR + DK * (zm + 1.3)), ph ? 96 : 112));
+      const DK = .14, sx = (x1 - x0) / 2, sy = (y1 - y0) / 2, aw = W - 8, ah = H - top - bot;
+      const fit = Math.max(14, Math.min(aw / (sx + DK * (zm + 1.3)), ah / (sy * AR + DK * (zm + 1.3)), ph ? 110 : 118));
       const w = fit * S.zoom, h = w * AR, d = w * DK, bw = sx * w + d * (zm + 1), bh = sy * h + d * (zm + 1);
       const lim = (v, over) => (over > 0 ? Math.max(-over / 2 - 10, Math.min(over / 2 + 10, v)) : 0);
       S.px = lim(S.px, bw - aw); S.py = lim(S.py, bh - ah);
@@ -16930,6 +17049,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     }
     function hitTile(x, y) {
       if (!G) return;
+      const B = S.B; if (B) for (let i = 0; i < S.buf.length; i++) { const b = S.buf[i]; if (x >= b.sx - 3 && x <= b.sx + B.sw + 3 && y >= b.sy - 3 && y <= b.sy + B.sh + 3) { tap(b); return; } }
       const order = S.T.filter((t) => !t.gone).sort((a, b) => b.z - a.z || b.hy - a.hy || b.hx - a.hx);
       for (const t of order) { const [tx, ty] = at(G, t); if (x >= tx && x <= tx + G.w && y >= ty && y <= ty + G.h) { tap(t); return; } }
       if (S.sel) S.sel = null;
@@ -16947,7 +17067,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       return { x, y, w, h };
     }
     function bigPanel(g, W, H, title, lines, b1, b2) {
-      const pw = Math.min(W - 30, 400), ph = 92 + lines.length * 24 + 60, px = W / 2 - pw / 2, py = Math.max(GM_TOP + 30, H * .3 - ph / 3);
+      const pw = Math.min(W - 30, 400), ph = 92 + lines.length * 24 + 60, px = W / 2 - pw / 2, py = Math.max(GM_TOP + (S.B ? S.B.fh + 34 : 30), H * .3 - ph / 3);
       g.fillStyle = "rgba(7,29,56,.9)"; g.beginPath(); g.roundRect ? g.roundRect(px, py, pw, ph, 22) : g.rect(px, py, pw, ph); g.fill(); g.strokeStyle = "rgba(242,178,51,.55)"; g.lineWidth = 1.5; g.stroke();
       g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#ffd978"; g.font = `900 23px ${SANS}`; g.fillText(title, W / 2, py + 34);
       g.font = `700 14.5px ${SANS}`; g.fillStyle = "#fff"; lines.forEach((l, i) => g.fillText(l, W / 2, py + 68 + i * 24));
@@ -16968,7 +17088,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         if (ids.length === 2) { const [p1, p2] = ids.map((i) => S.ptr[i]); S.pinch = { d: Math.max(20, Math.hypot(p1.x - p2.x, p1.y - p2.y)), z: S.zoom, px: S.px, py: S.py }; S.drag = null; return; }
         if (ids.length > 2) return;
         if (S.st === "win") { if (inR(S.pb1, x, y)) newGame(null, W, H); else if (inR(S.pb2, x, y)) newGame(NEXT[S.lay], W, H); return; }
-        if (S.st === "stuck") { if (inR(S.pb1, x, y)) { reshuffle(); return; } if (inR(S.pb2, x, y)) { undo(); return; } }
+        if (S.st === "stuck") { if (inR(S.pb1, x, y)) { reshuffle(); return; } if (inR(S.pb2, x, y)) { S.stuckOK = true; S.st = "play"; gmSnd.click(); return; } }
+        if (S.st === "full") { if (inR(S.pb1, x, y)) { undo(); return; } if (inR(S.pb2, x, y)) { newGame(null, W, H); return; } }
         if (S.st === "dead") { if (inR(S.pb1, x, y)) { undo(); undo(); return; } if (inR(S.pb2, x, y)) { newGame(null, W, H); return; } }
         for (const b of S.btn) if (inR(b, x, y)) {
           gmSnd.click();
@@ -16981,7 +17102,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           return;
         }
         if (S.menu) { S.menu = false; return; }   /* a lenyitott menü mellé koppintva csak becsukjuk */
-        if (S.st === "stuck" || S.st === "dead") return;
+        if (S.st === "stuck" || S.st === "dead" || S.st === "full") return;
         S.drag = { x, y, px: S.px, py: S.py, moved: false };
       },
       move(x, y, W, H, e) {
@@ -17006,14 +17127,13 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         if (S.run && S.st === "play") S.el += dt;
         if (S.msgT > 0) S.msgT -= dt; if (S.hintT > 0) { S.hintT -= dt; if (S.hintT <= 0) S.hint = null; } if (S.shufT > 0) S.shufT -= dt;
         S.fx.forEach((f) => (f.t += dt)); S.fx = S.fx.filter((f) => f.t < .55);
+        S.fly.forEach((f) => (f.a += dt / .42)); while (S.fly.length && S.fly[0].a >= 1) land(S.fly.shift().t);
         S.sp.forEach((p) => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; p.l -= dt; }); S.sp = S.sp.filter((p) => p.l > 0);
         S.conf.forEach((c) => { c.y += c.vy * dt; c.x += c.vx * dt + Math.sin(c.r) * .002; c.r += c.vr * dt; if (c.y > 1.1) { c.y = -.1; c.x = rnd(); } });
         if (S.shake) { S.shake.a += dt; if (S.shake.a > .35) S.shake = null; }
       },
       draw(g, W, H, t) {
-        panoBg(g, W, H, t);
-        const ov = g.createLinearGradient(0, 0, 0, H); ov.addColorStop(0, "rgba(4,20,42,.5)"); ov.addColorStop(1, "rgba(3,14,30,.72)"); g.fillStyle = ov; g.fillRect(0, 0, W, H);
-        const vg = g.createRadialGradient(W / 2, H * .5, Math.min(W, H) * .3, W / 2, H * .5, Math.max(W, H) * .75); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.35)"); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+        felt(g, W, H); W_PH = W < 600;
         if (S.st === "new" || !S.T.length) newGame(null, W, H);
         G = geo(W, H); S.G = G;
         const dpr = Math.min(2, window.devicePixelRatio || 1), ph = W < 600;
@@ -17024,10 +17144,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           let [x, y] = at(G, tl); const sel = tl === S.sel, hn = S.hint && (S.hint[0] === tl || S.hint[1] === tl);
           if (sel) y -= G.d * .5;
           if (S.shake && S.shake.t === tl) x += Math.sin(S.shake.a * 60) * G.w * .06 * (1 - S.shake.a / .35);
-          tl.sx = x; tl.sy = y;
+          tl.sx = x; tl.sy = y; tl.sw = G.w;
           if (S.shufT > 0) { const k2 = 1 - S.shufT / .6; g.globalAlpha = .35 + .65 * k2; }
           if (x > -G.w * 1.4 && x < W + G.w * .4 && y > -G.h * 1.4 && y < H + G.h * .4) blit(g, tl.k, x, y, dpr); g.globalAlpha = 1;
-          if (!tl.free) { rrp(g, x, y, G.w, G.h, G.w * .13); g.fillStyle = "rgba(8,26,52,.2)"; g.fill(); }
+          if (!tl.free) { rrp(g, x, y, G.w, G.h, G.w * .12); g.fillStyle = "rgba(20,40,20,.16)"; g.fill(); }
           if (sel || hn) {
             g.save(); rrp(g, x - 1, y - 1, G.w + 2, G.h + 2, G.w * .14); g.shadowColor = sel ? "#ffd23f" : "#4fe3ff"; g.shadowBlur = 16; g.lineWidth = sel ? 3 : 2 + pulse * 1.5;
             g.strokeStyle = sel ? "#ffcc33" : `rgba(79,227,255,${.6 + .4 * pulse})`; g.stroke(); g.restore();
@@ -17035,19 +17155,25 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           }
         }
         /* a kijelölt lap nagyban, ha a tábla mellett van hely – hogy a rajz részletei is látsszanak */
-        if (S.sel && !S.sel.gone) {
+        const BG = bufGeo(W); S.B = BG; drawBuf(g, BG, t, dpr);
+        if (S.sel && (!S.sel.gone || S.sel.buf)) {
           const margin = (W - G.bw) / 2;
           if (margin >= 170) { if (S.prevK !== S.sel.k) { S.prevK = S.sel.k; S.prevAt = t; } S.prevT = Math.min(1, (t - S.prevAt) / .25);
-            const pw = Math.min(210, margin - 44), ph = pw * 1.32, px = W - margin / 2 - pw / 2, py = Math.max(G.top, H / 2 - ph / 2 - 20);
+            const pw = Math.min(210, margin - 44), ph = pw * AR, px = W - margin / 2 - pw / 2, py = Math.max(G.top, H / 2 - ph / 2 - 20);
             g.save(); g.globalAlpha = S.prevT; g.translate(px + pw / 2, py + ph / 2); g.scale(.92 + .08 * S.prevT, .92 + .08 * S.prevT); drawTile(g, -pw / 2, -ph / 2, pw, ph, pw * .1, S.sel.k); g.restore(); }
         } else S.prevK = null;
         /* eltűnő párok és szikrák */
-        S.fx.forEach((f) => { const k2 = f.t / .55, sc = 1 + k2 * .25; g.globalAlpha = 1 - k2;
-          g.save(); g.translate(f.x + G.w / 2, f.y + G.h / 2 - k2 * G.h * .4); g.scale(sc, sc); blit(g, f.k, -G.w / 2, -G.h / 2, dpr); g.restore(); g.globalAlpha = 1; });
+        S.fx.forEach((f) => { const k2 = f.t / .55, sc = 1 + k2 * .25, fw = f.w || G.w; g.globalAlpha = 1 - k2;
+          g.save(); g.translate(f.x + fw / 2, f.y + fw * AR / 2 - k2 * fw * .5); g.scale(sc, sc); blitAt(g, f.k, -fw / 2, -fw * AR / 2, fw, dpr); g.restore(); g.globalAlpha = 1; });
+        /* a tározóba repülő lapok: ívben, kicsinyedve; ha ott a párja, rá érkezik */
+        { let nth = 0; S.fly.forEach((f) => { const pi = S.buf.findIndex((b) => b.k === f.t.k), slot = pi >= 0 ? pi : S.buf.length + nth++;
+            const [tx, ty] = slotXY(BG, Math.min(BUF_N - 1, slot)), u0 = Math.max(0, Math.min(1, f.a)), u = u0 < .5 ? 2 * u0 * u0 : 1 - Math.pow(-2 * u0 + 2, 2) / 2;
+            const w = f.w + (BG.sw - f.w) * u, x = f.x + (tx - f.x) * u, y = f.y + (ty - f.y) * u - Math.sin(Math.PI * u) * Math.min(90, H * .12);
+            g.save(); g.translate(x + w / 2, y + w * AR / 2); g.rotate(Math.sin(Math.PI * u) * .25); blitAt(g, f.t.k, -w / 2, -w * AR / 2, w, dpr, BG.sw * 1.6); g.restore(); }); }
         S.sp.forEach((p) => { g.globalAlpha = Math.max(0, p.l); g.fillStyle = p.c; g.save(); g.translate(p.x, p.y); g.rotate(p.l * 6); const s = 3 + p.l * 3; g.beginPath(); for (let i = 0; i < 8; i++) { const r = i % 2 ? s * .35 : s, a = i * Math.PI / 4; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.fill(); g.restore(); g.globalAlpha = 1; });
         /* számláló: jobb felső sarok, a fejléc sorában */
         if (!GM_PANELS_OFF) {
-          const l1 = gmFmt(S.el * 1000), l2 = ph ? `${S.left} lap · ${S.moves} pár` : `${LAYOUTS[S.lay].n} · ${S.left} lap · ${S.moves} szabad pár`;
+          const l1 = gmFmt(S.el * 1000), l2 = ph ? `${S.left + S.buf.length} lap · ${S.moves} pár` : `${LAYOUTS[S.lay].n} · ${S.left + S.buf.length} lap · ${S.moves} szabad pár`;
           g.font = `700 ${ph ? 11 : 12}px ${SANS}`; const w2 = g.measureText(l2).width; g.font = `900 ${ph ? 18 : 20}px ${SANS}`; const w1 = g.measureText(l1).width + 22;
           const cw = Math.max(w1, w2) + 24, chh = ph ? 44 : 48, cx = W - cw - 10; let cy = GM_HD.top;
           if (!GM_HD.min && GM_HD.right > cx - 6) cy = GM_HD.bottom + 8;
@@ -17065,7 +17191,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         { const b = pill(g, W - mw - 12, yb, mw, bh, mLbl, S.menu ? "on" : "gold"); b.id = "menu"; S.btn.push(b); }
         let msgY = yb - 46;
         if (S.menu) {
-          const acts = [["hint", "Tipp"], ["undo", "Vissza"], ["shuf", "Keverés"], ["new", "Új játék"]], lays = [["hab", "Hajóablak"], ["vit", "Vitorlás"], ["tek", "Teknős"]];
+          const acts = [["hint", "Tipp"], ["undo", "Vissza"], ["shuf", "Keverés"], ["new", "Új játék"]], lays = [["kik", "Kikötő"], ["hab", "Hajóablak"], ["vit", "Vitorlás"], ["tek", "Teknős"]];
           const rh = 42, gap = ph ? 5 : 7; g.font = `800 ${rh * .36}px ${SANS}`; const wOf = (s2) => Math.max(ph ? 56 : 82, g.measureText(s2).width + (ph ? 20 : 26));
           const rw = (items) => items.reduce((s2, [, l]) => s2 + wOf(l), 0) + gap * (items.length - 1);
           const pw = Math.min(W - 12, Math.max(rw(acts), rw(lays)) + 36), phh = rh * 2 + 64, px = W / 2 - pw / 2, py = yb - phh - 10;
@@ -17081,14 +17207,15 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(S.msg, W / 2, msgY + 17, W - 40); g.globalAlpha = 1;
         }
         if (S.st === "dead") bigPanel(g, W, H, "Elakadt a hajó", ["Az utolsó lapok egymás tetején maradtak.", "Ezen a keverés sem segít."], "Visszalépek", "Új játék");
-        if (S.st === "stuck") bigPanel(g, W, H, "Nincs több szabad pár", [`${S.left} lap maradt a stégen.`, "Megkeverjem a maradék lapokat?"], "Keverés", "Visszalépek");
+        if (S.st === "stuck") bigPanel(g, W, H, "Nincs szabad pár", [`${S.left} lap maradt a táblán.`, "Keverjem meg, vagy kockáztatsz a tározóval?"], "Keverés", "Kockáztatok");
+        if (S.st === "full") bigPanel(g, W, H, "Megtelt a tározó", ["A 4 helyen nincs egymást kiváltó pár –", "ennek a játéknak vége."], "Visszalépek", "Új játék");
         if (S.st === "win") {
           S.conf.forEach((c) => { g.save(); g.translate(c.x * W, c.y * H); g.rotate(c.r); drawFlag(g, c.f, 6); g.restore(); });
           const k = S.lay + (S.tr ? "t" : ""), best = S.best[k];
           bigPanel(g, W, H, "Tiszta a stég!", [`Minden lapot párosítottál – ${gmFmt(S.el * 1000)}`, S.rec ? "Ez az eddigi legjobb időd!" : best ? `Legjobb időd: ${gmFmt(best * 1000)}` : ""], "Új játék", "Jöhet a " + LAYOUTS[NEXT[S.lay]].n);
         }
       },
-      help: "Párosíts két egyforma, szabad lapot (nincs rajta másik, és legalább az egyik oldala szabad). A tájképek egymással is párosíthatók. Nagyítás: két ujjal vagy a + gombbal."
+      help: "Koppints két egyforma, szabad lapra. Ha nem pár, mindkettő a felső tározóba kerül (4 hely). Ott az egyforma lapok kiváltják egymást, és a tározóból is párosíthatsz. Ha megtelik, vége a játéknak."
     };
   }
 
