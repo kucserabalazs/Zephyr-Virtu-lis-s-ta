@@ -631,7 +631,7 @@
     VRR.riv.forEach((r, i) => { const p = ST.riv[i];   /* 2026-11-14: véletlen, tiszta rajthelyek (vrStartPlace) */ Object.assign(r, { x: p.x, z: p.z, b: p.b, v: p.v, next: 0, tack: wrapA(p.b - C.wf) > 0 ? 1 : -1, lane: null, holdDir: null, hold: 0, go: 0, spAv: null, lastTack: 0, fin: null, skill: 1, yr: 0, del: 0, spinOn: false, ph: rand() * 9, _mi: -1, errNext: 0, errGW: 0, penT: 0, pen: 0, spinA: null, penLast: 0, _tkg: false, _sd0: null, _rel: null, _ovT: 0, _ovBy: null, _mk: null, wide: 0, _dS: null, started: false, prevSide: null, _ls0: null }); });
     if (VRR.podium) VRR.podium.visible = false; if (VRR.foulB) VRR.foulB.visible = false; vrFoulDom(false);
     VRR.res = []; VRR.riv.forEach((r) => { r.fin = null; }); if (VRR.net) vrNetSetup(ST);
-    try { vrBriefClose(); } catch (e) {} vrLimitSet(C); vrLavGen(C); vrSpectPlace(C); vrShoresSet(C, vrVenue(lvl || 1)); try { stmLevels(C, vrVenue(lvl || 1)); } catch (e) { console.warn("vihar", e); } try { vrNightShore(); vrNightSet(vrIsNight(lvl), C); } catch (e) { console.warn("éjszaka", e); } if (!VRR.series) VRR.series = vrSeriesLoad();
+    try { vrBriefClose(); } catch (e) {} vrLimitSet(C); vrLavGen(C); vrSpectPlace(C); try { msStart(W.root, 3); } catch (e) {} vrShoresSet(C, vrVenue(lvl || 1)); try { stmLevels(C, vrVenue(lvl || 1)); } catch (e) { console.warn("vihar", e); } try { vrNightShore(); vrNightSet(vrIsNight(lvl), C); } catch (e) { console.warn("éjszaka", e); } if (!VRR.series) VRR.series = vrSeriesLoad();
     /* oktató futam: nincs visszaszámlálás és nincs ellenfél – a hajó a vonal alól indul, azonnal „versenyben” */
     VRR.setup = vrSetup;   /* (teszteléshez elérhető) */
     VRR.tut = lvl ? null : { step: 0 }; VRR.riv.forEach((r) => { r.g.visible = !!lvl; if (!lvl) { r.x += 9000; r.z += 9000; r.lbl.visible = false; } });
@@ -978,7 +978,9 @@
     const twa = Math.abs(wrapA(S.wf - S.b)) * R2D;
     S.spinOn = S.spinOn ? twa > 98 : twa > 108; const spin = S.spinOn && S.st === "race";   /* hátszélben (és széles hátszélben) felhúzzák a spinakkert */
     S.gk = S.gkW * vrLavK(S.x, S.z, S.t);   /* 2026-11-14: lavór (szélcsendes folt) a helyi szélben */ /* lökések és szélcsendesebb foltok (7–20 mp), lassú erősödés/gyengülés */
-    const vt = polar(twa, spin && S.sp && (S.sp.st === "fly" || S.sp.st === "pop")) * KN * VR_SPD * (S.heelPen || 1) * vrClsSpd(twa) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
+    let vt = polar(twa, spin && S.sp && (S.sp.st === "fly" || S.sp.st === "pop")) * KN * VR_SPD * (S.heelPen || 1) * vrClsSpd(twa) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
+    /* 2026-11-14 (tulajdonos: „a flamingó legyen nagyon gyors és egyszerűen irányítható – fikció, csak vígan lehessen száguldozni”): minden irányban gyors, nincs holtszög, nem kell cirkálni */
+    if (S.cls && S.cls.id === "flamingo") vt = KN * VR_SPD * (10.5 + 2.5 * clamp(S.tws * S.gk / (12 * KN), .5, 1.6)) * (1 + .05 * Math.sin(W.t * .9));
     /* gyorsabban gyorsul (a nagy vitorlafelület húz), a kormány fékez egy kicsit, ha nagyon el van tekerve */
     /* 2026-11-12 00:46 – A HAJÓ SIKLÁSA FIZIKAI MODELLEL (tulajdonos: „a hajó súlya 2300 kg … ha nem fújja a szél, azonnal megáll, miközben az életben még
        csúszik tovább, míg a közegellenállás meg nem állítja – pontos számítás, élethű mozgás”). Newton: (m + hozzáadott tömeg) · dv/dt = F_hajtó − R_víz(v) − F_szél.
@@ -988,12 +990,12 @@
        Ha a hajtóerő megszűnik, a hajó a lendületéből SIKLIK tovább: gyorsan veszít a hullámkeltő tartományban (5–6 csomó fölött), aztán hosszan, lassan csúszik. */
     { const vR = S.v / VR_SPD, vtR = Math.max(0, vt / VR_SPD), mE = VR_HYD.m * VR_HYD.add;
       let F = vtR > .05 ? vrHydR(vtR) * (1 + .6 * clamp(1 - vR / vtR, 0, 1)) : 0;
-      { const wv = vfwd(S.wf), fb = vfwd(S.b), hw = (wv[0] * fb[0] + wv[1] * fb[1]) * S.tws * S.gk + vR, fl = clamp((42 - twa) / 10, 0, 1); if (fl > 0 && hw > 0) F -= .5 * 1.2 * (2 + 3 * fl) * fl * hw * hw; }   /* C_d·A: test+árboc+kötélzet ~2 m², a lobogó vitorlák további ~3 m² (becslés) */
+      { const wv = vfwd(S.wf), fb = vfwd(S.b), hw = (wv[0] * fb[0] + wv[1] * fb[1]) * S.tws * S.gk + vR, fl = S.cls && S.cls.id === "flamingo" ? 0 : clamp((42 - twa) / 10, 0, 1); if (fl > 0 && hw > 0) F -= .5 * 1.2 * (2 + 3 * fl) * fl * hw * hw; }   /* C_d·A: test+árboc+kötélzet ~2 m², a lobogó vitorlák további ~3 m² (becslés) */
       const Rw = vR > .08 ? 22 * Math.pow(S.tws * S.gk / 6, 2) : 0;   /* a hullámok okozta többletellenállás (a széllel nő) – ettől áll meg végül a sikló hajó */
       const v2 = Math.max(0, vR + (F - vrHydR(vR) - Rw) / mE * dt); S.v = v2 * VR_SPD; S.dragN = vrHydR(v2) + Rw; }
     S.v *= 1 - Math.abs(S.del) * .16 * dt;
     /* fordulás: sebességfüggő, de lassan is kormányozható; kis tehetetlenséggel (nem ugrik, de jól reagál) */
-    { let yrT = Math.sin(S.del) * (.085 * S.v + .24);
+    { let yrT = Math.sin(S.del) * (.085 * S.v + .24); if (S.cls && S.cls.id === "flamingo") yrT = Math.sin(S.del) * 1.25;   /* flamingó: fürge, mindig egyformán fordul */
       /* 2026-11-12 20:01 (tulajdonos: „szélben állok órákig, mire elindul, addigra minden hajó elment”): kijutás a szélből – álló hajón, a holtszögben a legénység
          ellentartja a fockot, ezért a hajó orra leesik arra, amerre a kormányt tartod (ha a kormány középen áll: arra, amerre már amúgy is áll). Menetben nincs hatása. */
       const relW = wrapA(S.wf - S.b); if (S.st !== "done" && Math.abs(relW) < .62 && S.v < 1.6) { const kI = (1 - S.v / 1.6) * (1 - Math.abs(relW) / .62 * .5); if (Math.abs(S.del) > .04) yrT += Math.sign(S.del) * .27 * kI; }   /* 2026-11-13: csak arra segít, amerre a kormányt tartod – középen álló kormánynál a hajó magától NEM fordul */

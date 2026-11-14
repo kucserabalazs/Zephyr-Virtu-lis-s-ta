@@ -31,9 +31,14 @@
     S.boat.visible = false;
     const pb = makeClassBoat(id, { name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
     /* fedélzeti térkép (a nagy hajó taktikai kijelzője) a kis hajó fedélzetén, a kormányos előtt */
-    if (S.ck && S.ck.chartT) { const c = S.ck.chartT._canvas, w = id === "flamingo" ? .42 : .5, h = w * c.height / c.width; const pl = mesh(new THREE.PlaneGeometry(w, h), basic({ map: S.ck.chartT, side: THREE.DoubleSide }), pb.userData.body); const at = pb.userData.chartAt;
-      pl.position.set(at.x, at.y + h * .5 * .6, at.z); pl.rotation.set(-.85, Math.PI, 0); S.pbChart = pl;
-      const fr = mesh(new THREE.BoxGeometry(w + .04, h + .04, .02), std({ color: "#1d232b", roughness: .5 }), pl); fr.position.z = -.012; }
+    if (S.ck && S.ck.chartT) { const c = S.ck.chartT._canvas, w = id === "flamingo" ? .34 : .5, h = w * c.height / c.width; const pl = mesh(new THREE.PlaneGeometry(w, h), basic({ map: S.ck.chartT, side: THREE.DoubleSide }), pb.userData.body); const at = pb.userData.chartAt;
+      /* 2026-11-14 (tulajdonos: „a műszer nem felém mutat”): a kijelző a kormányos szeme felé néz (eddig hátulról, tükrözve látszott) */
+      pl.position.set(at.x, at.y + h * .5 * .6, at.z); { const eye = pb.userData.seat.clone().add(new THREE.Vector3(0, .95, 0)), M4 = new THREE.Matrix4().lookAt(eye, pl.position, new THREE.Vector3(0, 1, 0)); pl.quaternion.setFromRotationMatrix(M4); } S.pbChart = pl;
+      if (pb.userData.toyChart) { /* flamingó: felfújható, rózsaszín „úszógumi” keret, sárga sarokbogyókkal */ const pk = std({ color: "#ff6fae", roughness: .35 }), ye = std({ color: "#ffd21a", roughness: .3 });
+        [[0, h / 2 + .03, w + .1, true], [0, -h / 2 - .03, w + .1, true], [w / 2 + .03, 0, h + .02, false], [-w / 2 - .03, 0, h + .02, false]].forEach(([x, y, L, hor]) => { const c = mesh(new THREE.CapsuleGeometry(.035, L, 6, 12), pk, pl); c.position.set(x, y, -.02); if (hor) c.rotation.z = Math.PI / 2; });
+        [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => { const b = mesh(new THREE.SphereGeometry(.045, 12, 10), ye, pl); b.position.set(sx * (w / 2 + .03), sy * (h / 2 + .03), -.01); });
+        const bk = mesh(new THREE.BoxGeometry(w + .04, h + .04, .02), std({ color: "#ffd6ea", roughness: .5 }), pl); bk.position.z = -.03; }
+      else { const fr = mesh(new THREE.BoxGeometry(w + .04, h + .04, .02), std({ color: "#1d232b", roughness: .5 }), pl); fr.position.z = -.012; } }
     /* a nagy hajóra tett tábla a kis hajó fölé kerül */
     if (S.msgL) { S.msgL.parent && S.msgL.parent.remove(S.msgL); W.root.add(S.msgL); S.msgL.scale.multiplyScalar(.6); }
     if (S.helpL) { S.helpL.parent && S.helpL.parent.remove(S.helpL); W.root.add(S.helpL); S.helpL.scale.multiplyScalar(.6); }
@@ -44,6 +49,7 @@
   const _sv = new THREE.Vector3();
   function vrClassTick(dt) {
     const S = VRR, pb = S.pb; if (!pb) return; const BS = S.boat.userData.S, PS = pb.userData.S;
+    if (PS.scare != null && dt > 0) { if (S._vPrev != null && S._vPrev - S.v > .6 && S._vPrev > 1) PS.scare = 1.6; S._vPrev = S.v; }   /* ütközés (hirtelen lassulás): a kókusz megijed */
     PS.side = BS.side; PS.awa = BS.awa != null ? BS.awa : S.awa; PS.aws = BS.aws != null ? BS.aws : S.aws; PS.pitch = (BS.pitch || 0) * 1.6; PS.rud = S.wa / WA_MAX;
     PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : .35);
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
@@ -52,6 +58,7 @@
     pb.updateMatrix(); _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);
     if (T.inVR) { const lift = S.seated ? 0 : .5; W.root.position.set(-_sv.x, lift - _sv.y - .05, -_sv.z); }
+    else if (W.dbgEye) W.root.position.set(-_sv.x, .5 - _sv.y - .05 - 1.65, -_sv.z);   /* teszt: a VR-ben álló kormányos szemmagassága */
     else { const back = ph ? 9.5 : 5.6, up = ph ? 3.4 : 1.75; W.root.position.set(-_sv.x, -up - _sv.y, -_sv.z - back); }   /* 2D-ben a kamera a világ y = 0 pontjában van */
     if (S.msgL) S.msgL.position.set(_sv.x, _sv.y + 1.9, _sv.z - 3.2);
     if (S.helpL) S.helpL.position.set(_sv.x - .5, _sv.y + 1.4, _sv.z - 1.6);
@@ -176,7 +183,9 @@
         if (o !== S && !o.remote && gp.d < lim + 26 * S.kz) o.spAv = { x: q.g.position.x, z: q.g.position.z }; });
       /* emberek: integetnek (ha közel jön egy hajó, éljeneznek), ütközéskor elesnek, felállnak */
       const dS = Math.hypot(S.x - q.g.position.x, S.z - q.g.position.z);
-      q.crew.forEach((c, i) => { const fallTo = c.fallT && W.t > c.fallT && W.t < c.fallUp ? 1 : 0; c.fall += (fallTo - c.fall) * Math.min(1, dt * (fallTo ? 7 : 1.6));
+      /* 2026-11-14: távol (110 m-en túl) az emberek nem mozognak – így a nézőhajó egyetlen kisütött modellként rajzolható (akadás ellen); közeledéskor, eséskor, kiabáláskor élednek fel */
+      const live = dS < 110 || (S.shoutQ && S.shoutQ.q === q && W.t - S.shoutQ.t < 5) || q.crew.some((c) => c.fall > .01 || (c.fallT && W.t < c.fallUp));
+      q.crew.forEach((c, i) => { if (!live) return; const fallTo = c.fallT && W.t > c.fallT && W.t < c.fallUp ? 1 : 0; c.fall += (fallTo - c.fall) * Math.min(1, dt * (fallTo ? 7 : 1.6));
         c.waveT -= dt; if (c.waveT < 0) { c.wave = c.wave ? 0 : 1; c.waveT = c.wave ? rr(2, 4) : rr(3, 10); }
         const near = dS < 90, shout = S.shoutQ && S.shoutQ.q === q && W.t - S.shoutQ.t < 4 ? .6 + .4 * Math.sin(W.t * 18 + i) : 0;
         posePerson(c.p, dt, { sit: c.sit, wave: c.fall > .3 ? 0 : (near && i % 2 === 0 ? 1 : c.wave), cheer: near && i % 2 === 1 && c.fall < .3, fall: c.fall, shout, turn: near ? Math.atan2(S.x - q.g.position.x, S.z - q.g.position.z) * 0 : undefined }); });
@@ -211,7 +220,7 @@
   /* minden képkockán (a vrTick végén) */
   function vrExtTick(dt) {
     const S = VRR, C = S.C; if (!C) return;
-    vrLavTick(dt); vrSpectTick(dt); try { stmTick(dt, !!(NGT && NGT.on)); } catch (e) {}
+    vrLavTick(dt); vrSpectTick(dt); try { stmTick(dt, !!(NGT && NGT.on)); } catch (e) {} try { msTick(dt); } catch (e) { console.warn("kisütés", e); }
     /* időlimit */
     if (S.lvl && C.limit && S.st === "race" && !S.doneT) { const left = C.limit - S.t;
       if (left < 60 && left > 0 && !S.limWarn) { S.limWarn = 1; S.msg = "⚠ Még 1 perc az időlimitből – aki addig nem fut be, nem ért be (TLE)."; S.msgT = 6; beep(); }

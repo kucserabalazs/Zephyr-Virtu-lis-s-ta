@@ -883,17 +883,20 @@
   }
   function makeCommittee() {
     const g = makeMotorYacht({ hull: "#f5f5f2", stripe: "#123b74", people: 3, seed: 3 });   /* 2026-11-12 10:10: a rendezőhajó is szép motoros jacht (előtte dobozokból állt) */
-    const mastG = mesh(new THREE.CylinderGeometry(.05, .05, 4.5, 8), std({ color: "#ddd", metalness: .7, roughness: .3 }), g); mastG.position.set(0, 4.6, -.5);
+    /* 2026-11-14 (tulajdonos: „a zsűrihajó bele van nőve az egyik figura fejébe – tedd át a hajó orrába”): a jelzőárboc a zászlókkal az orrfedélzeten áll, távol az emberektől */
+    const zb = hullShape(.86).z * 1.3, yb = hullShape(.86).sheer * 1.35 + .08, dY = yb + 2.25 - 4.6;
+    const mastG = mesh(new THREE.CylinderGeometry(.05, .05, 4.5, 8), std({ color: "#ddd", metalness: .7, roughness: .3 }), g); mastG.position.set(0, 4.6 + dY, zb);
+    mesh(new THREE.CylinderGeometry(.18, .22, .12, 12), std({ color: "#c9ced3", metalness: .6, roughness: .35 }), g).position.set(0, yb + .06, zb);
     /* jelzőzászlók (P, osztályjel, narancs rajtvonal-zászló) */
     const flags = [];
     ["#ffffff", "#e5262f", "#ff7a00"].forEach((c, i) => {
       const ft = canvasTex(128, 96, (gg) => { gg.fillStyle = i === 0 ? "#1f4fbf" : c; gg.fillRect(0, 0, 128, 96); if (i === 0) { gg.fillStyle = "#fff"; gg.fillRect(36, 26, 56, 44); } if (i === 1) { gg.fillStyle = "#fff"; gg.font = "900 48px system-ui"; gg.textAlign = "center"; gg.fillText("R27", 64, 66); } });
       const f = mesh(new THREE.PlaneGeometry(.9, .62, 6, 1), basic({ map: ft, side: THREE.DoubleSide }), g);
-      f.position.set(.45, 6.5 - i * .85, -.5); f.visible = i !== 0; flags.push(f);
+      f.position.set(.45, 6.5 - i * .85 + dY, zb); f.visible = i !== 0; flags.push(f);
     });
     /* X lobogó (egyéni visszahívás – korai rajt): fehér alapon kék kereszt; alapból lent */
     { const xt = canvasTex(128, 96, (gg) => { gg.fillStyle = "#ffffff"; gg.fillRect(0, 0, 128, 96); gg.fillStyle = "#1f4fbf"; gg.fillRect(52, 0, 24, 96); gg.fillRect(0, 36, 128, 24); });
-      const f = mesh(new THREE.PlaneGeometry(.9, .62, 6, 1), basic({ map: xt, side: THREE.DoubleSide }), g); f.position.set(.45, 7.35, -.5); f.visible = false; flags.push(f); }
+      const f = mesh(new THREE.PlaneGeometry(.9, .62, 6, 1), basic({ map: xt, side: THREE.DoubleSide }), g); f.position.set(.45, 7.35 + dY, zb); f.visible = false; flags.push(f); }
     g.userData.flags = flags;
     return g;
   }
