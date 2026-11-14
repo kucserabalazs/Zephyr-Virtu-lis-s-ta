@@ -1108,3 +1108,10 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 ## 2026-11-14 18:39 – flamingó lassabb, a dőlés a nézőpontra is hat (minden hajó)
 - Flamingó: 30%-kal lassabb, szembeszélben (28–70° között) fokozatosan lassul (min. 25%), kicsit nehezebben fordul; billeg és dől (0,9× a nagy hajó dőléséből).
 - `vrHeelView` (05d): a világot a néző szeme körül a saját hajó dőlésének 60%-ával (bólintás 50%) elforgatjuk – a horizont megdől, a hajó a láb alatt marad. Kishajókon a nézőpont a dőlő test ülését követi (a szél felőli oldal emelkedése érezhető). Mérve: 9,4° testdőlés → 5,6° horizontdőlés, 3,8° látott árbocdőlés. A kikötőben és bezáráskor a világ forgatása visszaáll.
+
+## 2026-11-14 18:48–18:53 – Saját 420-as: Zephyr kivitel, élethű mancsaft
+- make420({ zephyr:true }) (csak a saját hajón, vrClassBuild + kikötő): test ×1.12 (emberek valódi méretben), piros test + Zephyr logó két oldalt, piros/sötétkék grósz, Zephyr fock, színes spinakker.
+- Részletek: ütközőléc, orrvasalat, árboctalp, windex (forog), fallok, mozgó vang, kihajlóhevederek, trapézfogantyúk, fockszkóta-vezetők és élő fockszkóta, bütykösök.
+- Kormány: botkormány iránya a nagy hajóéval azonos (+rud), toldó habfogóval és piros gombvéggel.
+- Mancsaft: makePerson({ zvest, pro }) – Zephyr mentőmellény textúra (elöl piros V-panelek, ZEPHYR felirat, derékheveder csattal, HÁTA EGYSZÍNŰ FEKETE), fül, szemöldök, napszemüveg, kesztyű, csizma.
+- posePerson o.floor/o.footOn: a térd úgy hajlik, hogy a talp a padlón/hevederben legyen – a láb soha nem lóg bele a hajótestbe; a csípő pontosan a peremen.
