@@ -1122,3 +1122,5 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - Tihanyi apátság részletes modell (2 órás torony, hagymasisak, lámpás, oromzat, apátsági szárnyak), kőlábazat a lejtőbe süllyesztve, éjjel világító ablakok/lámpák (L.lights → NL).
 - Élő nevezetességek (BAL.live): Ranolder-kereszt sc 7, fehér, éjjel fénykoszorú; Boglári gömbkilátó (ikozaéder, élvázzal) éjjel színváltó LED-fényjáték.
 - Nagy hajó: fehér szegély és orrfedélzet helyett tík; vékony perem bal PIROS / jobb ZÖLD (éjjel világít, VRR.navRail). Fock éjjel: bal fele piros, jobb fele zöld (shader, uXc = a fock közepe), felfelé halványul. Orrlámpák gömb + fénykoszorú.
+
+- 19:23: az orrfények a hajó orrának bal/jobb oldalán, a perem magasságában (hullShape(.9)); az égők (gömb + fénykoszorú) eltávolítva, csak a fényük marad.
