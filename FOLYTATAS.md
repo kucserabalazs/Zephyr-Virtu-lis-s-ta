@@ -1086,3 +1086,6 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - Hajófények: vitorlával haladó hajón oldalfények + farfény, árbocfény (fehér topfény) nincs; a korábbi árboccsúcsi vörös-zöld is kikerült; távolról apró, éles pontok. A 7 m alatti kishajók: egy körbe látszó fehér fény (+ közeledéskor zseblámpa).
 - Saját hajó: csak az orrban lévő oldalfények (zöld jobbra, vörös balra) világítanak halványan a fock aljára, az orrfedélzetre és a vízre; a vörös kokpitfény és a fehér zseblámpa-fény kikerült; a holdfény gyengébb.
 - Motoros jachtok (zsűrihajó, nézők): a flybridge-en álló ember az orrfedélzetre került (eddig a bimini/keménytető átment a fején).
+
+## 2026-11-14 18:15 – víz a kishajók belsejében (hangos egyeztetés után)
+- A víz-shader (`02-kornyezet.js`, `uHull[6]`/`uHullS[6]`) a kishajók (Finn, 420, flamingó, tutaj – `userData.hullLB`) körvonalán belül eldobja a vízpixeleket: a zárt héjon belül soha nincs víz, akármennyire merül vagy dől a hajó. A merülés és a látószög NEM változott (a tulajdonos kérése). Frissítés: `hullMaskSet` (05c) képkockánként a versenyben és a kikötőben.

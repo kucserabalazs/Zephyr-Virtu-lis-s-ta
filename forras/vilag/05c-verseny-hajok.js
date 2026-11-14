@@ -32,6 +32,12 @@
 
   /* --------------------------------------------------------------- közös: puha vitorla (paraméteres háló, a szélhez trimmelve, lobog, ha belobog) */
   const bsst2 = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  /* 2026-11-14 18:15: a kishajók zárt héján belül a víz nem rajzolódik – a víz-shader a hajótestek körvonalán belül eldobja a pixeleket (02-kornyezet.js uHull) */
+  const _hmP = new THREE.Vector3(), _hmF = new THREE.Vector3();
+  function hullMaskSet(mat, groups) { if (!mat || !mat.uniforms.uHull) return; const H = mat.uniforms.uHull.value, HS = mat.uniforms.uHullS.value; let n = 0;
+    groups.forEach((g) => { if (!g || n >= H.length || !g.userData || !g.userData.hullLB || !g.visible || !g.parent) return; g.updateMatrixWorld(true); _hmP.setFromMatrixPosition(g.matrixWorld); _hmF.set(0, 0, 1).transformDirection(g.matrixWorld); _hmF.y = 0; _hmF.normalize();
+      const sc = new THREE.Vector3().setFromMatrixScale(g.matrixWorld).x; H[n].set(_hmP.x, _hmP.z, _hmF.x, _hmF.z); HS[n].set(g.userData.hullLB[0] * sc, g.userData.hullLB[1] * sc, 0); n++; });
+    for (let i = n; i < H.length; i++) HS[i].set(0, 0, 0); }
   function softSail(o) {
     /* o: { parent, nu, nv, luff:(v)=>Vector3 (az árboc pontja a v magasságban, a vitorla helyi terében), chord:(v)=>m, mat, camber, twist, roach } */
     const nu = o.nu || 10, nv = o.nv || 14, N = (nu + 1) * (nv + 1), pos = new Float32Array(N * 3), uv = new Float32Array(N * 2), idx = [];
@@ -258,7 +264,7 @@
     const crew = [];
     if (o.crew) { const p = makePerson({ top: o.top || "#1f2f46", bot: "#1b2430", vest: o.vestC || "#c8102e", cap: o.cap || null, seed: o.seed || 0 }); body.add(p); crew.push({ p, kind: "helm" }); }
     const S = { side: 1, boom: .2, luff: 0, heel: 0, pitch: 0, spin: 0, awa: null, aws: 6, rud: 0, t: 0, crewS: 1 };
-    G.userData = { S, body, mast, deckY: H.sheer(.4), seat: new THREE.Vector3(0, .12, hz(1.6)), cls: "finn", chartAt: new THREE.Vector3(0, H.sheer(.55) + .02, hz(2.45)) };
+    G.userData = { S, body, mast, deckY: H.sheer(.4), seat: new THREE.Vector3(0, .12, hz(1.6)), cls: "finn", hullLB: [4.495 * .45, 1.51 * .44], chartAt: new THREE.Vector3(0, H.sheer(.55) + .02, hz(2.45)) };
     G.userData.update = (dt) => {
       S.t += dt; const A = S.awa != null ? S.awa : 60, U = S.aws || 6;
       const bT = clamp(A - 17, 3, 85) * D2R * S.side; S.boomS = S.boomS == null ? bT : S.boomS + (bT - S.boomS) * Math.min(1, dt * (Math.sign(bT) !== Math.sign(S.boomS) ? 3.5 : 1.8)); S.boom = S.boomS;
@@ -317,7 +323,7 @@
     crew.forEach((c) => body.add(c.p));
     const trapW = rodBetween(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0), .003, wire, body, 4); trapW.visible = false;
     const S = { side: 1, boom: .2, jib: .2, luff: 0, heel: 0, pitch: 0, spin: 0, awa: null, aws: 6, rud: 0, t: 0, crewS: 1, trap: 0 };
-    G.userData = { S, body, mast, deckY: H.sheer(.4), seat: new THREE.Vector3(0, .1, hz(.85)), cls: "j420", chartAt: new THREE.Vector3(0, H.sheer(.6) + .02, hz(2.75)) };
+    G.userData = { S, body, mast, deckY: H.sheer(.4), seat: new THREE.Vector3(0, .1, hz(.85)), cls: "j420", hullLB: [JOLLE_L * .45, 1.63 * .44], chartAt: new THREE.Vector3(0, H.sheer(.6) + .02, hz(2.75)) };
     const _bb = new THREE.Vector3();
     G.userData.update = (dt) => {
       S.t += dt; const A = S.awa != null ? S.awa : 60, U = S.aws || 6;
@@ -438,7 +444,7 @@
     const S = { side: 1, boom: .2, luff: 0, heel: 0, pitch: 0, spin: 0, awa: null, aws: 6, rud: 0, t: 0, scare: 0 };
     const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _q = new THREE.Vector3();
     const setRod = (m, a, b) => { _q.subVectors(b, a); const L = Math.max(_q.length(), 1e-4); m.position.copy(a); m.scale.set(1, L, 1); m.quaternion.setFromUnitVectors(_up, _q.multiplyScalar(1 / L)); };
-    G.userData = Object.assign(G.userData, { S, body, mast, deckY: .3, seat: new THREE.Vector3(0, .3 + FLOAT, -1.25), cls: "tutaj", chartAt: new THREE.Vector3(0, .62 + FLOAT, -.25), cocoChart: true });   /* a kijelző: félbevágott kókuszdióba építve, Kata mögött, egy bambuszkarón – feléd fordítva */
+    G.userData = Object.assign(G.userData, { S, body, mast, deckY: .3, seat: new THREE.Vector3(0, .3 + FLOAT, -1.25), cls: "tutaj", hullLB: [1.75, 1.05], chartAt: new THREE.Vector3(0, .62 + FLOAT, -.25), cocoChart: true });   /* a kijelző: félbevágott kókuszdióba építve, Kata mögött, egy bambuszkarón – feléd fordítva */
     { const post = new THREE.CylinderGeometry(.025, .03, .42, 7); post.translate(0, .27 + .21, -.25); mesh(post, std({ color: "#c9b06a", roughness: .8 }), body); }
     G.userData.update = (dt) => {
       S.t += dt; const A = S.awa != null ? S.awa : 60, U = S.aws || 6;
@@ -553,7 +559,7 @@
       for (let k = 0; k < 4; k++) { const sp = mesh(new THREE.CapsuleGeometry(.025, .26, 4, 8), wh, whR); sp.rotation.z = k * Math.PI / 4 * 2 + Math.PI / 4; }
       mesh(new THREE.SphereGeometry(.07, 16, 12), ye, whR); const valve = mesh(new THREE.CylinderGeometry(.012, .012, .03, 8), wh, whR); valve.rotation.x = Math.PI / 2; valve.position.set(.13, .13, .05);
       const post = new THREE.CylinderGeometry(.07, .1, .62, 16); post.translate(-.05, .72 - .31, .3 + .05); mesh(post, pk, body); void ring; }
-    G.userData = Object.assign(G.userData, { S, body, mast: rod, deckY: .16, seat: new THREE.Vector3(0, .15, -.15), cls: "flamingo", chartAt: new THREE.Vector3(.36, .78, .42), wheel: whR, toyChart: true });
+    G.userData = Object.assign(G.userData, { S, body, mast: rod, deckY: .16, seat: new THREE.Vector3(0, .15, -.15), cls: "flamingo", hullLB: [1.12, .84], chartAt: new THREE.Vector3(.36, .78, .42), wheel: whR, toyChart: true });
     const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
     const setLine = (m, a, b) => { _b.subVectors(b, a); const L = _b.length(); m.position.copy(a); m.scale.set(1, L, 1); m.quaternion.setFromUnitVectors(_up, _b.normalize()); };
     G.userData.update = (dt) => {

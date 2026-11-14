@@ -122,10 +122,10 @@
         uSkyH: { value: new THREE.Color(.70, .80, .87) }, uSkyZ: { value: new THREE.Color(.25, .45, .75) }, uDeep: { value: new THREE.Color(.06, .25, .27) }, uShallow: { value: new THREE.Color(.18, .44, .41) },
         uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 }, uFlk: { value: 0 },
         /* 2026-11-14 LAVÓR: legfeljebb 8 szélcsendes folt (x, z a vízminta koordinátáiban, sugár, mélység 0..1) – ott sima, tükröző, hullámtalanabb a víz */
-        uLav: { value: [0, 1, 2, 3, 4, 5, 6, 7].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uFoam: { value: 1 } },
+        uLav: { value: [0, 1, 2, 3, 4, 5, 6, 7].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uFoam: { value: 1 }, uHull: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uHullS: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector3(0, 0, 0)) } },
       vertexShader: `
         uniform float uT, uWind; uniform vec2 uOff; uniform vec4 uW[5]; uniform vec4 uLav[8];
-        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
+        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW; varying vec2 vWP;
         void main(){
           vec3 p = position; vec2 w = p.xz + uOff; float fadeD = 1. - smoothstep(60., 420., length(p.xz));
           { float cv = 0.; for (int i = 0; i < 8; i++) { vec4 L = uLav[i]; if (L.z > 0.) cv = max(cv, L.w * (1. - smoothstep(L.z * .5, L.z * 1.1, length(w - L.xy)))); } fadeD *= 1. - .45 * clamp(cv, 0., 1.); }
@@ -138,14 +138,17 @@
           }
           p += disp; vec4 wp = modelMatrix * vec4(p, 1.); vP = vec3(w.x + disp.x, p.y, w.y + disp.z); vN = normalize(n);
           vDist = length(p.xz); vW = w;
-          gl_Position = projectionMatrix * viewMatrix * wp;
+          vWP = wp.xz; gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        uniform sampler2D uSkyT; uniform float uSkyOn, uFlk; uniform vec2 uSkyRot; uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5]; uniform vec4 uLav[8]; uniform float uFoam;
-        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
+        uniform sampler2D uSkyT; uniform float uSkyOn, uFlk; uniform vec2 uSkyRot; uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5]; uniform vec4 uLav[8]; uniform float uFoam; uniform vec4 uHull[6]; uniform vec3 uHullS[6];
+        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW; varying vec2 vWP;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*f*(f*(f*6.-15.)+10.); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
         void main(){
+          /* 2026-11-14 18:15 (tulajdonos: „a hajó alján átlátok, és látom benne a vizet – a burkolat körbeöleli, ott nincs víz”): a kishajók zárt héján BELÜL
+             a víz nem rajzolódik (a hajótest körvonalán belül eldobjuk) – a merülés és a látószög változatlan */
+          for (int i = 0; i < 6; i++) { vec3 S = uHullS[i]; if (S.x > 0.) { vec2 d = vWP - uHull[i].xy, f = uHull[i].zw; float a = dot(d, f) / S.x, b = (d.x * f.y - d.y * f.x) / S.y; a = a > 0. ? a / (1. + S.z) : a; if (pow(abs(a), 2.4) + pow(abs(b), 2.4) < 1.) discard; } }
           vec2 wd = vec2(cos(uWind), sin(uWind));
           float fadeD = 1. - smoothstep(60., 420., vDist), fa = 1. - smoothstep(25., 240., vDist), fb = 1. - smoothstep(8., 70., vDist);
           /* LAVÓR: a folt széle szabálytalan (zajjal), belül a fodrok eltűnnek, a víz tükörsima */

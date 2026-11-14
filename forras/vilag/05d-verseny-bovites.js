@@ -225,7 +225,7 @@
   /* minden képkockán (a vrTick végén) */
   function vrExtTick(dt) {
     const S = VRR, C = S.C; if (!C) return;
-    vrLavTick(dt); vrSpectTick(dt); try { stmTick(dt, !!(NGT && NGT.on)); } catch (e) {} try { msTick(dt); } catch (e) { console.warn("kisütés", e); }
+    vrLavTick(dt); vrSpectTick(dt); try { stmTick(dt, !!(NGT && NGT.on)); } catch (e) {} try { msTick(dt); } catch (e) { console.warn("kisütés", e); } try { hullMaskSet(S.water && S.water.userData.mat, [S.pb].concat((S.riv || []).map((r) => r.g))); } catch (e) {}
     /* időlimit */
     if (S.lvl && C.limit && S.st === "race" && !S.doneT) { const left = C.limit - S.t;
       if (left < 60 && left > 0 && !S.limWarn) { S.limWarn = 1; S.msg = "⚠ Még 1 perc az időlimitből – aki addig nem fut be, nem ért be (TLE)."; S.msgT = 6; beep(); }

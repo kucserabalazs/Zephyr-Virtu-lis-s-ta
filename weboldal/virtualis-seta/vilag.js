@@ -243,10 +243,10 @@
         uSkyH: { value: new THREE.Color(.70, .80, .87) }, uSkyZ: { value: new THREE.Color(.25, .45, .75) }, uDeep: { value: new THREE.Color(.06, .25, .27) }, uShallow: { value: new THREE.Color(.18, .44, .41) },
         uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 }, uFlk: { value: 0 },
         /* 2026-11-14 LAVÓR: legfeljebb 8 szélcsendes folt (x, z a vízminta koordinátáiban, sugár, mélység 0..1) – ott sima, tükröző, hullámtalanabb a víz */
-        uLav: { value: [0, 1, 2, 3, 4, 5, 6, 7].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uFoam: { value: 1 } },
+        uLav: { value: [0, 1, 2, 3, 4, 5, 6, 7].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uFoam: { value: 1 }, uHull: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uHullS: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector3(0, 0, 0)) } },
       vertexShader: `
         uniform float uT, uWind; uniform vec2 uOff; uniform vec4 uW[5]; uniform vec4 uLav[8];
-        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
+        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW; varying vec2 vWP;
         void main(){
           vec3 p = position; vec2 w = p.xz + uOff; float fadeD = 1. - smoothstep(60., 420., length(p.xz));
           { float cv = 0.; for (int i = 0; i < 8; i++) { vec4 L = uLav[i]; if (L.z > 0.) cv = max(cv, L.w * (1. - smoothstep(L.z * .5, L.z * 1.1, length(w - L.xy)))); } fadeD *= 1. - .45 * clamp(cv, 0., 1.); }
@@ -259,14 +259,17 @@
           }
           p += disp; vec4 wp = modelMatrix * vec4(p, 1.); vP = vec3(w.x + disp.x, p.y, w.y + disp.z); vN = normalize(n);
           vDist = length(p.xz); vW = w;
-          gl_Position = projectionMatrix * viewMatrix * wp;
+          vWP = wp.xz; gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        uniform sampler2D uSkyT; uniform float uSkyOn, uFlk; uniform vec2 uSkyRot; uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5]; uniform vec4 uLav[8]; uniform float uFoam;
-        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
+        uniform sampler2D uSkyT; uniform float uSkyOn, uFlk; uniform vec2 uSkyRot; uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5]; uniform vec4 uLav[8]; uniform float uFoam; uniform vec4 uHull[6]; uniform vec3 uHullS[6];
+        varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW; varying vec2 vWP;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*f*(f*(f*6.-15.)+10.); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
         void main(){
+          /* 2026-11-14 18:15 (tulajdonos: „a hajó alján átlátok, és látom benne a vizet – a burkolat körbeöleli, ott nincs víz”): a kishajók zárt héján BELÜL
+             a víz nem rajzolódik (a hajótest körvonalán belül eldobjuk) – a merülés és a látószög változatlan */
+          for (int i = 0; i < 6; i++) { vec3 S = uHullS[i]; if (S.x > 0.) { vec2 d = vWP - uHull[i].xy, f = uHull[i].zw; float a = dot(d, f) / S.x, b = (d.x * f.y - d.y * f.x) / S.y; a = a > 0. ? a / (1. + S.z) : a; if (pow(abs(a), 2.4) + pow(abs(b), 2.4) < 1.) discard; } }
           vec2 wd = vec2(cos(uWind), sin(uWind));
           float fadeD = 1. - smoothstep(60., 420., vDist), fa = 1. - smoothstep(25., 240., vDist), fb = 1. - smoothstep(8., 70., vDist);
           /* LAVÓR: a folt széle szabálytalan (zajjal), belül a fodrok eltűnnek, a víz tükörsima */
@@ -3200,6 +3203,12 @@
 
   /* --------------------------------------------------------------- közös: puha vitorla (paraméteres háló, a szélhez trimmelve, lobog, ha belobog) */
   const bsst2 = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+  /* 2026-11-14 18:15: a kishajók zárt héján belül a víz nem rajzolódik – a víz-shader a hajótestek körvonalán belül eldobja a pixeleket (02-kornyezet.js uHull) */
+  const _hmP = new THREE.Vector3(), _hmF = new THREE.Vector3();
+  function hullMaskSet(mat, groups) { if (!mat || !mat.uniforms.uHull) return; const H = mat.uniforms.uHull.value, HS = mat.uniforms.uHullS.value; let n = 0;
+    groups.forEach((g) => { if (!g || n >= H.length || !g.userData || !g.userData.hullLB || !g.visible || !g.parent) return; g.updateMatrixWorld(true); _hmP.setFromMatrixPosition(g.matrixWorld); _hmF.set(0, 0, 1).transformDirection(g.matrixWorld); _hmF.y = 0; _hmF.normalize();
+      const sc = new THREE.Vector3().setFromMatrixScale(g.matrixWorld).x; H[n].set(_hmP.x, _hmP.z, _hmF.x, _hmF.z); HS[n].set(g.userData.hullLB[0] * sc, g.userData.hullLB[1] * sc, 0); n++; });
+    for (let i = n; i < H.length; i++) HS[i].set(0, 0, 0); }
   function softSail(o) {
     /* o: { parent, nu, nv, luff:(v)=>Vector3 (az árboc pontja a v magasságban, a vitorla helyi terében), chord:(v)=>m, mat, camber, twist, roach } */
     const nu = o.nu || 10, nv = o.nv || 14, N = (nu + 1) * (nv + 1), pos = new Float32Array(N * 3), uv = new Float32Array(N * 2), idx = [];
@@ -3426,7 +3435,7 @@
     const crew = [];
     if (o.crew) { const p = makePerson({ top: o.top || "#1f2f46", bot: "#1b2430", vest: o.vestC || "#c8102e", cap: o.cap || null, seed: o.seed || 0 }); body.add(p); crew.push({ p, kind: "helm" }); }
     const S = { side: 1, boom: .2, luff: 0, heel: 0, pitch: 0, spin: 0, awa: null, aws: 6, rud: 0, t: 0, crewS: 1 };
-    G.userData = { S, body, mast, deckY: H.sheer(.4), seat: new THREE.Vector3(0, .12, hz(1.6)), cls: "finn", chartAt: new THREE.Vector3(0, H.sheer(.55) + .02, hz(2.45)) };
+    G.userData = { S, body, mast, deckY: H.sheer(.4), seat: new THREE.Vector3(0, .12, hz(1.6)), cls: "finn", hullLB: [4.495 * .45, 1.51 * .44], chartAt: new THREE.Vector3(0, H.sheer(.55) + .02, hz(2.45)) };
     G.userData.update = (dt) => {
       S.t += dt; const A = S.awa != null ? S.awa : 60, U = S.aws || 6;
       const bT = clamp(A - 17, 3, 85) * D2R * S.side; S.boomS = S.boomS == null ? bT : S.boomS + (bT - S.boomS) * Math.min(1, dt * (Math.sign(bT) !== Math.sign(S.boomS) ? 3.5 : 1.8)); S.boom = S.boomS;
@@ -3485,7 +3494,7 @@
     crew.forEach((c) => body.add(c.p));
     const trapW = rodBetween(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0), .003, wire, body, 4); trapW.visible = false;
     const S = { side: 1, boom: .2, jib: .2, luff: 0, heel: 0, pitch: 0, spin: 0, awa: null, aws: 6, rud: 0, t: 0, crewS: 1, trap: 0 };
-    G.userData = { S, body, mast, deckY: H.sheer(.4), seat: new THREE.Vector3(0, .1, hz(.85)), cls: "j420", chartAt: new THREE.Vector3(0, H.sheer(.6) + .02, hz(2.75)) };
+    G.userData = { S, body, mast, deckY: H.sheer(.4), seat: new THREE.Vector3(0, .1, hz(.85)), cls: "j420", hullLB: [JOLLE_L * .45, 1.63 * .44], chartAt: new THREE.Vector3(0, H.sheer(.6) + .02, hz(2.75)) };
     const _bb = new THREE.Vector3();
     G.userData.update = (dt) => {
       S.t += dt; const A = S.awa != null ? S.awa : 60, U = S.aws || 6;
@@ -3606,7 +3615,7 @@
     const S = { side: 1, boom: .2, luff: 0, heel: 0, pitch: 0, spin: 0, awa: null, aws: 6, rud: 0, t: 0, scare: 0 };
     const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _q = new THREE.Vector3();
     const setRod = (m, a, b) => { _q.subVectors(b, a); const L = Math.max(_q.length(), 1e-4); m.position.copy(a); m.scale.set(1, L, 1); m.quaternion.setFromUnitVectors(_up, _q.multiplyScalar(1 / L)); };
-    G.userData = Object.assign(G.userData, { S, body, mast, deckY: .3, seat: new THREE.Vector3(0, .3 + FLOAT, -1.25), cls: "tutaj", chartAt: new THREE.Vector3(0, .62 + FLOAT, -.25), cocoChart: true });   /* a kijelző: félbevágott kókuszdióba építve, Kata mögött, egy bambuszkarón – feléd fordítva */
+    G.userData = Object.assign(G.userData, { S, body, mast, deckY: .3, seat: new THREE.Vector3(0, .3 + FLOAT, -1.25), cls: "tutaj", hullLB: [1.75, 1.05], chartAt: new THREE.Vector3(0, .62 + FLOAT, -.25), cocoChart: true });   /* a kijelző: félbevágott kókuszdióba építve, Kata mögött, egy bambuszkarón – feléd fordítva */
     { const post = new THREE.CylinderGeometry(.025, .03, .42, 7); post.translate(0, .27 + .21, -.25); mesh(post, std({ color: "#c9b06a", roughness: .8 }), body); }
     G.userData.update = (dt) => {
       S.t += dt; const A = S.awa != null ? S.awa : 60, U = S.aws || 6;
@@ -3721,7 +3730,7 @@
       for (let k = 0; k < 4; k++) { const sp = mesh(new THREE.CapsuleGeometry(.025, .26, 4, 8), wh, whR); sp.rotation.z = k * Math.PI / 4 * 2 + Math.PI / 4; }
       mesh(new THREE.SphereGeometry(.07, 16, 12), ye, whR); const valve = mesh(new THREE.CylinderGeometry(.012, .012, .03, 8), wh, whR); valve.rotation.x = Math.PI / 2; valve.position.set(.13, .13, .05);
       const post = new THREE.CylinderGeometry(.07, .1, .62, 16); post.translate(-.05, .72 - .31, .3 + .05); mesh(post, pk, body); void ring; }
-    G.userData = Object.assign(G.userData, { S, body, mast: rod, deckY: .16, seat: new THREE.Vector3(0, .15, -.15), cls: "flamingo", chartAt: new THREE.Vector3(.36, .78, .42), wheel: whR, toyChart: true });
+    G.userData = Object.assign(G.userData, { S, body, mast: rod, deckY: .16, seat: new THREE.Vector3(0, .15, -.15), cls: "flamingo", hullLB: [1.12, .84], chartAt: new THREE.Vector3(.36, .78, .42), wheel: whR, toyChart: true });
     const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
     const setLine = (m, a, b) => { _b.subVectors(b, a); const L = _b.length(); m.position.copy(a); m.scale.set(1, L, 1); m.quaternion.setFromUnitVectors(_up, _b.normalize()); };
     G.userData.update = (dt) => {
@@ -3979,7 +3988,7 @@
   /* minden képkockán (a vrTick végén) */
   function vrExtTick(dt) {
     const S = VRR, C = S.C; if (!C) return;
-    vrLavTick(dt); vrSpectTick(dt); try { stmTick(dt, !!(NGT && NGT.on)); } catch (e) {} try { msTick(dt); } catch (e) { console.warn("kisütés", e); }
+    vrLavTick(dt); vrSpectTick(dt); try { stmTick(dt, !!(NGT && NGT.on)); } catch (e) {} try { msTick(dt); } catch (e) { console.warn("kisütés", e); } try { hullMaskSet(S.water && S.water.userData.mat, [S.pb].concat((S.riv || []).map((r) => r.g))); } catch (e) {}
     /* időlimit */
     if (S.lvl && C.limit && S.st === "race" && !S.doneT) { const left = C.limit - S.t;
       if (left < 60 && left > 0 && !S.limWarn) { S.limWarn = 1; S.msg = "⚠ Még 1 perc az időlimitből – aki addig nem fut be, nem ért be (TLE)."; S.msgT = 6; beep(); }
@@ -4394,6 +4403,7 @@
   function hbTick(dt) {
     try { stmTick(dt, false); } catch (e) {}
     try { msTick(dt); } catch (e) {}
+    try { hullMaskSet(HB.water && HB.water.userData.mat, (HB.boats || []).map((o) => o.g).concat(HB.prev ? [HB.prev.g] : [])); } catch (e) {}
     W.root.position.set(0, T.inVR ? -.66 : -.66 - 1.62, 0);   /* a móló felszíne a padló (VR) / a szemmagasság alatt 1,62 m (2D) */
     HB.water.userData.mat.uniforms.uT.value = W.t; HB.water.userData.mat.uniforms.uOff.value.set(0, 0);
     if (HB.storm) { const l = STM.lv.keleti || 0, per = l === 2 ? 60 / 90 : l === 1 ? 60 / 45 : 0, on = per && (W.t % per) / per < .34; HB.storm.glow.visible = !!on; HB.storm.lamp.material.color.set(on ? "#ffe066" : l ? "#7a6420" : "#4a4a40"); }
