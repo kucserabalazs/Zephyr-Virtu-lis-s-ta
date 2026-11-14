@@ -6890,6 +6890,19 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       /* saját kéz megjelenítése (Quest kézkövetés) */
       const hh = document.createElement("a-entity");
       hh.setAttribute("hand-tracking-controls", `hand: ${hand}; modelStyle: mesh; modelColor: #e9cdb4; modelOpacity: 0.92`);
+      /* 2026-11-14 20:06 (tulajdonos: „a bal kezem nagyon hamar elveszti az érzékelést, ha nem mozgatom, és tehetetlenül megjelenik a játékban”):
+         ha a Quest elveszíti a kéz követését, az A-Frame az utolsó (vagy alap) pózban hagyja a kézmodellt. Az őr minden képkockán megnézi,
+         van-e érvényes ízületi póz (XRFrame.getJointPose a csuklóra), és ha nincs – vagy a csontok 0,3 mp-ig moccanatlanok –, elrejti a kezet;
+         amint a követés visszatér, azonnal újra látszik. */
+      if (window.AFRAME && !AFRAME.components["zv-hand-guard"]) AFRAME.registerComponent("zv-hand-guard", {
+        init() { this.sig = null; this.still = 0; },
+        tick(t, dt) { const el = this.el, m = el.getObject3D("mesh"); if (!m) return; const sc = el.sceneEl; let ok = null;
+          try { const fr = sc.frame, rs = sc.renderer && sc.renderer.xr && sc.renderer.xr.getReferenceSpace && sc.renderer.xr.getReferenceSpace(), d = el.components["hand-tracking-controls"], hd = d && d.data && d.data.hand;
+            if (fr && rs && fr.session) { ok = false; for (const src of fr.session.inputSources) { if (src.hand && src.handedness === hd) { const w = src.hand.get("wrist"), jp = w && fr.getJointPose(w, rs); ok = !!jp; } } } } catch (e) { ok = null; }
+          let sig = 0; m.traverse((o) => { if (o.isBone) { const q = o.quaternion, p = o.position; sig += q.x * 3.1 + q.y * 5.3 + q.z * 7.7 + p.x * 11 + p.y * 13 + p.z * 17; } });
+          if (this.sig != null && Math.abs(sig - this.sig) < 1e-7) this.still += (dt || 16) / 1000; else this.still = 0; this.sig = sig;
+          const show = ok !== false && this.still < .3; if (m.visible !== show) m.visible = show; } });
+      hh.setAttribute("zv-hand-guard", "");
       rig.appendChild(hh);
     });
     sceneEl.append(sky, sky2, spots, rig);
@@ -13456,7 +13469,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "2ef5892825"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "a63a0f926d"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -13490,7 +13503,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "f3d30c9356"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "6dc1e9e491"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 

@@ -1133,3 +1133,4 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - Fock éjjel: csak az alsó (nyak-) sarokban fényfolt (sugár a fock magasságának 27%-a), jobb fele zöld, bal fele piros. Perem csíkjai: bal piros, jobb zöld, vastagabb (3,5 cm), noBake (eddig a kisütés elnyelte a színüket).
 - 19:41: nappal a perem sötét tík színű, a piros/zöld csík csak éjjel (navRail userData.nightCol).
 - 19:52 (tulajdonos): VISSZAVONVA a 18:39-es nézőpont-dőlés – vrHeelView nem fut, a W.root forgatása minden képkockán alaphelyzetben; az ülés a testtel nem dől (csak a test helye/mérete számít).
+- 20:06: kézkövetés-őr (zv-hand-guard, HTML): ha nincs érvényes csuklópóz (XRFrame.getJointPose) vagy a csontok 0,3 mp-ig moccanatlanok, a kézmodell rejtve – nincs „tehetetlen” bal kéz. Apátság: a lábazat a terep anyagával (éjjel sötét), a díszfényes nevezetességeknél nincs nagy általános fényfolt, kisebb ablakfények – a tornyok alatt nem mosódik fény a hegybe.

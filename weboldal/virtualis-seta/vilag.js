@@ -5214,7 +5214,7 @@
     { n: "Tihanyi Bencés Apátság", sc: 2.2, lat: 46.91389, lon: 17.88944, ry: Math.PI / 2, lights: [], fp: [[0, 0], [0, -28], [0, 16], [-5.6, 17], [5.6, 17], [-8, 10], [8, 10], [-8, -26], [8, -26], [10, -4], [34, -2], [58, -2], [62, -26], [62, -42], [10, -32], [20, -32]], b: (P, L) => { const c = "#f2e4bf", wh = "#fbf6ea", rf = "#5f7a6e", tile = "#9a4b33", dk = "#2a2620", st = "#b9ac8f", gold = "#e3b24a";
       /* 19:13 (tulajdonos: „ne nyúljon túl a hegyen, illeszkedjen az alsó terepviszonyokba”): nincs kinyúló terasz – minden épület alatt kőlábazat
          a lejtőbe süllyesztve, így a hegyoldalból nő ki */
-      [[0, -6, 17, 45], [-5.6, 17, 7.5, 7.5], [5.6, 17, 7.5, 7.5], [0, 16.2, 5, 3], [34, -2, 52.5, 15.5], [62, -26, 14.5, 34.5], [10, -32, 20.5, 12.5], [0, -28, 14, 14]].forEach(([x, z, w, d]) => P(new THREE.BoxGeometry(w, 40, d), st, x, -19.6, z));
+      [[0, -6, 17, 45], [-5.6, 17, 7.5, 7.5], [5.6, 17, 7.5, 7.5], [0, 16.2, 5, 3], [34, -2, 52.5, 15.5], [62, -26, 14.5, 34.5], [10, -32, 20.5, 12.5], [0, -28, 14, 14]].forEach(([x, z, w, d]) => P(new THREE.BoxGeometry(w, 40, d), "~#4f4a3e", x, -20.2, z));   /* 20:06: a lábazat a TEREP anyagával (éjjel sötét, nem világít a hegyoldalba) */
       /* a templomhajó */
       P(new THREE.BoxGeometry(16, 19, 44), c, 0, 9.5, -6); P(new THREE.BoxGeometry(16.6, 1, 44.6), wh, 0, 19.2, -6);
       P(new THREE.CylinderGeometry(9.6, 9.6, 44.5, 3, 1).rotateX(-Math.PI / 2).scale(1, .55, 1), tile, 0, 21.7, -6);
@@ -5292,19 +5292,19 @@
     const m = new THREE.SpriteMaterial({ map: _bglT, color: new THREE.Color(col), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }); W.disposables.push(m); const s2 = new THREE.Sprite(m); s2.scale.setScalar(sz); s2.visible = false; s2.userData.night = 1; return s2; }
   function balLandmarks(G, cx, cz, NL) {
     BAL.live = [];
-    const parts = [], mat = balMatL(); BAL.lmLabels = [];
+    const parts = [], partsG = [], mat = balMatL(); BAL.lmLabels = [];
     BAL_LM.forEach((L) => { let [x, z] = balXY(L.lat, L.lon); if (L.harbour) { const s = balShorePt(L.lat, L.lon); x = s.x + s.nx * 30; z = s.z + s.nz * 30; }
       const d = Math.hypot(x - cx, z - cz); if (d < 60) return; const sc = L.sc || 1; let gy = 0;
       /* 19:34 (tulajdonos: „az apátság tornya belelóg a hegybe”): az épület alapja a TALAJ LEGMAGASABB pontja az egész alaprajz alatt (tornyok, hajó, szárnyak),
          így semmi nem süllyed a hegybe; lejtő felé a kőlábazat mélyen lenyúlik, hogy ne lebegjen. */
-      if (!L.harbour) { const fp = L.fp || [[0, 0]], ry = L.ry || 0; gy = -1e9; fp.forEach(([lx, lz]) => { const wx = x + (lx * Math.cos(ry) + lz * Math.sin(ry)) * sc, wz = z + (-lx * Math.sin(ry) + lz * Math.cos(ry)) * sc; gy = Math.max(gy, balGround(wx, wz)); }); if (!L.fp) gy = balGroundMin(x, z, 12 * sc); } const P = balPut(parts, cx, cz, x, z, gy - (sc > 1 ? 2 : 0), sc);   /* a jelképek kissé nagyítva, hogy a hegytetőn messziről is felismerhetők legyenek */ if (L.lights) L.lights.length = 0; L.b((geo, col, lx, ly, lz) => P(geo, col, lx, ly, lz, 0, L.ry || 0), L);
+      if (!L.harbour) { const fp = L.fp || [[0, 0]], ry = L.ry || 0; gy = -1e9; fp.forEach(([lx, lz]) => { const wx = x + (lx * Math.cos(ry) + lz * Math.sin(ry)) * sc, wz = z + (-lx * Math.sin(ry) + lz * Math.cos(ry)) * sc; gy = Math.max(gy, balGround(wx, wz)); }); if (!L.fp) gy = balGroundMin(x, z, 12 * sc); } const P = balPut(parts, cx, cz, x, z, gy - (sc > 1 ? 2 : 0), sc), PG = balPut(partsG, cx, cz, x, z, gy - (sc > 1 ? 2 : 0), sc);   /* a jelképek kissé nagyítva, hogy a hegytetőn messziről is felismerhetők legyenek */ if (L.lights) L.lights.length = 0; L.b((geo, col, lx, ly, lz) => (typeof col === "string" && col[0] === "~" ? PG(geo, col.slice(1), lx, ly, lz, 0, L.ry || 0) : P(geo, col, lx, ly, lz, 0, L.ry || 0)), L);
       if (L.live) { const q = balPlace(cx, cz, x, z, gy - (sc > 1 ? 2 : 0)), lg = new THREE.Group(); lg.position.set(q.x, q.y, q.z); lg.scale.setScalar(q.k * sc); lg.rotation.y = L.ry || 0; lg.userData.night = 1; lg.userData.noMerge = 1; G.add(lg);
         const up = L.live(lg); lg.traverse((o) => { o.userData.noMerge = 1; if (o.isSprite) o.userData.night = 1; }); up(false, 0); BAL.live.push(up); }
       /* díszkivilágítás: világító ablakok, lámpák, harangablakok (éjjel pontfényként) */
       (L.lights || []).forEach(([lx, ly, lz, lc, ls]) => { const ry = L.ry || 0, rx = (lx * Math.cos(ry) + lz * Math.sin(ry)) * sc, rz = (-lx * Math.sin(ry) + lz * Math.cos(ry)) * sc, cc = new THREE.Color(lc), q = balPlace(cx, cz, x + rx, z + rz, gy - (sc > 1 ? 2 : 0) + ly * sc);
-        NL.push([q.x, q.y, q.z, cc.r, cc.g, cc.b, clamp(4.2 - d / 5000, 1.4, 3.6) * ls, 0, 0, 1]); });
-      const pp = balPlace(cx, cz, x, z, gy + 18 * sc); NL.push([pp.x, pp.y, pp.z, 1, .82, .55, clamp(5 - d / 6000, 2, 4.5), 0, 0, 1]); BAL.lmLabels.push({ n: L.n, p: pp, d }); });
-    balBake(parts, (m4) => balHazeK(m4.userData_d || 0), mat, G);
+        NL.push([q.x, q.y, q.z, cc.r, cc.g, cc.b, clamp(2.2 - d / 6000, 1, 1.8) * ls, 0, 0, 1]); });
+      const pp = balPlace(cx, cz, x, z, gy + 18 * sc); if (!L.lights && !L.live) NL.push([pp.x, pp.y, pp.z, 1, .82, .55, clamp(5 - d / 6000, 2, 4.5), 0, 0, 1]);   /* 20:06: a saját díszfényes nevezetességeknél nincs nagy általános fényfolt (az apátság tornyainál a hegybe mosódott) */ BAL.lmLabels.push({ n: L.n, p: pp, d }); });
+    balBake(parts, (m4) => balHazeK(m4.userData_d || 0), mat, G); balBake(partsG, (m4) => balHazeK(m4.userData_d || 0), balMat(), G);
   }
   /* ---------------------------------------------------------------- fák a közeli partokon (nyárfasorok, erdőfoltok, kertek) */
   function balTrees(G, cx, cz, Rm) {

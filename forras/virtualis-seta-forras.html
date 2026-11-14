@@ -6874,6 +6874,19 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
       /* saját kéz megjelenítése (Quest kézkövetés) */
       const hh = document.createElement("a-entity");
       hh.setAttribute("hand-tracking-controls", `hand: ${hand}; modelStyle: mesh; modelColor: #e9cdb4; modelOpacity: 0.92`);
+      /* 2026-11-14 20:06 (tulajdonos: „a bal kezem nagyon hamar elveszti az érzékelést, ha nem mozgatom, és tehetetlenül megjelenik a játékban”):
+         ha a Quest elveszíti a kéz követését, az A-Frame az utolsó (vagy alap) pózban hagyja a kézmodellt. Az őr minden képkockán megnézi,
+         van-e érvényes ízületi póz (XRFrame.getJointPose a csuklóra), és ha nincs – vagy a csontok 0,3 mp-ig moccanatlanok –, elrejti a kezet;
+         amint a követés visszatér, azonnal újra látszik. */
+      if (window.AFRAME && !AFRAME.components["zv-hand-guard"]) AFRAME.registerComponent("zv-hand-guard", {
+        init() { this.sig = null; this.still = 0; },
+        tick(t, dt) { const el = this.el, m = el.getObject3D("mesh"); if (!m) return; const sc = el.sceneEl; let ok = null;
+          try { const fr = sc.frame, rs = sc.renderer && sc.renderer.xr && sc.renderer.xr.getReferenceSpace && sc.renderer.xr.getReferenceSpace(), d = el.components["hand-tracking-controls"], hd = d && d.data && d.data.hand;
+            if (fr && rs && fr.session) { ok = false; for (const src of fr.session.inputSources) { if (src.hand && src.handedness === hd) { const w = src.hand.get("wrist"), jp = w && fr.getJointPose(w, rs); ok = !!jp; } } } } catch (e) { ok = null; }
+          let sig = 0; m.traverse((o) => { if (o.isBone) { const q = o.quaternion, p = o.position; sig += q.x * 3.1 + q.y * 5.3 + q.z * 7.7 + p.x * 11 + p.y * 13 + p.z * 17; } });
+          if (this.sig != null && Math.abs(sig - this.sig) < 1e-7) this.still += (dt || 16) / 1000; else this.still = 0; this.sig = sig;
+          const show = ok !== false && this.still < .3; if (m.visible !== show) m.visible = show; } });
+      hh.setAttribute("zv-hand-guard", "");
       rig.appendChild(hh);
     });
     sceneEl.append(sky, sky2, spots, rig);
