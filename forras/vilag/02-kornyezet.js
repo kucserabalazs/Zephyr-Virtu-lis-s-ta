@@ -122,7 +122,7 @@
         uSkyH: { value: new THREE.Color(.70, .80, .87) }, uSkyZ: { value: new THREE.Color(.25, .45, .75) }, uDeep: { value: new THREE.Color(.06, .25, .27) }, uShallow: { value: new THREE.Color(.18, .44, .41) },
         uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 }, uFlk: { value: 0 },
         /* 2026-11-14 LAVÓR: legfeljebb 8 szélcsendes folt (x, z a vízminta koordinátáiban, sugár, mélység 0..1) – ott sima, tükröző, hullámtalanabb a víz */
-        uLav: { value: [0, 1, 2, 3, 4, 5, 6, 7].map(() => new THREE.Vector4(0, 0, 0, 0)) } },
+        uLav: { value: [0, 1, 2, 3, 4, 5, 6, 7].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uFoam: { value: 1 } },
       vertexShader: `
         uniform float uT, uWind; uniform vec2 uOff; uniform vec4 uW[5]; uniform vec4 uLav[8];
         varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
@@ -141,7 +141,7 @@
           gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        uniform sampler2D uSkyT; uniform float uSkyOn, uFlk; uniform vec2 uSkyRot; uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5]; uniform vec4 uLav[8];
+        uniform sampler2D uSkyT; uniform float uSkyOn, uFlk; uniform vec2 uSkyRot; uniform float uT, uWind, uLight, uSpec; uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec2 uGust; uniform vec4 uW[5]; uniform vec4 uLav[8]; uniform float uFoam;
         varying vec3 vP; varying vec3 vN; varying float vDist; varying vec2 vW;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*f*(f*(f*6.-15.)+10.); return mix(mix(h21(i), h21(i+vec2(1,0)), f.x), mix(h21(i+vec2(0,1)), h21(i+vec2(1,1)), f.x), f.y); }
@@ -189,7 +189,7 @@
           float steep = smoothstep(.10, .26, crest);
           float streak = smoothstep(.62, .9, vn(vec2(dot(vW, wd) * .35, dot(vW, vec2(-wd.y, wd.x)) * 2.2) - vec2(uT * .25, 0.)));
           float foam = clamp(steep * (.35 + .65 * streak) * fa + gust * steep * .2, 0., 1.);
-          col = mix(col, vec3(.93, .96, .97) * uLight, foam * .55 * (1. - calm));
+          col = mix(col, vec3(.93, .96, .97) * uLight, foam * .55 * (1. - calm) * uFoam);
           if (uFlk > 0.) {   /* a VÍZHEZ rögzített habpelyhek, buborékfoltok és szélcsíkok: nem vonulnak a hullámokkal – ezek mutatják a hajó valódi haladását */
             float nearF = 1. - smoothstep(14., 110., vDist), aa = clamp(1.4 - 5.3 * px, 0., 1.);
             float f1 = smoothstep(.58, .84, vn(vW * .85)) * smoothstep(.42, .78, vn(vW * 5.3 + 7.)) * aa;

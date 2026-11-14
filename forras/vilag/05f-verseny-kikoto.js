@@ -66,7 +66,7 @@
     P.buttons([["⛵ Indulás", () => hbGo(false)], ["⚓ Kikötői menü", hbMenu], ["‹ Vissza a sétához", () => W.close()]]); }
   function hbHud(H) { H.title("Zephyr kikötő · vitorlásverseny", `Hajó: ${boatCls(HB.sel).n} · bökj rá egy kikötött hajóra`); H.steer([["⚓ Kikötői menü", hbMenu], ["⛵ Indulás", () => hbGo(false)]], () => {}); H.hint("Bökj rá egy hajóra: előtted forog, és kiválaszthatod · a kikötői menüben: játékos, beállítások, eredmények, többjátékos"); }
   /* indulás a versenyre (W.open("race") a kikötő helyett közvetlenül a futamot nyitja) */
-  function hbGo(tut, lvl, force) { if (!tut && !force && NET.on && netActive().length && !NET.queue) { NET.queue = { t: Date.now(), ann: 0 }; netPost({ k: "q", on: 1, cls: HB.sel }); hbBoard("net"); return; } try { localStorage.setItem("zephyr-hajo", HB.sel || vrClsId()); } catch (e) {} uiCloseAll(); VRR.forceCls = null; if (tut) VRR.lvl = 0; else if (lvl) VRR.lvl = lvl; else if (!VRR.lvl) VRR.lvl = (VRR.series && VRR.series.races ? VRR.series.races.length % 5 : 0) + 1;
+  function hbGo(tut, lvl, force, night) { VRR.nightForce = night ? true : null; if (!tut && !force && NET.on && netActive().length && !NET.queue) { NET.queue = { t: Date.now(), ann: 0 }; netPost({ k: "q", on: 1, cls: HB.sel }); hbBoard("net"); return; } try { localStorage.setItem("zephyr-hajo", HB.sel || vrClsId()); } catch (e) {} uiCloseAll(); VRR.forceCls = null; if (tut) VRR.lvl = 0; else if (lvl) VRR.lvl = lvl; else if (!VRR.lvl) VRR.lvl = (VRR.series && VRR.series.races ? VRR.series.races.length % 5 : 0) + 1;
     setTimeout(() => { W._raceGo = true; W.open("race"); }, 30); }
   /* ---------------------------------------------------------------- hajó-előnézet a forgókorongon */
   function hbPreview(id) {
@@ -97,11 +97,11 @@
       B.btn(730, 380, 700, 64, "Bökj rá egy kikötött hajóra – vagy: ◀ ▶ itt", () => { const i = BOAT_ORDER.indexOf(HB.sel); hbPreview(BOAT_ORDER[(i + 1) % BOAT_ORDER.length]); }, { fs: 26 });
       /* fő gombok */
       B.btn(40, 490, 1420, 120, `⛵  INDULÁS A VERSENYRE  ·  ${VRR.series && VRR.series.races && !VRR.series.done ? (VRR.series.races.length + 1) + ". futam a sorozatban" : "új sorozat, 1. futam"}`, () => hbGo(false), { gold: true, fs: 44 });
-      B.btn(40, 636, 455, 100, "🎓 Oktató futam", () => hbGo(true));
+      B.btn(40, 636, 455, 100, "🌙 Éjszakai futam", () => hbGo(false, 0, false, true), { bg: "rgba(20,24,70,.92)" });
       B.btn(522, 636, 455, 100, "🏆 Eredmények és trófeák", () => hbBoard("trophy"));
       B.btn(1005, 636, 455, 100, "👥 Többjátékos", () => hbBoard("net"));
-      B.btn(40, 762, 700, 100, "⚙ Beállítások", () => hbBoard("set"));
-      B.btn(760, 762, 700, 100, "‹ Vissza a sétához", () => { uiCloseAll(); W.close(); });
+      B.btn(40, 762, 455, 100, "⚙ Beállítások", () => hbBoard("set")); B.btn(522, 762, 455, 100, "🎓 Oktató futam", () => hbGo(true));
+      B.btn(1005, 762, 455, 100, "‹ Vissza a sétához", () => { uiCloseAll(); W.close(); });
       g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 22px ${UIF}`; g.fillText("VR-ben a tábla felső sávját megfogva (csippentés) bárhová teheted; előre-hátra tolva nő vagy kisebbedik.", 40, 920);
     } else if (p === "boat") {
       const c = boatCls(HB.sel); uiFrame(B, g, c.n.toUpperCase(), "előtted forog a forgókorongon");
@@ -124,9 +124,10 @@
       row(170, "Ellenfelek szintje", [["kezdo", "Kezdő"], ["halado", "Haladó"], ["versenyzo", "Versenyző"]], diff, (v) => { try { localStorage.setItem("zephyr-vr-nehezseg", v); } catch (e) {} VRR.diff = v; });
       row(280, "Kormány (Zephyr)", [[true, "Botkormány"], [false, "Kormánykerék"]], tl, (v) => { try { localStorage.setItem("zephyr-kormany", v ? "bot" : "kerek"); } catch (e) {} });
       row(390, "Testhelyzet VR-ben", [[false, "Állva"], [true, "Ülve"]], seat, (v) => { try { localStorage.setItem("zephyr-vr-ules", v ? "1" : "0"); } catch (e) {} });
+      row(610, "Napszak", [["nap", "Nappal"], ["valt", "Minden 3. éjjel"], ["ej", "Mindig éjjel"]], vrNightPref(), (v) => { try { localStorage.setItem("zephyr-napszak", v); } catch (e) {} });
       row(500, "Táblák a vízen", [[true, "Mutasd"], [false, "Rejtsd"]], signs, (v) => { try { localStorage.setItem("zephyr-verseny-tablak", v ? "1" : "0"); } catch (e) {} });
-      g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 24px ${UIF}`; g.fillText("Kis hajókon (Finn, 420, tutaj, flamingó) mindig botkormánnyal kormányzol – zárd ökölbe a kezed, és mozdítsd balra-jobbra.", 60, 650);
-      B.btn(60, 720, 640, 90, "↺ Sorozat újrakezdése", () => { VRR.series = { races: [], done: false, id: Date.now() }; vrSeriesSave(); VRR.lvl = 1; B.dirty = 1; });
+      g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 24px ${UIF}`; g.fillText("Kis hajókon (Finn, 420, tutaj, flamingó) mindig botkormánnyal kormányzol – zárd ökölbe a kezed, és mozdítsd balra-jobbra.", 60, 735);
+      B.btn(60, 760, 640, 80, "↺ Sorozat újrakezdése", () => { VRR.series = { races: [], done: false, id: Date.now() }; vrSeriesSave(); VRR.lvl = 1; B.dirty = 1; });
       B.btn(60, 860, 1380, 100, "‹ Vissza a kikötői menübe", hbMenu, { gold: true });
     } else if (p === "trophy") hbDrawTrophy(B, g);
     else if (p === "net" || p === "inv" || p === "wait") { if (typeof hbDrawNet === "function") hbDrawNet(B, g); }

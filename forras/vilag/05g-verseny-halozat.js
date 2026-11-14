@@ -51,13 +51,13 @@
     S.riv.forEach((r) => { if (!r.key || r.out) return; const owner = r.owner; if (r.remote && !alive(owner) && host === NET.id) { r.remote = false; r.owner = NET.id; if (r.human) r.aiTook = true; r.errNext = 0; } });
   }
   /* ---------------------------------------------------------------- csoport indítása (automatikus vagy saját futam) */
-  function netGroupSend(mem, priv) { const gid = "g" + Math.random().toString(36).slice(2, 9), m = { k: "grp", gid, priv: !!priv, host: NET.id, members: mem.map((q) => ({ id: q.id, name: q.name })), cls: HB.sel || vrClsId(), lvl: (VRR.lvl && VRR.st === "done") ? VRR.lvl + 1 : 1, seed: (Math.random() * 1e9) | 0, startAt: Date.now() + 4000 };
+  function netGroupSend(mem, priv) { const gid = "g" + Math.random().toString(36).slice(2, 9), m = { k: "grp", gid, priv: !!priv, host: NET.id, members: mem.map((q) => ({ id: q.id, name: q.name })), cls: HB.sel || vrClsId(), lvl: (VRR.lvl && VRR.st === "done") ? VRR.lvl + 1 : 1, seed: (Math.random() * 1e9) | 0, startAt: Date.now() + 4000 }; m.night = VRR.nightForce || vrIsNight(m.lvl);
     netPost(m); netGroupStart(m, true); }
   function netGroupStart(m, self) {
     if (!self && !m.members.some((q) => q.id === NET.id)) return;
     NET.queue = null; NET.myInv = null; NET.inv = null; uiCloseAll();
     let seed = m.seed >>> 0; const rnd = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-    VRR.net = { gid: m.gid, host: m.host, members: m.members, priv: m.priv, startAt: m.startAt, seen: {}, me: m.members.findIndex((q) => q.id === NET.id) }; VRR.netRnd = rnd; VRR.forceCls = m.cls; VRR.lvl = m.lvl;
+    VRR.net = { gid: m.gid, host: m.host, members: m.members, priv: m.priv, startAt: m.startAt, night: m.night, seen: {}, me: m.members.findIndex((q) => q.id === NET.id) }; VRR.netRnd = rnd; VRR.forceCls = m.cls; VRR.lvl = m.lvl;
     m.members.forEach((q) => { VRR.net.seen[q.id] = Date.now(); });
     setTimeout(() => { W._raceGo = true; W.open("race"); }, 30);
   }

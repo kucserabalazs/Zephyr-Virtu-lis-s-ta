@@ -1030,3 +1030,11 @@ Kép: `weboldal/virtualis-seta/img/kapitanyi-hatter.jpg` (a tulajdonos stég-pan
 14. Nézőhajók: tagolt emberek (integetnek, éljeneznek), a pálya cikcakkjától is távol (`vrSpectPlace`), ütközéskor elesnek, kiabálnak (felirat + magyar beszédhang, ha van), a rendezőhajó is.
 15–16. Hajók: Finn dingi és 420-as a hivatalos osztályszabályok méreteivel (forrás a fájl fejlécében), rönktutaj (saját terv, Rák Rezső – a filmbeli tutaj/labda szerzői jog miatt NEM), flamingó: strandtörölköző-grósz a névvel, melltartó-spinakker. Az ellenfelek ugyanabban az osztályban; kis hajón botkormány, a nézőpont a kormányos helye (2D-ben hátulról követő kamera).
 Tesztek (a munkakörnyezetben): /home/claude/t/*.js mintájára – a race közvetlen nyitásához `ZephyrWorld.raceDirect = true`. SZEMÜVEGBEN NINCS ELLENŐRIZVE (az IWER-emulátoron hibamentesen fut).
+
+## 2026-11-14 15:12 – ÉJSZAKAI VERSENY (`forras/vilag/05h-verseny-ejszaka.js`)
+- Bekapcsolás: kikötő → „🌙 Éjszakai futam”, vagy Beállítások → Napszak (Nappal / Minden 3. éjjel [alap] / Mindig éjjel; localStorage `zephyr-napszak`). Online csoportnál a házigazda dönt (`m.night`).
+- Kivilágítás (Hajózási Szabályzat 3.13 cikk 5., COLREG 21., 25.): Zephyr (15 m): oldalfények az orron (zöld jobb / vörös bal, 112,5°), fehér farfény (135°), árbocon vörös-zöld körfény; 7 m alatti kishajók: egy körben látható fehér fény + közeledő hajónál második fehér fény (zseblámpa); horgonyzó nézőhajók és rendezőhajó: fehér horgonyfény + kabinfény. A fények csak a saját szögtartományukban látszanak.
+- Bóják: fordulóbója Fl Y 4 s, kapubóják Fl W 2,5 s. Viharjelzés: sárga villogás a parton és a tóközepi állomáson: elsőfok 45/perc, másodfok 90/perc (lökés ~1,35×átlag: 40–60 km/h → elsőfok); minden 6. futam éjszakája másodfok, távoli villámlással és mennydörgéssel.
+- Ég: telihold a part fölött (ezüst holdút a vízen), csillagok pislogással, Tejút, hullócsillag 7–23 mp-enként; parti fények (települések, sétány, kikötők vörös/zöld bejárati fénye – IALA A), díszkivilágított nevezetességek, tükörcsíkok a vízen; tücskök.
+- Technika: a kisütött anyagok színe éjjel lineárisan sötétítve (`vrNightTint`, eredeti szín: material.userData._dc), a víz uniformjai képkockánként éjszakaiak (a később betöltődő nappali égfotó felülírná). Víz: új `uFoam` uniform.
+- SZEMÜVEGBEN NINCS ELLENŐRIZVE.

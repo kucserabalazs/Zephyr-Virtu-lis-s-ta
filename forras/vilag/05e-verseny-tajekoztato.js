@@ -195,7 +195,7 @@
     if (!F.length) { g.fillStyle = "#7CFC9A"; g.font = `800 26px ${UIF}`; g.fillText("✓ Tiszta futam – nem volt ütközés.", 60, 660); g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 20px ${UIF}`; uiWrap(g, VR_R14, 60, 700, 650, 28, 3); }
     else { let yy = 650; F.slice(0, 4).forEach((f) => { const R = VR_RRS[f.n] || VR_RRS[10]; g.fillStyle = "#ffd166"; g.font = `800 21px ${UIF}`; uiWrap(g, `${f.bad} ⟷ ${f.other}: ${f.bad} a hibás`, 60, yy, 650, 26, 1); yy += 26; g.fillStyle = "#fff"; g.font = `600 18px ${UIF}`; yy += uiWrap(g, `${R[0]}: ${R[1]}`, 60, yy, 650, 23, 3) * 23 + 10; }); }
     /* jobb oldal: a következő futam */
-    uiCard(g, 754, 150, 812, 716); uiH(g, `KÖVETKEZŐ: ${N.lvl}. FUTAM – ${N.C.name.toUpperCase()}`, 780, 196);
+    uiCard(g, 754, 150, 812, 716); uiH(g, `KÖVETKEZŐ: ${N.lvl}. FUTAM – ${N.C.name.toUpperCase()}${vrIsNight(N.lvl) ? " · 🌙 ÉJSZAKAI" : ""}`, 780, 196);
     { const tx = `${N.venue.n} · ${N.C.wxn || "szél"} ${(N.C.tws / KN).toFixed(0)} csomó · időlimit ${mmss(N.C.limit)} (a várható idő ~3×)`; g.fillStyle = "#fff"; uiFit(g, tx, 770, 21, 600); g.fillText(tx, 780, 228); }
     drawCoursePlan(g, N.C, 774, 244, 470, 430, B.t); drawCourse3D(g, N.C, 1256, 244, 296, 430, B.t);
     const legs = vrCourseLegs(N.C); g.font = `700 19px ${UIF}`; legs.forEach((l, i) => { const y = 702 + i * 30; if (y > 850) return; g.fillStyle = "#ffd166"; g.fillText(`${i + 1}.`, 780, y); g.fillStyle = "#fff"; g.fillText(`${i ? i + ". bója" : "rajt"} → ${i + 1 < legs.length ? (i + 1) + ". bója" : "cél (a két bója KÖZÖTT)"} · ${Math.round(l.d)} m · ${l.kind}`, 812, y); });
