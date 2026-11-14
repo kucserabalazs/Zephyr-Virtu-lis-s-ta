@@ -187,12 +187,12 @@
     g.fillStyle = "rgba(255,255,255,.55)"; g.beginPath(); g.ellipse(x - s * .2, y - s * .62, s * .05, s * .2, -.2, 0, TAU); g.fill(); }
 
   /* ---------------------------------------------------------------- PÁLYAMODELL (tervrajz + forgó 3D) a vásznon */
-  function vrCourseLegs(C) { const lm = { x: 0, z: 0 }, pts = [lm].concat(C.marks, [lm]), up = (VRR.cls || BOATCLS.zephyr).up, out = [];
+  function vrCourseLegs(C) { const lm = { x: 0, z: 0 }, fm = C.fin ? { x: (C.fin.a.x + C.fin.b.x) / 2, z: (C.fin.a.z + C.fin.b.z) / 2 } : lm, pts = [lm].concat(C.marks, [fm]), up = (VRR.cls || BOATCLS.zephyr).up, out = [];
     for (let i = 0; i + 1 < pts.length; i++) { const a = pts[i], b = pts[i + 1], d = Math.hypot(b.x - a.x, b.z - a.z), brg = Math.atan2(b.x - a.x, -(b.z - a.z)), twa = Math.abs(wrapA(brg - C.wf)) * R2D;
       out.push({ a, b, d, brg, twa, kind: twa < up + 2 ? "cirkálás (szél ellen, fordulókkal)" : twa > 150 ? "hátszél (perdülésekkel, spinakkerrel)" : twa > 110 ? "bővszél (spinakker)" : twa > 70 ? "félszél" : "élesszél", path: vrLegPath(a, b, C.wf) }); }
     return out; }
   function drawCoursePlan(g, C, x, y, w, h, t) {
-    const legs = vrCourseLegs(C), pts = [{ x: 0, z: 0 }].concat(C.marks, [C.line.a, C.line.b]); let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; pts.forEach((p) => { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); });
+    const legs = vrCourseLegs(C), pts = [{ x: 0, z: 0 }].concat(C.marks, [C.line.a, C.line.b], C.fin ? [C.fin.a, C.fin.b] : []); let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; pts.forEach((p) => { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); });
     legs.forEach((l) => l.path.forEach((p) => { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); }));
     /* a pályát úgy forgatjuk, hogy a szél felülről fújjon (a tervrajz szabványos nézete) */
     const ca = Math.cos(C.wf), sa = Math.sin(C.wf);   /* a szél felülről fúj (a tervrajz szabványos nézete) */
@@ -211,6 +211,7 @@
       const s0 = all[si], f = Ls[si] ? u / Ls[si] : 0, p = { x: s0[0].x + (s0[1].x - s0[0].x) * f, z: s0[0].z + (s0[1].z - s0[0].z) * f }, q = P(p), q2 = P(s0[1]), an = Math.atan2(q2[1] - q[1], q2[0] - q[0]);
       g.save(); g.translate(q[0], q[1]); g.rotate(an + Math.PI / 2); g.fillStyle = "#ffffff"; g.beginPath(); g.moveTo(0, -14); g.quadraticCurveTo(8, 0, 6, 12); g.lineTo(-6, 12); g.quadraticCurveTo(-8, 0, 0, -14); g.fill(); g.fillStyle = "#c8102e"; g.beginPath(); g.moveTo(0, -10); g.lineTo(9, 6); g.lineTo(0, 4); g.fill(); g.restore(); }
     /* rajt-/célkapu */
+    if (C.fin) { const a = P(C.fin.a), b = P(C.fin.b); g.strokeStyle = "#ffd21a"; g.lineWidth = 5; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); [a, b].forEach((q) => { g.fillStyle = "#ffd21a"; g.beginPath(); g.arc(q[0], q[1], 7, 0, TAU); g.fill(); }); g.fillStyle = "#ffd21a"; g.font = "800 20px system-ui"; g.textAlign = "center"; g.fillText("CÉL", (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 12); }
     { const a = P(C.line.a), b = P(C.line.b); g.strokeStyle = "#7CFC9A"; g.lineWidth = 4; g.setLineDash([8, 8]); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); g.setLineDash([]);
       g.fillStyle = "#ff7a00"; g.beginPath(); g.arc(a[0], a[1], 10, 0, TAU); g.fill(); g.fillStyle = "#e9eef2"; uiRR(g, b[0] - 14, b[1] - 8, 28, 16, 4); g.fill(); g.fillStyle = "#7CFC9A"; g.font = `800 22px ${UIF}`; g.textAlign = "center"; g.fillText("RAJT / CÉL", (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 34); g.textAlign = "left"; }
     /* bóják a kerülés irányával (bal kéz felől = felülről nézve az óramutatóval ellentétesen) */
@@ -234,6 +235,7 @@
     /* útvonal-szalag */
     g.strokeStyle = "rgba(255,209,102,.95)"; g.lineWidth = 4; legs.forEach((l) => { g.beginPath(); l.path.forEach((p, j) => { const q = pr(p, 0); if (j) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]); }); g.stroke(); });
     /* kapu */
+    if (C.fin) { const a = pr(C.fin.a), b = pr(C.fin.b); g.strokeStyle = "#ffd21a"; g.lineWidth = 4; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); }
     { const a = pr(C.line.a), b = pr(C.line.b); g.strokeStyle = "#7CFC9A"; g.setLineDash([6, 6]); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); g.setLineDash([]); }
     /* bóják hengerként, távolság szerint rendezve */
     const items = C.marks.map((m, i) => ({ m, i, z: pr(m)[2] })).concat([{ m: C.line.a, i: -1, z: pr(C.line.a)[2] }, { m: C.line.b, i: -2, z: pr(C.line.b)[2] }]).sort((a, b) => b.z - a.z);

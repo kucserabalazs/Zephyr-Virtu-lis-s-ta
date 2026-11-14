@@ -1126,3 +1126,8 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - 19:23: az orrfények a hajó orrának bal/jobb oldalán, a perem magasságában (hullShape(.9)); az égők (gömb + fénykoszorú) eltávolítva, csak a fényük marad.
 
 - 19:26: versenytársak navigációs fényei: minden osztályon oldalfények (zöld jobb / piros bal, 112,5°) + fehér farfény (135°), a peremen kívül; nagyobb, élesebb pont (max(alap, d·0,0095)), opacitás ≥ 0,6. A saját hajón nincs látható égő.
+
+## 19:33–19:36
+- Felszél–hátszél pálya (1. futam): a 2. bója helyén CÉLKAPU (C.fin): két sárga célbója, köztük a vízen a célvonal; nappal fényoszlop mindkettőn, éjjel villogó fény; radar, tájékoztató térkép, ellenfelek, hátralévő táv mind a célkapura. finL()/finMid(); crossLine a célkapu vonalára.
+- Tihanyi apátság: alap = a talaj LEGMAGASABB pontja az alaprajz alatt (L.fp), kőlábazat 40 m mélyen – a torony nem lóg bele a hegybe.
+- Fock éjjel: csak az alsó (nyak-) sarokban fényfolt (sugár a fock magasságának 27%-a), jobb fele zöld, bal fele piros. Perem csíkjai: bal piros, jobb zöld, vastagabb (3,5 cm), noBake (eddig a kisütés elnyelte a színüket).

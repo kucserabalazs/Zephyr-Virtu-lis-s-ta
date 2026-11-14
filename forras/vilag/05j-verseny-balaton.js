@@ -212,10 +212,10 @@
        zsalus harangablakokkal; a sisak zöldes-szürke rézhagyma, lámpás, kis hagyma, csúcs, aranyozott kereszt. A tornyok között volutás oromzat
        szoborfülkével és kapuval; a hajó vörös cseréptetővel. Az apátsági épület (kétszintes, ablaksoros, vörös tetős, L alakú) a templomtól északra,
        hátrébb húzódik; alatta kő támfal és a sétány bástyája. Éjjel melegsárga díszkivilágítás, világos ablakok. Helyi tér: +z = kelet (homlokzat), +x = észak. */
-    { n: "Tihanyi Bencés Apátság", sc: 2.2, lat: 46.91389, lon: 17.88944, ry: Math.PI / 2, lights: [], b: (P, L) => { const c = "#f2e4bf", wh = "#fbf6ea", rf = "#5f7a6e", tile = "#9a4b33", dk = "#2a2620", st = "#b9ac8f", gold = "#e3b24a";
+    { n: "Tihanyi Bencés Apátság", sc: 2.2, lat: 46.91389, lon: 17.88944, ry: Math.PI / 2, lights: [], fp: [[0, 0], [0, -28], [0, 16], [-5.6, 17], [5.6, 17], [-8, 10], [8, 10], [-8, -26], [8, -26], [10, -4], [34, -2], [58, -2], [62, -26], [62, -42], [10, -32], [20, -32]], b: (P, L) => { const c = "#f2e4bf", wh = "#fbf6ea", rf = "#5f7a6e", tile = "#9a4b33", dk = "#2a2620", st = "#b9ac8f", gold = "#e3b24a";
       /* 19:13 (tulajdonos: „ne nyúljon túl a hegyen, illeszkedjen az alsó terepviszonyokba”): nincs kinyúló terasz – minden épület alatt kőlábazat
          a lejtőbe süllyesztve, így a hegyoldalból nő ki */
-      [[0, -6, 17, 45], [-5.6, 17, 7.5, 7.5], [5.6, 17, 7.5, 7.5], [0, 16.2, 5, 3], [34, -2, 52.5, 15.5], [62, -26, 14.5, 34.5], [10, -32, 20.5, 12.5], [0, -28, 14, 14]].forEach(([x, z, w, d]) => P(new THREE.BoxGeometry(w, 16, d), st, x, -8, z));
+      [[0, -6, 17, 45], [-5.6, 17, 7.5, 7.5], [5.6, 17, 7.5, 7.5], [0, 16.2, 5, 3], [34, -2, 52.5, 15.5], [62, -26, 14.5, 34.5], [10, -32, 20.5, 12.5], [0, -28, 14, 14]].forEach(([x, z, w, d]) => P(new THREE.BoxGeometry(w, 40, d), st, x, -19.6, z));
       /* a templomhajó */
       P(new THREE.BoxGeometry(16, 19, 44), c, 0, 9.5, -6); P(new THREE.BoxGeometry(16.6, 1, 44.6), wh, 0, 19.2, -6);
       P(new THREE.CylinderGeometry(9.6, 9.6, 44.5, 3, 1).rotateX(-Math.PI / 2).scale(1, .55, 1), tile, 0, 21.7, -6);
@@ -295,7 +295,10 @@
     BAL.live = [];
     const parts = [], mat = balMatL(); BAL.lmLabels = [];
     BAL_LM.forEach((L) => { let [x, z] = balXY(L.lat, L.lon); if (L.harbour) { const s = balShorePt(L.lat, L.lon); x = s.x + s.nx * 30; z = s.z + s.nz * 30; }
-      const d = Math.hypot(x - cx, z - cz); if (d < 60) return; const gy = L.harbour ? 0 : (L.lights ? balGround(x, z) : balGroundMin(x, z, 12 * (L.sc || 1))), sc = L.sc || 1; const P = balPut(parts, cx, cz, x, z, gy - (sc > 1 ? 2 : 0), sc);   /* a jelképek kissé nagyítva, hogy a hegytetőn messziről is felismerhetők legyenek */ if (L.lights) L.lights.length = 0; L.b((geo, col, lx, ly, lz) => P(geo, col, lx, ly, lz, 0, L.ry || 0), L);
+      const d = Math.hypot(x - cx, z - cz); if (d < 60) return; const sc = L.sc || 1; let gy = 0;
+      /* 19:34 (tulajdonos: „az apátság tornya belelóg a hegybe”): az épület alapja a TALAJ LEGMAGASABB pontja az egész alaprajz alatt (tornyok, hajó, szárnyak),
+         így semmi nem süllyed a hegybe; lejtő felé a kőlábazat mélyen lenyúlik, hogy ne lebegjen. */
+      if (!L.harbour) { const fp = L.fp || [[0, 0]], ry = L.ry || 0; gy = -1e9; fp.forEach(([lx, lz]) => { const wx = x + (lx * Math.cos(ry) + lz * Math.sin(ry)) * sc, wz = z + (-lx * Math.sin(ry) + lz * Math.cos(ry)) * sc; gy = Math.max(gy, balGround(wx, wz)); }); if (!L.fp) gy = balGroundMin(x, z, 12 * sc); } const P = balPut(parts, cx, cz, x, z, gy - (sc > 1 ? 2 : 0), sc);   /* a jelképek kissé nagyítva, hogy a hegytetőn messziről is felismerhetők legyenek */ if (L.lights) L.lights.length = 0; L.b((geo, col, lx, ly, lz) => P(geo, col, lx, ly, lz, 0, L.ry || 0), L);
       if (L.live) { const q = balPlace(cx, cz, x, z, gy - (sc > 1 ? 2 : 0)), lg = new THREE.Group(); lg.position.set(q.x, q.y, q.z); lg.scale.setScalar(q.k * sc); lg.rotation.y = L.ry || 0; lg.userData.night = 1; lg.userData.noMerge = 1; G.add(lg);
         const up = L.live(lg); lg.traverse((o) => { o.userData.noMerge = 1; if (o.isSprite) o.userData.night = 1; }); up(false, 0); BAL.live.push(up); }
       /* díszkivilágítás: világító ablakok, lámpák, harangablakok (éjjel pontfényként) */
