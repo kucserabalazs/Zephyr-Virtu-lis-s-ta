@@ -29,7 +29,7 @@
     const S = VRR, id = S.cls.id; S.pb = null;
     if (id === "zephyr") return;
     S.boat.visible = false;
-    const pb = makeClassBoat(id, { steer: (() => { try { return localStorage.getItem("zephyr-kormany") || "bot"; } catch (e) { return "bot"; } })(), zephyr: id === "j420", name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
+    const pb = makeClassBoat(id, { steer: (() => { try { return localStorage.getItem("zephyr-kormany") || "bot"; } catch (e) { return "bot"; } })(), zephyr: id === "j420" || id === "finn", name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
     /* fedélzeti térkép (a nagy hajó taktikai kijelzője) a kis hajó fedélzetén, a kormányos előtt */
     if (S.ck && S.ck.chartT) { const c = S.ck.chartT._canvas, w = id === "flamingo" ? .34 : id === "tutaj" ? .3 : .5, h = w * c.height / c.width; const pl = mesh(new THREE.PlaneGeometry(w, h), basic({ map: S.ck.chartT, side: THREE.DoubleSide }), pb.userData.body); const at = pb.userData.chartAt;
       /* 2026-11-14 (tulajdonos: „a műszer nem felém mutat”): a kijelző a kormányos szeme felé néz (eddig hátulról, tükrözve látszott) */

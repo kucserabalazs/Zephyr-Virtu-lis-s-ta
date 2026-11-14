@@ -38,8 +38,9 @@
   function wzModel(id) {
     if (HB.wzM && HB.wzM.id === id) return; if (HB.wzM) { HB.wzPed.remove(HB.wzM.g); HB.wzM = null; }
     const nm = vrProfile().name || ""; let g;
-    if (id === "zephyr") g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: nm });
-    else g = makeClassBoat(id, { zephyr: id === "j420", crew: id === "j420" ? 2 : 1, name: nm, num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
+    /* 00:46: a Zephyr modellje ugyanaz a kidolgozott hajó, mint a futamon (díszes vitorlák, vitorlaablakok, finom részletek) */
+    if (id === "zephyr") g = makeBoat({ sailName: nm, detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, win: true, fine: true, sheetPt: [0, hullShape(.2).sheer + .07 + .19 / VR_SC, hullShape(.14).z + 2.25 / VR_SC], travHalf: hullShape(.2).hb - .55 / VR_SC });
+    else g = makeClassBoat(id, { zephyr: id === "j420" || id === "finn", crew: id === "j420" ? 2 : 1, name: nm, num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
     const holder = new THREE.Group(); holder.add(g); const S = g.userData.S; if (S) { S.awa = 95; S.aws = 6; S.side = 1; if (S.spin != null) S.spin = 0; } try { g.userData.update(.016); } catch (e) {}
     const bb = new THREE.Box3().setFromObject(g), sz = bb.getSize(new THREE.Vector3()), k = 2.5 / Math.max(sz.x, sz.z, sz.y * .82); holder.scale.setScalar(k); holder.position.y = .64 - bb.min.y * k + (id === "zephyr" ? .25 * k : .05);
     HB.wzPed.add(holder); HB.wzM = { id, g: holder, boat: g };
@@ -48,7 +49,7 @@
   function wzGo(step) { HB.wz = HB.wz || wzLoad(); wzShow(true); HB.walk = false; HB.B && (HB.B.o.side = -.36); hbBoard("w" + step); if (HB.B) HB.B.o.side = -.36; if (T.inVR && HB.B) HB.B.place(); }
   /* 00:39 (tulajdonos): forgás közben egy látványos pillanatban kinyílik a spinakker – amikor a hajó oldalról-elölről fordul felénk, hátszélre fordul,
      a spinakker felhúzódik, kidagad és pár másodpercig repül, majd a következő kör előtt bevonják. */
-  function wzTick(dt) { const M = HB.wzM; if (M) { M.g.rotation.y += dt * .38; const S = M.boat.userData.S;
+  function wzTick(dt) { if (HB._frz) { uiTickAll(dt); return; } const M = HB.wzM; if (M) { M.g.rotation.y += dt * .38; const S = M.boat.userData.S;
       if (S) { const q = (((M.g.rotation.y - 1.1) % TAU) + TAU) % TAU, open = q < TAU * .42, M2 = HB.wzM; M2.sp = M2.sp || 0;
         M2.sp += ((open ? 1 : 0) - M2.sp) * Math.min(1, dt * (open ? 1.6 : 1.1)); const k = M2.sp * M2.sp * (3 - 2 * M2.sp);
         S.awa = 75 + 20 * Math.sin(W.t * .3) + (150 - 75) * k; S.aws = 6 + 2 * k; S.side = 1; if (S.spin != null || M.id !== "finn") S.spin = k; S.heel = Math.sin(W.t * .7) * .05 * (1 - k * .5); }

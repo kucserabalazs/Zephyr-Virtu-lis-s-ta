@@ -35,7 +35,7 @@
     /* a kikötött hajók – mindegyik rámutatható / rábökhető */
     HB.boats = HB.berths.map((b) => { let g;
       if (b.id === "zephyr") { g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: vrProfile().name || "" }); g.scale.setScalar(VR_SC); }
-      else g = makeClassBoat(b.id, { zephyr: b.id === "j420", crew: 0, name: vrProfile().name || "", num: "HUN " + (b.id === "j420" ? "420" : "7"), seed: 3 });
+      else g = makeClassBoat(b.id, { zephyr: b.id === "j420" || b.id === "finn", crew: 0, name: vrProfile().name || "", num: "HUN " + (b.id === "j420" ? "420" : "7"), seed: 3 });
       g.position.set(b.x, 0, b.z); g.rotation.y = b.sd > 0 ? Math.PI / 2 : -Math.PI / 2; env.add(g);
       const S = g.userData.S; S.awa = 160; S.aws = 3; S.side = 1; if (S.spin != null) S.spin = 0;
       const sz = b.big ? [6, 12, 16] : [3.2, 5, 5.5]; const hit = mesh(new THREE.BoxGeometry(sz[2], sz[1], sz[0]), basic({ visible: false }), env); hit.position.set(b.x, sz[1] / 2, b.z); hit.material.visible = false;
@@ -119,7 +119,7 @@
     if (HB.prev) { const o = HB.prev; HB.env.remove(o.g); HB.env.remove(o.disc); }
     const big = id === "zephyr"; let g;
     if (big) { g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: vrProfile().name || "" }); g.scale.setScalar(1); }   /* 22:48: valódi méretarány (8,2 m) – eddig 0,62-szeresre kicsinyítve forgott */
-    else g = makeClassBoat(id, { zephyr: id === "j420", crew: id === "j420" ? 2 : 1, name: vrProfile().name || "", num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
+    else g = makeClassBoat(id, { zephyr: id === "j420" || id === "finn", crew: id === "j420" ? 2 : 1, name: vrProfile().name || "", num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
     /* a forgókorong a móló jobb oldalán, a víz fölött; a nézet odafordul */
     const P0 = big ? [9.5, -1] : id === "flamingo" ? [4.4, -1.6] : [5.8, -1.8], y0 = big ? .42 : id === "finn" || id === "j420" ? .62 : .36;   /* a dingi hajóteste a forgókorongon ül (nem süllyed bele) */ g.position.set(P0[0], y0, P0[1]); HB.env.add(g);
     const disc = new THREE.Group(); disc.position.set(P0[0], .26, P0[1]); HB.env.add(disc); faceYaw(-Math.atan2(P0[0], -P0[1]) + .25); { const dg = new THREE.CylinderGeometry(big ? 4.5 : 3.2, big ? 4.6 : 3.3, .5, 48); dg.translate(0, -.2, 0); mesh(dg, std({ color: "#8a6a4a", roughness: .8 }), disc); const rg = new THREE.TorusGeometry(big ? 4.55 : 3.25, .06, 8, 64); rg.rotateX(Math.PI / 2); rg.translate(0, .07, 0); mesh(rg, std({ color: "#d4a13a", metalness: .8, roughness: .3 }), disc); }
@@ -223,7 +223,7 @@
     inp.click();
   }
   /* a név megváltozott: a kikötött hajók vitorláján is frissüljön */
-  function hbRebuildBoats() { try { HB.boats.forEach((o) => { const nm = vrProfile().name || ""; let g; if (o.b.id === "zephyr") { g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: nm }); g.scale.setScalar(VR_SC); } else g = makeClassBoat(o.b.id, { zephyr: o.b.id === "j420", crew: 0, name: nm, num: "HUN " + (o.b.id === "j420" ? "420" : "7"), seed: 3 });
+  function hbRebuildBoats() { try { HB.boats.forEach((o) => { const nm = vrProfile().name || ""; let g; if (o.b.id === "zephyr") { g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: nm }); g.scale.setScalar(VR_SC); } else g = makeClassBoat(o.b.id, { zephyr: o.b.id === "j420" || o.b.id === "finn", crew: 0, name: nm, num: "HUN " + (o.b.id === "j420" ? "420" : "7"), seed: 3 });
       g.position.copy(o.g.position); g.rotation.copy(o.g.rotation); HB.env.remove(o.g); HB.env.add(g); g.userData.S.awa = 160; g.userData.S.aws = 3; o.g = g; }); } catch (e) { console.warn(e); } }
   /* ---------------------------------------------------------------- EREDMÉNYEK ÉS TRÓFEÁK */
   function hbDrawTrophy(B, g) {

@@ -3329,6 +3329,8 @@
   function dinghySailTex(o) {
     return canvasTex(512, 1024, (g, w, h) => {
       g.fillStyle = o.cloth || "#f6f5ef"; g.fillRect(0, 0, w, h);
+      /* 00:46: ÁRPÁD-SÁVOS vitorla – vörössel és ezüsttel (fehérrel) hétszer vágott mező: 8 vízszintes sáv, felül vörös */
+      if (o.arpad) for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? "#f4f1ea" : "#c4161c"; g.fillRect(0, h * k / 8, w, h / 8 + 1); }
       /* 2026-11-14: vitorlakészítői részletek – ferde szabású panelek varrással, szövetszerkezet, élszalag a belépő élen, hátsóél-zsinór,
          sugaras sarokerősítések (nyak, szkótasarok, fej), mélységjelző csíkok (draft stripes), jelzőszál-ablakok */
       for (let k = 0; k < 2600; k++) { g.fillStyle = `rgba(0,0,0,${Math.random() * .018})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
@@ -3440,9 +3442,13 @@
     const W2 = (NT + 1) * 2;
     for (let i = 0; i < NU; i++) for (let j = 0; j < NT; j++) for (let s = 0; s < 2; s++) { const a = i * W2 + j * 2 + s, b = a + 2, c = a + W2, d = c + 2; if (s === 0) idx.push(a, c, b, b, c, d); else idx.push(a, b, c, b, d, c); }
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uvA, 2)); g.setIndex(idx); g.computeVertexNormals(); W.disposables.push(g);
-    const tex = canvasTex(1024, 256, (gg, w, h) => { gg.fillStyle = o.col || "#f4f4f0"; gg.fillRect(0, 0, w, h); gg.fillStyle = o.boot || "#1f3a6a"; gg.fillRect(0, h * .47, w, h * .06);
+    const tex = canvasTex(1024, 256, (gg, w, h) => { gg.fillStyle = o.col || "#f4f4f0"; gg.fillRect(0, 0, w, h);
+      /* 2026-11-15 00:46 (tulajdonos): NEMZETI SZÍNŰ hajótest – a peremtől lefelé piros, fehér, zöld sáv a vízvonalig, alatta fehér fenék
+         (a textúra közepe a perem, a jobb oldal felfelé, a bal lefelé fut a gerincig – a sávok tükrözve) */
+      if (o.nat) [["#ce2939", 0, .11], ["#ffffff", .11, .22], ["#477050", .22, .33]].forEach(([c, a, b]) => { gg.fillStyle = c; gg.fillRect(0, h * (.5 - b), w, h * (b - a)); gg.fillRect(0, h * (.5 + a), w, h * (b - a)); });
+      gg.fillStyle = o.boot || "#1f3a6a"; gg.fillRect(0, h * (o.nat ? .49 : .47), w, h * (o.nat ? .02 : .06));
       if (o.stripe) { gg.fillStyle = o.stripe; gg.fillRect(0, h * .02, w, h * .05); gg.fillRect(0, h * .93, w, h * .05); }
-      if (o.reg) { gg.fillStyle = "#14161b"; gg.font = "800 30px system-ui"; gg.textAlign = "center"; gg.fillText(o.reg, w * .72, h * .2); gg.save(); gg.translate(w * .72, h * .8); gg.scale(1, -1); gg.fillText(o.reg, 0, 0); gg.restore(); } });
+      if (o.reg) { gg.fillStyle = o.nat ? "#ffffff" : "#14161b"; gg.font = "800 30px system-ui"; gg.textAlign = "center"; gg.fillText(o.reg, w * .72, h * .2); gg.save(); gg.translate(w * .72, h * .8); gg.scale(1, -1); gg.fillText(o.reg, 0, 0); gg.restore(); } });
     const hm = new THREE.MeshStandardMaterial({ map: tex, roughness: .32, side: THREE.DoubleSide }); W.disposables.push(hm);
     const hull = new THREE.Mesh(g, hm);
     /* fedélzet: a peremen lezárt lap, középen nyitott kokpit */
@@ -3490,7 +3496,7 @@
     const G = new THREE.Group(), body = new THREE.Group(); G.add(body);
     const L = 4.495, B = 1.51, hz = (fromStern) => -L / 2 + fromStern;   /* a tükörtől mért távolság → helyi z */
     /* kokpit: a tatfedélzet (0,60 m) és az orrfedélzet (1,40 m) között, a fedélzet szintjén ±0,45 m széles (oldaltartályok 410–500 mm-re a középsíktól) */
-    const H = dinghyHull({ L, B, D: .5, stern: .74, bowP: .9, rocker: .06, col: o.hull, boot: o.boot, deck: o.deck || "#eceae2", cockpit: [hz(.6), hz(L - 1.4), .46], reg: o.num }); body.add(H.G);
+    const H = dinghyHull({ nat: !!o.zephyr, L, B, D: .5, stern: .74, bowP: .9, rocker: .06, col: o.zephyr ? "#ffffff" : o.hull, boot: o.zephyr ? "#14161b" : o.boot, deck: o.deck || "#eceae2", cockpit: [hz(.6), hz(L - 1.4), .46], reg: o.num }); body.add(H.G);
     const alu = std({ color: o.mastC || "#c9ccd0", metalness: .7, roughness: .3 }), dark = std({ color: "#1d232b", roughness: .5 }), bronze = std({ color: "#9c7a44", metalness: .8, roughness: .35 });
     /* ülőpad (thwart): hátsó éle a tükörtől 2,0 m-re, 75 mm széles; padlódeszkák 800–880 mm szélesen; kihasaló hevederek; főszkóta-kocsi ±550 mm */
     { const th = mesh(new THREE.BoxGeometry(.98, .035, .075), std({ color: "#cfc6b0", roughness: .7 }), H.G); th.position.set(0, H.sheer(2.0 / L) - .1, hz(2.04));
@@ -3516,7 +3522,7 @@
     /* GRÓSZ: a valódi szélességi méretek a fejtől (0 → 0,165; 1,5 → 1,075; 3,0 → 1,935; az alj ~2,6 m), 5 léc a mért helyükön, ablak */
     const luffL = mastH - .13 - boomPin, sailW = (fromHead) => tabLerp([[0, .165], [1.5, 1.075], [3.0, 1.935], [luffL, 2.62]], fromHead);
     const bat = [[.96, .4], [1.86, .6], [2.76, .7], [3.66, .6], [4.56, .5]].map(([h, l]) => [1 - h / luffL, l / sailW(h)]);
-    const sTex = dinghySailTex({ cloth: o.sail || "#f3f2ec", num: o.num, ins: "", finnIns: true, name: o.name, win: [.12, .1, .3, .12], battens: bat });
+    const sTex = dinghySailTex({ arpad: !!o.zephyr, cloth: o.sail || "#f3f2ec", num: o.num, ins: "", finnIns: true, name: o.name, win: [.12, .1, .3, .12], battens: bat });
     const sail = softSail({ parent: mast, nu: 12, nv: 20, bend: .09, ttLen: 1.2, mat: std({ map: sTex, roughness: .9, side: THREE.DoubleSide }), camber: .11, twist: .32,
       luff: (v) => { const y = boomPin + .03 + v * luffL, vv = y / mastH; return new THREE.Vector3(0, y, -.2 * Math.pow(Math.max(0, vv - .25) / .75, 2) - .05); }, chord: (v) => sailW((1 - v) * luffL) });
     const rud = dinghyRudder(H, { til: 1.1, depth: .8, cbD: .01 });
@@ -3605,7 +3611,14 @@
     /* ZEPHYR LOGÓ a hajótest két oldalán */
     if (o.zephyr) { const lt = new THREE.TextureLoader().load("img/zephyr-hajo-logo.png", (t) => { t.colorSpace = THREE.SRGBColorSpace; }); W.disposables.push(lt);
       const lm = new THREE.MeshStandardMaterial({ map: lt, transparent: true, roughness: .35, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }); W.disposables.push(lm);
-      [-1, 1].forEach((sd) => { const u = .7, pl = new THREE.Mesh(new THREE.PlaneGeometry(1.05, .35), lm); pl.position.set(sd * (H.half(u) * .97 + .012), H.sheer(u) - .2, H.zOf(u)); pl.rotation.set(0, sd * Math.PI / 2, 0); pl.rotateX(sd * 0); pl.rotation.z = 0; pl.rotateOnAxis(new THREE.Vector3(1, 0, 0), -.12); body.add(pl); }); }
+      /* 00:47 (tulajdonos): a logó ne álljon el a hajótesttől – a matrica a hajótest felületére simul (a test képletéből számolt rács, 3 mm-rel kívül) */
+      const surf = (u, th, sd) => { const hb = H.half(u), kz = H.keel(u), sz = H.sheer(u); return new THREE.Vector3(sd * hb * Math.pow(Math.sin(th * Math.PI / 2), .8), kz + (sz - kz) * (1 - Math.cos(th * Math.PI / 2)), H.zOf(u)); };
+      [-1, 1].forEach((sd) => { const NU2 = 16, NV2 = 6, u0 = .58, u1 = .84, t0 = .55, t1 = .9, pos = [], uv = [], idx = [];
+        for (let i = 0; i <= NU2; i++) for (let j = 0; j <= NV2; j++) { const u = u0 + (u1 - u0) * i / NU2, th = t0 + (t1 - t0) * j / NV2, p = surf(u, th, sd), pu = surf(u + .002, th, sd), pt = surf(u, th + .01, sd);
+          const n = new THREE.Vector3().subVectors(pu, p).cross(new THREE.Vector3().subVectors(pt, p)).normalize(); if (n.x * sd < 0) n.negate(); p.addScaledVector(n, .003); pos.push(p.x, p.y, p.z); uv.push(sd > 0 ? i / NU2 : 1 - i / NU2, j / NV2); }
+        for (let i = 0; i < NU2; i++) for (let j = 0; j < NV2; j++) { const a0 = i * (NV2 + 1) + j, b0 = a0 + NV2 + 1; idx.push(a0, b0, a0 + 1, b0, b0 + 1, a0 + 1); }
+        const dg = new THREE.BufferGeometry(); dg.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); dg.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); dg.setIndex(idx); dg.computeVertexNormals(); W.disposables.push(dg);
+        const dm = new THREE.Mesh(dg, lm); lm.side = THREE.DoubleSide; body.add(dm); }); }
     const crew = [];
     if (o.crew > 1) crew.push({ p: makePerson({ top: o.top || "#203a5c", bot: "#1b2430", zvest: o.zephyr, pro: o.zephyr, shoe: o.zephyr ? "#1b1d22" : undefined, vest: o.vest || "#ffd23a", seed: (o.seed || 0) + 1, cap: o.cap || "#ffffff" }), kind: "helm" });
     crew.push({ p: makePerson({ top: o.zephyr ? "#22262d" : o.top2 || "#e5262f", bot: "#1b2430", zvest: o.zephyr, pro: o.zephyr, shoe: o.zephyr ? "#1b1d22" : undefined, cap: o.zephyr ? "#c8102e" : undefined, vest: o.vest2 || "#ffd23a", seed: (o.seed || 0) + 3 }), kind: "trap" });   /* a játékos hajóján csak a legénység látszik (a kormányos te vagy) */
@@ -3625,7 +3638,7 @@
         const d0 = tk.clone().sub(pole.position), Lp = d0.length(); pole.scale.set(1, 1, Lp / 1.75); pole.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), d0.normalize()); }
       if (X420.vane) X420.vane.rotation.y = Math.PI - (A * D2R) * S.side + .05 * Math.sin(S.t * 6);
       { const gp = new THREE.Vector3(0, deckM + .45, mastZ - .03), bp = new THREE.Vector3(Math.sin(S.boom) * .75, deckM + boomY - .04, mastZ - .03 - Math.cos(S.boom) * .75), d = bp.clone().sub(gp), Lv = d.length(); X420.vang.position.copy(gp); X420.vang.scale.set(1, Lv, 1); X420.vang.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
-      { jibG.updateMatrixWorld(true); body.updateMatrixWorld(true); const pa = jib.geo.attributes.position, nuJ = 8, ck = new THREE.Vector3(pa.getX(nuJ), pa.getY(nuJ), pa.getZ(nuJ)).applyMatrix4(jib.mesh.matrixWorld); body.worldToLocal(ck);
+      { const pa = jib.geo.attributes.position, nuJ = 8, ck = new THREE.Vector3(pa.getX(nuJ), pa.getY(nuJ), pa.getZ(nuJ)); for (let o2 = jib.mesh; o2 && o2 !== body; o2 = o2.parent) { o2.updateMatrix(); ck.applyMatrix4(o2.matrix); }   /* a test terébe a helyi mátrixokkal (a felsőbb szintek – pl. a bemutató kicsinyítése – nem zavarnak) */
         const fl = new THREE.Vector3(-S.side * .63 * -1 * (ck.x >= 0 ? 1 : -1) * (ck.x >= 0 ? 1 : -1) * Math.sign(ck.x || 1), H.sheer(2.07 / L) + .02, hz(2.07)); fl.x = Math.sign(ck.x || 1) * .63; const d = fl.clone().sub(ck), Ls = d.length(); const js = X420.jibSheet; js.position.copy(ck); js.scale.set(1, Ls, 1); js.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
       body.rotation.set(S.pitch, 0, S.heel, "YXZ"); rud.til.rotation.y = (S.rud || 0) * .6;   /* ugyanabba az irányba, mint a nagy hajó botkormánya */
       S.crewS += (-S.side - S.crewS) * Math.min(1, dt * 1.3); const hk = clamp((U - 3) / 4.5, 0, 1) * clamp((125 - A) / 60, 0, 1); S.trap += ((U > 5 && A < 120 && Math.abs(S.crewS) > .8 ? 1 : 0) - S.trap) * Math.min(1, dt * 1.5);
@@ -3940,7 +3953,7 @@
     const S = VRR, id = S.cls.id; S.pb = null;
     if (id === "zephyr") return;
     S.boat.visible = false;
-    const pb = makeClassBoat(id, { steer: (() => { try { return localStorage.getItem("zephyr-kormany") || "bot"; } catch (e) { return "bot"; } })(), zephyr: id === "j420", name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
+    const pb = makeClassBoat(id, { steer: (() => { try { return localStorage.getItem("zephyr-kormany") || "bot"; } catch (e) { return "bot"; } })(), zephyr: id === "j420" || id === "finn", name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
     /* fedélzeti térkép (a nagy hajó taktikai kijelzője) a kis hajó fedélzetén, a kormányos előtt */
     if (S.ck && S.ck.chartT) { const c = S.ck.chartT._canvas, w = id === "flamingo" ? .34 : id === "tutaj" ? .3 : .5, h = w * c.height / c.width; const pl = mesh(new THREE.PlaneGeometry(w, h), basic({ map: S.ck.chartT, side: THREE.DoubleSide }), pb.userData.body); const at = pb.userData.chartAt;
       /* 2026-11-14 (tulajdonos: „a műszer nem felém mutat”): a kijelző a kormányos szeme felé néz (eddig hátulról, tükrözve látszott) */
@@ -4506,7 +4519,7 @@
     /* a kikötött hajók – mindegyik rámutatható / rábökhető */
     HB.boats = HB.berths.map((b) => { let g;
       if (b.id === "zephyr") { g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: vrProfile().name || "" }); g.scale.setScalar(VR_SC); }
-      else g = makeClassBoat(b.id, { zephyr: b.id === "j420", crew: 0, name: vrProfile().name || "", num: "HUN " + (b.id === "j420" ? "420" : "7"), seed: 3 });
+      else g = makeClassBoat(b.id, { zephyr: b.id === "j420" || b.id === "finn", crew: 0, name: vrProfile().name || "", num: "HUN " + (b.id === "j420" ? "420" : "7"), seed: 3 });
       g.position.set(b.x, 0, b.z); g.rotation.y = b.sd > 0 ? Math.PI / 2 : -Math.PI / 2; env.add(g);
       const S = g.userData.S; S.awa = 160; S.aws = 3; S.side = 1; if (S.spin != null) S.spin = 0;
       const sz = b.big ? [6, 12, 16] : [3.2, 5, 5.5]; const hit = mesh(new THREE.BoxGeometry(sz[2], sz[1], sz[0]), basic({ visible: false }), env); hit.position.set(b.x, sz[1] / 2, b.z); hit.material.visible = false;
@@ -4590,7 +4603,7 @@
     if (HB.prev) { const o = HB.prev; HB.env.remove(o.g); HB.env.remove(o.disc); }
     const big = id === "zephyr"; let g;
     if (big) { g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: vrProfile().name || "" }); g.scale.setScalar(1); }   /* 22:48: valódi méretarány (8,2 m) – eddig 0,62-szeresre kicsinyítve forgott */
-    else g = makeClassBoat(id, { zephyr: id === "j420", crew: id === "j420" ? 2 : 1, name: vrProfile().name || "", num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
+    else g = makeClassBoat(id, { zephyr: id === "j420" || id === "finn", crew: id === "j420" ? 2 : 1, name: vrProfile().name || "", num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
     /* a forgókorong a móló jobb oldalán, a víz fölött; a nézet odafordul */
     const P0 = big ? [9.5, -1] : id === "flamingo" ? [4.4, -1.6] : [5.8, -1.8], y0 = big ? .42 : id === "finn" || id === "j420" ? .62 : .36;   /* a dingi hajóteste a forgókorongon ül (nem süllyed bele) */ g.position.set(P0[0], y0, P0[1]); HB.env.add(g);
     const disc = new THREE.Group(); disc.position.set(P0[0], .26, P0[1]); HB.env.add(disc); faceYaw(-Math.atan2(P0[0], -P0[1]) + .25); { const dg = new THREE.CylinderGeometry(big ? 4.5 : 3.2, big ? 4.6 : 3.3, .5, 48); dg.translate(0, -.2, 0); mesh(dg, std({ color: "#8a6a4a", roughness: .8 }), disc); const rg = new THREE.TorusGeometry(big ? 4.55 : 3.25, .06, 8, 64); rg.rotateX(Math.PI / 2); rg.translate(0, .07, 0); mesh(rg, std({ color: "#d4a13a", metalness: .8, roughness: .3 }), disc); }
@@ -4694,7 +4707,7 @@
     inp.click();
   }
   /* a név megváltozott: a kikötött hajók vitorláján is frissüljön */
-  function hbRebuildBoats() { try { HB.boats.forEach((o) => { const nm = vrProfile().name || ""; let g; if (o.b.id === "zephyr") { g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: nm }); g.scale.setScalar(VR_SC); } else g = makeClassBoat(o.b.id, { zephyr: o.b.id === "j420", crew: 0, name: nm, num: "HUN " + (o.b.id === "j420" ? "420" : "7"), seed: 3 });
+  function hbRebuildBoats() { try { HB.boats.forEach((o) => { const nm = vrProfile().name || ""; let g; if (o.b.id === "zephyr") { g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: nm }); g.scale.setScalar(VR_SC); } else g = makeClassBoat(o.b.id, { zephyr: o.b.id === "j420" || o.b.id === "finn", crew: 0, name: nm, num: "HUN " + (o.b.id === "j420" ? "420" : "7"), seed: 3 });
       g.position.copy(o.g.position); g.rotation.copy(o.g.rotation); HB.env.remove(o.g); HB.env.add(g); g.userData.S.awa = 160; g.userData.S.aws = 3; o.g = g; }); } catch (e) { console.warn(e); } }
   /* ---------------------------------------------------------------- EREDMÉNYEK ÉS TRÓFEÁK */
   function hbDrawTrophy(B, g) {
@@ -5734,8 +5747,9 @@
   function wzModel(id) {
     if (HB.wzM && HB.wzM.id === id) return; if (HB.wzM) { HB.wzPed.remove(HB.wzM.g); HB.wzM = null; }
     const nm = vrProfile().name || ""; let g;
-    if (id === "zephyr") g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: nm });
-    else g = makeClassBoat(id, { zephyr: id === "j420", crew: id === "j420" ? 2 : 1, name: nm, num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
+    /* 00:46: a Zephyr modellje ugyanaz a kidolgozott hajó, mint a futamon (díszes vitorlák, vitorlaablakok, finom részletek) */
+    if (id === "zephyr") g = makeBoat({ sailName: nm, detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, win: true, fine: true, sheetPt: [0, hullShape(.2).sheer + .07 + .19 / VR_SC, hullShape(.14).z + 2.25 / VR_SC], travHalf: hullShape(.2).hb - .55 / VR_SC });
+    else g = makeClassBoat(id, { zephyr: id === "j420" || id === "finn", crew: id === "j420" ? 2 : 1, name: nm, num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
     const holder = new THREE.Group(); holder.add(g); const S = g.userData.S; if (S) { S.awa = 95; S.aws = 6; S.side = 1; if (S.spin != null) S.spin = 0; } try { g.userData.update(.016); } catch (e) {}
     const bb = new THREE.Box3().setFromObject(g), sz = bb.getSize(new THREE.Vector3()), k = 2.5 / Math.max(sz.x, sz.z, sz.y * .82); holder.scale.setScalar(k); holder.position.y = .64 - bb.min.y * k + (id === "zephyr" ? .25 * k : .05);
     HB.wzPed.add(holder); HB.wzM = { id, g: holder, boat: g };
@@ -5744,7 +5758,7 @@
   function wzGo(step) { HB.wz = HB.wz || wzLoad(); wzShow(true); HB.walk = false; HB.B && (HB.B.o.side = -.36); hbBoard("w" + step); if (HB.B) HB.B.o.side = -.36; if (T.inVR && HB.B) HB.B.place(); }
   /* 00:39 (tulajdonos): forgás közben egy látványos pillanatban kinyílik a spinakker – amikor a hajó oldalról-elölről fordul felénk, hátszélre fordul,
      a spinakker felhúzódik, kidagad és pár másodpercig repül, majd a következő kör előtt bevonják. */
-  function wzTick(dt) { const M = HB.wzM; if (M) { M.g.rotation.y += dt * .38; const S = M.boat.userData.S;
+  function wzTick(dt) { if (HB._frz) { uiTickAll(dt); return; } const M = HB.wzM; if (M) { M.g.rotation.y += dt * .38; const S = M.boat.userData.S;
       if (S) { const q = (((M.g.rotation.y - 1.1) % TAU) + TAU) % TAU, open = q < TAU * .42, M2 = HB.wzM; M2.sp = M2.sp || 0;
         M2.sp += ((open ? 1 : 0) - M2.sp) * Math.min(1, dt * (open ? 1.6 : 1.1)); const k = M2.sp * M2.sp * (3 - 2 * M2.sp);
         S.awa = 75 + 20 * Math.sin(W.t * .3) + (150 - 75) * k; S.aws = 6 + 2 * k; S.side = 1; if (S.spin != null || M.id !== "finn") S.spin = k; S.heel = Math.sin(W.t * .7) * .05 * (1 - k * .5); }
