@@ -467,6 +467,8 @@
        négy küllő, rönkvég-agy, villás ágon áll; a kormányzással együtt forog */
     const stickW = new THREE.Group(); stickW.position.set(-.32, .78, -.8); body.add(stickW); stickW.quaternion.setFromRotationMatrix(new THREE.Matrix4().lookAt(new THREE.Vector3(0, 1.35, -1.25), stickW.position, new THREE.Vector3(0, 1, 0)));
     const swR = new THREE.Group(); stickW.add(swR);
+    /* 2026-11-15 00:39 (tulajdonos): a rönktutajon választható – kormánykerék (botokból kötözött kerék) VAGY botkormány (csak a kormányevező nyele) */
+    stickW.visible = o.steer !== "bot";
     { const wood = std({ color: "#7b5a36", roughness: .95 }), wood2 = std({ color: "#8d6a42", roughness: .95 }), R0 = .3;
       for (let k = 0; k < 8; k++) { const a0 = k / 8 * TAU, a1 = (k + 1) / 8 * TAU, p0 = new THREE.Vector3(Math.cos(a0) * R0, Math.sin(a0) * R0, 0), p1 = new THREE.Vector3(Math.cos(a1) * R0, Math.sin(a1) * R0, 0), d = p1.clone().sub(p0); p0.addScaledVector(d, -.12); p1.addScaledVector(d, .12);
         rodBetween(p0, p1, .022 + (k % 3) * .003, k % 2 ? wood : wood2, swR, 6); const kn = new THREE.Mesh(new THREE.TorusGeometry(.03, .011, 5, 10), rope); kn.position.set(Math.cos(a1) * R0, Math.sin(a1) * R0, 0); kn.rotation.set(Math.random(), Math.random(), 0); swR.add(kn); }

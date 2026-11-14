@@ -3695,6 +3695,8 @@
        négy küllő, rönkvég-agy, villás ágon áll; a kormányzással együtt forog */
     const stickW = new THREE.Group(); stickW.position.set(-.32, .78, -.8); body.add(stickW); stickW.quaternion.setFromRotationMatrix(new THREE.Matrix4().lookAt(new THREE.Vector3(0, 1.35, -1.25), stickW.position, new THREE.Vector3(0, 1, 0)));
     const swR = new THREE.Group(); stickW.add(swR);
+    /* 2026-11-15 00:39 (tulajdonos): a rönktutajon választható – kormánykerék (botokból kötözött kerék) VAGY botkormány (csak a kormányevező nyele) */
+    stickW.visible = o.steer !== "bot";
     { const wood = std({ color: "#7b5a36", roughness: .95 }), wood2 = std({ color: "#8d6a42", roughness: .95 }), R0 = .3;
       for (let k = 0; k < 8; k++) { const a0 = k / 8 * TAU, a1 = (k + 1) / 8 * TAU, p0 = new THREE.Vector3(Math.cos(a0) * R0, Math.sin(a0) * R0, 0), p1 = new THREE.Vector3(Math.cos(a1) * R0, Math.sin(a1) * R0, 0), d = p1.clone().sub(p0); p0.addScaledVector(d, -.12); p1.addScaledVector(d, .12);
         rodBetween(p0, p1, .022 + (k % 3) * .003, k % 2 ? wood : wood2, swR, 6); const kn = new THREE.Mesh(new THREE.TorusGeometry(.03, .011, 5, 10), rope); kn.position.set(Math.cos(a1) * R0, Math.sin(a1) * R0, 0); kn.rotation.set(Math.random(), Math.random(), 0); swR.add(kn); }
@@ -3938,7 +3940,7 @@
     const S = VRR, id = S.cls.id; S.pb = null;
     if (id === "zephyr") return;
     S.boat.visible = false;
-    const pb = makeClassBoat(id, { zephyr: id === "j420", name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
+    const pb = makeClassBoat(id, { steer: (() => { try { return localStorage.getItem("zephyr-kormany") || "bot"; } catch (e) { return "bot"; } })(), zephyr: id === "j420", name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
     /* fedélzeti térkép (a nagy hajó taktikai kijelzője) a kis hajó fedélzetén, a kormányos előtt */
     if (S.ck && S.ck.chartT) { const c = S.ck.chartT._canvas, w = id === "flamingo" ? .34 : id === "tutaj" ? .3 : .5, h = w * c.height / c.width; const pl = mesh(new THREE.PlaneGeometry(w, h), basic({ map: S.ck.chartT, side: THREE.DoubleSide }), pb.userData.body); const at = pb.userData.chartAt;
       /* 2026-11-14 (tulajdonos: „a műszer nem felém mutat”): a kijelző a kormányos szeme felé néz (eddig hátulról, tükrözve látszott) */
@@ -5707,7 +5709,7 @@
   const WZ_STEPS = ["Játékmód", "Hajó", "Pálya", "Tájékoztató"];
   function wzLoad() { let o = {}; try { o = JSON.parse(localStorage.getItem("zephyr-bsvr") || "{}"); } catch (e) {} let st = "bot"; try { st = localStorage.getItem("zephyr-kormany") === "kerek" ? "kerek" : "bot"; } catch (e) {}
     return Object.assign({ mode: "solo", cls: vrClsId(), steer: st, tod: "nap", fleet: "od", kind: "series", lvl: 1, n: 5 }, o); }
-  function wzSave() { try { localStorage.setItem("zephyr-bsvr", JSON.stringify(HB.wz)); localStorage.setItem("zephyr-hajo", HB.wz.cls); localStorage.setItem("zephyr-kormany", HB.wz.steer); } catch (e) {} try { acctSync(); } catch (e) {} }
+  function wzSave() { const Z = HB.wz, kw = { zephyr: "both", tutaj: "both", flamingo: "kerek" }[Z.cls] || "bot"; try { localStorage.setItem("zephyr-bsvr", JSON.stringify(Z)); localStorage.setItem("zephyr-hajo", Z.cls); localStorage.setItem("zephyr-kormany", kw === "both" ? Z.steer : kw); } catch (e) {} try { acctSync(); } catch (e) {} }
   /* ---------------------------------------------------------------- a fekete bemutatóterem */
   function wzBuild(root) {
     const G = new THREE.Group(); G.visible = false; root.add(G); HB.wzG = G;
@@ -5740,7 +5742,13 @@
   }
   function wzShow(on) { HB.wizOn = !!on; if (HB.wzG) HB.wzG.visible = !!on; if (HB.env) HB.env.visible = !on; if (HB.far) HB.far.visible = !on; if (on) { if (HB.prev) { HB.env.remove(HB.prev.g); HB.env.remove(HB.prev.disc); HB.prev = null; } wzModel(HB.wz.cls); } }
   function wzGo(step) { HB.wz = HB.wz || wzLoad(); wzShow(true); HB.walk = false; HB.B && (HB.B.o.side = -.36); hbBoard("w" + step); if (HB.B) HB.B.o.side = -.36; if (T.inVR && HB.B) HB.B.place(); }
-  function wzTick(dt) { const M = HB.wzM; if (M) { M.g.rotation.y += dt * .38; const S = M.boat.userData.S; if (S) { S.awa = 95 + 30 * Math.sin(W.t * .25); S.aws = 6; S.heel = Math.sin(W.t * .7) * .05; } try { M.boat.userData.update(dt); } catch (e) {} M.g.position.y = M.g.position.y; }
+  /* 00:39 (tulajdonos): forgás közben egy látványos pillanatban kinyílik a spinakker – amikor a hajó oldalról-elölről fordul felénk, hátszélre fordul,
+     a spinakker felhúzódik, kidagad és pár másodpercig repül, majd a következő kör előtt bevonják. */
+  function wzTick(dt) { const M = HB.wzM; if (M) { M.g.rotation.y += dt * .38; const S = M.boat.userData.S;
+      if (S) { const q = (((M.g.rotation.y - 1.1) % TAU) + TAU) % TAU, open = q < TAU * .42, M2 = HB.wzM; M2.sp = M2.sp || 0;
+        M2.sp += ((open ? 1 : 0) - M2.sp) * Math.min(1, dt * (open ? 1.6 : 1.1)); const k = M2.sp * M2.sp * (3 - 2 * M2.sp);
+        S.awa = 75 + 20 * Math.sin(W.t * .3) + (150 - 75) * k; S.aws = 6 + 2 * k; S.side = 1; if (S.spin != null || M.id !== "finn") S.spin = k; S.heel = Math.sin(W.t * .7) * .05 * (1 - k * .5); }
+      try { M.boat.userData.update(dt); } catch (e) {} }
     if (T.inVR) W.root.position.set(0, 0, 0); else W.root.position.set(-2.5, -2.1, -3.6); W.root.quaternion.identity();   /* 2D: a terem hátrébb, hogy a forgó hajó egészében látsszon a tábla mellett */ uiTickAll(dt); if (NET.on) { try { vrNetTick(dt); } catch (e) {} if (HB.B && (HB.page === "w5" || HB.page === "w1")) HB.B.dirty = 1; } }
   /* ---------------------------------------------------------------- a fekete keret */
   function wzFrame(B, g, step, title, sub) { const w = B.o.w, h = B.o.h;
@@ -5786,8 +5794,9 @@
       B.btn(60, 262, 120, 114, "◀", () => { const i = BOAT_ORDER.indexOf(Z.cls); Z.cls = BOAT_ORDER[(i + BOAT_ORDER.length - 1) % BOAT_ORDER.length]; wzSave(); wzModel(Z.cls); B.dirty = 1; }, { fs: 50 });
       B.btn(1310, 262, 120, 114, "▶", () => { const i = BOAT_ORDER.indexOf(Z.cls); Z.cls = BOAT_ORDER[(i + 1) % BOAT_ORDER.length]; wzSave(); wzModel(Z.cls); B.dirty = 1; }, { fs: 50 });
       BOAT_ORDER.forEach((id, i) => uiChip(g, 1110 + (i % 3) * 64, 300 + Math.floor(i / 3) * 40, 56, 30, BOATCLS[id].sh.slice(0, 3), id === Z.cls ? "#d4a13a" : "rgba(255,255,255,.4)", 1));
-      const big = Z.cls === "zephyr";
-      wzRow(B, g, 420, "Kormány", [["kerek", "☸ Kormánykerék", big ? "a nagy hajón" : "csak a Zephyren", !big], ["bot", "⎯ Botkormány", "kormányrúd toldóval"]], big ? Z.steer : "bot", (v) => { Z.steer = v; wzSave(); }, big ? "" : "A kis hajókon mindig botkormánnyal kormányzol.");
+      /* 00:39: kormány – Zephyr és rönktutaj: választható; flamingó: csak kormánykerék (felfújható); Finn és 420: botkormány */
+      const kw = { zephyr: "both", tutaj: "both", flamingo: "kerek" }[Z.cls] || "bot", curS = kw === "both" ? Z.steer : kw;
+      wzRow(B, g, 420, "Kormány", [["kerek", "☸ Kormánykerék", kw === "bot" ? "ezen a hajón nincs" : Z.cls === "tutaj" ? "botokból kötözött kerék" : Z.cls === "flamingo" ? "felfújható kerék" : "a nagy hajón", kw === "bot"], ["bot", "⎯ Botkormány", kw === "kerek" ? "ezen a hajón nincs" : Z.cls === "tutaj" ? "a kormányevező nyele" : "kormányrúd toldóval", kw === "kerek"]], curS, (v) => { Z.steer = v; wzSave(); }, kw === "bot" ? "A Finn dingit és a 420-ast botkormánnyal kormányzod." : kw === "kerek" ? "A flamingót csak a felfújható kormánykerékkel lehet irányítani." : "");
       wzRow(B, g, 540, "Napszak", [["nap", "☀ Nappali", "napsütés, balatoni táj"], ["ej", "🌙 Éjszakai", "hold, csillagok, fények"], ["vegyes", "◐ Vegyes", "futamonként változik"]], Z.tod, (v) => { Z.tod = v; wzSave(); });
       wzRow(B, g, 660, "Mezőny", [["od", "⛵ Egyforma hajók", "one design – hivatalos pontozás"], ["mix", "⚓ Vegyes flotta", "mindenféle hajó indulhat"]], Z.fleet, (v) => { Z.fleet = v; wzSave(); }, Z.fleet === "mix" ? "Vegyes flottánál nincs hivatalos pontszámítás – a futam független a ranglistától, a sorozattól és a serlegektől." : "");
       B.btn(44, 840, 380, 116, "‹ Vissza", () => wzGo(1), { fs: 36 }); B.btn(444, 840, 1002, 116, "TOVÁBB ▶  a pálya kiválasztása", () => wzGo(3), { gold: true, fs: 40 });
