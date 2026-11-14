@@ -1115,3 +1115,10 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - Kormány: botkormány iránya a nagy hajóéval azonos (+rud), toldó habfogóval és piros gombvéggel.
 - Mancsaft: makePerson({ zvest, pro }) – Zephyr mentőmellény textúra (elöl piros V-panelek, ZEPHYR felirat, derékheveder csattal, HÁTA EGYSZÍNŰ FEKETE), fül, szemöldök, napszemüveg, kesztyű, csizma.
 - posePerson o.floor/o.footOn: a térd úgy hajlik, hogy a talp a padlón/hevederben legyen – a láb soha nem lóg bele a hajótestbe; a csípő pontosan a peremen.
+
+## 2026-11-14 19:05–19:19 – Éjszaka, táj, nevezetességek, nagy hajó pereme
+- Éjjel nincsenek sirályok (makeGulls most visszaadja a group-ot); hullócsillag 4–15 mp-enként, szélesebb csóvával.
+- Házak/fények/fák/nevezetességek a domborzati háló TÉNYLEGES felszínén (balGround: a háló képlete + part menti rámpa, 4 csúcsból interpolálva; balGroundMin), házak kőlábazattal, fák törzzsel.
+- Tihanyi apátság részletes modell (2 órás torony, hagymasisak, lámpás, oromzat, apátsági szárnyak), kőlábazat a lejtőbe süllyesztve, éjjel világító ablakok/lámpák (L.lights → NL).
+- Élő nevezetességek (BAL.live): Ranolder-kereszt sc 7, fehér, éjjel fénykoszorú; Boglári gömbkilátó (ikozaéder, élvázzal) éjjel színváltó LED-fényjáték.
+- Nagy hajó: fehér szegély és orrfedélzet helyett tík; vékony perem bal PIROS / jobb ZÖLD (éjjel világít, VRR.navRail). Fock éjjel: bal fele piros, jobb fele zöld (shader, uXc = a fock közepe), felfelé halványul. Orrlámpák gömb + fénykoszorú.

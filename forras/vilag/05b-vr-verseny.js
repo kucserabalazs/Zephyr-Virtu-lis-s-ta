@@ -64,18 +64,22 @@
       const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(idx); ge.computeVertexNormals(); mesh(ge, teak, G).receiveShadow = true; }
     /* 2026-11-12 08:18 (tulajdonos: „a hajótest szélétől befelé látok egy hibás csíkot, ahol a hajó átlátszik”): a tíkborítás 12 cm-rel a perem előtt véget ért,
        és a résen be lehetett látni a hajótestbe (a vízre). Tömör, fehér szegélyfedélzet zárja le a tík széle és a hajótest pereme között, a hajó teljes hosszában. */
-    { const N = 48, pos = [], idx = []; [-1, 1].forEach((sd) => { const b0 = pos.length / 3; for (let i = 0; i <= N; i++) { const u = .002 + .996 * i / N, s = sh(u), y = s.y - .07 * VR_SC, xi = Math.max(0, s.hb - .34);
-          pos.push(sd * xi, y + .004, s.z, sd * (s.hb + .01), y + .004, s.z); }
+    { const N = 48, pos = [], idx = [], uvM = []; [-1, 1].forEach((sd) => { const b0 = pos.length / 3; for (let i = 0; i <= N; i++) { const u = .002 + .996 * i / N, s = sh(u), y = s.y - .07 * VR_SC, xi = Math.max(0, s.hb - .34);
+          pos.push(sd * xi, y + .004, s.z, sd * (s.hb + .01), y + .004, s.z); uvM.push(sd * xi / 1.6, s.z / 1.6, sd * (s.hb + .01) / 1.6, s.z / 1.6); }
         for (let i = 0; i < N; i++) { const a = b0 + i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } });
-      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals();
-      const mm = std({ color: "#f1f1ec", roughness: .45, side: THREE.DoubleSide }); mesh(ge, mm, G).receiveShadow = true; }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute("uv", new THREE.Float32BufferAttribute(uvM, 2)); ge.setIndex(idx); ge.computeVertexNormals();
+      /* 2026-11-14 19:06 (tulajdonos): a fehér szegélycsík és a fehér fedélzet eltűnik – a szegély is tík, a hajó szélét csak egy nagyon vékony, sötét tík perem (toerail) jelöli */
+      const mm = std({ map: teakT, roughness: .75, side: THREE.DoubleSide }); mesh(ge, mm, G).receiveShadow = true;
+      /* 19:13 (tulajdonos): a perem csíkja balra (bal oldal) PIROS, jobbra ZÖLD – éjjel halványan világít, mint a navigációs fények */
+      VRR.navRail = []; [-1, 1].forEach((sd) => { const rail = std({ color: sd > 0 ? "#b3121b" : "#14823a", emissive: sd > 0 ? "#ff2a1a" : "#2aff5a", emissiveIntensity: 0, roughness: .5 }); VRR.navRail.push(rail); const pts = []; for (let i = 0; i <= N; i++) { const u = .004 + .992 * i / N, q = sh(u); pts.push(new THREE.Vector3(sd * (q.hb + .004), q.y - .07 * VR_SC + .016, q.z)); }
+        mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 96, .02, 6, false), rail, G).userData.noMerge = 1; }); }
     /* 2026-11-12 10:00 (tulajdonos, harmadszor: „ahol a versenyzők ülnek, a fenekük alatt vájat látszik a hajón, és alatta a víz – a hajó ott mintha ki lenne vágva”):
        a tíkborítás csak a hajó hátsó harmadát fedte, attól ELŐRE (a kajüt mellett, a legénység alatt és az orrfedélzeten) egyáltalán nem volt fedélzet – be lehetett látni
        a hajótestbe. Most teljes szélességű, domború, fehér csúszásgátló fedélzet zárja le a hajót a tík végétől az orrig. */
-    { const N = 44, M = 12, pos = [], idx = []; for (let i = 0; i <= N; i++) { const u = .33 + (.998 - .33) * i / N, s = sh(u); for (let j = 0; j <= M; j++) { const f = j / M * 2 - 1; pos.push(f * (s.hb + .01), s.y - .07 * VR_SC + .07 * VR_SC * (1 - f * f) * .9 + .003, s.z); } }
+    { const N = 44, M = 12, pos = [], idx = [], uvF = []; for (let i = 0; i <= N; i++) { const u = .33 + (.998 - .33) * i / N, s = sh(u); for (let j = 0; j <= M; j++) { const f = j / M * 2 - 1; pos.push(f * (s.hb + .01), s.y - .07 * VR_SC + .07 * VR_SC * (1 - f * f) * .9 + .003, s.z); uvF.push(f * (s.hb + .01) / 1.6, s.z / 1.6); } }
       for (let i = 0; i < N; i++) for (let j = 0; j < M; j++) { const a = i * (M + 1) + j, b = a + 1, c = a + M + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
-      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals();
-      mesh(ge, std({ color: "#eceee9", roughness: .85, side: THREE.DoubleSide }), G).receiveShadow = true; }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute("uv", new THREE.Float32BufferAttribute(uvF, 2)); ge.setIndex(idx); ge.computeVertexNormals();
+      mesh(ge, std({ map: teakT, roughness: .8, side: THREE.DoubleSide }), G).receiveShadow = true; }
     const helmU = .14, hs = sh(helmU), deckY = hs.y + .02;
     /* a kajüttető lapos, versenyhajós (TP52-szerű) – a makeBoat túraszerű kajütjét alacsonyabbra nyomjuk, sötét ablaksávot és lejárót kap */
     body.children.forEach((m) => { if (m.isMesh && m.geometry && m.geometry.type === "ExtrudeGeometry") { m.scale.y = .58; } });

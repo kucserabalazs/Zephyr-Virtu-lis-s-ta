@@ -767,7 +767,7 @@
       updMain(); updJib(); updSpin(); updCrew(dt); if (FINE) updRig(dt);
     };
     G.userData.mats = [hullMat, deckMat, white, dark, alu, chrome, wire, teak, glass, mainMat, jibMat].concat(spinM ? [spinM.material] : []);
-    G.userData.body = body; G.userData.deckY = deckY;
+    G.userData.body = body; G.userData.deckY = deckY; G.userData.jibMesh = jibM;
     G.userData.update(0);
     return G;
   }

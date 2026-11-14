@@ -1171,7 +1171,7 @@
       updMain(); updJib(); updSpin(); updCrew(dt); if (FINE) updRig(dt);
     };
     G.userData.mats = [hullMat, deckMat, white, dark, alu, chrome, wire, teak, glass, mainMat, jibMat].concat(spinM ? [spinM.material] : []);
-    G.userData.body = body; G.userData.deckY = deckY;
+    G.userData.body = body; G.userData.deckY = deckY; G.userData.jibMesh = jibM;
     G.userData.update(0);
     return G;
   }
@@ -1650,7 +1650,7 @@
       mesh(sg, wm, wl); const sg2 = sg.clone(); sg2.scale(-1, 1, 1); mesh(sg2, wm, wr);
       list.push({ b, wl, wr, r: rr(25, 70), h: rr(9, 22), sp: rr(.15, .3) * (rand() < .5 ? -1 : 1), a: rr(0, TAU), ph: rr(0, 9), cx: 0, cz: 0 });
     }
-    return { tick(dt, x, z) { list.forEach((q) => { q.cx += (x - q.cx) * dt * .05; q.cz += (z - 40 - q.cz) * dt * .05; q.a += q.sp * dt;
+    return { group: g, tick(dt, x, z) { list.forEach((q) => { q.cx += (x - q.cx) * dt * .05; q.cz += (z - 40 - q.cz) * dt * .05; q.a += q.sp * dt;
       q.b.position.set(q.cx + Math.cos(q.a) * q.r, q.h + Math.sin(W.t * .5 + q.ph) * 1.5, q.cz + Math.sin(q.a) * q.r);
       q.b.rotation.y = -q.a + (q.sp > 0 ? 0 : Math.PI); q.b.rotation.z = q.sp > 0 ? -.3 : .3;
       const f = Math.sin(W.t * 7 + q.ph) * (Math.sin(W.t * .6 + q.ph) > .3 ? .6 : .08); q.wl.rotation.z = f; q.wr.rotation.z = -f; }); } };
@@ -1721,18 +1721,22 @@
       const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(idx); ge.computeVertexNormals(); mesh(ge, teak, G).receiveShadow = true; }
     /* 2026-11-12 08:18 (tulajdonos: „a hajótest szélétől befelé látok egy hibás csíkot, ahol a hajó átlátszik”): a tíkborítás 12 cm-rel a perem előtt véget ért,
        és a résen be lehetett látni a hajótestbe (a vízre). Tömör, fehér szegélyfedélzet zárja le a tík széle és a hajótest pereme között, a hajó teljes hosszában. */
-    { const N = 48, pos = [], idx = []; [-1, 1].forEach((sd) => { const b0 = pos.length / 3; for (let i = 0; i <= N; i++) { const u = .002 + .996 * i / N, s = sh(u), y = s.y - .07 * VR_SC, xi = Math.max(0, s.hb - .34);
-          pos.push(sd * xi, y + .004, s.z, sd * (s.hb + .01), y + .004, s.z); }
+    { const N = 48, pos = [], idx = [], uvM = []; [-1, 1].forEach((sd) => { const b0 = pos.length / 3; for (let i = 0; i <= N; i++) { const u = .002 + .996 * i / N, s = sh(u), y = s.y - .07 * VR_SC, xi = Math.max(0, s.hb - .34);
+          pos.push(sd * xi, y + .004, s.z, sd * (s.hb + .01), y + .004, s.z); uvM.push(sd * xi / 1.6, s.z / 1.6, sd * (s.hb + .01) / 1.6, s.z / 1.6); }
         for (let i = 0; i < N; i++) { const a = b0 + i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } });
-      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals();
-      const mm = std({ color: "#f1f1ec", roughness: .45, side: THREE.DoubleSide }); mesh(ge, mm, G).receiveShadow = true; }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute("uv", new THREE.Float32BufferAttribute(uvM, 2)); ge.setIndex(idx); ge.computeVertexNormals();
+      /* 2026-11-14 19:06 (tulajdonos): a fehér szegélycsík és a fehér fedélzet eltűnik – a szegély is tík, a hajó szélét csak egy nagyon vékony, sötét tík perem (toerail) jelöli */
+      const mm = std({ map: teakT, roughness: .75, side: THREE.DoubleSide }); mesh(ge, mm, G).receiveShadow = true;
+      /* 19:13 (tulajdonos): a perem csíkja balra (bal oldal) PIROS, jobbra ZÖLD – éjjel halványan világít, mint a navigációs fények */
+      VRR.navRail = []; [-1, 1].forEach((sd) => { const rail = std({ color: sd > 0 ? "#b3121b" : "#14823a", emissive: sd > 0 ? "#ff2a1a" : "#2aff5a", emissiveIntensity: 0, roughness: .5 }); VRR.navRail.push(rail); const pts = []; for (let i = 0; i <= N; i++) { const u = .004 + .992 * i / N, q = sh(u); pts.push(new THREE.Vector3(sd * (q.hb + .004), q.y - .07 * VR_SC + .016, q.z)); }
+        mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 96, .02, 6, false), rail, G).userData.noMerge = 1; }); }
     /* 2026-11-12 10:00 (tulajdonos, harmadszor: „ahol a versenyzők ülnek, a fenekük alatt vájat látszik a hajón, és alatta a víz – a hajó ott mintha ki lenne vágva”):
        a tíkborítás csak a hajó hátsó harmadát fedte, attól ELŐRE (a kajüt mellett, a legénység alatt és az orrfedélzeten) egyáltalán nem volt fedélzet – be lehetett látni
        a hajótestbe. Most teljes szélességű, domború, fehér csúszásgátló fedélzet zárja le a hajót a tík végétől az orrig. */
-    { const N = 44, M = 12, pos = [], idx = []; for (let i = 0; i <= N; i++) { const u = .33 + (.998 - .33) * i / N, s = sh(u); for (let j = 0; j <= M; j++) { const f = j / M * 2 - 1; pos.push(f * (s.hb + .01), s.y - .07 * VR_SC + .07 * VR_SC * (1 - f * f) * .9 + .003, s.z); } }
+    { const N = 44, M = 12, pos = [], idx = [], uvF = []; for (let i = 0; i <= N; i++) { const u = .33 + (.998 - .33) * i / N, s = sh(u); for (let j = 0; j <= M; j++) { const f = j / M * 2 - 1; pos.push(f * (s.hb + .01), s.y - .07 * VR_SC + .07 * VR_SC * (1 - f * f) * .9 + .003, s.z); uvF.push(f * (s.hb + .01) / 1.6, s.z / 1.6); } }
       for (let i = 0; i < N; i++) for (let j = 0; j < M; j++) { const a = i * (M + 1) + j, b = a + 1, c = a + M + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
-      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setIndex(idx); ge.computeVertexNormals();
-      mesh(ge, std({ color: "#eceee9", roughness: .85, side: THREE.DoubleSide }), G).receiveShadow = true; }
+      const ge = new THREE.BufferGeometry(); ge.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute("uv", new THREE.Float32BufferAttribute(uvF, 2)); ge.setIndex(idx); ge.computeVertexNormals();
+      mesh(ge, std({ map: teakT, roughness: .8, side: THREE.DoubleSide }), G).receiveShadow = true; }
     const helmU = .14, hs = sh(helmU), deckY = hs.y + .02;
     /* a kajüttető lapos, versenyhajós (TP52-szerű) – a makeBoat túraszerű kajütjét alacsonyabbra nyomjuk, sötét ablaksávot és lejárót kap */
     body.children.forEach((m) => { if (m.isMesh && m.geometry && m.geometry.type === "ExtrudeGeometry") { m.scale.y = .58; } });
@@ -4852,8 +4856,15 @@
     /* a Zephyr kokpitjában vörös éjszakai fedélzeti világítás (nem vakítja el a kormányost) */
     /* a saját hajón éjjel CSAK az oldalfények (orrban: jobbra zöld, balra vörös) vetnek halvány színes fényt a fock alsó sarkára, az orrfedélzetre és a vízre */
     { const own = S.pb || S.boat, b0 = own.userData.body || own, bb = hb(b0), zb = bb.max.z - .25, yd = S.pb ? (S.pb.userData.deckY || .3) + .25 : (HULL ? hullShape(.97).sheer + .55 : 1.6); NGT.sideL = [];
-      [[-1, "#2aff5a"], [1, "#ff2a1a"]].forEach(([sd, c]) => { const l = new THREE.PointLight(c, 0, S.pb ? 4 : 7, 2); l.position.set(sd * (S.pb ? .25 : .5), yd, zb - .3); b0.add(l); l.userData.night = 1; NGT.sideL.push(l);
+      [[-1, "#2aff5a"], [1, "#ff2a1a"]].forEach(([sd, c]) => { const l = new THREE.PointLight(c, 0, S.pb ? 4 : 9, 1.4); l.position.set(sd * (S.pb ? .25 : .5), yd, zb - .3); b0.add(l); l.userData.night = 1; NGT.sideL.push(l); { const lm = new THREE.Mesh(new THREE.SphereGeometry(S.pb ? .03 : .05, 10, 8), new THREE.MeshBasicMaterial({ color: c })); W.disposables.push(lm.geometry, lm.material); lm.userData.night = 1; lm.userData.noMerge = 1; lm.visible = false; l.add(lm); const gs = glowSprite(c, S.pb ? .35 : .6); gs.userData.night = 1; gs.visible = false; l.add(gs); }
         const wm = new THREE.MeshBasicMaterial({ map: glowTex(), color: c, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }); W.disposables.push(wm); const q = new THREE.Mesh(new THREE.PlaneGeometry(S.pb ? 3 : 3.2, S.pb ? 3 : 3.2), wm); q.rotation.x = -Math.PI / 2; q.position.set(sd * (S.pb ? .8 : 1), S.pb ? .04 : .04 / VR_SC, zb - (S.pb ? .6 : 1)); q.userData.night = 1; q.visible = false; q.renderOrder = -4; own.add(q); NGT.sideL.push({ wq: q }); }); }
+    /* 19:13 (tulajdonos): az orrfények a fock (az első fehér háromszög) alsó részét színezik – bal fele PIROS, jobb fele ZÖLD, kis átfedéssel,
+       felfelé halványodva. A fock anyagába épített színezés (a hajó testének helyi terében: +x = bal, -x = jobb). */
+    { const own = S.boat, jm = own && own.userData.jibMesh; if (jm && !jm.material.userData.navT) { const mt = jm.material, U = { uNav: { value: 0 }, uY0: { value: 0 }, uY1: { value: 5 }, uXc: { value: 0 } }; mt.userData.navT = U; NGT.navU = U;
+        { const bb = new THREE.Box3().setFromBufferAttribute(jm.geometry.attributes.position); U.uY0.value = bb.min.y; U.uY1.value = bb.min.y + (bb.max.y - bb.min.y) * .55; }
+        mt.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, U); sh.vertexShader = "varying vec3 vNavP;\n" + sh.vertexShader.replace("#include <begin_vertex>", "#include <begin_vertex>\n vNavP = position;");
+          sh.fragmentShader = "uniform float uNav, uY0, uY1, uXc; varying vec3 vNavP;\n" + sh.fragmentShader.replace("#include <dithering_fragment>", "#include <dithering_fragment>\n { float f = uNav * (1. - smoothstep(uY0, uY1, vNavP.y)); float sR = smoothstep(-.25, .25, vNavP.x - uXc); vec3 nc = mix(vec3(.15, 1., .3), vec3(1., .14, .08), sR); gl_FragColor.rgb += nc * f * (.18 + .55 * diffuseColor.rgb); }"); };
+        mt.customProgramCacheKey = () => "navjib"; mt.needsUpdate = true; } }
     NGT.moonL = new THREE.DirectionalLight("#9fb2d8", 0); W.root.add(NGT.moonL); NGT.moonL.userData.night = 1;
   }
   /* a parti fények egyetlen pontfelhőben (villogással), a tükörcsíkok egy rajzolásban */
@@ -4899,7 +4910,7 @@
     const L = S.lights; if (L) { if (!NGT.saveL) NGT.saveL = { h: L.hemi.intensity, hc: L.hemi.color.clone(), hg: L.hemi.groundColor.clone(), s: L.sun.intensity, sc: L.sun.color.clone(), sp: L.sun.position.clone(), a: L.amb.intensity };
       if (on) { L.hemi.intensity = .05; L.hemi.color.set("#7d90b8"); L.hemi.groundColor.set("#0a0d14"); L.sun.intensity = .16; L.sun.color.set("#a8bbe0"); L.sun.position.copy(NGT.moonDir).multiplyScalar(100); L.amb.intensity = .015; }
       else { const s0 = NGT.saveL; L.hemi.intensity = s0.h; L.hemi.color.copy(s0.hc); L.hemi.groundColor.copy(s0.hg); L.sun.intensity = s0.s; L.sun.color.copy(s0.sc); L.sun.position.copy(s0.sp); L.amb.intensity = s0.a; } }
-    (NGT.sideL || []).forEach((l) => { if (l.isLight) l.intensity = on ? (VRR.pb ? .9 : 1.6) : 0; else if (l.wq) { l.wq.visible = on; l.wq.material.opacity = on ? .16 : 0; } });
+    (BAL.live || []).forEach((f) => { try { f(on, W.t); } catch (e) {} }); if (NGT.navU) NGT.navU.uNav.value = on ? 1 : 0; (VRR.navRail || []).forEach((m) => { m.emissiveIntensity = on ? 1.6 : 0; }); (NGT.sideL || []).forEach((l) => { if (l.isLight) { l.intensity = on ? (VRR.pb ? 1.2 : 2.2) : 0; l.children.forEach((ch) => { ch.visible = on; }); }   /* 19:05: erősebben – az orrfény színezze meg a fock alsó élét */ else if (l.wq) { l.wq.visible = on; l.wq.material.opacity = on ? .16 : 0; } });
     vrNightTint(on);
     NGT.sky.material.uniforms.uMoon.value.copy(NGT.moonDir); NGT.sky.material.uniforms.uAx.value = Math.atan2(C.u[0], -C.u[1]);
     NGT.moon.position.copy(NGT.moonDir).multiplyScalar(3500); NGT.moon.lookAt(0, 0, 0); NGT.moon.scale.setScalar(3500 * Math.tan(2.5 * D2R));   /* „romantikus” telihold: a horizont közelében nagyobbnak látszik */ NGT.halo.position.copy(NGT.moonDir).multiplyScalar(3450); NGT.halo.scale.setScalar(3450 * Math.tan(9 * D2R));   /* a kamera látótávolságán (4 km) belül */
@@ -4917,6 +4928,8 @@
   function vrNightTick(dt) {
     const S = VRR; if (!NGT.on || !NGT.G) return; const t = W.t;
     let px = 1; try { const r = T.sceneEl.renderer, sz = r.getSize(new THREE.Vector2()); px = clamp(sz.y / 900, .7, 2.2) * (T.inVR ? 1.4 : 1); } catch (e) {}
+    (BAL.live || []).forEach((f) => { try { f(true, t); } catch (e) {} });
+    { const jm = VRR.boat && VRR.boat.userData.jibMesh; if (NGT.navU && jm) { const pa = jm.geometry.attributes.position; let sx = 0, c0 = 0; for (let i = 0; i < pa.count; i += 3) { sx += pa.getX(i); c0++; } NGT.navU.uXc.value = c0 ? sx / c0 : 0; } }
     NGT.stars.uniforms.uT.value = t; NGT.stars.uniforms.uPx.value = px; if (NGT.shoreM) { NGT.shoreM.uniforms.uT.value = t; NGT.shoreM.uniforms.uPx.value = px; } if (NGT.reflM) NGT.reflM.uniforms.uT.value = t;
     const U = S.water.userData.mat.uniforms; U.uFlk.value = .12; U.uSun.value = NGT.moonDir;
     /* a nappali égfotó később töltődik be, és visszaállítaná a víz nappali színeit – éjjel minden képkockán az éjszakai értékek érvényesek */
@@ -4943,10 +4956,10 @@
     /* tóközépi viharjelző */
     if (NGT.stGlow) { const per = NGT.storm === 2 ? 60 / 90 : NGT.storm === 1 ? 60 / 45 : 0, onF = per && ((t % per) / per) < .32; NGT.stGlow.visible = !!onF; NGT.stLamp.material.color.set(onF ? "#ffd84a" : "#3a300a"); }
     /* hullócsillag */
-    NGT.metNext -= dt; if (NGT.metNext <= 0) { NGT.metNext = 7 + Math.random() * 16; const m = NGT.met.find((q) => q.life <= 0); if (m) { const az = Math.random() * TAU, el = (25 + Math.random() * 45) * D2R; m.p0 = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)).multiplyScalar(3600);
+    NGT.metNext -= dt; if (NGT.metNext <= 0) { NGT.metNext = 4 + Math.random() * 11; const m = NGT.met.find((q) => q.life <= 0); if (m) { const az = Math.random() * TAU, el = (25 + Math.random() * 45) * D2R; m.p0 = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)).multiplyScalar(3600);
         const tg = new THREE.Vector3(Math.cos(az), -.35 - Math.random() * .4, Math.sin(az)).normalize(); if (Math.random() < .5) tg.x *= -1, tg.z *= -1; m.dir = tg; m.len = 3600 * (.06 + Math.random() * .08); m.life = m.max = .55 + Math.random() * .7; } }
     NGT.met.forEach((m) => { if (m.life <= 0) { m.q.visible = false; return; } m.life -= dt; const u = 1 - m.life / m.max, head = m.p0.clone().addScaledVector(m.dir, m.len * u * 1.6), tail = head.clone().addScaledVector(m.dir, -m.len * Math.min(1, u * 3));
-      m.q.visible = true; m.q.position.copy(head).add(tail).multiplyScalar(.5); m.q.scale.set(head.distanceTo(tail), 3600 * .0035, 1); m.q.lookAt(0, 0, 0); const dl = new THREE.Vector3().subVectors(head, tail).normalize(), right = new THREE.Vector3().crossVectors(m.q.position.clone().normalize(), dl);
+      m.q.visible = true; m.q.position.copy(head).add(tail).multiplyScalar(.5); m.q.scale.set(head.distanceTo(tail), 3600 * .006, 1); m.q.lookAt(0, 0, 0); const dl = new THREE.Vector3().subVectors(head, tail).normalize(), right = new THREE.Vector3().crossVectors(m.q.position.clone().normalize(), dl);
       m.q.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(dl, right.normalize().cross(dl).negate(), m.q.position.clone().normalize().negate())); m.q.material.opacity = Math.sin(Math.PI * u); });
     /* zivatar a távolban (másodfokon): villámlás a part fölött – a felhők alját és a vizet egy pillanatra kivilágítja */
     if (NGT.storm === 2) { NGT.lightning -= dt; if (NGT.lightning <= 0) { NGT.lightning = 6 + Math.random() * 14; NGT.flash = 1; try { setTimeout(() => { const a = T.ac(); if (!a) return; const n2 = a.createBufferSource(); n2.buffer = T.noiseBuf(3); const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 90; const g2 = a.createGain(); g2.gain.setValueAtTime(.0001, a.currentTime); g2.gain.linearRampToValueAtTime(.18, a.currentTime + .4); g2.gain.exponentialRampToValueAtTime(.0005, a.currentTime + 3); n2.connect(f).connect(g2).connect(T.outBus()); n2.start(); }, 2500 + Math.random() * 3000); } catch (e) {} }
@@ -5074,6 +5087,19 @@
     S.nightShore = { NL, NS, D: 2500, ax: Math.atan2(sx, -sz) }; S.venue = venue; S.balC = [cx, cz];
     if (W.debug) console.log("Balaton-táj", venue.id, Math.round(performance.now() - t0), "ms");
   }
+
+  /* 2026-11-14 19:05 (tulajdonos: „a hátsó házak ne lógjanak a semmibe, a táj hegyein illeszkedjenek”): a házak, fák, fények és nevezetességek
+     magassága MOST a domborzati háló TÉNYLEGES felszíne – ugyanaz a képlet (a part menti rámpa is), a háló négy szomszédos csúcsából interpolálva. */
+  function balVertY(cx, cz, an, r) { const sa = Math.sin(an), ca = -Math.cos(an), wx = cx + sa * r, wz = cz + ca * r; if (balInLake(wx, wz)) return .35;
+    let inn = 400; for (let s2 = 10; s2 <= 330; s2 += 20) { if (balInLake(cx + sa * (r + s2), cz + ca * (r + s2)) || (r - s2 > 0 && balInLake(cx + sa * (r - s2), cz + ca * (r - s2)))) { inn = s2; break; } }
+    const hh = balHgt(wx, wz); return .55 + 1.1 * bsst(0, 45, inn) + Math.max(0, hh - 1.5) * bsst(20, 320, inn); }
+  function balGround(wx, wz) { const T = BAL.terr; if (!T) return balHgt(wx, wz); const dx = wx - T.cx, dz = wz - T.cz, r = Math.hypot(dx, dz); if (r <= T.r0) return balVertY(T.cx, T.cz, 0, Math.max(1, r));
+    const fi = Math.log(r / T.r0) / Math.log(T.r1 / T.r0) * (T.NR - 1), i0 = Math.floor(fi), ti = fi - i0, ra = T.r0 * Math.pow(T.r1 / T.r0, i0 / (T.NR - 1)), rb = T.r0 * Math.pow(T.r1 / T.r0, (i0 + 1) / (T.NR - 1));
+    let an = Math.atan2(dx, -dz); if (an < 0) an += TAU; const fa = an / TAU * T.NA, a0 = Math.floor(fa), ta = fa - a0, A0 = a0 / T.NA * TAU, A1 = (a0 + 1) / T.NA * TAU;
+    const y00 = balVertY(T.cx, T.cz, A0, ra), y01 = balVertY(T.cx, T.cz, A1, ra), y10 = balVertY(T.cx, T.cz, A0, rb), y11 = balVertY(T.cx, T.cz, A1, rb);
+    return (y00 * (1 - ta) + y01 * ta) * (1 - ti) + (y10 * (1 - ta) + y11 * ta) * ti; }
+  /* a legalacsonyabb felszín az épület alapterülete alatt (lejtőn a ház ne lógjon ki a levegőbe) */
+  function balGroundMin(wx, wz, rad) { let m = balGround(wx, wz); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([a, b]) => { m = Math.min(m, balGround(wx + a * rad, wz + b * rad)); }); return m; }
   /* egy valódi pont (méterben, az origóhoz képest) → a táj-csoport helyi pontja az összehúzással; k: a méretarány */
   function balPlace(cx, cz, x, z, y) { const dx = x - cx, dz = z - cz, d = Math.hypot(dx, dz), k = d > 1 ? balComp(d) / d : 1, yy = (y || 0) - d * d * BAL_CURV; return { x: dx * k, y: yy * k, z: dz * k, k, d }; }
   const BAL_HAZE = new THREE.Color(.60, .70, .81);
@@ -5082,6 +5108,7 @@
   function balTerrain(G, cx, cz, o) {
     const NR = 104, NA = 512, r0 = o.r0 || 160, r1 = 50000, R = new Float32Array(NR);
     for (let i = 0; i < NR; i++) R[i] = r0 * Math.pow(r1 / r0, i / (NR - 1));
+    BAL.terr = { cx, cz, r0, r1, NR, NA };
     const nV = NR * NA, lake = new Uint8Array(nV), coast = new Uint8Array(nV), rr = new Float32Array(nV), inl = new Float32Array(nV);
     for (let a = 0; a < NA; a++) { const an = a / NA * TAU, sa = Math.sin(an), ca = -Math.cos(an), cr = [];
       for (let i = 0; i < NR; i++) { const k = i * NA + a; rr[k] = R[i]; lake[k] = balInLake(cx + sa * R[i], cz + ca * R[i]) ? 1 : 0; }
@@ -5136,16 +5163,17 @@
     let houses = 0; const B = balData();
     BAL_TOWNS.forEach(([n, la, lo, rk]) => { const [tx, tz] = balXY(la, lo), dT = Math.hypot(tx - cx, tz - cz), R = rk * 1000;
       /* házak: csak a közeli településeken (a távoliakat a felszín színe adja) */
-      if (dT < 9000 + R && houses < 1100) { const nH = Math.min(220, Math.round(rk * rk * (dT < 4000 ? 120 : 70))); const put = (wx, wz, fn) => fn(balPut(parts, cx, cz, wx, wz, balHgt(wx, wz) + .3));
+      if (dT < 9000 + R && houses < 1100) { const nH = Math.min(220, Math.round(rk * rk * (dT < 4000 ? 120 : 70))); const put = (wx, wz, fn, g0) => fn(balPut(parts, cx, cz, wx, wz, g0));
         for (let q = 0, tries = 0; q < nH && tries < nH * 6; tries++) { const a = rnd() * TAU, rr = Math.sqrt(rnd()) * R, wx = tx + Math.sin(a) * rr, wz = tz - Math.cos(a) * rr; if (balInLake(wx, wz) || balInLake(wx + 25, wz) || balInLake(wx - 25, wz) || balInLake(wx, wz + 25) || balInLake(wx, wz - 25)) continue;
           const cl = balCls(wx, wz); if (cl === 3 && rnd() < .7) continue; if (balHgt(wx, wz) > 170) continue; q++; houses++;
           const big = (n === "Siófok" || n === "Balatonfüred" || n === "Balatonalmádi" || n === "Keszthely") && rnd() < .12, w = big ? 26 + rnd() * 30 : 8 + rnd() * 7, h = big ? 15 + rnd() * 22 : 4.5 + rnd() * 3.5, d = big ? 14 + rnd() * 8 : 8 + rnd() * 5, ry = rnd() * Math.PI;
-          put(wx, wz, (P) => { P(new THREE.BoxGeometry(w, h, d), big ? "#f1efe8" : rnd() < .8 ? "#efe9da" : "#e6d5b0", 0, h / 2, 0, ry); if (!big) { const rf = new THREE.CylinderGeometry(.01, w * .62, d * 1.02, 4, 1); rf.rotateZ(Math.PI / 2); rf.rotateY(Math.PI / 4 * 0); rf.scale(1, .55, 1);
-            const rg = new THREE.ConeGeometry(Math.max(w, d) * .72, 3 + w * .18, 4); rg.rotateY(Math.PI / 4); rg.scale(w / Math.max(w, d), 1, d / Math.max(w, d)); rf.dispose(); P(rg, rnd() < .75 ? "#a8452f" : "#6e4a3a", 0, h + 1.5 + w * .09, 0, ry); } else P(new THREE.BoxGeometry(w * 1.02, 1.2, d * 1.02), "#8c969c", 0, h + .6, 0, ry); }); } }
+          const gC = balGround(wx, wz), gM = balGroundMin(wx, wz, Math.max(w, d) * .6) - .6, pl = gC - gM;   /* lábazat a lejtő alsó pontjáig */
+          put(wx, wz, (P) => { if (pl > .2) P(new THREE.BoxGeometry(w * 1.02, pl + .4, d * 1.02), "#8d8571", 0, (pl + .4) / 2, 0, ry); P(new THREE.BoxGeometry(w, h, d), big ? "#f1efe8" : rnd() < .8 ? "#efe9da" : "#e6d5b0", 0, pl + h / 2, 0, ry); if (!big) { const rf = new THREE.CylinderGeometry(.01, w * .62, d * 1.02, 4, 1); rf.rotateZ(Math.PI / 2); rf.rotateY(Math.PI / 4 * 0); rf.scale(1, .55, 1);
+            const rg = new THREE.ConeGeometry(Math.max(w, d) * .72, 3 + w * .18, 4); rg.rotateY(Math.PI / 4); rg.scale(w / Math.max(w, d), 1, d / Math.max(w, d)); rf.dispose(); P(rg, rnd() < .75 ? "#a8452f" : "#6e4a3a", 0, pl + h + 1.5 + w * .09, 0, ry); } else P(new THREE.BoxGeometry(w * 1.02, 1.2, d * 1.02), "#8c969c", 0, pl + h + .6, 0, ry); }, gM); } }
       /* éjszakai fények a település területén */
       const nLt = Math.round(clamp(7 + rk * rk * 26, 5, 100)), px = clamp(3.0 - dT / 8000, 1.1, 2.8);   /* 18:02: kis balatoni települések – szolid, ritkás fények */
       for (let q = 0, tries = 0; q < nLt && tries < nLt * 5; tries++) { const a = rnd() * TAU, rr = Math.sqrt(rnd()) * R * 1.05, wx = tx + Math.sin(a) * rr, wz = tz - Math.cos(a) * rr; if (balInLake(wx, wz)) continue; q++;
-        nl(balPlace(cx, cz, wx, wz, balHgt(wx, wz) + 3 + rnd() * 6), rnd() < .55 ? "#ffcf7a" : rnd() < .6 ? "#fff1d6" : "#ffb35a", px * (.7 + rnd() * .5)); }
+        nl(balPlace(cx, cz, wx, wz, balGround(wx, wz) + 2.5 + rnd() * 4), rnd() < .55 ? "#ffcf7a" : rnd() < .6 ? "#fff1d6" : "#ffb35a", px * (.7 + rnd() * .5)); }
       /* parti sétány lámpái + tükörképük a vízen */
       B.P.forEach((p, i) => { if (Math.hypot(p[0] - tx, p[1] - tz) > R * 1.15 || i % 3) return; const P = balPlace(cx, cz, p[0], p[1], 5); nl(P, "#ffd9a0", px * .8); if (dT < 12000 && rnd() < .4) ns(P, "#ffcf88", 2, 120); }); });
     /* vitorláskikötők bejárati fényei (Fl R / Fl G 3 s) */
@@ -5157,11 +5185,50 @@
 
   /* ---------------------------------------------------------------- nevezetességek, valódi méretben és helyen (éjjel díszkivilágítással) */
   const BAL_LM = [
-    { n: "Tihanyi Bencés Apátság", sc: 2.2, lat: 46.91389, lon: 17.88944, ry: Math.PI / 2, b: (P) => { const c = "#f3ead6", rf = "#4f6a5e";
-      P(new THREE.BoxGeometry(16, 19, 44), c, 0, 9.5, -6); P(new THREE.CylinderGeometry(9.5, 9.5, 44.5, 3, 1).rotateX(-Math.PI / 2).scale(1, .55, 1), "#9a4b33", 0, 21.6, -6);
-      P(new THREE.BoxGeometry(62, 13, 15), c, -30, 6.5, -24); P(new THREE.BoxGeometry(63, 2.5, 16), "#9a4b33", -30, 14, -24);
-      [-5.4, 5.4].forEach((dx) => { P(new THREE.BoxGeometry(7, 34, 7), c, dx, 17, 17); P(new THREE.BoxGeometry(7.6, 1.2, 7.6), "#d9c9a0", dx, 34.6, 17); P(new THREE.SphereGeometry(3.7, 10, 8).scale(1, 1.25, 1), rf, dx, 37.5, 17); P(new THREE.CylinderGeometry(.6, 1.6, 6, 8), rf, dx, 43, 17); P(new THREE.ConeGeometry(.7, 6, 8), rf, dx, 48.5, 17); P(new THREE.BoxGeometry(.35, 3, .35), "#e0b04a", dx, 53, 17); });
-      P(new THREE.BoxGeometry(11, 12, 2), c, 0, 18, 15); } },
+    /* 2026-11-14 19:05 (tulajdonos: „a tihanyi apátságot jól nézd meg a képeken … ezzel a kidolgozottsággal és fényekkel szerepeljen”):
+       a barokk apátsági templom a félsziget keleti, meredek peremén, főhomlokzata kelet felé, a tó felé néz. Két, órás, párkányokkal tagolt torony,
+       zsalus harangablakokkal; a sisak zöldes-szürke rézhagyma, lámpás, kis hagyma, csúcs, aranyozott kereszt. A tornyok között volutás oromzat
+       szoborfülkével és kapuval; a hajó vörös cseréptetővel. Az apátsági épület (kétszintes, ablaksoros, vörös tetős, L alakú) a templomtól északra,
+       hátrébb húzódik; alatta kő támfal és a sétány bástyája. Éjjel melegsárga díszkivilágítás, világos ablakok. Helyi tér: +z = kelet (homlokzat), +x = észak. */
+    { n: "Tihanyi Bencés Apátság", sc: 2.2, lat: 46.91389, lon: 17.88944, ry: Math.PI / 2, lights: [], b: (P, L) => { const c = "#f2e4bf", wh = "#fbf6ea", rf = "#5f7a6e", tile = "#9a4b33", dk = "#2a2620", st = "#b9ac8f", gold = "#e3b24a";
+      /* 19:13 (tulajdonos: „ne nyúljon túl a hegyen, illeszkedjen az alsó terepviszonyokba”): nincs kinyúló terasz – minden épület alatt kőlábazat
+         a lejtőbe süllyesztve, így a hegyoldalból nő ki */
+      [[0, -6, 17, 45], [-5.6, 17, 7.5, 7.5], [5.6, 17, 7.5, 7.5], [0, 16.2, 5, 3], [34, -2, 52.5, 15.5], [62, -26, 14.5, 34.5], [10, -32, 20.5, 12.5], [0, -28, 14, 14]].forEach(([x, z, w, d]) => P(new THREE.BoxGeometry(w, 16, d), st, x, -8, z));
+      /* a templomhajó */
+      P(new THREE.BoxGeometry(16, 19, 44), c, 0, 9.5, -6); P(new THREE.BoxGeometry(16.6, 1, 44.6), wh, 0, 19.2, -6);
+      P(new THREE.CylinderGeometry(9.6, 9.6, 44.5, 3, 1).rotateX(-Math.PI / 2).scale(1, .55, 1), tile, 0, 21.7, -6);
+      for (let k = 0; k < 5; k++) [-1, 1].forEach((sd) => { P(new THREE.BoxGeometry(.6, 6.5, 2.8), dk, sd * 8.05, 11, -22 + k * 8); P(new THREE.CylinderGeometry(1.4, 1.4, .6, 10, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).rotateY(sd < 0 ? Math.PI : 0), dk, sd * 8.05, 14.2, -22 + k * 8); P(new THREE.BoxGeometry(.5, 19, 1), wh, sd * 8.1, 9.5, -26 + k * 8); });
+      P(new THREE.CylinderGeometry(7, 7, 16, 16, 1, false, 0, Math.PI).rotateY(Math.PI), c, 0, 8, -28); P(new THREE.SphereGeometry(7.4, 14, 8, 0, Math.PI, 0, Math.PI / 2).rotateY(Math.PI), tile, 0, 16, -28);   /* szentély */
+      /* két torony */
+      [-5.6, 5.6].forEach((dx) => { P(new THREE.BoxGeometry(7.2, 36, 7.2), c, dx, 18, 17);
+        [8, 19.5, 30, 36].forEach((y) => P(new THREE.BoxGeometry(7.9, y === 36 ? 1.4 : .8, 7.9), wh, dx, y, 17));
+        [[0, 1], [1, 0], [-1, 0]].forEach(([ox, oz]) => { const fx = dx + ox * 3.62, fz = 17 + oz * 3.62, rot = ox ? Math.PI / 2 : 0;
+          P(new THREE.BoxGeometry(1.8, 4.2, .4).rotateY(rot), dk, fx, 26, fz); P(new THREE.CylinderGeometry(.9, .9, .4, 10, 1, false, 0, Math.PI).rotateX(Math.PI / 2).rotateZ(Math.PI / 2).rotateY(rot), dk, fx, 28.1, fz);   /* zsalus harangablak */
+          for (let q = 0; q < 5; q++) P(new THREE.BoxGeometry(1.9, .14, .5).rotateY(rot), "#5a4a35", fx, 24.3 + q * .8, fz);
+          P(new THREE.CylinderGeometry(1.7, 1.7, .25, 20).rotateX(Math.PI / 2).rotateY(rot), "#f7f2e2", fx, 32.8, fz); P(new THREE.TorusGeometry(1.75, .15, 4, 20).rotateY(rot), gold, fx, 32.8, fz);   /* óralap */
+          P(new THREE.BoxGeometry(.18, 1.3, .1).rotateY(rot), dk, fx + (ox ? 0 : 0), 33.2, fz); P(new THREE.BoxGeometry(.9, .16, .1).rotateY(rot), dk, fx, 32.8, fz);
+          P(new THREE.BoxGeometry(1.4, 2.6, .3).rotateY(rot), dk, fx, 14, fz); });
+        P(new THREE.CylinderGeometry(3.4, 3.9, 1.6, 8), rf, dx, 37.5, 17); P(new THREE.SphereGeometry(3.6, 14, 10).scale(1, 1.15, 1), rf, dx, 40.2, 17);   /* hagymasisak */
+        P(new THREE.CylinderGeometry(1.3, 1.5, 3.4, 8), wh, dx, 44.6, 17); for (let q = 0; q < 8; q++) { const a = q / 8 * TAU; P(new THREE.BoxGeometry(.3, 2.2, .3), dk, dx + Math.cos(a) * 1.42, 44.6, 17 + Math.sin(a) * 1.42); }   /* lámpás */
+        P(new THREE.CylinderGeometry(1.6, 1.6, .4, 10), rf, dx, 46.5, 17); P(new THREE.SphereGeometry(1.5, 10, 8).scale(1, 1.2, 1), rf, dx, 47.9, 17); P(new THREE.ConeGeometry(.55, 4.6, 8), rf, dx, 51.4, 17);
+        P(new THREE.SphereGeometry(.45, 8, 6), gold, dx, 53.9, 17); P(new THREE.BoxGeometry(.3, 3, .3), gold, dx, 55.6, 17); P(new THREE.BoxGeometry(1.7, .3, .3), gold, dx, 56.2, 17);
+        L.lights.push([dx, 26, 17 + 3.7, "#ffd27a", 1.1], [dx, 44.6, 17, "#fff0c0", 1.3]); });
+      /* homlokzat a tornyok között: oromzat volutákkal, szoborfülke, kapu, ablakok */
+      P(new THREE.BoxGeometry(4.2, 24, 2), c, 0, 12, 16.2); P(new THREE.BoxGeometry(4.6, .8, 2.4), wh, 0, 24.2, 16.2);
+      P(new THREE.ConeGeometry(2.6, 4.5, 3).rotateY(Math.PI / 2).scale(1, 1, .4), c, 0, 26.6, 16.2); [-1, 1].forEach((sd) => P(new THREE.TorusGeometry(1, .35, 5, 10, Math.PI), wh, sd * 2.2, 25, 16.9));
+      P(new THREE.BoxGeometry(1.6, 3, .5), dk, 0, 20.5, 17.2); P(new THREE.CylinderGeometry(.35, .45, 2.3, 8), "#ece2c6", 0, 20.6, 17.5);   /* fülke szoborral */
+      P(new THREE.BoxGeometry(2.6, 5, .5), "#3a2b1d", 0, 2.5, 17.2); P(new THREE.CylinderGeometry(1.3, 1.3, .5, 12, 1, false, 0, Math.PI).rotateX(Math.PI / 2).rotateZ(Math.PI / 2), "#3a2b1d", 0, 5, 17.2); P(new THREE.BoxGeometry(4, .6, 1), wh, 0, 6.4, 17.4);
+      P(new THREE.BoxGeometry(1.6, 3.2, .4), dk, 0, 12.5, 17.2); L.lights.push([0, 12.5, 17.6, "#ffcf7a", 1], [0, 2.5, 17.6, "#ffb85a", 1.1]);
+      /* apátsági épület: kétszintes, a templomtól északra, hátrébb; és a hátsó szárny (L) */
+      const wing = (x, z, w, d, rot) => { P(new THREE.BoxGeometry(w, 13, d).rotateY(rot), c, x, 6.5, z); P(new THREE.BoxGeometry(w + .6, .7, d + .6).rotateY(rot), wh, x, 13.2, z);
+        const rg = new THREE.CylinderGeometry(.01, d * .62, w + .5, 4, 1); rg.rotateZ(Math.PI / 2); rg.rotateX(Math.PI / 4); rg.scale(1, .6, 1); P(rg.rotateY(rot), tile, x, 15.4, z);
+        const nW = Math.floor(w / 4.2); for (let k = 0; k < nW; k++) [3.6, 9].forEach((y) => { const t = -w / 2 + 2.1 + k * 4.2; const ox = rot ? 0 : t, oz = rot ? t : 0, fx = x + ox + (rot ? d / 2 + .05 : 0), fz = z + oz + (rot ? 0 : d / 2 + .05);
+          P(new THREE.BoxGeometry(1.4, 2.2, .3).rotateY(rot), dk, fx, y, fz); P(new THREE.BoxGeometry(1.9, .3, .4).rotateY(rot), wh, fx, y + 1.35, fz); if ((k * 7 + y) % 3 < 1.2) L.lights.push([fx, y, fz + (rot ? 0 : .4), "#ffd59a", .7]); }); };
+      wing(34, -2, 52, 15, 0); wing(62, -26, 34, 14, Math.PI / 2); wing(10, -32, 20, 12, 0);
+      P(new THREE.BoxGeometry(5, 1.6, 5), wh, 34, 17.4, -2); P(new THREE.ConeGeometry(2.4, 3.6, 4).rotateY(Math.PI / 4), rf, 34, 19.8, -2);   /* tetőhuszár */
+      /* a templom előtti kis tér: kőburkolat, padok, lámpák */
+      [-12, -4, 4, 12].forEach((x) => { P(new THREE.CylinderGeometry(.12, .15, 3.4, 6), dk, x, 1.9, 20.5); P(new THREE.SphereGeometry(.35, 8, 6), "#fff1c8", x, 3.7, 20.5); L.lights.push([x, 3.7, 20.5, "#ffe2a8", .9]); });
+    } },
     { n: "Siófoki víztorony", sc: 1.6, lat: 46.90541, lon: 18.0522, b: (P) => { const c = "#efefe8"; P(new THREE.CylinderGeometry(3.4, 4.2, 40, 16), c, 0, 20); P(new THREE.CylinderGeometry(13, 4, 9, 22), c, 0, 44.5); P(new THREE.CylinderGeometry(13.5, 13.5, 2.5, 22), "#c7ccd0", 0, 50); P(new THREE.CylinderGeometry(3, 3, 4, 12), c, 0, 53); } },
     { n: "Siófoki óriáskerék", lat: 46.9095, lon: 18.0505, b: (P) => { const T = new THREE.TorusGeometry(18, .8, 6, 40); P(T, "#e8ecef", 0, 21, 0); for (let k = 0; k < 16; k++) { const a = k / 16 * TAU; P(new THREE.BoxGeometry(2.4, 2, 2.4), ["#e53935", "#fdd835", "#1e88e5", "#43a047"][k % 4], Math.cos(a) * 18, 21 + Math.sin(a) * 18, 0); } P(new THREE.BoxGeometry(1, 22, 1).rotateZ(.35), "#c9ced3", -4, 10.5, 0); P(new THREE.BoxGeometry(1, 22, 1).rotateZ(-.35), "#c9ced3", 4, 10.5, 0); } },
     { n: "Siófoki kikötő világítótornya", lat: 46.9125, lon: 18.0455, harbour: true, b: (P) => { P(new THREE.CylinderGeometry(1.4, 2, 14, 12), "#f4f4f0", 0, 7); P(new THREE.CylinderGeometry(1.5, 1.5, 2.5, 10), "#c62828", 0, 15.3); P(new THREE.ConeGeometry(1.7, 1.6, 10), "#c62828", 0, 17.4); } },
@@ -5170,19 +5237,48 @@
     { n: "Siófoki szállodasor", lat: 46.9145, lon: 18.0700, b: (P) => { for (let k = 0; k < 9; k++) { const w = 30 + (k % 3) * 10, h = 22 + ((k * 7) % 4) * 9; P(new THREE.BoxGeometry(w, h, 16), "#f3f1ea", -380 + k * 95, h / 2, 0); P(new THREE.BoxGeometry(w + 1, 1.2, 17), "#7f8a90", -380 + k * 95, h + .6, 0); } } },
     { n: "Festetics-kastély", sc: 2, lat: 46.7703, lon: 17.2445, b: (P) => { const c = "#f5f2e8"; P(new THREE.BoxGeometry(120, 16, 22), c, 0, 8); P(new THREE.BoxGeometry(122, 3, 24), "#5f6b73", 0, 17.5); [-1, 1].forEach((s) => P(new THREE.BoxGeometry(22, 16, 70), c, s * 60, 8, 34)); P(new THREE.BoxGeometry(12, 30, 12), c, 0, 15, -6); P(new THREE.SphereGeometry(6.5, 14, 8, 0, TAU, 0, Math.PI / 2), "#4c5a62", 0, 30, -6); P(new THREE.ConeGeometry(1.2, 9, 8), "#4c5a62", 0, 40, -6); } },
     { n: "Szigligeti vár", sc: 2.4, lat: 46.8042, lon: 17.4343, b: (P) => { const c = "#cbbfa6"; P(new THREE.BoxGeometry(14, 22, 14), c, 0, 9); P(new THREE.BoxGeometry(34, 9, 4), "#c2b69c", 6, 2.5, 10); P(new THREE.BoxGeometry(4, 12, 28), "#c2b69c", -10, 4, -2); P(new THREE.BoxGeometry(18, 7, 4), "#bfb398", 2, 1.5, -13); } },
-    { n: "Ranolder-kereszt (Badacsony)", sc: 4, lat: 46.7965, lon: 17.4985, b: (P) => { P(new THREE.BoxGeometry(1.4, 14, 1.4), "#f4f4f0", 0, 7); P(new THREE.BoxGeometry(7, 1.3, 1.3), "#f4f4f0", 0, 10.5); } },
+    /* 2026-11-14 19:15 (tulajdonos): a Badacsony tetején álló nagy, kivilágított kereszt – a valóságosnál hangsúlyosabban, hogy verseny közben jól látszódjon.
+       Fehér, kőtalapzaton; éjjel erős, meleg-fehér díszfény, fénykoszorúval. (élő elem: BAL.live) */
+    { n: "Ranolder-kereszt (Badacsony)", sc: 7, lat: 46.7965, lon: 17.4985, b: (P) => { P(new THREE.BoxGeometry(4, 2, 4), "#b9ae96", 0, 0); P(new THREE.BoxGeometry(2.6, 1.2, 2.6), "#cfc4aa", 0, 1.5); },
+      live: (g) => { const m = new THREE.MeshBasicMaterial({ color: "#ffffff", fog: false }); W.disposables.push(m); const cr = new THREE.Group(); g.add(cr);
+        [[1.5, 15, 1.5, 0, 9.6], [7.6, 1.5, 1.5, 0, 12.6], [1.9, .5, 1.9, 0, 17.3], [8, .4, 1.9, 0, 13.5]].forEach(([w, h, d, x, y]) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, 0); W.disposables.push(b.geometry); cr.add(b); });
+        const gl = []; [[0, 6], [0, 10], [0, 14], [-3, 12.6], [3, 12.6], [0, 12.6]].forEach(([x, y], i) => { const sp = glowSpriteW(i === 5 ? "#fff3d8" : "#ffe9c0", i === 5 ? 26 : 12); sp.position.set(x, y, 1.2); g.add(sp); gl.push(sp); });
+        return (on, t) => { m.color.setRGB(on ? 1 : .98, on ? .97 : .98, on ? .9 : .96); gl.forEach((sp, i) => { sp.visible = on; sp.material.opacity = (i === 5 ? .55 : .7) * (.92 + .08 * Math.sin(t * .7 + i)); }); }; } },
     { n: "Kisfaludy-kilátó (Badacsony)", sc: 2, lat: 46.8035, lon: 17.4958, b: (P) => { P(new THREE.CylinderGeometry(3.2, 4, 18, 8), "#8f8676", 0, 9); P(new THREE.CylinderGeometry(4.6, 4.6, 1.2, 8), "#6b5a45", 0, 18.6); P(new THREE.ConeGeometry(4.6, 3.5, 8), "#6b4a34", 0, 21); } },
-    { n: "Boglári gömbkilátó", sc: 3, lat: 46.779, lon: 17.652, b: (P) => { P(new THREE.CylinderGeometry(1.4, 1.8, 10, 10), "#c9ced3", 0, 5); P(new THREE.SphereGeometry(7.5, 18, 12), "#d7dde2", 0, 17.5); } },
+    /* 19:15 (tulajdonos): a boglári Xantus János Gömbkilátó a Várdombon – 15 m átmérőjű gömb 240 háromszöglemezből (alumínium, az 1958-as „Magyar Atomium”),
+       acél tartószerkezeten; esténként LED-es fényjátékkal, színekben pompázik (a túlpartról is látszik). (élő elem: a lemezek színe animált) */
+    { n: "Boglári gömbkilátó", sc: 4, lat: 46.779, lon: 17.652, b: (P) => { [0, 1, 2].forEach((k) => { const a = k / 3 * TAU; P(new THREE.CylinderGeometry(.35, .5, 11, 6).rotateZ(.22).rotateY(-a), "#8d949b", Math.cos(a) * 2.4, 5.2, Math.sin(a) * 2.4); });
+        P(new THREE.CylinderGeometry(1.1, 1.3, 10.5, 10), "#9aa1a8", 0, 5.2); P(new THREE.CylinderGeometry(2.8, 2.8, .5, 14), "#7d848b", 0, .25); },
+      live: (g) => { const geo = new THREE.IcosahedronGeometry(7.5, 2).toNonIndexed(), n = geo.attributes.position.count, col = new Float32Array(n * 3), base = new Float32Array(n / 3), fy = new Float32Array(n / 3), fa = new Float32Array(n / 3);
+        for (let f = 0; f < n / 3; f++) { let y = 0, ax = 0, az = 0; for (let k = 0; k < 3; k++) { y += geo.attributes.position.getY(f * 3 + k); ax += geo.attributes.position.getX(f * 3 + k); az += geo.attributes.position.getZ(f * 3 + k); } fy[f] = y / 22.5; fa[f] = Math.atan2(az, ax); base[f] = .78 + .2 * ((f * 37) % 7) / 7; }
+        geo.setAttribute("color", new THREE.BufferAttribute(col, 3)); geo.translate(0, 17.8, 0); W.disposables.push(geo);
+        const m = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false }); W.disposables.push(m); const sph = new THREE.Mesh(geo, m); g.add(sph);
+        const eg = new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(7.53, 2)); eg.translate(0, 17.8, 0); W.disposables.push(eg); const lm = new THREE.LineBasicMaterial({ color: "#5d6369", fog: false }); W.disposables.push(lm); g.add(new THREE.LineSegments(eg, lm));
+        const halo = glowSpriteW("#ffffff", 46); halo.position.set(0, 17.8, 0); g.add(halo); const c = new THREE.Color(); let last = -1;
+        return (on, t) => { halo.visible = on; if (!on && last === 0) return; if (on && t - last < .05) return; last = on ? t : 0;
+          for (let f = 0; f < n / 3; f++) { if (on) { const h = (t * .045 + fy[f] * .35 + .12 * Math.sin(fa[f] * 2 + t * .8)) % 1; c.setHSL(h < 0 ? h + 1 : h, 1, .5 + .12 * Math.sin(t * 2.2 + f * .7)); } else { const k = base[f] * (.75 + .3 * Math.max(0, fy[f] * .5 + .5)); c.setRGB(k * .86, k * .89, k * .92); }
+            for (let q = 0; q < 3; q++) col.set([c.r, c.g, c.b], (f * 3 + q) * 3); }
+          geo.attributes.color.needsUpdate = true; if (on) { c.setHSL((t * .045 + .1) % 1, 1, .6); halo.material.color.copy(c); halo.material.opacity = .45; } }; } },
     { n: "Fonyódi Várhegyi kilátó", sc: 2.6, lat: 46.741, lon: 17.548, b: (P) => { P(new THREE.CylinderGeometry(2.4, 3.2, 20, 8), "#8f8676", 0, 10); P(new THREE.CylinderGeometry(3.6, 3.6, 1, 8), "#5a4a3a", 0, 20.5); } },
     { n: "Kőhegyi kilátó (Zamárdi)", sc: 2.6, lat: 46.87217, lon: 17.93216, b: (P) => { P(new THREE.CylinderGeometry(2.2, 3, 16, 8), "#a8794a", 0, 8); P(new THREE.ConeGeometry(3.6, 3, 8), "#6b4a34", 0, 17.5); } },
     { n: "Fülöp-hegyi kilátó (Révfülöp)", sc: 2.6, lat: 46.8420, lon: 17.6150, b: (P) => { P(new THREE.CylinderGeometry(2.2, 3, 18, 8), "#a8794a", 0, 9); P(new THREE.ConeGeometry(3.6, 3, 8), "#6b4a34", 0, 19.5); } },
     { n: "Zephyr Apartmanház", lat: 46.8893551, lon: 17.9629734, b: (P) => { P(new THREE.BoxGeometry(14, 7, 11), "#f4efe2", 0, 3.5); P(new THREE.ConeGeometry(10.5, 4.5, 4).rotateY(Math.PI / 4).scale(1, 1, .8), "#a8452f", 0, 9.2); P(new THREE.BoxGeometry(2.4, 2.4, .3), "#3a6fa6", 3, 4.6, 5.6); } },
     { n: "Tihanyi rév", lat: 46.8897, lon: 17.8910, harbour: true, b: (P) => { P(new THREE.BoxGeometry(12, 1.2, 70), "#bdb7a8", 0, .6, 0); P(new THREE.BoxGeometry(14, 3.2, 40), "#ffffff", 22, 1.6, 0); P(new THREE.BoxGeometry(8, 3, 10), "#3b5f8a", 22, 4.6, 0); } },
     { n: "Szántódi rév", lat: 46.8800, lon: 17.9000, harbour: true, b: (P) => { P(new THREE.BoxGeometry(12, 1.2, 70), "#bdb7a8", 0, .6, 0); } }];
+  /* additív fénykoszorú (éjjeli díszkivilágításhoz) */
+  let _bglT = null;
+  function glowSpriteW(col, sz) { if (!_bglT) _bglT = canvasTex(128, 128, (g, w, h) => { const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(.25, "rgba(255,255,255,.45)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+    const m = new THREE.SpriteMaterial({ map: _bglT, color: new THREE.Color(col), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }); W.disposables.push(m); const s2 = new THREE.Sprite(m); s2.scale.setScalar(sz); s2.visible = false; s2.userData.night = 1; return s2; }
   function balLandmarks(G, cx, cz, NL) {
+    BAL.live = [];
     const parts = [], mat = balMatL(); BAL.lmLabels = [];
     BAL_LM.forEach((L) => { let [x, z] = balXY(L.lat, L.lon); if (L.harbour) { const s = balShorePt(L.lat, L.lon); x = s.x + s.nx * 30; z = s.z + s.nz * 30; }
-      const d = Math.hypot(x - cx, z - cz); if (d < 60) return; const gy = L.harbour ? 0 : balHgt(x, z), sc = L.sc || 1; const P = balPut(parts, cx, cz, x, z, gy - (sc > 1 ? 2 : 0), sc);   /* a jelképek kissé nagyítva, hogy a hegytetőn messziről is felismerhetők legyenek */ L.b((geo, col, lx, ly, lz) => P(geo, col, lx, ly, lz, 0, L.ry || 0));
+      const d = Math.hypot(x - cx, z - cz); if (d < 60) return; const gy = L.harbour ? 0 : (L.lights ? balGround(x, z) : balGroundMin(x, z, 12 * (L.sc || 1))), sc = L.sc || 1; const P = balPut(parts, cx, cz, x, z, gy - (sc > 1 ? 2 : 0), sc);   /* a jelképek kissé nagyítva, hogy a hegytetőn messziről is felismerhetők legyenek */ if (L.lights) L.lights.length = 0; L.b((geo, col, lx, ly, lz) => P(geo, col, lx, ly, lz, 0, L.ry || 0), L);
+      if (L.live) { const q = balPlace(cx, cz, x, z, gy - (sc > 1 ? 2 : 0)), lg = new THREE.Group(); lg.position.set(q.x, q.y, q.z); lg.scale.setScalar(q.k * sc); lg.rotation.y = L.ry || 0; lg.userData.night = 1; lg.userData.noMerge = 1; G.add(lg);
+        const up = L.live(lg); lg.traverse((o) => { o.userData.noMerge = 1; if (o.isSprite) o.userData.night = 1; }); up(false, 0); BAL.live.push(up); }
+      /* díszkivilágítás: világító ablakok, lámpák, harangablakok (éjjel pontfényként) */
+      (L.lights || []).forEach(([lx, ly, lz, lc, ls]) => { const ry = L.ry || 0, rx = (lx * Math.cos(ry) + lz * Math.sin(ry)) * sc, rz = (-lx * Math.sin(ry) + lz * Math.cos(ry)) * sc, cc = new THREE.Color(lc), q = balPlace(cx, cz, x + rx, z + rz, gy - (sc > 1 ? 2 : 0) + ly * sc);
+        NL.push([q.x, q.y, q.z, cc.r, cc.g, cc.b, clamp(4.2 - d / 5000, 1.4, 3.6) * ls, 0, 0, 1]); });
       const pp = balPlace(cx, cz, x, z, gy + 18 * sc); NL.push([pp.x, pp.y, pp.z, 1, .82, .55, clamp(5 - d / 6000, 2, 4.5), 0, 0, 1]); BAL.lmLabels.push({ n: L.n, p: pp, d }); });
     balBake(parts, (m4) => balHazeK(m4.userData_d || 0), mat, G);
   }
@@ -5192,7 +5288,8 @@
     for (let t = 0; t < 9000 && n < 1500; t++) { const a = rnd() * TAU, r = 120 + Math.sqrt(rnd()) * Rm, wx = cx + Math.sin(a) * r, wz = cz - Math.cos(a) * r; if (balInLake(wx, wz)) continue;
       const cl = balCls(wx, wz), pr = cl === 3 ? .9 : cl === 4 ? .35 : cl === 8 ? .5 : cl === 6 ? .18 : cl === 5 ? .05 : .08; if (rnd() > pr) continue;
       const near = balInLake(wx + 70, wz) || balInLake(wx - 70, wz) || balInLake(wx, wz + 70) || balInLake(wx, wz - 70); if (balInLake(wx + 14, wz) || balInLake(wx - 14, wz) || balInLake(wx, wz + 14) || balInLake(wx, wz - 14)) continue;
-      n++; const P = balPut(parts, cx, cz, wx, wz, balHgt(wx, wz)), hh = 10 + rnd() * 12;
+      n++; const P = balPut(parts, cx, cz, wx, wz, balGroundMin(wx, wz, 4) - .5), hh = 10 + rnd() * 12;
+      P(new THREE.CylinderGeometry(hh * .03, hh * .045, hh * .5, 5), "#4a3a28", 0, hh * .25);   /* törzs: a lombkorona nem lebeg */
       if (near && rnd() < .55) P(new THREE.OctahedronGeometry(1, 0).scale(hh * .16, hh * .55, hh * .16), rnd() < .5 ? "#3e6a2e" : "#4c7a36", 0, hh * .55); /* nyárfa */
       else if (cl === 3 && rnd() < .5) P(new THREE.ConeGeometry(hh * .3, hh, 6), rnd() < .5 ? "#2f5426" : "#355f2a", 0, hh * .5); /* fenyő / erdő */
       else P(new THREE.IcosahedronGeometry(hh * .32, 0).scale(1, .85, 1), rnd() < .5 ? "#3f6b2e" : "#4f7a36", 0, hh * .55); }
