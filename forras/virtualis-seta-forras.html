@@ -13477,10 +13477,6 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "__WV__"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
-  /* 2026-11-14 16:33 (tulajdonos: „nyiss nekem egy linket a VR alkalmazásba”): közvetlen belépés – a cím végén #vitorlasverseny (vagy #vr-verseny)
-     a séta betöltése után azonnal a vitorlásverseny kikötőjét nyitja; a többi VR-játék: #hullamvasut, #sakk */
-  (function deepWorld() { const m = /#(vitorlasverseny|vr-verseny|hullamvasut|sakk)\b/.exec(location.hash); if (!m) return; const kind = { vitorlasverseny: "race", "vr-verseny": "race", hullamvasut: "coaster", sakk: "chess" }[m[1]];
-    let n = 0; const tryOpen = () => { n++; if (window.AFRAME && document.querySelector("a-scene") && document.querySelector("a-scene").hasLoaded && window.ZephyrTour) { setTimeout(() => openWorld(kind), 600); return; } if (n < 120) setTimeout(tryOpen, 250); }; setTimeout(tryOpen, 800); })();
 
   /* ================= 2026-11-12 12:14 – ÖNÁLLÓ JÁTÉKCSOMAG KEZDŐKÉPERNYŐJE (a tulajdonos kérése: a játékok az apartmanos részek nélkül, önálló csomagként) =================
      A cím végére írt „?jatek” (vagy „#jatek”) a sétát eltakaró, saját kezdőképernyőt nyit: cím, mottó, három játék kártyája, rekordok, beállítás (nehézség). A játékból

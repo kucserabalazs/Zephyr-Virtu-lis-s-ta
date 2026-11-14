@@ -1089,3 +1089,6 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 
 ## 2026-11-14 18:15 – víz a kishajók belsejében (hangos egyeztetés után)
 - A víz-shader (`02-kornyezet.js`, `uHull[6]`/`uHullS[6]`) a kishajók (Finn, 420, flamingó, tutaj – `userData.hullLB`) körvonalán belül eldobja a vízpixeleket: a zárt héjon belül soha nincs víz, akármennyire merül vagy dől a hajó. A merülés és a látószög NEM változott (a tulajdonos kérése). Frissítés: `hullMaskSet` (05c) képkockánként a versenyben és a kikötőben.
+
+## 2026-11-14 18:18 – a #vitorlasverseny közvetlen belépő TÖRÖLVE
+- A tulajdonos: a link azonnal a versenyt nyitotta, így nem tudott VR-módba lépni. Visszavonva; ilyen automatikus belépőt többet nem teszünk be. Az indító link a sima séta-link (?v=…).
