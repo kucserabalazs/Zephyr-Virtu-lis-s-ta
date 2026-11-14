@@ -40,9 +40,11 @@
   /* a jellegzetes csúcsok PONTOS alakja (nem a rácsból): tanúhegy = lapos tető, bazaltorgona-fal, alatta szőlőlejtő; kúp; kupola. [név, szél., hossz., tszf. m, sugár km, alak] */
   const BAL_PEAKS = [["Badacsony", 46.80351, 17.49584, 437.4, 1.55, "table"], ["Szent György-hegy", 46.8456, 17.4469, 415, 1.3, "table"], ["Gulács", 46.8331, 17.5056, 393, .75, "cone"], ["Tóti-hegy", 46.8389, 17.5362, 347, .6, "cone"],
     ["Csobánc", 46.8756, 17.5078, 376, .8, "table"], ["Szigligeti Várhegy", 46.8042, 17.4343, 239, .45, "cone"], ["Hegyestű", 46.888, 17.647, 337, .5, "cone"], ["Tihany – Csúcs-hegy", 46.90642, 17.85232, 232, .7, "dome"],
-    ["Tihany – Nyereg-hegy", 46.91104, 17.85291, 223, .55, "dome"], ["Tihany – Apáti-hegy", 46.91214, 17.85574, 214, .5, "dome"], ["Tihany – Akasztó-domb", 46.90344, 17.89329, 198, .55, "dome"], ["Tihany – Óvár", 46.9228, 17.87959, 190, .5, "dome"],
+    ["Tihany – Nyereg-hegy", 46.91104, 17.85291, 223, .55, "dome"], ["Tihany – Apáti-hegy", 46.91214, 17.85574, 214, .5, "dome"], ["Tihany – Akasztó-domb", 46.90344, 17.89329, 198, .55, "dome"], ["Tihany – Óvár", 46.9228, 17.87959, 190, .5, "dome"], ["Tihany – az apátság dombja", 46.9137, 17.8889, 182, .42, "dome"],
     ["Fonyódi Várhegy", 46.73654, 17.54116, 231, .7, "dome"], ["Fonyódi Sipos-hegy", 46.7435, 17.5662, 207, .6, "dome"], ["Boglári Várdomb", 46.779, 17.652, 165, .55, "dome"], ["Kőhegy (Zamárdi)", 46.87217, 17.93216, 219, 1.1, "dome"]];
-  function balPeaks() { if (BAL.pk) return BAL.pk; BAL.pk = BAL_PEAKS.map(([n, la, lo, hm, R, sh]) => { const [x, z] = balXY(la, lo); return { n, x, z, hr: hm - 104.8, R: R * 1000, sh }; }); return BAL.pk; }
+  /* 17:50 (tulajdonos: „a vulkanikus hegyek meghatározzák a balatoni látképet, kapjanak több hangsúlyt a háttérben”): a tanúhegyek és a vulkáni kúpok
+     30%-kal kiemelve (magasság), kevésbé párásak és mélyebb színűek – a valódi helyükön és alakjukkal, csak hangsúlyosabban (a Kőhegy nem vulkán) */
+  function balPeaks() { if (BAL.pk) return BAL.pk; BAL.pk = BAL_PEAKS.map(([n, la, lo, hm, R, sh]) => { const [x, z] = balXY(la, lo), vol = !/Kőhegy/.test(n), ex = /Tihany/.test(n) ? 1.7 : /Boglári/.test(n) ? 2.1 : /Kőhegy/.test(n) ? 1.9 : /Fonyódi/.test(n) ? 1.5 : 1.3; return { n, x, z, hr: (hm - 104.8) * ex, R: R * 1000 * (ex > 1.6 ? 1.15 : 1), sh, vol };   /* a kisebb dombok (Tihany, Boglár, Kőhegy, Fonyód) erősebben kiemelve, hogy minden helyszínen hangsúlyos hegy legyen szemközt */ }); return BAL.pk; }
   /* a csúcs-profil (m a tó fölött) és az övezet: 1 = tető (erdő), 2 = bazaltfal, 3 = szőlőlejtő */
   function balPeakAt(x, z) { let h = 0, zone = 0; const pk = balPeaks();
     for (let i = 0; i < pk.length; i++) { const p = pk[i], dx = x - p.x, dz = z - p.z; if (Math.abs(dx) > p.R * 1.6 || Math.abs(dz) > p.R * 1.6) continue; const r = Math.hypot(dx, dz) / p.R; let q = 0, zn = 0;
@@ -72,14 +74,18 @@
     let nx = -tz, nz = tx; if (!balInLake(p[0] + nx * 60, p[1] + nz * 60)) { nx = -nx; nz = -nz; } return { x: p[0], z: p[1], nx, nz, tx, tz }; }
 
   /* ---------------------------------------------------------------- versenyhelyszínek: a pálya közepe a tó egy valódi pontján */
+  /* 2026-11-14 17:49 (tulajdonos: „Szemközt a Badacsonyi hegy igazi szépséget és teret ad … legyenek eltérő helyek, de épp ilyen látványos legyen az összes”):
+     minden helyszínen szemközt egy jellegzetes hegy, a tetején a jelképével (Badacsony – Ranolder-kereszt, Tihany – apátság, Boglár – gömbkilátó, Szigliget – vár,
+     Fonyód – ikerhegy a kilátóval, Keszthely – a hegység és a kastély, Zamárdi – Kőhegy a kilátóval, Füred – Tamás-hegy) */
   const VENUES = [
-    { id: "tihany", n: "Tihany – az apátság előtt", lat: 46.9265, lon: 17.9230, basin: "keleti", d: "A Tihanyi-félszigettől keletre, 2,5 km-re: nyugatra a kéttornyú bencés apátság a félsziget gerincén, északra Füred és a Tamás-hegy, délre a Kőhegy és Zamárdi." },
-    { id: "badacsony", n: "Badacsony – a tanúhegy előtt", lat: 46.775, lon: 17.530, basin: "nyugati", d: "A Badacsony koporsó alakú tanúhegye északon (437 m), mellette a Gulács és a Tóti-hegy kúpja, nyugatra a Szent György-hegy és Szigliget; délen Fonyód ikerhegye." },
-    { id: "fured", n: "Balatonfüred – a móló előtt", lat: 46.9405, lon: 17.9300, basin: "keleti", d: "Füred előtt: a Tagore sétány, a parti szállodák, mögöttük a Tamás- és a Péter-hegy; délnyugatra a Tihanyi-félsziget az apátsággal." },
-    { id: "siofok", n: "Siófok – a víztorony előtt", lat: 46.935, lon: 18.060, basin: "keleti", d: "A keleti medence: délen a siófoki kikötő és a víztorony, a szállodasor; északon Alsóörs, Almádi és a kenesei magaspart." },
-    { id: "szigliget", n: "Szigliget – a vár alatt", lat: 46.770, lon: 17.445, basin: "nyugati", d: "A szigligeti öböl: északon a várhegy a 750 éves várral, keletre a Badacsony, mögötte a Szent György-hegy; nyugatra a Keszthelyi-hegység." },
-    { id: "keszthely", n: "Keszthely – az öbölben", lat: 46.738, lon: 17.292, basin: "nyugati", d: "A keszthelyi öböl: északnyugaton a város a Festetics-kastéllyal, mögötte a Keszthelyi-hegység; keletre a Szent György-hegy és a Badacsony." },
-    { id: "zamardi", n: "Zamárdi – a Zephyr előtt", lat: 46.9055, lon: 17.9755, basin: "keleti", d: "Hazai pálya a Zephyr Apartmanház előtt: délen Zamárdi strandja és a Kőhegy, nyugatra a Tihanyi-félsziget az apátsággal, északon Füred és Alsóörs." }];
+    { id: "tihany", n: "Tihany – az apátság alatt", lat: 46.905, lon: 17.918, basin: "keleti", d: "Szemközt a Tihanyi-félsziget dombja, a tetején a kéttornyú bencés apátság; mögötte a Csúcs-hegy, északra Füred, délre a zamárdi part." },
+    { id: "badacsony", n: "Badacsony – a tanúhegy előtt", lat: 46.775, lon: 17.530, basin: "nyugati", d: "Szemközt a koporsó alakú Badacsony (437 m) a Ranolder-kereszttel, mellette a Gulács és a Tóti-hegy kúpja, nyugatra a Szent György-hegy és Szigliget." },
+    { id: "fonyod", n: "Fonyód – az ikerhegy előtt", lat: 46.765, lon: 17.552, basin: "nyugati", d: "Délen Fonyód ikerhegye, a Várhegy kilátójával; a hátad mögött, északon a Badacsony és a tanúhegyek sora." },
+    { id: "fured", n: "Balatonfüred – a Tamás-hegy alatt", lat: 46.935, lon: 17.905, basin: "keleti", d: "Északon Füred: a Kerek templom, a parti szállodák, mögöttük a Tamás- és a Péter-hegy; délnyugatra a Tihanyi-félsziget az apátsággal." },
+    { id: "szigliget", n: "Szigliget – a vár alatt", lat: 46.772, lon: 17.440, basin: "nyugati", d: "Szemközt a szigligeti várhegy a 750 éves várral, keletre a Badacsony, mögötte a Szent György-hegy; nyugatra a Keszthelyi-hegység." },
+    { id: "boglar", n: "Balatonboglár – a gömbkilátó alatt", lat: 46.7955, lon: 17.660, basin: "kozepso", d: "Délen a boglári Várdomb, a tetején az ezüst gömbkilátó; szemben, északon Révfülöp és a Fülöp-hegy, nyugatra a Badacsony." },
+    { id: "keszthely", n: "Keszthely – az öbölben", lat: 46.738, lon: 17.292, basin: "nyugati", d: "Északnyugaton a Keszthelyi-hegység, előtte a város a Festetics-kastéllyal; keletre a Szent György-hegy és a Badacsony." },
+    { id: "zamardi", n: "Zamárdi – a Zephyr előtt", lat: 46.898, lon: 17.945, basin: "keleti", d: "Hazai pálya a Zephyr Apartmanház előtt: délen a Kőhegy a kilátóval, nyugatra a Tihanyi-félsziget az apátsággal, északon Füred és Alsóörs." }];
   function vrVenue(lvl) { return VENUES[((lvl || 1) - 1 + VENUES.length) % VENUES.length]; }
   /* a kikötő: Zamárdi, a Zephyr-háztól egyenesen a partra lépve (a móló a part elejétől észak felé fut) */
   function balHarborCentre() { const s = balShorePt(46.8915, 17.9575); return [s.x + s.nx * 12, s.z + s.nz * 12]; }
@@ -135,7 +141,7 @@
         /* árnyalás a domborzat lejtője szerint */
         const e = 70, gx = (balHgt(wx + e, wz) - balHgt(wx - e, wz)) / (2 * e), gz = (balHgt(wx, wz + e) - balHgt(wx, wz - e)) / (2 * e), nl = 1 / Math.hypot(gx, 1, gz);
         const lt = .66 + .52 * Math.max(0, (-gx * sun.x + sun.y - gz * sun.z) * nl) - .1; c.multiplyScalar(clamp(lt, .45, 1.15)); }
-      c.lerp(BAL_HAZE, balHazeK(r));
+      c.lerp(BAL_HAZE, balHazeK(r) * (!isL && balPeakAt(wx, wz)[0] > 25 ? .62 : 1));
       const P = balPlace(cx, cz, wx, wz, y); pos[k * 3] = P.x; pos[k * 3 + 1] = P.y; pos[k * 3 + 2] = P.z; col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
     }
     const idx = []; for (let i = 0; i < NR - 1; i++) for (let a = 0; a < NA; a++) { const k = i * NA + a, k1 = i * NA + (a + 1) % NA, k2 = k + NA, k3 = k1 + NA;
@@ -155,7 +161,7 @@
   }
   const BM4 = (x, y, z, ry, s) => { const m = new THREE.Matrix4().makeRotationY(ry || 0); if (s) m.premultiply(new THREE.Matrix4().makeScale(s, s, s)); m.setPosition(x, y, z); return m; };
   /* egy darab a világban: helyi (x,y,z,ry) a nevezetesség terében → a táj-csoport tere (összehúzás + görbület) */
-  function balPut(L, cx, cz, wx, wz, gy) { const P = balPlace(cx, cz, wx, wz, gy), T0 = new THREE.Matrix4().makeTranslation(P.x, P.y, P.z).multiply(new THREE.Matrix4().makeScale(P.k, P.k, P.k));
+  function balPut(L, cx, cz, wx, wz, gy, sc) { const P = balPlace(cx, cz, wx, wz, gy), ks = P.k * (sc || 1), T0 = new THREE.Matrix4().makeTranslation(P.x, P.y, P.z).multiply(new THREE.Matrix4().makeScale(ks, ks, ks));
     return (geo, col, lx, ly, lz, ry, rot) => { const m = new THREE.Matrix4().makeRotationY(rot || 0); m.multiply(new THREE.Matrix4().makeTranslation(lx || 0, ly || 0, lz || 0)); m.multiply(new THREE.Matrix4().makeRotationY(ry || 0)); m.premultiply(T0); m.userData_d = P.d; L.push([geo, col, m]); }; }
 
   /* ---------------------------------------------------------------- települések: házak (a közeli partokon), éjszakai fények, sétányok, kikötők */
@@ -186,33 +192,33 @@
 
   /* ---------------------------------------------------------------- nevezetességek, valódi méretben és helyen (éjjel díszkivilágítással) */
   const BAL_LM = [
-    { n: "Tihanyi Bencés Apátság", lat: 46.91389, lon: 17.88944, ry: Math.PI / 2, b: (P) => { const c = "#f3ead6", rf = "#4f6a5e";
+    { n: "Tihanyi Bencés Apátság", sc: 2.2, lat: 46.91389, lon: 17.88944, ry: Math.PI / 2, b: (P) => { const c = "#f3ead6", rf = "#4f6a5e";
       P(new THREE.BoxGeometry(16, 19, 44), c, 0, 9.5, -6); P(new THREE.CylinderGeometry(9.5, 9.5, 44.5, 3, 1).rotateX(-Math.PI / 2).scale(1, .55, 1), "#9a4b33", 0, 21.6, -6);
       P(new THREE.BoxGeometry(62, 13, 15), c, -30, 6.5, -24); P(new THREE.BoxGeometry(63, 2.5, 16), "#9a4b33", -30, 14, -24);
       [-5.4, 5.4].forEach((dx) => { P(new THREE.BoxGeometry(7, 34, 7), c, dx, 17, 17); P(new THREE.BoxGeometry(7.6, 1.2, 7.6), "#d9c9a0", dx, 34.6, 17); P(new THREE.SphereGeometry(3.7, 10, 8).scale(1, 1.25, 1), rf, dx, 37.5, 17); P(new THREE.CylinderGeometry(.6, 1.6, 6, 8), rf, dx, 43, 17); P(new THREE.ConeGeometry(.7, 6, 8), rf, dx, 48.5, 17); P(new THREE.BoxGeometry(.35, 3, .35), "#e0b04a", dx, 53, 17); });
       P(new THREE.BoxGeometry(11, 12, 2), c, 0, 18, 15); } },
-    { n: "Siófoki víztorony", lat: 46.90541, lon: 18.0522, b: (P) => { const c = "#efefe8"; P(new THREE.CylinderGeometry(3.4, 4.2, 40, 16), c, 0, 20); P(new THREE.CylinderGeometry(13, 4, 9, 22), c, 0, 44.5); P(new THREE.CylinderGeometry(13.5, 13.5, 2.5, 22), "#c7ccd0", 0, 50); P(new THREE.CylinderGeometry(3, 3, 4, 12), c, 0, 53); } },
+    { n: "Siófoki víztorony", sc: 1.6, lat: 46.90541, lon: 18.0522, b: (P) => { const c = "#efefe8"; P(new THREE.CylinderGeometry(3.4, 4.2, 40, 16), c, 0, 20); P(new THREE.CylinderGeometry(13, 4, 9, 22), c, 0, 44.5); P(new THREE.CylinderGeometry(13.5, 13.5, 2.5, 22), "#c7ccd0", 0, 50); P(new THREE.CylinderGeometry(3, 3, 4, 12), c, 0, 53); } },
     { n: "Siófoki óriáskerék", lat: 46.9095, lon: 18.0505, b: (P) => { const T = new THREE.TorusGeometry(18, .8, 6, 40); P(T, "#e8ecef", 0, 21, 0); for (let k = 0; k < 16; k++) { const a = k / 16 * TAU; P(new THREE.BoxGeometry(2.4, 2, 2.4), ["#e53935", "#fdd835", "#1e88e5", "#43a047"][k % 4], Math.cos(a) * 18, 21 + Math.sin(a) * 18, 0); } P(new THREE.BoxGeometry(1, 22, 1).rotateZ(.35), "#c9ced3", -4, 10.5, 0); P(new THREE.BoxGeometry(1, 22, 1).rotateZ(-.35), "#c9ced3", 4, 10.5, 0); } },
     { n: "Siófoki kikötő világítótornya", lat: 46.9125, lon: 18.0455, harbour: true, b: (P) => { P(new THREE.CylinderGeometry(1.4, 2, 14, 12), "#f4f4f0", 0, 7); P(new THREE.CylinderGeometry(1.5, 1.5, 2.5, 10), "#c62828", 0, 15.3); P(new THREE.ConeGeometry(1.7, 1.6, 10), "#c62828", 0, 17.4); } },
-    { n: "Balatonfüredi Kerek templom", lat: 46.9585, lon: 17.8905, b: (P) => { P(new THREE.CylinderGeometry(11, 11, 14, 22), "#f1e6c8", 0, 7); P(new THREE.SphereGeometry(11.5, 20, 10, 0, TAU, 0, Math.PI / 2), "#5d7a6a", 0, 14); P(new THREE.CylinderGeometry(1.6, 1.6, 4, 10), "#f1e6c8", 0, 27); P(new THREE.BoxGeometry(10, 12, 6), "#f1e6c8", 0, 6, 12); [-3, 0, 3].forEach((x) => P(new THREE.CylinderGeometry(.5, .5, 9, 8), "#ffffff", x, 4.5, 15.5)); } },
+    { n: "Balatonfüredi Kerek templom", sc: 1.8, lat: 46.9585, lon: 17.8905, b: (P) => { P(new THREE.CylinderGeometry(11, 11, 14, 22), "#f1e6c8", 0, 7); P(new THREE.SphereGeometry(11.5, 20, 10, 0, TAU, 0, Math.PI / 2), "#5d7a6a", 0, 14); P(new THREE.CylinderGeometry(1.6, 1.6, 4, 10), "#f1e6c8", 0, 27); P(new THREE.BoxGeometry(10, 12, 6), "#f1e6c8", 0, 6, 12); [-3, 0, 3].forEach((x) => P(new THREE.CylinderGeometry(.5, .5, 9, 8), "#ffffff", x, 4.5, 15.5)); } },
     { n: "Balatonfüredi szállodák", lat: 46.9525, lon: 17.8995, b: (P) => { [[-120, 0, 54, 24, 18], [-40, 10, 44, 33, 16], [60, 0, 60, 21, 18], [150, 20, 40, 28, 16]].forEach(([x, z, w, h, d]) => { P(new THREE.BoxGeometry(w, h, d), "#f6f4ee", x, h / 2, z); P(new THREE.BoxGeometry(w + 1, 1.2, d + 1), "#9aa3a8", x, h + .6, z); }); } },
     { n: "Siófoki szállodasor", lat: 46.9145, lon: 18.0700, b: (P) => { for (let k = 0; k < 9; k++) { const w = 30 + (k % 3) * 10, h = 22 + ((k * 7) % 4) * 9; P(new THREE.BoxGeometry(w, h, 16), "#f3f1ea", -380 + k * 95, h / 2, 0); P(new THREE.BoxGeometry(w + 1, 1.2, 17), "#7f8a90", -380 + k * 95, h + .6, 0); } } },
-    { n: "Festetics-kastély", lat: 46.7703, lon: 17.2445, b: (P) => { const c = "#f5f2e8"; P(new THREE.BoxGeometry(120, 16, 22), c, 0, 8); P(new THREE.BoxGeometry(122, 3, 24), "#5f6b73", 0, 17.5); [-1, 1].forEach((s) => P(new THREE.BoxGeometry(22, 16, 70), c, s * 60, 8, 34)); P(new THREE.BoxGeometry(12, 30, 12), c, 0, 15, -6); P(new THREE.SphereGeometry(6.5, 14, 8, 0, TAU, 0, Math.PI / 2), "#4c5a62", 0, 30, -6); P(new THREE.ConeGeometry(1.2, 9, 8), "#4c5a62", 0, 40, -6); } },
-    { n: "Szigligeti vár", lat: 46.8042, lon: 17.4343, b: (P) => { const c = "#cbbfa6"; P(new THREE.BoxGeometry(14, 22, 14), c, 0, 9); P(new THREE.BoxGeometry(34, 9, 4), "#c2b69c", 6, 2.5, 10); P(new THREE.BoxGeometry(4, 12, 28), "#c2b69c", -10, 4, -2); P(new THREE.BoxGeometry(18, 7, 4), "#bfb398", 2, 1.5, -13); } },
-    { n: "Ranolder-kereszt (Badacsony)", lat: 46.7965, lon: 17.4985, b: (P) => { P(new THREE.BoxGeometry(1.4, 14, 1.4), "#f4f4f0", 0, 7); P(new THREE.BoxGeometry(7, 1.3, 1.3), "#f4f4f0", 0, 10.5); } },
-    { n: "Kisfaludy-kilátó (Badacsony)", lat: 46.8035, lon: 17.4958, b: (P) => { P(new THREE.CylinderGeometry(3.2, 4, 18, 8), "#8f8676", 0, 9); P(new THREE.CylinderGeometry(4.6, 4.6, 1.2, 8), "#6b5a45", 0, 18.6); P(new THREE.ConeGeometry(4.6, 3.5, 8), "#6b4a34", 0, 21); } },
-    { n: "Boglári gömbkilátó", lat: 46.779, lon: 17.652, b: (P) => { P(new THREE.CylinderGeometry(1.4, 1.8, 10, 10), "#c9ced3", 0, 5); P(new THREE.SphereGeometry(7.5, 18, 12), "#d7dde2", 0, 17.5); } },
-    { n: "Fonyódi Várhegyi kilátó", lat: 46.741, lon: 17.548, b: (P) => { P(new THREE.CylinderGeometry(2.4, 3.2, 20, 8), "#8f8676", 0, 10); P(new THREE.CylinderGeometry(3.6, 3.6, 1, 8), "#5a4a3a", 0, 20.5); } },
-    { n: "Kőhegyi kilátó (Zamárdi)", lat: 46.87217, lon: 17.93216, b: (P) => { P(new THREE.CylinderGeometry(2.2, 3, 16, 8), "#a8794a", 0, 8); P(new THREE.ConeGeometry(3.6, 3, 8), "#6b4a34", 0, 17.5); } },
-    { n: "Fülöp-hegyi kilátó (Révfülöp)", lat: 46.8420, lon: 17.6150, b: (P) => { P(new THREE.CylinderGeometry(2.2, 3, 18, 8), "#a8794a", 0, 9); P(new THREE.ConeGeometry(3.6, 3, 8), "#6b4a34", 0, 19.5); } },
+    { n: "Festetics-kastély", sc: 2, lat: 46.7703, lon: 17.2445, b: (P) => { const c = "#f5f2e8"; P(new THREE.BoxGeometry(120, 16, 22), c, 0, 8); P(new THREE.BoxGeometry(122, 3, 24), "#5f6b73", 0, 17.5); [-1, 1].forEach((s) => P(new THREE.BoxGeometry(22, 16, 70), c, s * 60, 8, 34)); P(new THREE.BoxGeometry(12, 30, 12), c, 0, 15, -6); P(new THREE.SphereGeometry(6.5, 14, 8, 0, TAU, 0, Math.PI / 2), "#4c5a62", 0, 30, -6); P(new THREE.ConeGeometry(1.2, 9, 8), "#4c5a62", 0, 40, -6); } },
+    { n: "Szigligeti vár", sc: 2.4, lat: 46.8042, lon: 17.4343, b: (P) => { const c = "#cbbfa6"; P(new THREE.BoxGeometry(14, 22, 14), c, 0, 9); P(new THREE.BoxGeometry(34, 9, 4), "#c2b69c", 6, 2.5, 10); P(new THREE.BoxGeometry(4, 12, 28), "#c2b69c", -10, 4, -2); P(new THREE.BoxGeometry(18, 7, 4), "#bfb398", 2, 1.5, -13); } },
+    { n: "Ranolder-kereszt (Badacsony)", sc: 4, lat: 46.7965, lon: 17.4985, b: (P) => { P(new THREE.BoxGeometry(1.4, 14, 1.4), "#f4f4f0", 0, 7); P(new THREE.BoxGeometry(7, 1.3, 1.3), "#f4f4f0", 0, 10.5); } },
+    { n: "Kisfaludy-kilátó (Badacsony)", sc: 2, lat: 46.8035, lon: 17.4958, b: (P) => { P(new THREE.CylinderGeometry(3.2, 4, 18, 8), "#8f8676", 0, 9); P(new THREE.CylinderGeometry(4.6, 4.6, 1.2, 8), "#6b5a45", 0, 18.6); P(new THREE.ConeGeometry(4.6, 3.5, 8), "#6b4a34", 0, 21); } },
+    { n: "Boglári gömbkilátó", sc: 3, lat: 46.779, lon: 17.652, b: (P) => { P(new THREE.CylinderGeometry(1.4, 1.8, 10, 10), "#c9ced3", 0, 5); P(new THREE.SphereGeometry(7.5, 18, 12), "#d7dde2", 0, 17.5); } },
+    { n: "Fonyódi Várhegyi kilátó", sc: 2.6, lat: 46.741, lon: 17.548, b: (P) => { P(new THREE.CylinderGeometry(2.4, 3.2, 20, 8), "#8f8676", 0, 10); P(new THREE.CylinderGeometry(3.6, 3.6, 1, 8), "#5a4a3a", 0, 20.5); } },
+    { n: "Kőhegyi kilátó (Zamárdi)", sc: 2.6, lat: 46.87217, lon: 17.93216, b: (P) => { P(new THREE.CylinderGeometry(2.2, 3, 16, 8), "#a8794a", 0, 8); P(new THREE.ConeGeometry(3.6, 3, 8), "#6b4a34", 0, 17.5); } },
+    { n: "Fülöp-hegyi kilátó (Révfülöp)", sc: 2.6, lat: 46.8420, lon: 17.6150, b: (P) => { P(new THREE.CylinderGeometry(2.2, 3, 18, 8), "#a8794a", 0, 9); P(new THREE.ConeGeometry(3.6, 3, 8), "#6b4a34", 0, 19.5); } },
     { n: "Zephyr Apartmanház", lat: 46.8893551, lon: 17.9629734, b: (P) => { P(new THREE.BoxGeometry(14, 7, 11), "#f4efe2", 0, 3.5); P(new THREE.ConeGeometry(10.5, 4.5, 4).rotateY(Math.PI / 4).scale(1, 1, .8), "#a8452f", 0, 9.2); P(new THREE.BoxGeometry(2.4, 2.4, .3), "#3a6fa6", 3, 4.6, 5.6); } },
     { n: "Tihanyi rév", lat: 46.8897, lon: 17.8910, harbour: true, b: (P) => { P(new THREE.BoxGeometry(12, 1.2, 70), "#bdb7a8", 0, .6, 0); P(new THREE.BoxGeometry(14, 3.2, 40), "#ffffff", 22, 1.6, 0); P(new THREE.BoxGeometry(8, 3, 10), "#3b5f8a", 22, 4.6, 0); } },
     { n: "Szántódi rév", lat: 46.8800, lon: 17.9000, harbour: true, b: (P) => { P(new THREE.BoxGeometry(12, 1.2, 70), "#bdb7a8", 0, .6, 0); } }];
   function balLandmarks(G, cx, cz, NL) {
     const parts = [], mat = balMatL(); BAL.lmLabels = [];
     BAL_LM.forEach((L) => { let [x, z] = balXY(L.lat, L.lon); if (L.harbour) { const s = balShorePt(L.lat, L.lon); x = s.x + s.nx * 30; z = s.z + s.nz * 30; }
-      const d = Math.hypot(x - cx, z - cz); if (d < 60) return; const gy = L.harbour ? 0 : balHgt(x, z); const P = balPut(parts, cx, cz, x, z, gy); L.b((geo, col, lx, ly, lz) => P(geo, col, lx, ly, lz, 0, L.ry || 0));
-      const pp = balPlace(cx, cz, x, z, gy + 18); NL.push([pp.x, pp.y, pp.z, 1, .82, .55, clamp(5 - d / 6000, 2, 4.5), 0, 0, 1]); BAL.lmLabels.push({ n: L.n, p: pp, d }); });
+      const d = Math.hypot(x - cx, z - cz); if (d < 60) return; const gy = L.harbour ? 0 : balHgt(x, z), sc = L.sc || 1; const P = balPut(parts, cx, cz, x, z, gy - (sc > 1 ? 2 : 0), sc);   /* a jelképek kissé nagyítva, hogy a hegytetőn messziről is felismerhetők legyenek */ L.b((geo, col, lx, ly, lz) => P(geo, col, lx, ly, lz, 0, L.ry || 0));
+      const pp = balPlace(cx, cz, x, z, gy + 18 * sc); NL.push([pp.x, pp.y, pp.z, 1, .82, .55, clamp(5 - d / 6000, 2, 4.5), 0, 0, 1]); BAL.lmLabels.push({ n: L.n, p: pp, d }); });
     balBake(parts, (m4) => balHazeK(m4.userData_d || 0), mat, G);
   }
   /* ---------------------------------------------------------------- fák a közeli partokon (nyárfasorok, erdőfoltok, kertek) */

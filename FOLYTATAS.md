@@ -1075,3 +1075,7 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - A spinakkerrúd az árboctól pontosan a spinakker sarokpontjáig ér (hossza is igazodik), nem lóg ki.
 - `dinghyHull`: láthatatlan, csak mélységet író fedőlap a hajótest teljes belső körvonalán a padló alatt (renderOrder −6, a víz előtt) – a víz a zárt héjon belül soha nem látszik, a merülés közben valós marad.
 - Kikötői bemutató: a Finn és a 420 hajóteste a forgókorongon ül (nem süllyed bele).
+
+## 2026-11-14 17:49–17:50 – látványos helyszínek, hangsúlyos vulkáni hegyek
+- 8 helyszín, mindegyiken szemközt jellegzetes hegy a jelképével: Tihany (apátság a dombon), Badacsony (Ranolder-kereszt), Fonyód (ikerhegy, kilátó), Füred (Tamás-hegy), Szigliget (vár), Boglár (gömbkilátó), Keszthely (hegység, kastély), Zamárdi (Kőhegy, kilátó).
+- A vulkáni hegyek 30%-kal kiemelve, kevésbé párásan; a kisebb dombok erősebben (Tihany 1,7×, Boglár 2,1×, Kőhegy 1,9×, Fonyód 1,5×). A jelképek nagyítva (kereszt 4×, gömb 3×, apátság 2,2× stb.), hogy a hegytetőn felismerhetők legyenek. Ez tudatos eltérés a pontos mérettől, a tulajdonos kérésére.
