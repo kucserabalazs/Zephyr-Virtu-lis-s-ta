@@ -568,7 +568,7 @@
         spin.updateMatrixWorld(true); body.updateMatrixWorld(true); const tip = new THREE.Vector3(RX, .2 + .45 + rodH, RZ), beak = new THREE.Vector3(0, 1.9, 1.38), hand = new THREE.Vector3(.2, .7, -.1);
         cups.forEach((c, i) => { const top = body.worldToLocal(c.m.localToWorld(new THREE.Vector3(c.sd * .15, .58, 0))), side = body.worldToLocal(c.m.localToWorld(new THREE.Vector3(c.sd * .55, 0, 0)));
           setLine(straps[i], top, tip); setLine(straps[2 + i], side, i ? hand : beak); }); }
-      whR.rotation.z = -(S.rud || 0) * 2.4;   /* a felfújható kerék a kormányzással együtt fordul */
+      whR.rotation.z = (S.rud || 0) * 2.4;   /* a felfújható kerék a kormányzással együtt fordul */
       head.rotation.y = .25 * Math.sin(S.t * .6); head.rotation.x = .08 * Math.sin(S.t * .9);
       crew.forEach((p) => { p.position.set(0, .14 - .45, -.25); p.rotation.y = 0; posePerson(p, dt, { sit: 1, pull: true, armR: .2, legs: .35, turn: .3 * Math.sin(S.t * .4), wave: S.waveT > 0 ? 1 : 0 }); });
     };

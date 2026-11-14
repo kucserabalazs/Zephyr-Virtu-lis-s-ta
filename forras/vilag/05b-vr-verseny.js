@@ -980,7 +980,10 @@
     S.gk = S.gkW * vrLavK(S.x, S.z, S.t);   /* 2026-11-14: lavór (szélcsendes folt) a helyi szélben */ /* lökések és szélcsendesebb foltok (7–20 mp), lassú erősödés/gyengülés */
     let vt = polar(twa, spin && S.sp && (S.sp.st === "fly" || S.sp.st === "pop")) * KN * VR_SPD * (S.heelPen || 1) * vrClsSpd(twa) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
     /* 2026-11-14 (tulajdonos: „a flamingó legyen nagyon gyors és egyszerűen irányítható – fikció, csak vígan lehessen száguldozni”): minden irányban gyors, nincs holtszög, nem kell cirkálni */
-    if (S.cls && S.cls.id === "flamingo") vt = KN * VR_SPD * (10.5 + 2.5 * clamp(S.tws * S.gk / (12 * KN), .5, 1.6)) * (1 + .05 * Math.sin(W.t * .9));
+    /* 17:28 pontosítás: gyenge szélben a nagy hajó (Zephyr) csúcssebességének a fele, erős szélben a másfélszerese – iránytól függetlenül */
+    if (S.cls && S.cls.id === "flamingo") { if (!VRR._pMax) { let m = 0; for (let a = 0; a <= 180; a += 2) m = Math.max(m, polar(a, true), polar(a, false)); VRR._pMax = m; }
+      const top = VRR._pMax * KN * VR_SPD * (S.tws * S.gk / (12 * KN)) ** .5, twsKn = S.tws * S.gk / KN, f = .5 + clamp((twsKn - 7) / 11, 0, 1);
+      vt = top * f * (1 + .04 * Math.sin(W.t * .9)); }
     /* gyorsabban gyorsul (a nagy vitorlafelület húz), a kormány fékez egy kicsit, ha nagyon el van tekerve */
     /* 2026-11-12 00:46 – A HAJÓ SIKLÁSA FIZIKAI MODELLEL (tulajdonos: „a hajó súlya 2300 kg … ha nem fújja a szél, azonnal megáll, miközben az életben még
        csúszik tovább, míg a közegellenállás meg nem állítja – pontos számítás, élethű mozgás”). Newton: (m + hozzáadott tömeg) · dv/dt = F_hajtó − R_víz(v) − F_szél.

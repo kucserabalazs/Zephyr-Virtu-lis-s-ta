@@ -1067,3 +1067,6 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - A láda kikerült; **Kókusz Kata** (rúzsos ajkak, kókuszkóc haj, rózsaszín masni) az árboc tövében ül, mindig a kormányos felé néz, és a szélhez vágja az arcát.
 - A műszer egy félbevágott kókuszhéjba épített kijelző (rostos perem, fehér kókuszhús), Kata mögött, bambuszkarón, feléd fordítva.
 - Esőkabát-spinakker megmaradt; a zokni-zászló nagyobb és felismerhető (csíkos szár, gumis perem, szürke sarok és orr, lyuk, csipesz).
+
+## 2026-11-14 17:28 – flamingó: sebesség a Zephyrhez mérve, kerék iránya
+- Gyenge szélben (≤7 csomó) a Zephyr csúcssebességének fele, erős szélben (≥18 csomó) másfélszerese, köztük egyenletesen; iránytól független. A felfújható kerék arra forog, amerre a hajó fordul.
