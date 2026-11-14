@@ -156,7 +156,7 @@
 
   /* ---------------------------------------------------------------- PONTOZÁS (RRS A függelék, alacsony pontszámú rendszer) */
   function vrSeriesLoad() { try { const s = JSON.parse(localStorage.getItem("zephyr-sorozat") || "null"); if (s && s.races) return s; } catch (e) {} return { races: [], done: false, id: Date.now() }; }
-  function vrSeriesSave() { try { localStorage.setItem("zephyr-sorozat", JSON.stringify(VRR.series)); } catch (e) {} }
+  function vrSeriesSave() { if (VRR.series && VRR.series.mix) return; try { localStorage.setItem("zephyr-sorozat", JSON.stringify(VRR.series)); } catch (e) {} try { if (typeof acctSync === "function") acctSync(); } catch (e) {} }   /* vegyes flotta: nem mentjük, független mindentől */
   function vrSeriesAdd() {
     const S = VRR; if (!S.series || S.series.done) S.series = { races: [], done: false, id: Date.now() };
     const entries = 1 + S.riv.length, rows = []; let place = 0;
@@ -165,7 +165,8 @@
       rows.push({ n: q.me ? S.meName : q.n, me: !!q.me, pts, place: q.dnf || voidAI ? 0 : place, code, t: q.t, est: !!q.est, ai: !!q.ai, human: !!q.human }); });
     [S].concat(S.riv).forEach((o) => { const nm = o === S ? S.meName : o.o.name; if (!rows.some((r) => r.n === nm)) rows.push({ n: nm, me: o === S, pts: entries + 1, place: 0, code: "DNS" }); });
     S.series.races.push({ lvl: S.lvl, venue: S.venue ? S.venue.n : "", course: S.C.name, cls: S.cls.id, rows, fouls: (S.fouls || []).slice(0, 12) });
-    if (S.series.races.length >= 5) { S.series.done = true; S.series.final = vrSeriesTable(S.series); vrTrophyAward(S.series.final); }
+    if (!S.series.mix) { const me = rows.find((q) => q.me); try { acctLogRace({ t: Date.now(), lvl: S.lvl, palya: S.C.name, hely: S.venue ? S.venue.n : "", hajo: S.cls.id, helyezes: me ? me.place : 0, pont: me ? me.pts : 0, ido: me && me.t ? Math.round(me.t) : 0 }); } catch (e) {} }
+    if (S.series.races.length >= (S.series.n || 5)) { S.series.done = true; S.series.final = vrSeriesTable(S.series); if (!S.series.mix && (S.series.n || 5) >= 3) vrTrophyAward(S.series.final); }   /* vegyes flottánál / egy futamnál nincs serleg */
     vrSeriesSave();
   }
   function vrSeriesTable(ser) {
@@ -252,7 +253,7 @@
   /* ---------------------------------------------------------------- KAPITÁNYI TÁJÉKOZTATÓ */
   function vrBriefOpen() {
     const S = VRR; S.briefShown = true; if (S.brief) { S.brief.show(true); return; }
-    const next = (S.lvl || 0) + 1, C2 = vrCourse(next); S.briefNext = { lvl: next, C: C2, venue: vrVenue(next) }; vrLimitSetC(C2);
+    const ser0 = S.series, next = ser0 && ser0.plan && !ser0.done ? ser0.plan[Math.min(ser0.plan.length - 1, ser0.races.length)] : (S.lvl || 0) + 1, C2 = vrCourse(next); S.briefNext = { lvl: next, C: C2, venue: vrVenue(next) }; vrLimitSetC(C2);
     S.brief = uiBoard({ w: 1600, h: 1000, mw: 1.75, dist: 1.6, y: -.05, fps: 8, bar: 140, draw: drawBrief }); S.brief.page = 0; S.brief.show(true);
     if (S.podium) S.podium.visible = false; if (S.foulB) S.foulB.visible = false; vrFoulDom(false);
   }
@@ -262,7 +263,7 @@
   function drawBrief(B, g) {
     const S = VRR, N = S.briefNext, ser = S.series || { races: [] }, last = ser.races[ser.races.length - 1], W2 = B.o.w, H2 = B.o.h;
     const fin = ser.done && ser.final;
-    uiFrame(B, g, fin ? "🏆 A SOROZAT VÉGEREDMÉNYE" : "KAPITÁNYI TÁJÉKOZTATÓ", fin ? `${ser.races.length} futam · alacsony pontszámú rendszer (RRS A4) · a legkevesebb pont nyer` : `${S.lvl}. futam után · sorozat: ${ser.races.length}/5 futam · ${S.cls.n}`);
+    uiFrame(B, g, fin ? "🏆 A SOROZAT VÉGEREDMÉNYE" : "KAPITÁNYI TÁJÉKOZTATÓ", fin ? `${ser.races.length} futam · alacsony pontszámú rendszer (RRS A4) · a legkevesebb pont nyer` : `${ser.races.length}. futam után · ${ser.mix ? "vegyes flotta – nem hivatalos, nincs pontverseny" : "sorozat: " + ser.races.length + "/" + (ser.n || 5) + " futam"} · ${S.cls.n}`);
     if (B.page === 1 || fin) { drawSeries(B, g, ser, fin); return; }
     /* bal oszlop: eredmény + szabálytalanságok */
     uiCard(g, 34, 150, 700, 400); uiH(g, "AZ ELŐZŐ FUTAM", 60, 196, "cup"); g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 20px ${UIF}`; g.fillText(`${S.C.name} · ${S.venue ? S.venue.n : ""}`, 60, 226);
@@ -277,7 +278,7 @@
     if (!F.length) { g.fillStyle = "#7CFC9A"; g.font = `800 26px ${UIF}`; g.fillText("✓ Tiszta futam – nem volt ütközés.", 60, 660); g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 20px ${UIF}`; uiWrap(g, VR_R14, 60, 700, 650, 28, 3); }
     else { let yy = 650; F.slice(0, 4).forEach((f) => { const R = VR_RRS[f.n] || VR_RRS[10]; g.fillStyle = "#ffd166"; g.font = `800 21px ${UIF}`; uiWrap(g, `${f.bad} ⟷ ${f.other}: ${f.bad} a hibás`, 60, yy, 650, 26, 1); yy += 26; g.fillStyle = "#fff"; g.font = `600 18px ${UIF}`; yy += uiWrap(g, `${R[0]}: ${R[1]}`, 60, yy, 650, 23, 3) * 23 + 10; }); }
     /* jobb oldal: a következő futam */
-    uiCard(g, 754, 150, 812, 716); uiH(g, `KÖVETKEZŐ: ${N.lvl}. FUTAM – ${N.C.name.toUpperCase()}${vrIsNight(N.lvl) ? " · ÉJSZAKAI" : ""}`, 780, 196, vrIsNight(N.lvl) ? "moon" : "map");
+    uiCard(g, 754, 150, 812, 716); uiH(g, `KÖVETKEZŐ: ${ser.plan ? ser.races.length + 1 : N.lvl}. FUTAM – ${N.C.name.toUpperCase()}${vrIsNight(N.lvl) ? " · ÉJSZAKAI" : ""}`, 780, 196, vrIsNight(N.lvl) ? "moon" : "map");
     { const tx = `${N.venue.n} · ${N.C.wxn || "szél"} ${(N.C.tws / KN).toFixed(0)} csomó · időlimit ${mmss(N.C.limit)} (a várható idő ~3×)`; g.fillStyle = "#fff"; uiFit(g, tx, 770, 21, 600); g.fillText(tx, 780, 228); }
     drawCoursePlan(g, N.C, 774, 244, 470, 430, B.t); drawCourse3D(g, N.C, 1256, 244, 296, 206, B.t); drawBalMap(g, 1256, 458, 296, 216, { venue: N.venue, wf: N.C.wf, t: B.t, labels: "kevés" });
     const legs = vrCourseLegs(N.C); g.font = `700 19px ${UIF}`; legs.forEach((l, i) => { const y = 702 + i * 30; if (y > 812) return; g.fillStyle = "#ffd166"; g.fillText(`${i + 1}.`, 780, y); g.fillStyle = "#fff"; g.fillText(`${i ? i + ". bója" : "rajt"} → ${i + 1 < legs.length ? (i + 1) + ". bója" : "cél (a két bója KÖZÖTT)"} · ${Math.round(l.d)} m · ${l.kind}`, 812, y); });
@@ -285,10 +286,10 @@
     { const tx = `⚠ Balatoni viharjelzés – ${stmText()} · ${STM.src}`; g.fillStyle = "#ffd166"; uiFit(g, tx, 770, 18, 700); g.fillText(tx, 780, 862); }
     /* gombok */
     const by = 890, bh = 84;
-    B.btn(34, by, 460, bh, `▶  Indulás: ${N.lvl}. futam`, () => { vrBriefClose(); vrSetup(N.lvl); }, { gold: true });
+    B.btn(34, by, 460, bh, `▶  START: ${ser.plan ? ser.races.length + 1 : N.lvl}. futam`, () => { vrBriefClose(); vrSetup(N.lvl); }, { gold: true });
     B.btn(510, by, 300, bh, "↻ Előző újra", () => { vrBriefClose(); vrSetup(S.lvl); });
     B.btn(826, by, 300, bh, "🏆 Eredménylista", () => { B.page = 1; B.dirty = 1; });
-    B.btn(1142, by, 424, bh, "⚓ Vissza a kikötőbe", () => { vrBriefClose(); vrToHarbor(); });
+    B.btn(1142, by, 424, bh, "⛵ Főmenü", () => { vrBriefClose(); vrToHarbor(); });
   }
   function drawSeries(B, g, ser, fin) {
     const S = VRR, tab = vrSeriesTable(ser), nR = ser.races.length;
@@ -305,7 +306,7 @@
       tab.slice(0, 3).forEach((e, i) => { const x = [800, 470, 1130][i], y = [690, 712, 722][i], s = [118, 98, 90][i]; uiCup(g, x, y, s, i + 1); g.fillStyle = "#fff"; g.textAlign = "center"; uiFit(g, e.n, 300, 26, 900); g.fillText(e.n, x, y + s * .72); g.font = `700 20px ${UIF}`; g.fillStyle = "#ffd166"; g.fillText(`${i + 1}. hely · ${e.sum} pont`, x, y + s * .72 + 26); g.textAlign = "left"; });
       const me = tab.findIndex((e) => e.me); g.fillStyle = "#fff"; g.textAlign = "center"; uiFit(g, "Gratulálunk! A serleged a trófeateremben, a neved alatt vár (kikötő → Eredmények és trófeák).", 1400, 24, 800); g.fillText(me >= 0 && me < 3 ? "Gratulálunk! A serleged a trófeateremben, a neved alatt vár (kikötő → Eredmények és trófeák)." : "Az első hármas serlege a nevük alatt a trófeaterembe került.", 800, 650); g.textAlign = "left"; }
     const by = 890, bh = 84;
-    if (fin) { B.btn(34, by, 600, bh, "▶ Új sorozat: 1. futam", () => { VRR.series = { races: [], done: false, id: Date.now() }; vrSeriesSave(); vrBriefClose(); vrSetup(1); }, { gold: true }); B.btn(660, by, 420, bh, "⚓ Vissza a kikötőbe", () => { vrBriefClose(); vrToHarbor(); }); }
+    if (fin) { B.btn(34, by, 600, bh, "▶ Új verseny (főmenü)", () => { vrBriefClose(); vrToHarbor(); }, { gold: true }); if (0) B.btn(34, by, 600, bh, "", () => { VRR.series = { races: [], done: false, id: Date.now() }; vrSeriesSave(); vrBriefClose(); vrSetup(1); }, { gold: true }); B.btn(660, by, 420, bh, "⚓ Vissza a kikötőbe", () => { vrBriefClose(); vrToHarbor(); }); }
     else { B.btn(34, by, 520, bh, "‹ Vissza a tájékoztatóhoz", () => { B.page = 0; B.dirty = 1; }, { gold: true }); B.btn(580, by, 420, bh, "⚓ Vissza a kikötőbe", () => { vrBriefClose(); vrToHarbor(); }); }
   }
   /* vissza a kikötőbe (a verseny világát bezárja, a kikötőt nyitja) */

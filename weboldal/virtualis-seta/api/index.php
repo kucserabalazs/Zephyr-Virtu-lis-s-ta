@@ -8,6 +8,7 @@
  *   vendég:  config · availability (apt, from, to) · book (POST)
  *   admin:   login · logout · me · bookings · action · manual · settings · save_settings · password
  *   admin app (admin/): waste · waste_save · remind_test   ·   naptár: teendok_ical (key) – hulladék + vendégérkezés emlékeztetővel
+ *   játék:   jatekos_regisztracio · jatekos_belepes · jatekos_ellenorzes · jatekos_adat · jatekos_mentes · jatekos_kilepes (Balaton Sailing VR fiók)
  *   programajánló: events (nyilvános) · events_all · events_save · ev_feeds_save · ev_import (admin) – források: iCal, RSS (eseménydátummal), WordPress „The Events Calendar” JSON
  */
 
@@ -1424,6 +1425,48 @@ switch ($r) {
 /* ------------------------------ 2026-11-14: a HIVATALOS balatoni viharjelzés (HungaroMet) medencénként – a VR-vitorlásversenynek.
    A böngésző a met.hu-t közvetlenül nem érheti el (CORS), ezért itt olvassuk ki, 5 percre gyorsítótárazva.
    Válasz: { ok, ts, season, basins: { nyugati: 0|1|2, kozepso: 0|1|2, keleti: 0|1|2 } } – 0 = alapfok, 1 = elsőfok (45/perc), 2 = másodfok (90/perc). */
+/* ------------------------------ 2026-11-14 22:48: BALATON SAILING VR – JÁTÉKOSFIÓK e-mailes regisztrációval (a tulajdonos kérése).
+   A játék így mindig el tudja menteni a játékos adatait (név, hajó, beállítások) és eredményeit (sorozatok, serlegek, futamok) – bármelyik
+   eszközről (Quest, telefon, gép) ugyanazzal az e-mail címmel belépve ugyanott folytatható.
+   Tárolás: data/jatekosok/<e-mail kivonata>.php (az elején „exit”, így a böngészőből nem olvasható), a jelszó csak kivonatként (password_hash).
+   Végpontok: jatekos_regisztracio (email, nev, jelszo) · jatekos_belepes (email, jelszo) · jatekos_ellenorzes (token, kod – a levélben küldött 6 jegyű kód)
+              jatekos_adat (token) · jatekos_mentes (token, adat) · jatekos_kilepes (token) */
+case 'jatekos_regisztracio': case 'jatekos_belepes': case 'jatekos_ellenorzes': case 'jatekos_adat': case 'jatekos_mentes': case 'jatekos_kilepes':
+    header('Access-Control-Allow-Origin: *');
+    $jd = ZB_DATA_DIR . '/jatekosok'; if (!is_dir($jd)) { @mkdir($jd, 0750, true); @file_put_contents($jd . '/.htaccess', "Require all denied\nDeny from all\n"); }
+    $jf = function ($email) use ($jd) { return $jd . '/' . sha1(strtolower(trim($email)) . '|zephyr-bsvr') . '.php'; };
+    $jload = function ($f) { if (!is_file($f)) { return null; } $t = (string) @file_get_contents($f); $t = preg_replace('/^<\?php exit; \?>\n/', '', $t); $u = json_decode($t, true); return is_array($u) ? $u : null; };
+    $jsave = function ($f, $u) { return @file_put_contents($f, "<?php exit; ?>\n" . json_encode($u, JSON_UNESCAPED_UNICODE), LOCK_EX) !== false; };
+    $jtok = function ($tok) use ($jd, $jload) { $tok = preg_replace('/[^a-f0-9]/', '', (string) $tok); if (strlen($tok) < 32) { return array(null, null); }
+        $map = $jd . '/tokenek.php'; $m = $jload($map); if (!$m || empty($m[$tok])) { return array(null, null); } $f = $jd . '/' . basename($m[$tok]); $u = $jload($f); return array($u, $f); };
+    $jtokset = function ($tok, $f, $del = false) use ($jd, $jload, $jsave) { $map = $jd . '/tokenek.php'; $m = $jload($map) ?: array(); if ($del) { unset($m[$tok]); } else { $m[$tok] = basename($f); } $jsave($map, $m); };
+    $pub = function ($u) { return array('email' => $u['email'], 'nev' => $u['nev'], 'ellenorzott' => !empty($u['ok']), 'adat' => isset($u['adat']) ? $u['adat'] : new stdClass(), 'regisztralt' => $u['t0']); };
+    if ($r === 'jatekos_regisztracio') {
+        $email = strtolower(clean(isset($P['email']) ? $P['email'] : '', 120)); $nev = clean(isset($P['nev']) ? $P['nev'] : '', 40); $pw = (string) (isset($P['jelszo']) ? $P['jelszo'] : '');
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { fail('Érvénytelen e-mail cím.'); }
+        if (mb_strlen($pw) < 6) { fail('A jelszó legalább 6 karakter legyen.'); }
+        $f = $jf($email); if (is_file($f)) { fail('Ezzel az e-mail címmel már van fiók – lépj be.', 409); }
+        $kod = (string) random_int(100000, 999999); $u = array('email' => $email, 'nev' => $nev ?: explode('@', $email)[0], 'pw' => password_hash($pw, PASSWORD_DEFAULT), 'ok' => false, 'kod' => $kod, 't0' => time(), 'adat' => new stdClass());
+        if (!$jsave($f, $u)) { fail('A fiókot most nem sikerült menteni – próbáld később.', 500); }
+        $tok = bin2hex(random_bytes(20)); $jtokset($tok, $f);
+        $s0 = array('email' => ZB_ADMIN_EMAIL);
+        @send_mail($s0, $email, 'Balaton Sailing VR – a megerősítő kódod: ' . $kod, "Szia " . $u['nev'] . "!\n\nKöszönjük a regisztrációt a Balaton Sailing VR-be.\nA megerősítő kódod: " . $kod . "\n\nÍrd be a játékban (Főmenü → Fiók), és az eredményeid ezután minden eszközödön elérhetők lesznek.\n\nJó szelet!\nZephyr Apartmanház · Zamárdi\n");
+        out(array('ok' => true, 'token' => $tok, 'fiok' => $pub($u)));
+    }
+    if ($r === 'jatekos_belepes') {
+        $email = strtolower(clean(isset($P['email']) ? $P['email'] : '', 120)); $pw = (string) (isset($P['jelszo']) ? $P['jelszo'] : '');
+        $f = $jf($email); $u = $jload($f); usleep(250000);
+        if (!$u || !password_verify($pw, $u['pw'])) { fail('Hibás e-mail cím vagy jelszó.', 401); }
+        $tok = bin2hex(random_bytes(20)); $jtokset($tok, $f); out(array('ok' => true, 'token' => $tok, 'fiok' => $pub($u)));
+    }
+    list($u, $f) = $jtok(isset($P['token']) ? $P['token'] : token_in()); if (!$u) { fail('Lejárt vagy érvénytelen belépés – lépj be újra.', 401); }
+    if ($r === 'jatekos_ellenorzes') { if (empty($u['ok'])) { if (trim((string) (isset($P['kod']) ? $P['kod'] : '')) !== $u['kod']) { fail('Hibás kód.'); } $u['ok'] = true; $jsave($f, $u); } out(array('ok' => true, 'fiok' => $pub($u))); }
+    if ($r === 'jatekos_adat') { out(array('ok' => true, 'fiok' => $pub($u))); }
+    if ($r === 'jatekos_mentes') { $a = isset($P['adat']) && is_array($P['adat']) ? $P['adat'] : array(); $js = json_encode($a, JSON_UNESCAPED_UNICODE); if (strlen($js) > 400000) { fail('Túl nagy adat.'); }
+        $u['adat'] = $a; $u['t1'] = time(); if (!empty($P['nev'])) { $u['nev'] = clean($P['nev'], 40); } $jsave($f, $u); out(array('ok' => true)); }
+    if ($r === 'jatekos_kilepes') { $jtokset(preg_replace('/[^a-f0-9]/', '', (string) (isset($P['token']) ? $P['token'] : token_in())), $f, true); out(array('ok' => true)); }
+    fail('Ismeretlen kérés.');
+
 case 'viharjelzes':
     $cf = sys_get_temp_dir() . '/zephyr-viharjelzes.json';
     if (is_file($cf) && time() - filemtime($cf) < 300) { header('Content-Type: application/json; charset=utf-8'); header('Access-Control-Allow-Origin: *'); echo file_get_contents($cf); exit; }

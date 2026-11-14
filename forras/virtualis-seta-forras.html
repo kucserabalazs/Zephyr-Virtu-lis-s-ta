@@ -1654,6 +1654,9 @@ body.nav-edit .zx-book, body.nav-edit .hint { display: none !important; }
 .zx-book { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px; border-radius: 999px;
   font: 750 15px/1 Inter, sans-serif; color: #07182C; background: linear-gradient(180deg, #E8C26C, #D4A13A); box-shadow: 0 4px 14px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.5); white-space: nowrap; flex: none; }
 .zx-book:hover { filter: brightness(1.07); }
+.zx-vr svg { width: 30px !important; height: 19px !important; fill: none; stroke: none; color: #E8C26C; }
+.zx-vr .zx-t { color: #fff; }
+:root[data-device="phone"] .zx-vr .zx-t { display: none; }
 .zx-book:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .zx-book svg { width: 18px; height: 18px; stroke: #07182C; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 :root:not([data-device="pc"]) body.zx .hint { bottom: calc(18px + env(safe-area-inset-bottom, 0px)); font-family: Inter, sans-serif; background: rgba(7,24,44,.75); border-radius: 12px; }
@@ -12589,7 +12592,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     let it = null;
     if (world && ZephyrWorld.spec && ZephyrWorld.spec.wrist) { try { it = ZephyrWorld.spec.wrist(); } catch (e) {} }
     if (!it && world) it = [["☰", "Panel", () => ZephyrWorld.togglePanel()], ["🧭", "Forgás", [["↺", "Balra 45°", () => vrTurn(TURN)], ["↻", "Jobbra 45°", () => vrTurn(-TURN)], ["⤾", "Megfordulok", () => vrTurn(Math.PI)]]],
-      ["🎮", "VR játékok", [["⛵", "Vitorlásverseny", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "Makett", () => openWorld("maquette")]]],
+      ["🎮", "VR játékok", [["⛵", "Balaton Sailing VR", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "Makett", () => openWorld("maquette")]]],
       ["‹", "A sétához", () => ZephyrWorld.close()], ["❔", "Súgó", () => { ZephyrWorld.close(() => vrOpen("help")); }], ["✕", "Kilépés", () => vrEndSession()]];
     if (!it) {
       const pg = (p, f) => () => { if (f) f(); vrOpen(p); VRS.page = p; vrDraw(); vrPlace(); };
@@ -12599,7 +12602,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         ["🏠", "Lakások", apts],
         ["📅", "Foglalás", [["📅", "Időpont és foglalás", pg("book", () => vrBookInit())], ["🗺", "Melyik lakás hol van", pg("map")], ["❔", "Hogyan foglalok?", pg("help")]]],
         ["☀", "Napállás", pg("sun", () => sunSet(true))],
-        ["🎮", "VR játékok", [["⛵", "Vitorlásverseny", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "A ház makettje", () => openWorld("maquette")]]],
+        ["🎮", "VR játékok", [["⛵", "Balaton Sailing VR", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "A ház makettje", () => openWorld("maquette")]]],
         ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)], ["☰", "Nagy menü", () => vrToggle()],
         ["❔", "Súgó", pg("help")], ["✕", "Kilépés", () => vrEndSession()]];
     }
@@ -13542,7 +13545,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         <div class="gh-top"><div class="gh-logo"><svg viewBox="0 0 64 64" width="70%" height="70%" aria-hidden="true"><path d="M30 6v44H10z" fill="#fff"/><path d="M34 14v36h20z" fill="#ffd9a0"/><path d="M6 54h52l-6 6H12z" fill="#fff"/></svg></div>
           <div><h1>Zephyr <span>Sailing VR</span></h1><p class="gh-tag">Valódi vitorlázás a Balatonon – kézzel kormányzott versenyhajó, élethű szél és vitorlák, versenyszabályok.</p></div></div>
         <div class="gh-grid">
-          <button class="gh-card gh-main" data-g="race"><span class="gh-ic">⛵</span><b>Vitorlásverseny</b><p>Állj a Zephyr kormányához: rajt a két bója között, cirkálás, bójakerülés, spinakker, befutó. Három ellenfél, öt pálya, ötfutamos bajnokság, oktató futam kezdőknek.</p><span class="gh-rec">${recs()}</span><span class="gh-go">Vízre szállok ▸</span></button>
+          <button class="gh-card gh-main" data-g="race"><span class="gh-ic">⛵</span><b>Balaton Sailing VR</b><p>Állj a Zephyr kormányához: rajt a két bója között, cirkálás, bójakerülés, spinakker, befutó. Három ellenfél, öt pálya, ötfutamos bajnokság, oktató futam kezdőknek.</p><span class="gh-rec">${recs()}</span><span class="gh-go">Vízre szállok ▸</span></button>
           <button class="gh-card" data-g="chess"><span class="gh-ic">♞</span><b>Vitorlás sakk</b><p>A tábla maga a Balaton naplementében, a bábuk igazi hajók. Parancsnoki hídról vagy hőlégballonból vezényelsz.</p><span class="gh-go">Játszom ▸</span></button>
           <button class="gh-card" data-g="coaster"><span class="gh-ic">🎢</span><b>Balatoni hullámvasút</b><p>Körbe a Balaton partján, 14 látnivalóval és 33 kikötővel – nyugodt városnézés vagy vad menet hurkokkal.</p><span class="gh-go">Beszállok ▸</span></button>
         </div>
@@ -18175,6 +18178,14 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     book.innerHTML = `<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Foglalás</span>`;
     book.addEventListener("click", () => { const b = $("btnBook"); if (b) b.click(); });
     $("zxRight").insertBefore(book, $("zxRight").firstChild);
+    /* 2026-11-14 22:48 (tulajdonos): a fejlécben VR szemüveg ábra „VR szemüveg” felirattal – a belső VR menübe visz
+       (Quest böngészőben azonnal VR módba lép, ahol a VR menü nyílik; máshol a VR játékok – köztük a Balaton Sailing VR – választója nyílik) */
+    const vrh = document.createElement("button"); vrh.type = "button"; vrh.id = "zxVR"; vrh.className = "zx-btn zx-vr";
+    vrh.innerHTML = `<svg viewBox="0 0 48 30" aria-hidden="true"><path d="M6 4h36a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H31l-4-6h-6l-4 6H6a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/><circle cx="14" cy="15" r="4.2" fill="currentColor"/><circle cx="34" cy="15" r="4.2" fill="currentColor"/></svg><span class="zx-t">VR szemüveg</span>`;
+    vrh.title = "VR szemüveg – a belső VR menü (Meta Quest)"; vrh.setAttribute("aria-label", "VR szemüveg – belső VR menü");
+    vrh.addEventListener("click", (ev) => { ev.stopPropagation(); const v = $("btnVR"), w = $("btnWorld"); if (v) v.click(); else if (w) w.click(); });
+    $("zxRight").insertBefore(vrh, book.nextSibling);
+    try { if (window.ZI18N && ZI18N.lang !== "hu") vrh.querySelector(".zx-t").textContent = ZI18N.t("VR szemüveg"); } catch (e) {}
     const pb = $("zxPlacesBtn"); const setP = (on) => { document.body.classList.toggle("zx-places", on); pb.setAttribute("aria-expanded", on ? "true" : "false"); try { localStorage.setItem("zephyr-zx-places", on ? "1" : "0"); } catch (e) {} };
     pb.addEventListener("click", () => setP(!document.body.classList.contains("zx-places")));
     let pref = null; try { pref = localStorage.getItem("zephyr-zx-places"); } catch (e) {}

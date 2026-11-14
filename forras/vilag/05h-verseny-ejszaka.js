@@ -14,7 +14,7 @@
        tükörcsíkok a vízen; tücsökciripelés a part felől. */
   const NGT = { on: false };
   function vrNightPref() { try { return localStorage.getItem("zephyr-napszak") || "valt"; } catch (e) { return "valt"; } }
-  function vrIsNight(lvl) { if (VRR.nightForce != null) return !!VRR.nightForce; if (VRR.net && VRR.net.night != null) return !!VRR.net.night; const p = vrNightPref(); return p === "ej" ? true : p === "nap" ? false : !!lvl && lvl % 3 === 0; }
+  function vrIsNight(lvl) { if (VRR.nightForce != null) return !!VRR.nightForce; if (VRR.todMix) return (((lvl || 0) * 2654435761) >>> 0) % 3 === 1;   /* 22:48: vegyes napszak – futamonként változik */ if (VRR.net && VRR.net.night != null) return !!VRR.net.night; const p = vrNightPref(); return p === "ej" ? true : p === "nap" ? false : !!lvl && lvl % 3 === 0; }
   /* ragyogó pont-textúra */
   function glowTex() { if (NGT.gtex && NGT.gtex.image) return NGT.gtex; NGT.gtex = canvasTex(128, 128, (g) => { const r = g.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(.12, "rgba(255,255,255,.95)"); r.addColorStop(.3, "rgba(255,255,255,.35)"); r.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = r; g.fillRect(0, 0, 128, 128); }); return NGT.gtex; }
   function glowSprite(col, sz) { const m = new THREE.SpriteMaterial({ map: glowTex(), color: new THREE.Color(col), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }); W.disposables.push(m); const s = new THREE.Sprite(m); s.scale.setScalar(sz || .5); s.renderOrder = 8; s.userData.night = 1; return s; }
