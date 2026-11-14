@@ -375,7 +375,9 @@
     [-1, 1].forEach((sd) => rodBetween(new THREE.Vector3(0, mastH - .05, -.05), new THREE.Vector3(sd * (Wd / 2 - .05), .02, -1.5), .008, rope, body, 4));
     const yardY = mastH - .25, SF = .3, yard = new THREE.Group(); yard.position.set(0, yardY, SF); mast.add(yard);
     { const yg = new THREE.CylinderGeometry(.04, .04, 2.2, 7); yg.rotateZ(Math.PI / 2); mesh(yg, logM, yard); }
-    const boom = new THREE.Group(); boom.position.set(0, .55, SF); mast.add(boom); [yardY, .55].forEach((y) => rodBetween(new THREE.Vector3(0, y, SF), new THREE.Vector3(0, y, 0), .025, rope, mast, 5)); { const bg = new THREE.CylinderGeometry(.04, .04, 2.0, 7); bg.rotateZ(Math.PI / 2); mesh(bg, logM, boom); }
+    const boom = new THREE.Group(); boom.position.set(0, .55, SF); mast.add(boom);
+    /* hátszélben a ponyvát az alsó rúdra csomózzák (kötélhurkok), hogy az esőkabát-spinakker szabadon látsszon */
+    const ties = [-.78, -.28, .22, .72].map((x) => { const t = new THREE.Mesh(new THREE.TorusGeometry(.1, .014, 6, 14).rotateY(Math.PI / 2), std({ color: "#b89a62", roughness: 1 })); t.position.set(x, .08, .03); t.visible = false; boom.add(t); W.disposables.push(t.geometry); return t; }); [yardY, .55].forEach((y) => rodBetween(new THREE.Vector3(0, y, SF), new THREE.Vector3(0, y, 0), .025, rope, mast, 5)); { const bg = new THREE.CylinderGeometry(.04, .04, 2.0, 7); bg.rotateZ(Math.PI / 2); mesh(bg, logM, boom); }
     /* ponyvavitorla: foltozott, kopott szélű, varratokkal */
     const sT = canvasTex(512, 512, (g, w, h) => { g.fillStyle = "#d8c9a3"; g.fillRect(0, 0, w, h); const pc = ["#c3b48c", "#b9a477", "#e1d6b8", "#a89466", "#cdbb8f"];
       for (let k = 0; k < 9; k++) { g.fillStyle = pc[k % 5]; const x = rr(0, w * .8), y = rr(0, h * .8), ww = rr(70, 180), hh = rr(60, 160); g.fillRect(x, y, ww, hh); g.setLineDash([8, 6]); g.strokeStyle = "rgba(80,60,30,.7)"; g.lineWidth = 3; g.strokeRect(x + 4, y + 4, ww - 8, hh - 8); g.setLineDash([]); }
@@ -444,16 +446,16 @@
     const S = { side: 1, boom: .2, luff: 0, heel: 0, pitch: 0, spin: 0, awa: null, aws: 6, rud: 0, t: 0, scare: 0 };
     const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _q = new THREE.Vector3();
     const setRod = (m, a, b) => { _q.subVectors(b, a); const L = Math.max(_q.length(), 1e-4); m.position.copy(a); m.scale.set(1, L, 1); m.quaternion.setFromUnitVectors(_up, _q.multiplyScalar(1 / L)); };
-    G.userData = Object.assign(G.userData, { S, body, mast, deckY: .3, seat: new THREE.Vector3(0, .3 + FLOAT, -1.25), cls: "tutaj", hullLB: [1.75, 1.05], chartAt: new THREE.Vector3(0, .62 + FLOAT, -.25), cocoChart: true });   /* a kijelző: félbevágott kókuszdióba építve, Kata mögött, egy bambuszkarón – feléd fordítva */
-    { const post = new THREE.CylinderGeometry(.025, .03, .42, 7); post.translate(0, .27 + .21, -.25); mesh(post, std({ color: "#c9b06a", roughness: .8 }), body); }
+    G.userData = Object.assign(G.userData, { S, body, mast, deckY: .3, seat: new THREE.Vector3(0, .3 + FLOAT, -1.25), cls: "tutaj", hullLB: [1.75, 1.05], chartAt: new THREE.Vector3(.62, .62 + FLOAT, -.5), cocoChart: true });   /* a kókusz-kijelző tőled balra, bambuszkarón – így Kókusz Kata szabadon látszik */
+    { const post = new THREE.CylinderGeometry(.025, .03, .42, 7); post.translate(.62, .27 + .21, -.5); mesh(post, std({ color: "#c9b06a", roughness: .8 }), body); }
     G.userData.update = (dt) => {
       S.t += dt; const A = S.awa != null ? S.awa : 60, U = S.aws || 6;
       /* négyszögletes ponyva a két vízszintes rúd között: hátszélben keresztben áll, félszélben a szél alá fordul; a domborulat mindig előre (a szél alá) dagad */
       const yT = S.side * clamp((180 - A) * .3, 0, 25) * D2R; S.boomS = S.boomS == null ? yT : S.boomS + (yT - S.boomS) * Math.min(1, dt * 1.5); S.boom = S.boomS;
-      sailG.rotation.y = -S.boom; boom.rotation.y = -S.boom; yard.rotation.y = -S.boom; const lf = clamp(1 - (A - 32) / 16, 0, 1); S.luff = lf; const sp = S.spin || 0;
-      { const p = sail.geo.attributes.position, nu = 8, nv = 8, k1 = clamp(U / 7, .3, 1.15) * (1 - lf * .85); for (let j = 0; j <= nv; j++) for (let i = 0; i <= nu; i++) { const k = j * (nu + 1) + i, u = i / nu, v = j / nv;
+      sailG.rotation.y = -S.boom; boom.rotation.y = -S.boom; yard.rotation.y = -S.boom; const lf = clamp(1 - (A - 32) / 16, 0, 1); S.luff = lf; const sp = S.spin || 0; S.furl = (S.furl || 0) + ((sp > .05 ? 1 : 0) - (S.furl || 0)) * Math.min(1, dt * .9); const fu = S.furl; ties.forEach((t) => { t.visible = fu > .75; });
+      { const p = sail.geo.attributes.position, nu = 8, nv = 8, k1 = clamp(U / 7, .3, 1.15) * (1 - lf * .85) * (1 - fu); for (let j = 0; j <= nv; j++) for (let i = 0; i <= nu; i++) { const k = j * (nu + 1) + i, u = i / nu, v = j / nv;
           const bulge = .34 * k1 * Math.sin(Math.PI * u) * Math.sin(Math.PI * (.12 + .88 * v)) + (lf > .05 ? .1 * lf * Math.sin(S.t * 9 - u * 6 + v * 3) : 0) + .02 * Math.sin(S.t * 4.3 + u * 5) * k1;
-          p.setXYZ(k, -1.05 + 2.1 * u, .58 + v * (yardY - .62) - .06 * Math.sin(Math.PI * u) * (1 - v), bulge); } p.needsUpdate = true; sail.geo.computeVertexNormals(); }
+          p.setXYZ(k, (-1.05 + 2.1 * u) * (1 - .08 * fu), .58 + v * (yardY - .62) * (1 - fu) + fu * (.05 + .07 * Math.sin(v * Math.PI * 6 + u * 2) * (.5 + .5 * Math.sin(u * 11))) - .06 * Math.sin(Math.PI * u) * (1 - v) * (1 - fu), bulge + fu * .07 * Math.sin(v * Math.PI * 5 + u * 3)); }   /* hátszélben a rúdra csomózott ponyva-batyu */ p.needsUpdate = true; sail.geo.computeVertexNormals(); }
       body.rotation.set(S.pitch + .02 * Math.sin(S.t * 1.7), 0, S.heel * .35 + .03 * Math.sin(S.t * 1.3), "YXZ");
       oar.rotation.y = (S.rud || 0) * .5;
       /* esőkabát-spinakker */

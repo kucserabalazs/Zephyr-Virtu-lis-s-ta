@@ -1095,3 +1095,7 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 
 ## 2026-11-14 18:19 – aktívabb 420-as legénység
 - Erősebb kihajlás már közepes szélben (2 m/s-tól, max. ~1,35 rad), trapéz 5 m/s-tól, ritmusos „pumpálás” a lökésekre, időnként felnéz a vitorlára, a szabad kéz a fockszkótán dolgozik.
+
+## 2026-11-14 18:23 – tutaj: műszer balra, hátszélben batyuba kötött ponyva
+- A kókusz-műszer a kormányostól balra (x = 0,62), így Kókusz Kata látszik.
+- Hátszélben (esőkabát fent) a ponyvavitorla az alsó rúdra csomózva, négy kötélhurokkal – az esőkabát szabadon látszik.
