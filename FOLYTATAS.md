@@ -1070,3 +1070,8 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 
 ## 2026-11-14 17:28 – flamingó: sebesség a Zephyrhez mérve, kerék iránya
 - Gyenge szélben (≤7 csomó) a Zephyr csúcssebességének fele, erős szélben (≥18 csomó) másfélszerese, köztük egyenletesen; iránytól független. A felfújható kerék arra forog, amerre a hajó fordul.
+
+## 2026-11-14 17:32 – 420 spinakkerrúd, vízzáró héj
+- A spinakkerrúd az árboctól pontosan a spinakker sarokpontjáig ér (hossza is igazodik), nem lóg ki.
+- `dinghyHull`: láthatatlan, csak mélységet író fedőlap a hajótest teljes belső körvonalán a padló alatt (renderOrder −6, a víz előtt) – a víz a zárt héjon belül soha nem látszik, a merülés közben valós marad.
+- Kikötői bemutató: a Finn és a 420 hajóteste a forgókorongon ül (nem süllyed bele).

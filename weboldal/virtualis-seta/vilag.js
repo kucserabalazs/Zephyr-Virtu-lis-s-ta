@@ -3363,7 +3363,13 @@
       const fg = new THREE.BufferGeometry(); fg.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3)); fg.setIndex(fi); fg.computeVertexNormals(); W.disposables.push(fg);
       const ft = canvasTex(128, 128, (g2, w, h) => { g2.fillStyle = o.sole || "#dcd7c8"; g2.fillRect(0, 0, w, h); g2.fillStyle = "rgba(0,0,0,.06)"; for (let y = 0; y < h; y += 8) for (let x = (y / 8 % 2) * 4; x < w; x += 8) g2.fillRect(x, y, 3, 3); }, { repeat: [3, 12] });
       const fm = std({ map: ft, roughness: .85, side: THREE.DoubleSide }); fg.setAttribute("uv", new THREE.Float32BufferAttribute(fp.map((v, i) => i % 3 === 0 ? v : i % 3 === 2 ? v * .3 : null).filter((v) => v !== null), 2)); mesh(fg, fm, G);
-      const cb = new THREE.BoxGeometry(.06, .28, .9); cb.translate(0, fy + .14, zOf(.5)); mesh(cb, std({ color: o.deck || "#e9e6dc", roughness: .5 }), G); }
+      const cb = new THREE.BoxGeometry(.06, .28, .9); cb.translate(0, fy + .14, zOf(.5)); mesh(cb, std({ color: o.deck || "#e9e6dc", roughness: .5 }), G); 
+      /* VÍZZÁRÓ „HÉJ”: a hajótest belsejében, közvetlenül a padló alatt egy láthatatlan, csak mélységet író fedőlap a teljes hajótest-körvonalon –
+         a víz (amelyet utána rajzolunk) így a zárt héjon belül SOSEM látszik, akármennyit merül vagy dől a hajó; a merülés közben valósághű marad. */
+      { const my = fy - .015, mp = [], mi = [], NM = 30; for (let i = 0; i <= NM; i++) { const u = i / NM, hb = half(u), kz = keel(u), sz = sheer(u), r = clamp((my - kz) / Math.max(.01, sz - kz), 0, 1), th = Math.acos(1 - r) * 2 / Math.PI, w = Math.max(.002, hb * Math.pow(Math.sin(th * Math.PI / 2), .8) - .003);
+          mp.push(-w, my, zOf(u), w, my, zOf(u)); if (i) { const a2 = (i - 1) * 2; mi.push(a2, a2 + 2, a2 + 1, a2 + 1, a2 + 2, a2 + 3); } }
+        const mg = new THREE.BufferGeometry(); mg.setAttribute("position", new THREE.Float32BufferAttribute(mp, 3)); mg.setIndex(mi); W.disposables.push(mg);
+        const mm = new THREE.MeshBasicMaterial({ colorWrite: false, side: THREE.DoubleSide }); W.disposables.push(mm); const mk = new THREE.Mesh(mg, mm); mk.renderOrder = -6; mk.userData.noMerge = true; G.add(mk); } }
     return { G, half, keel, sheer, zOf, L, B };
   }
   /* kormánylapát + rúd (a rúd S.rud szerint fordul) és uszony */
@@ -3486,7 +3492,9 @@
       const sp = S.spin || 0, lfM = clamp(1 - (A - Math.abs(S.boom) * R2D - 4) / 8, 0, 1); S.luff = lfM; boom.rotation.y = -S.boom; main.update(dt, S.boom, lfM, U, S.side, 1);
       _bb.set(Math.sin(S.boom) * (boomL - .9), deckM + boomY - .03, mastZ - Math.cos(S.boom) * (boomL - .9)); { const d = _bb.clone().sub(mstBase), Lm = d.length(); mst.position.copy(mstBase); mst.scale.set(1, Lm, 1); mst.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); }
       const jA = clamp(A - 22, 8, 48) * D2R * S.side, lfJ = clamp(1 - (A - Math.abs(jA) * R2D - 6) / 8, 0, 1) + sp * .6; jib.update(dt, jA, clamp(lfJ, 0, 1), U, S.side, 1 - sp * .7);
-      spG.visible = pole.visible = sp > .05; if (sp > .05) { const sa = -S.side * clamp(A - 90, 0, 80) * D2R * .9; spG.rotation.y = sa * .4; spin.update(dt, sa, clamp(1 - sp, 0, 1) * .8, U, -S.side, sp); spG.scale.setScalar(.25 + .75 * sp); pole.rotation.y = -S.side * (1.2 - clamp(A - 90, 0, 80) * D2R * .6); }
+      spG.visible = pole.visible = sp > .05; if (sp > .05) { const sa = -S.side * clamp(A - 90, 0, 80) * D2R * .9; spG.rotation.y = sa * .4; spin.update(dt, sa, clamp(1 - sp, 0, 1) * .8, U, -S.side, sp); spG.scale.setScalar(.25 + .75 * sp); /* 2026-11-14 (tulajdonos: „a spinakkerbum kilóg a vitorlából”): a rúd az árboctól PONTOSAN a spinakker szél felőli sarkáig ér (a vászon sarokpontjához igazítva, a hossza is) */
+        spG.updateMatrixWorld(true); body.updateMatrixWorld(true); const pa = spin.geo.attributes.position, tk = new THREE.Vector3(pa.getX(0), pa.getY(0), pa.getZ(0)).applyMatrix4(spin.mesh.matrixWorld); body.worldToLocal(tk);
+        const d0 = tk.clone().sub(pole.position), Lp = d0.length(); pole.scale.set(1, 1, Lp / 1.75); pole.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), d0.normalize()); }
       body.rotation.set(S.pitch, 0, S.heel, "YXZ"); rud.til.rotation.y = -(S.rud || 0) * .6;
       S.crewS += (-S.side - S.crewS) * Math.min(1, dt * 1.3); const hk = clamp((U - 3) / 4.5, 0, 1) * clamp((125 - A) / 60, 0, 1); S.trap += ((U > 6.5 && A < 115 && Math.abs(S.crewS) > .8 ? 1 : 0) - S.trap) * Math.min(1, dt * 1.2);
       /* 2026-11-14 17:16 (tulajdonos, 5-szörös magyar bajnok): a vitorlázó lába MINDIG a hajó belseje felé áll (be van akasztva a hevederbe), a törzse a szél
@@ -4411,7 +4419,7 @@
     if (big) { g = makeBoat({ detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: vrProfile().name || "" }); g.scale.setScalar(.62); }
     else g = makeClassBoat(id, { crew: id === "j420" ? 2 : 1, name: vrProfile().name || "", num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
     /* a forgókorong a móló jobb oldalán, a víz fölött; a nézet odafordul */
-    const P0 = big ? [9.5, -1] : id === "flamingo" ? [4.4, -1.6] : [5.8, -1.8], y0 = big ? .42 : .36; g.position.set(P0[0], y0, P0[1]); HB.env.add(g);
+    const P0 = big ? [9.5, -1] : id === "flamingo" ? [4.4, -1.6] : [5.8, -1.8], y0 = big ? .42 : id === "finn" || id === "j420" ? .62 : .36;   /* a dingi hajóteste a forgókorongon ül (nem süllyed bele) */ g.position.set(P0[0], y0, P0[1]); HB.env.add(g);
     const disc = new THREE.Group(); disc.position.set(P0[0], .26, P0[1]); HB.env.add(disc); faceYaw(-Math.atan2(P0[0], -P0[1]) + .25); { const dg = new THREE.CylinderGeometry(big ? 4.5 : 3.2, big ? 4.6 : 3.3, .5, 48); dg.translate(0, -.2, 0); mesh(dg, std({ color: "#8a6a4a", roughness: .8 }), disc); const rg = new THREE.TorusGeometry(big ? 4.55 : 3.25, .06, 8, 64); rg.rotateX(Math.PI / 2); rg.translate(0, .07, 0); mesh(rg, std({ color: "#d4a13a", metalness: .8, roughness: .3 }), disc); }
     HB.prev = { id, g, disc, rot: 0, y0 }; HB.sel = id; hbBoard("boat");
   }
