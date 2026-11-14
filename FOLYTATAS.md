@@ -1092,3 +1092,6 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 
 ## 2026-11-14 18:18 – a #vitorlasverseny közvetlen belépő TÖRÖLVE
 - A tulajdonos: a link azonnal a versenyt nyitotta, így nem tudott VR-módba lépni. Visszavonva; ilyen automatikus belépőt többet nem teszünk be. Az indító link a sima séta-link (?v=…).
+
+## 2026-11-14 18:19 – aktívabb 420-as legénység
+- Erősebb kihajlás már közepes szélben (2 m/s-tól, max. ~1,35 rad), trapéz 5 m/s-tól, ritmusos „pumpálás” a lökésekre, időnként felnéz a vitorlára, a szabad kéz a fockszkótán dolgozik.
