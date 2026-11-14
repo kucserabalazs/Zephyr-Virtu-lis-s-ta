@@ -594,7 +594,7 @@ body.walk-on .sun-panel, body.in-vr .sun-panel, body.world-on .sun-panel { displ
 .world-pick [data-w] b { display: block; font-size: 21px; margin-bottom: 4px; } .world-pick [data-w] span { font-size: 16px; opacity: .85; }
 .world-pick p { margin: 6px 2px 0; font-size: 15px; opacity: .75; }
 .world-pick .wp-x { position: absolute; right: 14px; top: 12px; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); color: #fff; font-size: 20px; cursor: pointer; }
-body.world-on > *:not(#stage):not(#worldHud):not(.zfb):not(#worldPick) { visibility: hidden !important; }
+body.world-on > *:not(#stage):not(#worldHud):not(.zfb):not(#worldPick):not(.zx-board) { visibility: hidden !important; }
 body.world-on #stage { visibility: visible !important; }
 .a-enter-ar { display: none !important; }
 
@@ -11009,7 +11009,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     g.fillStyle = ZT.soft; g.font = ZT.font(700, 21); g.textBaseline = "middle"; g.textAlign = "left";
     try { g.letterSpacing = "3px"; } catch (e) {} g.fillText(zw ? "ZEPHYR WORLDS" : "ZEPHYR EXPLORE · " + real, 146, 40); try { g.letterSpacing = "0px"; } catch (e) {}
     g.fillStyle = ZT.text; g.font = ZT.font(650, 40);
-    if (zw) g.fillText(zw === "race" ? "Vitorlásverseny – a kormánynál" : zw === "coaster" ? "Balatoni hullámvasút" : zw === "table" ? "Balaton-terepasztal" : zw === "chess" ? "Vitorlás sakk" : "A ház makettje", 146, 84);
+    if (zw) g.fillText(zw === "race" ? "Vitorlásverseny – a kormánynál" : zw === "harbor" ? "Zephyr kikötő – vitorlásverseny" : zw === "coaster" ? "Balatoni hullámvasút" : zw === "table" ? "Balaton-terepasztal" : zw === "chess" ? "Vitorlás sakk" : "A ház makettje", 146, 84);
     else { let t = vT((grp ? grp.name + " · " : "") + (sc.n || "")); const t0 = t; while (t.length > 4 && g.measureText(t).width > 680) t = t.slice(0, -2); if (t !== t0) t += "…"; g.fillText(t, 146, 84); }
     btn(g, VW - 116, 22, 84, 84, "✕", () => vrClose(), { round: 42 });
     btn(g, VW - 330, 22, 108, 84, vr8k() ? "8K" : "4K", () => { vr8k(!vr8k()); if (vr8k()) hiRes(current); else hiDrop(); vrDraw(); }, { round: 42, fs: 30, on: vr8k() });
@@ -12596,7 +12596,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function sceneGroup() { const sc = SCENES[current]; return sc ? sc.g : null; }
   function watchContext() {
     const W = window.ZephyrWorld;
-    if (W && W.active) { const M = W.maq && W.maq.MAQ; if (W.kind === "maquette" && M) return M.mode === "life" ? "A ház életnagyságban" : "A ház makettje"; return W.kind === "race" ? "Vitorlásverseny" : W.kind === "chess" ? "Vitorlás sakk" : W.kind === "coaster" ? "Balatoni hullámvasút" : W.kind === "table" ? "Balaton-terepasztal" : W.kind === "sail" ? "Vitorlázás" : W.kind === "regatta" ? "Regatta" : "3D világ"; }
+    if (W && W.active) { const M = W.maq && W.maq.MAQ; if (W.kind === "maquette" && M) return M.mode === "life" ? "A ház életnagyságban" : "A ház makettje"; return W.kind === "race" ? "Vitorlásverseny" : W.kind === "harbor" ? "Zephyr kikötő" : W.kind === "chess" ? "Vitorlás sakk" : W.kind === "coaster" ? "Balatoni hullámvasút" : W.kind === "table" ? "Balaton-terepasztal" : W.kind === "sail" ? "Vitorlázás" : W.kind === "regatta" ? "Regatta" : "3D világ"; }
     const sc = SCENES[current]; const g = sc && GROUPS.find((q) => q.id === sc.g); return sc ? ((g && g.no ? g.name + " · " : "") + sc.n) : "Zephyr";
   }
   function watchNorthYaw() {

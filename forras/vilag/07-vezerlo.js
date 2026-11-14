@@ -235,6 +235,8 @@
   /* ------------------------------------------------------------------ MEGNYITÁS / BEZÁRÁS */
   let saved = null;
   W.open = function (kind) {
+    /* 2026-11-14: a vitorlásverseny a KIKÖTŐBEN kezdődik – a menüből indítva a kikötő nyílik; a kikötőből (és VR-váltáskor) közvetlenül a futam */
+    if (kind === "race" && !W._raceGo && !W.raceDirect) kind = "harbor"; W._raceGo = false;
     if (W.active) W.close(null, true);
     const sky = T.sky, sm = sky && sky.getObject3D("mesh");
     const lc0 = T.cam.components["look-controls"];
@@ -258,7 +260,7 @@
       return;
     }
     sky.object3D.visible = false;
-    safe(() => { W.spec = kind === "race" ? buildVRace() : kind === "coaster" || kind === "table" ? buildCoaster() : kind === "chess" ? lodBuild(buildChess) : kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
+    safe(() => { W.spec = kind === "harbor" ? buildHarbor() : kind === "race" ? buildVRace() : kind === "coaster" || kind === "table" ? buildCoaster() : kind === "chess" ? lodBuild(buildChess) : kind === "sail" ? buildSail() : buildMaquette(); finishOpen(); });
   };
   /* 2026-11-11 TELEFONOS KÖNNYÍTÉS (a vitorlás sakk 865 ezer háromszöget rajzolt – ettől melegedett a telefon): telefonon (nem VR-ben) az építés idejére
      a gömbök, hengerek, tóruszok, kapszulák, kúpok, esztergált és cső-testek felbontását kb. a felére vesszük – a formák ugyanazok, csak kevesebb lapból.
@@ -309,12 +311,13 @@
     if (W.hud) W.hud.el.style.display = on ? "none" : "";
     /* a szemmagasság VR-ben más – újraépítjük, de csak ha már van fej-póz (különben 0 m-t mérnénk) */
     const k = W.kind, tok = W.gen; let n = 0;
-    const tryIt = () => { if (tok !== W.gen) return; if (!on || T.headY() > .5 || ++n > 90) { W.close(null, true); W.open(k); } else T.xrRaf(tryIt); };
+    const tryIt = () => { if (tok !== W.gen) return; if (!on || T.headY() > .5 || ++n > 90) { W.close(null, true); W._raceGo = k === "race"; W.open(k); } else T.xrRaf(tryIt); };
     tryIt();
   };
   W.close = function (after, silent) {
     if (!W.active) { if (after) after(); return; }
     W.active = false; W.gen = (W.gen || 0) + 1;
+    try { uiCloseAll(); } catch (e) {}
     audioStop();
     if (W.onClose) { try { W.onClose(); } catch (e) {} W.onClose = null; }
     const cvs = T.sceneEl.canvas;

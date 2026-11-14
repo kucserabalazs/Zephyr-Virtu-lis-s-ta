@@ -19,7 +19,7 @@
     }, { repeat: [6, 6] }));
   }
   function sailTex(o) {
-    const key = "s" + o.num + o.main + (o.win ? "w" : "");
+    const key = "s" + o.num + o.main + (o.win ? "w" : "") + (o.sailName || "");
     return TEXC[key] || (TEXC[key] = canvasTex(1024, 1024, (g, w, h) => {
       g.fillStyle = o.main; g.fillRect(0, 0, w, h);
       /* vízszintes panelvarratok, finom szövet */
@@ -32,6 +32,7 @@
       g.fillText(o.num, w * .48, h * .40);
       if (o.logo) { g.font = "900 72px Georgia, serif"; g.fillStyle = /^#(d|e|c)[0-9a-f]1|^#d61f26/i.test(o.main) ? "#ffffff" : "#c62828"; g.fillText(o.logo, w * .48, h * .58); }
       g.font = "800 64px system-ui"; g.fillStyle = o.numCol || "#1b2c5e"; g.fillText(o.cls || "R27", w * .5, h * .2);
+      if (o.sailName) { const nm = String(o.sailName).toUpperCase().slice(0, 16); let fs = 130; g.font = `900 ${fs}px system-ui, sans-serif`; while (g.measureText(nm).width > w * .62 && fs > 40) { fs -= 5; g.font = `900 ${fs}px system-ui, sans-serif`; } g.lineWidth = 12; g.strokeStyle = "rgba(0,0,0,.35)"; g.strokeText(nm, w * .5, h * .74); g.fillStyle = "#ffffff"; g.fillText(nm, w * .5, h * .74); }   /* 2026-11-14: a játékos neve a grószon */
       if (o.win) sailDetail(g, w, h, true);   /* 2026-11-12 09:37 (tulajdonos): a grósz elég magasan van, oda nem kell ablak */
     }));
   }
