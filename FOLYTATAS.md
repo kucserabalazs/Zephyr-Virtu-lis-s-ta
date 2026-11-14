@@ -1055,3 +1055,8 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - **Flamingó**: minden irányban gyors (~11–14 csomó, nincs holtszög), fürge, egyforma fordulás; a bot-árboc előre, a nyak mellé, a törölköző alja fejmagasság fölé, a melltartó magasabbra – nem takar; felfújható rózsaszín kormánykerék (úszógumi, fehér küllők, sárga agy) a kormányos felé fordítva, a kormányzással forog; a kijelző felfújható keretben.
 - **Minden kis hajó kijelzője** a kormányos szeme felé néz (eddig hátulról, tükrözve látszott).
 - **Tutaj** (újraírva): két réteg rönk + zárt deszkapadló (belül száraz), egyenes árboc merevítőkkel, a rongyokból fércelt vitorla az árboc ELŐTT (nem metszi), esőkabát-spinakker (ujjak, csuklya lobog), koszos zokni-zászló, Kókusz Kálmán (vidám / unatkozik <3,5 m/s / fél >8 m/s / megijed hirtelen lassuláskor).
+
+## 2026-11-14 17:16 – 420/Finn legénység, száraz kokpit, a rajt nem változtat a hajókon
+- A legénység (420 kormányos + trapézos, Finn kormányos) EDDIG kifelé nézett és oldalra borult. Most: arccal befelé ül, a lába a hevederben a hajó belseje felé, a törzse a széllel egyre jobban hátradől a víz fölé (erős szélben szinte vízszintesen); a trapézos a perem szélén áll, egyenes testtel hátradőlve; forduláskor guggolva átjön. Oldalra soha nem dől (a forgatás a személy saját keresztirányú tengelye körül, `YXZ`).
+- `dinghyHull`: önürülő kokpitpadló a hajótest belső faláig, csúszásgátló mintával, uszonyház; a Finn és a 420 10 cm-rel magasabban úszik (`vrClassTick` lift) – a kokpitben nincs víz.
+- A spinakker rajt előtt is használható (saját és ellenfelek): a hajók sebessége és viselkedése nem változik a rajtjelnél.

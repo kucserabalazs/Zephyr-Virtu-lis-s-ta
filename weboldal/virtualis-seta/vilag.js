@@ -2629,7 +2629,7 @@
       for (const q of wx.gu) { const u = (S.t - q.t) / q.d; if (u > 0 && u < 1) { const e = Math.pow(Math.sin(u * Math.PI), .7); gk += q.k * e; gdir += q.a * e; } }
       S.wf = C.wf + wsh + gdir + Math.sin(S.t / 47 + C.lvl) * 6 * D2R + Math.sin(S.t / 13) * 2 * D2R; S.gkW = clamp(gk, .6, 1.5); }
     const twa = Math.abs(wrapA(S.wf - S.b)) * R2D;
-    S.spinOn = S.spinOn ? twa > 98 : twa > 108; const spin = S.spinOn && S.st === "race";   /* hátszélben (és széles hátszélben) felhúzzák a spinakkert */
+    S.spinOn = S.spinOn ? twa > 98 : twa > 108; const spin = S.spinOn && S.st !== "done";   /* 2026-11-14 (tulajdonos): rajt előtt, közben és után is ugyanúgy – a hajó tulajdonságai nem függnek a rajttól */   /* hátszélben (és széles hátszélben) felhúzzák a spinakkert */
     S.gk = S.gkW * vrLavK(S.x, S.z, S.t);   /* 2026-11-14: lavór (szélcsendes folt) a helyi szélben */ /* lökések és szélcsendesebb foltok (7–20 mp), lassú erősödés/gyengülés */
     let vt = polar(twa, spin && S.sp && (S.sp.st === "fly" || S.sp.st === "pop")) * KN * VR_SPD * (S.heelPen || 1) * vrClsSpd(twa) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
     /* 2026-11-14 (tulajdonos: „a flamingó legyen nagyon gyors és egyszerűen irányítható – fikció, csak vígan lehessen száguldozni”): minden irányban gyors, nincs holtszög, nem kell cirkálni */
@@ -2918,7 +2918,7 @@
     { const yrT = Math.sin(r.del) * (.085 * r.v + .24); r.yr = (r.yr || 0) + (yrT - (r.yr || 0)) * Math.min(1, dt * 3.2); }
     r.b = (r.b + r.yr * dt + TAU) % TAU;
     if (r.spinA != null) { r.spinA += Math.abs(r.yr * dt); if (r.spinA >= TAU) { r.spinA = null; r.pen--; r.lastTack = W.t; } }
-    const twa = Math.abs(wrapA(S.wf - r.b)) * R2D; r.spinOn = r.spinOn ? twa > 98 : twa > 108; const spin = r.spinOn && S.st === "race";
+    const twa = Math.abs(wrapA(S.wf - r.b)) * R2D; r.spinOn = r.spinOn ? twa > 98 : twa > 108; const spin = r.spinOn && !r.fin;
     const heelPen = (r.heel || 0) > 22 * D2R ? 1 - ((r.heel || 0) - 22 * D2R) / (30 * D2R) * .3 : 1;
     const vt = polar(twa, spin) * KN * VR_SPD * heelPen * vrClsSpd(twa) * (S.tws * (r.gkL || 1) / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07)) * (r.fin ? .4 : 1);
     r.v += (vt - r.v) * Math.min(1, dt / (vt > r.v ? 2.8 : 5)); r.v *= 1 - Math.abs(r.del) * .16 * dt;
@@ -3317,7 +3317,7 @@
     P.hips.position.y = .9 - .45 * sit - .5 * fall; P.hips.rotation.x = 0;
     P.lL.hp.rotation.x = P.lR.hp.rotation.x = -1.45 * sit - 1.3 * fall + (o.legs || 0); P.lL.kn.rotation.x = P.lR.kn.rotation.x = 1.5 * sit * (1 - hike) + .2 * fall;
     P.lL.hp.rotation.z = -.08 - .25 * fall; P.lR.hp.rotation.z = .08 + .25 * fall;
-    P.torso.rotation.x = -hike * 1.0 - fall * 1.25 + .03 * Math.sin(t * 1.3); P.torso.rotation.z = .02 * Math.sin(t * .9);
+    P.torso.rotation.x = -hike * 1.05 - fall * 1.25 + .03 * Math.sin(t * 1.3); P.torso.rotation.z = .02 * Math.sin(t * .9);
     P.head.rotation.x = hike * .6 + fall * .4 + (o.look || 0); P.head.rotation.y = (o.turn != null ? o.turn : .35 * Math.sin(t * .37));
     const wv = Math.sin(t * 9) * .45;
     P.aR.sh.rotation.set(0, 0, wave > 0 ? wave * (2.6 + wv * .4) : .15 + fall * 1.6 + (o.armR || 0)); P.aR.el.rotation.x = wave > 0 ? -.3 - wave * .3 : -.2 - fall * .4;
@@ -3352,7 +3352,15 @@
     { const p = dg.attributes.position; for (let i = 0; i < p.count; i++) { const z = p.getZ(i), u = clamp((z + L / 2) / L, 0, 1); p.setY(i, sheer(u) + .005); } dg.computeVertexNormals(); }
     const deck = new THREE.Mesh(dg, std({ color: o.deck || "#e9e6dc", roughness: .55, side: THREE.DoubleSide }));
     const G = new THREE.Group(); G.add(hull); G.add(deck);
-    if (o.cockpit) { const [z0, z1, cw] = o.cockpit, sole = mesh(new THREE.BoxGeometry(cw * 1.8, .02, Math.abs(z1 - z0)), std({ color: o.sole || "#d8d3c4", roughness: .8 }), G); sole.position.set(0, -.05, (z0 + z1) / 2); }
+    /* 2026-11-14 (tulajdonos: „a 420 alja tele van vízzel”): a kokpit ÖNÜRÜLŐ PADLÓJA a vízvonal fölött, a hajótest belső faláig ér – belül száraz.
+       Alatta zárt (felhajtóerős) tér, a padlón csúszásgátló minta és a középszekrény (uszonyház). */
+    if (o.cockpit) { const [z0, z1] = o.cockpit, fy = o.floorY != null ? o.floorY : .05, u0 = clamp((Math.min(z0, z1) + L / 2) / L - .03, 0, 1), u1 = clamp((Math.max(z0, z1) + L / 2) / L + .03, 0, 1), NF = 16, fp = [], fi = [];
+      const wAt = (u) => { const hb = half(u), kz = keel(u), sz = sheer(u), r = clamp((fy - kz) / Math.max(.01, sz - kz), 0, 1), th = Math.acos(1 - r) * 2 / Math.PI; return hb * Math.pow(Math.sin(th * Math.PI / 2), .8) + .004; };
+      for (let i = 0; i <= NF; i++) { const u = u0 + (u1 - u0) * i / NF, w = wAt(u), z = zOf(u); fp.push(-w, fy, z, w, fy, z); if (i) { const a = (i - 1) * 2; fi.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } }
+      const fg = new THREE.BufferGeometry(); fg.setAttribute("position", new THREE.Float32BufferAttribute(fp, 3)); fg.setIndex(fi); fg.computeVertexNormals(); W.disposables.push(fg);
+      const ft = canvasTex(128, 128, (g2, w, h) => { g2.fillStyle = o.sole || "#dcd7c8"; g2.fillRect(0, 0, w, h); g2.fillStyle = "rgba(0,0,0,.06)"; for (let y = 0; y < h; y += 8) for (let x = (y / 8 % 2) * 4; x < w; x += 8) g2.fillRect(x, y, 3, 3); }, { repeat: [3, 12] });
+      const fm = std({ map: ft, roughness: .85, side: THREE.DoubleSide }); fg.setAttribute("uv", new THREE.Float32BufferAttribute(fp.map((v, i) => i % 3 === 0 ? v : i % 3 === 2 ? v * .3 : null).filter((v) => v !== null), 2)); mesh(fg, fm, G);
+      const cb = new THREE.BoxGeometry(.06, .28, .9); cb.translate(0, fy + .14, zOf(.5)); mesh(cb, std({ color: o.deck || "#e9e6dc", roughness: .5 }), G); }
     return { G, half, keel, sheer, zOf, L, B };
   }
   /* kormánylapát + rúd (a rúd S.rud szerint fordul) és uszony */
@@ -3417,8 +3425,9 @@
       mast.rotation.x = -.035 * clamp(U / 8, 0, 1.2) * (1 - lf);
       body.rotation.set(S.pitch, 0, S.heel, "YXZ"); rud.til.rotation.y = -(S.rud || 0) * .6;
       S.crewS += (-S.side - S.crewS) * Math.min(1, dt * 1.4);
-      crew.forEach((c) => { const hk = clamp((U - 3.5) / 5, 0, 1) * clamp((120 - A) / 60, 0, 1); c.p.position.set(S.crewS * (B / 2 - .06), H.sheer(.3) - .45, hz(1.75)); c.p.rotation.y = S.crewS > 0 ? Math.PI / 2 : -Math.PI / 2;
-        posePerson(c.p, dt, { sit: 1, hike: hk * .9, pull: true, turn: -S.crewS * .25 }); c.p.rotation.z = 0; });
+      crew.forEach((c) => { const cross = 1 - Math.min(1, Math.abs(S.crewS)), hk = clamp((U - 3.5) / 5, 0, 1) * clamp((120 - A) / 60, 0, 1) + .35 * clamp((U - 8) / 4, 0, 1) * clamp((120 - A) / 60, 0, 1);
+        c.p.position.set(S.crewS * (B / 2 - .04), H.sheer(.3) - .45, hz(1.75)); c.p.rotation.set(0, S.crewS > 0 ? -Math.PI / 2 : Math.PI / 2, 0, "YXZ");   /* a lába befelé (hevederben), a törzse kifelé dől */
+        posePerson(c.p, dt, { sit: 1, hike: hk * (1 - cross), pull: true, turn: S.crewS * .9 }); });
     };
     G.userData.update(0); return G;
   }
@@ -3477,10 +3486,14 @@
       spG.visible = pole.visible = sp > .05; if (sp > .05) { const sa = -S.side * clamp(A - 90, 0, 80) * D2R * .9; spG.rotation.y = sa * .4; spin.update(dt, sa, clamp(1 - sp, 0, 1) * .8, U, -S.side, sp); spG.scale.setScalar(.25 + .75 * sp); pole.rotation.y = -S.side * (1.2 - clamp(A - 90, 0, 80) * D2R * .6); }
       body.rotation.set(S.pitch, 0, S.heel, "YXZ"); rud.til.rotation.y = -(S.rud || 0) * .6;
       S.crewS += (-S.side - S.crewS) * Math.min(1, dt * 1.3); const hk = clamp((U - 3) / 4.5, 0, 1) * clamp((125 - A) / 60, 0, 1); S.trap += ((U > 6.5 && A < 115 && Math.abs(S.crewS) > .8 ? 1 : 0) - S.trap) * Math.min(1, dt * 1.2);
-      crew.forEach((c) => { if (c.kind === "helm") { c.p.position.set(S.crewS * (B / 2 - .08), H.sheer(.25) - .45, hz(.95)); c.p.rotation.set(0, S.crewS > 0 ? Math.PI / 2 : -Math.PI / 2, 0); posePerson(c.p, dt, { sit: 1, hike: hk * .8, pull: true, turn: -S.crewS * .3 }); }
-        else { const tr = S.trap; c.p.position.set(S.crewS * (B / 2 - .08 + tr * .55), H.sheer(.45) - .45 + tr * .55, hz(1.9)); c.p.rotation.set(0, S.crewS > 0 ? Math.PI / 2 : -Math.PI / 2, -S.crewS * tr * 1.35);
-          posePerson(c.p, dt, { sit: 1 - tr, hike: hk * .7 * (1 - tr), legs: tr * 1.45, pull: true, turn: -S.crewS * .4 });
-          trapW.visible = tr > .3; if (trapW.visible) { const a = top.clone(), b2 = c.p.position.clone(); b2.y += .9; const d = b2.clone().sub(a), Lw = d.length(); trapW.position.copy(a); trapW.scale.set(1, Lw, 1); trapW.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); } } });
+      /* 2026-11-14 17:16 (tulajdonos, 5-szörös magyar bajnok): a vitorlázó lába MINDIG a hajó belseje felé áll (be van akasztva a hevederbe), a törzse a szél
+         erősödésével hátrafelé, a víz fölé dől és ellensúlyoz; nagyon erős szélben egészen hátradől – de soha nem fordul az oldalára. A trapézos a perem
+         szélén áll, egyenes testtel, hátradőlve szinte vízszintesen; forduláskor guggolva átbújik a bum alatt a másik oldalra. */
+      const cross = 1 - Math.min(1, Math.abs(S.crewS)), yawIn = S.crewS > 0 ? -Math.PI / 2 : Math.PI / 2, hkS = clamp((U - 3) / 5, 0, 1) * clamp((125 - A) / 60, 0, 1), hkX = hkS + .35 * clamp((U - 8) / 4, 0, 1) * clamp((125 - A) / 60, 0, 1);
+      crew.forEach((c) => { if (c.kind === "helm") { c.p.position.set(S.crewS * (B / 2 - .05), H.sheer(.25) - .45, hz(.95)); c.p.rotation.set(0, yawIn, 0, "YXZ"); posePerson(c.p, dt, { sit: 1, hike: hkX * (1 - cross), pull: true, turn: S.crewS * .9 }); }
+        else { const tr = S.trap * (1 - cross); c.p.position.set(S.crewS * (B / 2 - .05 + tr * .05), H.sheer(.45) - .45 * (1 - tr) - cross * .25, hz(1.85)); c.p.rotation.set(-tr * (1.05 + .3 * clamp((U - 8) / 4, 0, 1)), yawIn, 0, "YXZ");   /* a lábfej a peremen, a test egyenesen hátradől */
+          posePerson(c.p, dt, { sit: tr > .5 ? 0 : 1 - tr * 2 + cross * .2, hike: hkS * .9 * (1 - tr) * (1 - cross), legs: tr > .5 ? 1.45 * (1 - tr) * 0 : 0, pull: true, armR: tr * 2.6, turn: S.crewS * .9 * (1 - tr) + .2 });
+          trapW.visible = tr > .3; if (trapW.visible) { c.p.updateMatrix(); const a = top.clone(), b2 = new THREE.Vector3(0, 1.05, 0).applyMatrix4(c.p.matrix); const d = b2.clone().sub(a), Lw = d.length(); trapW.position.copy(a); trapW.scale.set(1, Lw, 1); trapW.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); } } });
     };
     G.userData.update(0); return G;
   }
@@ -3782,7 +3795,7 @@
     PS.side = BS.side; PS.awa = BS.awa != null ? BS.awa : S.awa; PS.aws = BS.aws != null ? BS.aws : S.aws; PS.pitch = (BS.pitch || 0) * 1.6; PS.rud = S.wa / WA_MAX;
     PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : .35);
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
-    const hb = vrWave(S.x, S.z, W.t); pb.position.set(0, hb * .45, 0); pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
+    const hb = vrWave(S.x, S.z, W.t), lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : S.cls.id === "tutaj" ? .04 : 0; pb.position.set(0, hb * .45 + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
     pb.updateMatrix(); _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);

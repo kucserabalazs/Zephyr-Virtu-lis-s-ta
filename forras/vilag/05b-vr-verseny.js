@@ -976,7 +976,7 @@
       for (const q of wx.gu) { const u = (S.t - q.t) / q.d; if (u > 0 && u < 1) { const e = Math.pow(Math.sin(u * Math.PI), .7); gk += q.k * e; gdir += q.a * e; } }
       S.wf = C.wf + wsh + gdir + Math.sin(S.t / 47 + C.lvl) * 6 * D2R + Math.sin(S.t / 13) * 2 * D2R; S.gkW = clamp(gk, .6, 1.5); }
     const twa = Math.abs(wrapA(S.wf - S.b)) * R2D;
-    S.spinOn = S.spinOn ? twa > 98 : twa > 108; const spin = S.spinOn && S.st === "race";   /* hátszélben (és széles hátszélben) felhúzzák a spinakkert */
+    S.spinOn = S.spinOn ? twa > 98 : twa > 108; const spin = S.spinOn && S.st !== "done";   /* 2026-11-14 (tulajdonos): rajt előtt, közben és után is ugyanúgy – a hajó tulajdonságai nem függnek a rajttól */   /* hátszélben (és széles hátszélben) felhúzzák a spinakkert */
     S.gk = S.gkW * vrLavK(S.x, S.z, S.t);   /* 2026-11-14: lavór (szélcsendes folt) a helyi szélben */ /* lökések és szélcsendesebb foltok (7–20 mp), lassú erősödés/gyengülés */
     let vt = polar(twa, spin && S.sp && (S.sp.st === "fly" || S.sp.st === "pop")) * KN * VR_SPD * (S.heelPen || 1) * vrClsSpd(twa) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
     /* 2026-11-14 (tulajdonos: „a flamingó legyen nagyon gyors és egyszerűen irányítható – fikció, csak vígan lehessen száguldozni”): minden irányban gyors, nincs holtszög, nem kell cirkálni */
@@ -1265,7 +1265,7 @@
     { const yrT = Math.sin(r.del) * (.085 * r.v + .24); r.yr = (r.yr || 0) + (yrT - (r.yr || 0)) * Math.min(1, dt * 3.2); }
     r.b = (r.b + r.yr * dt + TAU) % TAU;
     if (r.spinA != null) { r.spinA += Math.abs(r.yr * dt); if (r.spinA >= TAU) { r.spinA = null; r.pen--; r.lastTack = W.t; } }
-    const twa = Math.abs(wrapA(S.wf - r.b)) * R2D; r.spinOn = r.spinOn ? twa > 98 : twa > 108; const spin = r.spinOn && S.st === "race";
+    const twa = Math.abs(wrapA(S.wf - r.b)) * R2D; r.spinOn = r.spinOn ? twa > 98 : twa > 108; const spin = r.spinOn && !r.fin;
     const heelPen = (r.heel || 0) > 22 * D2R ? 1 - ((r.heel || 0) - 22 * D2R) / (30 * D2R) * .3 : 1;
     const vt = polar(twa, spin) * KN * VR_SPD * heelPen * vrClsSpd(twa) * (S.tws * (r.gkL || 1) / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07)) * (r.fin ? .4 : 1);
     r.v += (vt - r.v) * Math.min(1, dt / (vt > r.v ? 2.8 : 5)); r.v *= 1 - Math.abs(r.del) * .16 * dt;
