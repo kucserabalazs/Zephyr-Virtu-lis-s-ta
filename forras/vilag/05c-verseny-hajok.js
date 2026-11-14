@@ -24,7 +24,7 @@
     zephyr:   { id: "zephyr",   n: "Zephyr – versenyjacht", sh: "Zephyr",   len: "15,2 m (Raptor 27 nyomán)", crew: "kormányos + 4 fő legénység", spd: 1,    cs: 1,   up: 44, half: 6,    rad: 2.3,  hit: 4.6, d: "A tulajdonos hajója, nagy versenyjachtként: kormánykerék vagy botkormány, spinakker, nagy sebesség." },
     finn:     { id: "finn",     n: "Finn dingi",            sh: "Finn",     len: "4,495 m · 1,51 m · ≥116 kg · 10 m²",   crew: "egyszemélyes",               spd: .8,   cs: .72, up: 43, half: 2.25, rad: .8,   hit: 1.7, d: "Az olimpiák klasszikusa: egyetlen vitorla a hajlékony árbocon, a kormányos kihasal – tiszta, kemény vitorlázás." },
     j420:     { id: "j420",     n: "420-as jolle",          sh: "420",      len: "4,20 m · 1,63 m · 80 kg · 7,45 + 2,8 + 9 m²", crew: "kétszemélyes (trapéz)", spd: .84, cs: .72, up: 44, half: 2.1, rad: .85, hit: 1.75, d: "Az utánpótlás versenyhajója: grósz, fock, spinakker, a legénység trapézon lóg ki a víz fölé." },
-    tutaj:    { id: "tutaj",    n: "Rönktutaj",             sh: "Tutaj",    len: "3,8 m · rönkökből kötve",   crew: "hajótörött + Kókusz Kata",     spd: .46,  cs: .48, up: 62, half: 1.9,  rad: 1.25, hit: 2.2, d: "Hajótörött-tutaj: rongyokból fércelt vitorla, esőkabát-spinakker, zoknizászló – és Kókusz Kata az árboc tövében, aki minden szélre más arcot vág." },
+    tutaj:    { id: "tutaj",    n: "Rönktutaj",             sh: "Tutaj",    len: "3,8 m · rönkökből kötve",   crew: "hajótörött + Kókusz Kata",     spd: 1,    cs: .8,  up: 44, half: 1.9,  rad: 1.25, hit: 2.2, d: "Hajótörött-tutaj: rongyokból fércelt vitorla, esőkabát-spinakker, zoknizászló – és Kókusz Kata az árboc tövében, aki minden szélre más arcot vág." },
     flamingo: { id: "flamingo", n: "Flamingó matrac",       sh: "Flamingó", len: "1,9 m · felfújható",        crew: "egy bátor strandoló",        spd: 1.0,  cs: .8,  up: 40, half: 1.15, rad: .95, hit: 1.6, d: "Horgászbot az árboc, csíkos strandtörölköző a grósz (rajta a neved), hátszélben egy nagy pöttyös melltartó dagad ki spinakkerként. Vigyázz, borul!" }
   };
   const BOAT_ORDER = ["zephyr", "finn", "j420", "tutaj", "flamingo"];
@@ -354,7 +354,7 @@
        (a rönkök felül szárazak, a rések alatt sötét aljzat – nem látszik át a víz); a vitorla az árboc ELŐTT, legfeljebb 25°-ot fordul, így nem ér a szerkezetbe;
        kókuszdió (pofákat vág), esőkabát-spinakker és felismerhető zokni-zászló; a kormányevező nyele a kezeddel egy irányba mozog. */
     o = Object.assign({ crew: 1 }, o);
-    const G = new THREE.Group(), body = new THREE.Group(); G.add(body); const FLOAT = .13; body.position.y = FLOAT;
+    const G = new THREE.Group(), body = new THREE.Group(); G.add(body); const FLOAT = .07; body.position.y = FLOAT;   /* 18:34: kicsit mélyebben ül a vízben (a víz a héjon belül úgysem látszik) */
     const logT = canvasTex(256, 512, (g, w, h) => { g.fillStyle = "#7a5a3a"; g.fillRect(0, 0, w, h); for (let k = 0; k < 90; k++) { g.strokeStyle = `rgba(${40 + Math.random() * 40},${25 + Math.random() * 25},${10 + Math.random() * 15},.55)`; g.lineWidth = 1 + Math.random() * 3; g.beginPath(); const x = Math.random() * w; g.moveTo(x, 0); g.bezierCurveTo(x + rr(-8, 8), h * .33, x + rr(-8, 8), h * .66, x + rr(-6, 6), h); g.stroke(); }
       for (let k = 0; k < 7; k++) { g.fillStyle = "rgba(40,25,12,.6)"; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 6 + Math.random() * 6, 10 + Math.random() * 10, 0, 0, TAU); g.fill(); } }, { repeat: [1, 1] });
     const endT = canvasTex(128, 128, (g) => { g.fillStyle = "#c79a62"; g.fillRect(0, 0, 128, 128); for (let r = 6; r < 64; r += 7) { g.strokeStyle = `rgba(110,72,36,${.35 + Math.random() * .3})`; g.lineWidth = 2; g.beginPath(); g.arc(64 + rr(-3, 3), 64 + rr(-3, 3), r, 0, TAU); g.stroke(); } });
@@ -382,12 +382,33 @@
     const sT = canvasTex(512, 512, (g, w, h) => { g.fillStyle = "#d8c9a3"; g.fillRect(0, 0, w, h); const pc = ["#c3b48c", "#b9a477", "#e1d6b8", "#a89466", "#cdbb8f"];
       for (let k = 0; k < 9; k++) { g.fillStyle = pc[k % 5]; const x = rr(0, w * .8), y = rr(0, h * .8), ww = rr(70, 180), hh = rr(60, 160); g.fillRect(x, y, ww, hh); g.setLineDash([8, 6]); g.strokeStyle = "rgba(80,60,30,.7)"; g.lineWidth = 3; g.strokeRect(x + 4, y + 4, ww - 8, hh - 8); g.setLineDash([]); }
       g.fillStyle = "rgba(90,70,40,.18)"; for (let k = 0; k < 40; k++) { g.beginPath(); g.arc(rr(0, w), rr(0, h), rr(3, 14), 0, TAU); g.fill(); }
+      /* 18:34: hajótörött-vitorla – a ponyvára rávarrt foltok régi ruhákból (kifakult farmer, csíkos ing, zsákvászon, kockás abrosz), görbe, durva öltésekkel, X-varrással */
+      { const fab = ["#7d8fa3", "#a9a08a", "#b58f6a", "#8f9b7c", "#c7b48f", "#9c7d5e"]; for (let k = 0; k < 16; k++) { const x = rr(-20, w - 60), y = rr(-20, h - 60), ww = rr(50, 150), hh = rr(40, 130), rot = rr(-.25, .25), f = fab[k % fab.length];
+          g.save(); g.translate(x + ww / 2, y + hh / 2); g.rotate(rot); g.beginPath(); g.moveTo(-ww / 2 + rr(0, 8), -hh / 2); g.lineTo(ww / 2, -hh / 2 + rr(0, 8)); g.lineTo(ww / 2 - rr(0, 10), hh / 2); g.lineTo(-ww / 2, hh / 2 - rr(0, 9)); g.closePath(); g.fillStyle = f; g.globalAlpha = .82; g.fill(); g.globalAlpha = 1;
+          if (k % 4 === 0) { g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = 5; for (let q = -hh / 2; q < hh / 2; q += 14) { g.beginPath(); g.moveTo(-ww / 2, q); g.lineTo(ww / 2, q); g.stroke(); } }
+          if (k % 4 === 1) { g.strokeStyle = "rgba(60,40,20,.25)"; g.lineWidth = 2; for (let q = -ww; q < ww; q += 6) { g.beginPath(); g.moveTo(q, -hh / 2); g.lineTo(q + hh, hh / 2); g.stroke(); } }
+          if (k % 4 === 2) { g.fillStyle = "rgba(150,40,40,.25)"; for (let a2 = -ww / 2; a2 < ww / 2; a2 += 18) for (let b2 = -hh / 2; b2 < hh / 2; b2 += 18) if (((a2 + b2) / 18 | 0) % 2) g.fillRect(a2, b2, 9, 9); }
+          g.strokeStyle = "#2a1a0c"; g.lineWidth = 2.6; const per = 2 * (ww + hh), st = 13; for (let d = 0; d < per; d += st) { let px, py; if (d < ww) { px = -ww / 2 + d; py = -hh / 2; } else if (d < ww + hh) { px = ww / 2; py = -hh / 2 + d - ww; } else if (d < 2 * ww + hh) { px = ww / 2 - (d - ww - hh); py = hh / 2; } else { px = -ww / 2; py = hh / 2 - (d - 2 * ww - hh); }
+            g.beginPath(); g.moveTo(px - 4, py - 4); g.lineTo(px + 4, py + 4); g.moveTo(px + 4, py - 4); g.lineTo(px - 4, py + 4); g.stroke(); }   /* durva X-öltések körben */
+          g.restore(); }
+        g.strokeStyle = "rgba(40,25,10,.8)"; g.lineWidth = 3; for (let k = 0; k < 6; k++) { const y = rr(40, h - 40); g.setLineDash([10, 6]); g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= w; x += 40) g.lineTo(x, y + rr(-6, 6)); g.stroke(); } g.setLineDash([]); }   /* görbe, kézi varratsorok a toldásoknál */
       g.fillStyle = "#6b2a1a"; g.font = "900 64px Georgia, serif"; g.textAlign = "center"; g.fillText(o.name ? String(o.name).toUpperCase().slice(0, 12) : "S.O.S.", w / 2, h * .55);
       g.globalCompositeOperation = "destination-out"; for (let k = 0; k < 30; k++) { g.beginPath(); g.arc(rr(0, w), h - rr(0, 18), rr(4, 14), 0, TAU); g.fill(); g.beginPath(); g.arc(w - rr(0, 14), rr(0, h), rr(4, 12), 0, TAU); g.fill(); } g.globalCompositeOperation = "source-over"; });
     const sailM = std({ map: sT, roughness: 1, side: THREE.DoubleSide, transparent: true, alphaTest: .4 });
     const sailG = new THREE.Group(); sailG.position.set(0, 0, SF + .02); mast.add(sailG);
     const sail = softSail({ parent: sailG, nu: 8, nv: 8, loose: true, bend: 0, telltales: false, mat: sailM, camber: .16, twist: .05, sag: .05,
       luff: (v) => new THREE.Vector3(-1.05, .58 + v * (yardY - .62), 0), chord: (v) => 2.1 });
+    /* 18:34: BOTOKBÓL ÖSSZEKÖTÖZÖTT KORMÁNYKERÉK a kormányos előtt (tőle kicsit jobbra, hogy Kata látsszon): nyolc görbe ágból álló keret, kötéllel összekötözve,
+       négy küllő, rönkvég-agy, villás ágon áll; a kormányzással együtt forog */
+    const stickW = new THREE.Group(); stickW.position.set(-.32, .78, -.8); body.add(stickW); stickW.quaternion.setFromRotationMatrix(new THREE.Matrix4().lookAt(new THREE.Vector3(0, 1.35, -1.25), stickW.position, new THREE.Vector3(0, 1, 0)));
+    const swR = new THREE.Group(); stickW.add(swR);
+    { const wood = std({ color: "#7b5a36", roughness: .95 }), wood2 = std({ color: "#8d6a42", roughness: .95 }), R0 = .3;
+      for (let k = 0; k < 8; k++) { const a0 = k / 8 * TAU, a1 = (k + 1) / 8 * TAU, p0 = new THREE.Vector3(Math.cos(a0) * R0, Math.sin(a0) * R0, 0), p1 = new THREE.Vector3(Math.cos(a1) * R0, Math.sin(a1) * R0, 0), d = p1.clone().sub(p0); p0.addScaledVector(d, -.12); p1.addScaledVector(d, .12);
+        rodBetween(p0, p1, .022 + (k % 3) * .003, k % 2 ? wood : wood2, swR, 6); const kn = new THREE.Mesh(new THREE.TorusGeometry(.03, .011, 5, 10), rope); kn.position.set(Math.cos(a1) * R0, Math.sin(a1) * R0, 0); kn.rotation.set(Math.random(), Math.random(), 0); swR.add(kn); }
+      for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .3; rodBetween(new THREE.Vector3(), new THREE.Vector3(Math.cos(a) * (R0 + .04), Math.sin(a) * (R0 + .04), 0), .016, wood, swR, 5); }
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(.055, .06, .08, 10).rotateX(Math.PI / 2), [logM, endM, endM]); swR.add(hub);
+      for (let k = 0; k < 3; k++) { const hd = new THREE.Mesh(new THREE.CylinderGeometry(.015, .018, .14, 6).rotateX(Math.PI / 2), wood); const a = k / 3 * TAU; hd.position.set(Math.cos(a) * (R0 + .02), Math.sin(a) * (R0 + .02), .06); swR.add(hd); }   /* fogantyú-csonkok */
+      rodBetween(new THREE.Vector3(-.32, .37 - FLOAT * 0, -.85), new THREE.Vector3(-.32, .74, -.81), .03, wood, body, 6); rodBetween(new THREE.Vector3(-.32, .62, -.83), new THREE.Vector3(-.4, .74, -.8), .018, wood, body, 5); }   /* villás tartóág */
     /* kormányevező a farnál */
     const oar = new THREE.Group(); oar.position.set(0, .35, -1.75); body.add(oar); { const sh = new THREE.CylinderGeometry(.035, .035, 2.4, 7); sh.rotateX(Math.PI / 2 - .35); mesh(sh, logM, oar); const bl = new THREE.BoxGeometry(.04, .3, .55); bl.translate(0, -.42, -1.15); mesh(bl, logM, oar); }
     /* rakomány: láda, kötéltekercs, banánfürt, vizeskulacs, kókuszhéjak, kis zászló (rongyból) */
@@ -456,8 +477,8 @@
       { const p = sail.geo.attributes.position, nu = 8, nv = 8, k1 = clamp(U / 7, .3, 1.15) * (1 - lf * .85) * (1 - fu); for (let j = 0; j <= nv; j++) for (let i = 0; i <= nu; i++) { const k = j * (nu + 1) + i, u = i / nu, v = j / nv;
           const bulge = .34 * k1 * Math.sin(Math.PI * u) * Math.sin(Math.PI * (.12 + .88 * v)) + (lf > .05 ? .1 * lf * Math.sin(S.t * 9 - u * 6 + v * 3) : 0) + .02 * Math.sin(S.t * 4.3 + u * 5) * k1;
           p.setXYZ(k, (-1.05 + 2.1 * u) * (1 - .08 * fu), .58 + v * (yardY - .62) * (1 - fu) + fu * (.05 + .07 * Math.sin(v * Math.PI * 6 + u * 2) * (.5 + .5 * Math.sin(u * 11))) - .06 * Math.sin(Math.PI * u) * (1 - v) * (1 - fu), bulge + fu * .07 * Math.sin(v * Math.PI * 5 + u * 3)); }   /* hátszélben a rúdra csomózott ponyva-batyu */ p.needsUpdate = true; sail.geo.computeVertexNormals(); }
-      body.rotation.set(S.pitch + .02 * Math.sin(S.t * 1.7), 0, S.heel * .35 + .03 * Math.sin(S.t * 1.3), "YXZ");
-      oar.rotation.y = (S.rud || 0) * .5;
+      body.rotation.set(S.pitch + .02 * Math.sin(S.t * 1.7), 0, S.heel + .03 * Math.sin(S.t * 1.3), "YXZ");   /* 18:34: ugyanúgy dől, mint a nagy hajó */
+      oar.rotation.y = (S.rud || 0) * .5; swR.rotation.z = (S.rud || 0) * 2.4;   /* a botkerék a fordulás irányába forog */
       /* esőkabát-spinakker */
       coat.visible = sp > .03; coatLine.visible = coat.visible;
       if (coat.visible) { const fill = clamp(U / 6, .4, 1.25) * sp, sa = -S.side * clamp(A - 100, 0, 75) * D2R * .5; coat.position.set(Math.sin(sa) * .6 * sp, mastH - .6, .9 + .9 * sp); coat.rotation.set(-.15 * fill, sa, Math.sin(S.t * 1.4) * .06);

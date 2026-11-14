@@ -1099,3 +1099,8 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 ## 2026-11-14 18:23 – tutaj: műszer balra, hátszélben batyuba kötött ponyva
 - A kókusz-műszer a kormányostól balra (x = 0,62), így Kókusz Kata látszik.
 - Hátszélben (esőkabát fent) a ponyvavitorla az alsó rúdra csomózva, négy kötélhurokkal – az esőkabát szabadon látszik.
+
+## 2026-11-14 18:34 – tutaj: mélyebben, foltozottabb vitorla, nagyhajós irányítás, botkerék
+- FLOAT 0,07 m (a víz a héjon belül úgysem látszik). A ponyvára 16 rávarrt ruhafolt (farmer, csíkos ing, zsákvászon, kockás abrosz) durva X-öltésekkel, görbe varratsorok.
+- Irányítás, sebesség és dőlés pontosan a nagy hajóé (BOATCLS.tutaj spd 1, up 44, dőlés 1×).
+- Botokból összekötözött kormánykerék (8 ág keret kötéllel, 4 küllő, rönkvég-agy, fogantyúcsonkok, villás tartóág) a kormányos előtt jobbra; a fordulás irányába forog.
