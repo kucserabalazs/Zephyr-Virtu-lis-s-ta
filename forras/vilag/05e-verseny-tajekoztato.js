@@ -21,9 +21,23 @@
     const m = new THREE.Mesh(new THREE.PlaneGeometry(mw, mh), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false })); m.renderOrder = 996;
     const B = { o, cv, g, tex, m, btns: [], hov: null, dirty: 1, t: 0, open: false, dom: null, kbd: null };
     B.btn = (x, y, w, h, label, fn, st) => { st = st || {}; const id = B.btns.length, hv = B.hov === id && !st.off; B.btns.push({ x, y, w, h, fn: st.off ? null : fn });
-      uiRR(g, x, y, w, h, st.r != null ? st.r : Math.min(26, h / 2.6)); g.fillStyle = st.off ? "rgba(255,255,255,.08)" : hv ? "#ffe08a" : st.gold ? "#d4a13a" : st.green ? "#1e8e4f" : st.red ? "#b3261e" : st.bg || "rgba(7,28,58,.86)"; g.fill();
-      g.lineWidth = st.gold || hv ? 4 : 2.5; g.strokeStyle = hv ? "#fff3c4" : st.gold ? "#ffe4a0" : "rgba(255,209,102,.75)"; g.stroke();
-      g.fillStyle = hv || st.gold ? "#0b2f5e" : st.off ? "rgba(255,255,255,.4)" : "#ffffff"; const fs = uiFit(g, label, w - 24, st.fs || Math.min(40, h * .46), 800); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(label, x + w / 2, y + h / 2 + 1); g.textAlign = "left"; g.textBaseline = "alphabetic"; return fs; };
+      /* 2026-11-14 (tulajdonos: „sokkal érthetőbb, kidolgozottabb, balatoni hangulatú”): domború, színátmenetes gomb rajzolt ikonnal és magyarázó alsorral */
+      let ic = st.ic || null, lab = String(label); if (!ic) { const m = uiEmo(lab); if (m) { ic = m[0]; lab = m[1]; } }
+      const r = st.r != null ? st.r : Math.min(22, h / 3), pri = st.gold, kind = st.off ? "off" : pri ? "gold" : st.green ? "green" : st.red ? "red" : st.night || /^rgba\(20,24,70/.test(st.bg || "") ? "night" : "blue";
+      const PAL = { blue: ["#1d5a8e", "#0d3560", "#e9c46a"], gold: ["#ffe08a", "#d99a26", "#fff1c4"], green: ["#2aa866", "#16703f", "#bff5d2"], red: ["#d2433a", "#8f1f19", "#ffd1cc"], night: ["#2b3a86", "#121a4a", "#c9b6ff"], off: ["#3a4656", "#273140", "#6b7787"] }[kind];
+      g.save(); g.shadowColor = hv ? "rgba(255,214,102,.75)" : "rgba(0,0,0,.45)"; g.shadowBlur = hv ? 26 : 12; g.shadowOffsetY = hv ? 0 : 5;
+      uiRR(g, x, y, w, h, r); const gr = g.createLinearGradient(0, y, 0, y + h); gr.addColorStop(0, hv ? uiLite(PAL[0], .18) : PAL[0]); gr.addColorStop(1, hv ? uiLite(PAL[1], .15) : PAL[1]); g.fillStyle = gr; g.fill(); g.restore();
+      g.save(); uiRR(g, x, y, w, h, r); g.clip(); const hl = g.createLinearGradient(0, y, 0, y + h * .5); hl.addColorStop(0, "rgba(255,255,255,.28)"); hl.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = hl; g.fillRect(x, y, w, h * .5);
+      if (pri) { g.strokeStyle = "rgba(255,255,255,.22)"; g.lineWidth = 3; for (let k = 0; k < 3; k++) { g.beginPath(); for (let xx = 0; xx <= w; xx += 8) { const yy = y + h - 12 - k * 9 + Math.sin(xx / 26 + k * 1.7) * 3.5; if (xx) g.lineTo(x + xx, yy); else g.moveTo(x, yy); } g.stroke(); } }   /* hullámok a fő gomb alján */
+      g.restore(); uiRR(g, x + 1, y + 1, w - 2, h - 2, r); g.lineWidth = hv ? 4 : 2.5; g.strokeStyle = hv ? "#fff3c4" : PAL[2]; g.globalAlpha = st.off ? .5 : .95; g.stroke(); g.globalAlpha = 1;
+      const fg = pri ? "#0b2f5e" : st.off ? "rgba(255,255,255,.45)" : "#ffffff", sub = st.sub, sz = Math.min(h * .62, 64);
+      let tx = x + w / 2, al = "center", tw = w - 28;
+      if (ic) { const bx = x + Math.min(h * .55, 58), by = y + h / 2, br = Math.min(h * .34, 34); g.fillStyle = pri ? "rgba(11,47,94,.16)" : "rgba(255,255,255,.12)"; g.beginPath(); g.arc(bx, by, br, 0, TAU); g.fill(); uiIcon(g, ic, bx, by, br * 1.15, pri ? "#0b2f5e" : st.off ? "#8794a3" : "#ffe08a");
+        if (sub || w > 300) { al = "left"; tx = bx + br + 18; tw = x + w - tx - 18; } else { tw = w - (bx - x) - br - 26; tx = bx + br + 10 + tw / 2; } }
+      g.textAlign = al; g.textBaseline = "middle"; g.fillStyle = fg;
+      const fs = uiFit(g, lab, tw, st.fs || Math.min(40, h * (sub ? .34 : .44)), 800);
+      if (sub) { g.fillText(lab, tx, y + h * .38); g.fillStyle = pri ? "rgba(11,47,94,.8)" : "rgba(214,232,255,.85)"; uiFit(g, sub, tw, Math.min(22, h * .2), 600); g.fillText(sub, tx, y + h * .7); } else g.fillText(lab, tx, y + h / 2 + 1);
+      g.textAlign = "left"; g.textBaseline = "alphabetic"; void sz; return fs; };
     B.draw = () => { B.btns = []; g.clearRect(0, 0, o.w, o.h); o.draw(B, g); tex.needsUpdate = true; B.dirty = 0; if (B.dom) B.domDraw(); };
     B.hit = (x, y) => B.btns.findIndex((q) => q.fn && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
     B.click = (x, y) => { const i = B.hit(x, y); if (i >= 0) { try { const a = T.ac(); if (a) { const os = a.createOscillator(), gg = a.createGain(); os.frequency.value = 660; gg.gain.setValueAtTime(.05, a.currentTime); gg.gain.exponentialRampToValueAtTime(.001, a.currentTime + .08); os.connect(gg).connect(T.outBus()); os.start(); os.stop(a.currentTime + .1); } } catch (e) {} B.btns[i].fn(); B.dirty = 1; return true; } return false; };
@@ -64,15 +78,81 @@
   /* közös fejléc + háttér */
   const UIBG = {};
   function uiImg(src) { if (UIBG[src]) return UIBG[src]; const im = new Image(); im.onload = () => { UIB.list.forEach((B) => { B.dirty = 1; }); }; im.src = src; UIBG[src] = im; return im; }
-  function uiFrame(B, g, title, sub) { const w = B.o.w, h = B.o.h, im = uiImg("img/kapitanyi-hatter.jpg");
+  /* ---------------------------------------------------------------- 2026-11-14: BALATONI TÁBLA-STÍLUS – kötélkeret, kikötői fejléc a Tihanyi-félsziget sziluettjével,
+     jelzőzászló-füzér, sötét tókék kártyák aranyszegéllyel, rajzolt ikonok (Quest-en az emoji nem mindig szép) */
+  function uiLite(hex, k) { const c = new THREE.Color(hex); c.lerp(new THREE.Color("#ffffff"), k); return "#" + c.getHexString(); }
+  const UI_EMO = [["⛵", "boat"], ["🌙", "moon"], ["🏆", "cup"], ["👥", "people"], ["⚙", "gear"], ["🎓", "cap"], ["‹", "back"], ["⚓", "anchor"], ["▶", "play"], ["↻", "refresh"], ["↺", "refresh"], ["✎", "pencil"], ["📷", "camera"], ["✓", "check"], ["◀", "left"], ["✉", "mail"], ["⏳", "clock"], ["✕", "x"], ["●", "dot"], ["○", "ring"], ["🗺", "map"]];
+  function uiEmo(t) { for (const [e, k] of UI_EMO) if (t.startsWith(e)) return [k, t.slice(e.length).replace(/^\uFE0F/, "").trim()]; if (/ ▶$/.test(t)) return ["right", t.replace(/ ▶$/, "")]; return null; }
+  function uiIcon(g, k, cx, cy, s, col) {
+    g.save(); g.translate(cx, cy); g.scale(s / 40, s / 40); g.fillStyle = col; g.strokeStyle = col; g.lineWidth = 4; g.lineCap = "round"; g.lineJoin = "round";
+    const P = (pts, fill) => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (fill) { g.closePath(); g.fill(); } else g.stroke(); };
+    if (k === "boat") { P([[2, -26], [2, 10], [22, 10]], true); P([[-3, -20], [-3, 10], [-18, 10]], true); P([[-24, 15], [24, 15], [16, 25], [-16, 25]], true); }
+    else if (k === "moon") { g.beginPath(); g.arc(0, 0, 22, .6, TAU - .6 + TAU * 0); g.arc(9, -5, 18, TAU - .9, .9, true); g.fill(); [[18, -18], [24, 6]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 2.6, 0, TAU); g.fill(); }); }
+    else if (k === "cup") { P([[-18, -24], [18, -24], [14, -2], [4, 6], [4, 14], [12, 20], [-12, 20], [-4, 14], [-4, 6], [-14, -2]], true); g.lineWidth = 4.5; g.beginPath(); g.arc(-19, -13, 8, Math.PI / 2, Math.PI * 1.5); g.stroke(); g.beginPath(); g.arc(19, -13, 8, -Math.PI / 2, Math.PI / 2); g.stroke(); g.fillRect(-15, 21, 30, 6); }
+    else if (k === "people") { [[-11, 1], [11, 1]].forEach(([x], i) => { g.beginPath(); g.arc(x, -12, 8, 0, TAU); g.fill(); g.beginPath(); g.arc(x, 22, 15, Math.PI, TAU); g.fill(); }); }
+    else if (k === "gear") { for (let i = 0; i < 8; i++) { g.save(); g.rotate(i * Math.PI / 4); g.fillRect(-5, -27, 10, 12); g.restore(); } g.beginPath(); g.arc(0, 0, 18, 0, TAU); g.fill(); g.globalCompositeOperation = "destination-out"; g.beginPath(); g.arc(0, 0, 7, 0, TAU); g.fill(); }
+    else if (k === "cap") { P([[-26, -6], [0, -18], [26, -6], [0, 6]], true); P([[-14, 0], [-14, 13], [0, 20], [14, 13], [14, 0], [0, 6]], true); g.lineWidth = 3; P([[22, -4], [22, 14]]); }
+    else if (k === "back" || k === "left") { g.lineWidth = 6; P([[8, -18], [-10, 0], [8, 18]]); if (k === "back") P([[-10, 0], [22, 0]]); }
+    else if (k === "right") { g.lineWidth = 6; P([[-8, -18], [10, 0], [-8, 18]]); }
+    else if (k === "anchor") { g.lineWidth = 5; g.beginPath(); g.arc(0, -19, 6, 0, TAU); g.stroke(); P([[0, -13], [0, 22]]); P([[-12, -5], [12, -5]]); g.beginPath(); g.arc(0, 4, 20, Math.PI * .15, Math.PI * .85); g.stroke(); P([[-21, 2], [-19, 12], [-12, 8]]); P([[21, 2], [19, 12], [12, 8]]); }
+    else if (k === "play") P([[-12, -20], [20, 0], [-12, 20]], true);
+    else if (k === "refresh") { g.lineWidth = 5; g.beginPath(); g.arc(0, 0, 18, -.3, Math.PI * 1.55); g.stroke(); P([[10, -24], [20, -12], [6, -8]], true); }
+    else if (k === "pencil") { g.save(); g.rotate(-Math.PI / 4); g.fillRect(-6, -22, 12, 34); P([[-6, 14], [6, 14], [0, 26]], true); g.restore(); }
+    else if (k === "camera") { g.fillRect(-24, -12, 48, 30); g.fillRect(-10, -19, 20, 8); g.globalCompositeOperation = "destination-out"; g.beginPath(); g.arc(0, 3, 10, 0, TAU); g.fill(); g.globalCompositeOperation = "source-over"; g.beginPath(); g.arc(0, 3, 6, 0, TAU); g.fill(); }
+    else if (k === "check") { g.lineWidth = 7; P([[-18, 0], [-5, 14], [20, -14]]); }
+    else if (k === "mail") { g.lineWidth = 4; g.strokeRect(-22, -14, 44, 30); P([[-22, -14], [0, 4], [22, -14]]); }
+    else if (k === "clock") { g.lineWidth = 4; g.beginPath(); g.arc(0, 0, 20, 0, TAU); g.stroke(); P([[0, -12], [0, 0], [10, 6]]); }
+    else if (k === "x") { g.lineWidth = 6; P([[-15, -15], [15, 15]]); P([[15, -15], [-15, 15]]); }
+    else if (k === "dot") { g.beginPath(); g.arc(0, 0, 13, 0, TAU); g.fill(); }
+    else if (k === "ring") { g.lineWidth = 4; g.beginPath(); g.arc(0, 0, 13, 0, TAU); g.stroke(); }
+    else if (k === "map") { P([[-24, -16], [-8, -22], [8, -16], [24, -22], [24, 18], [8, 24], [-8, 18], [-24, 24]], true); g.globalCompositeOperation = "destination-out"; g.lineWidth = 2.5; P([[-8, -22], [-8, 18]]); P([[8, -16], [8, 24]]); }
+    else if (k === "wind") { g.lineWidth = 4.5; g.beginPath(); g.moveTo(-24, -8); g.lineTo(10, -8); g.arc(10, -15, 7, Math.PI / 2, -Math.PI * .7, true); g.stroke(); g.beginPath(); g.moveTo(-24, 4); g.lineTo(16, 4); g.arc(16, 12, 8, -Math.PI / 2, Math.PI * .7); g.stroke(); P([[-24, 15], [0, 15]]); }
+    else if (k === "storm") { g.beginPath(); g.arc(0, 0, 13, 0, TAU); g.fill(); for (let i = 0; i < 8; i++) { g.save(); g.rotate(i * Math.PI / 4); g.fillRect(-2, -26, 4, 8); g.restore(); } }
+    else if (k === "user") { g.beginPath(); g.arc(0, -10, 11, 0, TAU); g.fill(); g.beginPath(); g.arc(0, 26, 22, Math.PI, TAU); g.fill(); }
+    g.restore();
+  }
+  /* a fejléc alján: a Tihanyi-félsziget sziluettje az apátság két tornyával, vitorlák a vízen */
+  function uiPanorama(g, x, y, w, h) {
+    g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+    const hill = (col, amp, base, f, ph) => { g.fillStyle = col; g.beginPath(); g.moveTo(x, y + h); for (let i = 0; i <= 80; i++) { const u = i / 80, yy = y + h - base - amp * (Math.sin(u * f + ph) * .5 + .5) * Math.sin(Math.PI * Math.min(1, u * 1.1)); g.lineTo(x + u * w, yy); } g.lineTo(x + w, y + h); g.closePath(); g.fill(); };
+    hill("rgba(70,120,150,.35)", h * .55, h * .1, 5, 1); hill("rgba(36,86,112,.55)", h * .38, h * .06, 7.5, 2.2);
+    /* a félsziget a jobb oldalon, rajta az apátság */
+    const px = x + w * .72, py = y + h; g.fillStyle = "rgba(18,58,80,.85)"; g.beginPath(); g.moveTo(px - w * .2, py); g.quadraticCurveTo(px - w * .08, py - h * .62, px, py - h * .64); g.quadraticCurveTo(px + w * .1, py - h * .6, px + w * .2, py); g.fill();
+    const ab = (dx) => { g.fillRect(px + dx - 3, py - h * .64 - 26, 6, 26); g.beginPath(); g.arc(px + dx, py - h * .64 - 27, 3.6, 0, TAU); g.fill(); g.fillRect(px + dx - .8, py - h * .64 - 38, 1.6, 9); }; ab(-6); ab(6); g.fillRect(px - 9, py - h * .64 - 14, 18, 14);
+    /* vitorlák */
+    [[.14, 1], [.31, .8], [.5, 1.1], [.88, .7]].forEach(([u, k]) => { const bx = x + w * u, by = y + h - 4; g.fillStyle = "rgba(255,255,255,.75)"; g.beginPath(); g.moveTo(bx, by - 30 * k); g.lineTo(bx + 14 * k, by - 4); g.lineTo(bx, by - 4); g.fill(); g.beginPath(); g.moveTo(bx - 2, by - 26 * k); g.lineTo(bx - 10 * k, by - 4); g.lineTo(bx - 2, by - 4); g.fill(); g.fillStyle = "rgba(255,255,255,.55)"; g.fillRect(bx - 10 * k, by - 3, 24 * k, 3); });
+    g.restore(); }
+  function uiFrame(B, g, title, sub) { const w = B.o.w, h = B.o.h, im = uiImg("img/kapitanyi-hatter.jpg"), HH = 134;
     uiRR(g, 0, 0, w, h, 34); g.save(); g.clip();
-    if (im.complete && im.naturalWidth) { const k = Math.max(w / im.naturalWidth, h / im.naturalHeight); g.drawImage(im, (w - im.naturalWidth * k) / 2, (h - im.naturalHeight * k) / 2, im.naturalWidth * k, im.naturalHeight * k); } else { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#5b9fd6"); gr.addColorStop(.6, "#bcd8ea"); gr.addColorStop(.62, "#4f8f9a"); gr.addColorStop(1, "#2c5f6c"); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
-    const sh = g.createLinearGradient(0, 0, 0, h); sh.addColorStop(0, "rgba(4,18,40,.72)"); sh.addColorStop(.18, "rgba(4,18,40,.35)"); sh.addColorStop(1, "rgba(4,18,40,.55)"); g.fillStyle = sh; g.fillRect(0, 0, w, h); g.restore();
-    uiRR(g, 3, 3, w - 6, h - 6, 32); g.lineWidth = 6; g.strokeStyle = "rgba(212,161,58,.95)"; g.stroke();
-    g.fillStyle = "rgba(255,255,255,.35)"; uiRR(g, w / 2 - 70, 14, 140, 10, 5); g.fill();   /* fogó (VR-ben itt lehet megfogni) */
-    g.fillStyle = "#ffd166"; uiFit(g, title, w - 120, 54, 900); g.textAlign = "center"; g.fillText(title, w / 2, 82); if (sub) { g.fillStyle = "#ffffff"; uiFit(g, sub, w - 120, 30, 600); g.fillText(sub, w / 2, 122); } g.textAlign = "left"; }
-  function uiCard(g, x, y, w, h) { uiRR(g, x, y, w, h, 24); g.fillStyle = "rgba(6,22,48,.78)"; g.fill(); g.lineWidth = 2; g.strokeStyle = "rgba(255,255,255,.22)"; g.stroke(); }
-  function uiH(g, t, x, y) { g.fillStyle = "#ffd166"; g.font = `900 30px ${UIF}`; g.fillText(t, x, y); }
+    if (im.complete && im.naturalWidth) { const k = Math.max(w / im.naturalWidth, h / im.naturalHeight); g.drawImage(im, (w - im.naturalWidth * k) / 2, (h - im.naturalHeight * k) / 2, im.naturalWidth * k, im.naturalHeight * k); } else { g.fillStyle = "#0e3a5a"; g.fillRect(0, 0, w, h); }
+    const sh = g.createLinearGradient(0, 0, 0, h); sh.addColorStop(0, "rgba(5,22,44,.62)"); sh.addColorStop(.5, "rgba(6,34,60,.52)"); sh.addColorStop(1, "rgba(4,20,40,.74)"); g.fillStyle = sh; g.fillRect(0, 0, w, h);
+    /* fejléc */
+    const hg = g.createLinearGradient(0, 0, 0, HH); hg.addColorStop(0, "rgba(5,20,42,.97)"); hg.addColorStop(1, "rgba(10,52,86,.93)"); g.fillStyle = hg; g.fillRect(0, 0, w, HH); uiPanorama(g, 0, HH - 58, w, 58);
+    const gl = g.createLinearGradient(0, 0, w, 0); gl.addColorStop(0, "rgba(212,161,58,0)"); gl.addColorStop(.15, "#d4a13a"); gl.addColorStop(.85, "#d4a13a"); gl.addColorStop(1, "rgba(212,161,58,0)"); g.fillStyle = gl; g.fillRect(0, HH, w, 3);
+    /* jelzőzászló-füzér a két felső sarokban (a nemzetközi jelzőzászlók színei) */
+    const FL = [["#d61f26", "#fff"], ["#ffd21a", "#0b3a8a"], ["#0b3a8a", "#fff"], ["#fff", "#d61f26"], ["#1e8e4f", "#fff"], ["#ffd21a", "#d61f26"]];
+    [[24, 1], [w - 24, -1]].forEach(([x0, sd]) => { g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 2; g.beginPath(); g.moveTo(x0, 30); g.quadraticCurveTo(x0 + sd * 120, 62, x0 + sd * 250, 34); g.stroke();
+      for (let i = 0; i < 7; i++) { const u = (i + .5) / 7, fx = x0 + sd * 250 * u, fy = 30 + (62 - 30) * 2 * u * (1 - u) * 1.9 - 4 * u, f = FL[i % FL.length]; g.fillStyle = f[0]; g.beginPath(); g.moveTo(fx - 12, fy); g.lineTo(fx + 12, fy); g.lineTo(fx, fy + 30); g.fill(); g.fillStyle = f[1]; g.beginPath(); g.moveTo(fx - 5, fy + 1); g.lineTo(fx + 5, fy + 1); g.lineTo(fx, fy + 13); g.fill(); } });
+    g.restore();
+    /* kötélkeret */
+    uiRR(g, 4, 4, w - 8, h - 8, 31); g.lineWidth = 9; g.strokeStyle = "#a07a42"; g.stroke(); g.save(); uiRR(g, 4, 4, w - 8, h - 8, 31); g.lineWidth = 9; g.setLineDash([6, 6]); g.strokeStyle = "#e3c48a"; g.stroke(); g.restore();
+    uiRR(g, 12, 12, w - 24, h - 24, 25); g.lineWidth = 1.5; g.strokeStyle = "rgba(255,230,170,.45)"; g.stroke();
+    g.fillStyle = "rgba(255,255,255,.4)"; uiRR(g, w / 2 - 70, 15, 140, 9, 5); g.fill();   /* fogó (VR-ben itt lehet megfogni) */
+    let t = String(title), ic = null; const em = uiEmo(t); if (em) { ic = em[0]; t = em[1]; }
+    g.font = `800 52px Georgia, "Noto Serif", serif`; const fs = uiFit(g, t, w - 640, 52, 800); g.font = `800 ${fs}px Georgia, "Noto Serif", serif`; const tw = g.measureText(t).width;
+    g.textAlign = "center"; g.fillStyle = "rgba(0,0,0,.45)"; g.fillText(t, w / 2 + 2, 74); const tg = g.createLinearGradient(0, 30, 0, 80); tg.addColorStop(0, "#fff1c4"); tg.addColorStop(1, "#e2b04a"); g.fillStyle = tg; g.fillText(t, w / 2, 72);
+    if (ic) uiIcon(g, ic, w / 2 - tw / 2 - 40, 55, 40, "#f2c14e");
+    if (sub) { g.fillStyle = "#e8f2fb"; uiFit(g, sub, w - 560, 25, 600); g.fillText(sub, w / 2, 108); } g.textAlign = "left"; }
+  function uiCard(g, x, y, w, h, o) { o = o || {}; g.save(); g.shadowColor = "rgba(0,0,0,.4)"; g.shadowBlur = 18; g.shadowOffsetY = 6; uiRR(g, x, y, w, h, 22); g.fillStyle = o.bg || "rgba(5,24,48,.86)"; g.fill(); g.restore();
+    g.save(); uiRR(g, x, y, w, h, 22); g.clip(); const ac = g.createLinearGradient(x, 0, x + w, 0); ac.addColorStop(0, "#d4a13a"); ac.addColorStop(.5, "#f6d27a"); ac.addColorStop(1, "#d4a13a"); g.fillStyle = ac; g.fillRect(x, y, w, 5);
+    g.strokeStyle = "rgba(120,180,220,.07)"; g.lineWidth = 2; for (let yy = y + h - 10; yy > y + h - 60; yy -= 14) { g.beginPath(); for (let xx = 0; xx <= w; xx += 10) { const q = yy + Math.sin(xx / 30 + yy) * 3; if (xx) g.lineTo(x + xx, q); else g.moveTo(x, q); } g.stroke(); } g.restore();
+    uiRR(g, x + .5, y + .5, w - 1, h - 1, 22); g.lineWidth = 1.6; g.strokeStyle = "rgba(255,226,160,.38)"; g.stroke(); }
+  function uiH(g, t, x, y, ic, mw) { if (ic) { g.fillStyle = "rgba(242,193,78,.16)"; g.beginPath(); g.arc(x + 17, y - 10, 19, 0, TAU); g.fill(); uiIcon(g, ic, x + 17, y - 10, 22, "#f2c14e"); x += 46; }
+    g.fillStyle = "#f2c14e"; uiFit(g, t, (mw || 640) - (ic ? 46 : 0), 29, 800); g.fillText(t, x, y); const tw = g.measureText(t).width; g.fillStyle = "rgba(242,193,78,.35)"; g.fillRect(x, y + 8, Math.min(tw, 420), 2); }
+  /* címke-chip (pl. viharjelzés medencénként) */
+  function uiChip(g, x, y, w, h, txt, col, on) { uiRR(g, x, y, w, h, h / 2); g.fillStyle = "rgba(255,255,255,.08)"; g.fill(); g.lineWidth = 1.5; g.strokeStyle = "rgba(255,255,255,.25)"; g.stroke();
+    g.fillStyle = on ? col : "rgba(255,255,255,.18)"; g.beginPath(); g.arc(x + h / 2, y + h / 2, h * .28, 0, TAU); g.fill(); if (on) { g.fillStyle = col.replace(")", ",.3)").replace("rgb", "rgba"); g.beginPath(); g.arc(x + h / 2, y + h / 2, h * .46, 0, TAU); g.fill(); }
+    g.fillStyle = "#fff"; uiFit(g, txt, w - h - 12, h * .42, 700); g.textBaseline = "middle"; g.fillText(txt, x + h, y + h / 2 + 1); g.textBaseline = "alphabetic"; }
 
   /* ---------------------------------------------------------------- PONTOZÁS (RRS A függelék, alacsony pontszámú rendszer) */
   function vrSeriesLoad() { try { const s = JSON.parse(localStorage.getItem("zephyr-sorozat") || "null"); if (s && s.races) return s; } catch (e) {} return { races: [], done: false, id: Date.now() }; }
@@ -183,23 +263,24 @@
     uiFrame(B, g, fin ? "🏆 A SOROZAT VÉGEREDMÉNYE" : "KAPITÁNYI TÁJÉKOZTATÓ", fin ? `${ser.races.length} futam · alacsony pontszámú rendszer (RRS A4) · a legkevesebb pont nyer` : `${S.lvl}. futam után · sorozat: ${ser.races.length}/5 futam · ${S.cls.n}`);
     if (B.page === 1 || fin) { drawSeries(B, g, ser, fin); return; }
     /* bal oszlop: eredmény + szabálytalanságok */
-    uiCard(g, 34, 150, 700, 400); uiH(g, "AZ ELŐZŐ FUTAM", 60, 196); g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 20px ${UIF}`; g.fillText(`${S.C.name} · ${S.venue ? S.venue.n : ""}`, 60, 226);
+    uiCard(g, 34, 150, 700, 400); uiH(g, "AZ ELŐZŐ FUTAM", 60, 196, "cup"); g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 20px ${UIF}`; g.fillText(`${S.C.name} · ${S.venue ? S.venue.n : ""}`, 60, 226);
     (last ? last.rows : []).forEach((q, i) => { const y = 270 + i * 64; g.fillStyle = q.me ? "rgba(212,161,58,.28)" : "rgba(255,255,255,.06)"; uiRR(g, 52, y - 34, 664, 54, 12); g.fill();
       g.fillStyle = q.place === 1 ? "#ffd166" : "#fff"; g.font = `900 30px ${UIF}`; g.fillText(q.place ? q.place + "." : "–", 66, y + 4);
       g.font = `800 26px ${UIF}`; g.fillStyle = "#fff"; uiFit(g, q.n, 300, 26, 800); g.fillText(q.n, 120, y + 2);
       g.font = `600 20px ${UIF}`; g.fillStyle = q.code ? "#ff9a8a" : "rgba(255,255,255,.85)"; g.fillText(q.code === "TLE" ? "időlimit után (TLE)" : q.code === "DNC" ? "gépi vezetés – nem számít" : q.code ? q.code : (q.est ? "becsült: " : "") + mmss(q.t || 0), 440, y + 2);
       g.font = `900 26px ${UIF}`; g.fillStyle = "#ffd166"; g.textAlign = "right"; g.fillText(q.pts + " p", 704, y + 4); g.textAlign = "left";
       if (q.ai && q.human) { g.fillStyle = "#ff9a8a"; g.font = `700 16px ${UIF}`; g.fillText("⚠ a játékos kiesett – a gép vezette tovább", 120, y + 22); } });
-    uiCard(g, 34, 566, 700, 300); uiH(g, "SZABÁLYTALANSÁGOK", 60, 610);
+    uiCard(g, 34, 566, 700, 300); uiH(g, "SZABÁLYTALANSÁGOK", 60, 610, "x");
     const F = (last && last.fouls) || []; g.font = `600 21px ${UIF}`;
     if (!F.length) { g.fillStyle = "#7CFC9A"; g.font = `800 26px ${UIF}`; g.fillText("✓ Tiszta futam – nem volt ütközés.", 60, 660); g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 20px ${UIF}`; uiWrap(g, VR_R14, 60, 700, 650, 28, 3); }
     else { let yy = 650; F.slice(0, 4).forEach((f) => { const R = VR_RRS[f.n] || VR_RRS[10]; g.fillStyle = "#ffd166"; g.font = `800 21px ${UIF}`; uiWrap(g, `${f.bad} ⟷ ${f.other}: ${f.bad} a hibás`, 60, yy, 650, 26, 1); yy += 26; g.fillStyle = "#fff"; g.font = `600 18px ${UIF}`; yy += uiWrap(g, `${R[0]}: ${R[1]}`, 60, yy, 650, 23, 3) * 23 + 10; }); }
     /* jobb oldal: a következő futam */
-    uiCard(g, 754, 150, 812, 716); uiH(g, `KÖVETKEZŐ: ${N.lvl}. FUTAM – ${N.C.name.toUpperCase()}${vrIsNight(N.lvl) ? " · 🌙 ÉJSZAKAI" : ""}`, 780, 196);
+    uiCard(g, 754, 150, 812, 716); uiH(g, `KÖVETKEZŐ: ${N.lvl}. FUTAM – ${N.C.name.toUpperCase()}${vrIsNight(N.lvl) ? " · ÉJSZAKAI" : ""}`, 780, 196, vrIsNight(N.lvl) ? "moon" : "map");
     { const tx = `${N.venue.n} · ${N.C.wxn || "szél"} ${(N.C.tws / KN).toFixed(0)} csomó · időlimit ${mmss(N.C.limit)} (a várható idő ~3×)`; g.fillStyle = "#fff"; uiFit(g, tx, 770, 21, 600); g.fillText(tx, 780, 228); }
-    drawCoursePlan(g, N.C, 774, 244, 470, 430, B.t); drawCourse3D(g, N.C, 1256, 244, 296, 430, B.t);
-    const legs = vrCourseLegs(N.C); g.font = `700 19px ${UIF}`; legs.forEach((l, i) => { const y = 702 + i * 30; if (y > 850) return; g.fillStyle = "#ffd166"; g.fillText(`${i + 1}.`, 780, y); g.fillStyle = "#fff"; g.fillText(`${i ? i + ". bója" : "rajt"} → ${i + 1 < legs.length ? (i + 1) + ". bója" : "cél (a két bója KÖZÖTT)"} · ${Math.round(l.d)} m · ${l.kind}`, 812, y); });
-    { const tx = "A bójákat bal kéz felől kell megkerülni (felülről nézve az óramutatóval ellentétesen). A szaggatott vonal az ajánlott cirkálási útvonal."; g.fillStyle = "rgba(255,255,255,.75)"; uiFit(g, tx, 770, 17, 600); g.fillText(tx, 780, 860); }
+    drawCoursePlan(g, N.C, 774, 244, 470, 430, B.t); drawCourse3D(g, N.C, 1256, 244, 296, 206, B.t); drawBalMap(g, 1256, 458, 296, 216, { venue: N.venue, wf: N.C.wf, t: B.t, labels: "kevés" });
+    const legs = vrCourseLegs(N.C); g.font = `700 19px ${UIF}`; legs.forEach((l, i) => { const y = 702 + i * 30; if (y > 812) return; g.fillStyle = "#ffd166"; g.fillText(`${i + 1}.`, 780, y); g.fillStyle = "#fff"; g.fillText(`${i ? i + ". bója" : "rajt"} → ${i + 1 < legs.length ? (i + 1) + ". bója" : "cél (a két bója KÖZÖTT)"} · ${Math.round(l.d)} m · ${l.kind}`, 812, y); });
+    { const tx = "A bójákat bal kéz felől kell megkerülni (felülről nézve az óramutatóval ellentétesen). A szaggatott vonal az ajánlott cirkálási útvonal."; g.fillStyle = "rgba(255,255,255,.75)"; uiFit(g, tx, 770, 17, 600); g.fillText(tx, 780, 836); }
+    { const tx = `⚠ Balatoni viharjelzés – ${stmText()} · ${STM.src}`; g.fillStyle = "#ffd166"; uiFit(g, tx, 770, 18, 700); g.fillText(tx, 780, 862); }
     /* gombok */
     const by = 890, bh = 84;
     B.btn(34, by, 460, bh, `▶  Indulás: ${N.lvl}. futam`, () => { vrBriefClose(); vrSetup(N.lvl); }, { gold: true });

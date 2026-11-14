@@ -116,146 +116,7 @@
     const lk = vrLavK(S.x, S.z, S.t); if (lk < .8 && S.st === "race" && !S.fin && W.t - (S.lavMsgT || 0) > 20 && !(S.msgT > 0 && /⚠/.test(S.msg || ""))) { S.lavMsgT = W.t; S.msg = "LAVÓR! Szélcsendes foltba futottál – a víz itt sima, a szél leállt. Legközelebb kerüld meg (a tükörsima, fodrozódás nélküli víz jelzi)."; S.msgT = 7; }
   }
 
-  /* ---------------------------------------------------------------- 7. A PART A HÁTTÉRBEN – futamonként más balatoni helyszín
-     A part a pálya szél felőli végén túl, ~1,6–3,5 km-re: dombok (szőlő, erdő, mező, nádas), települések, és a hely jellegzetes épülete pontos formával.
-     A színek a távolság szerint párásodnak (légperspektíva), a fények rá vannak sütve (Questen olcsó). */
-  const VENUES = [
-    { id: "tihany", n: "Tihany – az apátság alatt", d: "A Tihanyi-félsziget: a kéttornyú bencés apátság a domb tetején, alatta a falu és a lankák." },
-    { id: "badacsony", n: "Badacsony – a tanúhegy előtt", d: "A koporsó alakú Badacsony bazaltorgonáival, szőlőteraszaival és a csúcs keresztjével; nyugatra a Gulács és Szigliget." },
-    { id: "fured", n: "Balatonfüred – a móló előtt", d: "Füred: a Kerek templom kupolája, a parti szállodák, a kikötő árbócerdeje, mögötte a Tamás-hegy." },
-    { id: "siofok", n: "Siófok – a víztorony előtt", d: "A déli part: a siófoki víztorony gombafeje, a kikötő világítótornya, a parti szállodasor, nyárfák." },
-    { id: "szigliget", n: "Szigliget – a vár alatt", d: "A szigligeti várhegy a romos várral, a Kamonkő, mögötte a Badacsony és a Szent György-hegy." },
-    { id: "keszthely", n: "Keszthely – az öbölben", d: "A keszthelyi öböl: a Festetics-kastély tornya a fák fölött, a Helikon-part nádasa, mögötte a Keszthelyi-hegység." },
-    { id: "zamardi", n: "Zamárdi – a Zephyr előtt", d: "Hazai pálya: a zamárdi part nyárfái és strandja, szemben a Tihanyi-félsziget az apátsággal." }];
-  function vrVenue(lvl) { return VENUES[((lvl || 1) - 1 + VENUES.length) % VENUES.length]; }
-  function vrShoresBuild(far) {
-    const S = VRR; S.shoreG = new THREE.Group(); far.add(S.shoreG); S.shoreOld = makeShores(far); S.shoreOld.material.opacity = .55;
-  }
-  /* egy helyszín felépítése a pálya tengelyéhez képest: a part a pálya „felső” (szél felőli) végén túl */
-  function vrShoresSet(C, venue) {
-    const S = VRR, G = S.shoreG; if (!G) return; while (G.children.length) { const o = G.children[0]; G.remove(o); o.traverse((q) => { if (q.geometry) q.geometry.dispose(); }); }
-    const ax = Math.atan2(C.u[0], -C.u[1]);   /* a pálya „felfelé” irányszöge (É = 0) */
-    const haze = new THREE.Color(.80, .86, .90), sunD = new THREE.Vector3(-.42, .52, -.74).normalize(), rnd = vrRng(venue.id.length * 977 + 11);
-    const dirV = (brg, d) => new THREE.Vector3(Math.sin(brg) * d, 0, -Math.cos(brg) * d);
-    const nl = (brg, d, y, col, px, fl) => { const p = dirV(brg, d), c = new THREE.Color(col); NL.push([p.x, y, p.z, c.r, c.g, c.b, px, fl ? fl[0] : 0, fl ? fl[1] : 0, fl ? fl[2] : 1]); };
-    const ns = (brg, d, col, wd, ln) => { const p = dirV(brg, d), c = new THREE.Color(col); NS.push([p.x, p.z, c.r, c.g, c.b, wd, ln, brg]); };
-    const hzK = (d) => clamp((d - 500) / 7500, 0, .55);
-    const colM = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false }); W.disposables.push(colM);
-    /* 2026-11-14 ÉJSZAKA: a nevezetes épületek külön anyagot kapnak – éjjel díszkivilágításban (meleg fény), nem sötét sziluettként */
-    const colL = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false }); colL.userData.nightK = [.85, .5, .2]; W.disposables.push(colL); colM.userData.nightK = [.007, .009, .018];
-    let lmOn = 0, Dm = 1500; const NL = [], NS = [];   /* éjszakai fénypontok: [x, y, z, r, g, b, méret px, villogás-periódus s, fázis, kitöltés]; tükörcsíkok: [x, z, r, g, b, szélesség, hossz] */
-    const addGeo = (geo) => { W.disposables.push(geo); const m = new THREE.Mesh(geo, lmOn ? colL : colM); m.frustumCulled = false; G.add(m); return m; };
-    /* domb-szalag: szögtartomány [b0,b1], távolság, magasság-profil fn(t) → m, színező fn(t, y01) → Color */
-    const ridge = (b0, b1, dist, hFn, colFn, depth) => {
-      const N = 90, M = 6, pos = [], col = [], idx = [], dep = depth || 600;
-      for (let i = 0; i <= N; i++) { const t = i / N, brg = ax + b0 + (b1 - b0) * t, h = hFn(t), nrm = new THREE.Vector3();
-        for (let j = 0; j <= M; j++) { const v = j / M, y = h * Math.pow(v, .8), p = dirV(brg, dist + dep * v); p.y = j === 0 ? -2 : y;   /* a parttól (v = 0) a gerincig (v = 1) emelkedik */ pos.push(p.x, p.y, p.z);
-          const c = colFn(t, v, h).clone(); const slope = (hFn(Math.min(1, t + .01)) - hFn(Math.max(0, t - .01))) * .004, sl = clamp(.66 + .38 * v + slope + .06 * Math.sin(t * 97 + v * 13), .45, 1.12); c.multiplyScalar(sl); c.lerp(haze, hzK(dist)); col.push(c.r, c.g, c.b); } }
-      for (let i = 0; i < N; i++) for (let j = 0; j < M; j++) { const a = i * (M + 1) + j, b = a + 1, c = a + M + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
-      const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); return addGeo(g); };
-    const C3 = (h) => new THREE.Color(h);
-    const greenMix = (t, v) => { const n = Math.sin(t * 61 + v * 7) * .5 + .5, n2 = Math.sin(t * 173 + 1.3) * .5 + .5; return C3(n > .62 ? "#3f6b2e" : n2 > .7 ? "#7a8f45" : "#4f7a36"); };
-    const vine = (t, v) => { const rows = Math.sin(t * 900) > 0; return v < .55 ? C3(rows ? "#6d8b3c" : "#59772f") : C3(v > .85 ? "#3d5e2a" : "#4a6d30"); };
-    /* box-alakú épület (a helyszín irányában), sült árnyalással */
-    const bld = (brg, dist, w, h, dpt, col, roof, yb) => { const g = new THREE.BoxGeometry(w, h, dpt); g.translate(0, (yb || 0) + h / 2, 0); const p = dirV(brg, dist); const c = C3(col).lerp(haze, hzK(dist)), cr = C3(roof || col).lerp(haze, hzK(dist));
-      const n = g.attributes.normal, cc = []; for (let i = 0; i < n.count; i++) { const k = n.getY(i) > .5 ? 1.05 : .62 + .38 * Math.max(0, n.getX(i) * sunD.x + n.getZ(i) * sunD.z); const q = (n.getY(i) > .5 ? cr : c).clone().multiplyScalar(k); cc.push(q.r, q.g, q.b); }
-      g.setAttribute("color", new THREE.Float32BufferAttribute(cc, 3)); const m = addGeo(g); m.position.copy(p); m.rotation.y = -brg; return m; };
-    const shape = (geo, brg, dist, col, yb) => { geo.translate(0, yb || 0, 0); const c = C3(col).lerp(haze, hzK(dist)), n = geo.attributes.normal, cc = []; for (let i = 0; i < n.count; i++) { const k = .6 + .45 * Math.max(0, n.getX(i) * sunD.x + n.getY(i) * sunD.y + n.getZ(i) * sunD.z); const q = c.clone().multiplyScalar(k); cc.push(q.r, q.g, q.b); }
-      geo.setAttribute("color", new THREE.Float32BufferAttribute(cc, 3)); const m = addGeo(geo); m.position.copy(dirV(brg, dist)); m.rotation.y = -brg; return m; };
-    const trees = (b0, b1, dist, n, hgt, col) => { for (let i = 0; i < n; i++) { const b = ax + b0 + (b1 - b0) * rnd(), d = dist + rnd() * 120, hh = hgt * (.7 + rnd() * .6); const g = new THREE.ConeGeometry(hh * .22, hh, 6); shape(g, b, d, col || (rnd() < .5 ? "#355f2a" : "#2f5426"), hh / 2); } };
-    const poplars = (b0, b1, dist, n) => { for (let i = 0; i < n; i++) { const b = ax + b0 + (b1 - b0) * (i + rnd() * .6) / n, hh = 16 + rnd() * 10, g = new THREE.SphereGeometry(hh * .22, 8, 6); g.scale(1, 2.3, 1); shape(g, b, dist + rnd() * 40, rnd() < .5 ? "#3e6a2e" : "#4c7a36", hh * .55); } ridge(b0, b1, dist + 60, (t) => 9 + 3 * Math.sin(t * 50), () => C3("#456f33"), 50); };   /* nyárfasor + mögötte összefüggő lombkorona */
-    const village = (b0, b1, dist, n, yb) => { for (let i = 0; i < n; i++) { const b = ax + b0 + (b1 - b0) * rnd(), d = dist + rnd() * 160, w = 8 + rnd() * 10, y0 = yb ? yb(b) : 0; if (rnd() < .7) nl(b, d, y0 + 2.5 + rnd() * 3, rnd() < .8 ? "#ffcf7a" : "#fff1d6", 2.2 + rnd() * 1.6); bld(b, d, w, 5 + rnd() * 4, 8 + rnd() * 6, rnd() < .8 ? "#f2eee4" : "#e8d9b8", rnd() < .6 ? "#a8432f" : "#6b4a3a", (yb ? yb(b) : 0)); } };
-    const reeds = (b0, b1, dist) => ridge(b0, b1, dist, (t) => 2.2 + Math.sin(t * 40) * .4, () => C3("#a7a160"), 30);
-    const beach = (b0, b1, dist) => { ridge(b0, b1, dist, () => 1.2, () => C3("#d9c79a"), 25); for (let b = b0; b < b1; b += .012) { nl(ax + b, dist + 18, 6, "#ffd9a0", 2.4); if (rnd() < .25) ns(ax + b, dist, "#ffcf88", 2.5, 120); } };   /* parti sétány lámpái */
-    /* ----- a helyszínek ----- */
-    const v = venue.id;
-    if (v === "tihany" || v === "zamardi") {
-      const D = v === "zamardi" ? 6000 : 1700, hk = v === "zamardi" ? 1 : 1; Dm = D;
-      if (v === "zamardi" && !venue.harbor) { beach(-1.25, -.35, 900); poplars(-1.2, -.4, 930, 40); village(-1.1, -.5, 960, 25); }
-      ridge(-.55, .6, D, (t) => (90 + 40 * Math.sin(t * 9) + 30 * Math.sin(t * 23)) * Math.sin(Math.PI * clamp(t * 1.1, 0, 1)) * hk, greenMix, 500);
-      ridge(-1.2, 1.1, D + 2600, (t) => 140 + 60 * Math.sin(t * 7 + 1) + 30 * Math.sin(t * 17), () => C3("#5d7550"), 1500);
-      reeds(-.5, .55, D - 20);
-      /* a falu a domboldalon */
-      village(-.25, .3, D + 30, 70, () => 18 + rnd() * 30);
-      /* a TIHANYI APÁTSÁG: hosszú templomhajó, a homlokzaton két magas torony, sötétzöld-szürke barokk sisakkal; a domb gerincén (~80 m) */
-      lmOn = 1;
-      { const b = ax + .05, d = D + 300, y0 = 96, col = "#f3ead6", rf = "#5d6b62";
-      lmOn = 0;
-        bld(b, d + 30, 18, 20, 52, col, "#8a4a35", y0); bld(b - .012, d + 55, 60, 14, 22, col, "#8a4a35", y0);   /* templom + rendház */
-        [-1, 1].forEach((sd) => { const tb = b + sd * .0042; bld(tb, d, 7.5, 34, 7.5, col, col, y0); const hel = new THREE.ConeGeometry(4.8, 9, 8); shape(hel, tb, d, rf, y0 + 34 + 4.5); const bulb = new THREE.SphereGeometry(3.6, 10, 8); bulb.scale(1, 1.3, 1); shape(bulb, tb, d, rf, y0 + 34 + 1);
-          const sp = new THREE.CylinderGeometry(.4, .9, 9, 6); shape(sp, tb, d, rf, y0 + 34 + 13); const cr = new THREE.BoxGeometry(.5, 3, .5); shape(cr, tb, d, "#d4a13a", y0 + 34 + 19); }); }
-      trees(-.5, .55, D + 60, 70, 14);
-    } else if (v === "badacsony") {
-      const D = 2800; Dm = D;
-      /* koporsó alakú tanúhegy: meredek bazaltorgona-fal fent, lapos tető ~438 m, a lejtőn szőlőteraszok fehér présházakkal */
-      ridge(-.32, .32, D, (t) => { const e = Math.abs(t - .5) * 2; return e < .62 ? 420 + 12 * Math.sin(t * 30) : e < .82 ? 420 - (e - .62) / .2 * 210 : 210 * (1 - (e - .82) / .18); },
-        (t, v2, h) => v2 > .78 ? C3("#5b5d55") : v2 > .62 ? C3("#3e5a2c") : vine(t, v2), 650);
-      ridge(.35, .62, D + 1600, (t) => 300 * Math.pow(Math.sin(Math.PI * t), 1.6), greenMix, 900);   /* Gulács (kúp) */
-      ridge(-.75, -.36, D + 600, (t) => 180 * Math.sin(Math.PI * t) + 40 * Math.sin(t * 14), greenMix, 900);   /* Szent György-hegy */
-      ridge(-1.2, 1.2, D + 3800, (t) => 120 + 50 * Math.sin(t * 9), () => C3("#61785a"), 1400);
-      reeds(-.6, .6, D - 30); village(-.3, .3, D + 20, 45, (b) => 10 + rnd() * 120);
-      /* a kereszt a hegytető peremén */
-      lmOn = 1;
-      { const b = ax - .02, d = D + 650; const p1 = new THREE.BoxGeometry(1.4, 16, 1.4); shape(p1, b, d, "#f4f4f0", 418); const p2 = new THREE.BoxGeometry(8, 1.4, 1.4); shape(p2, b, d, "#f4f4f0", 430); }
-      lmOn = 0;
-    } else if (v === "fured") {
-      const D = 1500; Dm = D;
-      ridge(-.9, .9, D + 900, (t) => 160 + 70 * Math.sin(t * 6) + 30 * Math.sin(t * 19), greenMix, 1200);
-      ridge(-1.3, 1.3, D + 3500, (t) => 230 + 80 * Math.sin(t * 5 + 2), () => C3("#5e7356"), 1500);
-      beach(-.7, .7, D - 10); poplars(-.7, .7, D + 40, 50); village(-.6, .6, D + 120, 60, () => rnd() * 25);
-      /* parti szállodák (fehér, 5–8 emeletes) */
-      [-.22, -.1, .14, .3].forEach((b, i) => bld(ax + b, D + 70, 40 + i * 8, 18 + (i % 2) * 8, 18, "#f6f4ee", "#9aa3a8"));
-      /* a Kerek templom: kör alaprajzú, kupolás, oszlopos portikusz */
-      lmOn = 1;
-      { const b = ax + .02, d = D + 160; const cyl = new THREE.CylinderGeometry(11, 11, 14, 20); shape(cyl, b, d, "#f1e6c8", 6 + 7); const dome = new THREE.SphereGeometry(11.5, 20, 10, 0, TAU, 0, Math.PI / 2); shape(dome, b, d, "#5d7a6a", 6 + 14); const lan = new THREE.CylinderGeometry(1.6, 1.6, 4, 10); shape(lan, b, d, "#f1e6c8", 6 + 26); }
-      lmOn = 0;
-      /* kikötő árbócerdeje */
-      for (let i = 0; i < 40; i++) { const b = ax - .5 + rnd() * .2, hh = 9 + rnd() * 6; const g = new THREE.CylinderGeometry(.12, .12, hh, 4); shape(g, b, D - 60 + rnd() * 40, "#e8ecef", hh / 2); }
-    } else if (v === "siofok") {
-      const D = 1300; Dm = D;
-      beach(-1, 1, D - 10); poplars(-1, 1, D + 30, 70); village(-.9, .9, D + 100, 70);
-      [-.35, -.2, .25, .4, .55].forEach((b, i) => bld(ax + b, D + 80, 30 + i * 6, 22 + (i % 3) * 9, 16, "#f3f1ea", "#7f8a90"));
-      /* a siófoki víztorony: karcsú törzs, kiszélesedő gombafej, tetején kilátó */
-      lmOn = 1;
-      { const b = ax + .06, d = D + 120, K = 1.5; const tr = new THREE.CylinderGeometry(3.2 * K, 4 * K, 40 * K, 14); shape(tr, b, d, "#efefe8", 20 * K); const hd = new THREE.CylinderGeometry(13 * K, 4 * K, 9 * K, 20); shape(hd, b, d, "#efefe8", 44.5 * K); const tp = new THREE.CylinderGeometry(13.5 * K, 13.5 * K, 2.5 * K, 20); shape(tp, b, d, "#c7ccd0", 50 * K); const lt = new THREE.CylinderGeometry(3 * K, 3 * K, 4 * K, 10); shape(lt, b, d, "#efefe8", 53 * K); }   /* a víztorony (a jobb felismerhetőségért kissé nagyítva) */
-      lmOn = 0;
-      /* a kikötő világítótornya a móló végén */
-      lmOn = 1;
-      { const b = ax - .18, d = D - 120; const lt = new THREE.CylinderGeometry(1.4, 2, 14, 12); shape(lt, b, d, "#f4f4f0", 7); const lh = new THREE.CylinderGeometry(1.5, 1.5, 2.5, 10); shape(lh, b, d, "#c62828", 15.3); const mo = new THREE.BoxGeometry(5, 2, 260); shape(mo, b + .07, d + 120, "#bdb7a8", 1); }
-      lmOn = 0;
-      ridge(-1.3, 1.3, D + 2800, (t) => 25 + 12 * Math.sin(t * 8), () => C3("#6e8460"), 900);
-    } else if (v === "szigliget") {
-      const D = 1900; Dm = D;
-      ridge(-.25, .25, D, (t) => 240 * Math.pow(Math.sin(Math.PI * t), 1.2) + 15 * Math.sin(t * 25), greenMix, 900);   /* várhegy */
-      ridge(.15, .45, D + 500, (t) => 150 * Math.sin(Math.PI * t), greenMix, 700);   /* Kamonkő */
-      ridge(-.9, -.3, D + 2200, (t) => { const e = Math.abs(t - .5) * 2; return e < .6 ? 420 : 420 * (1 - (e - .6) / .4); }, (t, v2) => v2 > .75 ? C3("#5b5d55") : vine(t, v2), 1200);   /* Badacsony */
-      reeds(-.6, .6, D - 25); village(-.5, .5, D + 30, 35);
-      /* a szigligeti vár romja: falmaradványok és a lakótorony a csúcson */
-      lmOn = 1;
-      { const b = ax, d = D + 230, y0 = 232; bld(b, d, 14, 22, 14, "#cbbfa6", "#cbbfa6", y0); bld(b + .006, d + 10, 30, 9, 4, "#c2b69c", "#c2b69c", y0 - 4); bld(b - .007, d - 5, 4, 12, 26, "#c2b69c", "#c2b69c", y0 - 6); }
-      lmOn = 0;
-      trees(-.25, .25, D + 60, 80, 13);
-    } else {   /* keszthely */
-      const D = 1800; Dm = D;
-      reeds(-1, 1, D - 30); ridge(-1.1, 1.1, D + 1500, (t) => 260 + 80 * Math.sin(t * 5) + 30 * Math.sin(t * 13), greenMix, 1400);
-      trees(-.6, .6, D + 40, 110, 18); village(-.8, .8, D + 180, 60);
-      /* a Festetics-kastély: hosszú fehér főszárny, középen a toronnyal (kupolás, órás) */
-      lmOn = 1;
-      { const b = ax + .03, d = D + 260; bld(b, d, 120, 16, 22, "#f5f2e8", "#6a6f78"); const tw = new THREE.BoxGeometry(12, 30, 12); shape(tw, b, d - 8, "#f5f2e8", 15); const cu = new THREE.SphereGeometry(6.5, 14, 8, 0, TAU, 0, Math.PI / 2); shape(cu, b, d - 8, "#4c5a62", 45); const sp = new THREE.ConeGeometry(1.2, 9, 8); shape(sp, b, d - 8, "#4c5a62", 55); }
-      lmOn = 0;
-    }
-    /* ----- ÉJSZAKAI FÉNYEK (vrNight* – 05h): kikötők bejárati fényei, viharjelzők, díszkivilágítás, tükörcsíkok a vízen -----
-       A kikötőbe a tó felől behajózva a bejárat BAL oldalán vörös, JOBB oldalán zöld fény (IALA „A” rendszer); a viharjelző sárga villogó fény
-       (elsőfok: percenként 45, másodfok: percenként 90 felvillanás – a periódust az éjszakai modul állítja a szélhez). */
-    { const ML = { tihany: [-.33, .42], badacsony: [-.22, .24], fured: [-.48, .1], siofok: [-.16, .34], szigliget: [.08, -.4], keszthely: [-.28, .22], zamardi: [-.8, .5] }[venue.id] || [0];
-      ML.forEach((b0) => { const b = ax + b0, d = Dm - 25; nl(b - .0045, d, 4, "#ff2a1a", 5, [3, rnd() * 3, .3]); nl(b + .0045, d, 4, "#2aff6a", 5, [3, rnd() * 3, .3]); ns(b - .0045, d, "#ff3a2a", 2, 160); ns(b + .0045, d, "#3aff7a", 2, 160);
-        for (let k = 0; k < 14; k++) nl(b + (rnd() - .5) * .03, d + 30 + rnd() * 60, 3 + rnd() * 5, rnd() < .5 ? "#ffd27a" : "#e8f0ff", 1.8 + rnd()); });
-      const SW = venue.harbor ? [] : [-.9, -.45, 0.05, .5, .95]; S.stormPts = []; SW.forEach((b0) => { const b = ax + b0 + (rnd() - .5) * .06, d = Dm + 10; S.stormPts.push(NL.length); nl(b, d, 7, "#ffc41a", 7.5, [1.333, rnd(), .32]); ns(b, d, "#ffc41a", 3.5, 220); S.stormPts.push(-NS.length); });
-      /* díszkivilágítás a nevezetes épület körül: halvány fényfolt-pontok */
-      G.children.forEach((m) => { if (m.material === colL) { m.geometry.computeBoundingSphere(); const bs = m.geometry.boundingSphere, wp = bs.center.clone().applyEuler(m.rotation).add(m.position); NL.push([wp.x, wp.y, wp.z, 1, .82, .55, 3.5, 0, 0, 1]); } });
-      S.nightShore = { NL, NS, D: Dm, ax }; }
-    S.venue = venue;
-  }
+  /* ---------------------------------------------------------------- 7. A PART A HÁTTÉRBEN: 2026-11-14 15:45 óta a VALÓDI Balaton (05j-verseny-balaton.js: VENUES, vrShoresSet) */
 
   /* ---------------------------------------------------------------- 14. NÉZŐHAJÓK: kidolgozott motoros jachtok, tagolt (integető) emberekkel; soha nincsenek a pályán;
      nekik is neki lehet menni – ilyenkor a rajtuk állók elesnek, és kiabálnak */
@@ -350,7 +211,7 @@
   /* minden képkockán (a vrTick végén) */
   function vrExtTick(dt) {
     const S = VRR, C = S.C; if (!C) return;
-    vrLavTick(dt); vrSpectTick(dt);
+    vrLavTick(dt); vrSpectTick(dt); try { stmTick(dt, !!(NGT && NGT.on)); } catch (e) {}
     /* időlimit */
     if (S.lvl && C.limit && S.st === "race" && !S.doneT) { const left = C.limit - S.t;
       if (left < 60 && left > 0 && !S.limWarn) { S.limWarn = 1; S.msg = "⚠ Még 1 perc az időlimitből – aki addig nem fut be, nem ért be (TLE)."; S.msgT = 6; beep(); }

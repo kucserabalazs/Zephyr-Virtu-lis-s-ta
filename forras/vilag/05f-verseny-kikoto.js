@@ -9,7 +9,7 @@
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); HB.env = env;
     const oldSky = makeSky(far); HB.water = makeWater(env); makePhotoSky(far, oldSky, HB.water);
     /* part: Zamárdi, szemben Tihany */
-    VRR.shoreG = new THREE.Group(); far.add(VRR.shoreG); try { vrShoresSet({ u: [0, -1] }, Object.assign({}, VENUES.find((q) => q.id === "zamardi"), { harbor: true })); } catch (e) { console.warn(e); }
+    VRR.shoreG = new THREE.Group(); env.add(VRR.shoreG); try { const nl0 = VRR.lvl || 1; stmLevels(vrCourse(nl0), vrVenue(nl0)); vrShoresSet({ u: [0, -1] }, Object.assign({}, VENUES.find((q) => q.id === "zamardi"), { harbor: true })); } catch (e) { console.warn(e); }
     HB.lights = addLights(SUN.clone());
     const wood = std({ map: canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#8a6a4a"; g.fillRect(0, 0, w, h); for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? "#7f5f40" : "#93724f"; g.fillRect(0, k * h / 8, w, h / 8 - 3); g.fillStyle = "rgba(30,18,8,.6)"; g.fillRect(0, (k + 1) * h / 8 - 3, w, 3); }
       for (let k = 0; k < 160; k++) { g.fillStyle = `rgba(40,25,10,${Math.random() * .2})`; g.fillRect(Math.random() * w, Math.random() * h, 20 + Math.random() * 60, 1); } }, { repeat: [1, 12] }), roughness: .9 });
@@ -44,15 +44,54 @@
       hit.userData.xr = { hover: (on) => { o.hov = on; }, click: () => hbPreview(b.id) }; T.xr.extra.add(hit); W.objs.push(hit); return o; });
     HB.sel = vrClsId(); HB.prev = null; HB.mode = "menu";
     HB.gulls = makeGulls(env);
+    try { hbDecor(env); } catch (e) { console.warn("kikötő-díszlet", e); }
     try { netStart(); } catch (e) {}
     faceYaw(0);
     audioStart({ water: .05, wind: .02 });
     hbMenu(); W._hb = { preview: hbPreview, board: hbBoard, go: hbGo, HB };
     return { tick: hbTick, panel: hbPanel, hud: hbHud, wrist: () => [["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["‹", "A sétához", () => W.close()]] };
   }
+  /* ---------------------------------------------------------------- 2026-11-14: balatoni kikötői részletek – viharjelző oszlop (a keleti medence valódi fokozatával),
+     hattyúk, nádas a part mentén, útjelző tábla a valódi távolságokkal, pad, virágládák */
+  function hbDecor(env) {
+    const white = std({ color: "#f2f2ee", roughness: .5 }), dark = std({ color: "#2a2e33", roughness: .6 }), yel = std({ color: "#f2c21a", roughness: .45 });
+    /* viharjelző oszlop a móló végén (a valódiak: magas oszlop, tetején sárga villogó lámpa) */
+    { const G = new THREE.Group(); G.position.set(-1.35, .62, -45.2); env.add(G); mesh(new THREE.CylinderGeometry(.09, .12, 7.5, 10).translate(0, 3.75, 0), white, G); mesh(new THREE.BoxGeometry(.5, .5, .5).translate(0, 7.7, 0), dark, G);
+      const lamp = mesh(new THREE.CylinderGeometry(.22, .22, .55, 14).translate(0, 8.25, 0), basic({ color: "#4a4a40" }), G); mesh(new THREE.ConeGeometry(.3, .25, 14).translate(0, 8.65, 0), dark, G);
+      const glow = glowSprite("#ffcc22", 2.6); glow.position.set(0, 8.25, 0); glow.userData.night = 0; G.add(glow); glow.visible = false;
+      const sg = canvasTex(512, 160, (g, w, h) => { g.fillStyle = "#f2c21a"; g.fillRect(0, 0, w, h); g.fillStyle = "#14161b"; g.font = "900 52px system-ui, sans-serif"; g.textAlign = "center"; g.fillText("VIHARJELZŐ", w / 2, 66); g.font = "700 30px system-ui, sans-serif"; g.fillText("45/perc: elsőfok · 90/perc: másodfok", w / 2, 122); });
+      const pl = mesh(new THREE.PlaneGeometry(1.4, .44), basic({ map: sg, side: THREE.DoubleSide }), G); pl.position.set(0, 2.2, .14); HB.storm = { lamp, glow }; }
+    /* útjelző tábla a móló elején: a valódi távolságok légvonalban */
+    { const [hx, hz] = balHarborCentre(), dist = (la, lo) => { const [x, z] = balXY(la, lo); return (Math.hypot(x - hx, z - hz) / 1000).toFixed(1).replace(".", ","); }, brg = (la, lo) => { const [x, z] = balXY(la, lo); return Math.atan2(x - hx, -(z - hz)); };
+      const T0 = [["Tihanyi apátság", 46.91389, 17.88944], ["Balatonfüred", 46.9537, 17.8955], ["Siófok, víztorony", 46.90541, 18.0522], ["Szántódi rév", 46.8793, 17.9006], ["Badacsony", 46.80351, 17.49584]];
+      const G = new THREE.Group(); G.position.set(2.15, .62, 2.6); env.add(G); mesh(new THREE.CylinderGeometry(.06, .07, 3.2, 8).translate(0, 1.6, 0), std({ color: "#5d4630", roughness: .9 }), G);
+      T0.forEach(([n, la, lo], i) => { const tx = canvasTex(512, 96, (g, w, h) => { g.fillStyle = "#0b3a5e"; g.fillRect(0, 0, w, h); g.strokeStyle = "#e9c46a"; g.lineWidth = 6; g.strokeRect(4, 4, w - 8, h - 8); g.fillStyle = "#fff"; g.font = "800 40px system-ui, sans-serif"; g.fillText(n, 22, 62); g.textAlign = "right"; g.fillStyle = "#ffd166"; g.fillText(dist(la, lo) + " km", w - 22, 62); });
+        const b = mesh(new THREE.BoxGeometry(1.5, .28, .04), [std({ color: "#0b3a5e" }), std({ color: "#0b3a5e" }), std({ color: "#0b3a5e" }), std({ color: "#0b3a5e" }), basic({ map: tx }), basic({ map: tx })], G); const a = brg(la, lo);
+        b.position.set(Math.sin(a) * .7, 2.95 - i * .34, -Math.cos(a) * .7); b.rotation.y = -a + Math.PI / 2; });
+      const lbl = labelSprite(["Zamárdi · Balaton", "a táblán a valódi távolságok, légvonalban"], { size: 1.4, fs: 54, w: 760 }); lbl.position.set(0, 3.7, 0); G.add(lbl); }
+    /* pad és virágládák a móló elején */
+    { const wood = std({ color: "#8a6a4a", roughness: .8 }); const G = new THREE.Group(); G.position.set(-1.15, .66, -10); env.add(G); mesh(new THREE.BoxGeometry(.45, .06, 1.6).translate(0, .45, 0), wood, G); mesh(new THREE.BoxGeometry(.06, .45, 1.6).translate(-.2, .7, 0), wood, G); [-.7, .7].forEach((z) => mesh(new THREE.BoxGeometry(.4, .45, .06).translate(0, .22, z), dark, G));
+      [[-1.25, -2.8], [1.25, -20.5], [-1.25, -27]].forEach(([x, z]) => { const b = mesh(new THREE.BoxGeometry(.32, .3, .9), wood, env); b.position.set(x, .8, z); for (let k = 0; k < 9; k++) { const f = mesh(new THREE.SphereGeometry(.07, 6, 5), std({ color: ["#e63946", "#ffb703", "#f1faee", "#c77dff"][k % 4], roughness: .7 }), env); f.position.set(x + (Math.random() - .5) * .24, 1.0 + Math.random() * .08, z + (Math.random() - .5) * .8); } }); }
+    /* nádas a part közelében, a móló két oldalán */
+    { const rm = std({ color: "#9a9a58", roughness: .9 }), hm = std({ color: "#6b4a2a", roughness: .9 }), parts = [];
+      for (let k = 0; k < 260; k++) { const sd = k % 2 ? 1 : -1, x = sd * (5 + Math.random() * 16), z = 4 + Math.random() * 7, h = 1.6 + Math.random() * 1.2; const g = new THREE.CylinderGeometry(.012, .02, h, 3); g.rotateZ((Math.random() - .5) * .25); g.translate(x, h / 2 - .2, z); parts.push(g);
+        if (k % 4 === 0) { const t = new THREE.CylinderGeometry(.035, .035, .22, 5); t.translate(x, h - .2, z); parts.push(t); } }
+      const merged = mergeGeoms(parts.map((g) => [g, new THREE.Matrix4()])); W.disposables.push(merged); const m = new THREE.Mesh(merged, rm); env.add(m); void hm; }
+    /* hattyúk */
+    HB.swans = [[-14, -26, 7, .05], [16, -34, 9, -.04], [-22, -55, 6, .06]].map(([cx, cz, r, w2]) => { const g = new THREE.Group(), wm = std({ color: "#fbfbf8", roughness: .55 });
+      const body = mesh(new THREE.SphereGeometry(.3, 14, 10), wm, g); body.scale.set(1, .62, 1.6); body.position.y = .12; const tail = mesh(new THREE.ConeGeometry(.16, .3, 10), wm, g); tail.rotation.x = -2.2; tail.position.set(0, .26, -.48);
+      [-1, 1].forEach((sd) => { const wg = mesh(new THREE.SphereGeometry(.2, 10, 8), wm, g); wg.scale.set(.5, .55, 1.4); wg.position.set(sd * .2, .25, -.05); wg.rotation.x = -.25; });
+      const neck = new THREE.Group(); neck.position.set(0, .22, .36); g.add(neck); let py = 0, pz = 0; for (let i = 0; i < 7; i++) { const a = -.15 + i * .2, sg = mesh(new THREE.SphereGeometry(.065 - i * .003, 8, 6), wm, neck); py += Math.cos(a) * .1; pz += Math.sin(a) * .045 - (i > 4 ? .03 : 0); sg.position.set(0, py, pz); }
+      const head = mesh(new THREE.SphereGeometry(.075, 10, 8), wm, neck); head.position.set(0, py + .03, pz + .04); head.scale.set(.85, .85, 1.3);
+      const beak = mesh(new THREE.ConeGeometry(.035, .14, 8), std({ color: "#ff7a1a", roughness: .5 }), neck); beak.rotation.x = Math.PI / 2 + .35; beak.position.set(0, py + .0, pz + .16); const knob = mesh(new THREE.SphereGeometry(.03, 8, 6), dark, neck); knob.position.set(0, py + .04, pz + .1);
+      env.add(g); return { g, neck, cx, cz, r, w: w2, a: Math.random() * TAU }; });
+  }
   function hbTick(dt) {
+    try { stmTick(dt, false); } catch (e) {}
     W.root.position.set(0, T.inVR ? -.66 : -.66 - 1.62, 0);   /* a móló felszíne a padló (VR) / a szemmagasság alatt 1,62 m (2D) */
     HB.water.userData.mat.uniforms.uT.value = W.t; HB.water.userData.mat.uniforms.uOff.value.set(0, 0);
+    if (HB.storm) { const l = STM.lv.keleti || 0, per = l === 2 ? 60 / 90 : l === 1 ? 60 / 45 : 0, on = per && (W.t % per) / per < .34; HB.storm.glow.visible = !!on; HB.storm.lamp.material.color.set(on ? "#ffe066" : l ? "#7a6420" : "#4a4a40"); }
+    (HB.swans || []).forEach((q, i) => { q.a += dt * q.w; q.g.position.set(q.cx + Math.cos(q.a) * q.r, Math.sin(W.t * 1.3 + i) * .03, q.cz + Math.sin(q.a) * q.r * .6); q.g.rotation.y = -q.a + (q.w > 0 ? Math.PI : 0); q.neck.rotation.x = .08 * Math.sin(W.t * .7 + i * 2); });
     HB.boats.forEach((o) => { const S = o.g.userData.S; S.heel = Math.sin(W.t * .9 + o.ph) * .03; S.pitch = Math.sin(W.t * 1.1 + o.ph) * .015; o.g.position.y = Math.sin(W.t * 1.2 + o.ph) * .05; S.awa = 150 + 20 * Math.sin(W.t * .2 + o.ph); S.aws = 2.5;
       o.g.visible = !(HB.prev && HB.prev.id === o.b.id); if (o.g.visible) o.g.userData.update(dt); o.lbl.visible = !HB.prev; o.lbl.material.opacity = o.hov ? 1 : .85; const k = o.hov ? 1.12 : 1; o.lbl.scale.set((o.b.big ? 3.6 : 2.4) * k, o.lbl.scale.y / o.lbl.scale.x * (o.b.big ? 3.6 : 2.4) * k, 1); });
     ["flag0", "flag1"].forEach((k) => { const f = HB[k]; if (!f) return; const pa = f.geometry.attributes.position, b0 = f.userData.base; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 5 - W.t * 6) * .08 * (x + .7); } pa.needsUpdate = true; });
@@ -82,27 +121,46 @@
   /* ---------------------------------------------------------------- a kikötő táblái (menü, hajó, játékos, beállítások, eredmények, többjátékos) */
   function hbMenu() { if (HB.prev) { HB.env.remove(HB.prev.g); HB.env.remove(HB.prev.disc); HB.prev = null; } hbBoard("menu"); }
   function hbBoard(page) {
-    HB.page = page; if (!HB.B) HB.B = uiBoard({ w: 1500, h: 1000, mw: 1.45, dist: 1.25, side: page === "boat" ? .62 : 0, y: -.08, fps: 2, bar: 140, draw: hbDraw }); HB.B.o.side = page === "boat" ? .62 : 0; HB.B.show(true); if (T.inVR) HB.B.place(); HB.B.dirty = 1; }
+    HB.page = page; if (!HB.B) HB.B = uiBoard({ w: 1500, h: 1000, mw: 1.45, dist: 1.25, side: page === "boat" ? .62 : 0, y: -.08, fps: 4, bar: 140, draw: hbDraw }); HB.B.o.side = page === "boat" ? .62 : 0; HB.B.show(true); if (T.inVR) HB.B.place(); HB.B.dirty = 1; }
   function hbDraw(B, g) {
     const p = HB.page, pr = vrProfile();
     if (p === "menu") {
-      uiFrame(B, g, "⚓ ZEPHYR KIKÖTŐ", "Vitorlásverseny – válassz hajót, állítsd be, és indulhatsz");
-      /* játékoskártya */
-      uiCard(g, 40, 160, 640, 300); uiH(g, "JÁTÉKOS", 70, 205);
-      { const im = pr.photo ? uiImg(pr.photo) : null; g.save(); g.beginPath(); g.arc(150, 320, 80, 0, TAU); g.fillStyle = "#123b6b"; g.fill(); g.clip(); if (im && im.complete && im.naturalWidth) g.drawImage(im, 70, 240, 160, 160); else { g.fillStyle = "#ffd166"; g.font = `900 90px ${UIF}`; g.textAlign = "center"; g.fillText((pr.name || "?").slice(0, 1).toUpperCase(), 150, 352); g.textAlign = "left"; } g.restore();
-        g.fillStyle = "#fff"; uiFit(g, pr.name || "Nincs még neved", 380, 40, 900); g.fillText(pr.name || "Nincs még neved", 260, 305); g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 22px ${UIF}`; g.fillText("a neved a nagyvitorlára kerül", 260, 342); }
-      B.btn(260, 370, 400, 70, "✎ Név és fénykép", () => hbBoard("profile"));
-      /* hajó */
-      uiCard(g, 700, 160, 760, 300); uiH(g, "HAJÓ", 730, 205); const c = boatCls(HB.sel); g.fillStyle = "#fff"; g.font = `900 40px ${UIF}`; g.fillText(c.n, 730, 262); g.font = `600 22px ${UIF}`; g.fillStyle = "rgba(255,255,255,.85)"; g.fillText(`${c.len} · ${c.crew}`, 730, 300); uiWrap(g, c.d, 730, 336, 700, 28, 2);
-      B.btn(730, 380, 700, 64, "Bökj rá egy kikötött hajóra – vagy: ◀ ▶ itt", () => { const i = BOAT_ORDER.indexOf(HB.sel); hbPreview(BOAT_ORDER[(i + 1) % BOAT_ORDER.length]); }, { fs: 26 });
-      /* fő gombok */
-      B.btn(40, 490, 1420, 120, `⛵  INDULÁS A VERSENYRE  ·  ${VRR.series && VRR.series.races && !VRR.series.done ? (VRR.series.races.length + 1) + ". futam a sorozatban" : "új sorozat, 1. futam"}`, () => hbGo(false), { gold: true, fs: 44 });
-      B.btn(40, 636, 455, 100, "🌙 Éjszakai futam", () => hbGo(false, 0, false, true), { bg: "rgba(20,24,70,.92)" });
-      B.btn(522, 636, 455, 100, "🏆 Eredmények és trófeák", () => hbBoard("trophy"));
-      B.btn(1005, 636, 455, 100, "👥 Többjátékos", () => hbBoard("net"));
-      B.btn(40, 762, 455, 100, "⚙ Beállítások", () => hbBoard("set")); B.btn(522, 762, 455, 100, "🎓 Oktató futam", () => hbGo(true));
-      B.btn(1005, 762, 455, 100, "‹ Vissza a sétához", () => { uiCloseAll(); W.close(); });
-      g.fillStyle = "rgba(255,255,255,.8)"; g.font = `600 22px ${UIF}`; g.fillText("VR-ben a tábla felső sávját megfogva (csippentés) bárhová teheted; előre-hátra tolva nő vagy kisebbedik.", 40, 920);
+      /* 2026-11-14 (tulajdonos: „a kikötő és az egész kezelőfelület legyen sokkal érthetőbb, kidolgozottabb, részletgazdagabb, balatoni hangulatú”):
+         bal oldalt a Balaton térképe a következő futam helyével, a széllel és a hivatalos viharjelzéssel; jobb oldalt a játékos, a hajó és az indítás;
+         alul minden gomb ikonnal és egy sornyi magyarázattal. */
+      const nl = VRR.lvl || ((VRR.series && VRR.series.races ? VRR.series.races.length % 5 : 0) + 1), ven = vrVenue(nl), C0 = HB.C0 && HB.C0.lvl === nl ? HB.C0 : (HB.C0 = vrCourse(nl));
+      uiFrame(B, g, "⚓ ZEPHYR KIKÖTŐ · ZAMÁRDI", "Balatoni vitorlásverseny – válassz hajót, nézd meg a pályát, és indulhatsz");
+      /* --- a mai futam térképe --- */
+      uiCard(g, 36, 152, 724, 604); uiH(g, `A KÖVETKEZŐ FUTAM: ${nl}. · ${C0.name.toUpperCase()}`, 58, 196, "map");
+      drawBalMap(g, 54, 212, 688, 350, { venue: ven, wf: C0.wf, t: B.t });
+      g.fillStyle = "#fff"; g.font = `800 26px ${UIF}`; uiFit(g, ven.n, 680, 26, 800); g.fillText(ven.n, 58, 594);
+      g.fillStyle = "rgba(225,238,250,.88)"; g.font = `500 19px ${UIF}`; uiWrap(g, ven.d, 58, 622, 684, 23, 2);
+      { const dirs = ["É", "ÉK", "K", "DK", "D", "DNy", "Ny", "ÉNy"], wd = dirs[Math.round(((C0.wf * R2D) % 360 + 360) % 360 / 45) % 8];
+        g.fillStyle = "#9fd8ff"; g.font = `700 19px ${UIF}`; uiFit(g, `Szél: ${wd} felől, ${(C0.tws / KN).toFixed(0)} csomó (${C0.wxn || ""}) · ${vrIsNight(nl) ? "🌙 éjszakai futam" : "nappali futam"}`, 684, 19, 700); g.fillText(`Szél: ${wd} felől, ${(C0.tws / KN).toFixed(0)} csomó (${C0.wxn || ""}) · ${vrIsNight(nl) ? "éjszakai futam" : "nappali futam"}`, 58, 676); }
+      { const L = STM.lv, col = (l) => l === 2 ? "rgb(230,57,53)" : l === 1 ? "rgb(255,200,26)" : "rgb(120,200,140)", tx = (l) => l === 2 ? "másodfok" : l === 1 ? "elsőfok" : "alapfok"; const fl = Math.floor(B.t * 1.5) % 2;
+        [["nyugati", "Nyugati"], ["kozepso", "Középső"], ["keleti", "Keleti"]].forEach(([k, n], i) => uiChip(g, 58 + i * 230, 690, 218, 34, `${n}: ${tx(L[k])}`, col(L[k]), L[k] ? fl : 1));
+        g.fillStyle = "rgba(225,238,250,.6)"; g.font = `500 14px ${UIF}`; uiFit(g, `Balatoni viharjelzés medencénként (sárga villogás: 45/perc = elsőfok, 90/perc = másodfok) · ${STM.src}`, 684, 14, 500); g.fillText(`Balatoni viharjelzés medencénként (sárga villogás: 45/perc = elsőfok, 90/perc = másodfok) · ${STM.src}`, 58, 744); }
+      /* --- játékos --- */
+      uiCard(g, 784, 152, 680, 168); uiH(g, "JÁTÉKOS", 806, 196, "user");
+      { const im = pr.photo ? uiImg(pr.photo) : null; g.save(); g.beginPath(); g.arc(860, 260, 46, 0, TAU); g.fillStyle = "#123b6b"; g.fill(); g.clip(); if (im && im.complete && im.naturalWidth) g.drawImage(im, 814, 214, 92, 92); else { g.fillStyle = "#f2c14e"; g.font = `900 52px ${UIF}`; g.textAlign = "center"; g.fillText((pr.name || "?").slice(0, 1).toUpperCase(), 860, 278); g.textAlign = "left"; } g.restore(); g.strokeStyle = "#d4a13a"; g.lineWidth = 3; g.beginPath(); g.arc(860, 260, 47, 0, TAU); g.stroke();
+        g.fillStyle = "#fff"; uiFit(g, pr.name || "Nincs még neved", 300, 34, 900); g.fillText(pr.name || "Nincs még neved", 924, 254); g.fillStyle = "rgba(225,238,250,.8)"; g.font = `500 18px ${UIF}`; g.fillText("a neved a nagyvitorlára kerül", 924, 284); }
+      B.btn(1250, 214, 194, 84, "✎ Név, fotó", () => hbBoard("profile"), { fs: 24 });
+      /* --- hajó --- */
+      uiCard(g, 784, 336, 680, 206); uiH(g, "HAJÓ", 806, 380, "boat"); const c = boatCls(HB.sel);
+      g.fillStyle = "#fff"; g.font = `900 32px ${UIF}`; uiFit(g, c.n, 440, 32, 900); g.fillText(c.n, 806, 426); g.font = `600 18px ${UIF}`; g.fillStyle = "#9fd8ff"; uiFit(g, `${c.len} · ${c.crew}`, 440, 18, 600); g.fillText(`${c.len} · ${c.crew}`, 806, 454); g.fillStyle = "rgba(225,238,250,.85)"; g.font = `500 17px ${UIF}`; uiWrap(g, c.d, 806, 480, 440, 22, 2);
+      B.btn(1268, 360, 84, 76, "◀", () => { const i = BOAT_ORDER.indexOf(HB.sel); hbPreview(BOAT_ORDER[(i + BOAT_ORDER.length - 1) % BOAT_ORDER.length]); }); B.btn(1362, 360, 84, 76, "", () => { const i = BOAT_ORDER.indexOf(HB.sel); hbPreview(BOAT_ORDER[(i + 1) % BOAT_ORDER.length]); }, { ic: "right" });
+      g.fillStyle = "rgba(225,238,250,.7)"; g.font = `500 15px ${UIF}`; uiWrap(g, "vagy bökj rá egy kikötött hajóra a mólón", 1268, 462, 180, 19, 3);
+      /* --- indulás --- */
+      const ser = VRR.series && VRR.series.races && !VRR.series.done ? VRR.series.races.length : 0;
+      B.btn(784, 560, 680, 196, "⛵ INDULÁS A VERSENYRE", () => hbGo(false), { gold: true, fs: 44, sub: ser ? `${ser + 1}. futam a sorozatban (5 futam, RRS A4 pontozás)` : "új, 5 futamos sorozat · RRS A4 pontozás – a legkevesebb pont nyer" });
+      /* --- további lehetőségek --- */
+      const bw = 464, bh = 96, y1 = 776, y2 = 884;
+      B.btn(36, y1, bw, bh, "🌙 Éjszakai futam", () => hbGo(false, 0, false, true), { night: true, sub: "holdfény, csillagok, világító bóják, parti fények" });
+      B.btn(36 + bw + 14, y1, bw, bh, "🎓 Oktató futam", () => hbGo(true), { sub: "egyetlen bója, egyenletes szél – gyakorlásra" });
+      B.btn(36 + 2 * (bw + 14), y1, bw, bh, "👥 Többjátékos", () => hbBoard("net"), { sub: "négyes csoportok, meghívás, saját futam" });
+      B.btn(36, y2, bw, bh, "🏆 Eredmények és trófeák", () => hbBoard("trophy"), { sub: "a sorozatok állása és a serlegek" });
+      B.btn(36 + bw + 14, y2, bw, bh, "⚙ Beállítások", () => hbBoard("set"), { sub: "ellenfelek, kormány, napszak, ülve/állva" });
+      B.btn(36 + 2 * (bw + 14), y2, bw, bh, "‹ Vissza a sétához", () => { uiCloseAll(); W.close(); }, { sub: "a Zephyr Apartmanház virtuális sétája" });
     } else if (p === "boat") {
       const c = boatCls(HB.sel); uiFrame(B, g, c.n.toUpperCase(), "előtted forog a forgókorongon");
       uiCard(g, 40, 160, 1420, 560); g.fillStyle = "#fff"; g.font = `800 30px ${UIF}`; g.fillText(c.len, 70, 220); g.fillText(c.crew, 70, 262); g.font = `600 27px ${UIF}`; uiWrap(g, c.d, 70, 320, 1360, 38, 4);

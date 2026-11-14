@@ -43,7 +43,9 @@
     const L = 70 * Math.max(.6, cs);   /* a rajtvonal hossza (kis hajóknál rövidebb) */
     /* időjárás futamonként (külön véletlen-sorozat, hogy a pályák bójái a korábbiak maradjanak): gyenge / közepes / friss szél */
     const Rw = vrRng(lvl * 31 + 7), w0 = lvl <= 2 ? .5 : Rw(), wxn = w0 < .25 ? "gyenge szél" : w0 < .7 ? "közepes szél" : "friss szél", wk = w0 < .25 ? 6.5 + Rw() * 2 : w0 < .7 ? 10 + R() * 6 : 16 + Rw() * 4;
-    return { name: tp.n, wxn, lvl, wf, tws: wk * KN, marks, u, c, line: { a: { x: -c[0] * L / 2, z: -c[1] * L / 2 }, b: { x: c[0] * L / 2, z: c[1] * L / 2 } } };
+    const C = { name: tp.n, wxn, lvl, wf, tws: wk * KN, marks, u, c, line: { a: { x: -c[0] * L / 2, z: -c[1] * L / 2 }, b: { x: c[0] * L / 2, z: c[1] * L / 2 } } };
+    try { stmWind(C, vrVenue(lvl)); } catch (e) {}   /* 2026-11-14: élő viharjelzés esetén a futam szele is igazodik */
+    return C;
   }
   /* --------------------------------------------------------------- a nagy versenyjacht kokpitja (méterben, a skálázott hajó helyi terében) */
   function vrCockpit(boat) {
@@ -629,7 +631,7 @@
     VRR.riv.forEach((r, i) => { const p = ST.riv[i];   /* 2026-11-14: véletlen, tiszta rajthelyek (vrStartPlace) */ Object.assign(r, { x: p.x, z: p.z, b: p.b, v: p.v, next: 0, tack: wrapA(p.b - C.wf) > 0 ? 1 : -1, lane: null, holdDir: null, hold: 0, go: 0, spAv: null, lastTack: 0, fin: null, skill: 1, yr: 0, del: 0, spinOn: false, ph: rand() * 9, _mi: -1, errNext: 0, errGW: 0, penT: 0, pen: 0, spinA: null, penLast: 0, _tkg: false, _sd0: null, _rel: null, _ovT: 0, _ovBy: null, _mk: null, wide: 0, _dS: null, started: false, prevSide: null, _ls0: null }); });
     if (VRR.podium) VRR.podium.visible = false; if (VRR.foulB) VRR.foulB.visible = false; vrFoulDom(false);
     VRR.res = []; VRR.riv.forEach((r) => { r.fin = null; }); if (VRR.net) vrNetSetup(ST);
-    try { vrBriefClose(); } catch (e) {} vrLimitSet(C); vrLavGen(C); vrSpectPlace(C); vrShoresSet(C, vrVenue(lvl || 1)); try { vrNightShore(); vrNightSet(vrIsNight(lvl), C); } catch (e) { console.warn("éjszaka", e); } if (!VRR.series) VRR.series = vrSeriesLoad();
+    try { vrBriefClose(); } catch (e) {} vrLimitSet(C); vrLavGen(C); vrSpectPlace(C); vrShoresSet(C, vrVenue(lvl || 1)); try { stmLevels(C, vrVenue(lvl || 1)); } catch (e) { console.warn("vihar", e); } try { vrNightShore(); vrNightSet(vrIsNight(lvl), C); } catch (e) { console.warn("éjszaka", e); } if (!VRR.series) VRR.series = vrSeriesLoad();
     /* oktató futam: nincs visszaszámlálás és nincs ellenfél – a hajó a vonal alól indul, azonnal „versenyben” */
     VRR.setup = vrSetup;   /* (teszteléshez elérhető) */
     VRR.tut = lvl ? null : { step: 0 }; VRR.riv.forEach((r) => { r.g.visible = !!lvl; if (!lvl) { r.x += 9000; r.z += 9000; r.lbl.visible = false; } });
@@ -1474,7 +1476,7 @@
     P.title(`Vitorlásverseny · ${S.lvl ? S.lvl + ". futam" : "🎓"} · ${S.C.name} · ${vrDiff().n} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.nightInfo ? S.nightInfo + " · " : ""}${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · ${S.C.wxn || "szél"} ${(S.tws / KN).toFixed(0)} csomó`);
     P.row(0, S.msgT > 0 ? S.msg : "Kormány: zárd ökölbe a kezed magad előtt, és mozdítsd balra-jobbra (15–15 cm a teljes kitérés). Nyitott tenyérrel engeded el.", "#ffd166");
     P.row(1, S.pen > 0 ? `⚠ BÜNTETŐ: ${S.pen} × 360° forduló hátravan (${Math.round(Math.abs(S.penAcc || 0) * R2D)}° megvan) – enélkül a befutó érvénytelen` : S.ocs ? "KORAI RAJT – menj vissza a rajtvonal mögé, aztán lépd át újra" : S.st === "pre" ? "Rajt előtt maradj a vonal mögött – a rajtjelre (hosszú kürt) lépd át" : S.next < S.marks.length ? `Következő: ${S.next + 1}. bója (${S.marks.length} van) – bal kéz felől kerüld` : "Utolsó szakasz: át a rajtvonalon!", "#ffffff");
-    P.row(2, S.st === "done" ? S.res.map((q, i) => `${i + 1}. ${q.n} ${mmss(q.t)}`).join(" · ") : "A sárga fényoszlop mutatja a következő bóját.", "#7fd3ff");
+    P.row(2, S.st === "done" ? S.res.map((q, i) => `${i + 1}. ${q.n} ${mmss(q.t)}`).join(" · ") : `⚠ Balatoni viharjelzés – ${stmText()} (${STM.src})`, "#7fd3ff");
     { const ser = S.series || { races: [] }, tb = ser.races.length ? vrSeriesTable(ser).map((q, i) => `${i + 1}. ${q.n.replace(" (te)", "")} ${q.sum}p`).join(" · ") : "";
       P.row(3, `Időlimit: ${mmss(S.C.limit || 0)} · ${S.venue ? S.venue.n : ""} · ` + (ser.races.length ? `Sorozat ${ser.races.length}/5: ${tb}` : "Sorozat: 5 futam, RRS A4 pontozás – a legkevesebb pont nyer"), "#c9a24a"); }
     if (S.st === "done") P.buttons(S.lvl ? [["⚓ Kapitányi tájékoztató", vrBriefOpen], ["Tovább ▸ " + (S.lvl + 1) + ". futam", () => vrSetup(S.lvl + 1)], ["⚓ Kikötő", vrToHarbor]] : [["▸ 1. futam", () => vrSetup(1)], ["⚓ Kikötő", vrToHarbor]]);

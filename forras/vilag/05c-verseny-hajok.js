@@ -31,6 +31,7 @@
   function boatCls(id) { return BOATCLS[id] || BOATCLS.zephyr; }
 
   /* --------------------------------------------------------------- közös: puha vitorla (paraméteres háló, a szélhez trimmelve, lobog, ha belobog) */
+  const bsst2 = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   function softSail(o) {
     /* o: { parent, nu, nv, luff:(v)=>Vector3 (az árboc pontja a v magasságban, a vitorla helyi terében), chord:(v)=>m, mat, camber, twist, roach } */
     const nu = o.nu || 10, nv = o.nv || 14, N = (nu + 1) * (nv + 1), pos = new Float32Array(N * 3), uv = new Float32Array(N * 2), idx = [];
@@ -41,21 +42,52 @@
     /* kétoldalas vászon: a hátoldalon tükrözött textúra – a szám és a név mindkét oldalról olvasható (mint a valódi vitorlákon) */
     if (o.mat.map && o.mat.side === THREE.DoubleSide) { o.mat.side = THREE.FrontSide; const t2 = o.mat.map.clone(); t2.wrapS = THREE.RepeatWrapping; t2.repeat.x = -1; t2.offset.x = 1; t2.needsUpdate = true; W.disposables.push(t2);
       const m2 = o.mat.clone(); m2.map = t2; m2.side = THREE.BackSide; W.disposables.push(m2); const bk = new THREE.Mesh(g, m2); bk.frustumCulled = false; m.add(bk); }
-    const L = new THREE.Vector3();
-    const st = { a: 0, lf: 0, t: Math.random() * 9, side: 1, U: 6, depth: o.camber || .1 };
+    const L = new THREE.Vector3(), L2 = new THREE.Vector3();
+    /* 2026-11-14 (tulajdonos: „a vitorlák részletessége, a grósz mozgása legyen életszerűbb”): ÉLETHŰ VITORLAMOZGÁS
+       • soronkénti (alulról felfelé) tehetetlenség: a vitorla nem egyszerre telik meg és nem egyszerre vált oldalt – forduláskor a lécek egymás után „pattannak át”;
+       • a mély pont (draft) a húr ~42%-ánál, felfelé laposodó profil; erős szélben az árboc meghajlik (előre ível) és a vitorla laposabb lesz;
+       • széllökésben először a belépő él telik meg, a hátsó él kinyílik (csavarodás nő), aztán visszazár;
+       • belobogás: előbb buborék a belépő él mögött, majd az egész vászon hullámzik – a hullám a belépő éltől a hátsó él felé fut, a szél erejével gyorsul;
+       • teli vitorlán erős szélben a hátsó él felső része rezeg (leech flutter), gyenge szélben ráncok az árboc mögött;
+       • jelzőszálak (telltale) a lécek végén: sima áramlásnál hátrafelé lobognak, belobogáskor összevissza csapkodnak. */
+    const st = { a: 0, lf: 0, t: Math.random() * 9, side: 1, U: 6, Uf: 6, gk: 0, depth: o.camber || .1, sv: new Float32Array(nv + 1).fill(1), fl: new Float32Array(nv + 1).fill(1) };
+    const dpos = o.draft || .42, dxp = Math.log(.5) / Math.log(dpos);
+    /* jelzőszálak a hátsó élen (3 magasságban) */
+    const TT = []; if (o.telltales !== false && o.parent) { const tm = new THREE.LineBasicMaterial({ color: "#d61f26" }), tm2 = new THREE.LineBasicMaterial({ color: "#1e8e4f" }); W.disposables.push(tm, tm2);
+      [.3, .55, .8].forEach((v, i) => { const tg = new THREE.BufferGeometry(); tg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(15), 3)); W.disposables.push(tg); const ln = new THREE.Line(tg, i % 2 ? tm2 : tm); ln.frustumCulled = false; o.parent.add(ln); TT.push({ v, ln, ph: Math.random() * 9 }); }); }
     st.update = (dt, a, lf, U, side, k) => {   /* a: a vitorla szöge (rad, + = a hajó +x oldala felé), lf: belobogás 0..1, U: látszólagos szél m/s, k: teltség-szorzó */
-      st.t += dt; const t = st.t, om = TAU * (1 + U * .16), fill = k == null ? 1 : k, sd = Math.abs(a) > .02 ? Math.sign(a) : side;
+      dt = Math.min(dt || 0, .1); st.t += dt; const t = st.t, fill = k == null ? 1 : k, sd = Math.abs(a) > .02 ? Math.sign(a) : side;
+      st.Uf += (U - st.Uf) * Math.min(1, dt * .6); st.gk += (clamp((U - st.Uf) / Math.max(2, st.Uf), -.5, .6) - st.gk) * Math.min(1, dt * 3);   /* széllökés-érzékelés */
+      const om = TAU * (.9 + U * .17), flat = 1 - .32 * clamp((U - 6.5) / 7, 0, 1), bendK = (o.bend || .05) * clamp(U / 9, .15, 1.3) * (1 + st.gk * .8);
       for (let j = 0; j <= nv; j++) {
-        const v = j / nv, c = o.chord(v); L.copy(o.luff(v)); const aa = a + sd * (o.twist || .18) * v * v, dx = Math.sin(aa), dz = -Math.cos(aa), px = Math.cos(aa) * sd, pz = Math.sin(aa) * sd;
+        const v = j / nv, c = o.chord(v); L.copy(o.luff(v));
+        /* soronkénti oldal és teltség – alul gyorsabb, felül lassabb (a lécek egymás után pattannak át) */
+        const rate = (4.2 - 2.4 * v) * dt, dS = sd - st.sv[j]; st.sv[j] += clamp(dS, -rate, rate); const q = st.sv[j], sdj = Math.sign(q || sd) * Math.pow(Math.abs(q), .5);
+        const tgtF = fill * (1 - .9 * lf); st.fl[j] += (tgtF - st.fl[j]) * Math.min(1, dt * (tgtF > st.fl[j] ? 2.6 - 1.2 * v : 5)); const fj = st.fl[j], lfj = Math.max(lf, (1 - Math.abs(q)) * .95);
+        const tw = (o.twist || .18) * (1 + st.gk * 1.6 + .5 * clamp((Math.abs(a) - .6) / .8, 0, 1)), aa = a + sdj * tw * v * v, dx = Math.sin(aa), dz = -Math.cos(aa), px = Math.cos(aa) * sdj, pz = Math.sin(aa) * sdj;
+        const bend = o.bend === 0 ? 0 : bendK * Math.sin(Math.PI * v) * c;   /* árbochajlás: a belépő él közepe előre ível → a vitorla laposabb */
+        const foot = o.loose ? 1 : .3 + .7 * Math.min(1, v / .12);          /* a bumhoz fogott alsó él simul */
         for (let i = 0; i <= nu; i++) {
-          const u = i / nu, k2 = (j * (nu + 1) + i) * 3, sh = Math.sin(Math.PI * Math.pow(u, .78)) * (1 - .25 * v);
-          let dep = st.depth * c * sh * fill * (1 - .9 * lf);
-          if (lf > .02) dep += c * .06 * lf * Math.sin(om * t - u * 8 - v * 2.6) * (.3 + .7 * u) * clamp(U / 7, .25, 1.1);
-          if (U > 5 && lf < .3) dep += c * .012 * clamp((U - 5) / 5, 0, 1) * u * u * Math.sin(TAU * 6.5 * t + v * 8);
-          pos[k2] = L.x + dx * c * u + px * dep; pos[k2 + 1] = L.y + (o.sag ? -o.sag * Math.sin(Math.PI * u) * (1 - v) : 0); pos[k2 + 2] = L.z + dz * c * u + pz * dep;
+          const u = i / nu, k2 = (j * (nu + 1) + i) * 3, prof = Math.sin(Math.PI * Math.pow(u, dxp)) * (1 - .3 * v);
+          /* a teltség a belépő éltől halad a hátsó él felé */
+          const fu = clamp(fj * 1.25 - (u * .25) * (1 - fj), 0, 1);
+          let dep = st.depth * c * prof * fu * flat * foot * (1 - .1 * bend / Math.max(c, .01));
+          if (lfj > .02) { const bub = lfj * (1 - bsst2(.5, 1, lfj)), flog = bsst2(.45, 1, lfj), e = Math.exp(-u * 5.5);
+            dep -= st.depth * c * bub * 1.8 * e * foot;   /* buborék a belépő él mögött */
+            dep += c * (.075 * flog * Math.sin(om * t - u * 9 - v * 2.8) * (.25 + .75 * u) + .03 * flog * Math.sin(om * 1.7 * t - u * 15 + v * 5)) * clamp(U / 7, .25, 1.15) * foot; }
+          if (U > 5 && lfj < .3) dep += c * .016 * clamp((U - 5) / 5, 0, 1) * Math.pow(Math.max(0, u - .7) / .3, 2) * bsst2(.35, .75, v) * Math.sin(TAU * 6.8 * t + v * 9 + u * 3);   /* hátsóél-rezgés */
+          if (U < 4.5 && lfj < .3) dep += c * .008 * Math.exp(-u * 7) * Math.sin(v * 46 + u * 9) * (1 - U / 4.5);   /* ráncok gyenge szélben */
+          dep += c * .006 * Math.sin(t * 2.1 + v * 4 - u * 5) * st.gk;   /* a vászon „lélegzik” a lökésekben */
+          pos[k2] = L.x + dx * c * u + px * dep; pos[k2 + 1] = L.y + (o.sag ? -o.sag * Math.sin(Math.PI * u) * (1 - v) : 0); pos[k2 + 2] = L.z + dz * c * u + pz * dep + bend * (1 - u) * (1 - u);
         }
       }
       g.attributes.position.needsUpdate = true; g.computeVertexNormals();
+      /* jelzőszálak: a hátsó él pontjából 5 pontos szalag */
+      TT.forEach((T2) => { const j = Math.round(T2.v * nv), kk = (j * (nu + 1) + nu) * 3, kk0 = (j * (nu + 1) + nu - 1) * 3, A = T2.ln.geometry.attributes.position.array; L.set(pos[kk], pos[kk + 1], pos[kk + 2]); L2.set(pos[kk] - pos[kk0], pos[kk + 1] - pos[kk0 + 1], pos[kk + 2] - pos[kk0 + 2]).normalize();
+        const lfx = Math.max(lf, 1 - Math.abs(st.sv[j])), len = .055 * (o.ttLen || 1) * Math.max(.6, o.chord(T2.v) / 1.2);
+        for (let n = 0; n < 5; n++) { const f = n / 4, wv = Math.sin(t * (9 + U) + T2.ph - f * 5) * f * (.15 + lfx * .9), cu = lfx * Math.sin(t * 3.3 + T2.ph + f * 3) * f * 1.2;
+          A[n * 3] = L.x + (L2.x * Math.cos(cu) - L2.z * Math.sin(cu)) * len * n + wv * len * .8 * L2.z; A[n * 3 + 1] = L.y - f * f * len * (lfx * 1.5 + .2) + wv * len * .3; A[n * 3 + 2] = L.z + (L2.z * Math.cos(cu) + L2.x * Math.sin(cu)) * len * n - wv * len * .8 * L2.x; }
+        T2.ln.geometry.attributes.position.needsUpdate = true; });
     };
     st.mesh = m; st.geo = g; return st;
   }
@@ -63,7 +95,18 @@
   function dinghySailTex(o) {
     return canvasTex(512, 1024, (g, w, h) => {
       g.fillStyle = o.cloth || "#f6f5ef"; g.fillRect(0, 0, w, h);
-      for (let y = 0; y < h; y += 70) { g.fillStyle = "rgba(0,0,0,.035)"; g.fillRect(0, y, w, 2); }
+      /* 2026-11-14: vitorlakészítői részletek – ferde szabású panelek varrással, szövetszerkezet, élszalag a belépő élen, hátsóél-zsinór,
+         sugaras sarokerősítések (nyak, szkótasarok, fej), mélységjelző csíkok (draft stripes), jelzőszál-ablakok */
+      for (let k = 0; k < 2600; k++) { g.fillStyle = `rgba(0,0,0,${Math.random() * .018})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+      for (let y = 0; y < h + 80; y += 68) { g.strokeStyle = "rgba(0,0,0,.075)"; g.lineWidth = 2; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y - 22); g.stroke(); g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, y + 3); g.lineTo(w, y - 19); g.stroke(); }
+      g.fillStyle = "rgba(255,255,255,.6)"; g.fillRect(0, 0, 16, h); g.fillStyle = "rgba(0,0,0,.14)"; g.fillRect(16, 0, 2, h);   /* élszalag (az árboc felőli él a textúra bal széle) */
+      g.fillStyle = "rgba(0,0,0,.12)"; g.fillRect(w - 6, 0, 6, h); g.fillRect(0, h - 8, w, 8);   /* hátsóél-zsinór, alsó él */
+      const fan = (x, y, a0, a1, R) => { g.fillStyle = "rgba(255,255,255,.14)"; g.beginPath(); g.moveTo(x, y); g.arc(x, y, R, a0, a1); g.closePath(); g.fill(); g.strokeStyle = "rgba(0,0,0,.13)"; g.lineWidth = 2; for (let i = 0; i <= 7; i++) { const aa = a0 + (a1 - a0) * i / 7; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(aa) * R, y + Math.sin(aa) * R); g.stroke(); }
+        g.fillStyle = "#c9ced4"; g.beginPath(); g.arc(x + Math.cos((a0 + a1) / 2) * 26, y + Math.sin((a0 + a1) / 2) * 26, 10, 0, TAU); g.fill(); g.fillStyle = "rgba(0,0,0,.55)"; g.beginPath(); g.arc(x + Math.cos((a0 + a1) / 2) * 26, y + Math.sin((a0 + a1) / 2) * 26, 4.5, 0, TAU); g.fill(); };
+      fan(0, h, -Math.PI / 2, 0, 120); fan(w, h, -Math.PI, -Math.PI / 2, 130); fan(0, 0, 0, Math.PI / 2, 100);
+      [.3, .55, .78].forEach((v) => { const y = h * (1 - v); g.strokeStyle = "rgba(20,30,60,.45)"; g.lineWidth = 5; g.beginPath(); g.moveTo(w * .04, y); g.quadraticCurveTo(w * .4, y - 8, w * .9, y + 4); g.stroke(); g.fillStyle = "rgba(200,225,240,.5)"; g.beginPath(); g.arc(w * .2, y + 26, 9, 0, TAU); g.fill(); });
+      if (o.finnIns) { g.strokeStyle = "#1f4fbf"; g.lineWidth = 16; [0, 1].forEach((k) => { g.beginPath(); for (let x = w * .22; x <= w * .86; x += 6) { const yy = h * .14 + k * 40 + Math.sin((x - w * .22) / (w * .64) * TAU * 1.5) * 13; if (x === w * .22) g.moveTo(x, yy); else g.lineTo(x, yy); } g.stroke(); }); }   /* a Finn osztályjelvénye: két kék hullámvonal */
+
       g.strokeStyle = "rgba(90,90,90,.32)"; g.lineWidth = 9; (o.battens || []).forEach(([v, f]) => { const y = h * (1 - v); g.beginPath(); g.moveTo(w * (1 - f), y); g.lineTo(w, y); g.stroke(); });   /* léczsebek (a valódi helyükön) */
       if (o.band) { g.fillStyle = o.band; g.fillRect(0, h * .9, w, h * .1); }
       if (o.win) { const [x0, y0, ww, hh] = o.win; g.fillStyle = "rgba(200,225,240,.55)"; g.fillRect(w * x0, h * (1 - y0 - hh), w * ww, h * hh); g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = 4; g.strokeRect(w * x0, h * (1 - y0 - hh), w * ww, h * hh); }
@@ -193,8 +236,8 @@
     /* GRÓSZ: a valódi szélességi méretek a fejtől (0 → 0,165; 1,5 → 1,075; 3,0 → 1,935; az alj ~2,6 m), 5 léc a mért helyükön, ablak */
     const luffL = mastH - .13 - boomPin, sailW = (fromHead) => tabLerp([[0, .165], [1.5, 1.075], [3.0, 1.935], [luffL, 2.62]], fromHead);
     const bat = [[.96, .4], [1.86, .6], [2.76, .7], [3.66, .6], [4.56, .5]].map(([h, l]) => [1 - h / luffL, l / sailW(h)]);
-    const sTex = dinghySailTex({ cloth: o.sail || "#f3f2ec", num: o.num, ins: "", name: o.name, win: [.12, .1, .3, .12], battens: bat });
-    const sail = softSail({ parent: mast, nu: 10, nv: 16, mat: std({ map: sTex, roughness: .9, side: THREE.DoubleSide }), camber: .11, twist: .32,
+    const sTex = dinghySailTex({ cloth: o.sail || "#f3f2ec", num: o.num, ins: "", finnIns: true, name: o.name, win: [.12, .1, .3, .12], battens: bat });
+    const sail = softSail({ parent: mast, nu: 12, nv: 20, bend: .09, ttLen: 1.2, mat: std({ map: sTex, roughness: .9, side: THREE.DoubleSide }), camber: .11, twist: .32,
       luff: (v) => { const y = boomPin + .03 + v * luffL, vv = y / mastH; return new THREE.Vector3(0, y, -.2 * Math.pow(Math.max(0, vv - .25) / .75, 2) - .05); }, chord: (v) => sailW((1 - v) * luffL) });
     const rud = dinghyRudder(H, { til: 1.1, depth: .8, cbD: .01 });
     /* kormányos: kihasal a szél felőli oldalon (lába a hevederben) */
@@ -237,17 +280,17 @@
     /* GRÓSZ: hátsó él ≤ 5,4 m; szélességek a fejtől: 0 → 0,115; 0,6 → 0,48; ¾ → 0,995; ½ → 1,63; ¼ → 2,13; alj 2,40 m; ablak ≤ 0,3 m² */
     const luffL = 6.06 - 1.16, mW = (h) => tabLerp([[0, .115], [.6, .48], [luffL * .25, .995], [luffL * .5, 1.63], [luffL * .75, 2.13], [luffL, 2.38]], h);
     const mTex = dinghySailTex({ cloth: "#f6f6f2", num: o.num, ins: "420", insC: o.insC || "#1f5fa8", name: o.name, win: [.2, .12, .34, .1], battens: [[1 - 1.445 / luffL, .54 / mW(1.445)], [1 - 2.6 / luffL, .7 / mW(2.6)], [1 - 3.7 / luffL, .7 / mW(3.7)], [.08, .54 / 2.3]] });
-    const main = softSail({ parent: mast, nu: 9, nv: 14, mat: std({ map: mTex, roughness: .9, side: THREE.DoubleSide }), camber: .1, twist: .26,
+    const main = softSail({ parent: mast, nu: 10, nv: 16, bend: .05, mat: std({ map: mTex, roughness: .9, side: THREE.DoubleSide }), camber: .1, twist: .26,
       luff: (v) => new THREE.Vector3(0, boomY + .03 + v * luffL, -.04), chord: (v) => mW((1 - v) * luffL) });
     /* FOCK: első él 3,5 m az orrvastól a 4,52 m-es felhúzási pontig, alj 1,75 m, szkótavezető a tükörtől 2,07 m-re, 0,63 m-re oldalt; kis ablak */
     const jibG = new THREE.Group(); jibG.position.copy(stem); body.add(jibG); const hoist = new THREE.Vector3(0, deckM + 4.52, mastZ).sub(stem);
     const jTex = canvasTex(256, 512, (g, w, h) => { g.fillStyle = "#f8f8f4"; g.fillRect(0, 0, w, h); g.fillStyle = "rgba(200,225,240,.6)"; g.fillRect(w * .25, h * .6, w * .4, h * .12); g.strokeStyle = "rgba(80,80,80,.25)"; g.lineWidth = 7; [.3, .55, .8].forEach((v) => { g.beginPath(); g.moveTo(w * .85, h * (1 - v)); g.lineTo(w, h * (1 - v)); g.stroke(); }); });
-    const jib = softSail({ parent: jibG, nu: 7, nv: 11, mat: std({ map: jTex, roughness: .9, side: THREE.DoubleSide }), camber: .1, twist: .2,
+    const jib = softSail({ parent: jibG, nu: 8, nv: 12, loose: true, bend: 0, draft: .38, mat: std({ map: jTex, roughness: .9, side: THREE.DoubleSide }), camber: .1, twist: .2,
       luff: (v) => hoist.clone().multiplyScalar(v).add(new THREE.Vector3(0, .05, 0)), chord: (v) => 1.75 * (1 - v) + .04 });
     /* SPINAKKER: hátsó él ≤ 4,0 m, alj ≤ 2,22 m, félmagassági szélesség ≤ 2,84 m, felhúzás 4,65 m; rúd 1,75 m */
     const spT = canvasTex(256, 512, (g, w, h) => { const c = o.spin; for (let k = 0; k < 7; k++) { g.fillStyle = c[k % c.length]; g.fillRect(0, k * h / 7, w, h / 7 + 1); } });
     const spG = new THREE.Group(); spG.position.set(0, deckM + .4, hz(L) + .25); body.add(spG);
-    const spin = softSail({ parent: spG, nu: 8, nv: 10, mat: std({ map: spT, roughness: .85, side: THREE.DoubleSide }), camber: .38, twist: 0,
+    const spin = softSail({ parent: spG, nu: 8, nv: 10, loose: true, bend: 0, telltales: false, draft: .5, mat: std({ map: spT, roughness: .85, side: THREE.DoubleSide }), camber: .38, twist: 0,
       luff: (v) => new THREE.Vector3(0, v * 4.0, (mastZ - hz(L) - .25) * v * .55), chord: (v) => tabLerp([[0, 2.22], [.5, 2.84], [.85, 1.6], [1, .05]], v) });
     const pole = new THREE.Group(); pole.position.set(0, deckM + 1.45, mastZ); body.add(pole); { const pg = new THREE.CylinderGeometry(.017, .017, 1.75, 6); pg.rotateX(Math.PI / 2); pg.translate(0, 0, .875); mesh(pg, alu, pole); }
     /* USZONY ~0,42 × 1,0 m, 18 mm; KORMÁNYLAPÁT 0,54 m-re a test alá */
@@ -310,7 +353,7 @@
       g.globalCompositeOperation = "destination-out"; for (let k = 0; k < 30; k++) { g.beginPath(); g.arc(rr(0, w), h - rr(0, 18), rr(4, 14), 0, TAU); g.fill(); g.beginPath(); g.arc(w - rr(0, 14), rr(0, h), rr(4, 12), 0, TAU); g.fill(); } g.globalCompositeOperation = "source-over"; });
     const sailM = std({ map: sT, roughness: 1, side: THREE.DoubleSide, transparent: true, alphaTest: .4 });
     const sailG = new THREE.Group(); sailG.position.set(0, 0, .02); mast.add(sailG);
-    const sail = softSail({ parent: sailG, nu: 8, nv: 8, mat: sailM, camber: .16, twist: .05, sag: .05,
+    const sail = softSail({ parent: sailG, nu: 8, nv: 8, loose: true, bend: 0, telltales: false, mat: sailM, camber: .16, twist: .05, sag: .05,
       luff: (v) => new THREE.Vector3(-1.05, .58 + v * (yardY - .62), 0), chord: (v) => 2.1 });
     /* kormányevező a farnál */
     const oar = new THREE.Group(); oar.position.set(0, .35, -1.75); body.add(oar); { const sh = new THREE.CylinderGeometry(.035, .035, 2.4, 7); sh.rotateX(Math.PI / 2 - .35); mesh(sh, logM, oar); const bl = new THREE.BoxGeometry(.04, .3, .55); bl.translate(0, -.42, -1.15); mesh(bl, logM, oar); }
@@ -398,7 +441,7 @@
     const towG = new THREE.Group(); towG.position.set(0, .45, -.02); rod.add(towG);
     const boomY = .62, towH = rodH - .5, towW = 1.05, boom = new THREE.Group(); boom.position.set(0, .45 + boomY, -.02); rod.add(boom);
     { const bg = new THREE.CylinderGeometry(.018, .018, towW + .1, 7); bg.rotateX(Math.PI / 2); bg.translate(0, 0, -(towW + .1) / 2); mesh(bg, std({ color: "#c9a96a", roughness: .8 }), boom); for (let k = 1; k < 4; k++) { const n = new THREE.TorusGeometry(.021, .005, 4, 10); n.rotateX(Math.PI / 2); n.translate(0, 0, -k * .28); mesh(n, std({ color: "#8a6a3a" }), boom); } }
-    const towel = softSail({ parent: towG, nu: 9, nv: 14, mat: std({ map: towT, roughness: 1, side: THREE.DoubleSide }), camber: .14, twist: .22, sag: .03,
+    const towel = softSail({ parent: towG, nu: 9, nv: 14, bend: .12, telltales: false, mat: std({ map: towT, roughness: 1, side: THREE.DoubleSide }), camber: .14, twist: .22, sag: .03,
       luff: (v) => new THREE.Vector3(0, boomY + .02 + v * (towH - boomY), -.02), chord: (v) => towW * (1 - .12 * v) });
     /* SPINAKKER = NAGY MELLTARTÓ: hátszélben a bot csúcsáról az orr elé húzzák fel; a két kosár a széltől kidagad (egymástól kicsit eltérő ütemben ring),
        félig telve a széle csapkod; a pántok a bot csúcsához, a kapocs a csőrhöz kötve */

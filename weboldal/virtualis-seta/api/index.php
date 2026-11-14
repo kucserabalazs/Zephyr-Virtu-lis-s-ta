@@ -1421,6 +1421,28 @@ $P = body();
 
 switch ($r) {
 
+/* ------------------------------ 2026-11-14: a HIVATALOS balatoni viharjelzés (HungaroMet) medencénként – a VR-vitorlásversenynek.
+   A böngésző a met.hu-t közvetlenül nem érheti el (CORS), ezért itt olvassuk ki, 5 percre gyorsítótárazva.
+   Válasz: { ok, ts, season, basins: { nyugati: 0|1|2, kozepso: 0|1|2, keleti: 0|1|2 } } – 0 = alapfok, 1 = elsőfok (45/perc), 2 = másodfok (90/perc). */
+case 'viharjelzes':
+    $cf = sys_get_temp_dir() . '/zephyr-viharjelzes.json';
+    if (is_file($cf) && time() - filemtime($cf) < 300) { header('Content-Type: application/json; charset=utf-8'); header('Access-Control-Allow-Origin: *'); echo file_get_contents($cf); exit; }
+    $ctx = stream_context_create(array('http' => array('timeout' => 6, 'user_agent' => 'ZephyrApartmanhaz/1.0 (+balatoni-udules.hu)'), 'https' => array('timeout' => 6)));
+    $html = @file_get_contents('https://www.met.hu/idojaras/veszelyjelzes/tavi_viharjelzes/main.php', false, $ctx);
+    $lvl = function ($name) use ($html) {
+        if (!$html) { return null; }
+        $t = html_entity_decode(strip_tags($html), ENT_QUOTES, 'UTF-8');
+        if (!preg_match('/A ' . $name . ' medencében([^.]*)\./u', $t, $m)) { return null; }
+        if (mb_stripos($m[1], 'másodfokú', 0, 'UTF-8') !== false) { return 2; }
+        if (mb_stripos($m[1], 'elsőfokú', 0, 'UTF-8') !== false) { return 1; }
+        return 0;
+    };
+    $md = (int) date('n'); $season = $md >= 4 && $md <= 10;
+    $res = array('ok' => (bool) $html, 'ts' => date('c'), 'season' => $season, 'source' => 'HungaroMet – met.hu tavi viharjelzés',
+        'basins' => array('nyugati' => $lvl('nyugati'), 'kozepso' => $lvl('középső'), 'keleti' => $lvl('keleti')));
+    $js = json_encode($res, JSON_UNESCAPED_UNICODE); if ($html) { @file_put_contents($cf, $js); }
+    header('Content-Type: application/json; charset=utf-8'); header('Access-Control-Allow-Origin: *'); echo $js; exit;
+
 /* ------------------------------ vendég */
 case 'config':
     $db = db_load(); $s = $db['settings'];
