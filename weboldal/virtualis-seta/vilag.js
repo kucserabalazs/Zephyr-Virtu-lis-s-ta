@@ -2638,9 +2638,9 @@
     let vt = polar(twa, spin && S.sp && (S.sp.st === "fly" || S.sp.st === "pop")) * KN * VR_SPD * (S.heelPen || 1) * vrClsSpd(twa) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
     /* 2026-11-14 (tulajdonos: „a flamingó legyen nagyon gyors és egyszerűen irányítható – fikció, csak vígan lehessen száguldozni”): minden irányban gyors, nincs holtszög, nem kell cirkálni */
     /* 17:28 pontosítás: gyenge szélben a nagy hajó (Zephyr) csúcssebességének a fele, erős szélben a másfélszerese – iránytól függetlenül */
-    if (S.cls && S.cls.id === "flamingo") { if (!VRR._pMax) { let m = 0; for (let a = 0; a <= 180; a += 2) m = Math.max(m, polar(a, true), polar(a, false)); VRR._pMax = m; }
+    if (S.cls && S.cls.id === "flamingo") { const upw = .25 + .75 * clamp((twa - 28) / 42, 0, 1);   /* 18:39: szembeszélben jóval lassabb (de nem áll meg) */ if (!VRR._pMax) { let m = 0; for (let a = 0; a <= 180; a += 2) m = Math.max(m, polar(a, true), polar(a, false)); VRR._pMax = m; }
       const top = VRR._pMax * KN * VR_SPD * (S.tws * S.gk / (12 * KN)) ** .5, twsKn = S.tws * S.gk / KN, f = .5 + clamp((twsKn - 7) / 11, 0, 1);
-      vt = top * f * (1 + .04 * Math.sin(W.t * .9)); }
+      vt = top * f * .7 * upw * (1 + .04 * Math.sin(W.t * .9)); }   /* 18:39: 30%-kal lassabb */
     /* gyorsabban gyorsul (a nagy vitorlafelület húz), a kormány fékez egy kicsit, ha nagyon el van tekerve */
     /* 2026-11-12 00:46 – A HAJÓ SIKLÁSA FIZIKAI MODELLEL (tulajdonos: „a hajó súlya 2300 kg … ha nem fújja a szél, azonnal megáll, miközben az életben még
        csúszik tovább, míg a közegellenállás meg nem állítja – pontos számítás, élethű mozgás”). Newton: (m + hozzáadott tömeg) · dv/dt = F_hajtó − R_víz(v) − F_szél.
@@ -2655,7 +2655,7 @@
       const v2 = Math.max(0, vR + (F - vrHydR(vR) - Rw) / mE * dt); S.v = v2 * VR_SPD; S.dragN = vrHydR(v2) + Rw; }
     S.v *= 1 - Math.abs(S.del) * .16 * dt;
     /* fordulás: sebességfüggő, de lassan is kormányozható; kis tehetetlenséggel (nem ugrik, de jól reagál) */
-    { let yrT = Math.sin(S.del) * (.085 * S.v + .24); if (S.cls && S.cls.id === "flamingo") yrT = Math.sin(S.del) * 1.25;   /* flamingó: fürge, mindig egyformán fordul */
+    { let yrT = Math.sin(S.del) * (.085 * S.v + .24); if (S.cls && S.cls.id === "flamingo") yrT = Math.sin(S.del) * (.6 + .05 * S.v);   /* 18:39: kicsit nehezebben fordul */   /* flamingó: fürge, mindig egyformán fordul */
       /* 2026-11-12 20:01 (tulajdonos: „szélben állok órákig, mire elindul, addigra minden hajó elment”): kijutás a szélből – álló hajón, a holtszögben a legénység
          ellentartja a fockot, ezért a hajó orra leesik arra, amerre a kormányt tartod (ha a kormány középen áll: arra, amerre már amúgy is áll). Menetben nincs hatása. */
       const relW = wrapA(S.wf - S.b); if (S.st !== "done" && Math.abs(relW) < .62 && S.v < 1.6) { const kI = (1 - S.v / 1.6) * (1 - Math.abs(relW) / .62 * .5); if (Math.abs(S.del) > .04) yrT += Math.sign(S.del) * .27 * kI; }   /* 2026-11-13: csak arra segít, amerre a kormányt tartod – középen álló kormánynál a hajó magától NEM fordul */
@@ -2742,7 +2742,7 @@
        így a kerék mindig a kéz ügyében marad, a fedélzet nem csúszik el (kényelmesebb, kevésbé émelyítő) */
     if (S.helmL) { const bd = S.boat.userData.body; bd.updateMatrix(); S.boat.updateMatrix(); const cur = S.helmL.clone().applyMatrix4(bd.matrix).applyMatrix4(S.boat.matrix);
       W.root.position.set(S.rootX - (cur.x - S.helmRest.x), S.baseY - (S.seated && T.inVR ? .45 : 0) - (cur.y - S.helmRest.y), S.rootZ - (cur.z - S.helmRest.z)); }
-    vrClassTick(dt);
+    vrClassTick(dt); try { vrHeelView(); } catch (e) {}
     /* legénység: a szél felőli oldalra ül (forduláskor átmászik) */
     S.crewSide = S.crewSide == null ? -side : S.crewSide + (-side - S.crewSide) * Math.min(1, dt * .9);
     S.ck.crew.forEach((c, i) => { const s = S.ck.sh(c.u); c.g.position.set(S.crewSide * (s.hb - .55), s.y - .02, s.z); const ry = S.crewSide > 0 ? Math.PI / 2 : -Math.PI / 2; c.g.rotation.y = ry; c.g.rotation.z = Math.sin(W.t * 2 + i) * .02;
@@ -3777,6 +3777,7 @@
         cups.forEach((c, i) => { const top = body.worldToLocal(c.m.localToWorld(new THREE.Vector3(c.sd * .15, .58, 0))), side = body.worldToLocal(c.m.localToWorld(new THREE.Vector3(c.sd * .55, 0, 0)));
           setLine(straps[i], top, tip); setLine(straps[2 + i], side, i ? hand : beak); }); }
       whR.rotation.z = (S.rud || 0) * 2.4;   /* a felfújható kerék a kormányzással együtt fordul */
+      body.rotation.set(S.pitch + .04 * Math.sin(S.t * 1.9), 0, S.heel + .05 * Math.sin(S.t * 1.4) + .025 * Math.sin(S.t * 3.3), "YXZ");   /* 18:39: a matrac billeg és dől – a szél felőli oldala megemelkedik */
       head.rotation.y = .25 * Math.sin(S.t * .6); head.rotation.x = .08 * Math.sin(S.t * .9);
       crew.forEach((p) => { p.position.set(0, .14 - .45, -.25); p.rotation.y = 0; posePerson(p, dt, { sit: 1, pull: true, armR: .2, legs: .35, turn: .3 * Math.sin(S.t * .4), wave: S.waveT > 0 ? 1 : 0 }); });
     };
@@ -3842,11 +3843,11 @@
     const S = VRR, pb = S.pb; if (!pb) return; const BS = S.boat.userData.S, PS = pb.userData.S;
     if (PS.scare != null && dt > 0) { if (S._vPrev != null && S._vPrev - S.v > .6 && S._vPrev > 1) PS.scare = 1.6; S._vPrev = S.v; }   /* ütközés (hirtelen lassulás): a kókusz megijed */
     PS.side = BS.side; PS.awa = BS.awa != null ? BS.awa : S.awa; PS.aws = BS.aws != null ? BS.aws : S.aws; PS.pitch = (BS.pitch || 0) * 1.6; PS.rud = S.wa / WA_MAX;
-    PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : .35);   /* a tutaj pontosan úgy dől, mint a nagy hajó */
+    PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : S.cls.id === "flamingo" ? .9 : .35);   /* a tutaj pontosan úgy dől, mint a nagy hajó */
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
     const hb = vrWave(S.x, S.z, W.t), lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hb * .45 + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
-    pb.updateMatrix(); _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);
+    pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { bdy.updateMatrix(); _sv.copy(pb.userData.seat).applyMatrix4(bdy.matrix).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 18:39: a szél felőli oldal emelkedését a nézőpont is követi */
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);
     if (T.inVR) { const lift = S.seated ? 0 : .5; W.root.position.set(-_sv.x, lift - _sv.y - .05, -_sv.z); }
     else if (W.dbgEye) W.root.position.set(-_sv.x, .5 - _sv.y - .05 - 1.65, -_sv.z);   /* teszt: a VR-ben álló kormányos szemmagassága */
@@ -3854,6 +3855,13 @@
     if (S.msgL) S.msgL.position.set(_sv.x, _sv.y + 1.9, _sv.z - 3.2);
     if (S.helpL) S.helpL.position.set(_sv.x - .5, _sv.y + 1.4, _sv.z - 1.6);
   }
+  /* 2026-11-14 18:39 (tulajdonos: „a dőlés a nézőpontra mindig legyen kihatással a vezetőre is” – minden hajón): a világot a néző szeme körül a hajó dőlésének
+     ~60%-ával elforgatjuk – a horizont megdől, a hajó a lábad alatt marad (a teljes 100% émelyítő lenne) */
+  const _rq = new THREE.Quaternion(), _rp = new THREE.Vector3(), _rz = new THREE.Vector3(0, 0, 1);
+  function vrHeelView() { const S = VRR, own = S.pb || S.boat; if (!own) return; const b = own.userData.body; const h = b ? b.rotation.z : 0, p = b ? b.rotation.x : 0;
+    try { T.camObj().getWorldPosition(_rp); } catch (e) { _rp.set(0, 0, 0); }
+    _rq.setFromAxisAngle(_rz, h * .6); const qx = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -p * .5); _rq.multiply(qx);
+    W.root.position.sub(_rp).applyQuaternion(_rq).add(_rp); W.root.quaternion.copy(_rq); }
   /* osztályfüggő sebesség: a polár szorzója + a nem élesen vitorlázó hajók (tutaj, flamingó) szél felé alig haladnak */
   function vrClsSpd(twa) { const c = VRR.cls || BOATCLS.zephyr; let k = c.spd; if (c.up > 50) k *= clamp((twa - (c.up - 22)) / 26, .08, 1); return k; }
 
@@ -4427,7 +4435,7 @@
     try { stmTick(dt, false); } catch (e) {}
     try { msTick(dt); } catch (e) {}
     try { hullMaskSet(HB.water && HB.water.userData.mat, (HB.boats || []).map((o) => o.g).concat(HB.prev ? [HB.prev.g] : [])); } catch (e) {}
-    W.root.position.set(0, T.inVR ? -.66 : -.66 - 1.62, 0);   /* a móló felszíne a padló (VR) / a szemmagasság alatt 1,62 m (2D) */
+    W.root.position.set(0, T.inVR ? -.66 : -.66 - 1.62, 0); W.root.quaternion.identity();   /* a móló felszíne a padló (VR) / a szemmagasság alatt 1,62 m (2D) */
     HB.water.userData.mat.uniforms.uT.value = W.t; HB.water.userData.mat.uniforms.uOff.value.set(0, 0);
     if (HB.storm) { const l = STM.lv.keleti || 0, per = l === 2 ? 60 / 90 : l === 1 ? 60 / 45 : 0, on = per && (W.t % per) / per < .34; HB.storm.glow.visible = !!on; HB.storm.lamp.material.color.set(on ? "#ffe066" : l ? "#7a6420" : "#4a4a40"); }
     (HB.swans || []).forEach((q, i) => { q.a += dt * q.w; q.g.position.set(q.cx + Math.cos(q.a) * q.r, Math.sin(W.t * 1.3 + i) * .03, q.cz + Math.sin(q.a) * q.r * .6); q.g.rotation.y = -q.a + (q.w > 0 ? Math.PI : 0); q.neck.rotation.x = .08 * Math.sin(W.t * .7 + i * 2); });
@@ -11468,7 +11476,7 @@
     const tryIt = () => { if (tok !== W.gen) return; if (!on || T.headY() > .5 || ++n > 90) { W.close(null, true); W._raceGo = k === "race"; W.open(k); } else T.xrRaf(tryIt); };
     tryIt();
   };
-  W.close = function (after, silent) {
+  W.close = function (after, silent) { try { if (W.root) W.root.quaternion.identity(); } catch (e) {}
     if (!W.active) { if (after) after(); return; }
     W.active = false; W.gen = (W.gen || 0) + 1;
     try { uiCloseAll(); } catch (e) {}

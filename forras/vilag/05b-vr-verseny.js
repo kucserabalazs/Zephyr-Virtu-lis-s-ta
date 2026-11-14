@@ -981,9 +981,9 @@
     let vt = polar(twa, spin && S.sp && (S.sp.st === "fly" || S.sp.st === "pop")) * KN * VR_SPD * (S.heelPen || 1) * vrClsSpd(twa) * (S.tws * S.gk / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07));
     /* 2026-11-14 (tulajdonos: „a flamingó legyen nagyon gyors és egyszerűen irányítható – fikció, csak vígan lehessen száguldozni”): minden irányban gyors, nincs holtszög, nem kell cirkálni */
     /* 17:28 pontosítás: gyenge szélben a nagy hajó (Zephyr) csúcssebességének a fele, erős szélben a másfélszerese – iránytól függetlenül */
-    if (S.cls && S.cls.id === "flamingo") { if (!VRR._pMax) { let m = 0; for (let a = 0; a <= 180; a += 2) m = Math.max(m, polar(a, true), polar(a, false)); VRR._pMax = m; }
+    if (S.cls && S.cls.id === "flamingo") { const upw = .25 + .75 * clamp((twa - 28) / 42, 0, 1);   /* 18:39: szembeszélben jóval lassabb (de nem áll meg) */ if (!VRR._pMax) { let m = 0; for (let a = 0; a <= 180; a += 2) m = Math.max(m, polar(a, true), polar(a, false)); VRR._pMax = m; }
       const top = VRR._pMax * KN * VR_SPD * (S.tws * S.gk / (12 * KN)) ** .5, twsKn = S.tws * S.gk / KN, f = .5 + clamp((twsKn - 7) / 11, 0, 1);
-      vt = top * f * (1 + .04 * Math.sin(W.t * .9)); }
+      vt = top * f * .7 * upw * (1 + .04 * Math.sin(W.t * .9)); }   /* 18:39: 30%-kal lassabb */
     /* gyorsabban gyorsul (a nagy vitorlafelület húz), a kormány fékez egy kicsit, ha nagyon el van tekerve */
     /* 2026-11-12 00:46 – A HAJÓ SIKLÁSA FIZIKAI MODELLEL (tulajdonos: „a hajó súlya 2300 kg … ha nem fújja a szél, azonnal megáll, miközben az életben még
        csúszik tovább, míg a közegellenállás meg nem állítja – pontos számítás, élethű mozgás”). Newton: (m + hozzáadott tömeg) · dv/dt = F_hajtó − R_víz(v) − F_szél.
@@ -998,7 +998,7 @@
       const v2 = Math.max(0, vR + (F - vrHydR(vR) - Rw) / mE * dt); S.v = v2 * VR_SPD; S.dragN = vrHydR(v2) + Rw; }
     S.v *= 1 - Math.abs(S.del) * .16 * dt;
     /* fordulás: sebességfüggő, de lassan is kormányozható; kis tehetetlenséggel (nem ugrik, de jól reagál) */
-    { let yrT = Math.sin(S.del) * (.085 * S.v + .24); if (S.cls && S.cls.id === "flamingo") yrT = Math.sin(S.del) * 1.25;   /* flamingó: fürge, mindig egyformán fordul */
+    { let yrT = Math.sin(S.del) * (.085 * S.v + .24); if (S.cls && S.cls.id === "flamingo") yrT = Math.sin(S.del) * (.6 + .05 * S.v);   /* 18:39: kicsit nehezebben fordul */   /* flamingó: fürge, mindig egyformán fordul */
       /* 2026-11-12 20:01 (tulajdonos: „szélben állok órákig, mire elindul, addigra minden hajó elment”): kijutás a szélből – álló hajón, a holtszögben a legénység
          ellentartja a fockot, ezért a hajó orra leesik arra, amerre a kormányt tartod (ha a kormány középen áll: arra, amerre már amúgy is áll). Menetben nincs hatása. */
       const relW = wrapA(S.wf - S.b); if (S.st !== "done" && Math.abs(relW) < .62 && S.v < 1.6) { const kI = (1 - S.v / 1.6) * (1 - Math.abs(relW) / .62 * .5); if (Math.abs(S.del) > .04) yrT += Math.sign(S.del) * .27 * kI; }   /* 2026-11-13: csak arra segít, amerre a kormányt tartod – középen álló kormánynál a hajó magától NEM fordul */
@@ -1085,7 +1085,7 @@
        így a kerék mindig a kéz ügyében marad, a fedélzet nem csúszik el (kényelmesebb, kevésbé émelyítő) */
     if (S.helmL) { const bd = S.boat.userData.body; bd.updateMatrix(); S.boat.updateMatrix(); const cur = S.helmL.clone().applyMatrix4(bd.matrix).applyMatrix4(S.boat.matrix);
       W.root.position.set(S.rootX - (cur.x - S.helmRest.x), S.baseY - (S.seated && T.inVR ? .45 : 0) - (cur.y - S.helmRest.y), S.rootZ - (cur.z - S.helmRest.z)); }
-    vrClassTick(dt);
+    vrClassTick(dt); try { vrHeelView(); } catch (e) {}
     /* legénység: a szél felőli oldalra ül (forduláskor átmászik) */
     S.crewSide = S.crewSide == null ? -side : S.crewSide + (-side - S.crewSide) * Math.min(1, dt * .9);
     S.ck.crew.forEach((c, i) => { const s = S.ck.sh(c.u); c.g.position.set(S.crewSide * (s.hb - .55), s.y - .02, s.z); const ry = S.crewSide > 0 ? Math.PI / 2 : -Math.PI / 2; c.g.rotation.y = ry; c.g.rotation.z = Math.sin(W.t * 2 + i) * .02;

@@ -314,7 +314,7 @@
     const tryIt = () => { if (tok !== W.gen) return; if (!on || T.headY() > .5 || ++n > 90) { W.close(null, true); W._raceGo = k === "race"; W.open(k); } else T.xrRaf(tryIt); };
     tryIt();
   };
-  W.close = function (after, silent) {
+  W.close = function (after, silent) { try { if (W.root) W.root.quaternion.identity(); } catch (e) {}
     if (!W.active) { if (after) after(); return; }
     W.active = false; W.gen = (W.gen || 0) + 1;
     try { uiCloseAll(); } catch (e) {}

@@ -56,11 +56,11 @@
     const S = VRR, pb = S.pb; if (!pb) return; const BS = S.boat.userData.S, PS = pb.userData.S;
     if (PS.scare != null && dt > 0) { if (S._vPrev != null && S._vPrev - S.v > .6 && S._vPrev > 1) PS.scare = 1.6; S._vPrev = S.v; }   /* ütközés (hirtelen lassulás): a kókusz megijed */
     PS.side = BS.side; PS.awa = BS.awa != null ? BS.awa : S.awa; PS.aws = BS.aws != null ? BS.aws : S.aws; PS.pitch = (BS.pitch || 0) * 1.6; PS.rud = S.wa / WA_MAX;
-    PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : .35);   /* a tutaj pontosan úgy dől, mint a nagy hajó */
+    PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : S.cls.id === "flamingo" ? .9 : .35);   /* a tutaj pontosan úgy dől, mint a nagy hajó */
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
     const hb = vrWave(S.x, S.z, W.t), lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hb * .45 + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
-    pb.updateMatrix(); _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);
+    pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { bdy.updateMatrix(); _sv.copy(pb.userData.seat).applyMatrix4(bdy.matrix).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 18:39: a szél felőli oldal emelkedését a nézőpont is követi */
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);
     if (T.inVR) { const lift = S.seated ? 0 : .5; W.root.position.set(-_sv.x, lift - _sv.y - .05, -_sv.z); }
     else if (W.dbgEye) W.root.position.set(-_sv.x, .5 - _sv.y - .05 - 1.65, -_sv.z);   /* teszt: a VR-ben álló kormányos szemmagassága */
@@ -68,6 +68,13 @@
     if (S.msgL) S.msgL.position.set(_sv.x, _sv.y + 1.9, _sv.z - 3.2);
     if (S.helpL) S.helpL.position.set(_sv.x - .5, _sv.y + 1.4, _sv.z - 1.6);
   }
+  /* 2026-11-14 18:39 (tulajdonos: „a dőlés a nézőpontra mindig legyen kihatással a vezetőre is” – minden hajón): a világot a néző szeme körül a hajó dőlésének
+     ~60%-ával elforgatjuk – a horizont megdől, a hajó a lábad alatt marad (a teljes 100% émelyítő lenne) */
+  const _rq = new THREE.Quaternion(), _rp = new THREE.Vector3(), _rz = new THREE.Vector3(0, 0, 1);
+  function vrHeelView() { const S = VRR, own = S.pb || S.boat; if (!own) return; const b = own.userData.body; const h = b ? b.rotation.z : 0, p = b ? b.rotation.x : 0;
+    try { T.camObj().getWorldPosition(_rp); } catch (e) { _rp.set(0, 0, 0); }
+    _rq.setFromAxisAngle(_rz, h * .6); const qx = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -p * .5); _rq.multiply(qx);
+    W.root.position.sub(_rp).applyQuaternion(_rq).add(_rp); W.root.quaternion.copy(_rq); }
   /* osztályfüggő sebesség: a polár szorzója + a nem élesen vitorlázó hajók (tutaj, flamingó) szél felé alig haladnak */
   function vrClsSpd(twa) { const c = VRR.cls || BOATCLS.zephyr; let k = c.spd; if (c.up > 50) k *= clamp((twa - (c.up - 22)) / 26, .08, 1); return k; }
 

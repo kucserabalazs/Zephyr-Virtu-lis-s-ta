@@ -1104,3 +1104,7 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - FLOAT 0,07 m (a víz a héjon belül úgysem látszik). A ponyvára 16 rávarrt ruhafolt (farmer, csíkos ing, zsákvászon, kockás abrosz) durva X-öltésekkel, görbe varratsorok.
 - Irányítás, sebesség és dőlés pontosan a nagy hajóé (BOATCLS.tutaj spd 1, up 44, dőlés 1×).
 - Botokból összekötözött kormánykerék (8 ág keret kötéllel, 4 küllő, rönkvég-agy, fogantyúcsonkok, villás tartóág) a kormányos előtt jobbra; a fordulás irányába forog.
+
+## 2026-11-14 18:39 – flamingó lassabb, a dőlés a nézőpontra is hat (minden hajó)
+- Flamingó: 30%-kal lassabb, szembeszélben (28–70° között) fokozatosan lassul (min. 25%), kicsit nehezebben fordul; billeg és dől (0,9× a nagy hajó dőléséből).
+- `vrHeelView` (05d): a világot a néző szeme körül a saját hajó dőlésének 60%-ával (bólintás 50%) elforgatjuk – a horizont megdől, a hajó a láb alatt marad. Kishajókon a nézőpont a dőlő test ülését követi (a szél felőli oldal emelkedése érezhető). Mérve: 9,4° testdőlés → 5,6° horizontdőlés, 3,8° látott árbocdőlés. A kikötőben és bezáráskor a világ forgatása visszaáll.
