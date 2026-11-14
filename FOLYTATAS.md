@@ -1124,3 +1124,5 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - Nagy hajó: fehér szegély és orrfedélzet helyett tík; vékony perem bal PIROS / jobb ZÖLD (éjjel világít, VRR.navRail). Fock éjjel: bal fele piros, jobb fele zöld (shader, uXc = a fock közepe), felfelé halványul. Orrlámpák gömb + fénykoszorú.
 
 - 19:23: az orrfények a hajó orrának bal/jobb oldalán, a perem magasságában (hullShape(.9)); az égők (gömb + fénykoszorú) eltávolítva, csak a fényük marad.
+
+- 19:26: versenytársak navigációs fényei: minden osztályon oldalfények (zöld jobb / piros bal, 112,5°) + fehér farfény (135°), a peremen kívül; nagyobb, élesebb pont (max(alap, d·0,0095)), opacitás ≥ 0,6. A saját hajón nincs látható égő.

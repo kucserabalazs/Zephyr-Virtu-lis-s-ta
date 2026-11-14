@@ -4840,16 +4840,18 @@
     const hb = (o) => { const bb = new THREE.Box3(); o.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(o.matrixWorld).invert(); o.traverse((q) => { if (q.isMesh && q.geometry && !q.userData.night) { q.geometry.computeBoundingBox(); const b = q.geometry.boundingBox.clone().applyMatrix4(q.matrixWorld).applyMatrix4(inv); bb.union(b); } }); return bb; };
     const addNav = (g, kind, owner) => { const body = g.userData.body || g, L = [], bb = hb(body), sc = 1;
       const put = (col, x, y, z, sec, size) => { const s = glowSprite(col, size || .5); s.position.set(x, y, z); body.add(s); s.visible = false; L.push({ s, sec, base: size || .5, col }); return s; };
-      if (kind === "big") { const zb = bb.max.z - .25, zs = bb.min.z + .1, yd = HULL ? hullShape(.97).sheer + .55 : 1.6, ys = hullShape(.03).sheer + .45;
-        put("#2aff5a", -.12, yd, zb, [0, 112.5], .32); put("#ff2a1a", .12, yd, zb, [-112.5, 0], .32); put("#fff6e0", 0, ys, zs, "stern", .3);
+      /* 19:26 (tulajdonos: „a versenytársak far- és orrfényei a KRESZ alapvető részei – mindig lássuk megfelelően”): minden versenytárson
+         oldalfények (jobb: zöld, bal: piros, 112,5°-os szektor) és fehér farfény (hátra 135°), a peremen kívülre helyezve, hogy a saját vitorlája ne takarja;
+         messziről is jól látható, éles pont. (A saját hajón nincs látható égő – ott csak a fényük világít.) */
+      if (kind === "big") { const hs = HULL ? hullShape(.9) : null, zb = hs ? hs.z : bb.max.z - .25, yd = hs ? hs.sheer + .12 : 1.6, xs = hs ? hs.hb + .06 : .5, zs = bb.min.z + .05, ys = HULL ? hullShape(.03).sheer + .35 : 1;
+        put("#2aff5a", -xs, yd, zb, [0, 112.5], .8); put("#ff2a1a", xs, yd, zb, [-112.5, 0], .8); put("#fff6e0", 0, ys, zs, "stern", .75);
         /* vitorlával haladó hajó: oldalfények + farfény; ÁRBOCFÉNY (fehér topfény) NINCS – az csak gépi hajtásnál kötelező (Hajózási Szabályzat 3.12; COLREG 25) */ }
-      else if (kind === "small") { put("#fff6e0", 0, (g.userData.deckY || .4) + 1.05, bb.min.z + .25, "all", .3); const t = put("#fffbe8", .3, (g.userData.deckY || .4) + .9, bb.min.z + 1.2, "torch", .7); t.userData.torch = 1; }
+      else if (kind === "small") { const dy = g.userData.deckY || .4, hw = Math.max(.15, Math.min(bb.max.x, -bb.min.x) * .55); put("#2aff5a", -hw, dy + .12, bb.max.z - .35, [0, 112.5], .85); put("#ff2a1a", hw, dy + .12, bb.max.z - .35, [-112.5, 0], .85); put("#fff6e0", 0, dy + .15, bb.min.z + .02, "stern", .8); const t = put("#fffbe8", .3, (g.userData.deckY || .4) + .9, bb.min.z + 1.2, "torch", .7); t.userData.torch = 1; }
       else if (kind === "anchor") { put("#fff6e0", 0, bb.max.y + .2, bb.min.z + (bb.max.z - bb.min.z) * .55, "all", .6);
         const wm = new THREE.MeshBasicMaterial({ color: "#ffbf6a", transparent: true, opacity: .85, side: THREE.DoubleSide }); W.disposables.push(wm); [-1, 1].forEach((sd) => { const w = mesh(new THREE.PlaneGeometry(2.6, .32), wm, body); w.position.set(sd * (bb.max.x - .05), bb.min.y + (bb.max.y - bb.min.y) * .55, (bb.max.z + bb.min.z) * .5); w.rotation.y = Math.PI / 2; w.userData.night = 1; w.visible = false; L.push({ s: w, sec: "win" }); }); }
       else if (kind === "mark") put("#ffcc22", 0, bb.max.y + .35, 0, "fly", 1.1);
       else if (kind === "gate") put("#ffffff", 0, bb.max.y + .35, 0, "flw", 1.1);
       NGT.nav.push({ g, body, L, kind, owner }); };
-    if (S.pb) addNav(S.pb, "small", S); else addNav(S.boat, "big", S);
     S.riv.forEach((r) => addNav(r.g, S.cls.id === "zephyr" ? "big" : "small", r));
     (S.spect || []).forEach((q) => addNav(q.g, "anchor", q)); if (S.cb) addNav(S.cb, "anchor", S.cb);
     NGT.marksDone = false;
@@ -4953,7 +4955,7 @@
         else if (l.sec === "flash" || l.sec === "flashR") { const ph = ((t + (n.g.id % 7) * .37) % l.per) / l.per; vis = ph < l.on / l.per; }
         else if (l.sec === "win") { l.s.visible = true; return; }
         l.s.visible = vis; if (!vis || l.sec === "flashR") return;
-        l.s.getWorldPosition(_lw); const d = _lw.distanceTo(_cw), sc = Math.max(l.base * .7, d * .0042) * k;   /* távolról is apró, éles pont (nem nagy folt) */ l.s.scale.setScalar(sc); l.s.material.opacity = clamp(1.1 - d / 2600, .25, 1); }); });
+        l.s.getWorldPosition(_lw); const d = _lw.distanceTo(_cw), sc = Math.max(l.base, d * .0095) * k;   /* távolról is apró, éles pont (nem nagy folt) */ l.s.scale.setScalar(sc); l.s.material.opacity = clamp(1.25 - d / 4000, .6, 1); l.s.renderOrder = 6; }); });
     /* tóközépi viharjelző */
     if (NGT.stGlow) { const per = NGT.storm === 2 ? 60 / 90 : NGT.storm === 1 ? 60 / 45 : 0, onF = per && ((t % per) / per) < .32; NGT.stGlow.visible = !!onF; NGT.stLamp.material.color.set(onF ? "#ffd84a" : "#3a300a"); }
     /* hullócsillag */
