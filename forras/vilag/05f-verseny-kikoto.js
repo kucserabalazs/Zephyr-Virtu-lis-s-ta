@@ -169,7 +169,7 @@
       const spec = { zephyr: ["Kormánykerék vagy botkormány", "Grósz, génua, spinakker – a Zephyr logójával", "A legénység trimmel, te kormányzol"],
         finn: ["Osztályszabály (World Sailing, 2025): 4495 mm, ≥ 116 kg, árboc 6,56 m", "Egyetlen grósz: 5 léc, ablak, a neved rajta", "Kötélzet nélküli, forgó árboc; bronz uszony"],
         j420: ["Osztályszabály (2014): 4,20 × 1,63 m, 80 kg, árboc 6,26 m", "Grósz 7,45 m² · fock 2,8 m² · spinakker 9 m²", "Trapéz – a legénység kilóg a víz fölé"],
-        tutaj: ["Két réteg kötözött rönk, zárt deszkapadló – belül száraz", "Rongyokból összefércelt vitorla, hátszélben egy sáros esőkabát dagad", "Kókusz Kálmán a ládán: unatkozik, fél, megijed – és egy koszos zokni a zászló"],
+        tutaj: ["Kötéllel összefogott rönkök, foltozott ponyvavitorla", "Hátszélben egy sáros esőkabát dagad spinakkerként", "Kókusz Kata (rúzs, kókuszkóc haj) az árboc tövében – és egy koszos zokni a zászló"],
         flamingo: ["Felfújható óriás flamingó: S-nyak, fekete hegyű csőr", "Horgászbot az árboc, strandtörölköző a grósz – a neveddel", "Hátszélben egy nagy pöttyös melltartó dagad ki spinakkerként"] }[c.id] || [];
       g.font = `700 26px ${UIF}`; spec.forEach((s, i) => { g.fillStyle = "#ffd166"; g.fillText("•", 70, 520 + i * 52); g.fillStyle = "#fff"; g.fillText(s, 100, 520 + i * 52); });
       B.btn(40, 750, 820, 120, "✓ Ezt választom – tovább a versenyre", () => { HB.sel = c.id; hbGo(false); }, { gold: true, fs: 38 });

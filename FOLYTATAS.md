@@ -1060,3 +1060,10 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - A legénység (420 kormányos + trapézos, Finn kormányos) EDDIG kifelé nézett és oldalra borult. Most: arccal befelé ül, a lába a hevederben a hajó belseje felé, a törzse a széllel egyre jobban hátradől a víz fölé (erős szélben szinte vízszintesen); a trapézos a perem szélén áll, egyenes testtel hátradőlve; forduláskor guggolva átjön. Oldalra soha nem dől (a forgatás a személy saját keresztirányú tengelye körül, `YXZ`).
 - `dinghyHull`: önürülő kokpitpadló a hajótest belső faláig, csúszásgátló mintával, uszonyház; a Finn és a 420 10 cm-rel magasabban úszik (`vrClassTick` lift) – a kokpitben nincs víz.
 - A spinakker rajt előtt is használható (saját és ellenfelek): a hajók sebessége és viselkedése nem változik a rajtjelnél.
+
+## 2026-11-14 17:22–17:25 – a tutaj vissza a régi formára
+- A tulajdonos szerint a régi tutaj szebb volt: visszaállítva (1267050 szerinti), de 13 cm-rel magasabban úszik, a rések alatt sötét aljzat; a vitorla és a két rúd az árboc előtt (SF = 0,3 m), legfeljebb 25°-ot fordul – nem ér az A-árbocba.
+- A kormányevező a kézzel egy irányba mozog (eddig fordítva).
+- A láda kikerült; **Kókusz Kata** (rúzsos ajkak, kókuszkóc haj, rózsaszín masni) az árboc tövében ül, mindig a kormányos felé néz, és a szélhez vágja az arcát.
+- A műszer egy félbevágott kókuszhéjba épített kijelző (rostos perem, fehér kókuszhús), Kata mögött, bambuszkarón, feléd fordítva.
+- Esőkabát-spinakker megmaradt; a zokni-zászló nagyobb és felismerhető (csíkos szár, gumis perem, szürke sarok és orr, lyuk, csipesz).

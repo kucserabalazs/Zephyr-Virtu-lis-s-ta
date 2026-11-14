@@ -31,13 +31,18 @@
     S.boat.visible = false;
     const pb = makeClassBoat(id, { name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
     /* fedélzeti térkép (a nagy hajó taktikai kijelzője) a kis hajó fedélzetén, a kormányos előtt */
-    if (S.ck && S.ck.chartT) { const c = S.ck.chartT._canvas, w = id === "flamingo" ? .34 : .5, h = w * c.height / c.width; const pl = mesh(new THREE.PlaneGeometry(w, h), basic({ map: S.ck.chartT, side: THREE.DoubleSide }), pb.userData.body); const at = pb.userData.chartAt;
+    if (S.ck && S.ck.chartT) { const c = S.ck.chartT._canvas, w = id === "flamingo" ? .34 : id === "tutaj" ? .3 : .5, h = w * c.height / c.width; const pl = mesh(new THREE.PlaneGeometry(w, h), basic({ map: S.ck.chartT, side: THREE.DoubleSide }), pb.userData.body); const at = pb.userData.chartAt;
       /* 2026-11-14 (tulajdonos: „a műszer nem felém mutat”): a kijelző a kormányos szeme felé néz (eddig hátulról, tükrözve látszott) */
       pl.position.set(at.x, at.y + h * .5 * .6, at.z); { const eye = pb.userData.seat.clone().add(new THREE.Vector3(0, .95, 0)), M4 = new THREE.Matrix4().lookAt(eye, pl.position, new THREE.Vector3(0, 1, 0)); pl.quaternion.setFromRotationMatrix(M4); } S.pbChart = pl;
       if (pb.userData.toyChart) { /* flamingó: felfújható, rózsaszín „úszógumi” keret, sárga sarokbogyókkal */ const pk = std({ color: "#ff6fae", roughness: .35 }), ye = std({ color: "#ffd21a", roughness: .3 });
         [[0, h / 2 + .03, w + .1, true], [0, -h / 2 - .03, w + .1, true], [w / 2 + .03, 0, h + .02, false], [-w / 2 - .03, 0, h + .02, false]].forEach(([x, y, L, hor]) => { const c = mesh(new THREE.CapsuleGeometry(.035, L, 6, 12), pk, pl); c.position.set(x, y, -.02); if (hor) c.rotation.z = Math.PI / 2; });
         [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => { const b = mesh(new THREE.SphereGeometry(.045, 12, 10), ye, pl); b.position.set(sx * (w / 2 + .03), sy * (h / 2 + .03), -.01); });
         const bk = mesh(new THREE.BoxGeometry(w + .04, h + .04, .02), std({ color: "#ffd6ea", roughness: .5 }), pl); bk.position.z = -.03; }
+      else if (pb.userData.cocoChart) { /* tutaj: kókuszdió-műszer – a kijelző egy félbevágott kókuszhéjban, rostos peremmel */
+        const ct = canvasTex(128, 64, (g2, w2, h2) => { g2.fillStyle = "#5e3b1d"; g2.fillRect(0, 0, w2, h2); for (let k = 0; k < 500; k++) { g2.strokeStyle = `rgba(${150 + Math.random() * 60},${105 + Math.random() * 40},${55 + Math.random() * 30},.5)`; g2.beginPath(); const x = Math.random() * w2, y = Math.random() * h2; g2.moveTo(x, y); g2.lineTo(x + Math.random() * 6 - 3, y + 4 + Math.random() * 8); g2.stroke(); } });
+        const shell = new THREE.SphereGeometry(Math.max(w, h) * .62, 20, 12, 0, TAU, 0, Math.PI / 2); shell.rotateX(-Math.PI / 2); shell.scale(1, h / w * 1.05 + .15, .55); const sm = mesh(shell, std({ map: ct, roughness: 1, side: THREE.DoubleSide }), pl); sm.position.z = -.012;
+        const rim = new THREE.TorusGeometry(Math.max(w, h) * .62, .014, 6, 28); rim.scale(1, h / w * 1.05 + .15, 1); mesh(rim, std({ color: "#f1ead6", roughness: .7 }), pl).position.z = -.008;   /* a kókusz fehér húsa a vágott peremen */
+        for (let k = 0; k < 24; k++) { const a = k / 24 * TAU, st = new THREE.ConeGeometry(.008, .05 + Math.random() * .04, 4); const m2 = mesh(st, std({ color: k % 2 ? "#8a5a2e" : "#a8743c", roughness: 1 }), pl); m2.position.set(Math.cos(a) * Math.max(w, h) * .64, Math.sin(a) * Math.max(w, h) * .64 * (h / w * 1.05 + .15), -.03); m2.rotation.z = a - Math.PI / 2; } }
       else { const fr = mesh(new THREE.BoxGeometry(w + .04, h + .04, .02), std({ color: "#1d232b", roughness: .5 }), pl); fr.position.z = -.012; } }
     /* a nagy hajóra tett tábla a kis hajó fölé kerül */
     if (S.msgL) { S.msgL.parent && S.msgL.parent.remove(S.msgL); W.root.add(S.msgL); S.msgL.scale.multiplyScalar(.6); }
@@ -53,7 +58,7 @@
     PS.side = BS.side; PS.awa = BS.awa != null ? BS.awa : S.awa; PS.aws = BS.aws != null ? BS.aws : S.aws; PS.pitch = (BS.pitch || 0) * 1.6; PS.rud = S.wa / WA_MAX;
     PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : .35);
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
-    const hb = vrWave(S.x, S.z, W.t), lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : S.cls.id === "tutaj" ? .04 : 0; pb.position.set(0, hb * .45 + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
+    const hb = vrWave(S.x, S.z, W.t), lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hb * .45 + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
     pb.updateMatrix(); _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);
