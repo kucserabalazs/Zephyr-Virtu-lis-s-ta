@@ -60,7 +60,7 @@
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
     const hb = vrWave(S.x, S.z, W.t), lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hb * .45 + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
-    pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { bdy.updateMatrix(); _sv.copy(pb.userData.seat).applyMatrix4(bdy.matrix).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 18:39: a szél felőli oldal emelkedését a nézőpont is követi */
+    pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { _sv.copy(pb.userData.seat).multiply(bdy.scale).add(bdy.position).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 19:52 (tulajdonos): a nézőpont NEM követi a dőlést (a 18:39-es változás visszavonva) */
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);
     if (T.inVR) { const lift = S.seated ? 0 : .5; W.root.position.set(-_sv.x, lift - _sv.y - .05, -_sv.z); }
     else if (W.dbgEye) W.root.position.set(-_sv.x, .5 - _sv.y - .05 - 1.65, -_sv.z);   /* teszt: a VR-ben álló kormányos szemmagassága */

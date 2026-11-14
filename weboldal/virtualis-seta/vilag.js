@@ -2752,7 +2752,7 @@
        így a kerék mindig a kéz ügyében marad, a fedélzet nem csúszik el (kényelmesebb, kevésbé émelyítő) */
     if (S.helmL) { const bd = S.boat.userData.body; bd.updateMatrix(); S.boat.updateMatrix(); const cur = S.helmL.clone().applyMatrix4(bd.matrix).applyMatrix4(S.boat.matrix);
       W.root.position.set(S.rootX - (cur.x - S.helmRest.x), S.baseY - (S.seated && T.inVR ? .45 : 0) - (cur.y - S.helmRest.y), S.rootZ - (cur.z - S.helmRest.z)); }
-    vrClassTick(dt); try { vrHeelView(); } catch (e) {}
+    vrClassTick(dt); if (W.root && !W.root.quaternion.equals(_qI)) W.root.quaternion.identity();   /* 19:52 (tulajdonos): a hajó dőlése NE forgassa a nézőpontot – visszavonva */
     /* legénység: a szél felőli oldalra ül (forduláskor átmászik) */
     S.crewSide = S.crewSide == null ? -side : S.crewSide + (-side - S.crewSide) * Math.min(1, dt * .9);
     S.ck.crew.forEach((c, i) => { const s = S.ck.sh(c.u); c.g.position.set(S.crewSide * (s.hb - .55), s.y - .02, s.z); const ry = S.crewSide > 0 ? Math.PI / 2 : -Math.PI / 2; c.g.rotation.y = ry; c.g.rotation.z = Math.sin(W.t * 2 + i) * .02;
@@ -2868,6 +2868,7 @@
     g.fillStyle = "#9fb7c9"; g.font = "500 34px system-ui"; wrap(VR_R14 + " Büntetés: szabálysértésenként egy teljes (360°) forduló.", "500 34px system-ui", Wd - pad * 2).forEach((ln) => { g.fillText(ln, pad, y); y += 42; });
     S.foulB.userData.tx.needsUpdate = true; const wM = 3.3; S.foulB.scale.set(wM, wM * 1200 / Wd, 1); S.foulB.center.set(.5, 1 - H / 2400); if (pos) S.foulB.position.copy(pos); S.foulB.visible = true; }
   function inGate(o) { const C = VRR.C, along = (o.x - C.line.a.x) * C.c[0] + (o.z - C.line.a.z) * C.c[1], L = Math.hypot(C.line.b.x - C.line.a.x, C.line.b.z - C.line.a.z); return along > -2 && along < L + 2; }   /* a rajtvonal két bójája KÖZÖTT van-e */
+  const _qI = new THREE.Quaternion();
   function crossLine(o) {   /* a rajtvonal átlépése szél felőli irányból szél alá (befutó), a vonal két vége között */
     const C = VRR.C, F = finL(), off = (F.a.x - C.line.a.x) * C.u[0] + (F.a.z - C.line.a.z) * C.u[1], s = lineSide(o) - off, w0 = o === VRR ? VRR.prevSide : o.prevSide, was = w0 == null ? null : w0 - off;
     const along = (o.x - F.a.x) * C.c[0] + (o.z - F.a.z) * C.c[1], L = Math.hypot(F.b.x - F.a.x, F.b.z - F.a.z);
@@ -3928,7 +3929,7 @@
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
     const hb = vrWave(S.x, S.z, W.t), lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hb * .45 + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
-    pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { bdy.updateMatrix(); _sv.copy(pb.userData.seat).applyMatrix4(bdy.matrix).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 18:39: a szél felőli oldal emelkedését a nézőpont is követi */
+    pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { _sv.copy(pb.userData.seat).multiply(bdy.scale).add(bdy.position).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 19:52 (tulajdonos): a nézőpont NEM követi a dőlést (a 18:39-es változás visszavonva) */
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);
     if (T.inVR) { const lift = S.seated ? 0 : .5; W.root.position.set(-_sv.x, lift - _sv.y - .05, -_sv.z); }
     else if (W.dbgEye) W.root.position.set(-_sv.x, .5 - _sv.y - .05 - 1.65, -_sv.z);   /* teszt: a VR-ben álló kormányos szemmagassága */

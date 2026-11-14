@@ -1132,3 +1132,4 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - Tihanyi apátság: alap = a talaj LEGMAGASABB pontja az alaprajz alatt (L.fp), kőlábazat 40 m mélyen – a torony nem lóg bele a hegybe.
 - Fock éjjel: csak az alsó (nyak-) sarokban fényfolt (sugár a fock magasságának 27%-a), jobb fele zöld, bal fele piros. Perem csíkjai: bal piros, jobb zöld, vastagabb (3,5 cm), noBake (eddig a kisütés elnyelte a színüket).
 - 19:41: nappal a perem sötét tík színű, a piros/zöld csík csak éjjel (navRail userData.nightCol).
+- 19:52 (tulajdonos): VISSZAVONVA a 18:39-es nézőpont-dőlés – vrHeelView nem fut, a W.root forgatása minden képkockán alaphelyzetben; az ülés a testtel nem dől (csak a test helye/mérete számít).

@@ -1095,7 +1095,7 @@
        így a kerék mindig a kéz ügyében marad, a fedélzet nem csúszik el (kényelmesebb, kevésbé émelyítő) */
     if (S.helmL) { const bd = S.boat.userData.body; bd.updateMatrix(); S.boat.updateMatrix(); const cur = S.helmL.clone().applyMatrix4(bd.matrix).applyMatrix4(S.boat.matrix);
       W.root.position.set(S.rootX - (cur.x - S.helmRest.x), S.baseY - (S.seated && T.inVR ? .45 : 0) - (cur.y - S.helmRest.y), S.rootZ - (cur.z - S.helmRest.z)); }
-    vrClassTick(dt); try { vrHeelView(); } catch (e) {}
+    vrClassTick(dt); if (W.root && !W.root.quaternion.equals(_qI)) W.root.quaternion.identity();   /* 19:52 (tulajdonos): a hajó dőlése NE forgassa a nézőpontot – visszavonva */
     /* legénység: a szél felőli oldalra ül (forduláskor átmászik) */
     S.crewSide = S.crewSide == null ? -side : S.crewSide + (-side - S.crewSide) * Math.min(1, dt * .9);
     S.ck.crew.forEach((c, i) => { const s = S.ck.sh(c.u); c.g.position.set(S.crewSide * (s.hb - .55), s.y - .02, s.z); const ry = S.crewSide > 0 ? Math.PI / 2 : -Math.PI / 2; c.g.rotation.y = ry; c.g.rotation.z = Math.sin(W.t * 2 + i) * .02;
@@ -1211,6 +1211,7 @@
     g.fillStyle = "#9fb7c9"; g.font = "500 34px system-ui"; wrap(VR_R14 + " Büntetés: szabálysértésenként egy teljes (360°) forduló.", "500 34px system-ui", Wd - pad * 2).forEach((ln) => { g.fillText(ln, pad, y); y += 42; });
     S.foulB.userData.tx.needsUpdate = true; const wM = 3.3; S.foulB.scale.set(wM, wM * 1200 / Wd, 1); S.foulB.center.set(.5, 1 - H / 2400); if (pos) S.foulB.position.copy(pos); S.foulB.visible = true; }
   function inGate(o) { const C = VRR.C, along = (o.x - C.line.a.x) * C.c[0] + (o.z - C.line.a.z) * C.c[1], L = Math.hypot(C.line.b.x - C.line.a.x, C.line.b.z - C.line.a.z); return along > -2 && along < L + 2; }   /* a rajtvonal két bójája KÖZÖTT van-e */
+  const _qI = new THREE.Quaternion();
   function crossLine(o) {   /* a rajtvonal átlépése szél felőli irányból szél alá (befutó), a vonal két vége között */
     const C = VRR.C, F = finL(), off = (F.a.x - C.line.a.x) * C.u[0] + (F.a.z - C.line.a.z) * C.u[1], s = lineSide(o) - off, w0 = o === VRR ? VRR.prevSide : o.prevSide, was = w0 == null ? null : w0 - off;
     const along = (o.x - F.a.x) * C.c[0] + (o.z - F.a.z) * C.c[1], L = Math.hypot(F.b.x - F.a.x, F.b.z - F.a.z);
