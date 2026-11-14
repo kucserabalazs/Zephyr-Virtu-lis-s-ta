@@ -163,6 +163,16 @@
       const nose = new THREE.ConeGeometry(.018, .05, 6); nose.rotateX(Math.PI / 2); nose.translate(0, .08, .11); mesh(nose, sk, head);
       [-1, 1].forEach((sd) => { const e = mesh(new THREE.SphereGeometry(.014, 8, 6), std({ color: "#1a1a1a", roughness: .3 }), head); e.position.set(sd * .04, .115, .098); });
       if (o.cap) { const cp = new THREE.SphereGeometry(.125, 16, 8, 0, TAU, 0, Math.PI * .45); cp.translate(0, .115, 0); mesh(cp, std({ color: o.cap, roughness: .7 }), head); const br = new THREE.BoxGeometry(.16, .012, .11); br.translate(0, .14, .13); mesh(br, std({ color: o.cap, roughness: .7 }), head); }
+      /* 00:53 (tulajdonos): BANÁNLEVÉL CSÁKÓ – összehajtogatott papírcsákó formájú, banánlevélből: a két háromszög-oldal a fejtetőn gerincben
+         találkozik, alul felhajtott szegély, a levél zöld, középér és párhuzamos oldalerek, szakadozott szél, egy levélszár-pöcök a csúcson */
+      if (o.banana) { const lt = canvasTex(256, 128, (gg, w, h) => { const gr = gg.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#5f9a2c"); gr.addColorStop(1, "#3f7a1e"); gg.fillStyle = gr; gg.fillRect(0, 0, w, h);
+          gg.strokeStyle = "rgba(220,240,160,.75)"; gg.lineWidth = 4; gg.beginPath(); gg.moveTo(0, h * .92); gg.lineTo(w, h * .92); gg.stroke();
+          gg.strokeStyle = "rgba(30,70,15,.55)"; gg.lineWidth = 1.5; for (let x = -h; x < w; x += 9) { gg.beginPath(); gg.moveTo(x, h * .9); gg.lineTo(x + h * .5, 0); gg.stroke(); }
+          gg.fillStyle = "rgba(140,110,40,.5)"; for (let k = 0; k < 6; k++) { gg.beginPath(); gg.ellipse(Math.random() * w, Math.random() * h * .8, 6, 3, 0, 0, TAU); gg.fill(); } });
+        const lm = std({ map: lt, roughness: .55, side: THREE.DoubleSide }), bh = new THREE.Group(); bh.position.set(0, .17, -.005); bh.rotation.y = Math.PI / 2; head.add(bh);
+        [-1, 1].forEach((sd) => { const sh = new THREE.Shape(); sh.moveTo(-.19, 0); sh.lineTo(.19, 0); sh.lineTo(.03, .2); sh.lineTo(-.02, .19); sh.closePath(); const sg = new THREE.ShapeGeometry(sh); sg.rotateX(sd * -.32); sg.translate(0, 0, sd * .055); mesh(sg, lm, bh);
+          const br = new THREE.BoxGeometry(.4, .045, .012); br.rotateX(sd * -.32); br.translate(0, .02, sd * .07); mesh(br, std({ color: "#4f8a24", roughness: .6 }), bh); });
+        mesh(new THREE.CylinderGeometry(.006, .008, .06, 5).rotateZ(.4).translate(.04, .22, 0), std({ color: "#7a8a2a", roughness: .8 }), bh); }
       if (o.glasses) { const gl = new THREE.BoxGeometry(.17, .035, .02); gl.translate(0, .115, .108); mesh(gl, std({ color: "#0d0f12", roughness: .2, metalness: .5 }), head); }
       if (o.sunhat) { const hb = new THREE.CylinderGeometry(.24, .26, .02, 20); hb.translate(0, .17, 0); mesh(hb, std({ color: o.sunhat, roughness: .9 }), head); const hc = new THREE.CylinderGeometry(.11, .13, .1, 16); hc.translate(0, .22, 0); mesh(hc, std({ color: o.sunhat, roughness: .9 }), head); }
       if (o.pro) { [-1, 1].forEach((sd) => { const ea = new THREE.SphereGeometry(.026, 8, 6); ea.scale(.5, 1, .8); ea.translate(sd * .1, .095, -.005); mesh(ea, sk, head);
@@ -457,20 +467,54 @@
     /* hátszélben a ponyvát az alsó rúdra csomózzák (kötélhurkok), hogy az esőkabát-spinakker szabadon látsszon */
     const ties = [-.78, -.28, .22, .72].map((x) => { const t = new THREE.Mesh(new THREE.TorusGeometry(.1, .014, 6, 14).rotateY(Math.PI / 2), std({ color: "#b89a62", roughness: 1 })); t.position.set(x, .08, .03); t.visible = false; boom.add(t); W.disposables.push(t.geometry); return t; }); [yardY, .55].forEach((y) => rodBetween(new THREE.Vector3(0, y, SF), new THREE.Vector3(0, y, 0), .025, rope, mast, 5)); { const bg = new THREE.CylinderGeometry(.04, .04, 2.0, 7); bg.rotateZ(Math.PI / 2); mesh(bg, logM, boom); }
     /* ponyvavitorla: foltozott, kopott szélű, varratokkal */
-    const sT = canvasTex(512, 512, (g, w, h) => { g.fillStyle = "#d8c9a3"; g.fillRect(0, 0, w, h); const pc = ["#c3b48c", "#b9a477", "#e1d6b8", "#a89466", "#cdbb8f"];
-      for (let k = 0; k < 9; k++) { g.fillStyle = pc[k % 5]; const x = rr(0, w * .8), y = rr(0, h * .8), ww = rr(70, 180), hh = rr(60, 160); g.fillRect(x, y, ww, hh); g.setLineDash([8, 6]); g.strokeStyle = "rgba(80,60,30,.7)"; g.lineWidth = 3; g.strokeRect(x + 4, y + 4, ww - 8, hh - 8); g.setLineDash([]); }
-      g.fillStyle = "rgba(90,70,40,.18)"; for (let k = 0; k < 40; k++) { g.beginPath(); g.arc(rr(0, w), rr(0, h), rr(3, 14), 0, TAU); g.fill(); }
-      /* 18:34: hajótörött-vitorla – a ponyvára rávarrt foltok régi ruhákból (kifakult farmer, csíkos ing, zsákvászon, kockás abrosz), görbe, durva öltésekkel, X-varrással */
-      { const fab = ["#7d8fa3", "#a9a08a", "#b58f6a", "#8f9b7c", "#c7b48f", "#9c7d5e"]; for (let k = 0; k < 16; k++) { const x = rr(-20, w - 60), y = rr(-20, h - 60), ww = rr(50, 150), hh = rr(40, 130), rot = rr(-.25, .25), f = fab[k % fab.length];
-          g.save(); g.translate(x + ww / 2, y + hh / 2); g.rotate(rot); g.beginPath(); g.moveTo(-ww / 2 + rr(0, 8), -hh / 2); g.lineTo(ww / 2, -hh / 2 + rr(0, 8)); g.lineTo(ww / 2 - rr(0, 10), hh / 2); g.lineTo(-ww / 2, hh / 2 - rr(0, 9)); g.closePath(); g.fillStyle = f; g.globalAlpha = .82; g.fill(); g.globalAlpha = 1;
-          if (k % 4 === 0) { g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = 5; for (let q = -hh / 2; q < hh / 2; q += 14) { g.beginPath(); g.moveTo(-ww / 2, q); g.lineTo(ww / 2, q); g.stroke(); } }
-          if (k % 4 === 1) { g.strokeStyle = "rgba(60,40,20,.25)"; g.lineWidth = 2; for (let q = -ww; q < ww; q += 6) { g.beginPath(); g.moveTo(q, -hh / 2); g.lineTo(q + hh, hh / 2); g.stroke(); } }
-          if (k % 4 === 2) { g.fillStyle = "rgba(150,40,40,.25)"; for (let a2 = -ww / 2; a2 < ww / 2; a2 += 18) for (let b2 = -hh / 2; b2 < hh / 2; b2 += 18) if (((a2 + b2) / 18 | 0) % 2) g.fillRect(a2, b2, 9, 9); }
-          g.strokeStyle = "#2a1a0c"; g.lineWidth = 2.6; const per = 2 * (ww + hh), st = 13; for (let d = 0; d < per; d += st) { let px, py; if (d < ww) { px = -ww / 2 + d; py = -hh / 2; } else if (d < ww + hh) { px = ww / 2; py = -hh / 2 + d - ww; } else if (d < 2 * ww + hh) { px = ww / 2 - (d - ww - hh); py = hh / 2; } else { px = -ww / 2; py = hh / 2 - (d - 2 * ww - hh); }
-            g.beginPath(); g.moveTo(px - 4, py - 4); g.lineTo(px + 4, py + 4); g.moveTo(px + 4, py - 4); g.lineTo(px - 4, py + 4); g.stroke(); }   /* durva X-öltések körben */
-          g.restore(); }
-        g.strokeStyle = "rgba(40,25,10,.8)"; g.lineWidth = 3; for (let k = 0; k < 6; k++) { const y = rr(40, h - 40); g.setLineDash([10, 6]); g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= w; x += 40) g.lineTo(x, y + rr(-6, 6)); g.stroke(); } g.setLineDash([]); }   /* görbe, kézi varratsorok a toldásoknál */
-      g.fillStyle = "#6b2a1a"; g.font = "900 64px Georgia, serif"; g.textAlign = "center"; g.fillText(o.name ? String(o.name).toUpperCase().slice(0, 12) : "S.O.S.", w / 2, h * .55);
+    /* 2026-11-15 00:53 (tulajdonos): a tutaj vitorlája KÜLÖNFÉLE ANYAGOKBÓL ÖSSZEVARRVA – egy része vászon, más része zsák (durva juta-szövés, kifakult
+       pecséttel), és minden más, ami egy hajótörött kezébe akad: kifakult farmer, piros-zöld kockás flanel, kék-fehér csíkos matrachuzat, virágos
+       kendő, frottír törölköző, olajos ponyva. A foltok szabálytalan sokszögek, vastag cérnával, durva férceléssel és X-öltésekkel összefogva.
+       Kézzel, kátránnyal / szénnel írva: „SOS”, alatta a játékos neve. */
+    const sT = canvasTex(1024, 1024, (g, w, h) => {
+      const R = (() => { let x = 7919; return () => (x = (x * 16807) % 2147483647) / 2147483647; })(), rr2 = (a, b) => a + (b - a) * R();
+      const weave = (c, d, step, a) => { g.strokeStyle = c; g.lineWidth = d; for (let q = -h; q < w + h; q += step) { g.globalAlpha = a; g.beginPath(); g.moveTo(q, 0); g.lineTo(q, h); g.stroke(); g.beginPath(); g.moveTo(0, q); g.lineTo(w, q); g.stroke(); } g.globalAlpha = 1; };
+      const MAT = {
+        vaszon: () => { g.fillStyle = "#e3d7b6"; g.fillRect(0, 0, w, h); weave("rgba(120,100,60,.5)", 1, 4, .35); for (let k = 0; k < 40; k++) { g.fillStyle = `rgba(110,90,50,${R() * .12})`; g.beginPath(); g.arc(R() * w, R() * h, rr2(6, 40), 0, TAU); g.fill(); } },
+        zsak: () => { g.fillStyle = "#a88456"; g.fillRect(0, 0, w, h); weave("rgba(70,48,22,.9)", 3, 9, .55); weave("rgba(210,180,130,.6)", 1.5, 9, .35); for (let k = 0; k < 400; k++) { g.strokeStyle = "rgba(230,200,150,.35)"; g.lineWidth = 1; const x = R() * w, y = R() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + rr2(-12, 12), y + rr2(-12, 12)); g.stroke(); }
+          g.save(); g.translate(w * .5, h * .55); g.rotate(-.12); g.fillStyle = "rgba(60,30,20,.38)"; g.font = "900 150px Georgia, serif"; g.textAlign = "center"; g.fillText("KÁVÉ", 0, 0); g.font = "800 70px Georgia, serif"; g.fillText("60 KG · SANTOS", 0, 90); g.restore(); },
+        farmer: () => { g.fillStyle = "#4d6f96"; g.fillRect(0, 0, w, h); g.strokeStyle = "rgba(230,240,255,.28)"; g.lineWidth = 2; for (let q = -h; q < w; q += 6) { g.beginPath(); g.moveTo(q, h); g.lineTo(q + h, 0); g.stroke(); } for (let k = 0; k < 30; k++) { g.fillStyle = "rgba(220,230,245,.18)"; g.fillRect(R() * w, R() * h, rr2(30, 200), rr2(4, 14)); }
+          g.strokeStyle = "#d39a3a"; g.lineWidth = 3; g.setLineDash([12, 8]); [.3, .32].forEach((f) => { g.beginPath(); g.moveTo(0, h * f); g.lineTo(w, h * f); g.stroke(); }); g.setLineDash([]); },
+        kocka: () => { g.fillStyle = "#b8322b"; g.fillRect(0, 0, w, h); for (let q = 0; q < w; q += 64) { g.fillStyle = "rgba(20,70,40,.55)"; g.fillRect(q, 0, 26, h); g.fillRect(0, q, w, 26); g.fillStyle = "rgba(240,220,170,.35)"; g.fillRect(q + 40, 0, 4, h); g.fillRect(0, q + 40, w, 4); } },
+        matrac: () => { g.fillStyle = "#f0ece2"; g.fillRect(0, 0, w, h); for (let q = 0; q < w; q += 22) { g.fillStyle = "#3d5f9c"; g.fillRect(q, 0, 7, h); g.fillStyle = "rgba(61,95,156,.5)"; g.fillRect(q + 12, 0, 2, h); } },
+        virag: () => { g.fillStyle = "#e8c43e"; g.fillRect(0, 0, w, h); for (let k = 0; k < 120; k++) { const x = R() * w, y = R() * h, c = ["#c8102e", "#ffffff", "#d84f8a", "#2e7d32"][k % 4]; for (let p2 = 0; p2 < 5; p2++) { g.fillStyle = c; g.beginPath(); g.ellipse(x + Math.cos(p2 * 1.26) * 12, y + Math.sin(p2 * 1.26) * 12, 9, 6, p2 * 1.26, 0, TAU); g.fill(); } g.fillStyle = "#5a3a10"; g.beginPath(); g.arc(x, y, 5, 0, TAU); g.fill(); } },
+        torolkozo: () => { g.fillStyle = "#f6f3ee"; g.fillRect(0, 0, w, h); for (let k = 0; k < 9000; k++) { g.fillStyle = `rgba(160,150,140,${R() * .25})`; g.fillRect(R() * w, R() * h, 2, 2); } g.fillStyle = "#e07a2a"; g.fillRect(0, h * .2, w, 40); g.fillStyle = "#2a8cc8"; g.fillRect(0, h * .2 + 50, w, 16); },
+        ponyva: () => { g.fillStyle = "#4f5d3c"; g.fillRect(0, 0, w, h); for (let k = 0; k < 60; k++) { g.fillStyle = `rgba(20,25,10,${R() * .3})`; g.beginPath(); g.ellipse(R() * w, R() * h, rr2(20, 90), rr2(8, 40), R() * 3, 0, TAU); g.fill(); } g.fillStyle = "#c9c4b5"; for (let k = 0; k < 6; k++) { g.beginPath(); g.arc(R() * w, R() * h, 9, 0, TAU); g.fill(); } } };
+      /* minden anyag egy saját vászonra, onnan vágjuk ki a foltokat */
+      const pat = {}; Object.keys(MAT).forEach((k) => { const c = document.createElement("canvas"); c.width = c.height = 512; const g0 = g; g = c.getContext("2d"); const w0 = w, h0 = h; w = h = 512; MAT[k](); w = w0; h = h0; g = g0; pat[k] = g.createPattern(c, "repeat"); });
+      /* szabálytalan foltrács: 4×5 cella, eltolt csúcsokkal; a két legnagyobb mező vászon és zsák (a tulajdonos kérése) */
+      const NX = 4, NY = 5, P = []; for (let j = 0; j <= NY; j++) for (let i = 0; i <= NX; i++) P.push([i / NX * w + (i && i < NX ? rr2(-55, 55) : 0), j / NY * h + (j && j < NY ? rr2(-45, 45) : 0)]);
+      const kinds = ["vaszon", "zsak", "farmer", "vaszon", "kocka", "zsak", "matrac", "vaszon", "virag", "zsak", "torolkozo", "ponyva", "vaszon", "zsak", "farmer", "kocka", "vaszon", "matrac", "zsak", "virag"];
+      const cells = []; for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) { const q = [P[j * (NX + 1) + i], P[j * (NX + 1) + i + 1], P[(j + 1) * (NX + 1) + i + 1], P[(j + 1) * (NX + 1) + i]]; cells.push(q); }
+      /* két nagy egybefüggő mező: a felső-orr felé vászon, a hátsó-alsó zsák */
+      cells.forEach((q, k) => { g.save(); g.beginPath(); q.forEach((p2, i) => (i ? g.lineTo(p2[0], p2[1]) : g.moveTo(p2[0], p2[1]))); g.closePath(); g.fillStyle = pat[kinds[(k * 7) % kinds.length]]; g.translate(rr2(-200, 200), rr2(-200, 200)); g.fill(); g.restore(); });
+      /* kopás, piszok, vízfoltok */
+      for (let k = 0; k < 70; k++) { g.fillStyle = `rgba(70,50,25,${R() * .14})`; g.beginPath(); g.ellipse(R() * w, R() * h, rr2(8, 70), rr2(6, 50), R() * 3, 0, TAU); g.fill(); }
+      /* varratok: a foltok szélén vastag, durva férc (szaggatott) és sűrű X-öltések, helyenként kilógó cérnavég */
+      const seam = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L; g.strokeStyle = "rgba(30,20,10,.35)"; g.lineWidth = 5; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+        g.strokeStyle = R() < .5 ? "#2a1a0c" : "#efe6cf"; g.lineWidth = 3.2; for (let d = 8; d < L - 8; d += 17) { const x = a[0] + dx * d / L + rr2(-1.5, 1.5), y = a[1] + dy * d / L + rr2(-1.5, 1.5); g.beginPath(); g.moveTo(x - nx * 9 - dx / L * 5, y - ny * 9 - dy / L * 5); g.lineTo(x + nx * 9 + dx / L * 5, y + ny * 9 + dy / L * 5); g.moveTo(x + nx * 9 - dx / L * 5, y + ny * 9 - dy / L * 5); g.lineTo(x - nx * 9 + dx / L * 5, y - ny * 9 + dy / L * 5); g.stroke(); }
+        if (R() < .4) { const t = R(), x = a[0] + dx * t, y = a[1] + dy * t; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 18, y + 10, x + rr2(10, 30), y + rr2(20, 40)); g.stroke(); } };
+      for (let j = 0; j <= NY; j++) for (let i = 0; i < NX; i++) seam(P[j * (NX + 1) + i], P[j * (NX + 1) + i + 1]);
+      for (let j = 0; j < NY; j++) for (let i = 0; i <= NX; i++) seam(P[j * (NX + 1) + i], P[(j + 1) * (NX + 1) + i]);
+      /* kézírás: „SOS” vastag kátránnyal, remegő, kézzel húzott betűk (több rétegben, csorgással), alatta a játékos neve szénnel */
+      const hand = (txt, cx, cy, size, col, wob, drip) => { g.save(); g.translate(cx, cy); g.rotate(rr2(-.06, .03)); g.textAlign = "center"; g.textBaseline = "middle"; g.font = `italic 800 ${size}px Inter, "Comic Sans MS", "Chalkboard SE", system-ui, sans-serif`;
+        for (let k = 0; k < 7; k++) { g.save(); g.translate(rr2(-wob, wob), rr2(-wob, wob)); g.rotate(rr2(-.015, .015)); g.globalAlpha = k ? .28 : .9; g.fillStyle = col; g.fillText(txt, 0, 0); g.restore(); }
+        if (drip) { const tw = g.measureText(txt).width; g.fillStyle = col; for (let k = 0; k < 6; k++) { const x = rr2(-tw / 2, tw / 2), y = size * .3, L = rr2(15, 70); g.globalAlpha = .75; g.fillRect(x, y, rr2(3, 6), L); g.beginPath(); g.arc(x + 2.5, y + L, 4.5, 0, TAU); g.fill(); } }
+        g.restore(); g.globalAlpha = 1; };
+      /* „SOS”: ecsettel, kátránnyal festve – betűtípustól független, kézzel húzott vonások (remegő, egyenetlen vastagságú, csorgással) */
+      const brush = (pts, lw) => { for (let k = 0; k < 3; k++) { g.strokeStyle = k ? "rgba(27,18,9,.35)" : "#1b1209"; g.lineWidth = lw * (k ? 1.12 : 1) + rr2(-3, 3); g.lineCap = "round"; g.lineJoin = "round"; g.beginPath();
+        pts.forEach((p2, i) => { const x = p2[0] + rr2(-3, 3), y = p2[1] + rr2(-3, 3); if (i === 0) g.moveTo(x, y); else if (p2.length > 2) g.quadraticCurveTo(p2[2] + rr2(-3, 3), p2[3] + rr2(-3, 3), x, y); else g.lineTo(x, y); }); g.stroke(); } };
+      const S0 = (cx, cy, s2) => brush([[cx + s2 * .55, cy - s2 * .7], [cx - s2 * .5, cy - s2 * .35, cx - s2 * .1, cy - s2 * 1.0], [cx + s2 * .45, cy + s2 * .35, cx - s2 * .5, cy + s2 * .05], [cx - s2 * .6, cy + s2 * .72, cx + s2 * .55, cy + s2 * 1.05]], s2 * .32);
+      const O0 = (cx, cy, s2) => { g.save(); g.translate(cx, cy); g.rotate(-.08); g.scale(1, 1.25); g.strokeStyle = "#1b1209"; g.lineWidth = s2 * .3; g.beginPath(); g.ellipse(0, 0, s2 * .55, s2 * .62, 0, .2, TAU + .05); g.stroke(); g.restore(); };
+      const sx = w * .5, sy = h * .38, sz = 120; S0(sx - 270, sy, sz); O0(sx, sy, sz); S0(sx + 270, sy + 8, sz);
+      g.fillStyle = "#1b1209"; for (let k = 0; k < 7; k++) { const x = sx + rr2(-330, 330), y = sy + sz * .95, L = rr2(20, 90); g.globalAlpha = .8; g.fillRect(x, y, rr2(4, 8), L); g.beginPath(); g.arc(x + 3, y + L, 6, 0, TAU); g.fill(); } g.globalAlpha = 1;
+      /* alatta a játékos neve: szénnel, kézírásszerűen (dőlt, remegő, többször átrajzolva) */
+      const nm = o.name ? String(o.name).slice(0, 14) : ""; if (nm) hand(nm, w * .5, h * .68, nm.length > 9 ? 100 : 128, "#2b1d12", 3, false);
       g.globalCompositeOperation = "destination-out"; for (let k = 0; k < 30; k++) { g.beginPath(); g.arc(rr(0, w), h - rr(0, 18), rr(4, 14), 0, TAU); g.fill(); g.beginPath(); g.arc(w - rr(0, 14), rr(0, h), rr(4, 12), 0, TAU); g.fill(); } g.globalCompositeOperation = "source-over"; });
     const sailM = std({ map: sT, roughness: 1, side: THREE.DoubleSide, transparent: true, alphaTest: .4 });
     const sailG = new THREE.Group(); sailG.position.set(0, 0, SF + .02); mast.add(sailG);
@@ -503,16 +547,19 @@
       sockG.position.set(1.0, 1.98, -1.4); body.add(sockG);
       const wt = std({ color: "#ece8dc", roughness: 1, side: THREE.DoubleSide }), dirt = std({ color: "#b9ab88", roughness: 1 }), grey = std({ color: "#8d8a82", roughness: 1 }), red = std({ color: "#c8102e", roughness: .9 }), blue = std({ color: "#1f4fbf", roughness: .9 });
       const pin = mesh(new THREE.BoxGeometry(.03, .09, .05), std({ color: "#e0b04a", roughness: .6 }), sockG); pin.position.y = .02;
-      const sk = new THREE.Group(); sockG.add(sk);
-      mesh(new THREE.CylinderGeometry(.075, .07, .5, 14, 1, true).translate(0, -.27, 0), wt, sk);
-      [[-.07, red], [-.12, blue], [-.17, red]].forEach(([y, m]) => mesh(new THREE.CylinderGeometry(.077, .077, .03, 14, 1, true).translate(0, y, 0), m, sk));
-      mesh(new THREE.TorusGeometry(.075, .012, 6, 16).rotateX(Math.PI / 2).translate(0, -.02, 0), wt, sk);
-      const foot = new THREE.Group(); foot.position.set(0, -.52, 0); sk.add(foot);
-      mesh(new THREE.SphereGeometry(.078, 14, 10), grey, foot);
-      mesh(new THREE.CapsuleGeometry(.068, .2, 6, 14).rotateX(Math.PI / 2).translate(0, -.02, .14), wt, foot);
-      mesh(new THREE.SphereGeometry(.07, 12, 10).translate(0, -.02, .27), grey, foot);
-      mesh(new THREE.CircleGeometry(.025, 10).translate(0, 0, .079), std({ color: "#3a2a1a", roughness: 1 }), foot);
-      mesh(new THREE.SphereGeometry(.072, 10, 8).scale(1.02, .5, 1.6).translate(0, -.06, .12), dirt, foot);
+      /* 2026-11-15 00:53 (tulajdonos): a zokni helyett egy FECSKE FÜRDŐNADRÁG lóg a rúdon, a mintája a RAJTZÁSZLÓ jelzés – a „P” lobogó
+         (kék mező, közepén fehér négyzet: „rajtra készülj”). A derékrészénél csipesz fogja, a szárnyílások magasan kivágva, a szél lobogtatja. */
+      const sk = new THREE.Group(); sk.scale.setScalar(1.7); sockG.add(sk);
+      const tT = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#1d4fa3"; g.fillRect(0, 0, w, h); g.fillStyle = "#ffffff"; g.fillRect(w * .3, h * .22, w * .4, h * .4);
+        for (let k = 0; k < 500; k++) { g.fillStyle = `rgba(0,0,0,${Math.random() * .06})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+        g.fillStyle = "#e9e4d6"; g.fillRect(0, 0, w, h * .1); g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = 2; g.beginPath(); g.moveTo(0, h * .1); g.lineTo(w, h * .1); g.stroke(); });
+      const tm = std({ map: tT, roughness: .7, side: THREE.DoubleSide });
+      const tr = new THREE.Shape(); tr.moveTo(-.17, 0); tr.lineTo(.17, 0); tr.lineTo(.16, -.06); tr.quadraticCurveTo(.06, -.1, .045, -.2); tr.lineTo(-.045, -.2); tr.quadraticCurveTo(-.06, -.1, -.16, -.06); tr.closePath();
+      [-1, 1].forEach((sd) => { const tg = new THREE.ShapeGeometry(tr, 10); const pa = tg.attributes.position, uv = tg.attributes.uv; for (let i = 0; i < pa.count; i++) { uv.setXY(i, (pa.getX(i) + .17) / .34, 1 + pa.getY(i) / .2); pa.setZ(i, sd * (.012 + .02 * Math.max(0, -pa.getY(i)) * 0) + sd * .008 * Math.cos(pa.getX(i) * 9)); }
+        tg.computeVertexNormals(); const m = mesh(tg, tm, sk); m.rotation.y = Math.PI / 2; m.position.y = -.02; });
+      /* derékgumi-zsinór masnival */
+      mesh(new THREE.TorusGeometry(.02, .004, 5, 10).translate(0, -.035, .0), std({ color: "#f2efe6", roughness: .8 }), sk).rotation.y = Math.PI / 2;
+      const foot = new THREE.Group(); foot.position.set(0, -.2, 0); sk.add(foot);
       G.userData.flag = sockG; G.userData.sockFoot = foot; }
     /* KÓKUSZDIÓ a ládán – arcot vág: vidám (közepes szél), unatkozik (gyenge szél: félig lehunyt szem, ásít), fél (erős szél: tágra nyílt szem, reszket, O-száj),
        megijed (ütközés: felugrik, a szeme kidülled) */
@@ -543,7 +590,7 @@
     const hood = mesh(new THREE.SphereGeometry(.24, 12, 8, 0, TAU, 0, Math.PI * .6), coatM, coat);
     const coatLine = rodBetween(new THREE.Vector3(), new THREE.Vector3(0, 1, 0), .008, rope, mast, 4);
     const crew = [];
-    if (o.crew) { const p = makePerson({ top: "#e9e1cf", bot: "#4a5a6a", hair: "#4a3424", seed: o.seed || 2, bareLegs: true, shoe: "#d29a72", sleeve: false }); body.add(p); crew.push(p); }
+    if (o.crew) { const p = makePerson({ banana: true, top: "#e9e1cf", bot: "#4a5a6a", hair: "#4a3424", seed: o.seed || 2, bareLegs: true, shoe: "#d29a72", sleeve: false }); body.add(p); crew.push(p); }
     const S = { side: 1, boom: .2, luff: 0, heel: 0, pitch: 0, spin: 0, awa: null, aws: 6, rud: 0, t: 0, scare: 0 };
     const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _q = new THREE.Vector3();
     const setRod = (m, a, b) => { _q.subVectors(b, a); const L = Math.max(_q.length(), 1e-4); m.position.copy(a); m.scale.set(1, L, 1); m.quaternion.setFromUnitVectors(_up, _q.multiplyScalar(1 / L)); };
