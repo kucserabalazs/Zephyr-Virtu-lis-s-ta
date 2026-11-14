@@ -876,7 +876,8 @@
       const nk = new THREE.CylinderGeometry(.05, .055, .08, 8); nk.translate(0, hh + .5, 0); put(R(nk), sk); const hd = new THREE.SphereGeometry(.115, 14, 10); hd.scale(.92, 1.08, 1); hd.translate(0, hh + .64, 0); put(R(hd), sk);
       const hair = new THREE.SphereGeometry(.122, 14, 8, 0, TAU, 0, Math.PI * .55); hair.rotateX(-.3); hair.translate(0, hh + .655, -.012); put(R(hair), k % 3 === 0 ? "#ffffff" : hr);
       const sg = new THREE.BoxGeometry(.16, .035, .02); sg.translate(0, hh + .66, .105); put(R(sg), "#0d0f12"); };
-    person(0, d0 + 1.5, .35, Math.PI, false, 0);
+    /* 2026-11-14 18:02 (tulajdonos: „a középen álló ember fején keresztülmegy a bimini – tedd a hajó elejébe”): a magányos álló ember a flybridge-ről az orrfedélzetre került */
+    person(-.48, dy(.78) + .02, zz(.78), .25, false, 0);
     const aftY = dy(.12) + .03; for (let k = 1; k <= o.people; k++) person(-.75 + ((k * 7) % 5) * .38, aftY, zz(.14) + ((k * 3) % 4) * .28 - .3, (k % 2 ? 1 : -1) * Math.PI / 2 + (k * .7 % 1 - .5), k % 3 === 2, k);
     Object.keys(byM).forEach((c) => mesh(mergeGeoms(byM[c]), std({ color: c, roughness: .8 }), g));
     return g;

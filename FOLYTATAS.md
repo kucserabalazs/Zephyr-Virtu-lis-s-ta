@@ -1079,3 +1079,10 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 ## 2026-11-14 17:49–17:50 – látványos helyszínek, hangsúlyos vulkáni hegyek
 - 8 helyszín, mindegyiken szemközt jellegzetes hegy a jelképével: Tihany (apátság a dombon), Badacsony (Ranolder-kereszt), Fonyód (ikerhegy, kilátó), Füred (Tamás-hegy), Szigliget (vár), Boglár (gömbkilátó), Keszthely (hegység, kastély), Zamárdi (Kőhegy, kilátó).
 - A vulkáni hegyek 30%-kal kiemelve, kevésbé párásan; a kisebb dombok erősebben (Tihany 1,7×, Boglár 2,1×, Kőhegy 1,9×, Fonyód 1,5×). A jelképek nagyítva (kereszt 4×, gömb 3×, apátság 2,2× stb.), hogy a hegytetőn felismerhetők legyenek. Ez tudatos eltérés a pontos mérettől, a tulajdonos kérésére.
+
+## 2026-11-14 18:02 – élethűbb éjszaka, zsűrihajó embere az orrban
+- Csillagok: ~4400 db, a valódi fényesség-eloszlással (szinte mind apró, halvány; fényes csak néhány tucat), enyhébb pislogás, halványabb Tejút.
+- Parti fények: kevesebb, kisebb, halványabb (kis balatoni települések), gyengébb tükörcsíkok.
+- Hajófények: vitorlával haladó hajón oldalfények + farfény, árbocfény (fehér topfény) nincs; a korábbi árboccsúcsi vörös-zöld is kikerült; távolról apró, éles pontok. A 7 m alatti kishajók: egy körbe látszó fehér fény (+ közeledéskor zseblámpa).
+- Saját hajó: csak az orrban lévő oldalfények (zöld jobbra, vörös balra) világítanak halványan a fock aljára, az orrfedélzetre és a vízre; a vörös kokpitfény és a fehér zseblámpa-fény kikerült; a holdfény gyengébb.
+- Motoros jachtok (zsűrihajó, nézők): a flybridge-en álló ember az orrfedélzetre került (eddig a bimini/keménytető átment a fején).

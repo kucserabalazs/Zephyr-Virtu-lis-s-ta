@@ -178,11 +178,11 @@
           put(wx, wz, (P) => { P(new THREE.BoxGeometry(w, h, d), big ? "#f1efe8" : rnd() < .8 ? "#efe9da" : "#e6d5b0", 0, h / 2, 0, ry); if (!big) { const rf = new THREE.CylinderGeometry(.01, w * .62, d * 1.02, 4, 1); rf.rotateZ(Math.PI / 2); rf.rotateY(Math.PI / 4 * 0); rf.scale(1, .55, 1);
             const rg = new THREE.ConeGeometry(Math.max(w, d) * .72, 3 + w * .18, 4); rg.rotateY(Math.PI / 4); rg.scale(w / Math.max(w, d), 1, d / Math.max(w, d)); rf.dispose(); P(rg, rnd() < .75 ? "#a8452f" : "#6e4a3a", 0, h + 1.5 + w * .09, 0, ry); } else P(new THREE.BoxGeometry(w * 1.02, 1.2, d * 1.02), "#8c969c", 0, h + .6, 0, ry); }); } }
       /* éjszakai fények a település területén */
-      const nLt = Math.round(clamp(14 + rk * rk * 55, 10, 220)), px = clamp(4.4 - dT / 7000, 1.5, 4.2);
+      const nLt = Math.round(clamp(7 + rk * rk * 26, 5, 100)), px = clamp(3.0 - dT / 8000, 1.1, 2.8);   /* 18:02: kis balatoni települések – szolid, ritkás fények */
       for (let q = 0, tries = 0; q < nLt && tries < nLt * 5; tries++) { const a = rnd() * TAU, rr = Math.sqrt(rnd()) * R * 1.05, wx = tx + Math.sin(a) * rr, wz = tz - Math.cos(a) * rr; if (balInLake(wx, wz)) continue; q++;
         nl(balPlace(cx, cz, wx, wz, balHgt(wx, wz) + 3 + rnd() * 6), rnd() < .55 ? "#ffcf7a" : rnd() < .6 ? "#fff1d6" : "#ffb35a", px * (.7 + rnd() * .5)); }
       /* parti sétány lámpái + tükörképük a vízen */
-      B.P.forEach((p, i) => { if (Math.hypot(p[0] - tx, p[1] - tz) > R * 1.15 || i % 2) return; const P = balPlace(cx, cz, p[0], p[1], 5); nl(P, "#ffd9a0", px * .95); if (dT < 16000 && rnd() < .55) ns(P, "#ffcf88", 2.5, 160); }); });
+      B.P.forEach((p, i) => { if (Math.hypot(p[0] - tx, p[1] - tz) > R * 1.15 || i % 3) return; const P = balPlace(cx, cz, p[0], p[1], 5); nl(P, "#ffd9a0", px * .8); if (dT < 12000 && rnd() < .4) ns(P, "#ffcf88", 2, 120); }); });
     /* vitorláskikötők bejárati fényei (Fl R / Fl G 3 s) */
     BAL_HARBORS.forEach((n, i) => { const t = BAL_TOWNS.find((q) => q[0] === n); if (!t) return; const s = balShorePt(t[1], t[2]), bx = s.x + s.nx * 90, bz = s.z + s.nz * 90, dT = Math.hypot(bx - cx, bz - cz);
       [[-1, "#ff2a1a"], [1, "#2aff6a"]].forEach(([sd, col]) => { const P = balPlace(cx, cz, bx + s.tx * sd * 45, bz + s.tz * sd * 45, 4); nl(P, col, clamp(5.2 - dT / 8000, 2.2, 5), [3, (i * .37) % 3, .3]); if (dT < 18000) ns(P, col, 2, 170); });
