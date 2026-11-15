@@ -12799,7 +12799,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---------------------------------------------------------------- a mindig látható gombok (2D) */
   function fotoButtons() {
     if (FOTO.ui || !fotoDev()) return; const box = document.createElement("div"); box.id = "zfoto";
-    { const st = document.createElement("style"); st.textContent = "#zfoto{right:10px}body.world-on #zfoto{right:auto;left:10px}"; document.head.appendChild(st); }   /* a sétában jobb szélen (bal oldalt az alaprajz van), a 3D világokban bal szélen (jobbra a táblák) */
+    { const st = document.createElement("style"); st.textContent = "#zfoto{right:10px}body.world-on #zfoto{right:auto;left:10px}body:has(.gm-wrap.on[data-game=mahj]:not([hidden])) #zfoto{display:none!important}"; document.head.appendChild(st); }   /* a sétában jobb szélen (bal oldalt az alaprajz van), a 3D világokban bal szélen (jobbra a táblák) */
     box.style.cssText = "position:fixed;top:50%;transform:translateY(-50%);z-index:2147482000;display:flex;flex-direction:column;gap:10px;pointer-events:none";
     const mk = (ico, tip, fn) => { const b = document.createElement("button"); b.type = "button"; b.title = tip; b.setAttribute("aria-label", tip); b.textContent = ico;
       b.style.cssText = "pointer-events:auto;position:relative;width:52px;height:52px;border-radius:50%;border:2px solid rgba(228,187,99,.9);background:rgba(7,28,58,.82);color:#fff;font:400 24px/1 system-ui,sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.35);padding:0;-webkit-tap-highlight-color:transparent";
@@ -13742,7 +13742,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "f8c091b1d9"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "784f140cea"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -18860,7 +18860,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     if (open) { const on = hd.querySelector(".gm-tabs button.on"); if (on) on.scrollIntoView({ block: "nearest", inline: "center" }); }
   }
   function gmStart(id) {
-    gmGame = GM_MAKE[id](); gmGame.id = id;
+    gmGame = GM_MAKE[id](); gmGame.id = id; gmEl.dataset.game = id;   /* 2026-11-15: a mahjong alatt a 📷/🖼 gombok rejtve (a tulajdonos kérése; máshol maradnak) */
     { const q = GM_LIST.find((x) => x.id === id), cur = gmEl.querySelector(".gm-cur"); if (q && cur) { cur.querySelector("b").textContent = q.n; cur.style.setProperty("--gc", q.c); } }
     gmEl.querySelectorAll(".gm-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.gm === id));
     const hp = gmEl.querySelector(".gm-help"); hp.textContent = gmGame.help || ""; hp.classList.remove("show"); void hp.offsetWidth; hp.classList.add("show"); gmInput = performance.now(); gmHud();
