@@ -585,7 +585,7 @@ body.walk-on .walk-bar { bottom: calc(24px + env(safe-area-inset-bottom, 0px)); 
 .gate-skip:focus-visible { outline: 3px solid #e8c478; outline-offset: 3px; }
 .gate-skip[hidden] { display: none; }
 /* a kapus átmenet alatt a kezelőfelület elhalványul, hogy csak a kapu látsszon */
-body.gate-on > *:not(#stage):not(#gateSkip):not(script) { opacity: 0 !important; pointer-events: none !important; transition: opacity .6s ease; }
+body.gate-on > *:not(#stage):not(#gateSkip):not(script):not(#zfoto) { opacity: 0 !important; pointer-events: none !important; transition: opacity .6s ease; }
 .vr-btn:hover, .vr-btn:focus-visible { background: linear-gradient(180deg, rgba(30,84,150,.95), rgba(12,44,90,.95)); outline: none; transform: translateY(-1px); }
 body.walk-on .vr-btn, body.in-vr .vr-btn, body.world-on .vr-btn { display: none; }
 #btnVR { top: calc(144px + env(safe-area-inset-top, 0px)); }
@@ -610,7 +610,7 @@ body.walk-on .sun-panel, body.in-vr .sun-panel, body.world-on .sun-panel { displ
 .world-pick [data-w] b, .world-pick [data-dict] b { display: block; font-size: 21px; margin-bottom: 4px; } .world-pick [data-w] span, .world-pick [data-dict] span { font-size: 16px; opacity: .85; }
 .world-pick p { margin: 6px 2px 0; font-size: 15px; opacity: .75; }
 .world-pick .wp-x { position: absolute; right: 14px; top: 12px; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); color: #fff; font-size: 20px; cursor: pointer; }
-body.world-on > *:not(#stage):not(#worldHud):not(.zfb):not(#worldPick):not(.zx-board) { visibility: hidden !important; }
+body.world-on > *:not(#stage):not(#worldHud):not(.zfb):not(#worldPick):not(.zx-board):not(#zfoto):not(#zfotoGal) { visibility: hidden !important; }
 body.world-on #stage { visibility: visible !important; }
 .a-enter-ar { display: none !important; }
 
@@ -12616,6 +12616,139 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       ["📏", "Gyors méret", pick("size", Object.keys(WSTY.size), "⌚")],
       ["↺", "Alaphelyzet", () => { WS = Object.assign({}, WS_DEF); wsSet("size", WS.size); }]]];
   }
+  /* ================================================================ 2026-11-15 (tulajdonos: „fényképező gomb a virtuális sétához, amit mindig elő tudok
+     venni, hogy le tudjam fotózni vele az adott problémát a javításhoz”) – 📷 FOTÓ + 🖼 FOTÓIM.
+     2D-ben: a jobb szélen mindig látható kerek gomb; VR-ben: a tenyér/óra menü első pontja.
+     A kép a 3D jelenetet újrarajzolja egy saját képpufferbe (VR-ben is működik, ahol a vásznat nem lehet kiolvasni), 2D-ben ráteszi a látható táblákat,
+     alul pedig rávési, hol készült (hely, pozíció, idő, verzió). A képek a böngészőben maradnak (IndexedDB), a galériában letölthetők / megoszthatók. */
+  const FOTO = { db: null, n: 0, busy: false, ui: null };
+  function fotoDB() {
+    if (FOTO.db) return Promise.resolve(FOTO.db);
+    return new Promise((ok, no) => { try { const rq = indexedDB.open("zephyrFotok", 1); rq.onupgradeneeded = () => { try { rq.result.createObjectStore("f", { keyPath: "id" }); } catch (e) {} };
+      rq.onsuccess = () => { FOTO.db = rq.result; ok(FOTO.db); }; rq.onerror = () => no(rq.error); } catch (e) { no(e); } });
+  }
+  function fotoTx(mode, fn) { return fotoDB().then((db) => new Promise((ok, no) => { const tx = db.transaction("f", mode), st = tx.objectStore("f"); let res; try { res = fn(st); } catch (e) { no(e); return; } tx.oncomplete = () => ok(res && "result" in res ? res.result : res); tx.onerror = () => no(tx.error); })); }
+  function fotoAll() { return fotoTx("readonly", (st) => st.getAll()).then((a) => (a || []).sort((p, q) => q.id - p.id)).catch(() => []); }
+  function fotoCount() { fotoAll().then((a) => { FOTO.n = a.length; fotoBadge(); }); }
+  function fotoBadge() { const b = FOTO.ui && FOTO.ui.badge; if (b) { b.textContent = FOTO.n; b.style.display = FOTO.n ? "flex" : "none"; } }
+  function fotoWhere() {
+    let s = ""; try { s = watchContext(); } catch (e) {}
+    try { const W = window.ZephyrWorld; if (W && W.active && W._hb) { const H = W._hb; const R = H.SCH && H.SCH.R; if (R && R.h) s += " · " + R.h.name; } } catch (e) {}
+    let p = null; try { const v = new THREE.Vector3(); (inVR ? sceneEl.renderer.xr.getCamera() : sceneEl.camera).getWorldPosition(v); p = v; } catch (e) {}
+    try { const W = window.ZephyrWorld, H = W && W.active && W._hb && W._hb.HB; if (H && H.walk && H.pos) p = new THREE.Vector3(H.pos.x, p ? p.y : 1.6, H.pos.z); } catch (e) {}   /* a kikötőben a világ mozog, nem a kamera */
+    return { s, p };
+  }
+  function fotoName(d) { const z = (n) => String(n).padStart(2, "0"); return `zephyr-foto-${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.jpg`; }
+  /* a jelenet újrarajzolása saját pufferbe → vászon (függőlegesen tükrözve, mert a WebGL alulról olvas) */
+  function fotoRender(Wd, Hd) {
+    const r = sceneEl.renderer, sc = sceneEl.object3D, xr = r.xr, pres = !!(xr && xr.isPresenting);
+    let cam = sceneEl.camera, tmp = null;
+    if (pres) { const xc = xr.getCamera(), eye = (xc.cameras && xc.cameras[0]) || xc; eye.updateMatrixWorld && eye.updateMatrixWorld(true);
+      tmp = new THREE.PerspectiveCamera(78, Wd / Hd, (sceneEl.camera && sceneEl.camera.near) || .05, (sceneEl.camera && sceneEl.camera.far) || 4000); eye.matrixWorld.decompose(tmp.position, tmp.quaternion, tmp.scale); tmp.scale.set(1, 1, 1); tmp.updateMatrixWorld(true); cam = tmp; }
+    const SS = 1.5, Rw = Math.round(Wd * SS), Rh = Math.round(Hd * SS), rt = new THREE.WebGLRenderTarget(Rw, Rh);   /* élsimítás: nagyobb felbontásban rajzol, majd lekicsinyít (a többmintás puffer ezzel a módszerrel fekete képet adna) */ rt.texture.colorSpace = THREE.LinearSRGBColorSpace; rt.texture.internalFormat = "SRGB8_ALPHA8";
+    rt.isXRRenderTarget = true;   /* így a three ugyanazt a tónusleképezést kapja, mint a képernyő, az sRGB kódolást pedig a puffer végzi – a színek pontosan egyeznek a látottal (mérve) */
+    const hid = []; const hide = (o) => { if (o && o.visible) { o.visible = false; hid.push(o); } };
+    try { if (XRP.wristP) hide(XRP.wristP.g); hide(XRP.wrist); Object.values(XRP.ray || {}).forEach((o) => hide(o && o.isObject3D ? o : o && o.line)); } catch (e) {}
+    const oEn = xr ? xr.enabled : false, oRT = r.getRenderTarget(), oAsp = cam.aspect;
+    try { if (!pres && cam.isPerspectiveCamera) { cam.aspect = Wd / Hd; cam.updateProjectionMatrix(); }
+      if (xr) xr.enabled = false; r.setRenderTarget(rt); r.clear(); r.render(sc, cam);
+      const px = new Uint8Array(Rw * Rh * 4); r.readRenderTargetPixels(rt, 0, 0, Rw, Rh, px);
+      const big = document.createElement("canvas"); big.width = Rw; big.height = Rh; const gb = big.getContext("2d"), im = gb.createImageData(Rw, Rh), row = Rw * 4;
+      for (let y = 0; y < Rh; y++) im.data.set(px.subarray((Rh - 1 - y) * row, (Rh - y) * row), y * row);
+      for (let i = 3; i < im.data.length; i += 4) im.data[i] = 255;
+      gb.putImageData(im, 0, 0); const cv = document.createElement("canvas"); cv.width = Wd; cv.height = Hd; const g = cv.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(big, 0, 0, Wd, Hd); return cv;
+    } finally { r.setRenderTarget(oRT); if (xr) xr.enabled = oEn; if (!pres && cam.isPerspectiveCamera && oAsp) { cam.aspect = oAsp; cam.updateProjectionMatrix(); } hid.forEach((o) => { o.visible = true; }); rt.dispose(); }
+  }
+  function fotoSnap() {
+    if (FOTO.busy || !sceneEl || !sceneEl.renderer) return; FOTO.busy = true;
+    const pres = (() => { try { return !!sceneEl.renderer.xr.isPresenting; } catch (e) { return false; } })();
+    const go = () => {
+      let cv = null; const d = new Date(), wh = fotoWhere();
+      try {
+        let Wd, Hd; if (pres) { Wd = 1600; Hd = 1200; } else { const c = sceneEl.canvas, cw = c.clientWidth || innerWidth, ch = c.clientHeight || innerHeight, k = Math.min(1920 / cw, 1920 / ch, Math.max(1, devicePixelRatio || 1)); Wd = Math.round(cw * k); Hd = Math.round(ch * k); }
+        cv = fotoRender(Wd, Hd); const g = cv.getContext("2d");
+        /* 2D: a vászon fölött látszó táblák (kikötői menü, lecke-sáv vásznai) is kerüljenek rá */
+        if (!pres) { const c = sceneEl.canvas, k = Wd / (c.clientWidth || innerWidth), b0 = c.getBoundingClientRect();
+          document.querySelectorAll("canvas").forEach((o) => { if (o === c || !o.width || !o.height) return; const b = o.getBoundingClientRect(); if (b.width < 8 || b.height < 8) return; const st = getComputedStyle(o); if (st.visibility === "hidden" || st.display === "none" || +st.opacity === 0 || !o.offsetParent && st.position !== "fixed") return;
+            try { g.drawImage(o, (b.left - b0.left) * k, (b.top - b0.top) * k, b.width * k, b.height * k); } catch (e) {} }); }
+        /* felirat: hol és mikor készült */
+        const fs = Math.max(16, Math.round(Hd / 48)), bh = Math.round(fs * 2.1); g.fillStyle = "rgba(4,16,32,.78)"; g.fillRect(0, Hd - bh, Wd, bh);
+        g.fillStyle = "#E4BB63"; g.font = `700 ${fs}px Inter, system-ui, sans-serif`; g.textBaseline = "middle";
+        const pos = wh.p ? `  ·  x ${wh.p.x.toFixed(1)}  z ${wh.p.z.toFixed(1)}  y ${wh.p.y.toFixed(1)}` : "";
+        g.fillText(`📷 ${wh.s || "Zephyr virtuális séta"}${pos}  ·  ${d.toLocaleString("hu-HU")}  ·  ${pres ? "VR" : "2D"}  ·  v${(window.ZEPHYR_BV || "").slice(0, 10)}`, Math.round(fs * .8), Hd - bh / 2, Wd - fs * 1.6);
+      } catch (e) { FOTO.busy = false; try { toast("A fotó nem sikerült: " + (e && e.message || e), 5000); } catch (e2) {} return; }
+      cv.toBlob((blob) => {
+        const rec = { id: d.getTime(), t: d.toISOString(), name: fotoName(d), where: wh.s, pos: wh.p ? [wh.p.x, wh.p.y, wh.p.z].map((v) => +v.toFixed(2)) : null, vr: pres, v: window.ZEPHYR_BV || "", note: "", blob };
+        fotoTx("readwrite", (st) => st.put(rec)).then(() => { FOTO.n++; fotoBadge(); FOTO.busy = false; fotoDone(pres); }).catch((e) => { FOTO.busy = false; try { toast("A fotót nem sikerült elmenteni: " + (e && e.message || e), 5000); } catch (e2) {} });
+      }, "image/jpeg", .9);
+    };
+    /* VR-ben a következő XR-képkocka után (friss fejhelyzet), 2D-ben azonnal */
+    try { const s = pres && sceneEl.renderer.xr.getSession(); if (s) { s.requestAnimationFrame(() => setTimeout(go, 0)); return; } } catch (e) {}
+    go();
+  }
+  function fotoDone(pres) {
+    try { const a = ac(); if (a) { const src = a.createBufferSource(); src.buffer = noiseBuf(.06); const f = a.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 2500; const gn = a.createGain(); gn.gain.setValueAtTime(.5, a.currentTime); gn.gain.exponentialRampToValueAtTime(.001, a.currentTime + .09); src.connect(f); f.connect(gn); gn.connect(a.destination); src.start(); } } catch (e) {}
+    if (pres) { try { vrHaptic(null, .6, 60); } catch (e) {} try { const P = XRP.wristP; if (P) { P.draw(); } } catch (e) {} return; }
+    const fl = document.createElement("div"); fl.style.cssText = "position:fixed;inset:0;z-index:2147483200;background:#fff;opacity:.85;pointer-events:none;transition:opacity .35s ease-out"; document.body.appendChild(fl);
+    requestAnimationFrame(() => requestAnimationFrame(() => { fl.style.opacity = "0"; setTimeout(() => fl.remove(), 400); }));
+    try { toast(`📷 Fotó elmentve (${FOTO.n} db). A 🖼 gombbal megnézheted, letöltheted és megoszthatod.`, 3500); } catch (e) {}
+  }
+  /* ---------------------------------------------------------------- a mindig látható gombok (2D) */
+  function fotoButtons() {
+    if (FOTO.ui) return; const box = document.createElement("div"); box.id = "zfoto";
+    { const st = document.createElement("style"); st.textContent = "#zfoto{right:10px}body.world-on #zfoto{right:auto;left:10px}"; document.head.appendChild(st); }   /* a sétában jobb szélen (bal oldalt az alaprajz van), a 3D világokban bal szélen (jobbra a táblák) */
+    box.style.cssText = "position:fixed;top:50%;transform:translateY(-50%);z-index:2147482000;display:flex;flex-direction:column;gap:10px;pointer-events:none";
+    const mk = (ico, tip, fn) => { const b = document.createElement("button"); b.type = "button"; b.title = tip; b.setAttribute("aria-label", tip); b.textContent = ico;
+      b.style.cssText = "pointer-events:auto;position:relative;width:52px;height:52px;border-radius:50%;border:2px solid rgba(228,187,99,.9);background:rgba(7,28,58,.82);color:#fff;font:400 24px/1 system-ui,sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.35);padding:0;-webkit-tap-highlight-color:transparent";
+      b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); fn(); }); b.addEventListener("pointerdown", (e) => e.stopPropagation()); box.appendChild(b); return b; };
+    const cam = mk("📷", "Fotó a mostani nézetről (a hiba javításához)", fotoSnap), gal = mk("🖼", "Fotóim – megnézés, letöltés, megosztás", fotoGallery);
+    const badge = document.createElement("span"); badge.style.cssText = "position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#E4BB63;color:#07203a;font:800 12px/1 Inter,system-ui,sans-serif;display:none;align-items:center;justify-content:center;box-sizing:border-box";
+    gal.appendChild(badge); document.body.appendChild(box); FOTO.ui = { box, cam, gal, badge }; fotoCount();
+    document.addEventListener("keydown", (e) => { if (e.key === "F9" || (e.altKey && (e.key === "f" || e.key === "F"))) { e.preventDefault(); fotoSnap(); } });
+  }
+  /* ---------------------------------------------------------------- galéria */
+  function fotoDl(rec) { const u = URL.createObjectURL(rec.blob), a = document.createElement("a"); a.href = u; a.download = rec.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+  function fotoFile(rec) { return new File([rec.blob], rec.name, { type: "image/jpeg" }); }
+  function fotoText(list) { return list.map((r) => `• ${r.name}: ${r.where || ""}${r.pos ? ` (x ${r.pos[0]}, z ${r.pos[2]})` : ""}${r.vr ? " · VR" : ""}${r.note ? " – " + r.note : ""}`).join("\n"); }
+  function fotoShare(list) {
+    const files = list.map(fotoFile), data = { files, title: "Zephyr virtuális séta – hibafotók", text: "Hibafotók a virtuális sétából:\n" + fotoText(list) };
+    if (navigator.canShare && navigator.canShare({ files })) { navigator.share(data).catch(() => {}); return; }
+    list.forEach((r, i) => setTimeout(() => fotoDl(r), i * 350)); try { toast("Ezen az eszközön nincs megosztás – a képeket letöltöttem.", 4000); } catch (e) {}
+  }
+  function fotoGallery() {
+    const old = document.getElementById("zfotoGal"); if (old) old.remove();
+    const ov = document.createElement("div"); ov.id = "zfotoGal";
+    ov.style.cssText = "position:fixed;inset:0;z-index:2147483100;background:rgba(2,10,22,.92);color:#fff;font-family:Inter,system-ui,sans-serif;overflow:auto;padding:18px 18px 40px;box-sizing:border-box";
+    ["pointerdown", "wheel", "keydown", "touchstart"].forEach((ev) => ov.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
+    const btnCss = "padding:10px 14px;border-radius:10px;border:1.5px solid rgba(228,187,99,.8);background:rgba(16,42,68,.9);color:#fff;font:700 15px/1 Inter,system-ui,sans-serif;cursor:pointer";
+    const head = document.createElement("div"); head.style.cssText = "display:flex;flex-wrap:wrap;align-items:center;gap:10px;max-width:1200px;margin:0 auto 16px";
+    head.innerHTML = `<div style="flex:1 1 260px"><div style="font:800 22px/1.2 Inter,system-ui,sans-serif;color:#E4BB63">🖼 Fotóim</div><div style="font:500 14px/1.4 Inter,system-ui,sans-serif;opacity:.8;margin-top:4px">A 📷 gombbal (VR-ben a tenyérmenüből) készült képek. Írj melléjük megjegyzést, aztán töltsd le vagy oszd meg, és küldd el a javításhoz.</div></div>`;
+    const hb = (t, f) => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.style.cssText = btnCss; b.addEventListener("click", f); head.appendChild(b); return b; };
+    const grid = document.createElement("div"); grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:1200px;margin:0 auto";
+    ov.appendChild(head); ov.appendChild(grid); document.body.appendChild(ov);
+    const urls = []; const close = () => { urls.forEach((u) => URL.revokeObjectURL(u)); ov.remove(); };
+    fotoAll().then((list) => {
+      hb("⬇ Mind letöltése", () => list.forEach((r, i) => setTimeout(() => fotoDl(r), i * 350)));
+      hb("↗ Mind megosztása", () => fotoShare(list));
+      hb("🗑 Mind törlése", () => { if (!list.length || !confirm(`Mind a(z) ${list.length} fotót törlöd? Nem vonható vissza.`)) return; fotoTx("readwrite", (st) => st.clear()).then(() => { FOTO.n = 0; fotoBadge(); fotoGallery(); }); });
+      hb("✕ Bezárás", close);
+      if (!list.length) { grid.innerHTML = `<div style="opacity:.8;font:500 16px/1.5 Inter,system-ui,sans-serif;padding:30px 0">Még nincs fotó. Nyomd meg a jobb szélen a 📷 gombot (VR-ben: tenyérmenü → 📷 Fotó), és a kép ide kerül.</div>`; return; }
+      list.forEach((r) => {
+        const u = URL.createObjectURL(r.blob); urls.push(u); const c = document.createElement("div"); c.style.cssText = "background:rgba(16,42,68,.75);border:1px solid rgba(228,187,99,.35);border-radius:14px;overflow:hidden;display:flex;flex-direction:column";
+        const im = document.createElement("img"); im.src = u; im.alt = r.name; im.style.cssText = "width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:zoom-in;background:#000"; im.addEventListener("click", () => window.open(u, "_blank"));
+        const tx = document.createElement("div"); tx.style.cssText = "padding:10px 12px 4px;font:600 14px/1.35 Inter,system-ui,sans-serif"; tx.textContent = `${new Date(r.t).toLocaleString("hu-HU")} · ${r.vr ? "VR" : "2D"}`;
+        const wh = document.createElement("div"); wh.style.cssText = "padding:0 12px;font:500 13px/1.35 Inter,system-ui,sans-serif;opacity:.8"; wh.textContent = r.where || "";
+        const no = document.createElement("textarea"); no.placeholder = "Megjegyzés: mi a hiba? (nem kötelező)"; no.value = r.note || ""; no.rows = 2;
+        no.style.cssText = "margin:8px 12px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.3);color:#fff;font:500 14px/1.35 Inter,system-ui,sans-serif;resize:vertical";
+        no.addEventListener("change", () => { r.note = no.value.trim(); fotoTx("readwrite", (st) => st.put(r)); });
+        const bar = document.createElement("div"); bar.style.cssText = "display:flex;gap:8px;padding:0 12px 12px;flex-wrap:wrap";
+        const bb = (t, f) => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.style.cssText = btnCss + ";padding:8px 11px;font-size:14px"; b.addEventListener("click", f); bar.appendChild(b); };
+        bb("⬇ Letöltés", () => fotoDl(r)); bb("↗ Megosztás", () => fotoShare([r])); bb("🗑 Törlés", () => { fotoTx("readwrite", (st) => st.delete(r.id)).then(() => { FOTO.n = Math.max(0, FOTO.n - 1); fotoBadge(); c.remove(); }); });
+        c.append(im, tx, wh, no, bar); grid.appendChild(c);
+      });
+    });
+  }
+  if (document.body) setTimeout(fotoButtons, 0); else addEventListener("DOMContentLoaded", fotoButtons);
   function watchItems() {
     const world = !!(window.ZephyrWorld && ZephyrWorld.active);
     let it = null;
@@ -12636,6 +12769,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         ["❔", "Súgó", pg("help")], ["✕", "Kilépés", () => vrEndSession()]];
     }
     if (!it.some((q) => q[1] === "Óra beállítás")) it = it.concat([watchSettings()]);
+    it = [["📷", FOTO.n ? `Fotó a hibáról (${FOTO.n})` : "Fotó a hibáról", () => fotoSnap()]].concat(it);   /* 2026-11-15: a fényképező mindig az első */
     return it.slice(0, 12);
   }
   function sceneGroup() { const sc = SCENES[current]; return sc ? sc.g : null; }
@@ -13485,7 +13619,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "604718e292"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "fcd2710557"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
