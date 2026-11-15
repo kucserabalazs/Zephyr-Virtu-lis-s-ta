@@ -20,6 +20,8 @@
 
   const W = { active: false, kind: null, root: null, objs: [], disposables: [], upd: [], hud: null, panel: null, t: 0, scale: 1 };
   window.ZephyrWorld = W;
+  /* a kontroller karja a világokban: ha a világ kezeli (pl. a kikötő: fordulás, lépés), annak adjuk tovább (2026-11-15) */
+  W.stick = (ax, ay) => { const s = W.spec; if (s && s.stick) try { s.stick(ax, ay); } catch (e) { console.warn("kar", e); } };
 
   /* ------------------------------------------------------------------ segédek: anyagok, geometriák */
   const std = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ roughness: .6, metalness: 0 }, o)); W.disposables.push(m); return m; };
@@ -7727,7 +7729,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       const sz = b.big ? [6, 12, 16] : [3.2, 5, 5.5]; const hit = mesh(new THREE.BoxGeometry(sz[2], sz[1], sz[0]), basic({ visible: false }), env); hit.position.set(b.x, sz[1] / 2, b.z); hit.material.visible = false;
       const lbl = labelSprite([BOATCLS[b.id].n, "bökj rá – megnézem"], { size: b.big ? 3.6 : 2.4, fs: 60, w: 760 }); env.add(lbl); lbl.position.set(b.x, b.big ? 15 : 7.5, b.z);
       const o = { b, g, hit, lbl, hov: false, ph: rand() * 9 };
-      hit.userData.xr = { hover: (on) => { o.hov = on; }, click: () => { if (HB.walk) hbPreview(b.id); } }; T.xr.extra.add(hit); W.objs.push(hit); return o; });
+      hit.userData.xr = { hover: (on) => { o.hov = on; }, click: () => { if (HB.walk && !SCH.R && hbNearBoat(o)) hbPreview(b.id); } }; T.xr.extra.add(hit); W.objs.push(hit); return o; });
     HB.sel = vrClsId(); HB.prev = null; HB.mode = "menu";
     HB.gulls = makeGulls(env);
     try { hbDecor(env); } catch (e) { console.warn("kikötő-díszlet", e); }
@@ -7743,9 +7745,11 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     try { msStart(W.root, 3); } catch (e) {}
     /* 2026-11-14 22:48: a fekete bemutatóterem (Balaton Sailing VR menü) és a mólón járható felületek (séta a kikötőben) */
     try { wzBuild(root); } catch (e) { console.warn("menü-terem", e); }
-    hbTpSurf(env, 0, -pierL / 2 + 2, 3, pierL); HB.berths.forEach((b) => { const fl = b.big ? 13 : 6; hbTpSurf(env, b.sd * (1.5 + fl / 2), b.z + (b.big ? 4.2 : 2.6), fl, 1.1); }); HB.pos = { x: 0, z: 0 };
+    hbTpSurf(env, 0, -pierL / 2 + 2, 2.8, pierL, .67, .45); HB.berths.forEach((b) => { const fl = b.big ? 13 : 6; hbTpSurf(env, b.sd * (1.5 + fl / 2), b.z + (b.big ? 4.2 : 2.6), fl, 1.0, .67, .4); }); HB.pos = { x: 0, z: 0 };
     HB.wz = wzLoad(); if (W._hbWalk) { W._hbWalk = false; hbWalk(true); } else wzGo(1); W._hb = { preview: hbPreview, board: hbBoard, go: hbGo, HB, wz: wzGo, walk: hbWalk, school: hbSchool, SCH, rooms: ROOMS, sit: roomSit, stand: roomStand, houses: HOUSES, LAND, start: () => { wzPlan(); wzStart(); } };
-    return { noPanel: true, menu: () => hbMenu(), tick: hbTick, panel: hbPanel, hud: hbHud, wrist: () => [["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["‹", "A sétához", () => W.close()]] };
+    /* 2026-11-15 (tulajdonos: „nem lehet megfordulni … ott a tenyér menü, ha valamire szükség van”): a tenyérmenüben forgás és lépés,
+       a házban a tanterem minden gombja; a kontroller karjával is fordulsz (balra/jobbra 45°) és lépsz (előre/hátra) */
+    return { noPanel: true, menu: () => hbMenu(), tick: hbTick, panel: hbPanel, hud: hbHud, stick: hbStick, wrist: hbWrist };
   }
   /* ---------------------------------------------------------------- 2026-11-14: balatoni kikötői részletek – viharjelző oszlop (a keleti medence valódi fokozatával),
      hattyúk, nádas a part mentén, útjelző tábla a valódi távolságokkal, pad, virágládák */
@@ -7806,7 +7810,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     if (HB.storm) { const l = STM.lv.keleti || 0, per = l === 2 ? 60 / 90 : l === 1 ? 60 / 45 : 0, on = per && (W.t % per) / per < .34; HB.storm.glow.visible = !!on; HB.storm.lamp.material.color.set(on ? "#ffe066" : l ? "#7a6420" : "#4a4a40"); }
     (HB.swans || []).forEach((q, i) => { q.a += dt * q.w; q.g.position.set(q.cx + Math.cos(q.a) * q.r, Math.sin(W.t * 1.3 + i) * .03, q.cz + Math.sin(q.a) * q.r * .6); q.g.rotation.y = -q.a + (q.w > 0 ? Math.PI : 0); q.neck.rotation.x = .08 * Math.sin(W.t * .7 + i * 2); });
     HB.boats.forEach((o) => { const S = o.g.userData.S; S.heel = Math.sin(W.t * .9 + o.ph) * .03; S.pitch = Math.sin(W.t * 1.1 + o.ph) * .015; o.g.position.y = Math.sin(W.t * 1.2 + o.ph) * .05; S.awa = 150 + 20 * Math.sin(W.t * .2 + o.ph); S.aws = 2.5;
-      o.g.visible = !(HB.prev && HB.prev.id === o.b.id); if (o.g.visible) o.g.userData.update(dt); o.lbl.visible = !HB.prev && !SCH.inside && (!HB.walk || Math.hypot(hp.x - o.b.x, hp.z - o.b.z) < (o.b.big ? 11 : 7.5));   /* kikötő-jelentés 2.3: csak a közeli hajó felirata */ o.lbl.material.opacity = o.hov ? 1 : .85; const k = o.hov ? 1.12 : 1; o.lbl.scale.set((o.b.big ? 3.6 : 2.4) * k, o.lbl.scale.y / o.lbl.scale.x * (o.b.big ? 3.6 : 2.4) * k, 1); });
+      o.g.visible = !(HB.prev && HB.prev.id === o.b.id); if (o.g.visible) o.g.userData.update(dt); o.lbl.visible = !HB.prev && !SCH.inside && (!HB.walk || Math.hypot(hp.x - o.b.x, hp.z - o.b.z) < (o.b.big ? 11 : 7.5)); o.hit.visible = !SCH.inside && (!HB.walk || hbNearBoat(o));   /* kikötő-jelentés 2.3: csak a közeli hajó felirata */ o.lbl.material.opacity = o.hov ? 1 : .85; const k = o.hov ? 1.12 : 1; o.lbl.scale.set((o.b.big ? 3.6 : 2.4) * k, o.lbl.scale.y / o.lbl.scale.x * (o.b.big ? 3.6 : 2.4) * k, 1); });
     ["flag0", "flag1"].forEach((k) => { const f = HB[k]; if (!f) return; const pa = f.geometry.attributes.position, b0 = f.userData.base; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 5 - W.t * 6) * .08 * (x + .7); } pa.needsUpdate = true; });
     if (HB.gulls) HB.gulls.tick(dt, 0, -20);
     /* előnézet: a hajó a móló előtti forgókorongon forog */
@@ -7823,14 +7827,26 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   function hbGo(tut, lvl, force, night) { if (night) VRR.nightForce = true; else if (!HB.wzKeep) VRR.nightForce = null; if (!tut && !force && NET.on && netActive().length && !NET.queue) { NET.queue = { t: Date.now(), ann: 0 }; netPost({ k: "q", on: 1, cls: HB.sel }); hbBoard("net"); return; } try { localStorage.setItem("zephyr-hajo", HB.sel || vrClsId()); } catch (e) {} uiCloseAll(); VRR.forceCls = null; if (tut) VRR.lvl = 0; else if (lvl) VRR.lvl = lvl; else if (!VRR.lvl) VRR.lvl = (VRR.series && VRR.series.races ? VRR.series.races.length % 5 : 0) + 1;
     setTimeout(() => { W._raceGo = true; W.open("race"); }, 30); }
   /* ---------------------------------------------------------------- hajó-előnézet a forgókorongon */
+  /* egy kikötött hajó csak a sétán, házon kívül és a közeléből választható ki (a falon át véletlenül se ugorjon elő a forgó hajó) */
+  function hbNearBoat(o) { const p = HB.pos || { x: 0, z: 0 }; return Math.hypot(p.x - o.b.x, p.z - o.b.z) < (o.b.big ? 16 : 12); }
+  function hbTurn(a) { try { T.vrPanel.turn(a); } catch (e) { try { faceYaw(T.camYaw() + a); } catch (e2) {} } }
+  /* lépés 1,2 m-t a nézés irányába – csak járható felületre (a teleport-felületekre lefelé nézve) */
+  function hbStep(dir) { if (!HB.walk) return; if (HB.seat) { roomStand(); return; } const p = HB.pos || { x: 0, z: 0 }; let yaw = 0; try { yaw = T.camYaw(); } catch (e) {} const nx = p.x - Math.sin(yaw) * 1.2 * dir, nz = p.z - Math.cos(yaw) * 1.2 * dir;
+    const rc = new THREE.Raycaster(), surf = []; try { T.xr.extra.forEach((o) => { if (o.userData && o.userData.tp && o.parent) surf.push(o); }); } catch (e) {} const o = new THREE.Vector3(nx, 6, nz); W.root.localToWorld(o); rc.set(o, new THREE.Vector3(0, -1, 0)); rc.far = 12; const h = rc.intersectObjects(surf, false)[0];
+    if (h && h.object.userData.xr && h.object.userData.xr.click) h.object.userData.xr.click(h); else { try { uiSnd("warn"); } catch (e) {} } }
+  function hbStick(ax, ay) { if (Math.abs(ax) >= Math.abs(ay)) hbTurn(ax > 0 ? -Math.PI / 4 : Math.PI / 4); else hbStep(ay < 0 ? 1 : -1); }
+  function hbWrist() { const it = [["🧭", "Forgás és lépés", [["↺", "Balra 45°", () => hbTurn(Math.PI / 4)], ["↻", "Jobbra 45°", () => hbTurn(-Math.PI / 4)], ["⤾", "Megfordulok", () => hbTurn(Math.PI)], ["⬆", "Előre lépek", () => hbStep(1)], ["⬇", "Hátra lépek", () => hbStep(-1)]]]];
+    const R = SCH.R; if (R) { const n = R.h.name; it.push(["🎓", n, [HB.seat ? ["🧍", "Felállok", () => roomStand()] : ["🪑", "Leülök a táblával szemben", () => roomSit(R)], [R.playing ? "⏸" : "▶", R.playing ? "Szünet" : (R.t > 0 ? "Folytatás" : "Teljes anyag sorban"), () => { if (R.playing || R.t > 0) roomPause(R); else { R.mode = "all"; roomGo(R, 0, true); } }],
+        ["⏭", "Következő lecke", () => roomGo(R, R.i + 1, true)], ["⏮", "Előző lecke", () => roomGo(R, R.i - 1, true)], [SCH.voice ? "🔇" : "🔊", SCH.voice ? "Hang ki" : "Hang be", () => { SCH.voice = !SCH.voice; if (!SCH.voice) roomHush(); }], ["🚪", "Ki a házból", () => schoolLeave(false)]]]); }
+    it.push(["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["↩", "Vissza a móló elejére", () => { roomOut(); HB.pos = { x: 0, z: 0 }; faceYaw(0); }], ["‹", "A sétához", () => W.close()]); return it; }
   function hbPreview(id) {
     if (HB.prev) { const o = HB.prev; HB.env.remove(o.g); HB.env.remove(o.disc); }
     const big = id === "zephyr"; let g;
     if (big) { g = makeBoat({ detail: 0, vis: true, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: vrProfile().name || "" }); g.scale.setScalar(1); }   /* 22:48: valódi méretarány (8,2 m) – eddig 0,62-szeresre kicsinyítve forgott */
     else g = makeClassBoat(id, { full: true, zephyr: id === "j420" || id === "finn", crew: id === "j420" ? 2 : 1, name: vrProfile().name || "", num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
     /* a forgókorong a móló jobb oldalán, a víz fölött; a nézet odafordul */
-    const P0 = big ? [9.5, -1] : id === "flamingo" ? [4.4, -1.6] : [5.8, -1.8], y0 = big ? .42 : id === "finn" || id === "j420" ? .62 : .36;   /* a dingi hajóteste a forgókorongon ül (nem süllyed bele) */ g.position.set(P0[0], y0, P0[1]); HB.env.add(g);
-    const disc = new THREE.Group(); disc.position.set(P0[0], .26, P0[1]); HB.env.add(disc); faceYaw(-Math.atan2(P0[0], -P0[1]) + .25); { const dg = new THREE.CylinderGeometry(big ? 4.5 : 3.2, big ? 4.6 : 3.3, .5, 48); dg.translate(0, -.2, 0); mesh(dg, std({ color: "#8a6a4a", roughness: .8 }), disc); const rg = new THREE.TorusGeometry(big ? 4.55 : 3.25, .06, 8, 64); rg.rotateX(Math.PI / 2); rg.translate(0, .07, 0); mesh(rg, std({ color: "#d4a13a", metalness: .8, roughness: .3 }), disc); }
+    const P0 = big ? [-8.6, -4.6] : id === "flamingo" ? [-5.6, -3.6] : [-6.2, -3.8],   /* 2026-11-15: a móló bal oldalán, nyílt víz fölött (jobbra már az oktatóházak állnak) */ y0 = big ? .42 : id === "finn" || id === "j420" ? .62 : .36;   /* a dingi hajóteste a forgókorongon ül (nem süllyed bele) */ g.position.set(P0[0], y0, P0[1]); HB.env.add(g);
+    const disc = new THREE.Group(); disc.position.set(P0[0], .26, P0[1]); HB.env.add(disc); if (HB.walk) { roomOut(); HB.pos = { x: -.4, z: -1.5 }; } { const pp = HB.walk ? HB.pos : { x: 0, z: 0 }; faceYaw(Math.atan2(-(P0[0] - pp.x), -(P0[1] - pp.z)) + .25); } { const dg = new THREE.CylinderGeometry(big ? 4.5 : 3.2, big ? 4.6 : 3.3, .5, 48); dg.translate(0, -.2, 0); mesh(dg, std({ color: "#8a6a4a", roughness: .8 }), disc); const rg = new THREE.TorusGeometry(big ? 4.55 : 3.25, .06, 8, 64); rg.rotateX(Math.PI / 2); rg.translate(0, .07, 0); mesh(rg, std({ color: "#d4a13a", metalness: .8, roughness: .3 }), disc); }
     HB.prev = { id, g, disc, rot: 0, y0 }; HB.sel = id; hbBoard("boat");
   }
   /* ---------------------------------------------------------------- a kikötő táblái (menü, hajó, játékos, beállítások, eredmények, többjátékos) */
@@ -9107,12 +9123,15 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     S.preB.show(true); if (!S.net && !S.paused && S.st !== "done") vrPause(true), vrPauseBoard(false), (S.menuPaused = true); }
   /* ---------------------------------------------------------------- SÉTA A KIKÖTŐBEN: a mólóra bökve / az ívvel odaugorva sétálhatsz */
   function hbWalk(on) { const was = HB.walk; wzShow(!on); HB.walk = !!on; if (on && !was) { try { msStart(W.root, 2.5); } catch (e) {} }   /* kikötő-jelentés: a kisütés a séta indulásakor (nem a rejtett kikötőn) */
-    if (on) { HB.pos = HB.pos || { x: 0, z: 0 }; hbBoard("walk"); if (HB.B) { HB.B.o.side = 0; if (T.inVR) HB.B.place(); } } }
-  function hbTpSurf(env, x, z, w, d) { const t = new THREE.Mesh(new THREE.BoxGeometry(w, .08, d), new THREE.MeshBasicMaterial({ visible: false })); t.position.set(x, .67, z); env.add(t); W.disposables.push(t.geometry, t.material);
+    /* 2026-11-15 (tulajdonos: „egy hatalmas tábla fogad, amit nem lehet bezárni … ott a tenyér menü”): sétáláskor nincs tábla – VR-ben a tenyérmenü, 2D-ben a lenti sáv gombjai */
+    if (on) { HB.pos = HB.pos || { x: 0, z: 0 }; if (HB.B) HB.B.show(false); } }
+  /* teleport-felület: w × d téglalap; y: a felület magassága (alap: a palló, .67); pad: ennyivel nagyobb a célozható terület (könnyebb eltalálni), de a lépés a téglalapon belül marad */
+  function hbTpSurf(env, x, z, w, d, y, pad) { pad = pad || 0; const t = new THREE.Mesh(new THREE.BoxGeometry(w + 2 * pad, .08, d + 2 * pad), new THREE.MeshBasicMaterial({ visible: false })); t.position.set(x, y == null ? .67 : y, z); env.add(t); W.disposables.push(t.geometry, t.material);
     t.userData.tp = () => !!HB.walk; t.userData.xr = { click: (h) => { if (!HB.walk || !h || !h.point) return; const p = W.root.worldToLocal(h.point.clone()); HB.pos = { x: clamp(p.x, x - w / 2 + .3, x + w / 2 - .3), z: clamp(p.z, z - d / 2 + .3, z + d / 2 - .3) }; try { beep(); } catch (e) {} } };
     try { T.xr.extra.add(t); W.objs.push(t); } catch (e) {} return t; }
   function hbDrawWalk(B, g) { uiFrame(B, g, "⚓ SÉTA A KIKÖTŐBEN", "a hajók valódi méretben ringanak a mólónál");
     uiCard(g, 40, 160, 1420, 420); g.fillStyle = "#fff"; g.font = `700 30px ${UIF}`; uiWrap(g, "Sétálj a mólón: bökj rá a pallóra (VR-ben: ökölbe zárt kéz + hüvelykujj, az ív végén koppints), és odalépsz. Egy kikötött hajóra bökve előtted megforog – ott ki is választhatod.", 70, 230, 1360, 44, 6);
+    B.btn(40, 470, 1420, 100, "✕ Bezárás – sétálok tovább", () => { if (HB.B) HB.B.show(false); }, { fs: 34 });
     B.btn(40, 620, 700, 140, "⛵ Vissza a főmenübe", () => wzGo(1), { gold: true, fs: 40 }); B.btn(760, 620, 700, 140, "↺ Vissza a móló elejére", () => { HB.pos = { x: 0, z: 0 }; }, { fs: 34 });
     B.btn(40, 790, 1420, 110, "‹ Vissza a virtuális sétához", () => { uiCloseAll(); W.close(); }, { fs: 32 }); }
   /* ---------------------------------------------------------------- FIÓK: regisztráció / belépés e-maillel (a táblán billentyűzettel is) */
@@ -9419,13 +9438,13 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     /* két függő viharlámpa a gerincgerendáról + meleg fény */
     lantern(5.2, F + 2.35, zc, .95); lantern(8.0, F + 2.35, zc, .95); { const pl = new THREE.PointLight("#ffc27a", 1.4, 9, 1.6); pl.position.set(6.6, F + 2.3, zc); G.add(pl); }
     /* padok rönkből */
-    [[5.45, .78], [8.0, .82]].forEach(([x, z]) => { addLog.length; const sg3 = new THREE.CylinderGeometry(.13, .13, 1.5, 12); sg3.rotateZ(Math.PI / 2); sg3.scale(1, .55, 1); mesh(sg3.translate(x, F + .44, z), std({ map: logT, roughness: .9 }), G); [-.55, .55].forEach((dx) => mesh(new THREE.CylinderGeometry(.09, .1, .4, 10).translate(x + dx, F + .2, z), endM, G)); });
+    [[4.75, .4], [8.6, .45]].forEach(([x, z]) => { addLog.length; const sg3 = new THREE.CylinderGeometry(.13, .13, 1.5, 12); sg3.rotateZ(Math.PI / 2); sg3.scale(1, .55, 1); mesh(sg3.translate(x, F + .44, z), std({ map: logT, roughness: .9 }), G); [-.55, .55].forEach((dx) => mesh(new THREE.CylinderGeometry(.09, .1, .4, 10).translate(x + dx, F + .2, z), endM, G)); });
     /* poszterek: csomók és a viharjelző */
     const poster = (lines, x, z, ry, col) => { const tx = canvasTex(512, 640, (g, w, h) => { g.fillStyle = "#fbf6e8"; g.fillRect(0, 0, w, h); g.fillStyle = col; g.fillRect(0, 0, w, 120); g.fillStyle = "#fff"; g.font = `900 52px ${UIF}`; g.textAlign = "center"; g.fillText(lines[0], w / 2, 82); g.fillStyle = "#14161b"; g.font = `700 36px ${UIF}`; lines.slice(1).forEach((s, i) => g.fillText(s, w / 2, 200 + i * 70)); });
       const p = mesh(new THREE.PlaneGeometry(.8, 1), basic({ map: tx }), G); p.position.set(x, F + 1.7, z); p.rotation.y = ry; };
     poster(["CSOMÓK", "nyolcas", "bak", "kikötő-", "bowline", "szorító"], 8.7, B.z1 - LR - .04, Math.PI, "#0b3a5e"); poster(["112", "HOL?", "MI TÖRTÉNT?", "HÁNYAN?", "ne tedd le!"], B.x0 + LR + .04, 3.4, Math.PI / 2, "#c8102e");
     /* járható felületek: terasz és a ház padlója */
-    hbTpSurf(env, 2.5, 1.2, 2, 7.2); hbTpSurf(env, 6.5, 1.25, 5.6, 5.1); hbTpSurf(env, 9.95, 1.2, .9, 7.2); hbTpSurf(env, 9.6, 4.45, 15.6, .8);
+    hbTpSurf(env, 9.5, 1.2, 15.6, 7.0, .67, .3);   /* az egész terasz (a két ház közötti tornáccal) egy felület */
     SCH.built = true;
   }
   /* =================================================================== TANTERMEK (2026-11-15, a tulajdonos kérése a kikötő-jelentés után):
@@ -9437,6 +9456,17 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   const ROOMS = {}; const RB = {};
   const SEC_C = { "Üdvözlés": "#e9c46a", "A verseny szabályai": "#7cc6ff", "Mentés": "#ff9a5a", "Elsősegély": "#ff6b6b", "Búcsú": "#7CFC9A" };
   const TEACH_N = { nagypapa: "Nagypapa", nagymama: "Nagymama", apa: "Apa", anya: "Anya", matroz1: "Feri bácsi, a mentőoktató", matroz2: "Laci bácsi, a meteorológus", matroz4: "Jóska bácsi, a kötélmester", orseg: "Tamás bácsi, a toronyőr" };
+  /* belépéskor a tanár köszönt, elmondja, mit tanít, és hellyel kínál (felvett hang: hang/lecke/<ház>/koszon.mp3) */
+  const GREET = {
+    isk: "Szervusz, kis matróz! Én vagyok a nagypapa. Ez a vitorlásiskola: itt a versenyszabályokat és a mentést tanítom. Gyere, ülj le a székre a táblával szemben, onnan mindent jól látsz!",
+    els: "Szervusz, kincsem! Én vagyok a nagymama. Itt az elsősegélyt tanítom: mit tegyél, ha valaki bajba kerül a vízen vagy a parton. Ülj csak le a székre, és kezdjük!",
+    ter: "Szia, örülök, hogy benéztél! Ez a Természetvédelmi ház: itt a Balaton halairól, madarairól és a nádasról mesélek. Foglalj helyet a széken, onnan jól látod a táblát!",
+    vih: "Szia! Laci bácsi vagyok, a meteorológus. Ez a Viharjelző torony: itt megtanulod, mit jelent a sárga villogó, hogyan olvass a felhőkből, és mekkora szél az elég. Ülj le, kezdjük!",
+    cso: "Szervusz! Jóska bácsi vagyok, a kötélmester. Ez a Csomózóház: itt hat fontos hajós csomót tanulsz meg. Ülj le a székre, és figyeld a táblát!",
+    mel: "Szia! Feri bácsi vagyok, vízimentő. Ez a Mentőmellény-pont: itt a mentőmellényről és a mentésről tanítok. Gyere, ülj le, kezdjük!",
+    vil: "Jó napot! Tamás bácsi vagyok, a toronyőr. Itt, a világítótorony őrházában az éjszakai hajózás fényeit és jeleit tanítom. Foglalj helyet a széken!",
+    izek: "Isten hozott a Magyar Ízek Házában! Itt a leghíresebb magyar ételeket, borokat és hungarikumokat mutatom be. Ülj le nyugodtan a székre, mindjárt kezdjük!" };
+  function roomOut() { if (HB.seat) HB.seat = null; if (SCH.R) roomExit(SCH.R); }
   function roomLessons(id) { if (id === "isk") return LESSONS.filter((q) => q.s !== "Elsősegély"); if (id === "els") return [LX_ELS[0]].concat(LESSONS.filter((q) => q.s === "Elsősegély"), [LX_ELS[1]]); return LX[id] || []; }
   const roomDur = (R, i) => R.adur && R.adurI === i ? R.adur + 1.4 : Math.max(10, (R.lessons[i] || R.lessons[0]).say.length / 13.5 + 3);
   function roomStaticTex(h) { return canvasTex(900, 500, (g, w, hh) => { const bg = g.createLinearGradient(0, 0, 0, hh); bg.addColorStop(0, "#21443c"); bg.addColorStop(1, "#16302a"); g.fillStyle = bg; g.fillRect(0, 0, w, hh);
@@ -9467,7 +9497,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   }
   /* ---- szereplők: a tanár és a tanulók (lustán épülnek, ha a ház közelébe érsz; messze menve eltűnnek) ---- */
   function figMake(k, full) { let c, root, s = 1.1;
-    if (/^matroz|^orseg/.test(k)) { const o = { full: true, seed: { matroz1: 1, matroz2: 2, matroz4: 4, orseg: 5 }[k] || 1 }; if (k === "matroz1") { o.vest = "#ff7a12"; o.top = "#1f5fa8"; } if (k === "matroz2") { o.top = "#e8e4d8"; } if (k === "matroz4") { o.cap = "#1f2a44"; o.top = "#7a4ea3"; } if (k === "orseg") { o.beard = true; o.cap = "#1f2a44"; o.top = "#24324a"; }
+    if (/^matroz|^orseg/.test(k)) { const o = { full: true, seed: { matroz1: 1, matroz2: 2, matroz4: 4, orseg: 5 }[k] || 1 }; if (k === "matroz1") { o.zvest = true; o.top = "#1f5fa8"; } if (k === "matroz2") { o.top = "#e8e4d8"; } if (k === "matroz4") { o.cap = "#1f2a44"; o.top = "#7a4ea3"; } if (k === "orseg") { o.beard = true; o.cap = "#1f2a44"; o.top = "#24324a"; }
       const g = makeFamPerson(o); c = g.userData.P.fam; root = g; s = 1; }
     else { c = new FAM.Character(k, { expr: "vidam" }); famStd(c.root); c.blob.visible = false; c.root.traverse((m) => { if (m.isMesh) m.castShadow = false; }); root = c.root; }
     root.userData.noMerge = true; root.scale.setScalar(s); void full; try { if (!c._frozen) famFreeze(c, true); } catch (e) { console.warn("figura-sütés", e); } return { c, root, s }; }
@@ -9475,11 +9505,14 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   function roomFigs(R, on) { const h = R.h;
     if (on && !R.tch) { try { const f = figMake(h.teacher); const t = h.tpos; f.root.position.set(t.x, h.F, t.z); f.root.rotation.y = Math.atan2(h.seat.x - t.x, h.seat.z - t.z) * .6 + Math.atan2(h.board.x - t.x, h.board.z - t.z) * .4; (h.G || HB.env).add(f.root); R.tch = f; f.c.act("integet"); } catch (e) { console.warn("tanár", h.id, e); }
       (h.studs || []).forEach((st) => { try { const f = figMake(st.k); f.root.position.set(st.x, h.F, st.z); f.root.rotation.y = Math.atan2(h.board.x - st.x, h.board.z - st.z); (h.G || HB.env).add(f.root); f.st = st; f.nx = 3 + Math.random() * 5;
-          /* pad a tanuló alá (rönkpad) */ if (!st.bench && h.id !== "isk") { const bm = mesh(new THREE.CylinderGeometry(.13, .13, .9, 12).rotateZ(Math.PI / 2).scale(1, .55, 1), std({ map: HZ.logT, roughness: .9 }), h.G); bm.position.set(st.x, h.F + .36, st.z - Math.cos(f.root.rotation.y) * .05); bm.rotation.y = f.root.rotation.y; [-.35, .35].forEach((dx) => { const l = mesh(new THREE.CylinderGeometry(.08, .09, .3, 8), std({ map: HZ.logT, roughness: .9 }), h.G); l.position.set(st.x + Math.cos(f.root.rotation.y) * dx, h.F + .15, st.z - Math.sin(f.root.rotation.y) * dx); }); st.bench = 1; }
+          /* pad a tanuló alá (rönkpad) */ if (!st.bench && h.id !== "isk") { const bm = mesh(new THREE.CylinderGeometry(.13, .13, .9, 12).rotateZ(Math.PI / 2).scale(1, .55, 1), std({ map: HZ.logT, roughness: .9 }), h.G); bm.position.set(st.x, h.F + .40, st.z); bm.rotation.y = f.root.rotation.y; [-.35, .35].forEach((dx) => { const l = mesh(new THREE.CylinderGeometry(.08, .09, .34, 8), std({ map: HZ.logT, roughness: .9 }), h.G); l.position.set(st.x + Math.cos(f.root.rotation.y) * dx, h.F + .17, st.z - Math.sin(f.root.rotation.y) * dx); }); st.bench = 1; }
           R.studs.push(f); } catch (e) { console.warn("tanuló", h.id, e); } }); }
     if (!on && R.tch) { figDrop(R.tch); R.tch = null; R.studs.forEach(figDrop); R.studs = []; } }
   /* ülő póz a család-figurának: a frissítés UTÁN felülírjuk a csípőt, a térdet és a test magasságát */
-  function figSit(f, seatY) { const c = f.c; if (!c.legs) return; c.legs.forEach((L) => { L.hip.rotation.x = -1.42; L.knee.rotation.x = 1.42; L.foot.rotation.x = .05; }); c.mover.position.y = seatY / f.s - c.pelvis.position.y + .02; }
+  function figSit(f, seatY) { const c = f.c; if (!c.legs) return; c.legs.forEach((L) => { L.hip.rotation.x = -1.5; L.knee.rotation.x = 1.5; L.foot.rotation.x = 0; });
+    /* a fenék a pad tetején: a csípőcsukló a pad fölött a comb vastagságával (a combcsont tengelye) – így nem süllyed bele a deszkába */
+    if (f.thR == null) { try { const bb = new THREE.Box3(), L = c.legs[0]; let r = 0; L.hip.children.forEach((ch) => { if (ch.isMesh && ch !== L.knee) { ch.geometry.computeBoundingBox(); bb.copy(ch.geometry.boundingBox); r = Math.max(r, (bb.max.x - bb.min.x) / 2, (bb.max.z - bb.min.z) / 2); } }); f.thR = r || .07; f.hipOff = L.hip.position.y; } catch (e) { f.thR = .07; f.hipOff = 0; } }
+    c.mover.position.y = seatY / f.s - c.pelvis.position.y - (f.hipOff || 0) + f.thR * 1.02; }
   /* ---- a tábla rajza a közös vásznon ---- */
   function roomDraw(R) {
     const g = RB.g, L = R.lessons[R.i] || R.lessons[0], W2 = 1800, H2 = 1000; if (!L) return;
@@ -9508,12 +9541,15 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const np = Math.ceil(R.lessons.length / BOOK_N); btn(860, 758, 220, 86, "◀ lap", () => { R.page = Math.max(0, R.page - 1); bookFlip(R, -1); }, false, "pv"); g.fillStyle = "#4a3520"; g.font = `800 30px ${UIF}`; g.textAlign = "center"; g.fillText(`${R.page + 1} / ${np}`, 1205, 812); g.textAlign = "left"; btn(1330, 758, 220, 86, "lap ▶", () => { R.page = Math.min(np - 1, R.page + 1); bookFlip(R, 1); }, false, "nx");
     btn(860, 862, 690, 92, "🧍 Felállok", () => roomStand(), false, "up");
     RB.btex.needsUpdate = true; }
-  function bookClick(R, hh) { if (SCH.R !== R || !hh || !hh.uv) { if (SCH.R !== R) roomSit(R); return; } const x = hh.uv.x * 1600, y = (1 - hh.uv.y) * 1000; const b = (R.hits || []).find((q) => q.fn && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) { try { uiSnd("press"); hapt(.3, 30); } catch (e) {} b.fn(); bookDraw(R); } }
+  function bookClick(R, hh) { if (SCH.R !== R) { roomSit(R); return; } if (hh && !hh.uv && hh.point) { const lp = R.book.worldToLocal(hh.point.clone()); hh = { uv: { x: clamp(.5 - lp.x / .76, 0, 1), y: clamp(.5 - lp.z / .475, 0, 1) } }; } if (!hh || !hh.uv) return; const x = hh.uv.x * 1600, y = (1 - hh.uv.y) * 1000; const b = (R.hits || []).find((q) => q.fn && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) { try { uiSnd("press"); hapt(.3, 30); } catch (e) {} b.fn(); bookDraw(R); } }
   /* lapozás: egy lap átfordul a gerinc körül */
   function bookFlip(R, dir) { bookDraw(R); try { const top = R.bookTop; if (!RB.flipM) { RB.flipM = std({ color: "#f3ead2", roughness: .9, side: THREE.DoubleSide }); } const pg = new THREE.PlaneGeometry(.38, .47); pg.rotateX(-Math.PI / 2); pg.translate(-.19, 0, 0); const m = new THREE.Mesh(pg, RB.flipM); m.position.y = .075; top.add(m); m.rotation.z = dir > 0 ? 0 : -Math.PI; R.flip = { m, t: 0, dir }; try { uiSnd("hover"); } catch (e) {} } catch (e) {} }
   /* ---- hang: előre felvett természetes beszéd; ha nincs, a böngésző magyar géphangja ---- */
   const VOX = new Map();
   function roomHush() { try { speechSynthesis.cancel(); } catch (e) {} if (RB.src) { try { RB.src.stop(); } catch (e) {} RB.src = null; } }
+  function roomGreet(R) { roomHush(); if (!SCH.voice || !GREET[R.h.id]) return; R.greetEnd = W.t + GREET[R.h.id].length / 13; const url = `hang/lecke/${R.h.id}/koszon.mp3`, a = T.ac(); if (R.tch) { R.tch.c.act("integet"); R.tch.c.say(GREET[R.h.id].length / 13); }
+    const play = (buf) => { if (SCH.R !== R || R.playing) return; try { const src = a.createBufferSource(); src.buffer = buf; let out = null; try { const v = new THREE.Vector3(); (R.tch ? R.tch.root : R.board).getWorldPosition(v); v.y += 1.5; const sp = sp3(v, "vox", 4); out = sp && sp.node; } catch (e) {} src.connect(out || T.outBus("vox") || T.outBus()); src.start(); RB.src = src; R.greetEnd = W.t + buf.duration + .3; if (R.tch) R.tch.c.say(buf.duration); } catch (e) {} };
+    if (!a) return; const v = VOX.get(url); if (v && v !== "x" && !v.then) { play(v); return; } const pr = (v && v.then) ? v : fetch(url).then((r) => { if (!r.ok) throw 0; return r.arrayBuffer(); }).then((ab) => new Promise((res, rej) => a.decodeAudioData(ab, res, rej))).then((b) => { VOX.set(url, b); return b; }).catch(() => { VOX.set(url, "x"); return null; }); if (!v) VOX.set(url, pr); pr.then((b) => { if (b && b.duration) play(b); }); }
   function roomSpeak(R) { roomHush(); R.adur = 0; R.wait = 0; if (!SCH.voice) return; const L = R.lessons[R.i], url = `hang/lecke/${R.h.id}/${R.i}.mp3`, i0 = R.i;
     const a = T.ac(); const play = (buf) => { if (SCH.R !== R || R.i !== i0 || !R.playing) return; try { const src = a.createBufferSource(); src.buffer = buf; let out = null; try { const v = new THREE.Vector3(); (R.tch ? R.tch.root : R.board).getWorldPosition(v); v.y += 1.5; const sp = sp3(v, "vox", 4); out = sp && sp.node; } catch (e) {} src.connect(out || T.outBus("vox") || T.outBus()); src.start(); RB.src = src; R.adur = buf.duration; R.adurI = i0; R.t = 0; R.wait = 0; if (R.tch) R.tch.c.say(buf.duration); } catch (e) { fallback(); } };
     const fallback = () => { R.wait = 0; try { const ss = window.speechSynthesis; if (!ss) return; const v = ss.getVoices().find((q) => /^hu/i.test(q.lang)); if (!v) return; const u = new SpeechSynthesisUtterance((L.t + ". " + L.say).replace(/[„”]/g, "")); u.voice = v; u.lang = v.lang; u.rate = .98; u.pitch = R.h.voice === "imre" ? .85 : 1.05; ss.speak(u); if (R.tch) R.tch.c.say(roomDur(R, R.i) - 2.5); } catch (e) {} };
@@ -9527,34 +9563,32 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   function roomPause(R) { R.playing = !R.playing; if (!R.playing) roomHush(); else roomSpeak(R); roomDraw(R); bookDraw(R); if (SCH.LB) SCH.LB.dirty = 1; }
   /* ---- leülés / felállás ---- */
   function roomSit(R) { if (!HB.walk) hbWalk(true); if (SCH.R !== R) roomEnter(R); HB.pos = { x: R.h.seat.x, z: R.h.seat.z }; HB.seat = R; R.sitAt = W.t; try { faceYaw(R.yaw + Math.PI); } catch (e) {} if (!T.inVR) { try { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.08; } catch (e) {} }
-    try { uiSnd("success"); } catch (e) {} if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } roomEnter(R); bookDraw(R); roomBar(); }
-  function roomStand() { const R = HB.seat; HB.seat = null; if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } if (R) { HB.pos = { x: R.h.seat.x - Math.sin(R.yaw) * .9, z: R.h.seat.z - Math.cos(R.yaw) * .9 }; } if (SCH.R) { const B = roomLB(SCH.R); B.show(true); roomDock(B); } }
+    try { uiSnd("success"); } catch (e) {} if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } roomEnter(R); bookDraw(R); roomBar(); if (!R.playing && !(R.t > 0)) R.autoAt = Math.max(W.t + 1.6, R.greetEnd || 0); }
+  function roomStand() { const R = HB.seat; HB.seat = null; if (R) R.autoAt = 0; if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } if (R) { HB.pos = { x: R.h.seat.x - Math.sin(R.yaw) * .9, z: R.h.seat.z - Math.cos(R.yaw) * .9 }; } if (SCH.R && !T.inVR) { const B = roomLB(SCH.R); B.show(true); roomDock(B); } }
   /* ülve 2D-ben: kis sáv alul (a könyvre lenézés, szünet, felállás) */
   function roomBar() { if (T.inVR) return; if (SCH.BL && UIB.list.indexOf(SCH.BL) >= 0) return; SCH.BL = uiBoard({ w: 1500, h: 150, mw: 1.15, dist: 1.05, y: -.5, fps: 3, draw: (B, g) => { const R = SCH.R; if (!R) return; g.fillStyle = "rgba(8,26,48,.9)"; uiRR(g, 0, 0, 1500, 150, 26); g.fill();
       B.btn(16, 22, 470, 106, "📖 Lenézek a könyvre", () => { try { const lc = T.cam.components["look-controls"]; lc.pitchObject.rotation.x = lc.pitchObject.rotation.x < -.4 ? -.08 : -.72; } catch (e) {} }, { fs: 30 });
       B.btn(500, 22, 340, 106, R.playing ? "⏸ Szünet" : "▶ Indítás", () => { if (!R.playing && R.t === 0 && !R.done[R.i]) { R.mode = "all"; roomGo(R, R.i, true); } else roomPause(R); B.dirty = 1; }, { fs: 30 });
       B.btn(854, 22, 300, 106, "Következő ▶", () => { roomGo(R, R.i + 1, true); B.dirty = 1; }, { fs: 28, off: R.i >= R.lessons.length - 1 }); B.btn(1168, 22, 316, 106, "🧍 Felállok", () => roomStand(), { fs: 30 }); } }); SCH.BL.show(true); roomDock(SCH.BL); setTimeout(() => roomDock(SCH.BL), 60); }
   /* állva a házban: a vezérlő tábla (felirat + gombok), mint eddig – és a „Leülök” gomb */
+  /* állva a házban (csak 2D-ben): keskeny sáv alul – VR-ben semmi nem lebeg előtted, minden a tenyérmenüben */
   function roomLB(R) {
-    if (SCH.LB && UIB.list.indexOf(SCH.LB) >= 0) return SCH.LB; const isk = R.h.id === "isk";
-    SCH.LB = uiBoard({ w: 1500, h: 420, mw: 1.15, dist: 1.05, y: -.42, side: .35, fps: 3, bar: 60, draw: (B, g) => { const L = R.lessons[R.i];
-      g.fillStyle = "rgba(8,26,48,.94)"; uiRR(g, 0, 0, 1500, 420, 28); g.fill(); g.strokeStyle = R.h.col; g.lineWidth = 6; uiRR(g, 3, 3, 1494, 414, 26); g.stroke();
-      g.fillStyle = "#ffd166"; g.font = `900 30px ${UIF}`; g.fillText(`🎓 ${R.h.name} · ${TEACH_N[R.h.teacher] || ""} · ${R.i + 1}/${R.lessons.length} · ${L.t}`.slice(0, 92), 30, 50);
-      g.fillStyle = "rgba(235,242,250,.92)"; g.font = `600 24px ${UIF}`; uiWrap(g, R.playing || R.t > 0 ? "„" + L.say + "”" : "Ülj le a táblával szemben álló székre (bökj rá) – előtted a leckekönyv: abból választhatsz leckét, vagy kérheted a teljes anyagot sorban.", 30, 92, 1440, 31, 4);
-      B.btn(24, 238, 470, 84, "🪑 Leülök a táblával szemben", () => roomSit(R), { gold: true, fs: 28 });
-      B.btn(508, 238, 300, 84, R.playing ? "⏸ Szünet" : "▶ Teljes anyag", () => { if (R.playing || R.t > 0) roomPause(R); else { R.mode = "all"; roomGo(R, 0, true); } B.dirty = 1; }, { fs: 28 });
-      B.btn(822, 238, 230, 84, "◀ Előző", () => roomGo(R, R.i - 1, true), { off: R.i === 0, fs: 26 }); B.btn(1066, 238, 260, 84, "Következő ▶", () => roomGo(R, R.i + 1, true), { off: R.i >= R.lessons.length - 1, fs: 26 }); B.btn(1340, 238, 136, 84, SCH.voice ? "🔊" : "🔇", () => { SCH.voice = !SCH.voice; if (!SCH.voice) roomHush(); B.dirty = 1; }, { fs: 30 });
-      if (isk) B.btn(24, 334, 600, 66, "🎓 Tovább az oktatópályára ▶", () => schoolLeave(true), { gold: true, fs: 24 });
-      B.btn(isk ? 640 : 24, 334, isk ? 836 : 1452, 66, "‹ Ki a házból, vissza a mólóra", () => schoolLeave(false), { fs: 24 }); } });
+    if (SCH.LB && UIB.list.indexOf(SCH.LB) >= 0) return SCH.LB;
+    SCH.LB = uiBoard({ w: 1500, h: 150, mw: 1.15, dist: 1.05, y: -.5, fps: 3, draw: (B, g) => { g.fillStyle = "rgba(8,26,48,.9)"; uiRR(g, 0, 0, 1500, 150, 26); g.fill(); g.strokeStyle = R.h.col; g.lineWidth = 5; uiRR(g, 3, 3, 1494, 144, 24); g.stroke();
+      B.btn(16, 22, 420, 106, "🪑 Leülök", () => roomSit(R), { gold: true, fs: 32 });
+      B.btn(450, 22, 400, 106, R.playing ? "⏸ Szünet" : "▶ Teljes anyag", () => { if (R.playing || R.t > 0) roomPause(R); else { R.mode = "all"; roomGo(R, 0, true); } B.dirty = 1; }, { fs: 30 });
+      B.btn(864, 22, 140, 106, SCH.voice ? "🔊" : "🔇", () => { SCH.voice = !SCH.voice; if (!SCH.voice) roomHush(); B.dirty = 1; }, { fs: 34 });
+      if (R.h.id === "isk") B.btn(1018, 22, 230, 106, "🎓 Pálya ▶", () => schoolLeave(true), { fs: 28 });
+      B.btn(R.h.id === "isk" ? 1262 : 1018, 22, R.h.id === "isk" ? 222 : 466, 106, "🚪 Ki", () => schoolLeave(false), { fs: 30 }); } });
     return SCH.LB; }
-  function roomDock(B) { if (B && B.dom && B.dcv) { B.dom.style.alignItems = "flex-end"; B.dom.style.justifyContent = "center"; B.dom.style.background = "transparent"; B.dom.style.pointerEvents = "none"; B.dcv.style.pointerEvents = "auto"; B.dcv.style.maxWidth = "min(58vw, 980px)"; B.dcv.style.marginBottom = "1.2vh"; } }
+  function roomDock(B) { if (B && B.dom && B.dcv) { B.dom.style.alignItems = "flex-end"; B.dom.style.justifyContent = "center"; B.dom.style.background = "transparent"; B.dom.style.pointerEvents = "none"; B.dcv.style.pointerEvents = "auto"; B.dcv.style.maxWidth = "min(58vw, 980px)"; B.dcv.style.marginBottom = "max(12vh, 92px)"; } }
   function schoolLeave(toCourse) { const R = SCH.R; roomHush(); if (R) R.playing = false; HB.seat = null; if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; }
-    if (toCourse) { wzStartTut(); return; } HB.pos = { x: 1.6, z: 1.2 }; if (HB.walk) hbBoard("walk"); }
+    if (toCourse) { wzStartTut(); return; } const o = R && R.h.out; HB.pos = o ? { x: o.x, z: o.z } : { x: 1.6, z: 1.2 }; if (o) { try { faceYaw(Math.atan2(-(o.lx - o.x), -(o.lz - o.z))); } catch (e) {} } }
   /* belépés a menüből („🎓 Oktatás”): leülsz az iskolában, és a nagypapa sorban elkezdi a teljes anyagot */
   function hbSchool() { const R = ROOMS.isk; if (!R) { wzStartTut(); return; } hbWalk(true); roomSit(R); R.mode = "all"; setTimeout(() => roomGo(R, 0, true), 400); }
   function roomEnter(R) { if (SCH.R === R) return; if (SCH.R) roomExit(SCH.R); SCH.R = R; R.board.material.map = RB.tex; R.board.material.needsUpdate = true; R.book.material.map = RB.btex; R.book.material.needsUpdate = true; roomFigs(R, true); roomDraw(R); bookDraw(R);
-    if (HB.B) HB.B.show(false); if (!HB.seat) { const B = roomLB(R); B.show(true); roomDock(B); setTimeout(() => roomDock(B), 60); } }
-  function roomExit(R) { roomHush(); R.playing = false; R.board.material.map = R.statT; R.board.material.needsUpdate = true; R.book.material.map = R.bookStat; R.book.material.needsUpdate = true; SCH.R = null; if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } HB.seat = null; if (HB.walk) hbBoard("walk"); }
+    if (HB.B) HB.B.show(false); if (!HB.seat && !T.inVR) { const B = roomLB(R); B.show(true); roomDock(B); setTimeout(() => roomDock(B), 60); } if (!R.playing && W.t - (R.greetT || -99) > 45) { R.greetT = W.t; setTimeout(() => { if (SCH.R === R && !R.playing) roomGreet(R); }, 500); } }
+  function roomExit(R) { roomHush(); R.playing = false; R.autoAt = 0; R.board.material.map = R.statT; R.board.material.needsUpdate = true; R.book.material.map = R.bookStat; R.book.material.needsUpdate = true; SCH.R = null; if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } HB.seat = null; }
   function roomAt(p) { for (const id in ROOMS) { const B = ROOMS[id].h.box; if (p.x > B.x0 && p.x < B.x1 && p.z > B.z0 && p.z < B.z1) return ROOMS[id]; } return null; }
   function schoolTick(dt) {
     if (!SCH.built) return; const p = HB.pos || { x: 0, z: 0 }; const R = HB.walk ? roomAt(p) : null;
@@ -9567,11 +9601,14 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       if (near && !Q.tch) roomFigs(Q, true); else if (!near && Q.tch && d > 22 && SCH.R !== Q) roomFigs(Q, false);
       if (!Q.tch) continue; const vis = SCH.R === Q; Q.tch.root.visible = vis; Q.studs.forEach((f) => { f.root.visible = vis; }); if (!vis) continue;
       const tc = Q.tch.c; if (cam) tc.lookAt(cam); tc.update(dt, W.t);
-      Q.studs.forEach((f) => { const c = f.c; if (SCH.R === Q && Q.tch) { const v = new THREE.Vector3(); Q.tch.root.getWorldPosition(v); v.y += 1.6; c.lookAt(v); } c.update(dt, W.t); figSit(f, .44);
+      /* a tanár feléd fordul (beszéd közben kicsit a tábla felé is), simán */
+      { const t0 = Q.h.tpos, ty = Math.atan2(p.x - t0.x, p.z - t0.z), by = Math.atan2(Q.h.board.x - t0.x, Q.h.board.z - t0.z); let d2 = by - ty; d2 = Math.atan2(Math.sin(d2), Math.cos(d2)); const tgt = ty + (Q.playing ? d2 * .3 : 0), r0 = Q.tch.root.rotation.y; let dd = tgt - r0; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); Q.tch.root.rotation.y = r0 + dd * Math.min(1, dt * 2.5); }
+      Q.studs.forEach((f) => { const c = f.c; if (SCH.R === Q && Q.tch) { const v = new THREE.Vector3(); Q.tch.root.getWorldPosition(v); v.y += 1.6; c.lookAt(v); } c.update(dt, W.t); figSit(f, f.st.seatY || (Q.h.id === "isk" ? .51 : .47));
         f.nx -= dt; if (f.nx <= 0) { f.nx = 5 + Math.random() * 7; if (SCH.R === Q && Q.playing) c.act(["bolint", "ir", "bolint", f.st.k === "gyerek" ? "integet" : "bolint"][(Math.random() * 4) | 0]); } }); }
     if (HB.signLbl) HB.signLbl.visible = !SCH.R; for (const id in ROOMS) if (ROOMS[id].chairG) ROOMS[id].chairG.visible = HB.seat !== ROOMS[id];
     if (R && R.flip) { const f = R.flip; f.t += dt / .45; const k = kEase(Math.min(1, f.t)); f.m.rotation.z = f.dir > 0 ? -k * Math.PI : -(1 - k) * Math.PI; if (f.t >= 1) { f.m.parent.remove(f.m); f.m.geometry.dispose(); R.flip = null; } }
     if (!R) return;
+    if (R.autoAt && HB.seat === R && W.t > R.autoAt && !R.playing) { R.autoAt = 0; if (!(R.t > 0)) { R.mode = "all"; roomGo(R, 0, true); } }
     if (R.playing && !R.wait) { R.t += dt; if (R.t > roomDur(R, R.i)) { R.done[R.i] = 1; if (R.mode === "all" && R.i < R.lessons.length - 1) roomGo(R, R.i + 1); else { R.playing = false; R.t = roomDur(R, R.i); if (R.tch) R.tch.c.act("bolint"); R.studs.forEach((f) => f.c.act(f.st.k === "gyerek" ? "tapsol" : "bolint")); bookDraw(R); if (SCH.LB) SCH.LB.dirty = 1; if (SCH.BL) SCH.BL.dirty = 1; } } }
     else if (R.wait) { R.wait += dt; if (R.wait > 4) R.wait = 0; }
     RB.acc = (RB.acc || 0) + dt; if (RB.acc > 1 / 24) { RB.acc = 0; roomDraw(R); }
@@ -9679,16 +9716,20 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       mesh(mergeGeoms(core), std({ color: "#365e22", roughness: .95 }), G);
       const lm = std({ map: leaf, alphaTest: .5, side: THREE.DoubleSide, roughness: .85 }); mesh(mergeGeoms(lv), lm, G); }
     /* ---------- KŐHULLÁMTÖRŐ kelet felé (a világítótoronyhoz), a tetején járható betonpalló ---------- */
-    { const path = [[24.5, landShore(24.5) + 1], [25.6, -10], [26.6, -20], [29.5, -24.2]]; LAND.bw = path; const parts = [], col2 = new THREE.Color();
+    { const path = [[24.5, landShore(24.5) + 1], [25.6, -10], [26.6, -20], [27.8, -24.0]]; LAND.bw = path; const parts = [], col2 = new THREE.Color();
       for (let s = 0; s < path.length - 1; s++) { const [ax, az] = path[s], [bx, bz] = path[s + 1], L2 = Math.hypot(bx - ax, bz - az); for (let t = 0; t < L2; t += .55) { const k = t / L2, x = ax + (bx - ax) * k, z = az + (bz - az) * k; for (let q = 0; q < 6; q++) { const r = .35 + rand() * .4, g = new THREE.DodecahedronGeometry(r, 0); const off = (q < 3 ? -1 : 1) * (1.05 + (q % 3) * .55) + (rand() - .5) * .25, nx = -(bz - az) / L2, nz = (bx - ax) / L2; const n = g.attributes.position.count, ca = new Float32Array(n * 3); col2.setHSL(.08, .07, .24 + rand() * .16); for (let i = 0; i < n; i++) { ca[i * 3] = col2.r; ca[i * 3 + 1] = col2.g; ca[i * 3 + 2] = col2.b; } g.setAttribute("color", new THREE.BufferAttribute(ca, 3)); parts.push([g, M4(x + nx * off, .32 - (Math.abs(off) - 1) * .45 + rand() * .12, z + nz * off, rand() * 3, rand() * 3, rand() * 3)]); } } }
       mesh(mergeGeoms(parts), std({ vertexColors: true, roughness: .95, flatShading: true }), G);
-      const conc = std({ color: "#b7b2a6", roughness: .9 }); for (let s = 0; s < path.length - 1; s++) { const [ax, az] = path[s], [bx, bz] = path[s + 1], L2 = Math.hypot(bx - ax, bz - az); const pl = mesh(new THREE.BoxGeometry(2.0, 1.4, L2 + .9), conc, G); pl.position.set((ax + bx) / 2, -.03, (az + bz) / 2); pl.rotation.y = Math.atan2(bx - ax, bz - az); for (let t = .6; t < L2; t += 1.2) { const k = t / L2; hbTpSurf(env, ax + (bx - ax) * k, az + (bz - az) * k, 1.3, 1.3); } } }
+      const conc = std({ color: "#b7b2a6", roughness: .9 }); for (let s = 0; s < path.length - 1; s++) { const [ax, az] = path[s], [bx, bz] = path[s + 1], L2 = Math.hypot(bx - ax, bz - az); const pl = mesh(new THREE.BoxGeometry(2.0, 1.4, L2 + .9), conc, G); pl.position.set((ax + bx) / 2, -.03, (az + bz) / 2); pl.rotation.y = Math.atan2(bx - ax, bz - az); for (let t = .5; t < L2; t += .9) { const k = t / L2; hbTpSurf(env, ax + (bx - ax) * k, az + (bz - az) * k, 1.4, 1.4, .67, .35); } } }
     /* ---------- KIKÖTŐI TÉR a móló tövénél (kőburkolat, a mólóval egy szintben; innen indulnak a színes ösvények) ---------- */
     { const pv = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#a9a39a"; g.fillRect(0, 0, w, h); for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) { const v = 150 + rand() * 50 | 0; g.fillStyle = `rgb(${v},${v - 4},${v - 10})`; g.fillRect(c * 32 + 2 + (r % 2) * 16, r * 32 + 2, 28, 28); } }, { repeat: [3, 2] });
       mesh(new THREE.BoxGeometry(8.2, .9, 5.4).translate(-2.5, .2, 4.1), std({ map: pv, roughness: .9 }), G).receiveShadow = true; mesh(new THREE.BoxGeometry(8.4, .12, .3).translate(-2.5, .6, 1.35), std({ color: "#8d877c", roughness: .9 }), G);
       hbTpSurf(env, -2.5, 4.1, 8, 5.2); }
     /* ---------- járható felület a parton (a sétány és a rét eleje) ---------- */
-    hbTpSurf(env, -2, 15, 116, 22).userData.land = 1;
+    /* a part teleport-felülete követi a talajt (ritka rács, láthatatlan): a parton bárhová léphetsz, a vízbe nem */
+    { const P = [], ii = [], ok = [], X0 = -100, NX = 51, Z0 = 2, NZ = 18; for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) { const x = X0 + i * 4, z = Z0 + j * 2.6, d = z - landShore(x); P.push(x, Math.max(.62, landY(x, z)) + .05, z); ok.push(d > .6); }
+      for (let j = 0; j < NZ - 1; j++) for (let i = 0; i < NX - 1; i++) { const a = j * NX + i, b = a + 1, c = a + NX, d = c + 1; if (ok[a] && ok[b] && ok[c] && ok[d]) ii.push(a, c, b, b, c, d); }
+      const tg = new THREE.BufferGeometry(); tg.setAttribute("position", new THREE.Float32BufferAttribute(P, 3)); tg.setIndex(ii); const tm = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide })); env.add(tm); W.disposables.push(tg, tm.material);
+      tm.userData.tp = () => !!HB.walk; tm.userData.noMerge = true; tm.userData.xr = { click: (h) => { if (!HB.walk || !h || !h.point) return; const p = W.root.worldToLocal(h.point.clone()); if (p.z - landShore(p.x) < .6) return; HB.pos = { x: clamp(p.x, -98, 98), z: clamp(p.z, Z0, Z0 + (NZ - 1) * 2.6) }; try { beep(); } catch (e) {} } }; try { T.xr.extra.add(tm); W.objs.push(tm); } catch (e) {} LAND.tp = tm; }
     LAND.built = true;
   }
   /* ahol nincs fű és napágy: a házak, a sétány melletti épületek helye */
@@ -9708,7 +9749,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     { id: "mel", name: "Mentőmellény-pont", sub: "mellény, mentőöv, mentés", col: "#f07a12", flag: "O", kind: "cabin", box: { x0: -11.2, x1: -6.2, z0: 12.6, z1: 17.4 }, teacher: "matroz1", voice: "imre" },
     { id: "isk", name: "Vitorlásiskola", sub: "a nagypapa szabályai", col: "#2f6fb7", flag: "P", kind: "school", box: { x0: 3.5, x1: 9.5, z0: -1.5, z1: 4 }, teacher: "nagypapa", voice: "imre" },
     { id: "els", name: "Elsősegély", sub: "a nagymama tanít", col: "#d0342c", flag: "W", kind: "cabin", stilts: true, box: { x0: 11.2, x1: 16.2, z0: -1.5, z1: 4 }, teacher: "nagymama", voice: "anna" },
-    { id: "vil", name: "Világítótorony", sub: "fények és jelek éjjel", col: "#14a0a6", flag: "L", kind: "light", box: { x0: 27.6, x1: 32.8, z0: -27.8, z1: -22.6 }, teacher: "orseg", voice: "imre" }
+    { id: "vil", name: "Világítótorony", sub: "fények és jelek éjjel", col: "#14a0a6", flag: "L", kind: "light", box: { x0: 25.9, x1: 30.9, z0: -29.8, z1: -24.8 }, teacher: "orseg", voice: "imre" }
   ];
   const HOUSES_FOOT = HOUSES.map((h) => [h.box.x0, h.box.x1, h.box.z0, h.box.z1]);
   const HZ = { flags: [], beams: [], lamps: [] };
@@ -9734,7 +9775,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       g.font = `700 44px ${UIF}`; g.fillStyle = "#fff3d6"; g.fillText(h.sub + " · gyere be!", w / 2, 230); }); }
   function houseLantern(G, x, y, z) { const lg = new THREE.Group(); lg.position.set(x, y, z); G.add(lg); const blk = std({ color: "#1c1c1c", roughness: .5, metalness: .6 });
     mesh(new THREE.CylinderGeometry(.09, .11, .04, 10).translate(0, -.15, 0), blk, lg); const gm = new THREE.MeshStandardMaterial({ color: "#ffd88a", emissive: "#ffb347", emissiveIntensity: 1.4, transparent: true, opacity: .85 }); W.disposables.push(gm); mesh(new THREE.CylinderGeometry(.075, .085, .2, 10, 1, true), gm, lg);
-    mesh(new THREE.ConeGeometry(.11, .1, 10).translate(0, .15, 0), blk, lg); const gl = glowSprite("#ffc070", 1.1); gl.position.set(x, y, z); G.add(gl); return lg; }
+    mesh(new THREE.ConeGeometry(.11, .1, 10).translate(0, .15, 0), blk, lg); return lg; }
 
   /* ---------------------------------------------------------------- RÖNKHÁZ (az iskola rönkházának általánosítása)
      o: { box, F (padló), door: "n"|"s"|"w" (a fal), dc (az ajtó közepe a fal mentén), win: [[fal, középpont, szélesség]], h (a ház leírása) } */
@@ -9743,7 +9784,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const logT = HZ.logT || (HZ.logT = canvasTex(512, 128, (g, w, hh) => { const gr = g.createLinearGradient(0, 0, 0, hh); gr.addColorStop(0, "#5a3f26"); gr.addColorStop(.5, "#8a6440"); gr.addColorStop(1, "#4a3220"); g.fillStyle = gr; g.fillRect(0, 0, w, hh);
       for (let k = 0; k < 140; k++) { g.strokeStyle = `rgba(${rr(30, 60) | 0},${rr(18, 35) | 0},${rr(8, 18) | 0},${rr(.25, .6)})`; g.lineWidth = rr(1, 3); const y = rr(0, hh); g.beginPath(); g.moveTo(rr(-20, w), y); g.lineTo(rr(0, w + 20), y + rr(-4, 4)); g.stroke(); }
       for (let k = 0; k < 14; k++) { g.fillStyle = "rgba(40,24,10,.6)"; g.beginPath(); g.ellipse(rr(0, w), rr(10, hh - 10), rr(5, 10), rr(3, 6), 0, 0, TAU); g.fill(); } for (let k = 0; k < 30; k++) { g.fillStyle = `rgba(190,150,100,${rr(.1, .25)})`; g.fillRect(rr(0, w), rr(0, hh), rr(20, 80), rr(2, 6)); } }, { repeat: [3, 1] }));
-    const endT = HZ.endT || (HZ.endT = canvasTex(128, 128, (g) => { g.fillStyle = "#c9a06a"; g.fillRect(0, 0, 128, 128); for (let r = 4; r < 64; r += 5) { g.strokeStyle = `rgba(110,72,36,${rr(.3, .6)})`; g.lineWidth = 1.6; g.beginPath(); g.arc(64, 64, r, 0, TAU); g.stroke(); } g.strokeStyle = "#4a3220"; g.lineWidth = 10; g.beginPath(); g.arc(64, 64, 60, 0, TAU); g.stroke(); }));
+    const endT = HZ.endT || (HZ.endT = canvasTex(128, 128, (g) => { const gr = g.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, "#9a7448"); gr.addColorStop(.85, "#7d5a36"); gr.addColorStop(1, "#4a3220"); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); for (let r = 14; r < 60; r += 14) { g.strokeStyle = "rgba(70,46,24,.22)"; g.lineWidth = 3; g.beginPath(); g.arc(64, 64, r, 0, TAU); g.stroke(); } }));
     const shT = HZ.shT || (HZ.shT = canvasTex(512, 512, (g, w, hh) => { g.fillStyle = "#4a3a2c"; g.fillRect(0, 0, w, hh); for (let r = 0; r < 16; r++) for (let c = -1; c < 12; c++) { const x = c * 46 + (r % 2) * 23 + rr(-3, 3), y = r * 32, ww = rr(38, 48); const v = rr(95, 125) | 0; g.fillStyle = `rgb(${v},${v * .78 | 0},${v * .6 | 0})`; g.fillRect(x, y, ww, 34); g.fillStyle = "rgba(20,14,8,.6)"; g.fillRect(x, y + 30, ww, 4); g.fillRect(x + ww - 2, y, 2, 34); if (rand() < .15) { g.fillStyle = "rgba(90,110,60,.35)"; g.fillRect(x + 4, y + 4, ww * .6, 12); } } }, { repeat: [3, 2] }));
     const logParts = [], endParts = [], M0 = new THREE.Matrix4();
     const addLog = (ax, c, a0, a1, y, r, ends) => { const L = a1 - a0; if (L < .08) return; const g = new THREE.CylinderGeometry(r, r * 1.04, L, 12, 1, true); g.rotateZ(Math.PI / 2); if (ax === "z") g.rotateY(Math.PI / 2); const m = (a0 + a1) / 2; g.translate(ax === "x" ? m : c, y, ax === "x" ? c : m); logParts.push([g, M0]);
@@ -9802,7 +9843,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   function houseFloor(h) { const B = h.box; if (h.stilts || h.kind === "school") return .66; if (h.kind === "light") return .72; return Math.max(landY(B.x0, B.z0), landY(B.x1, B.z0), landY(B.x0, B.z1), landY(B.x1, B.z1), landY((B.x0 + B.x1) / 2, (B.z0 + B.z1) / 2)) + .22; }
   function houseOne(G, h) {
     const B = h.box, F = h.F = houseFloor(h), xc = (B.x0 + B.x1) / 2, zc = (B.z0 + B.z1) / 2; h.inner = { F };
-    if (h.kind === "school") { h.board = { x: 6.7, y: F + 1.75, z: B.z0 + .2, ry: 0, w: 3.5 }; h.seat = { x: 6.7, z: 1.55 }; h.tpos = { x: 4.55, z: B.z0 + .85, ry: .55 }; h.studs = [{ k: "gyerek", x: 5.45, z: .78, bench: 1 }, { k: "anya", x: 8.0, z: .82, bench: 1 }];
+    if (h.kind === "school") { h.out = { x: 2.4, z: 1.2, lx: -2, lz: 1.2 }; h.board = { x: 6.7, y: F + 1.75, z: B.z0 + .2, ry: 0, w: 3.5 }; h.seat = { x: 6.7, z: 1.55 }; h.tpos = { x: 4.55, z: B.z0 + .85, ry: .55 }; h.studs = [{ k: "gyerek", x: 4.75, z: .4, bench: 1 }, { k: "anya", x: 8.6, z: .45, bench: 1 }];
       /* az iskola a színkódot a zászlóval és a gerinccel kapja (a ház maga a jóváhagyott rönkház marad) */
       houseFlag(G, h, B.x0 - .2, F + 3 + 1.6 - .1, zc, 2.6); { const rc = std({ color: h.col, roughness: .55 }); [-1, 1].forEach((s2) => { const b = mesh(new THREE.BoxGeometry(B.x1 - B.x0 + 1.22, .06, .26), rc, G); b.position.set(xc, F + 3 + 1.6 + .05, zc + s2 * .11); b.rotation.x = s2 * Math.atan2(1.6, (B.z1 - B.z0) / 2 + .55); }); }
       return; }
@@ -9818,19 +9859,20 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       { const p = mesh(new THREE.PlaneGeometry(.8, .8), basic({ map: rcT }), G); p.position.set(B.x0 - .2, F + 3.55, zc); p.rotation.y = -Math.PI / 2; const p2 = mesh(new THREE.PlaneGeometry(.7, .7), basic({ map: rcT }), G); p2.position.set(xc + 1.7, F + 1.6, B.z1 + .2); }
       firstAidProps(G, h, C);
       h.board = { x: B.x1 - .2, y: F + 1.65, z: zc + .1, ry: -Math.PI / 2, w: 3.0 }; h.seat = { x: B.x1 - 3.0, z: zc + .4 }; h.tpos = { x: B.x1 - .85, z: B.z0 + .9, ry: -.95 }; h.studs = [{ k: "apa", x: B.x1 - 2.15, z: zc - .85 }];
-      hbTpSurf(HZ.env || G, xc, zc, B.x1 - B.x0 - .6, B.z1 - B.z0 - .6); hbTpSurf(HZ.env || G, 10.4, 1.6, 1.4, 6.6); return;
+      hbTpSurf(HZ.env || G, xc, zc, B.x1 - B.x0 - .6, B.z1 - B.z0 - .6, F + .01, .25); h.out = { x: 10.35, z: 4.3, lx: 10.35, lz: 8 }; return;
     }
     houseFound(G, B, F);
     if (h.kind === "csarda") { csardaBuild(G, h); }
     else {
       const C = cabinBuild(G, { box: B, F, door: "n", dc: h.id === "ter" ? B.x0 + 1.6 : xc - .9, win: [["n", h.id === "ter" ? xc + 1.4 : xc + 1.3, 1.2], ["w", zc, 1.1], ["e", zc, 1.1]], h, flagX: B.x0 - .15 });
       houseSteps(G, h.id === "ter" ? B.x0 + 1.6 : xc - .9, B.z0, F, -1);
-      if (h.id === "ter") natureProps(G, h, C); else if (h.id === "cso") knotProps(G, h, C); else if (h.id === "mel") vestProps(G, h, C); else if (h.id === "vih") stormProps(G, h, C);
+      if (h.id === "ter") natureProps(G, h, C); else if (h.id === "cso") knotProps(G, h, C); else if (h.id === "mel") { vestProps(G, h, C); h.studs = []; } else if (h.id === "vih") stormProps(G, h, C);
       if (h.kind === "tower") stormTower(G, h, C);
     }
     /* belső elrendezés: tábla a hátsó (déli) falon, a tanár mellette, a szék középen, a tanulók oldalt */
-    if (!h.board) { h.board = { x: xc, y: F + 1.65, z: B.z1 - .2, ry: Math.PI, w: Math.min(3.2, B.x1 - B.x0 - 1.6) }; h.seat = { x: xc, z: B.z1 - 3.05 }; h.tpos = { x: B.x0 + .85, z: B.z1 - .95, ry: Math.PI - .7 }; h.studs = [{ k: "gyerek", x: xc - 1.45, z: B.z1 - 1.95 }]; }
-    hbTpSurf(HZ.env || G, xc, zc, B.x1 - B.x0 - .6, B.z1 - B.z0 - .6);
+    if (!h.board) { h.board = { x: xc, y: F + 1.65, z: B.z1 - .2, ry: Math.PI, w: Math.min(3.2, B.x1 - B.x0 - 1.6) }; h.seat = { x: xc, z: B.z1 - 3.05 }; h.tpos = { x: B.x0 + .85, z: B.z1 - .95, ry: Math.PI - .7 }; h.studs = [{ k: "gyerek", x: xc - 1.7, z: B.z1 - 1.6 }]; } if (h.id === "mel") h.studs = [];
+    hbTpSurf(HZ.env || G, xc, zc, B.x1 - B.x0 - .6, B.z1 - B.z0 - .6, F + .01, .25);
+    if (!h.out) { const dz = h.kind === "csarda" ? 3.1 : 1.9, dx = h.kind === "csarda" ? xc : h.id === "ter" ? B.x0 + 1.6 : xc - .9; h.out = { x: dx, z: B.z0 - dz, lx: dx, lz: B.z0 - dz - 5 }; }
   }
 
   /* ---- belső díszek ---- */
@@ -9874,15 +9916,47 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     { const g = new THREE.Group(); g.position.set(B.x0 + .9, F + .55, B.z0 + .8); G.add(g); mesh(new THREE.BoxGeometry(1.2, .06, .5), C.frameM, g); [-.5, .5].forEach((dx) => mesh(new THREE.BoxGeometry(.06, .55, .45).translate(dx, -.28, 0), C.frameM, g)); const cl = std({ color: "#b8bcc2", metalness: .8, roughness: .3 }); mesh(new THREE.BoxGeometry(.3, .04, .06).translate(0, .07, 0), cl, g); mesh(new THREE.BoxGeometry(.06, .05, .06).translate(0, .045, 0), cl, g); }
     for (let k = 0; k < 4; k++) rodBetween(new THREE.Vector3(B.x0 + 1.5 + k * .5, F + 2.85, B.z0 + .35), new THREE.Vector3(B.x0 + 1.5 + k * .5 + (rand() - .5) * .1, F + 1.1 + rand() * .3, B.z0 + .4), .014, [rope, rope2, rope3, rope][k], G, 5);
     poster(G, ["A NYOLCAS", "a kötél végén", "nem csúszik ki", "a csigán át"], "#7a4ea3", B.x1 - .2, F + 1.75, B.z1 - 1.2, -Math.PI / 2, .7); }
-  function vestProps(G, h, C) { const B = h.box, F = C.F; const VC = ["#ff7a12", "#e3262f", "#f2c200", "#ff7a12", "#1f5fa8", "#e3262f"];
-    /* mellény-állvány a ház előtt és bent: különböző méretű mentőmellények vállfán */
-    const vest = (x, y, z, ry, c, s) => { const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(s); G.add(g); const m = std({ color: c, roughness: .6 }); const pr = [[.04, .02], [.2, .03], [.22, .14], [.22, .3], [.2, .42], [.13, .5]].map(([r, yy]) => new THREE.Vector2(r, yy)); const vg = new THREE.LatheGeometry(pr, 18, 0, Math.PI * 1.7); vg.rotateY(Math.PI * .15); vg.scale(1, 1, .6); mesh(vg.translate(0, -.5, 0), m, g); mesh(new THREE.BoxGeometry(.06, .04, .02).translate(0, -.3, .14), std({ color: "#111", roughness: .4 }), g); mesh(new THREE.TorusGeometry(.06, .006, 4, 10, Math.PI).translate(0, .05, 0), std({ color: "#888", metalness: .7 }), g); };
-    { const rack = std({ color: "#4a4f56", metalness: .6, roughness: .4 }); const rx = (B.x0 + B.x1) / 2 + 1.2, rz = B.z0 - 1.4; mesh(new THREE.CylinderGeometry(.02, .02, 2.2, 6).rotateZ(Math.PI / 2).translate(rx, F + 1.55 - .2, rz), rack, G); [-1.05, 1.05].forEach((dx) => mesh(new THREE.CylinderGeometry(.025, .025, 1.6, 6).translate(rx + dx, F + .6, rz), rack, G));
-      for (let k = 0; k < 6; k++) vest(rx - .9 + k * .36, F + 1.32, rz, .0, VC[k], .78 + (k % 3) * .12); }
-    for (let k = 0; k < 4; k++) vest(B.x0 + .3, F + 1.9, B.z0 + .8 + k * .55, Math.PI / 2, VC[k + 1], .9);
-    { const ring = std({ color: "#ff7a1a", roughness: .5 }), wht = std({ color: "#f4f4f0", roughness: .5 }); [[B.x1 - .2, B.z0 + 1.2], [B.x1 - .2, B.z0 + 2.4]].forEach(([x, z]) => { const r = mesh(new THREE.TorusGeometry(.3, .075, 10, 24), ring, G); r.position.set(x, F + 1.6, z); r.rotation.y = Math.PI / 2; for (let k = 0; k < 4; k++) { const b = mesh(new THREE.TorusGeometry(.3, .078, 10, 4, .3), wht, G); b.position.copy(r.position); b.rotation.set(0, Math.PI / 2, k * Math.PI / 2); } }); }
-    { const bag = std({ color: "#e3262f", roughness: .8 }); mesh(new THREE.CylinderGeometry(.14, .14, .38, 14).translate(B.x1 - .4, F + .2, B.z1 - .5), bag, G); mesh(new THREE.CylinderGeometry(.14, .14, .38, 14).translate(B.x1 - .75, F + .2, B.z1 - .5), std({ color: "#f2c200", roughness: .8 }), G); }
-    poster(G, ["MÉRET", "testsúly szerint", "gyerek: 15–30 kg", "ifjúsági: 30–50 kg", "felnőtt: 50 kg +"], "#f07a12", B.x1 - .2, F + 1.75, B.z1 - 1.25, -Math.PI / 2, .7); }
+  /* ---- ZEPHYR MENTŐMELLÉNYEK (2026-11-15, a tulajdonos – a Zephyr mellényeket ők gyártják): a mellények a valódi termékfotókból készülnek
+     (piros-fekete és sárga-fekete sportmellény, narancs GULF 100N és BAY 100N), a Mentőmellény-pontban próbababákon, állványon és a falon,
+     a Zephyr emblémával és a mellények valódi címkéivel */
+  const ZV_IMG = { piros: "piros-fekete", sarga: "sarga-fekete", gulf: "gulf100", bay: "bay100" };
+  function zvTex(n) { HZ.zvt = HZ.zvt || {}; if (!HZ.zvt[n]) { const t = new THREE.TextureLoader().load("img/melleny/" + n + ".webp"); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; HZ.zvt[n] = t; W.disposables.push(t); } return HZ.zvt[n]; }
+  /* egy mellény térben: elöl a fotó (ívelten a test köré hajlítva), hátul és oldalt sötét anyag; w, hh: szélesség és magasság (m), R: a test sugara */
+  function zVest(parent, kind, w, hh, R, x, y, z, ry) { const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry || 0; parent.add(g); const back = kind === "gulf" || kind === "bay" ? "#f07a12" : "#17181b";
+    const bend = (geo, sgn) => { const pa = geo.attributes.position; for (let i = 0; i < pa.count; i++) { const px = pa.getX(i), a = px / R; pa.setX(i, Math.sin(a) * R); pa.setZ(i, sgn * (Math.cos(a) * R)); } geo.computeVertexNormals(); return geo; };
+    const fg = bend(new THREE.PlaneGeometry(w, hh, 14, 1), 1); const fm = new THREE.MeshStandardMaterial({ map: zvTex(ZV_IMG[kind]), alphaTest: .45, roughness: .7, side: THREE.DoubleSide }); W.disposables.push(fm); mesh(fg, fm, g);
+    const sweep = Math.PI * 2 - 2 * (w / 2) / R + .12; const bg = new THREE.CylinderGeometry(R * .985, R * .985, hh * .8, 18, 1, true, (w / 2) / R - .06, sweep); const bm = mesh(bg, std({ color: back, roughness: .75, side: THREE.DoubleSide }), g); bm.position.y = -hh * .06;
+    return g; }
+  /* próbababa a mellényben: matt bézs műanyag test, sötétszürke vitorlás kabát fehér csíkos ujjal, nadrág térdfolttal, fekete sapka, napszemüveg, csősál – ahogy a termékfotókon */
+  function zMannequin(parent, kind, x, z, F, ry) { const g = new THREE.Group(); g.position.set(x, F, z); g.rotation.y = ry || 0; parent.add(g);
+    const skin = std({ color: "#e8d2b8", roughness: .35 }), jak = std({ color: "#3b414a", roughness: .7 }), pant = std({ color: "#5d6673", roughness: .75 }), blk = std({ color: "#15161a", roughness: .7 }), wht = std({ color: "#eef0f2", roughness: .5 }), steel = std({ color: "#9aa2aa", metalness: .8, roughness: .3 });
+    mesh(new THREE.CylinderGeometry(.22, .25, .03, 24).translate(0, .015, 0), steel, g); mesh(new THREE.CylinderGeometry(.015, .015, .5, 8).translate(0, .26, 0), steel, g);
+    [-.1, .1].forEach((sx) => { mesh(new THREE.CylinderGeometry(.075, .062, .86, 14).translate(sx, .5, 0), pant, g); mesh(new THREE.BoxGeometry(.13, .2, .03).translate(sx, .55, .07), blk, g); mesh(new THREE.BoxGeometry(.11, .07, .24).translate(sx, .05, .04), blk, g); });
+    const tor = new THREE.LatheGeometry([[.0, 0], [.17, 0], [.19, .08], [.2, .3], [.21, .45], [.2, .55], [.12, .62], [.06, .64]].map(([a, b]) => new THREE.Vector2(a, b)), 22); tor.scale(1, 1, .72); mesh(tor.translate(0, .92, 0), jak, g);
+    mesh(new THREE.CylinderGeometry(.18, .2, .28, 22).scale(1, 1, .75).translate(0, 1.0, 0), jak, g);   /* a kabát alja a csípőn */
+    [-1, 1].forEach((sd) => { const arm = new THREE.Group(); arm.position.set(sd * .22, 1.49, 0); arm.rotation.z = sd * .12; g.add(arm); mesh(new THREE.CylinderGeometry(.055, .048, .6, 12).translate(0, -.3, 0), jak, arm); for (let k = 0; k < 3; k++) mesh(new THREE.CylinderGeometry(.057, .057, .012, 12).translate(0, -.08 - k * .025, .0), wht, arm); mesh(new THREE.SphereGeometry(.045, 10, 8).scale(.8, 1.3, .6).translate(0, -.66, 0), skin, arm); });
+    mesh(new THREE.CylinderGeometry(.07, .085, .14, 14).translate(0, 1.6, 0), jak, g); mesh(new THREE.SphereGeometry(.1, 18, 14).scale(.9, 1.15, .95).translate(0, 1.73, 0), skin, g);
+    mesh(new THREE.SphereGeometry(.104, 18, 10, 0, TAU, 0, Math.PI * .52).translate(0, 1.76, 0), blk, g); mesh(new THREE.CylinderGeometry(.08, .082, .09, 14).translate(0, 1.63, .005), std({ color: "#4a505a", roughness: .8 }), g);
+    mesh(new THREE.BoxGeometry(.17, .035, .03).translate(0, 1.745, .085), std({ color: "#2a3038", roughness: .15, metalness: .5 }), g);
+    zVest(g, kind, kind === "gulf" ? .5 : .46, kind === "gulf" ? .5 : .5, .215, 0, 1.25, .0, 0); return g; }
+  function vestProps(G, h, C) { const B = h.box, F = C.F, xc = xMid(B);
+    /* két próbababa bent (piros-fekete, sárga-fekete), egy kint az ajtó mellett (narancs GULF 100N) */
+    zMannequin(G, "piros", B.x1 - .55, B.z0 + .75, F, -Math.PI / 2 + .5); zMannequin(G, "sarga", B.x1 - .55, B.z0 + 1.75, F, -Math.PI / 2 + .3);
+    const yo = landY(B.x1 + 1.0, B.z0 - .4); zMannequin(G, "gulf", B.x1 + 1.0, B.z0 - .2, yo, Math.PI);
+    /* mellény-állvány a ház nyugati oldalán: a négy Zephyr mellény vállfán */
+    { const rack = std({ color: "#4a4f56", metalness: .6, roughness: .4 }), rx = B.x0 - 1.0, rz = (B.z0 + B.z1) / 2, ry = landY(rx, rz); [-1.2, 1.2].forEach((dz) => mesh(new THREE.CylinderGeometry(.025, .025, 2.45, 8).translate(rx, ry + 1.22, rz + dz), rack, G)); mesh(new THREE.CylinderGeometry(.02, .02, 2.5, 8).rotateX(Math.PI / 2).translate(rx, ry + 1.72, rz), rack, G);
+      ["piros", "sarga", "bay", "piros", "gulf", "sarga"].forEach((k, i) => { const z = rz - 1.0 + i * .4; mesh(new THREE.TorusGeometry(.04, .006, 4, 10, Math.PI).rotateY(Math.PI / 2).translate(rx, ry + 1.69, z), rack, G); zVest(G, k, k === "bay" ? .4 : .44, k === "bay" ? .62 : .5, .17, rx, ry + 1.36, z, -Math.PI / 2); }); }
+    /* mellények a falon (fogason), mentőöv, mentőkötél-táska */
+    ["sarga", "piros", "bay"].forEach((k, i) => zVest(G, k, k === "bay" ? .38 : .42, k === "bay" ? .6 : .48, .16, B.x0 + .28, F + 1.75, B.z0 + .9 + i * .75, Math.PI / 2));
+    { const ring = std({ color: "#ff7a1a", roughness: .5 }), wht = std({ color: "#f4f4f0", roughness: .5 }); const r = mesh(new THREE.TorusGeometry(.3, .075, 10, 24), ring, G); r.position.set(B.x1 - .2, F + 1.9, B.z1 - 1.4); r.rotation.y = Math.PI / 2; for (let k = 0; k < 4; k++) { const b2 = mesh(new THREE.TorusGeometry(.3, .078, 10, 4, .3), wht, G); b2.position.copy(r.position); b2.rotation.set(0, Math.PI / 2, k * Math.PI / 2); } }
+    { const bag = std({ color: "#e3262f", roughness: .8 }); mesh(new THREE.CylinderGeometry(.14, .14, .38, 14).translate(B.x1 - .4, F + .2, B.z1 - .5), bag, G); }
+    /* Zephyr embléma a ház homlokzatán és bent a falon, a valódi címkék fotója posztereken */
+    const logoT = (() => { const t = new THREE.TextureLoader().load("img/melleny/logo.webp"); t.colorSpace = THREE.SRGBColorSpace; W.disposables.push(t); return t; })();
+    const lgM = new THREE.MeshBasicMaterial({ map: logoT, transparent: true, alphaTest: .1 }); W.disposables.push(lgM);
+    { const rx = B.x0 - 1.0, rz = (B.z0 + B.z1) / 2, ry = landY(rx, rz); const bd = mesh(new THREE.BoxGeometry(.04, .66, 2.4), std({ color: "#f6f4ee", roughness: .6 }), G); bd.position.set(rx, ry + 2.12, rz); const lg = mesh(new THREE.PlaneGeometry(2.0, .6), lgM, G); lg.position.set(rx - .025, ry + 2.12, rz); lg.rotation.y = -Math.PI / 2; const lg2 = mesh(new THREE.PlaneGeometry(2.0, .6), lgM, G); lg2.position.set(rx + .025, ry + 2.12, rz); lg2.rotation.y = Math.PI / 2; }   /* felirat-tábla az állvány tetején, két oldalán az embléma */
+    { const lg = mesh(new THREE.PlaneGeometry(1.2, .36), lgM, G); lg.position.set(xc, F + 2.55, B.z1 - .2); lg.rotation.y = Math.PI; }
+    const lab = (n, x, z, ry) => { const t = new THREE.TextureLoader().load("img/melleny/" + n + ".webp"); t.colorSpace = THREE.SRGBColorSpace; W.disposables.push(t); const m = new THREE.MeshBasicMaterial({ map: t }); W.disposables.push(m); const p = mesh(new THREE.PlaneGeometry(.62, .64), m, G); p.position.set(x, F + 1.6, z); p.rotation.y = ry; };
+    lab("cimke-bay100", B.x1 - .2, B.z1 - 1.25, -Math.PI / 2); lab("cimke-wave50", B.x1 - .2, B.z1 - 2.05, -Math.PI / 2); }
   function stormProps(G, h, C) { const B = h.box, F = C.F;
     /* barométer a falon, széljelző zsák modell, Beaufort-tábla */
     { const g = new THREE.Group(); g.position.set(B.x0 + .2, F + 1.75, B.z0 + 1.2); g.rotation.y = Math.PI / 2; G.add(g); mesh(new THREE.CylinderGeometry(.24, .24, .06, 28).rotateX(Math.PI / 2), C.frameM, g); const tx = canvasTex(256, 256, (gg, w, hh) => { gg.fillStyle = "#f6f0dc"; gg.beginPath(); gg.arc(128, 128, 120, 0, TAU); gg.fill(); gg.fillStyle = "#222"; gg.font = `700 22px ${UIF}`; gg.textAlign = "center"; ["vihar", "eső", "változó", "szép"].forEach((s, i) => { const a = -2.3 + i * 1.5; gg.fillText(s, 128 + Math.cos(a) * 80, 136 + Math.sin(a) * 80); }); gg.strokeStyle = "#b02a20"; gg.lineWidth = 6; gg.beginPath(); gg.moveTo(128, 128); gg.lineTo(70, 90); gg.stroke(); });
@@ -9936,29 +10010,34 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       /* pálinkás üvegek (szilva, barack, körte) és az Unicum gömbölyű üvege a polcon */ { const sg = shelf(G, B.x0 + .2, F + 1.85, zc + .2, Math.PI / 2, 1.3, wood); ["#e8e4d0", "#f2c46a", "#e9e6c8", "#1b1b1b"].forEach((c, k) => { if (k === 3) { mesh(new THREE.SphereGeometry(.08, 14, 10).translate(-.45 + k * .3, .1, 0), std({ color: c, roughness: .2 }), sg); mesh(new THREE.CylinderGeometry(.015, .015, .08, 8).translate(-.45 + k * .3, .2, 0), std({ color: "#c9a23a", metalness: .7 }), sg); return; } mesh(new THREE.CylinderGeometry(.04, .05, .24, 12).translate(-.45 + k * .3, .14, 0), std({ color: c, roughness: .1, transparent: true, opacity: .7 }), sg); mesh(new THREE.CylinderGeometry(.015, .02, .08, 8).translate(-.45 + k * .3, .3, 0), std({ color: "#2b2b2b" }), sg); }); }
       /* lógó téliszalámi és kolbász a gerendán */ for (let k = 0; k < 4; k++) { const sx = B.x0 + 1.5 + k * .4; rodBetween(new THREE.Vector3(sx, F + 2.85, B.z0 + .9), new THREE.Vector3(sx, F + 2.55, B.z0 + .9), .004, std({ color: "#ddd" }), G, 3); mesh(new THREE.CylinderGeometry(.045, .045, .5, 10).translate(sx, F + 2.28, B.z0 + .9), std({ color: k % 2 ? "#d9d0bd" : "#7a2a1a", roughness: .9 }), G); }
       poster(G, ["HUNGARIKUM", "pálinka · Tokaji aszú", "PICK és HERZ szalámi", "szegedi, kalocsai", "paprika · Unicum"], h.col, B.x1 - .2, F + 2.05, B.z0 + 1.0, -Math.PI / 2, .7); }
-    h.board = { x: xc + .5, y: F + 1.65, z: B.z1 - .35, ry: Math.PI, w: 3.2 }; h.seat = { x: xc + .5, z: B.z1 - 3.35 }; h.tpos = { x: xc - 1.6, z: B.z1 - 1.0, ry: Math.PI - .65 }; h.studs = [{ k: "gyerek", x: xc + 1.95, z: B.z1 - 2.2 }]; }
-  /* ---------------------------------------------------------------- VILÁGÍTÓTORONY a hullámtörő végén (fehér-piros sávos, kerengővel, forgó fénnyel) */
-  function lighthouseBuild(G, h) { const B = h.box, F = h.F, xc = xMid(B), zc = zMid(B), R = 2.55, H = 12.5;
+    h.board = { x: xc + .5, y: F + 1.65, z: B.z1 - .35, ry: Math.PI, w: 3.2 }; h.seat = { x: xc + .5, z: B.z1 - 3.35 }; h.tpos = { x: xc - 1.6, z: B.z1 - 1.0, ry: Math.PI - .65 }; h.studs = [{ k: "gyerek", x: xc + 2.3, z: B.z1 - 1.75 }]; }
+  /* ---------------------------------------------------------------- VILÁGÍTÓTORONY a hullámtörő végén – az őrház a tanterem (rönkház, ajtaja a hullámtörő felé),
+     mellette a zárt, fehér-piros sávos torony kerengővel és forgó fénnyel (2026-11-15: a toronybelső szűk volt és szétesett – a tanítás az őrházba költözött) */
+  function lighthouseBuild(G, h) { const B = h.box, F = h.F, xc = xMid(B), zc = zMid(B);
+    /* betonplató a hullámtörő végén (a ház és a torony alatt) */
+    const conc = std({ color: "#b7b2a6", roughness: .9 }); mesh(new THREE.BoxGeometry(11.4, 1.6, 7.4).translate(xc + 2.6, F - .82, zc + .1), conc, G);
+    const C = cabinBuild(G, { box: B, F, door: "s", dc: xc - .7, win: [["w", zc, 1.1], ["n", xc + .9, 1.2]], h, flagX: B.x0 - .15 });
+    /* a torony: zárt, kúposan szűkülő, sávos */
+    const tx = B.x1 + 2.3, tz = zc - .2, R = 1.9, H = 12.5;
     const lt = canvasTex(512, 1024, (g, w, hh) => { for (let k = 0; k < 6; k++) { g.fillStyle = k % 2 ? "#c8202a" : "#f6f4ee"; g.fillRect(0, k * hh / 6, w, hh / 6); } for (let k = 0; k < 900; k++) { g.fillStyle = `rgba(0,0,0,${rand() * .04})`; g.fillRect(rand() * w, rand() * hh, 2 + rand() * 30, 1 + rand() * 4); } });
-    /* a bejárat a hullámtörő felől (északnyugat) – a falban rés */ const dA = Math.atan2(-(26.6 - xc), -(-20 - zc)), gap = .5;
-    const wg = new THREE.CylinderGeometry(R * .72, R, H, 40, 1, true, dA + gap / 2 + Math.PI, TAU - gap); const wm = mesh(wg.translate(xc, F + H / 2, zc), std({ map: lt, roughness: .6, side: THREE.DoubleSide }), G); void wm;
-    mesh(new THREE.CylinderGeometry(R + .25, R + .4, .5, 40).translate(xc, F - .2, zc), std({ color: "#9a958a", roughness: .9 }), G); mesh(new THREE.CylinderGeometry(R - .12, R - .1, 3.1, 40, 1, true, dA + gap / 2 + Math.PI + .02, TAU - gap - .04).translate(xc, F + 1.55, zc), std({ color: "#f1ece0", roughness: .85, side: THREE.BackSide }), G); mesh(new THREE.CircleGeometry(R - .05, 40).rotateX(-Math.PI / 2).translate(xc, F + .02, zc), std({ map: HZ.floorT, roughness: .9 }), G);
-    /* belső mennyezet 3,1 m-en (a belső tér osztálynyi), feljebb a lámpaház */ mesh(new THREE.CircleGeometry(R * .97, 40).rotateX(Math.PI / 2).translate(xc, F + 3.1, zc), std({ color: "#d9d2c0", roughness: .9 }), G);
-    { const top = F + H, gal = std({ color: "#1d232b", roughness: .5, metalness: .6 }); mesh(new THREE.CylinderGeometry(R * .72 + .6, R * .72 + .6, .14, 40).translate(xc, top, zc), gal, G); for (let k = 0; k < 24; k++) { const a = k / 24 * TAU; mesh(new THREE.CylinderGeometry(.02, .02, .9, 5).translate(xc + Math.cos(a) * (R * .72 + .55), top + .45, zc + Math.sin(a) * (R * .72 + .55)), gal, G); }
-      mesh(new THREE.TorusGeometry(R * .72 + .55, .03, 5, 40).rotateX(Math.PI / 2).translate(xc, top + .9, zc), gal, G); const glassM = new THREE.MeshStandardMaterial({ color: "#d8f0ff", roughness: .05, metalness: .3, transparent: true, opacity: .35, depthWrite: false }); W.disposables.push(glassM); mesh(new THREE.CylinderGeometry(1.0, 1.0, 1.5, 16, 1, true).translate(xc, top + .9, zc), glassM, G);
-      mesh(new THREE.ConeGeometry(1.25, 1.0, 16).translate(xc, top + 2.1, zc), std({ color: "#c8202a", roughness: .5 }), G); mesh(new THREE.SphereGeometry(.14, 10, 8).translate(xc, top + 2.65, zc), gal, G);
-      const lens = new THREE.MeshStandardMaterial({ color: "#fff6c8", emissive: "#ffd36a", emissiveIntensity: .8, roughness: .2 }); W.disposables.push(lens); mesh(new THREE.CylinderGeometry(.42, .42, .9, 16).translate(xc, top + .9, zc), lens, G);
-      /* forgó fénynyaláb (két áttetsző kúp) – éjjel látszik igazán */ const bm = new THREE.MeshBasicMaterial({ color: "#fff1b0", transparent: true, opacity: .16, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }); W.disposables.push(bm);
-      const bg = new THREE.Group(); bg.position.set(xc, top + .9, zc); G.add(bg); [0, Math.PI].forEach((a) => { const c = new THREE.ConeGeometry(2.2, 26, 16, 1, true); c.rotateZ(Math.PI / 2); c.translate(13, 0, 0); const m = mesh(c, bm, bg); m.rotation.y = a; }); bg.userData.noMerge = true; HZ.beams.push(bg); const gl = glowSprite("#ffe9a0", 3.2); gl.position.set(xc, top + .9, zc); G.add(gl); }
-    /* ajtókeret a ház színével, névtábla, zászló a kerengőn */ { const fr = std({ color: h.col, roughness: .55 }), dx = xc + Math.sin(dA) * R, dz = zc + Math.cos(dA) * R; [-1, 1].forEach((s) => { const a = dA + s * (gap / 2 + .02); mesh(new THREE.BoxGeometry(.14, 2.3, .4).translate(xc + Math.sin(a) * R * .99, F + 1.15, zc + Math.cos(a) * R * .99), fr, G); }); const lin = mesh(new THREE.BoxGeometry(1.5, .16, .4), fr, G); lin.position.set(dx, F + 2.35, dz); lin.rotation.y = dA;
-      const t = houseSign(h), pl = mesh(new THREE.PlaneGeometry(2.4, .7), basic({ map: t }), G); pl.position.set(xc + Math.sin(dA) * (R + .06), F + 2.95, zc + Math.cos(dA) * (R + .06)); pl.rotation.y = dA; }
-    houseFlag(G, h, xc + Math.sin(dA + .9) * (R * .72 + .55), F + H + .9, zc + Math.cos(dA + .9) * (R * .72 + .55), 2.0);
-    /* belső: hajózási térkép-asztal, nagy Fresnel-lencse modell, iránytű, piros és zöld jelzőlámpa */
-    { const wood = std({ color: "#6b4a2a", roughness: .7 }); const ta = dA + Math.PI * .55; const tx = xc + Math.sin(ta) * 1.5, tz = zc + Math.cos(ta) * 1.5; mesh(new THREE.BoxGeometry(1.0, .06, .7).translate(tx, F + .85, tz), wood, G); mesh(new THREE.PlaneGeometry(.9, .6).rotateX(-Math.PI / 2).translate(tx, F + .885, tz), basic({ map: canvasTex(256, 192, (g, w, hh) => { g.fillStyle = "#e9e2c8"; g.fillRect(0, 0, w, hh); g.fillStyle = "#9cc6d8"; g.beginPath(); g.ellipse(128, 96, 120, 46, -.3, 0, TAU); g.fill(); g.strokeStyle = "#555"; g.strokeRect(4, 4, w - 8, hh - 8); }) }), G); [[-.4, -.28], [.4, -.28], [-.4, .28], [.4, .28]].forEach(([a, b]) => mesh(new THREE.BoxGeometry(.05, .85, .05).translate(tx + a, F + .42, tz + b), wood, G));
-      const lA = dA - Math.PI * .55, lx = xc + Math.sin(lA) * 1.7, lz = zc + Math.cos(lA) * 1.7; const lens = std({ color: "#e8f4ff", roughness: .05, metalness: .2, transparent: true, opacity: .55 }); for (let k = 0; k < 6; k++) mesh(new THREE.TorusGeometry(.12 + k * .05, .018, 6, 24).rotateY(lA).translate(lx, F + 1.1, lz), lens, G); mesh(new THREE.BoxGeometry(.5, .6, .5).translate(lx, F + .3, lz), wood, G);
-      [["#d0342c", -.3], ["#2f9e57", .3]].forEach(([c, o]) => { const m = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .8, roughness: .3 }); W.disposables.push(m); mesh(new THREE.SphereGeometry(.09, 12, 10).translate(lx + Math.cos(lA) * o, F + 1.75, lz - Math.sin(lA) * o), m, G); }); }
-    const bA = dA + Math.PI; h.board = { x: xc + Math.sin(bA) * (R - .3), y: F + 1.7, z: zc + Math.cos(bA) * (R - .3), ry: bA + Math.PI, w: 2.4 }; h.seat = { x: xc + Math.sin(dA) * .6, z: zc + Math.cos(dA) * .6 }; const tA = bA + .75; h.tpos = { x: xc + Math.sin(tA) * (R - .75), z: zc + Math.cos(tA) * (R - .75), ry: tA + Math.PI - .5 }; h.studs = [];
-    hbTpSurf(HZ.env || G, xc, zc, 3.2, 3.2); }
+    mesh(new THREE.CylinderGeometry(R * .72, R, H, 32, 1, false).translate(tx, F + H / 2, tz), std({ map: lt, roughness: .6 }), G);
+    mesh(new THREE.CylinderGeometry(R + .2, R + .3, .4, 32).translate(tx, F + .1, tz), std({ color: "#9a958a", roughness: .9 }), G);
+    /* ajtó a torony tövében (zárt, a ház színével) és két kis ablak */ { const fr = std({ color: h.col, roughness: .55 }), a = Math.PI; const dx = tx + Math.sin(a) * R * .985, dz = tz + Math.cos(a) * R * .985; const dr = mesh(new THREE.BoxGeometry(1.0, 2.1, .12), fr, G); dr.position.set(dx - .02, F + 1.05, dz); dr.rotation.y = a + Math.PI / 2;
+      [4.5, 8.2].forEach((y) => { const r2 = R - (R - R * .72) * (y / H), w = mesh(new THREE.BoxGeometry(.5, .7, .1), std({ color: "#1d2a38", roughness: .3 }), G); w.position.set(tx - r2 * .99, F + y, tz); w.rotation.y = Math.PI / 2; }); }
+    { const top = F + H, r0 = R * .72, gal = std({ color: "#1d232b", roughness: .5, metalness: .6 }); mesh(new THREE.CylinderGeometry(r0 + .6, r0 + .6, .14, 32).translate(tx, top, tz), gal, G); for (let k = 0; k < 20; k++) { const a = k / 20 * TAU; mesh(new THREE.CylinderGeometry(.02, .02, .9, 5).translate(tx + Math.cos(a) * (r0 + .55), top + .45, tz + Math.sin(a) * (r0 + .55)), gal, G); }
+      mesh(new THREE.TorusGeometry(r0 + .55, .03, 5, 32).rotateX(Math.PI / 2).translate(tx, top + .9, tz), gal, G); const glassM = new THREE.MeshStandardMaterial({ color: "#d8f0ff", roughness: .05, metalness: .3, transparent: true, opacity: .35, depthWrite: false }); W.disposables.push(glassM); mesh(new THREE.CylinderGeometry(.95, .95, 1.5, 16, 1, true).translate(tx, top + .9, tz), glassM, G);
+      mesh(new THREE.ConeGeometry(1.2, 1.0, 16).translate(tx, top + 2.1, tz), std({ color: "#c8202a", roughness: .5 }), G); mesh(new THREE.SphereGeometry(.14, 10, 8).translate(tx, top + 2.65, tz), gal, G);
+      const lens = new THREE.MeshStandardMaterial({ color: "#fff6c8", emissive: "#ffd36a", emissiveIntensity: .8, roughness: .2 }); W.disposables.push(lens); mesh(new THREE.CylinderGeometry(.42, .42, .9, 16).translate(tx, top + .9, tz), lens, G);
+      const bm = new THREE.MeshBasicMaterial({ color: "#fff1b0", transparent: true, opacity: .16, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }); W.disposables.push(bm);
+      const bg = new THREE.Group(); bg.position.set(tx, top + .9, tz); G.add(bg); [0, Math.PI].forEach((a) => { const c = new THREE.ConeGeometry(2.2, 26, 16, 1, true); c.rotateZ(Math.PI / 2); c.translate(13, 0, 0); const m = mesh(c, bm, bg); m.rotation.y = a; }); bg.userData.noMerge = true; bg.visible = false; HZ.beams.push(bg);
+      houseFlag(G, h, tx + r0 + .55, top + .9, tz, 2.0); }
+    /* belső: hajózási térkép-asztal, Fresnel-lencse modell, piros és zöld jelzőlámpa, iránytű */
+    { const wood = std({ color: "#6b4a2a", roughness: .7 }); const t0x = B.x0 + .75, t0z = zc + .3; mesh(new THREE.BoxGeometry(.7, .06, 1.1).translate(t0x, F + .85, t0z), wood, G); mesh(new THREE.PlaneGeometry(.62, 1.0).rotateX(-Math.PI / 2).translate(t0x, F + .885, t0z), basic({ map: canvasTex(192, 256, (g, w, hh) => { g.fillStyle = "#e9e2c8"; g.fillRect(0, 0, w, hh); g.fillStyle = "#9cc6d8"; g.beginPath(); g.ellipse(96, 128, 46, 110, .3, 0, TAU); g.fill(); g.strokeStyle = "#555"; g.strokeRect(4, 4, w - 8, hh - 8); }) }), G); [[-.3, -.5], [.3, -.5], [-.3, .5], [.3, .5]].forEach(([a, b]) => mesh(new THREE.BoxGeometry(.05, .85, .05).translate(t0x + a, F + .42, t0z + b), wood, G));
+      const lx = B.x1 - .6, lz = zc + .6; const lens = std({ color: "#e8f4ff", roughness: .05, metalness: .2, transparent: true, opacity: .55 }); for (let k = 0; k < 6; k++) mesh(new THREE.TorusGeometry(.12 + k * .05, .018, 6, 24).rotateY(Math.PI / 2).translate(lx, F + 1.1, lz), lens, G); mesh(new THREE.BoxGeometry(.5, .6, .5).translate(lx, F + .3, lz), wood, G);
+      [["#d0342c", -.3], ["#2f9e57", .3]].forEach(([c, o]) => { const m = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: .8, roughness: .3 }); W.disposables.push(m); mesh(new THREE.SphereGeometry(.09, 12, 10).translate(B.x1 - .2, F + 1.8, zc + o), m, G); }); }
+    poster(G, ["HAJÓFÉNYEK", "port: piros", "starboard: zöld", "hátul: fehér", "szemből: piros+zöld"], h.col, B.x0 + .2, F + 1.75, B.z0 + 1.0, Math.PI / 2, .7);
+    h.board = { x: xc, y: F + 1.65, z: B.z0 + .2, ry: 0, w: 3.0 }; h.seat = { x: xc, z: B.z0 + 3.0 }; h.tpos = { x: B.x1 - .9, z: B.z0 + .95 }; h.studs = []; h.out = { x: xc - .7, z: B.z1 + 1.3, lx: xc - .7, lz: B.z1 + 6 };
+    hbTpSurf(HZ.env || G, xc, zc, B.x1 - B.x0 - .6, B.z1 - B.z0 - .6, F + .01, .25); hbTpSurf(HZ.env || G, xc + 2.6, B.z1 + .9, 10, 1.6, .67, .3); }
 
   /* ---------------------------------------------------------------- SZÍNES ÖSVÉNYCSÍKOK a móló tövétől minden házig (C-jelölés), egy hálóban */
   function housePaths(env) { const parts = [], dash = canvasTex(64, 256, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "#fff"; uiRR(g, 6, 10, w - 12, h * .62, 10); g.fill(); });
@@ -9972,7 +10051,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       ribbon([[start.x - .3, start.z], [start.x - .6, landPromZ(0) - .2], [dx + 1.2, pz - .2], [dx, pz + .8], [dx, dz]], h.col, off); });
     const isk = HZ.byId.isk, els = HZ.byId.els, vil = HZ.byId.vil;
     ribbon([[1.7, 4.3], [2.6, 3.6], [2.9, 2.2]], isk.col, 0); ribbon([[1.7, 4.5], [9.9, 4.45], [10.4, 3.4], [10.6, 2.3]], els.col, 0);
-    ribbon([[start.x + .4, start.z + .2], [3, landPromZ(3) - .4], [22.5, landPromZ(22.5) - .4], [24.6, 3.4], [25.6, -10], [26.6, -20], [28.3, -22.9]], vil.col, 0);
+    ribbon([[start.x + .4, start.z + .2], [3, landPromZ(3) - .4], [22.5, landPromZ(22.5) - .4], [24.6, 3.4], [25.6, -10], [26.6, -20], [27.7, -23.6]], vil.col, 0);
     const m = new THREE.Mesh(mergeGeoms(parts), std({ map: dash, vertexColors: true, transparent: true, alphaTest: .4, roughness: .7, depthWrite: true, polygonOffset: true, polygonOffsetFactor: -2 })); m.renderOrder = 1; dash.wrapT = THREE.RepeatWrapping; env.add(m); }
   /* ---------------------------------------------------------------- KIKÖTŐTÉRKÉP a móló tövénél (a házak a saját színükkel és zászlójukkal) */
   function harborMap(env) { const tx = canvasTex(1400, 900, (g, w, hh) => { g.fillStyle = "#f6f1e6"; g.fillRect(0, 0, w, hh); const MX0 = 40, MX1 = 900, MY0 = 130, MY1 = 860, X = (x) => MX0 + (x + 60) / 96 * (MX1 - MX0), Z = (z) => MY0 + (z + 28) / 50 * (MY1 - MY0);
@@ -10006,6 +10085,10 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   const dRope = (g, P, u, col) => { const pts = sPart(P, u); kL(g, pts, "#5a4a2a", 9); kL(g, pts, col || "#efe2c2", 6); for (let i = 2; i < pts.length; i += 3) sCirc(g, pts[i][0], pts[i][1], 1.2, "rgba(90,70,40,.5)"); };
   const dBowl = (g, x, y, soup, steam, t) => { g.fillStyle = "#f4f1e8"; g.beginPath(); g.ellipse(x, y, 46, 14, 0, 0, TAU); g.fill(); g.fillStyle = soup; g.beginPath(); g.ellipse(x, y - 1, 40, 10, 0, 0, TAU); g.fill(); g.fillStyle = "#f4f1e8"; g.beginPath(); g.moveTo(x - 46, y); g.quadraticCurveTo(x, y + 52, x + 46, y); g.fill(); if (steam) for (let k = 0; k < 3; k++) kL(g, [[x - 14 + k * 14, y - 12], [x - 10 + k * 14 + Math.sin(t * 2 + k) * 5, y - 30], [x - 14 + k * 14, y - 46 - ((t * 10 + k * 6) % 10)]], "rgba(255,255,255,.7)", 2.5); };
   const dBottle = (g, x, y, col, lab, h) => { h = h || 70; g.fillStyle = col; uiRR(g, x - 11, y - h * .62, 22, h * .62, 5); g.fill(); g.fillRect(x - 4, y - h, 8, h * .4); g.fillStyle = "#f6f0dc"; g.fillRect(x - 9, y - h * .45, 18, 14); if (lab) kT(g, lab, x, y - h * .45 + 7, 5, "#3a2a1a"); };
+  /* Zephyr mellény a táblán: középen színes V-panel cipzárral, oldalt fekete, a bal mellen ZEPHYR felirat, derékheveder csattal (a narancs életmentőnél nyakpárna) */
+  const dZVest = (g, x, y, s, col, life) => { g.save(); g.translate(x, y); g.scale(s, s); if (life) { g.fillStyle = col; uiRR(g, -32, -44, 64, 92, 12); g.fill(); g.beginPath(); g.ellipse(0, -44, 30, 14, 0, Math.PI, 0); g.fill(); g.fillStyle = "rgba(0,0,0,.25)"; g.fillRect(-1, -36, 2, 82); }
+    else { g.fillStyle = "#17181b"; uiRR(g, -32, -40, 64, 86, 10); g.fill(); g.fillStyle = col; g.beginPath(); g.moveTo(-24, -40); g.lineTo(-8, -40); g.lineTo(-4, 46); g.lineTo(-14, 46); g.closePath(); g.fill(); g.beginPath(); g.moveTo(24, -40); g.lineTo(8, -40); g.lineTo(4, 46); g.lineTo(14, 46); g.closePath(); g.fill(); g.fillStyle = "#0b0b0c"; g.fillRect(-1, -40, 2, 86); }
+    g.fillStyle = "#101010"; g.fillRect(-34, 18, 68, 7); g.fillStyle = "#333"; g.fillRect(-5, 16, 10, 11); g.fillStyle = life ? "#101010" : "#f4f4f0"; g.font = "italic 900 8px Arial, sans-serif"; g.textAlign = "center"; g.fillText("ZEPHYR", 14, -18); g.restore(); };
   const SAY_FIN = (n) => `Köszönöm, hogy itt voltál! Ha szeretnéd, bármikor visszajöhetsz – a ${n} ajtaja mindig nyitva áll. Jó szelet!`;
   /* ---- ELSŐSEGÉLY: a nagymama bevezetője és búcsúja (a hat lecke a 05o-ból költözik ide) ---- */
   const LX_ELS = [
@@ -10076,9 +10159,11 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     /* ---- MENTŐMELLÉNY-PONT – Feri bácsi, a mentőoktató ---- */
     mel: [
       { s: "Üdvözlés", t: "A mellény a legjobb barátod a vízen", say: "Szia, Feri bácsi vagyok, vízimentő. Sok embert húztam már ki a Balatonból – és tudod, mi a közös azokban, akik bajba kerültek? Legtöbbször nem volt rajtuk mentőmellény. Megtanítom, hogyan válaszd ki, hogyan vedd fel, és hogyan ments, ha baj van.",
-        d: (g, t) => { dBg(g); g.fillStyle = "#ff7a12"; uiRR(g, 120, 50, 60, 90, 14); g.fill(); g.fillStyle = "#1b1d22"; g.fillRect(122, 100, 56, 8); sCirc(g, 150, 104, 4, "#888"); kT(g, "MINDIG RAJTAD!", 150, 170, 15, SR, "center", 900); kT(g, "♥", 150 + Math.sin(t * 3) * 2, 30, 20, SR, "center", 900); } },
-      { s: "A mellény", t: "A megfelelő méret és erő", say: "A mentőmellényt a testsúlyod szerint választjuk. A gyerekmellénynek nyakpárnája van, ami a víz fölött tartja a fejed, és combpántja, hogy ne csússzon le. Gyerekeknek és kezdőknek legalább száz newtonos mellény kell, nyílt vízre a felnőtteknek százötven newtonos. A mellényen ott van a felirat – mindig nézd meg!",
-        d: (g, t) => { dBg(g); [[70, .7, "15–30 kg", "#f2c200"], [150, .9, "30–50 kg", "#ff7a12"], [235, 1.1, "50 kg +", SR]].forEach(([x, s, n, c], i) => { const on = Math.floor((t % 9) / 3) === i; g.save(); g.translate(x, 100); g.scale(s, s); g.fillStyle = c; uiRR(g, -24, -36, 48, 70, 12); g.fill(); g.fillStyle = "#1b1d22"; g.fillRect(-22, 4, 44, 6); g.restore(); kT(g, n, x, 160, 11, on ? SR : SN, "center", on ? 900 : 700); }); kT(g, "100 N gyerek · 150 N felnőtt", 150, 24, 11, SN, "center", 900); } },
+        d: (g, t) => { dBg(g); dZVest(g, 150, 92, 1.1, "#d4121e"); kT(g, "MINDIG RAJTAD!", 150, 170, 15, SR, "center", 900); kT(g, "♥", 150 + Math.sin(t * 3) * 2, 30, 20, SR, "center", 900); } },
+      { s: "A mellény", t: "50 vagy 100 newton?", say: "A mellényen lévő szám a felhajtóerőt mutatja, newtonban. A Balatonon az előírt mentőmellény a 100 newtonos: ha valaki elájul a vízben, ez a hátára fordítja, és szabadon tartja a légútját. Versenyen és a biztosító hajón az 50 newtonos sportmellény is megfelel: ez is fenntart a vízen, de az ájult embert nem fordítja meg. A legfontosabb mégis az, hogy mindig legyen rajtad mellény! A méretet a testsúlyod szerint választod, a pontos értéket a mellény bevarrt címkéjén találod.",
+        d: (g, t) => { dBg(g); const k = Math.floor((t % 10) / 5); dZVest(g, 82, 92, 1.0, "#d4121e"); kT(g, "50 N", 82, 150, 15, k === 0 ? SR : SN, "center", 900); kT(g, "verseny · biztosító hajó", 82, 170, 9, SN, "center", 800);
+          dZVest(g, 218, 92, 1.0, "#f07a12", true); kT(g, "100 N", 218, 150, 15, k === 1 ? SR : SN, "center", 900); kT(g, "előírt · ájultan is megfordít", 218, 170, 9, SN, "center", 800);
+          if (k === 1) { const u = cl01(((t % 5) - .5) / 2.5), a = Math.PI * u; g.save(); g.translate(218, 30); g.rotate(a); g.fillStyle = "#e8bc96"; g.beginPath(); g.arc(0, -8, 5, 0, TAU); g.fill(); g.fillStyle = "#f07a12"; g.fillRect(-6, -3, 12, 14); g.restore(); } kT(g, "MINDIG LEGYEN RAJTAD!", 150, 16, 11, SGR, "center", 900); } },
       { s: "A mellény", t: "Felvétel és próba", say: "Vedd fel, húzd fel a cipzárt, csatold be a csatokat, és húzd meg a pántokat. Aztán jön a próba: valaki fogja meg a vállpántjánál, és húzza felfelé. Ha a mellény a füledig csúszik, szorosabbra kell húzni. Jól beállított mellény a vízben sem csúszik le rólad.",
         d: (g, t) => { dBg(g); const c = t % 8, k = kEase(kSeg(c, 3, 5)); sCirc(g, 150, 46, 16, "#e8bc96", SN, 1.5); g.fillStyle = "#2f6db0"; uiRR(g, 126, 62, 48, 70, 10); g.fill(); g.fillStyle = "#ff7a12"; uiRR(g, 122, 62 - k * 10, 56, 60, 10); g.fill(); if (c > 1) { kL(g, [[120, 104 - k * 10], [180, 104 - k * 10]], "#1b1d22", 4); kT(g, "KATT", 210, 104, 10, SGR, "center", 900); } if (c > 3) { kL(g, [[150, 40], [150, 14]], SR, 3); kT(g, "↑ húzd!", 190, 24, 11, SR, "center", 900); } kT(g, k < .5 ? "jó, nem csúszik ✔" : "", 150, 176, 12, SGR, "center", 900); } },
       { s: "Mentés", t: "Mentőöv és mentőkötél dobása", say: "Ha valaki a vízbe esett: kiálts, hogy ember a vízben, és mutass rá folyamatosan. A mentőövet vagy a mentőkötél-táskát ne a fejére dobd, hanem mögé és kicsit túl rajta – így a kötél pont a keze ügyébe esik. Aztán lassan, egyenletesen húzd be.",
@@ -10088,7 +10173,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       { s: "Mentés", t: "Kiemelés a hajóba", say: "A vízből a hajóba a szél alatti oldalon emeljük ki az embert, mert ott alacsonyabb a perem, és a hajó nem sodródik rá. Ketten fogjátok meg a mellénye vállpántjánál, számoljatok háromig, és egy lendülettel húzzátok fel. A mellény erre is jó – ezért van rajta erős pánt!",
         d: (g, t) => { sWater(g, t); g.fillStyle = "#fff"; g.beginPath(); g.ellipse(170, 96, 70, 20, 0, Math.PI, 0); g.fill(); g.strokeStyle = SN; g.lineWidth = 2; g.stroke(); const k = kEase(cl01(((t % 8) - 3) / 2)); sSwim(g, 110, 120 - k * 30, t, .9); kT(g, ["1…", "2…", "3 – HOPP!"][Math.min(2, Math.floor((t % 8) / 1.2))], 220, 40, 16, SR, "center", 900); kT(g, "szél alatti oldal", 170, 176, 11, SN, "center", 900); } },
       { s: "Búcsú", t: "Mellény fel – mindig!", say: "Jegyezd meg: a mentőmellény nem a hajón, hanem rajtad van a helye – akkor is, ha jól úszol, és akkor is, ha szép az idő. A baj mindig váratlanul jön. " + SAY_FIN("Mentőmellény-pont"),
-        d: (g, t) => { dBg(g); g.fillStyle = "#ff7a12"; uiRR(g, 125, 40, 50, 80, 12); g.fill(); kT(g, "MELLÉNY FEL!", 150, 160, 20, SR, "center", 900); void t; } }
+        d: (g, t) => { dBg(g); dZVest(g, 150, 84, 1.0, "#f2c200"); kT(g, "MELLÉNY FEL!", 150, 160, 20, SR, "center", 900); void t; } }
     ],
     /* ---- VILÁGÍTÓTORONY – Tamás bácsi, a toronyőr ---- */
     vil: [

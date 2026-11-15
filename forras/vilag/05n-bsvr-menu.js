@@ -159,12 +159,15 @@
     S.preB.show(true); if (!S.net && !S.paused && S.st !== "done") vrPause(true), vrPauseBoard(false), (S.menuPaused = true); }
   /* ---------------------------------------------------------------- SÉTA A KIKÖTŐBEN: a mólóra bökve / az ívvel odaugorva sétálhatsz */
   function hbWalk(on) { const was = HB.walk; wzShow(!on); HB.walk = !!on; if (on && !was) { try { msStart(W.root, 2.5); } catch (e) {} }   /* kikötő-jelentés: a kisütés a séta indulásakor (nem a rejtett kikötőn) */
-    if (on) { HB.pos = HB.pos || { x: 0, z: 0 }; hbBoard("walk"); if (HB.B) { HB.B.o.side = 0; if (T.inVR) HB.B.place(); } } }
-  function hbTpSurf(env, x, z, w, d) { const t = new THREE.Mesh(new THREE.BoxGeometry(w, .08, d), new THREE.MeshBasicMaterial({ visible: false })); t.position.set(x, .67, z); env.add(t); W.disposables.push(t.geometry, t.material);
+    /* 2026-11-15 (tulajdonos: „egy hatalmas tábla fogad, amit nem lehet bezárni … ott a tenyér menü”): sétáláskor nincs tábla – VR-ben a tenyérmenü, 2D-ben a lenti sáv gombjai */
+    if (on) { HB.pos = HB.pos || { x: 0, z: 0 }; if (HB.B) HB.B.show(false); } }
+  /* teleport-felület: w × d téglalap; y: a felület magassága (alap: a palló, .67); pad: ennyivel nagyobb a célozható terület (könnyebb eltalálni), de a lépés a téglalapon belül marad */
+  function hbTpSurf(env, x, z, w, d, y, pad) { pad = pad || 0; const t = new THREE.Mesh(new THREE.BoxGeometry(w + 2 * pad, .08, d + 2 * pad), new THREE.MeshBasicMaterial({ visible: false })); t.position.set(x, y == null ? .67 : y, z); env.add(t); W.disposables.push(t.geometry, t.material);
     t.userData.tp = () => !!HB.walk; t.userData.xr = { click: (h) => { if (!HB.walk || !h || !h.point) return; const p = W.root.worldToLocal(h.point.clone()); HB.pos = { x: clamp(p.x, x - w / 2 + .3, x + w / 2 - .3), z: clamp(p.z, z - d / 2 + .3, z + d / 2 - .3) }; try { beep(); } catch (e) {} } };
     try { T.xr.extra.add(t); W.objs.push(t); } catch (e) {} return t; }
   function hbDrawWalk(B, g) { uiFrame(B, g, "⚓ SÉTA A KIKÖTŐBEN", "a hajók valódi méretben ringanak a mólónál");
     uiCard(g, 40, 160, 1420, 420); g.fillStyle = "#fff"; g.font = `700 30px ${UIF}`; uiWrap(g, "Sétálj a mólón: bökj rá a pallóra (VR-ben: ökölbe zárt kéz + hüvelykujj, az ív végén koppints), és odalépsz. Egy kikötött hajóra bökve előtted megforog – ott ki is választhatod.", 70, 230, 1360, 44, 6);
+    B.btn(40, 470, 1420, 100, "✕ Bezárás – sétálok tovább", () => { if (HB.B) HB.B.show(false); }, { fs: 34 });
     B.btn(40, 620, 700, 140, "⛵ Vissza a főmenübe", () => wzGo(1), { gold: true, fs: 40 }); B.btn(760, 620, 700, 140, "↺ Vissza a móló elejére", () => { HB.pos = { x: 0, z: 0 }; }, { fs: 34 });
     B.btn(40, 790, 1420, 110, "‹ Vissza a virtuális sétához", () => { uiCloseAll(); W.close(); }, { fs: 32 }); }
   /* ---------------------------------------------------------------- FIÓK: regisztráció / belépés e-maillel (a táblán billentyűzettel is) */

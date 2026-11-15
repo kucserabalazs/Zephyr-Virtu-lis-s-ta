@@ -20,6 +20,8 @@
 
   const W = { active: false, kind: null, root: null, objs: [], disposables: [], upd: [], hud: null, panel: null, t: 0, scale: 1 };
   window.ZephyrWorld = W;
+  /* a kontroller karja a világokban: ha a világ kezeli (pl. a kikötő: fordulás, lépés), annak adjuk tovább (2026-11-15) */
+  W.stick = (ax, ay) => { const s = W.spec; if (s && s.stick) try { s.stick(ax, ay); } catch (e) { console.warn("kar", e); } };
 
   /* ------------------------------------------------------------------ segédek: anyagok, geometriák */
   const std = (o) => { const m = new THREE.MeshStandardMaterial(Object.assign({ roughness: .6, metalness: 0 }, o)); W.disposables.push(m); return m; };

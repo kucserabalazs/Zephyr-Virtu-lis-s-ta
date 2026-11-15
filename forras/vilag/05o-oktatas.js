@@ -274,13 +274,13 @@
     /* két függő viharlámpa a gerincgerendáról + meleg fény */
     lantern(5.2, F + 2.35, zc, .95); lantern(8.0, F + 2.35, zc, .95); { const pl = new THREE.PointLight("#ffc27a", 1.4, 9, 1.6); pl.position.set(6.6, F + 2.3, zc); G.add(pl); }
     /* padok rönkből */
-    [[5.45, .78], [8.0, .82]].forEach(([x, z]) => { addLog.length; const sg3 = new THREE.CylinderGeometry(.13, .13, 1.5, 12); sg3.rotateZ(Math.PI / 2); sg3.scale(1, .55, 1); mesh(sg3.translate(x, F + .44, z), std({ map: logT, roughness: .9 }), G); [-.55, .55].forEach((dx) => mesh(new THREE.CylinderGeometry(.09, .1, .4, 10).translate(x + dx, F + .2, z), endM, G)); });
+    [[4.75, .4], [8.6, .45]].forEach(([x, z]) => { addLog.length; const sg3 = new THREE.CylinderGeometry(.13, .13, 1.5, 12); sg3.rotateZ(Math.PI / 2); sg3.scale(1, .55, 1); mesh(sg3.translate(x, F + .44, z), std({ map: logT, roughness: .9 }), G); [-.55, .55].forEach((dx) => mesh(new THREE.CylinderGeometry(.09, .1, .4, 10).translate(x + dx, F + .2, z), endM, G)); });
     /* poszterek: csomók és a viharjelző */
     const poster = (lines, x, z, ry, col) => { const tx = canvasTex(512, 640, (g, w, h) => { g.fillStyle = "#fbf6e8"; g.fillRect(0, 0, w, h); g.fillStyle = col; g.fillRect(0, 0, w, 120); g.fillStyle = "#fff"; g.font = `900 52px ${UIF}`; g.textAlign = "center"; g.fillText(lines[0], w / 2, 82); g.fillStyle = "#14161b"; g.font = `700 36px ${UIF}`; lines.slice(1).forEach((s, i) => g.fillText(s, w / 2, 200 + i * 70)); });
       const p = mesh(new THREE.PlaneGeometry(.8, 1), basic({ map: tx }), G); p.position.set(x, F + 1.7, z); p.rotation.y = ry; };
     poster(["CSOMÓK", "nyolcas", "bak", "kikötő-", "bowline", "szorító"], 8.7, B.z1 - LR - .04, Math.PI, "#0b3a5e"); poster(["112", "HOL?", "MI TÖRTÉNT?", "HÁNYAN?", "ne tedd le!"], B.x0 + LR + .04, 3.4, Math.PI / 2, "#c8102e");
     /* járható felületek: terasz és a ház padlója */
-    hbTpSurf(env, 2.5, 1.2, 2, 7.2); hbTpSurf(env, 6.5, 1.25, 5.6, 5.1); hbTpSurf(env, 9.95, 1.2, .9, 7.2); hbTpSurf(env, 9.6, 4.45, 15.6, .8);
+    hbTpSurf(env, 9.5, 1.2, 15.6, 7.0, .67, .3);   /* az egész terasz (a két ház közötti tornáccal) egy felület */
     SCH.built = true;
   }
   /* =================================================================== TANTERMEK (2026-11-15, a tulajdonos kérése a kikötő-jelentés után):
@@ -292,6 +292,17 @@
   const ROOMS = {}; const RB = {};
   const SEC_C = { "Üdvözlés": "#e9c46a", "A verseny szabályai": "#7cc6ff", "Mentés": "#ff9a5a", "Elsősegély": "#ff6b6b", "Búcsú": "#7CFC9A" };
   const TEACH_N = { nagypapa: "Nagypapa", nagymama: "Nagymama", apa: "Apa", anya: "Anya", matroz1: "Feri bácsi, a mentőoktató", matroz2: "Laci bácsi, a meteorológus", matroz4: "Jóska bácsi, a kötélmester", orseg: "Tamás bácsi, a toronyőr" };
+  /* belépéskor a tanár köszönt, elmondja, mit tanít, és hellyel kínál (felvett hang: hang/lecke/<ház>/koszon.mp3) */
+  const GREET = {
+    isk: "Szervusz, kis matróz! Én vagyok a nagypapa. Ez a vitorlásiskola: itt a versenyszabályokat és a mentést tanítom. Gyere, ülj le a székre a táblával szemben, onnan mindent jól látsz!",
+    els: "Szervusz, kincsem! Én vagyok a nagymama. Itt az elsősegélyt tanítom: mit tegyél, ha valaki bajba kerül a vízen vagy a parton. Ülj csak le a székre, és kezdjük!",
+    ter: "Szia, örülök, hogy benéztél! Ez a Természetvédelmi ház: itt a Balaton halairól, madarairól és a nádasról mesélek. Foglalj helyet a széken, onnan jól látod a táblát!",
+    vih: "Szia! Laci bácsi vagyok, a meteorológus. Ez a Viharjelző torony: itt megtanulod, mit jelent a sárga villogó, hogyan olvass a felhőkből, és mekkora szél az elég. Ülj le, kezdjük!",
+    cso: "Szervusz! Jóska bácsi vagyok, a kötélmester. Ez a Csomózóház: itt hat fontos hajós csomót tanulsz meg. Ülj le a székre, és figyeld a táblát!",
+    mel: "Szia! Feri bácsi vagyok, vízimentő. Ez a Mentőmellény-pont: itt a mentőmellényről és a mentésről tanítok. Gyere, ülj le, kezdjük!",
+    vil: "Jó napot! Tamás bácsi vagyok, a toronyőr. Itt, a világítótorony őrházában az éjszakai hajózás fényeit és jeleit tanítom. Foglalj helyet a széken!",
+    izek: "Isten hozott a Magyar Ízek Házában! Itt a leghíresebb magyar ételeket, borokat és hungarikumokat mutatom be. Ülj le nyugodtan a székre, mindjárt kezdjük!" };
+  function roomOut() { if (HB.seat) HB.seat = null; if (SCH.R) roomExit(SCH.R); }
   function roomLessons(id) { if (id === "isk") return LESSONS.filter((q) => q.s !== "Elsősegély"); if (id === "els") return [LX_ELS[0]].concat(LESSONS.filter((q) => q.s === "Elsősegély"), [LX_ELS[1]]); return LX[id] || []; }
   const roomDur = (R, i) => R.adur && R.adurI === i ? R.adur + 1.4 : Math.max(10, (R.lessons[i] || R.lessons[0]).say.length / 13.5 + 3);
   function roomStaticTex(h) { return canvasTex(900, 500, (g, w, hh) => { const bg = g.createLinearGradient(0, 0, 0, hh); bg.addColorStop(0, "#21443c"); bg.addColorStop(1, "#16302a"); g.fillStyle = bg; g.fillRect(0, 0, w, hh);
@@ -322,7 +333,7 @@
   }
   /* ---- szereplők: a tanár és a tanulók (lustán épülnek, ha a ház közelébe érsz; messze menve eltűnnek) ---- */
   function figMake(k, full) { let c, root, s = 1.1;
-    if (/^matroz|^orseg/.test(k)) { const o = { full: true, seed: { matroz1: 1, matroz2: 2, matroz4: 4, orseg: 5 }[k] || 1 }; if (k === "matroz1") { o.vest = "#ff7a12"; o.top = "#1f5fa8"; } if (k === "matroz2") { o.top = "#e8e4d8"; } if (k === "matroz4") { o.cap = "#1f2a44"; o.top = "#7a4ea3"; } if (k === "orseg") { o.beard = true; o.cap = "#1f2a44"; o.top = "#24324a"; }
+    if (/^matroz|^orseg/.test(k)) { const o = { full: true, seed: { matroz1: 1, matroz2: 2, matroz4: 4, orseg: 5 }[k] || 1 }; if (k === "matroz1") { o.zvest = true; o.top = "#1f5fa8"; } if (k === "matroz2") { o.top = "#e8e4d8"; } if (k === "matroz4") { o.cap = "#1f2a44"; o.top = "#7a4ea3"; } if (k === "orseg") { o.beard = true; o.cap = "#1f2a44"; o.top = "#24324a"; }
       const g = makeFamPerson(o); c = g.userData.P.fam; root = g; s = 1; }
     else { c = new FAM.Character(k, { expr: "vidam" }); famStd(c.root); c.blob.visible = false; c.root.traverse((m) => { if (m.isMesh) m.castShadow = false; }); root = c.root; }
     root.userData.noMerge = true; root.scale.setScalar(s); void full; try { if (!c._frozen) famFreeze(c, true); } catch (e) { console.warn("figura-sütés", e); } return { c, root, s }; }
@@ -330,11 +341,14 @@
   function roomFigs(R, on) { const h = R.h;
     if (on && !R.tch) { try { const f = figMake(h.teacher); const t = h.tpos; f.root.position.set(t.x, h.F, t.z); f.root.rotation.y = Math.atan2(h.seat.x - t.x, h.seat.z - t.z) * .6 + Math.atan2(h.board.x - t.x, h.board.z - t.z) * .4; (h.G || HB.env).add(f.root); R.tch = f; f.c.act("integet"); } catch (e) { console.warn("tanár", h.id, e); }
       (h.studs || []).forEach((st) => { try { const f = figMake(st.k); f.root.position.set(st.x, h.F, st.z); f.root.rotation.y = Math.atan2(h.board.x - st.x, h.board.z - st.z); (h.G || HB.env).add(f.root); f.st = st; f.nx = 3 + Math.random() * 5;
-          /* pad a tanuló alá (rönkpad) */ if (!st.bench && h.id !== "isk") { const bm = mesh(new THREE.CylinderGeometry(.13, .13, .9, 12).rotateZ(Math.PI / 2).scale(1, .55, 1), std({ map: HZ.logT, roughness: .9 }), h.G); bm.position.set(st.x, h.F + .36, st.z - Math.cos(f.root.rotation.y) * .05); bm.rotation.y = f.root.rotation.y; [-.35, .35].forEach((dx) => { const l = mesh(new THREE.CylinderGeometry(.08, .09, .3, 8), std({ map: HZ.logT, roughness: .9 }), h.G); l.position.set(st.x + Math.cos(f.root.rotation.y) * dx, h.F + .15, st.z - Math.sin(f.root.rotation.y) * dx); }); st.bench = 1; }
+          /* pad a tanuló alá (rönkpad) */ if (!st.bench && h.id !== "isk") { const bm = mesh(new THREE.CylinderGeometry(.13, .13, .9, 12).rotateZ(Math.PI / 2).scale(1, .55, 1), std({ map: HZ.logT, roughness: .9 }), h.G); bm.position.set(st.x, h.F + .40, st.z); bm.rotation.y = f.root.rotation.y; [-.35, .35].forEach((dx) => { const l = mesh(new THREE.CylinderGeometry(.08, .09, .34, 8), std({ map: HZ.logT, roughness: .9 }), h.G); l.position.set(st.x + Math.cos(f.root.rotation.y) * dx, h.F + .17, st.z - Math.sin(f.root.rotation.y) * dx); }); st.bench = 1; }
           R.studs.push(f); } catch (e) { console.warn("tanuló", h.id, e); } }); }
     if (!on && R.tch) { figDrop(R.tch); R.tch = null; R.studs.forEach(figDrop); R.studs = []; } }
   /* ülő póz a család-figurának: a frissítés UTÁN felülírjuk a csípőt, a térdet és a test magasságát */
-  function figSit(f, seatY) { const c = f.c; if (!c.legs) return; c.legs.forEach((L) => { L.hip.rotation.x = -1.42; L.knee.rotation.x = 1.42; L.foot.rotation.x = .05; }); c.mover.position.y = seatY / f.s - c.pelvis.position.y + .02; }
+  function figSit(f, seatY) { const c = f.c; if (!c.legs) return; c.legs.forEach((L) => { L.hip.rotation.x = -1.5; L.knee.rotation.x = 1.5; L.foot.rotation.x = 0; });
+    /* a fenék a pad tetején: a csípőcsukló a pad fölött a comb vastagságával (a combcsont tengelye) – így nem süllyed bele a deszkába */
+    if (f.thR == null) { try { const bb = new THREE.Box3(), L = c.legs[0]; let r = 0; L.hip.children.forEach((ch) => { if (ch.isMesh && ch !== L.knee) { ch.geometry.computeBoundingBox(); bb.copy(ch.geometry.boundingBox); r = Math.max(r, (bb.max.x - bb.min.x) / 2, (bb.max.z - bb.min.z) / 2); } }); f.thR = r || .07; f.hipOff = L.hip.position.y; } catch (e) { f.thR = .07; f.hipOff = 0; } }
+    c.mover.position.y = seatY / f.s - c.pelvis.position.y - (f.hipOff || 0) + f.thR * 1.02; }
   /* ---- a tábla rajza a közös vásznon ---- */
   function roomDraw(R) {
     const g = RB.g, L = R.lessons[R.i] || R.lessons[0], W2 = 1800, H2 = 1000; if (!L) return;
@@ -363,12 +377,15 @@
     const np = Math.ceil(R.lessons.length / BOOK_N); btn(860, 758, 220, 86, "◀ lap", () => { R.page = Math.max(0, R.page - 1); bookFlip(R, -1); }, false, "pv"); g.fillStyle = "#4a3520"; g.font = `800 30px ${UIF}`; g.textAlign = "center"; g.fillText(`${R.page + 1} / ${np}`, 1205, 812); g.textAlign = "left"; btn(1330, 758, 220, 86, "lap ▶", () => { R.page = Math.min(np - 1, R.page + 1); bookFlip(R, 1); }, false, "nx");
     btn(860, 862, 690, 92, "🧍 Felállok", () => roomStand(), false, "up");
     RB.btex.needsUpdate = true; }
-  function bookClick(R, hh) { if (SCH.R !== R || !hh || !hh.uv) { if (SCH.R !== R) roomSit(R); return; } const x = hh.uv.x * 1600, y = (1 - hh.uv.y) * 1000; const b = (R.hits || []).find((q) => q.fn && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) { try { uiSnd("press"); hapt(.3, 30); } catch (e) {} b.fn(); bookDraw(R); } }
+  function bookClick(R, hh) { if (SCH.R !== R) { roomSit(R); return; } if (hh && !hh.uv && hh.point) { const lp = R.book.worldToLocal(hh.point.clone()); hh = { uv: { x: clamp(.5 - lp.x / .76, 0, 1), y: clamp(.5 - lp.z / .475, 0, 1) } }; } if (!hh || !hh.uv) return; const x = hh.uv.x * 1600, y = (1 - hh.uv.y) * 1000; const b = (R.hits || []).find((q) => q.fn && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h); if (b) { try { uiSnd("press"); hapt(.3, 30); } catch (e) {} b.fn(); bookDraw(R); } }
   /* lapozás: egy lap átfordul a gerinc körül */
   function bookFlip(R, dir) { bookDraw(R); try { const top = R.bookTop; if (!RB.flipM) { RB.flipM = std({ color: "#f3ead2", roughness: .9, side: THREE.DoubleSide }); } const pg = new THREE.PlaneGeometry(.38, .47); pg.rotateX(-Math.PI / 2); pg.translate(-.19, 0, 0); const m = new THREE.Mesh(pg, RB.flipM); m.position.y = .075; top.add(m); m.rotation.z = dir > 0 ? 0 : -Math.PI; R.flip = { m, t: 0, dir }; try { uiSnd("hover"); } catch (e) {} } catch (e) {} }
   /* ---- hang: előre felvett természetes beszéd; ha nincs, a böngésző magyar géphangja ---- */
   const VOX = new Map();
   function roomHush() { try { speechSynthesis.cancel(); } catch (e) {} if (RB.src) { try { RB.src.stop(); } catch (e) {} RB.src = null; } }
+  function roomGreet(R) { roomHush(); if (!SCH.voice || !GREET[R.h.id]) return; R.greetEnd = W.t + GREET[R.h.id].length / 13; const url = `hang/lecke/${R.h.id}/koszon.mp3`, a = T.ac(); if (R.tch) { R.tch.c.act("integet"); R.tch.c.say(GREET[R.h.id].length / 13); }
+    const play = (buf) => { if (SCH.R !== R || R.playing) return; try { const src = a.createBufferSource(); src.buffer = buf; let out = null; try { const v = new THREE.Vector3(); (R.tch ? R.tch.root : R.board).getWorldPosition(v); v.y += 1.5; const sp = sp3(v, "vox", 4); out = sp && sp.node; } catch (e) {} src.connect(out || T.outBus("vox") || T.outBus()); src.start(); RB.src = src; R.greetEnd = W.t + buf.duration + .3; if (R.tch) R.tch.c.say(buf.duration); } catch (e) {} };
+    if (!a) return; const v = VOX.get(url); if (v && v !== "x" && !v.then) { play(v); return; } const pr = (v && v.then) ? v : fetch(url).then((r) => { if (!r.ok) throw 0; return r.arrayBuffer(); }).then((ab) => new Promise((res, rej) => a.decodeAudioData(ab, res, rej))).then((b) => { VOX.set(url, b); return b; }).catch(() => { VOX.set(url, "x"); return null; }); if (!v) VOX.set(url, pr); pr.then((b) => { if (b && b.duration) play(b); }); }
   function roomSpeak(R) { roomHush(); R.adur = 0; R.wait = 0; if (!SCH.voice) return; const L = R.lessons[R.i], url = `hang/lecke/${R.h.id}/${R.i}.mp3`, i0 = R.i;
     const a = T.ac(); const play = (buf) => { if (SCH.R !== R || R.i !== i0 || !R.playing) return; try { const src = a.createBufferSource(); src.buffer = buf; let out = null; try { const v = new THREE.Vector3(); (R.tch ? R.tch.root : R.board).getWorldPosition(v); v.y += 1.5; const sp = sp3(v, "vox", 4); out = sp && sp.node; } catch (e) {} src.connect(out || T.outBus("vox") || T.outBus()); src.start(); RB.src = src; R.adur = buf.duration; R.adurI = i0; R.t = 0; R.wait = 0; if (R.tch) R.tch.c.say(buf.duration); } catch (e) { fallback(); } };
     const fallback = () => { R.wait = 0; try { const ss = window.speechSynthesis; if (!ss) return; const v = ss.getVoices().find((q) => /^hu/i.test(q.lang)); if (!v) return; const u = new SpeechSynthesisUtterance((L.t + ". " + L.say).replace(/[„”]/g, "")); u.voice = v; u.lang = v.lang; u.rate = .98; u.pitch = R.h.voice === "imre" ? .85 : 1.05; ss.speak(u); if (R.tch) R.tch.c.say(roomDur(R, R.i) - 2.5); } catch (e) {} };
@@ -382,34 +399,32 @@
   function roomPause(R) { R.playing = !R.playing; if (!R.playing) roomHush(); else roomSpeak(R); roomDraw(R); bookDraw(R); if (SCH.LB) SCH.LB.dirty = 1; }
   /* ---- leülés / felállás ---- */
   function roomSit(R) { if (!HB.walk) hbWalk(true); if (SCH.R !== R) roomEnter(R); HB.pos = { x: R.h.seat.x, z: R.h.seat.z }; HB.seat = R; R.sitAt = W.t; try { faceYaw(R.yaw + Math.PI); } catch (e) {} if (!T.inVR) { try { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.08; } catch (e) {} }
-    try { uiSnd("success"); } catch (e) {} if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } roomEnter(R); bookDraw(R); roomBar(); }
-  function roomStand() { const R = HB.seat; HB.seat = null; if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } if (R) { HB.pos = { x: R.h.seat.x - Math.sin(R.yaw) * .9, z: R.h.seat.z - Math.cos(R.yaw) * .9 }; } if (SCH.R) { const B = roomLB(SCH.R); B.show(true); roomDock(B); } }
+    try { uiSnd("success"); } catch (e) {} if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } roomEnter(R); bookDraw(R); roomBar(); if (!R.playing && !(R.t > 0)) R.autoAt = Math.max(W.t + 1.6, R.greetEnd || 0); }
+  function roomStand() { const R = HB.seat; HB.seat = null; if (R) R.autoAt = 0; if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } if (R) { HB.pos = { x: R.h.seat.x - Math.sin(R.yaw) * .9, z: R.h.seat.z - Math.cos(R.yaw) * .9 }; } if (SCH.R && !T.inVR) { const B = roomLB(SCH.R); B.show(true); roomDock(B); } }
   /* ülve 2D-ben: kis sáv alul (a könyvre lenézés, szünet, felállás) */
   function roomBar() { if (T.inVR) return; if (SCH.BL && UIB.list.indexOf(SCH.BL) >= 0) return; SCH.BL = uiBoard({ w: 1500, h: 150, mw: 1.15, dist: 1.05, y: -.5, fps: 3, draw: (B, g) => { const R = SCH.R; if (!R) return; g.fillStyle = "rgba(8,26,48,.9)"; uiRR(g, 0, 0, 1500, 150, 26); g.fill();
       B.btn(16, 22, 470, 106, "📖 Lenézek a könyvre", () => { try { const lc = T.cam.components["look-controls"]; lc.pitchObject.rotation.x = lc.pitchObject.rotation.x < -.4 ? -.08 : -.72; } catch (e) {} }, { fs: 30 });
       B.btn(500, 22, 340, 106, R.playing ? "⏸ Szünet" : "▶ Indítás", () => { if (!R.playing && R.t === 0 && !R.done[R.i]) { R.mode = "all"; roomGo(R, R.i, true); } else roomPause(R); B.dirty = 1; }, { fs: 30 });
       B.btn(854, 22, 300, 106, "Következő ▶", () => { roomGo(R, R.i + 1, true); B.dirty = 1; }, { fs: 28, off: R.i >= R.lessons.length - 1 }); B.btn(1168, 22, 316, 106, "🧍 Felállok", () => roomStand(), { fs: 30 }); } }); SCH.BL.show(true); roomDock(SCH.BL); setTimeout(() => roomDock(SCH.BL), 60); }
   /* állva a házban: a vezérlő tábla (felirat + gombok), mint eddig – és a „Leülök” gomb */
+  /* állva a házban (csak 2D-ben): keskeny sáv alul – VR-ben semmi nem lebeg előtted, minden a tenyérmenüben */
   function roomLB(R) {
-    if (SCH.LB && UIB.list.indexOf(SCH.LB) >= 0) return SCH.LB; const isk = R.h.id === "isk";
-    SCH.LB = uiBoard({ w: 1500, h: 420, mw: 1.15, dist: 1.05, y: -.42, side: .35, fps: 3, bar: 60, draw: (B, g) => { const L = R.lessons[R.i];
-      g.fillStyle = "rgba(8,26,48,.94)"; uiRR(g, 0, 0, 1500, 420, 28); g.fill(); g.strokeStyle = R.h.col; g.lineWidth = 6; uiRR(g, 3, 3, 1494, 414, 26); g.stroke();
-      g.fillStyle = "#ffd166"; g.font = `900 30px ${UIF}`; g.fillText(`🎓 ${R.h.name} · ${TEACH_N[R.h.teacher] || ""} · ${R.i + 1}/${R.lessons.length} · ${L.t}`.slice(0, 92), 30, 50);
-      g.fillStyle = "rgba(235,242,250,.92)"; g.font = `600 24px ${UIF}`; uiWrap(g, R.playing || R.t > 0 ? "„" + L.say + "”" : "Ülj le a táblával szemben álló székre (bökj rá) – előtted a leckekönyv: abból választhatsz leckét, vagy kérheted a teljes anyagot sorban.", 30, 92, 1440, 31, 4);
-      B.btn(24, 238, 470, 84, "🪑 Leülök a táblával szemben", () => roomSit(R), { gold: true, fs: 28 });
-      B.btn(508, 238, 300, 84, R.playing ? "⏸ Szünet" : "▶ Teljes anyag", () => { if (R.playing || R.t > 0) roomPause(R); else { R.mode = "all"; roomGo(R, 0, true); } B.dirty = 1; }, { fs: 28 });
-      B.btn(822, 238, 230, 84, "◀ Előző", () => roomGo(R, R.i - 1, true), { off: R.i === 0, fs: 26 }); B.btn(1066, 238, 260, 84, "Következő ▶", () => roomGo(R, R.i + 1, true), { off: R.i >= R.lessons.length - 1, fs: 26 }); B.btn(1340, 238, 136, 84, SCH.voice ? "🔊" : "🔇", () => { SCH.voice = !SCH.voice; if (!SCH.voice) roomHush(); B.dirty = 1; }, { fs: 30 });
-      if (isk) B.btn(24, 334, 600, 66, "🎓 Tovább az oktatópályára ▶", () => schoolLeave(true), { gold: true, fs: 24 });
-      B.btn(isk ? 640 : 24, 334, isk ? 836 : 1452, 66, "‹ Ki a házból, vissza a mólóra", () => schoolLeave(false), { fs: 24 }); } });
+    if (SCH.LB && UIB.list.indexOf(SCH.LB) >= 0) return SCH.LB;
+    SCH.LB = uiBoard({ w: 1500, h: 150, mw: 1.15, dist: 1.05, y: -.5, fps: 3, draw: (B, g) => { g.fillStyle = "rgba(8,26,48,.9)"; uiRR(g, 0, 0, 1500, 150, 26); g.fill(); g.strokeStyle = R.h.col; g.lineWidth = 5; uiRR(g, 3, 3, 1494, 144, 24); g.stroke();
+      B.btn(16, 22, 420, 106, "🪑 Leülök", () => roomSit(R), { gold: true, fs: 32 });
+      B.btn(450, 22, 400, 106, R.playing ? "⏸ Szünet" : "▶ Teljes anyag", () => { if (R.playing || R.t > 0) roomPause(R); else { R.mode = "all"; roomGo(R, 0, true); } B.dirty = 1; }, { fs: 30 });
+      B.btn(864, 22, 140, 106, SCH.voice ? "🔊" : "🔇", () => { SCH.voice = !SCH.voice; if (!SCH.voice) roomHush(); B.dirty = 1; }, { fs: 34 });
+      if (R.h.id === "isk") B.btn(1018, 22, 230, 106, "🎓 Pálya ▶", () => schoolLeave(true), { fs: 28 });
+      B.btn(R.h.id === "isk" ? 1262 : 1018, 22, R.h.id === "isk" ? 222 : 466, 106, "🚪 Ki", () => schoolLeave(false), { fs: 30 }); } });
     return SCH.LB; }
-  function roomDock(B) { if (B && B.dom && B.dcv) { B.dom.style.alignItems = "flex-end"; B.dom.style.justifyContent = "center"; B.dom.style.background = "transparent"; B.dom.style.pointerEvents = "none"; B.dcv.style.pointerEvents = "auto"; B.dcv.style.maxWidth = "min(58vw, 980px)"; B.dcv.style.marginBottom = "1.2vh"; } }
+  function roomDock(B) { if (B && B.dom && B.dcv) { B.dom.style.alignItems = "flex-end"; B.dom.style.justifyContent = "center"; B.dom.style.background = "transparent"; B.dom.style.pointerEvents = "none"; B.dcv.style.pointerEvents = "auto"; B.dcv.style.maxWidth = "min(58vw, 980px)"; B.dcv.style.marginBottom = "max(12vh, 92px)"; } }
   function schoolLeave(toCourse) { const R = SCH.R; roomHush(); if (R) R.playing = false; HB.seat = null; if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; }
-    if (toCourse) { wzStartTut(); return; } HB.pos = { x: 1.6, z: 1.2 }; if (HB.walk) hbBoard("walk"); }
+    if (toCourse) { wzStartTut(); return; } const o = R && R.h.out; HB.pos = o ? { x: o.x, z: o.z } : { x: 1.6, z: 1.2 }; if (o) { try { faceYaw(Math.atan2(-(o.lx - o.x), -(o.lz - o.z))); } catch (e) {} } }
   /* belépés a menüből („🎓 Oktatás”): leülsz az iskolában, és a nagypapa sorban elkezdi a teljes anyagot */
   function hbSchool() { const R = ROOMS.isk; if (!R) { wzStartTut(); return; } hbWalk(true); roomSit(R); R.mode = "all"; setTimeout(() => roomGo(R, 0, true), 400); }
   function roomEnter(R) { if (SCH.R === R) return; if (SCH.R) roomExit(SCH.R); SCH.R = R; R.board.material.map = RB.tex; R.board.material.needsUpdate = true; R.book.material.map = RB.btex; R.book.material.needsUpdate = true; roomFigs(R, true); roomDraw(R); bookDraw(R);
-    if (HB.B) HB.B.show(false); if (!HB.seat) { const B = roomLB(R); B.show(true); roomDock(B); setTimeout(() => roomDock(B), 60); } }
-  function roomExit(R) { roomHush(); R.playing = false; R.board.material.map = R.statT; R.board.material.needsUpdate = true; R.book.material.map = R.bookStat; R.book.material.needsUpdate = true; SCH.R = null; if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } HB.seat = null; if (HB.walk) hbBoard("walk"); }
+    if (HB.B) HB.B.show(false); if (!HB.seat && !T.inVR) { const B = roomLB(R); B.show(true); roomDock(B); setTimeout(() => roomDock(B), 60); } if (!R.playing && W.t - (R.greetT || -99) > 45) { R.greetT = W.t; setTimeout(() => { if (SCH.R === R && !R.playing) roomGreet(R); }, 500); } }
+  function roomExit(R) { roomHush(); R.playing = false; R.autoAt = 0; R.board.material.map = R.statT; R.board.material.needsUpdate = true; R.book.material.map = R.bookStat; R.book.material.needsUpdate = true; SCH.R = null; if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } HB.seat = null; }
   function roomAt(p) { for (const id in ROOMS) { const B = ROOMS[id].h.box; if (p.x > B.x0 && p.x < B.x1 && p.z > B.z0 && p.z < B.z1) return ROOMS[id]; } return null; }
   function schoolTick(dt) {
     if (!SCH.built) return; const p = HB.pos || { x: 0, z: 0 }; const R = HB.walk ? roomAt(p) : null;
@@ -422,11 +437,14 @@
       if (near && !Q.tch) roomFigs(Q, true); else if (!near && Q.tch && d > 22 && SCH.R !== Q) roomFigs(Q, false);
       if (!Q.tch) continue; const vis = SCH.R === Q; Q.tch.root.visible = vis; Q.studs.forEach((f) => { f.root.visible = vis; }); if (!vis) continue;
       const tc = Q.tch.c; if (cam) tc.lookAt(cam); tc.update(dt, W.t);
-      Q.studs.forEach((f) => { const c = f.c; if (SCH.R === Q && Q.tch) { const v = new THREE.Vector3(); Q.tch.root.getWorldPosition(v); v.y += 1.6; c.lookAt(v); } c.update(dt, W.t); figSit(f, .44);
+      /* a tanár feléd fordul (beszéd közben kicsit a tábla felé is), simán */
+      { const t0 = Q.h.tpos, ty = Math.atan2(p.x - t0.x, p.z - t0.z), by = Math.atan2(Q.h.board.x - t0.x, Q.h.board.z - t0.z); let d2 = by - ty; d2 = Math.atan2(Math.sin(d2), Math.cos(d2)); const tgt = ty + (Q.playing ? d2 * .3 : 0), r0 = Q.tch.root.rotation.y; let dd = tgt - r0; dd = Math.atan2(Math.sin(dd), Math.cos(dd)); Q.tch.root.rotation.y = r0 + dd * Math.min(1, dt * 2.5); }
+      Q.studs.forEach((f) => { const c = f.c; if (SCH.R === Q && Q.tch) { const v = new THREE.Vector3(); Q.tch.root.getWorldPosition(v); v.y += 1.6; c.lookAt(v); } c.update(dt, W.t); figSit(f, f.st.seatY || (Q.h.id === "isk" ? .51 : .47));
         f.nx -= dt; if (f.nx <= 0) { f.nx = 5 + Math.random() * 7; if (SCH.R === Q && Q.playing) c.act(["bolint", "ir", "bolint", f.st.k === "gyerek" ? "integet" : "bolint"][(Math.random() * 4) | 0]); } }); }
     if (HB.signLbl) HB.signLbl.visible = !SCH.R; for (const id in ROOMS) if (ROOMS[id].chairG) ROOMS[id].chairG.visible = HB.seat !== ROOMS[id];
     if (R && R.flip) { const f = R.flip; f.t += dt / .45; const k = kEase(Math.min(1, f.t)); f.m.rotation.z = f.dir > 0 ? -k * Math.PI : -(1 - k) * Math.PI; if (f.t >= 1) { f.m.parent.remove(f.m); f.m.geometry.dispose(); R.flip = null; } }
     if (!R) return;
+    if (R.autoAt && HB.seat === R && W.t > R.autoAt && !R.playing) { R.autoAt = 0; if (!(R.t > 0)) { R.mode = "all"; roomGo(R, 0, true); } }
     if (R.playing && !R.wait) { R.t += dt; if (R.t > roomDur(R, R.i)) { R.done[R.i] = 1; if (R.mode === "all" && R.i < R.lessons.length - 1) roomGo(R, R.i + 1); else { R.playing = false; R.t = roomDur(R, R.i); if (R.tch) R.tch.c.act("bolint"); R.studs.forEach((f) => f.c.act(f.st.k === "gyerek" ? "tapsol" : "bolint")); bookDraw(R); if (SCH.LB) SCH.LB.dirty = 1; if (SCH.BL) SCH.BL.dirty = 1; } } }
     else if (R.wait) { R.wait += dt; if (R.wait > 4) R.wait = 0; }
     RB.acc = (RB.acc || 0) + dt; if (RB.acc > 1 / 24) { RB.acc = 0; roomDraw(R); }
