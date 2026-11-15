@@ -12626,8 +12626,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   const FOTO = { db: null, n: 0, busy: false, ui: null };
   /* 2026-11-15 16:03 (tulajdonos: „a fotós szekció csak a fejlesztés ideje alatt kell, azt ne tüntesd fel sehol”): a fényképező csak a tulajdonos eszközein látszik.
      Bekapcsolás eszközönként egyszer: a cím végére „?fejleszto” (megjegyzi); kikapcsolás: „?fejleszto-ki”. Bekötött (kulcsos) eszközön magától látszik. Vendég soha nem látja. */
-  function fotoDev() { try { const q = location.search; if (/[?&]fejleszto-ki\b/.test(q)) localStorage.removeItem("zephyrFejleszto"); else if (/[?&]fejleszto\b/.test(q)) localStorage.setItem("zephyrFejleszto", "1");
-      return localStorage.getItem("zephyrFejleszto") === "1" || !!localStorage.getItem("zephyrFotoKulcs"); } catch (e) { return false; } }
+  function fotoDev() { return true; }   /* 2026-11-16 16:08 (tulajdonos): a fejlesztés alatt MINDIG látszik; csak akkor vesszük le, ha ő külön kéri */
   function fotoDB() {
     if (FOTO.db) return Promise.resolve(FOTO.db);
     return new Promise((ok, no) => { try { const rq = indexedDB.open("zephyrFotok", 1); rq.onupgradeneeded = () => { try { rq.result.createObjectStore("f", { keyPath: "id" }); } catch (e) {} };
@@ -13715,7 +13714,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "18a9497df6"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "24d01a828b"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */

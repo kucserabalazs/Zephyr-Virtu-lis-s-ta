@@ -12610,8 +12610,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   const FOTO = { db: null, n: 0, busy: false, ui: null };
   /* 2026-11-15 16:03 (tulajdonos: „a fotós szekció csak a fejlesztés ideje alatt kell, azt ne tüntesd fel sehol”): a fényképező csak a tulajdonos eszközein látszik.
      Bekapcsolás eszközönként egyszer: a cím végére „?fejleszto” (megjegyzi); kikapcsolás: „?fejleszto-ki”. Bekötött (kulcsos) eszközön magától látszik. Vendég soha nem látja. */
-  function fotoDev() { try { const q = location.search; if (/[?&]fejleszto-ki\b/.test(q)) localStorage.removeItem("zephyrFejleszto"); else if (/[?&]fejleszto\b/.test(q)) localStorage.setItem("zephyrFejleszto", "1");
-      return localStorage.getItem("zephyrFejleszto") === "1" || !!localStorage.getItem("zephyrFotoKulcs"); } catch (e) { return false; } }
+  function fotoDev() { return true; }   /* 2026-11-16 16:08 (tulajdonos): a fejlesztés alatt MINDIG látszik; csak akkor vesszük le, ha ő külön kéri */
   function fotoDB() {
     if (FOTO.db) return Promise.resolve(FOTO.db);
     return new Promise((ok, no) => { try { const rq = indexedDB.open("zephyrFotok", 1); rq.onupgradeneeded = () => { try { rq.result.createObjectStore("f", { keyPath: "id" }); } catch (e) {} };
