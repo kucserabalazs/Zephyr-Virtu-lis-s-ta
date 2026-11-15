@@ -2389,5 +2389,7 @@
  "{#}. december {#}. (péntek)": "{#}년 12월 {#}일 (금요일)",
  "{#}. december {#}. (szombat)": "{#}년 12월 {#}일 (토요일)",
  "{#}. december {#}. (vasárnap)": "{#}년 12월 {#}일 (일요일)",
- "dec. {#}.": "12월 {#}일"
+ "dec. {#}.": "12월 {#}일",
+ "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "같은 패를 짝지으세요! 틀린 짝은 위쪽 보관함으로 갑니다 – 가득 차면 게임 끝."
 }

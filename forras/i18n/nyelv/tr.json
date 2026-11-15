@@ -2389,5 +2389,7 @@
  "{#}. december {#}. (péntek)": "{#} Aralık {#} (cuma)",
  "{#}. december {#}. (szombat)": "{#} Aralık {#} (cumartesi)",
  "{#}. december {#}. (vasárnap)": "{#} Aralık {#} (pazar)",
- "dec. {#}.": "{#} Ara"
+ "dec. {#}.": "{#} Ara",
+ "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Aynı taşları eşleştir! Yanlış çift üstteki tepsiye gider – dolarsa oyun biter."
 }

@@ -2389,5 +2389,7 @@
  "{#}. december {#}. (péntek)": "ডিসেম্বর {#}, {#} (শুক্রবার)",
  "{#}. december {#}. (szombat)": "ডিসেম্বর {#}, {#} (শনিবার)",
  "{#}. december {#}. (vasárnap)": "ডিসেম্বর {#}, {#} (রবিবার)",
- "dec. {#}.": "{#} ডিসে"
+ "dec. {#}.": "{#} ডিসে",
+ "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "একই রকম টাইল মেলাও! ভুল জোড়া উপরের ট্রেতে যায় – ট্রে ভরে গেলে খেলা শেষ।"
 }

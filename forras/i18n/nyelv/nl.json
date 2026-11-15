@@ -2391,5 +2391,7 @@
  "{#}. december {#}. (péntek)": "{#}, {#} december (vrijdag)",
  "{#}. december {#}. (szombat)": "{#}, {#} december (zaterdag)",
  "{#}. december {#}. (vasárnap)": "{#}, {#} december (zondag)",
- "dec. {#}.": "{#} dec"
+ "dec. {#}.": "{#} dec",
+ "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Combineer gelijke stenen! Een fout paar gaat naar het bakje boven – is het vol, dan is het spel voorbij."
 }

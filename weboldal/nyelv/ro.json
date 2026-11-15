@@ -2391,5 +2391,7 @@
  "{#}. december {#}. (péntek)": "{#}, decembrie {#} (vineri)",
  "{#}. december {#}. (szombat)": "{#}, decembrie {#} (sâmbătă)",
  "{#}. december {#}. (vasárnap)": "{#}, decembrie {#} (duminică)",
- "dec. {#}.": "{#} dec."
+ "dec. {#}.": "{#} dec.",
+ "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Potrivește piesele identice! O pereche greșită ajunge în tava de sus – când se umple, jocul s-a terminat."
 }

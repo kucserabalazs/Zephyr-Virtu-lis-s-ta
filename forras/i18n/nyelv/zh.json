@@ -2389,5 +2389,7 @@
  "{#}. december {#}. (péntek)": "{#}年12月{#}日 (星期五)",
  "{#}. december {#}. (szombat)": "{#}年12月{#}日 (星期六)",
  "{#}. december {#}. (vasárnap)": "{#}年12月{#}日 (星期日)",
- "dec. {#}.": "12月{#}日"
+ "dec. {#}.": "12月{#}日",
+ "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "配对相同的牌！配错的牌会进入上方的托盘——托盘满了，游戏结束。"
 }
