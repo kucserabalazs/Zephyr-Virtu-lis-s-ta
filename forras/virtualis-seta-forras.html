@@ -6519,7 +6519,7 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     ac: "A ház névadója, Zephürosz, a görög mitológia enyhe nyugati szele – a klíma az ő hűsítő munkáját végzi el szélcsendben.",
     kettle: "A tengerészek a sebességet ma is csomóban mérik: 1 csomó = 1 tengeri mérföld (1852 méter) óránként.",
     bedding: "A hajókon az ágyat kojának hívják, a függőágyat pedig a tengerészek évszázadokig minden reggel feltekerve vitték a fedélzetre.",
-    tv: "A hajókon a bal oldal neve „backbord” (piros lámpa), a jobb oldalé „steuerbord” (zöld lámpa) – a távirányító piros gombját így könnyű megjegyezni.",
+    tv: "A hajókon a bal oldal neve „port” (piros lámpa), a jobb oldalé „starboard” (zöld lámpa) – a távirányító piros gombját így könnyű megjegyezni.",
     terraceset: "Balatoni viharjelzés: percenként 45 villanás az elsőfok (figyelmeztetés), 90 villanás a másodfok – ilyenkor tilos fürdeni és vízre szállni.",
     shower: "Egy átlagos zuhanyzás 40–60 liter vizet használ – a bojler 50 literes, ezért érdemes nem túl sokáig folyatni a meleg vizet.",
     towel: "A vitorlázók szerint a törölköző a hajó legfontosabb felszerelése – közvetlenül a mentőmellény után."
@@ -10288,8 +10288,8 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         ["Bak (kikötőbak)", "Erre kötjük ki a hajót a kikötőben.", () => svg(`<path d="M0 130 H300 V190 H0 Z" fill="#b98a55"/><path d="M110 122 H190 V132 H110 Z M128 132 V150 H138 V132 M162 132 V150 H172 V132" fill="#444" stroke="${N}"/><path d="M40 70 Q120 150 150 126 Q170 110 150 126 Q190 150 262 60" fill="none" stroke="#e8dcc0" stroke-width="6"/>`)],
         ["Puffer (fender)", "Felfújt „párna” a hajó oldalán: kikötéskor védi a testet.", () => svg(`<path d="M0 150 Q75 142 150 150 T300 150 V190 H0 Z" fill="#9fc9dc"/><path d="M40 60 H260 L250 150 H50 Z" fill="${S}" stroke="${N}" stroke-width="2"/><rect x="140" y="80" width="22" height="66" rx="11" fill="#fff" stroke="${N}" stroke-width="2"/><path d="M151 60 V80" stroke="#e8dcc0" stroke-width="4"/>`)]]],
       ["Oldalak és irányok", [
-        ["Backbord (bal oldal)", "A hajó BAL oldala (ha az orr felé nézel). Színe a piros.", () => svg(`${boat(150, 96, 0, S, 0, 2.2)}<path d="M150 40 C128 66 126 116 135 150 L150 150 Z" fill="rgba(214,31,38,.55)"/><text x="80" y="100" text-anchor="middle" class="zsd-t" fill="${R}">BACKBORD</text>`)],
-        ["Steuerbord (jobb oldal)", "A hajó JOBB oldala. Színe a zöld.", () => svg(`${boat(150, 96, 0, S, 0, 2.2)}<path d="M150 40 C172 66 174 116 165 150 L150 150 Z" fill="rgba(40,160,80,.55)"/><text x="226" y="100" text-anchor="middle" class="zsd-t" fill="#1d7a3c">STEUERBORD</text>`)],
+        ["Port (bal oldal)", "A hajó BAL oldala (ha az orr felé nézel). Színe a piros.", () => svg(`${boat(150, 96, 0, S, 0, 2.2)}<path d="M150 40 C128 66 126 116 135 150 L150 150 Z" fill="rgba(214,31,38,.55)"/><text x="80" y="100" text-anchor="middle" class="zsd-t" fill="${R}">PORT</text>`)],
+        ["Starboard (jobb oldal)", "A hajó JOBB oldala. Színe a zöld.", () => svg(`${boat(150, 96, 0, S, 0, 2.2)}<path d="M150 40 C172 66 174 116 165 150 L150 150 Z" fill="rgba(40,160,80,.55)"/><text x="226" y="100" text-anchor="middle" class="zsd-t" fill="#1d7a3c">STARBOARD</text>`)],
         ["Luv", "A hajónak az az oldala, amerről a szél fúj (szél felőli oldal).", () => svg(`${wind(60, 100, 90, "SZÉL")}${boat(170, 100, 0, S, 1, 1.6)}<text x="118" y="60" text-anchor="middle" class="zsd-t">LUV</text><text x="232" y="60" text-anchor="middle" class="zsd-t" opacity=".4">lee</text>`)],
         ["Lee", "A hajó szél alatti oldala – amerre a vitorlák állnak.", () => svg(`${wind(60, 100, 90, "SZÉL")}${boat(170, 100, 0, S, 1, 1.6)}<text x="118" y="60" text-anchor="middle" class="zsd-t" opacity=".4">luv</text><text x="232" y="60" text-anchor="middle" class="zsd-t">LEE</text>`)],
         ["Jobbcsapás", "A szél jobbról éri a hajót, a bum a bal oldalon van. Elsőbbsége van!", () => course(45, -1, "jobbcsapás")], ["Balcsapás", "A szél balról éri a hajót, a bum a jobb oldalon van. Ki kell térnie.", () => course(-45, 1, "balcsapás")]]],
@@ -15845,7 +15845,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const side = R() < .3 ? (R() < .5 ? -1 : 1) * (.9 + R() * .5) : (R() - .5) * .9;   /* néha oldalszél */
       const str = .8 + R() * .5;
       const co = { name: tp.n, m, lz, lh, wind: side, wstr: str, lvl };
-      /* bójakerülés: minden bóját backbord felől (bal kéz felől) kell hagyni; a szükséges „körbeérési” szög a pálya töréséből */
+      /* bójakerülés: minden bóját port felől (bal kéz felől) kell hagyni; a szükséges „körbeérési” szög a pálya töréséből */
       const P = [[0, lz]].concat(m, [[0, lz - 4]]), hdg = (a, b) => Math.atan2(b[0] - a[0], b[1] - a[1]);
       co.legs = m.map((q, i) => { const hIn = hdg(P[i], q), hOut = hdg(q, P[i + 2]), turn = ad(hOut - hIn); const sw = turn <= 0 ? turn : 0; return { hIn, hOut, sw, need: Math.max(.8, Math.PI - turn) * .6 }; });
       placeCommittee(co); return co;
@@ -15902,13 +15902,13 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           if (dist < 1.6) { b.v *= .5; const pu = 1.6 / Math.max(.2, dist); b.X = m[0] + dx * pu; b.Z = m[1] + dz * pu; if (b.c.me && !b.hitMsg) { b.hitMsg = 1; S.msg = "Hozzáértél a bójához! Kerüld el a bójákat."; } }
           if (dist < 24) { const a = Math.atan2(dx, dz); if (b.lastA != null) b.acc += ad(a - b.lastA); b.lastA = a; } else { b.lastA = null; if (dist > 40) b.acc = 0; }
           if (b.acc <= -lg.need && dist < 26) { b.next++; b.acc = 0; b.lastA = null; b.wp = 0; b.hitMsg = 0; if (!b.c.me) { const r = Math.random(); b.err = r < .12 ? 2 : r < .3 ? 1 : 0; b.path = null; if (b.next < NM && Math.random() < .07) b.miss = gmRnd(3, 6); } if (b.c.me) { gmSnd.coin(); S.msg = b.next < NM ? `${b.next}. bója szabályosan megkerülve – irány a ${b.next + 1}.!` : "Minden bóját megkerültél. Most térj vissza a stég előtti célvonalhoz!"; } }
-          else if (b.acc >= lg.need) { b.acc = 0; if (b.c.me) { S.msg = "Rossz oldalon kerülted! A bóját BAL kéz felől (backbord) kell hagyni – kerüld meg újra."; fxTone(300, 220, .3, .03, "triangle"); } }
+          else if (b.acc >= lg.need) { b.acc = 0; if (b.c.me) { S.msg = "Rossz oldalon kerülted! A bóját BAL kéz felől (port) kell hagyni – kerüld meg újra."; fxTone(300, 220, .3, .03, "triangle"); } }
         }
         else if (b.pen > 0) { /* büntetőkör nélkül nem lehet célba érni */ }
         else if (b.Z < CO.lz && b.X > -CO.lh - 2 && b.X < CO.lh + 2) { b.done = true; b.ft = S.t; S.res.push(b); if (b.c.me) { const pos = S.res.length; S.msg = pos === 1 ? "Győztél! Első helyen értél célba!" : `Célba értél – ${pos}. hely.`; gmSnd.win(); S.best[S.lvl] = Math.min(S.best[S.lvl] || 1e9, S.t); } else fxTone(880, 880, .2, .02, "sine"); }
       }
     }
-    /* gépi versenyző: a bóját kívülről, backbord felől kerüli (rávezető és kifutó pont), néha hibázik, és betartja a backbord–steuerbord szabályt */
+    /* gépi versenyző: a bóját kívülről, port felől kerüli (rávezető és kifutó pont), néha hibázik, és betartja a port–starboard szabályt */
     function ai(b, dt) {
       if (b.done) { const tg = S.wind + Math.PI * .6; b.rot += (gmClamp(ad(tg - b.hd), -.4, .4) - b.rot) * Math.min(1, dt * 2); return; }
       const NM = CO.m.length; let tx, tz;
@@ -15934,7 +15934,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       } else { tx = 0; tz = CO.lz - 6; }
       const br = Math.atan2(tx - b.X, tz - b.Z), d = ad(br - S.wind); let want;
       if (Math.abs(d) < .82) { if (!b.tack) b.tack = Math.sign(d) || 1; if (d * b.tack < -.32 - (b.lateTack || 0)) { b.tack = -b.tack; b.lateTack = Math.random() < .25 ? gmRnd(.1, .35) : 0; if (Math.random() < .15) b.stall = gmRnd(.8, 1.8); } want = S.wind + b.tack * .84; } else { b.tack = 0; want = br; }
-      /* backbord–steuerbord: backbordhalzon (szél balról) kitér a steuerbordhalzon haladó elől */
+      /* port–starboard: bal csapás (szél balról) kitér a jobb csapás haladó elől */
       if (b.avoid) want = b.hd + b.avoid;
       const side = Math.sign(ad(b.hd - S.wind)) || 1;
       if (side > 0) S.boats.forEach((o) => { if (o === b || o.done) return; const os = Math.sign(ad(o.hd - S.wind)) || 1; if (os > 0) return;
@@ -16460,7 +16460,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         if (S.st !== "race") return;
         S.t += dt;
         S.boats.forEach((b) => { if (b.c.me) { b.rot += ((b.done ? 0 : S.steer * 1.05) - b.rot) * Math.min(1, dt * 3.5); } else ai(b, dt); sail(b, dt); cmCollide(b); });
-        /* ütközés, backbord–steuerbord szabály, büntetőkör (360°) */
+        /* ütközés, port–starboard szabály, büntetőkör (360°) */
         S.boats.forEach((b) => { b.foulCd = Math.max(0, b.foulCd - dt); if (b.pen > 0) { b.penAcc += Math.abs(b.rot) * dt; if (b.penAcc >= Math.PI * 2) { b.pen = 0; b.penAcc = 0; if (b.c.me) { S.msg = "Letudtad a büntetőkört – hajrá!"; gmSnd.coin(); } } } });
         for (let i = 0; i < S.boats.length; i++) for (let j = i + 1; j < S.boats.length; j++) {
           const a = S.boats[i], c = S.boats[j]; if (a.done || c.done) continue;
@@ -16469,7 +16469,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
             if (d < 2.6) { const push = (2.6 - d) / 2 / Math.max(.3, d); a.X -= dx * push; a.Z -= dz * push; c.X += dx * push; c.Z += dz * push; a.v *= .9; c.v *= .9; }
             const sa = Math.sign(ad(a.hd - S.wind)) || 1, sc = Math.sign(ad(c.hd - S.wind)) || 1;
             if (sa !== sc && d < 2.8 && a.v > 1 && c.v > 1 && S.t > 4) { const port = sa > 0 ? a : c; if (!port.foulCd && !port.pen) { port.pen = 1; port.penAcc = 0; port.foulCd = 8;
-              if (port.c.me) { S.msg = "Backbordhalzon nem tértél ki! Büntetés: fordulj egy teljes kört (360°)."; fxTone(330, 220, .4, .035, "sawtooth"); }
+              if (port.c.me) { S.msg = "Bal csapáson (port) nem tértél ki! Büntetés: fordulj egy teljes kört (360°)."; fxTone(330, 220, .4, .035, "sawtooth"); }
               else if ((sa > 0 ? c : a).c.me) S.msg = `${port.c.n} nem tért ki – büntetőkört kell tennie.`; } }
           }
         }
@@ -16489,7 +16489,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         const items = CO.m.map(([X, Z], i) => ({ z: Z, d: () => raceMark(g, X, Z, t, String(i + 1), false) })).concat(S.boats.map((b) => ({ z: b.Z, d: () => { if (!boatGL(g, b, t)) boat3d(g, b, t, false); } })),
           [{ z: CO.lz, d: () => raceMark(g, -CO.lh, CO.lz, t, "", "orange") }, { z: CO.lz + .01, d: () => raceMark(g, CO.lh, CO.lz, t, "", "blue") }, { z: CO.cm.Z, d: () => committee(g, t) }]);
         items.sort((a, b) => b.z - a.z).forEach((it) => it.d());
-        /* a következő bójánál ívelt nyíl mutatja a kerülés irányát (backbord: bal kéz felől hagyni) */
+        /* a következő bójánál ívelt nyíl mutatja a kerülés irányát (port: bal kéz felől hagyni) */
         { const me = S.boats.find((q) => q.c.me); if (me && !me.done && me.next < CO.m.length && (S.st === "race" || S.st === "count")) { const m = CO.m[me.next], lg = CO.legs[me.next];
           const pm = proj(C, m[0], 0, m[1]); g.save(); g.strokeStyle = "#ffd23f"; g.fillStyle = "#ffd23f"; g.lineWidth = pm ? Math.max(3, Math.min(7, pm.s * .35)) : 3; g.lineCap = "round"; g.shadowColor = "rgba(0,0,0,.5)"; g.shadowBlur = 4; g.beginPath(); let last = null, prev = null;
           const a0 = lg.hIn + Math.PI + .3, sweep = -(lg.need / .72), n = 24;
@@ -16500,7 +16500,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         S.spray.forEach((p) => { const q = proj(C, p.X, p.Y, p.Z); if (!q) return; g.fillStyle = `rgba(255,255,255,${p.a})`; g.beginPath(); g.arc(q.x, q.y, Math.max(1, .06 * q.s), 0, 7); g.fill(); });
         L = {}; hud(g, W, H, t);
         const me = S.boats.find((b) => b.c.me);
-        if (S.st === "idle") panel(g, W, H, `${S.lvl}. pálya: ${CO.name}`, [`${CO.m.length} bója · ${windName()}`, "Kerüld meg a bójákat sorban, BAL kéz felől (backbord) –", "a sárga nyíl mutatja. Backbordhalzon tér ki,", "ütközésért büntetőkör jár. Cél: a stég előtti vonal."], "Rajt");
+        if (S.st === "idle") panel(g, W, H, `${S.lvl}. pálya: ${CO.name}`, [`${CO.m.length} bója · ${windName()}`, "Kerüld meg a bójákat sorban, BAL kéz felől (port) –", "a sárga nyíl mutatja. A bal csapású (port) tér ki,", "ütközésért büntetőkör jár. Cél: a stég előtti vonal."], "Rajt");
         else if (S.st === "count") { gmText(g, W, `${S.lvl}. pálya: ${CO.name} · ${windName()}`, ""); g.save(); g.font = `900 ${Math.min(120, W * .2)}px Manrope, Arial, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle"; g.lineWidth = 8; g.strokeStyle = "rgba(7,29,56,.75)"; const s2 = String(Math.max(1, Math.ceil(S.cd))); g.strokeText(s2, W / 2, H * .38); g.fillStyle = "#ffd978"; g.fillText(s2, W / 2, H * .38); g.restore(); }
         else if (S.st === "race") { const r = rank(), pos = r.indexOf(me) + 1, NM = CO.m.length; if (me.pen > 0) S.msg = `Büntetőkör: ${Math.round(me.penAcc / (Math.PI * 2) * 100)}% – fordulj tovább egy irányba!`; gmText(g, W, S.msg, `Idő: ${S.t.toFixed(1)} mp · helyezés: ${pos}/${S.boats.length} · ${me.done ? "célban" : me.next < NM ? "következő: " + (me.next + 1) + ". bója" : "irány a cél"}`); }
         else if (S.st === "done") {
@@ -16508,7 +16508,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           panel(g, W, H, me.done ? (S.res[0] === me ? "Győzelem!" : "Célba értél!") : "A futam véget ért", list, "Tovább: új pálya ›", "Újra ezen a pályán");
         }
       },
-      help: "◀ ▶ vagy nyilak: kormányzás · minden bóját BAL kéz felől (backbord) kell hagyni és teljesen megkerülni – a sárga nyíl mutatja · backbordhalzonon (szél balról) kitérsz · ütközésért (a rendezőhajóval is!) 360°-os büntetőkör · szemből nem halad a hajó, cirkálj · ↻ Újra: ugyanez a pálya."
+      help: "◀ ▶ vagy nyilak: kormányzás · minden bóját BAL kéz felől (port) kell hagyni és teljesen megkerülni – a sárga nyíl mutatja · bal csapáson (port, szél balról) kitérsz · ütközésért (a rendezőhajóval is!) 360°-os büntetőkör · szemből nem halad a hajó, cirkálj · ↻ Újra: ugyanez a pálya."
     };
   }
 

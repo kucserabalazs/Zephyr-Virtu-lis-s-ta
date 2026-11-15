@@ -93,7 +93,7 @@
 
   /* ---------------------------------------------------------------- a táj felépítése egy helyszínhez */
   function vrShoresSet(C, venue) {
-    W._bal = { balXY, balLL, balInLake, balHgt, balCls, balShorePt, balHarborCentre, STM };
+    W._bal = { balXY, balLL, balInLake, balHgt, balCls, balShorePt, balHarborCentre, balGround, STM };
     const S = VRR; let G = S.shoreG; if (!G) return;
     if (S.env && G.parent !== S.env && !venue.harbor) S.env.add(G);
     while (G.children.length) { const o = G.children[0]; G.remove(o); o.traverse((q) => { if (q.geometry) q.geometry.dispose(); }); }
@@ -164,7 +164,9 @@
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.BufferAttribute(col, 3)); g.setIndex(idx); W.disposables.push(g);
     const m = new THREE.Mesh(g, balMat()); m.frustumCulled = false; m.renderOrder = -3; G.add(m); return m;
   }
-  function balMat() { if (BAL.mat && !BAL.mat._gone) return BAL.mat; const m = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false }); m.userData.nightK = [.006, .008, .016]; W.disposables.push(m); BAL.mat = m; return m; }
+  /* 2026-11-15 (kikötő-jelentés 2.2 – „fekete-fehér, besötétedett háttér”): a táj anyaga világok között megmarad; ha egy ÉJSZAKAI futam után
+     (ahol a színe a nappali ~1%-ára sötétült) nyílik a kikötő, a sötét szín ragadt rajta. Újrahasználatkor a nappali szín visszaáll. */
+  function balMat() { if (BAL.mat && !BAL.mat._gone) { if (BAL.mat.userData._dc) BAL.mat.color.copy(BAL.mat.userData._dc); return BAL.mat; } const m = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false }); m.userData.nightK = [.006, .008, .016]; W.disposables.push(m); BAL.mat = m; return m; }
   function balMatL() { const m = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false }); m.userData.nightK = [.8, .48, .2]; W.disposables.push(m); return m; }
   /* összeolvasztott, napfény + pára szerint előre árnyalt geometria (darabok: [geo, szín, Matrix4]) */
   function balBake(parts, hz, mat, G) {

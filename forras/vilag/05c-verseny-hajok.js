@@ -185,12 +185,13 @@
   /* „KISÜTÉS” (tulajdonos 2026-11-14: „hogy ne zabálja a memóriát”): a távolabbi (ellenfél-) legénységen az arc és a kéz egy beállt
      kifejezésben / markolásban megfagy, és minden csont alatti részlet anyagonként egyetlen hálóvá olvad – ~120 helyett ~25 rajzolás/fő.
      A saját hajó legénysége és a bemutató modell teljes, élő részletességű marad. */
-  function famFreeze(c) {
-    for (let k = 0; k < 6; k++) { c.face.update(.5, k, { x: 0, y: 0 }); c.arms.forEach((A) => { A.hand.set("fog"); A.hand.update(.5, 0); }); }
+  /* keepHead (2026-11-15, tantermek): a fej érintetlen marad (pislogás, beszéd, tekintet), a test csontonként összeolvad – a csontváz továbbra is mozog */
+  function famFreeze(c, keepHead) {
+    for (let k = 0; k < 6; k++) { if (!keepHead) c.face.update(.5, k, { x: 0, y: 0 }); c.arms.forEach((A) => { A.hand.set(keepHead ? "laza" : "fog"); A.hand.update(.5, 0); }); }
     const bones = new Set([c.root, c.mover, c.squash, c.pelvis, c.spine, c.chest, c.neck, c.headG]);
     c.arms.forEach((A) => [A.sh, A.elbow, A.wrist].forEach((b) => bones.add(b))); c.legs.forEach((L) => [L.hip, L.knee, L.foot].forEach((b) => bones.add(b)));
     c.root.updateMatrixWorld(true); const inv = new THREE.Matrix4(), rel = new THREE.Matrix4();
-    bones.forEach((B) => { const list = []; const walk = (n) => n.children.forEach((ch) => { if (bones.has(ch)) return; if (ch.isMesh && !ch.isInstancedMesh && ch.visible && ch.geometry.attributes.normal) list.push(ch); if (!ch.isMesh || ch.children.length) walk(ch); }); walk(B);
+    bones.forEach((B) => { const hd = keepHead && B === c.headG; const list = []; const walk = (n) => n.children.forEach((ch) => { if (bones.has(ch)) return; if (ch.isMesh && !ch.isInstancedMesh && ch.visible && ch.geometry.attributes.normal && !(hd && (ch.parent !== c.head || ch.children.length || (ch.geometry.morphAttributes && Object.keys(ch.geometry.morphAttributes).length) || ch.morphTargetInfluences))) list.push(ch); if (!hd ? (!ch.isMesh || ch.children.length) : (ch === c.head)) walk(ch); }); walk(B);
       if (list.length < 2) return; inv.copy(B.matrixWorld).invert(); const buckets = new Map();
       list.forEach((m) => { const key = m.material.uuid + "|" + Object.keys(m.geometry.attributes).filter((k2) => k2 !== "uv" || m.material.map).sort().join(",") + "|" + (m.customDepthMaterial ? m.customDepthMaterial.uuid : ""); if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(m); });
       buckets.forEach((ms) => { const keepUv = !!ms[0].material.map, geos = ms.map((m) => { rel.multiplyMatrices(inv, m.matrixWorld); let g2 = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone(); g2.applyMatrix4(rel);
@@ -544,7 +545,7 @@
         const dm = new THREE.Mesh(dg, lm); lm.side = THREE.DoubleSide; body.add(dm); }); }
     const crew = [];
     if (o.crew > 1) crew.push({ p: makePerson({ top: o.top || "#203a5c", bot: "#1b2430", zvest: o.zephyr, pro: o.zephyr, shoe: o.zephyr ? "#1b1d22" : undefined, vest: o.vest || "#ffd23a", seed: (o.seed || 0) + 1, cap: o.cap || "#ffffff" }), kind: "helm" });
-    crew.push({ p: makePerson({ top: o.zephyr ? "#22262d" : o.top2 || "#e5262f", bot: "#1b2430", zvest: o.zephyr, pro: o.zephyr, shoe: o.zephyr ? "#1b1d22" : undefined, cap: o.zephyr ? "#c8102e" : undefined, vest: o.vest2 || "#ffd23a", seed: (o.seed || 0) + 3 }), kind: "trap" });   /* a játékos hajóján csak a legénység látszik (a kormányos te vagy) */
+    if (o.crew > 0) crew.push({ p: makePerson({ top: o.zephyr ? "#22262d" : o.top2 || "#e5262f", bot: "#1b2430", zvest: o.zephyr, pro: o.zephyr, shoe: o.zephyr ? "#1b1d22" : undefined, cap: o.zephyr ? "#c8102e" : undefined, vest: o.vest2 || "#ffd23a", seed: (o.seed || 0) + 3 }), kind: "trap" });   /* a játékos hajóján csak a legénység látszik (a kormányos te vagy) */
     crew.forEach((c) => { body.add(c.p); c.p.scale.setScalar(1 / SCL); });   /* az emberek valódi méretűek maradnak */
     const trapW = rodBetween(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0), .003, wire, body, 4); trapW.visible = false;
     const S = { side: 1, boom: .2, jib: .2, luff: 0, heel: 0, pitch: 0, spin: 0, awa: null, aws: 6, rud: 0, t: 0, crewS: 1, trap: 0 };

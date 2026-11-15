@@ -158,7 +158,8 @@
       B.btn(764, 856, 682, 100, "↻ Futam újrakezdése", () => { S.preB.destroy(); S.preB = null; vrSetup(S.lvl); }, { fs: 34 }); } });
     S.preB.show(true); if (!S.net && !S.paused && S.st !== "done") vrPause(true), vrPauseBoard(false), (S.menuPaused = true); }
   /* ---------------------------------------------------------------- SÉTA A KIKÖTŐBEN: a mólóra bökve / az ívvel odaugorva sétálhatsz */
-  function hbWalk(on) { wzShow(!on); HB.walk = !!on; if (on) { HB.pos = HB.pos || { x: 0, z: 0 }; hbBoard("walk"); if (HB.B) { HB.B.o.side = 0; if (T.inVR) HB.B.place(); } } }
+  function hbWalk(on) { const was = HB.walk; wzShow(!on); HB.walk = !!on; if (on && !was) { try { msStart(W.root, 2.5); } catch (e) {} }   /* kikötő-jelentés: a kisütés a séta indulásakor (nem a rejtett kikötőn) */
+    if (on) { HB.pos = HB.pos || { x: 0, z: 0 }; hbBoard("walk"); if (HB.B) { HB.B.o.side = 0; if (T.inVR) HB.B.place(); } } }
   function hbTpSurf(env, x, z, w, d) { const t = new THREE.Mesh(new THREE.BoxGeometry(w, .08, d), new THREE.MeshBasicMaterial({ visible: false })); t.position.set(x, .67, z); env.add(t); W.disposables.push(t.geometry, t.material);
     t.userData.tp = () => !!HB.walk; t.userData.xr = { click: (h) => { if (!HB.walk || !h || !h.point) return; const p = W.root.worldToLocal(h.point.clone()); HB.pos = { x: clamp(p.x, x - w / 2 + .3, x + w / 2 - .3), z: clamp(p.z, z - d / 2 + .3, z + d / 2 - .3) }; try { beep(); } catch (e) {} } };
     try { T.xr.extra.add(t); W.objs.push(t); } catch (e) {} return t; }
