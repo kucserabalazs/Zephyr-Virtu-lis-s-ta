@@ -320,7 +320,7 @@
     if (!W.active) { if (after) after(); return; }
     W.active = false; W.gen = (W.gen || 0) + 1;
     try { uiCloseAll(); } catch (e) {}
-    audioStop();
+    audioStop(); try { T.busMute(["amb", "fx", "race", "vox"], false); } catch (e) {}
     if (W.onClose) { try { W.onClose(); } catch (e) {} W.onClose = null; }
     const cvs = T.sceneEl.canvas;
     cvs.removeEventListener("pointermove", on2DMove); cvs.removeEventListener("pointerdown", on2DDown); cvs.removeEventListener("pointerup", on2DUp); cvs.style.cursor = "";
@@ -332,7 +332,7 @@
     W.root && W.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
     W.disposables.forEach((d) => { try { d.dispose(); } catch (e) {} });
     Object.keys(TEXC).forEach((k) => delete TEXC[k]); Object.keys(TX).forEach((k) => delete TX[k]); Object.keys(HX).forEach((k) => delete HX[k]);
-    W.disposables = []; W.objs = []; W.root = null; W.panel = null; W.spec = null;
+    W.disposables = []; W.objs = []; W.root = null; W.panel = null; W.spec = null; W.kind = null;   /* 2026-11-15 (szakértői jelentés B.8): bezárás után a kind ne maradjon „race” */
     if (W.hud) { W.hud.el.remove(); W.hud = null; }
     document.body.classList.remove("world-on");
     const sky = T.sky, sm = sky && sky.getObject3D("mesh");

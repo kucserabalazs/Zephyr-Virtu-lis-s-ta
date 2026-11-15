@@ -641,7 +641,7 @@
     VRR.lineM.position.set(mx, .05, mz); VRR.lineM.scale.set(Math.hypot(C.line.b.x - C.line.a.x, C.line.b.z - C.line.a.z), 1, 1); VRR.lineM.rotation.z = -Math.atan2(C.line.b.z - C.line.a.z, C.line.b.x - C.line.a.x);
     /* a hajók a vonal alatt (szél alatt) 70–110 m-re, halzon; 45 mp a rajtig */
     const back = (d, s) => ({ x: -C.u[0] * d + C.c[0] * s, z: -C.u[1] * d + C.c[1] * s });
-    let ST = vrStartPlace(C); if (VRR.net) ST = vrNetSetup0(ST); const p0 = ST.me; Object.assign(VRR, { wx: null, fox: 0, foz: 0, x: p0.x, z: p0.z, b: p0.b, v: p0.v, limWarn: 0, briefShown: false, doneWT: 0, del: 0, wa: 0, heel: 0, lastSide: 0, tackT: 0, next: 0, t: -45, st: "pre", horns: {}, fin: null, started: false, ocs: 0, sp: null, msg: "Rajt 45 mp múlva – állj be a vonal mögé!", msgT: 6, ocs: 0, res: [], pen: 0, penAcc: 0, penLast: 0, foul: null, fouls: [], _tkg: false, _sd0: null, doneT: 0, prevSide: null, dnf: false, _mi: -1, nearMk: 0, hailT: 0, guideT: 0, offT: 0 });
+    let ST = vrStartPlace(C); if (VRR.net) ST = vrNetSetup0(ST); const p0 = ST.me; Object.assign(VRR, { wx: null, fox: 0, foz: 0, x: p0.x, z: p0.z, b: p0.b, v: p0.v, limWarn: 0, briefShown: false, doneWT: 0, del: 0, wa: 0, heel: 0, lastSide: 0, tackT: 0, next: 0, t: (() => { try { return localStorage.getItem("zephyr-rajt-valodi") === "1" ? -300 : -45; } catch (e) { return -45; } })(), t0: (() => { try { return localStorage.getItem("zephyr-rajt-valodi") === "1" ? -300 : -45; } catch (e) { return -45; } })(), st: "pre", horns: {}, fin: null, started: false, ocs: 0, sp: null, msg: "Rajt 45 mp múlva – állj be a vonal mögé!", msgT: 6, ocs: 0, res: [], pen: 0, penAcc: 0, penLast: 0, foul: null, fouls: [], _tkg: false, _sd0: null, doneT: 0, prevSide: null, dnf: false, _mi: -1, nearMk: 0, hailT: 0, guideT: 0, offT: 0 });
     VRR.riv.forEach((r, i) => { const p = ST.riv[i];   /* 2026-11-14: véletlen, tiszta rajthelyek (vrStartPlace) */ Object.assign(r, { x: p.x, z: p.z, b: p.b, v: p.v, next: 0, tack: wrapA(p.b - C.wf) > 0 ? 1 : -1, lane: null, holdDir: null, hold: 0, go: 0, spAv: null, lastTack: 0, fin: null, skill: 1, yr: 0, del: 0, spinOn: false, ph: rand() * 9, _mi: -1, errNext: 0, errGW: 0, penT: 0, pen: 0, spinA: null, penLast: 0, _tkg: false, _sd0: null, _rel: null, _ovT: 0, _ovBy: null, _mk: null, wide: 0, _dS: null, started: false, prevSide: null, _ls0: null }); });
     if (VRR.podium) VRR.podium.visible = false; if (VRR.foulB) VRR.foulB.visible = false; vrFoulDom(false);
     VRR.res = []; VRR.riv.forEach((r) => { r.fin = null; }); if (VRR.net) vrNetSetup(ST);
@@ -1024,7 +1024,7 @@
     if (S.pen > 0 && S.st === "race") { const dB = S.yr * dt; if (Math.abs(S.yr) < .05) { S.penSt = (S.penSt || 0) + dt; if (S.penSt > 4) S.penAcc = 0; } else S.penSt = 0;
       if (S.penAcc && Math.sign(dB) !== Math.sign(S.penAcc) && Math.abs(dB) > 1e-5 && Math.abs(S.yr) > .12) S.penAcc = 0;
       S.penAcc = (S.penAcc || 0) + dB;
-      if (Math.abs(S.penAcc) >= TAU) { S.pen--; S.penAcc = 0; horn(.3, .1); S.msg = S.pen ? `✓ Büntetőforduló kész – még ${S.pen} van hátra.` : "✓ Büntetőforduló letudva – tiszta vagy, mehet a verseny!"; S.msgT = 6; W.panelDirty = 1; } }
+      if (Math.abs(S.penAcc) >= TAU) { S.pen--; S.penAcc = 0; uiSnd("success"); S.msg = S.pen ? `✓ Büntetőforduló kész – még ${S.pen} van hátra.` : "✓ Büntetőforduló letudva – tiszta vagy, mehet a verseny!"; S.msgT = 6; W.panelDirty = 1; } }
     /* 2026-11-12 14:09 (tulajdonos: „apró kis csalás a versenyélmény fenntartására – minden fizika megtartása mellett a mi hajónk legyen 5%-kal gyorsabb a többinél”):
        a fizika, a vitorlák és a kijelzett sebesség változatlan; csak a megtett út 5%-kal több */
     const [fx, fz] = vfwd(S.b); S.x += fx * S.v * 1.05 * dt; S.z += fz * S.v * 1.05 * dt;
@@ -1075,7 +1075,7 @@
     const hb = vrWave(S.x + fx * 6, S.z + fz * 6, W.t), hs2 = vrWave(S.x - fx * 6, S.z - fz * 6, W.t);
     const rockK = clamp(1.25 - S.v / 8, .28, 1.25);
     S.slam = (S.slam || 0) * Math.pow(.015, dt);
-    if (S.v > 5 && S.prevHb != null && (hb - S.prevHb) / Math.max(dt, .001) > .45 && W.t - (S.slamT || 0) > 1.6 && Math.random() < .35) { S.slam = .03 + Math.random() * .02; S.slamT = W.t; S.sprayBurst = 1; }
+    if (S.v > 5 && S.prevHb != null && (hb - S.prevHb) / Math.max(dt, .001) > .45 && W.t - (S.slamT || 0) > 1.6 && Math.random() < .35) { S.slam = .03 + Math.random() * .02; S.slamT = W.t; S.sprayBurst = 1; hapt(.4, 40); }
     S.prevHb = hb;
     BS.pitch = clamp((hs2 - hb) / 12 * 1.1 * rockK, -.05, .05) - S.slam * Math.sin(Math.min(1, (W.t - (S.slamT || 0)) * 3) * Math.PI);
     BS.heel += Math.sin(W.t * .83 + 1.3) * .03 * rockK + Math.sin(W.t * 1.37) * .012 * rockK;
@@ -1128,10 +1128,20 @@
     (S.spect || []).forEach((q) => { q.g.position.y = Math.sin(W.t * 1.1 + q.ph) * .08; q.g.rotation.z = Math.sin(W.t * .9 + q.ph) * .03; q.g.rotation.x = Math.sin(W.t * .7 + q.ph * 2) * .02; });
     /* verseny-állapot */
     S.t += dt; if (S.net && S.net.startAt) S.t = (Date.now() - S.net.startAt) / 1000 - 45;
-    if (S.st === "pre") { [-30, -10, -5, -4, -3, -2, -1].forEach((tt) => { if (S.t >= tt && !S.horns[tt]) { S.horns[tt] = 1; if (tt === -30 || tt === -10) horn(.7, .14); else beep(); } }); if (S.t >= 0) { S.st = "race"; horn(1.5, .2);
+    /* 2026-11-15 (szakértői jelentés F.4 – SZABÁLYOS RAJTELJÁRÁS, RRS 26): figyelmeztető jel (5 perc: osztályzászló fel, 1 hangjel) → előkészítő jel
+       (4 perc: P zászló fel, 1 hangjel) → 1 perc (P le, 1 HOSSZÚ hangjel) → rajt (osztályzászló le, 1 hangjel). A rövid (alap) futamon arányosan összenyomva
+       (45 mp: −45 / −36 / −9 / 0), valódi időben localStorage zephyr-rajt-valodi = 1 (5 perc). A kürt a rendezőhajóról, térben és késve szól (a zászló a mérvadó);
+       az utolsó 10 mp-et nem sípolás, hanem halk óra-kattanás kíséri (csak segítség, nem jelzés). */
+    if (S.st === "pre") { const T0 = S.t0 || -45, sig = [[T0, "warn"], [T0 * .8, "prep"], [T0 * .2, "one"]];
+      sig.forEach(([tt, k]) => { if (S.t >= tt && !S.horns[k]) { S.horns[k] = 1; if (S.t - tt > 1.5) return;
+        if (k === "warn") { cbHorn(.9, .16); S.msg = `Figyelmeztető jel – osztályzászló fel${T0 < -100 ? " (5 perc)" : ""}`; }
+        if (k === "prep") { cbHorn(.9, .16); S.msg = `Előkészítő jel – P zászló fel${T0 < -100 ? " (4 perc)" : ""}`; }
+        if (k === "one") { cbHorn(2.2, .17); S.msg = `Egy perc jel – P zászló le, hosszú hangjel${T0 < -100 ? "" : " (rövidített rajt)"}`; } S.msgT = 4; } });
+      for (let k = 10; k >= 1; k--) if (S.t >= -k && !S.horns["c" + k]) { S.horns["c" + k] = 1; if (S.t + k < .5) vrTick2(k <= 3); }
+      if (S.t >= 0) { S.st = "race"; cbHorn(1.2, .2); hapt(.6, 120);
         /* korai rajt (OCS): a rajtjelkor a vonal pálya felőli oldalán vagy → egyéni visszahívás, vissza kell menni a vonal mögé */
         S.started = false; S.pen = 0; S.penAcc = 0; S.penLast = 0; S.riv.forEach((q) => { q.pen = 0; q.spinA = null; q.penLast = 0; q._dP = null; });
-        if (lineSide(S) > 0) { S.ocs = 1; S.msg = "Korai rajt! Fordulj vissza, és menj át újra a rajtvonalon."; S.msgT = 8; setTimeout(() => horn(.4, .14), 700); }
+        if (lineSide(S) > 0) { S.ocs = 1; S.msg = "Korai rajt! X lobogó fel – fordulj vissza, és menj át újra a rajtvonalon."; S.msgT = 8; setTimeout(() => cbHorn(.5, .16), 700); }
         else { S.msg = "RAJT! Menj át a két rajtbója KÖZÖTT, aztán irány az 1. bója"; S.msgT = 6; } S.guideT = W.t + 12; } }
     /* 2026-11-12 01:49 (tulajdonos: „ha nem a két rajtbója között halad el a hajó a rajtnál, az hibás rajt – vissza kell fordulnia, és szabályosan rajtolnia; addig nem számít rajtnak”):
        a rajt CSAK akkor érvényes, ha a hajó a rajtjel után a két bója KÖZÖTT lépi át a vonalat a pálya felé. Aki a bóján kívül kerüli meg a vonalat, annak vissza kell mennie
@@ -1144,11 +1154,11 @@
     if (S.st === "race" && !S.fin && !S.ocs && S.started) {
       if (S.next < S.marks.length) { const m = S.marks[S.next], d = Math.hypot(m.x - S.x, m.z - S.z), rc = vrRoundCheck(S, S.next);
         if (d < 45) S.nearMk = S.next + 1;
-        if (rc === 1) { S.next++; S.nearMk = 0; S.guideT = W.t + 10; horn(.3, .1); S.msg = S.next < S.marks.length ? `✓ ${S.next}. bója megkerülve – jöhet a ${S.next + 1}.` : "✓ Utolsó bója megkerülve – irány a befutó: a két bója KÖZÖTT!"; S.msgT = 5; S.wrongT = 0; }
+        if (rc === 1) { S.next++; S.nearMk = 0; S.guideT = W.t + 10; uiSnd("success"); S.msg = S.next < S.marks.length ? `✓ ${S.next}. bója megkerülve – jöhet a ${S.next + 1}.` : "✓ Utolsó bója megkerülve – irány a befutó: a két bója KÖZÖTT!"; S.msgT = 5; S.wrongT = 0; }
         else if (rc === -1 && (!S.wrongT || W.t - S.wrongT > 6)) { S.wrongT = W.t; S.msg = "⚠ Rossz irány! A bóját BAL kéz felől kell megkerülni – fordulj vissza, és kerüld meg az óramutatóval ellentétesen"; S.msgT = 6; S.guideT = W.t + 12; beep(); }
         else if (S.nearMk === S.next + 1 && d > 80) { S.nearMk = 0; S.msg = `⚠ Nem kerülted meg a(z) ${S.next + 1}. bóját! Vissza kell menned – enélkül nincs érvényes futam.`; S.msgT = 7; S.guideT = W.t + 15; beep(); setTimeout(beep, 250); } }
       else if (crossLine(S) && S.pen > 0) { S.msg = `⚠ ÉRVÉNYTELEN BEFUTÓ! Még ${S.pen} büntetőforduló (360°) hátravan – tedd meg, aztán fuss be újra.`; S.msgT = 9; beep(); setTimeout(beep, 250); }
-      else if (crossLine(S)) { S.fin = S.t; S.res.push({ n: VRR.meName, t: S.t, me: true }); horn(1.2, .2); vrApplause(4.5); S.msg = "BEFUTÓ!"; S.msgT = 6; }
+      else if (crossLine(S)) { S.fin = S.t; S.res.push({ n: VRR.meName, t: S.t, me: true }); cbHorn(.6, .2); vrApplause(4.5); S.msg = "BEFUTÓ!"; S.msgT = 6; }
     }
     S.prevSide = lineSide(S); vrTackState(S);
     /* ellenfelek: a regatta mesterséges intelligenciája (cirkálás laylinig, hátszélben jibbelés), bóják bal kéz felől */
@@ -1164,13 +1174,18 @@
     S.beam.position.set(tgt.x, 30, tgt.z); S.beam.visible = !S.fin && Math.hypot(tgt.x - S.x, tgt.z - S.z) > 35;   /* közel már a vízen lévő nyíl mutat */ S.beamLbl.visible = false; S.beamLbl.position.set(tgt.x, 14 + Math.sin(W.t * 1.5) * .4, tgt.z);
     { const dl = Math.hypot(tgt.x - S.x, tgt.z - S.z), kk = clamp(dl * .06, 5, 18); S.lblAr = S.lblAr || S.beamLbl.scale.y / S.beamLbl.scale.x; S.beamLbl.scale.set(kk, kk * S.lblAr, 1); S.beamLbl.position.y = 6 + kk * .6; }
     S.beamLbl.userData.set(S.ocs === 1 ? ["KORAI RAJT", "vissza a rajtvonal mögé"] : S.ocs === 2 ? ["RENDBEN", "most lépd át újra a vonalat"] : S.next < S.marks.length ? [`${S.next + 1}. bója`, `${Math.round(Math.hypot(tgt.x - S.x, tgt.z - S.z))} m · bal kéz felől kerüld`] : ["BEFUTÓ", C.fin ? "a két célbója között át" : "a rajtvonalon át"]);
-    { const fl = S.cb.userData.flags; if (fl) { fl[0].visible = S.st === "pre" && S.t > -30 && S.t < -5; fl[2].visible = S.st !== "done"; if (fl[3]) fl[3].visible = !!S.ocs; }
+    { const fl = S.cb.userData.flags; if (fl) { const T0 = S.t0 || -45; fl[0].visible = S.st === "pre" && S.t >= T0 * .8 && S.t < T0 * .2; fl[1].visible = S.st === "pre"; fl[2].visible = S.st !== "done"; if (fl[3]) fl[3].visible = !!S.ocs; }
       S.cdL.visible = S.st === "pre" || (S.st === "race" && S.t < 4); S.cdL.position.set(S.cb.position.x, 13 + Math.sin(W.t * 2) * .2, S.cb.position.z); S.cdL.userData.set(S.st === "pre" ? ["RAJT", mmss(S.t)] : ["RAJT!", "jó versenyt!"]); }
     S.lineM.material.opacity = S.st === "pre" || (!C.fin && S.next >= S.marks.length) ? .5 + .2 * Math.sin(W.t * 3) : .15;
     if (S.finM && C.fin) S.finM.material.opacity = S.started && S.next >= S.marks.length && !S.fin ? .55 + .25 * Math.sin(W.t * 3) : .3;
     /* hangok */
     vrSfx(dt, aws);
     AU.set("rush", clamp((S.v - .8) / 4.5, 0, 1.25) * .11, .4); AU.set("wind", clamp(aws / (14 * KN), 0, 1.2) ** 1.5 * .07, .6); AU.set("water", .035, 1);
+    /* „SZÉL A FÜLÖN” (szakértői jelentés F.2): a szél zúgása a látszólagos szél irányából szól, a fejhez képest – ha a szél felé fordulsz, mindkét fülön egyforma
+       (a versenyzők a valóságban is így „néznek szelet”); rohamban erősebb és élesebb */
+    if (AU.windPan) { try { const R = W.root, q = new THREE.Quaternion(), cam = T.sceneEl.camera, cq = new THREE.Quaternion(); R.getWorldQuaternion(q); cam.getWorldQuaternion(cq);
+      const d = new THREE.Vector3(aw[0], 0, aw[1]).normalize().applyQuaternion(q).applyQuaternion(cq.invert()); AU.windPan.pan.setTargetAtTime(clamp(d.x * .85, -.85, .85), T.ac().currentTime, .15);
+      if (AU.wind) AU.wind.f.frequency.setTargetAtTime(600 * (S.gk > 1.08 ? 1.35 : 1) * (d.z < 0 ? 1.15 : 1), T.ac().currentTime, .4); } catch (e) {} }
     /* 2026-11-11: a vízen és a levegőben NINCS több tábla, felirat, keringő jel, festett nyíl – csak a fényoszlop a következő célnál és a rajt-/célvonal két oszlopa */
     { const M = S.CM; if (M) { M.orbit.visible = false; M.sign.visible = false; if (M.gateL) M.gateL.visible = false; M.chev.visible = false; (M.garrows || []).forEach((m) => { m.visible = false; }); }
       S.arrow.visible = false; S.beamLbl.visible = false; S.beam.visible = !S.fin;
@@ -1192,7 +1207,7 @@
   /* 2026-11-12 22:03 (tulajdonos: „a büntetés magyarázata a BEFUTÓ UTÁN, nagyban jelenjen meg, ne futam közben”): futam közben csak rövid jelzés megy
      (ki a hibás, melyik szabály, hány forduló); a teljes, személyre szabott magyarázat minden szabálysértésről a befutó után, nagy táblán olvasható. */
   function vrFoulInfo(bad, other, n) { const S = VRR, R = VR_RRS[n] || VR_RRS[10]; S.foul = { t: W.t, at: S.t, bad: vrNm(bad), other: vrNm(other), mine: bad === S, title: R[0], text: R[1] }; (S.fouls || (S.fouls = [])).push(S.foul); return R[0].split(" – ")[0]; }
-  function vrFoulMe(r, n) { const S = VRR; if (S.penLast && W.t - S.penLast < 25) { S.penLast = W.t; return; } S.penLast = W.t; S.pen = (S.pen || 0) + 1; S.penAcc = 0;
+  function vrFoulMe(r, n) { const S = VRR; hapt(.9, 200); if (S.penLast && W.t - S.penLast < 25) { S.penLast = W.t; return; } S.penLast = W.t; S.pen = (S.pen || 0) + 1; S.penAcc = 0;
     const rn = vrFoulInfo(S, r, n); S.msg = `⚠ SZABÁLYSÉRTÉS (${rn}) – ütközés a(z) ${r.o.name} hajóval, te vagy a hibás. Büntetés: ${S.pen} × 360° forduló, befutó előtt tedd meg.`; S.msgT = 9; beep(); setTimeout(beep, 250); W.panelDirty = 1; }
   function vrFoulRiv(r, n) { const S = VRR; if (r.penLast && W.t - r.penLast < 25) { r.penLast = W.t; return; } r.penLast = W.t; r.pen = (r.pen || 0) + 1;
     const rn = vrFoulInfo(r, S, n); S.msg = `A(z) ${r.o.name} beléd jött – ő a hibás (${rn}), büntetőfordulót kap.`; S.msgT = 7; W.panelDirty = 1; }
@@ -1242,7 +1257,12 @@
   function vrApplause(sec) { const a = T.ac(); if (!a) return; try { const t = a.currentTime, n = a.createBufferSource(); n.buffer = T.noiseBuf(4); n.loop = true; const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2100; f.Q.value = .6; const g = a.createGain(); g.gain.setValueAtTime(0, t);
       for (let k = 0; k < sec * 22; k++) { const tt = t + k / 22 + rand() * .03, env = Math.sin(Math.PI * Math.min(1, k / (sec * 22))) ; g.gain.linearRampToValueAtTime((.02 + rand() * .05) * (.3 + env), tt); } g.gain.linearRampToValueAtTime(0, t + sec + .3); n.connect(f).connect(g).connect(T.outBus()); n.start(t); n.stop(t + sec + .4);
       [0, .5, 1.1].forEach((d) => { const o = a.createOscillator(), og = a.createGain(), t0 = t + d + .3; o.type = "triangle"; o.frequency.setValueAtTime(520, t0); o.frequency.linearRampToValueAtTime(780, t0 + .35); og.gain.setValueAtTime(0, t0); og.gain.linearRampToValueAtTime(.02, t0 + .1); og.gain.exponentialRampToValueAtTime(.0006, t0 + .5); o.connect(og).connect(T.outBus()); o.start(t0); o.stop(t0 + .55); }); } catch (e) {} }
-  function beep() { const a = T.ac(); if (!a) return; const o = a.createOscillator(), g = a.createGain(); o.type = "square"; o.frequency.value = 880; g.gain.setValueAtTime(.06, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + .18); o.connect(g).connect(T.outBus()); o.start(); o.stop(a.currentTime + .2); }
+  /* a rendezőhajó kürtje térben (a hajó jelzőárbocáról) */
+  function cbHorn(d, v) { const S = VRR; try { const p = new THREE.Vector3(); S.cb.getWorldPosition(p); p.y += 6; horn(d, v, p); } catch (e) { horn(d, v); } }
+  /* halk óra-kattanás a rajt előtti utolsó 10 mp-ben (a gombok csatornáján – csak segítség, nem hivatalos jelzés) */
+  function vrTick2(strong) { const a = T.ac(); if (!a) return; try { const t = a.currentTime, o = a.createOscillator(), g = a.createGain(), f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = strong ? 2400 : 3200; f.Q.value = 6;
+      o.type = "square"; o.frequency.value = strong ? 1200 : 1600; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(strong ? .07 : .04, t + .003); g.gain.exponentialRampToValueAtTime(.0005, t + .05); o.connect(f).connect(g).connect(T.outBus("ui") || T.outBus()); o.start(t); o.stop(t + .06); } catch (e) {} }
+  function beep() { uiSnd("warn"); }   /* 2026-11-15: a figyelmeztető sípolás helyett az egységes gombhangkészlet „figyelmeztetés” hangja */
   function vrRivalTick(r, dt) {
     const S = VRR, C = S.C;
     if (r.out) return; if (r.remote) { vrNetRemoteTick(r, dt); return; }
@@ -1297,7 +1317,7 @@
     r.yr += Math.sign(wrapA(S.wf - r.b)) * Math.max(0, r.heel || 0) * .1 * Math.min(1, r.v / 5) * dt * 3;
     const f = vfwd(r.b); r.x += f[0] * r.v * dt; r.z += f[1] * r.v * dt;
     /* bójakerülés: ugyanaz a szabály, mint nálad (26 m-en belül, a bója a hajó BAL oldalán) */
-    if (S.st === "race" && !r.fin && r.started && !(fin && r.pen > 0)) { if (!fin) { if (vrRoundCheck(r, r.next) === 1) { r.next++; r.wide = 0; } } else if (crossLine(r)) { r.fin = S.t; S.res.push({ n: r.o.name, t: S.t, ai: !!r.aiTook, human: !!r.human }); horn(.4, .06); } }
+    if (S.st === "race" && !r.fin && r.started && !(fin && r.pen > 0)) { if (!fin) { if (vrRoundCheck(r, r.next) === 1) { r.next++; r.wide = 0; } } else if (crossLine(r)) { cbHorn(.4, .12); r.fin = S.t; S.res.push({ n: r.o.name, t: S.t, ai: !!r.aiTook, human: !!r.human }); horn(.4, .06); } }
     r.prevSide = lineSide(r);
     /* ütközés a saját hajónkkal: szétlöki a két hajót, mindkettő lelassul, koppanás és kiabálás helyett kürt */
     { const hg = vrHullGap(S, r), d = hg.d, dx = hg.nx, dz = hg.nz, HT = S.cls ? S.cls.hit : 4.6; if (d < HT) { const k = (HT - d) / 2; r.x += dx * k; r.z += dz * k; S.x -= dx * k; S.z -= dz * k;

@@ -28,8 +28,8 @@
 
   /* ---------------------------------------------------------------- SZÜNET */
   function vrPause(on) { const S = VRR; if (!S.C) return; if (S.net && on) { S.msg = "Online futamban a szünet nem állítja meg a többieket – a versenymenü elérhető."; S.msgT = 5; return; }
-    S.paused = !!on; if (on) { S.msg = "SZÜNET – a játék áll. Folytatás: ▶ FOLYTAT gomb (vagy a P billentyű)."; S.msgT = 999; try { const a = T.ac(); if (a && a.state === "running") a.suspend(); } catch (e) {} vrPauseBoard(true); }
-    else { S.msgT = 0; try { const a = T.ac(); if (a && a.state === "suspended") a.resume(); } catch (e) {} vrPauseBoard(false); }
+    S.paused = !!on; if (on) { S.msg = "SZÜNET – a játék áll. Folytatás: ▶ FOLYTAT gomb (vagy a P billentyű)."; S.msgT = 999; try { T.busMute(["amb", "fx", "race", "vox"], true); try { speechSynthesis.pause(); } catch (e) {} } catch (e) {} vrPauseBoard(true); }   /* szakértői jelentés B.15: szünetben a gombok hangja szól */
+    else { S.msgT = 0; try { T.busMute(["amb", "fx", "race", "vox"], false); try { speechSynthesis.resume(); } catch (e) {} } catch (e) {} vrPauseBoard(false); }
     W.panelDirty = 1; }
   function vrPauseBoard(on) { const S = VRR;
     if (!on) { if (S.pauseB) { S.pauseB.destroy(); S.pauseB = null; } return; }
@@ -79,10 +79,11 @@
   function vrReplay(on) { const S = VRR;
     if (!on) { if (!S.replay) return; const P = S.replay; S.replay = null; if (S.repB) { S.repB.destroy(); S.repB = null; }
       /* az állapot visszaállítása, ahol a futam tartott */ Object.assign(S, P.save); S.riv.forEach((r, i) => Object.assign(r, P.rsave[i])); S.cal = P.cal; W.panelDirty = 1; return; }
-    if (!S.rec || S.rec.f.length < 3) return; if (S.paused) { S.paused = false; vrPauseBoard(false); }
+    if (!S.rec || S.rec.f.length < 3) return; if (S.rec.f[S.rec.f.length - 1][0] <= 0) { S.msg = "🎥 A visszajátszás a rajt után indítható."; S.msgT = 4; return; }   /* szakértői jelentés B.14 */
+    if (S.paused) { S.paused = false; vrPauseBoard(false); }
     S.replay = { i: 0, t: S.rec.f[0][0], spd: 1, play: true, a: 0, save: { x: S.x, z: S.z, b: S.b, v: S.v }, rsave: S.riv.map((r) => ({ x: r.x, z: r.z, b: r.b, v: r.v })), cal: S.cal };
     S.repB = uiBoard({ w: 1300, h: 300, mw: 1.0, dist: 1.1, y: -.35, fps: 4, bar: 80, draw: (B, g) => { const P = S.replay; if (!P) return; const F = S.rec.f, t0 = F[0][0], t1 = F[F.length - 1][0];
-      uiFrame(B, g, "🎥 VISSZAJÁTSZÁS – DRÓNNÉZET", `${mmss(Math.max(0, P.t))} / ${mmss(t1)} · ${P.spd}× sebesség`);
+      uiFrame(B, g, "🎥 VISSZAJÁTSZÁS – DRÓNNÉZET", `${mmss(Math.max(0, P.t))} / ${mmss(Math.max(0, t1))} · ${P.spd}× sebesség`);
       g.fillStyle = "rgba(255,255,255,.15)"; g.fillRect(40, 150, 1220, 14); g.fillStyle = "#ffd166"; g.fillRect(40, 150, 1220 * clamp((P.t - t0) / Math.max(1, t1 - t0), 0, 1), 14);
       B.btn(40, 186, 230, 90, P.play ? "⏸ Szünet" : "▶ Lejátszás", () => { P.play = !P.play; B.dirty = 1; }, { gold: true });
       B.btn(290, 186, 200, 90, "⏮ Elejére", () => { P.t = t0; P.i = 0; B.dirty = 1; });

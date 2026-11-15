@@ -189,6 +189,9 @@
         else if (l.sec === "torch") { vis = near > .05; k = .6 + .4 * Math.sin(t * 13) * Math.sin(t * 7.3); }
         else if (l.sec === "flash" || l.sec === "flashR") { const ph = ((t + (n.g.id % 7) * .37) % l.per) / l.per; vis = ph < l.on / l.per; }
         else if (l.sec === "win") { l.s.visible = true; return; }
+        /* 2026-11-15 (szakértői jelentés C.3): a pályabóják fénye a valóságban villog (sárga Fl 4 s) – itt egy halványabb állandó fény fölött 4 mp-enként
+           0,6 mp-es erős felvillanás, hogy a bója közben se tűnjön el */
+        else if (l.sec === "fly") { const ph = ((t + (n.g.id % 5) * .53) % 4) / 4; k = ph < .15 ? 1.35 : .55; }
         l.s.visible = vis; if (!vis || l.sec === "flashR") return;
         l.s.getWorldPosition(_lw); const d = _lw.distanceTo(_cw), sc = Math.max(l.base, d * .0095) * k;   /* távolról is apró, éles pont (nem nagy folt) */ l.s.scale.setScalar(sc); l.s.material.opacity = clamp(1.25 - d / 4000, .6, 1); l.s.renderOrder = 6; }); });
     /* tóközépi viharjelző */

@@ -605,9 +605,9 @@ body.walk-on .sun-panel, body.in-vr .sun-panel, body.world-on .sun-panel { displ
 .world-pick { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(4,14,28,.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 16px; }
 .world-pick .wp-card { position: relative; width: min(560px, 100%); background: linear-gradient(180deg, #123a6b, #0a2347); color: #fff; border: 2px solid rgba(255,209,102,.85); border-radius: 26px; padding: 26px 22px 18px; box-shadow: 0 24px 60px rgba(0,0,0,.45); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
 .world-pick h2 { margin: 0 0 16px; font-size: 26px; color: #ffd166; letter-spacing: .02em; }
-.world-pick [data-w] { display: block; width: 100%; text-align: left; margin: 0 0 12px; padding: 16px 18px; border-radius: 18px; border: 1.5px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; cursor: pointer; font: inherit; }
-.world-pick [data-w]:hover, .world-pick [data-w]:focus-visible { background: rgba(255,209,102,.18); border-color: #ffd166; outline: none; }
-.world-pick [data-w] b { display: block; font-size: 21px; margin-bottom: 4px; } .world-pick [data-w] span { font-size: 16px; opacity: .85; }
+.world-pick [data-w], .world-pick [data-dict] { display: block; width: 100%; text-align: left; margin: 0 0 12px; padding: 16px 18px; border-radius: 18px; border: 1.5px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); color: #fff; cursor: pointer; font: inherit; }
+.world-pick [data-w]:hover, .world-pick [data-w]:focus-visible, .world-pick [data-dict]:hover, .world-pick [data-dict]:focus-visible { background: rgba(255,209,102,.18); border-color: #ffd166; outline: none; }
+.world-pick [data-w] b, .world-pick [data-dict] b { display: block; font-size: 21px; margin-bottom: 4px; } .world-pick [data-w] span, .world-pick [data-dict] span { font-size: 16px; opacity: .85; }
 .world-pick p { margin: 6px 2px 0; font-size: 15px; opacity: .75; }
 .world-pick .wp-x { position: absolute; right: 14px; top: 12px; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.4); background: rgba(255,255,255,.1); color: #fff; font-size: 20px; cursor: pointer; }
 body.world-on > *:not(#stage):not(#worldHud):not(.zfb):not(#worldPick):not(.zx-board) { visibility: hidden !important; }
@@ -8873,7 +8873,17 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
   function ac() { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); } catch (e) { AC = null; } return AC; }
   let BUS = null, VOL = .7;
   try { const v = localStorage.getItem("zephyr-vol"); if (v !== null) VOL = Math.max(0, Math.min(1, +v)); } catch (e) {}
-  function outBus() { const a = ac(); if (!BUS) { BUS = a.createGain(); BUS.gain.value = VOL; BUS.connect(a.destination); } return BUS; }
+  /* 2026-11-15 (szakértői jelentés F.2): HANGCSATORNÁK – amb (környezet: szél, víz, kikötő), fx (hajó- és játékhangok – ez az alapértelmezett, a régi hívások ide futnak),
+     race (kürt, kiáltások), ui (gombok – szünetben is szól), vox (beszéd – alatta a környezet és az effektek lehalkulnak), mus (zene).
+     Mind a fő hangerőn (BUS) és egy limiteren át szól, így sok egyidejű hang sem torzít. */
+  let LIM = null; const BUSES = {}, BUSLV = { amb: 1, fx: 1, race: 1, ui: .9, vox: 1, mus: 1 };
+  function outBus(name) { const a = ac(); if (!a) return null;
+    if (!BUS) { BUS = a.createGain(); BUS.gain.value = VOL; LIM = a.createDynamicsCompressor(); try { LIM.threshold.value = -6; LIM.knee.value = 4; LIM.ratio.value = 12; LIM.attack.value = .003; LIM.release.value = .2; } catch (e) {} BUS.connect(LIM); LIM.connect(a.destination); }
+    const k = name || "fx"; if (!BUSES[k]) { const g = a.createGain(); g.gain.value = BUSLV[k] != null ? BUSLV[k] : 1; g.connect(BUS); BUSES[k] = g; } return BUSES[k]; }
+  /* csatornák némítása (pl. szünet: a környezet és az effektek elhallgatnak, a gombok szólnak) */
+  function busMute(names, on) { const a = ac(); if (!a) return; names.forEach((k) => { const g = outBus(k); if (g) g.gain.setTargetAtTime(on ? 0 : (BUSLV[k] != null ? BUSLV[k] : 1), a.currentTime, .08); }); }
+  /* beszéd alatt a környezet és az effektek 8 dB-lel halkabbak (150 ms be, 600 ms ki) */
+  function busDuck(on) { const a = ac(); if (!a) return; ["amb", "fx"].forEach((k) => { const g = outBus(k); if (g) g.gain.setTargetAtTime((BUSLV[k] || 1) * (on ? .4 : 1), a.currentTime, on ? .05 : .2); }); }
   function setVol(v) {
     VOL = v; if (BUS && AC) BUS.gain.setTargetAtTime(v, AC.currentTime, .05);
     if (MUSIC) MUSIC.volume = v * .8;
@@ -8905,7 +8915,10 @@ PLANS.kadett.marks = PLANS.kadett.marks.concat([["sun", 3.8, 6.8, "Nyitott, nem 
     $("volMute").addEventListener("click", () => { if (VOL > 0) { volBefore = VOL; setVol(0); } else setVol(volBefore || .7); });
     setVol(VOL);
   }
-  function noiseBuf(sec) { const a = ac(), b = a.createBuffer(1, Math.ceil(a.sampleRate * sec), a.sampleRate), d = b.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; return b; }
+  /* 2026-11-15 (szakértői jelentés B.6): a zajpuffereket hosszanként egyszer készítjük el és újrahasznosítjuk – nincs szemétgyűjtés miatti akadás a Questen */
+  const NOISE_C = new Map();
+  function noiseBuf(sec) { const a = ac(), n = Math.ceil(a.sampleRate * Math.max(.05, Math.round(sec * 20) / 20)), key = a.sampleRate + ":" + n; let b = NOISE_C.get(key); if (b) return b;
+    b = a.createBuffer(1, n, a.sampleRate); const d = b.getChannelData(0); for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1; NOISE_C.set(key, b); return b; }
   function sndSplash(strength) {
     const a = ac(); if (!a) return; const t = a.currentTime, v = .35 * (strength || 1);
     const n = a.createBufferSource(); n.buffer = noiseBuf(.5);
@@ -10208,7 +10221,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     let d = $("worldPick"); if (d) { d.remove(); return; }
     d = document.createElement("div"); d.id = "worldPick"; d.className = "world-pick"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "VR játékok");
     d.innerHTML = `<div class="wp-card"><button type="button" class="wp-x" aria-label="Bezárás">✕</button><h2>VR játékok</h2>
-      <button type="button" data-w="race"><b>⛵ Vitorlásverseny – a kormánynál</b><span>A 15 méteres Zephyr kormánykerekénél: rajt, bójakerülés, három ellenfél, futamonként új pálya és szél</span></button>
+      <button type="button" data-w="race"><b>⛵ Balaton Sailing VR – vitorlásverseny</b><span>5 hajóosztály (Zephyr, Finn, 420, rönktutaj, flamingó), 10 pálya, egy futam vagy sorozat, nappal vagy éjjel · vitorlásiskola a nagypapával</span></button>
       <button type="button" data-w="chess"><b>♞ Vitorlás sakk – életnagyságban</b><span>A tábla maga a Balaton naplementében, a bábuk igazi hajók · parancsnoki híd, stég, hőlégballon</span></button>
       <button type="button" data-w="maquette"><b>🏠 A ház makettje a regatta-bóján</b><span>A Balaton közepén, körülötted verseny és jelenetek (tengeri szörny…) · nagyítható életnagyságig</span></button>
       <button type="button" data-w="coaster"><b>🎢 Balatoni hullámvasút – a Zephyr fedélzetén</b><span>Balaton-körút 14 látnivalóval: az égbe emelkedsz, arany karikákon suhansz át, és mindenhová lecsapsz, idegenvezetéssel – vagy a VAD menet: zuhanás, hurok, dugóhúzó, alagút</span></button>
@@ -11166,7 +11179,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function pWorld(g) {
     /* 2026. nov. 6.: a tulajdonos kérésére VR-ben csak két világ marad – a vitorlásverseny a kormánynál és a makett */
     /* 2026-11-11 este: „VR játékok” – a hullámvasút és a terepasztal is ide került (a tulajdonos kérése) */
-    const items = [["race", "⛵  Vitorlásverseny – a kormánynál", "Rajt, bójakerülés, három ellenfél, futamonként új pálya és szél."],
+    const items = [["race", "⛵  Balaton Sailing VR", "5 hajóosztály, 10 pálya, futam vagy sorozat · vitorlásiskola."],
                    ["coaster", "🎢  Balatoni hullámvasút", "A Zephyr fedélzetén a tó 14 látnivalója között – vagy a vad menet."],
                    ["chess", "♞  Vitorlás sakk", "A tábla a Balaton naplementében, a bábuk életnagyságú hajók."],
                    ["maquette", "🏠  A ház makettje", "Egy regatta-bóján a tó közepén; széthúzva életnagyságú lesz."]];
@@ -13472,7 +13485,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "91f3ccad0a"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "5e52c677e8"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -13485,7 +13498,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     get THREE() { return THREE; }, get sceneEl() { return sceneEl; }, get rig() { return rig; }, get cam() { return cam; }, camObj,
     get sky() { return sky; }, get spots() { return spots; }, get sky2() { return sky2; }, get inVR() { return inVR; }, get current() { return current; },
     get device() { return device; }, SCENES, GROUPS, PLANS: typeof PLANS !== "undefined" ? PLANS : {}, go: (id, look) => go(id, false, look), deviceFov, imgUrl, loadTexture,
-    ac, outBus, noiseBuf, xr: XRP, camYaw, xrRaf, vrClose, vrEnd: (f) => vrEndSession(f), headY() { try { const xc = sceneEl.renderer.xr.getCamera(), p = new THREE.Vector3(); xc.getWorldPosition(p); return inVR ? p.y : 0; } catch (e) { return 0; } },
+    ac, outBus, busMute, busDuck, noiseBuf, xr: XRP, camYaw, xrRaf, vrClose, vrEnd: (f) => vrEndSession(f), headY() { try { const xc = sceneEl.renderer.xr.getCamera(), p = new THREE.Vector3(); xc.getWorldPosition(p); return inVR ? p.y : 0; } catch (e) { return 0; } },
     headPos() { try { const xc = sceneEl.renderer.xr.getCamera(), p = new THREE.Vector3(); xc.getWorldPosition(p); return p; } catch (e) { return null; } },
     setBusy(v) { busy = !!v; },
     /* a VR-panel elérése (tesztekhez és a világ-modulhoz): állapot, megnyitás, kattintás a vászon-koordinátán, billentyű */
@@ -13506,7 +13519,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "f6a6dc1c00"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "c38038aca3"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
@@ -13542,7 +13555,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       #gameHub .gh-recs td{padding:7px 14px 7px 0;border-bottom:1px solid rgba(255,255,255,.1)}
       #gameHub .gh-recs p{font-size:19px;color:#cfe3f2;margin:14px 0 0}
       #gameHub.gh-hide{display:none}`; document.head.appendChild(css);
-    { const lk = document.createElement("link"); lk.rel = "manifest"; lk.href = "jatek.webmanifest"; document.head.appendChild(lk); document.title = "Zephyr Sailing VR"; }   /* 9. lépés előkészítése: a csomagoló (Bubblewrap) ebből a leírásból dolgozik */
+    { const lk = document.createElement("link"); lk.rel = "manifest"; lk.href = "jatek.webmanifest"; document.head.appendChild(lk); document.title = "Balaton Sailing VR"; }   /* 9. lépés előkészítése: a csomagoló (Bubblewrap) ebből a leírásból dolgozik */
     const hub = document.createElement("div"); hub.id = "gameHub"; hub.setAttribute("role", "dialog"); hub.setAttribute("aria-label", "Játékok");
     const DIFF = { kezdo: "Kezdő", halado: "Haladó", verseny: "Versenyző" }, ls = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
     const mmss = (t) => { t = Math.max(0, Math.round(t)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
@@ -13567,7 +13580,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         </div>
         <div class="gh-row"><button class="gh-pill" data-a="tut">🎓 Oktató futam</button><button class="gh-pill" data-a="diff">Nehézség: ${DIFF[ls("zephyr-vr-nehezseg", "halado")] || "Haladó"}</button><button class="gh-pill" data-a="steer">Kormány: ${ls("zephyr-kormany", "bot") === "kerek" ? "kormánykerék" : "botkormány"}</button></div>
         ${recTable()}
-        <p class="gh-foot">VR-szemüvegben: indítsd el a játékot, aztán nyomd meg a „VR” gombot. Kézkövetéssel és kontrollerrel is játszható; szemüveg nélkül billentyűzettel vagy érintéssel.<br>Zephyr Sailing VR · ${String(window.ZEPHYR_BV || "").slice(0, 5)}</p></div>`; };
+        <p class="gh-foot">VR-szemüvegben: indítsd el a játékot, aztán nyomd meg a „VR” gombot. Kézkövetéssel és kontrollerrel is játszható; szemüveg nélkül billentyűzettel vagy érintéssel.<br>Balaton Sailing VR · ${String(window.ZEPHYR_BV || "").slice(0, 5)}</p></div>`; };
     const open = (kind, tut) => { hub.classList.add("gh-hide"); if (tut) window.__ghTut = 1;
       /* 2026-11-12 13:29 (tulajdonos: „ha elindítom, nem lép be a VR-be”): szemüvegben a kártya megnyomása azonnal VR-be lép (a kattintás a szükséges felhasználói művelet) */
       try { if (VRS.ok && sceneEl && !sceneEl.is("vr-mode")) sceneEl.enterVR(); } catch (e) {}

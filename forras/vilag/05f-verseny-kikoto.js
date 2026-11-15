@@ -46,7 +46,8 @@
     HB.gulls = makeGulls(env);
     try { hbDecor(env); } catch (e) { console.warn("kikötő-díszlet", e); }
     try { schoolBuild(env); } catch (e) { console.warn("vitorlásiskola", e); }
-    try { netStart(); } catch (e) {}
+    /* szakértői jelentés B.25: nyilvános hálózathoz csak online módban kapcsolódunk (egyedül játszva nem) */
+    try { const z = wzLoad(); if (z && z.mode === "online") netStart(); } catch (e) {}
     faceYaw(0);
     audioStart({ water: .05, wind: .02 });
     try { msStart(W.root, 3); } catch (e) {}
@@ -91,9 +92,23 @@
       const beak = mesh(new THREE.ConeGeometry(.035, .14, 8), std({ color: "#ff7a1a", roughness: .5 }), neck); beak.rotation.x = Math.PI / 2 + .35; beak.position.set(0, py + .0, pz + .16); const knob = mesh(new THREE.SphereGeometry(.03, 8, 6), dark, neck); knob.position.set(0, py + .04, pz + .1);
       env.add(g); return { g, neck, cx, cz, r, w: w2, a: Math.random() * TAU }; });
   }
+  /* 2026-11-15 (szakértői jelentés F.5): KIKÖTŐI HANGKÉP – a kikötők legjellegzetesebb hangja, a fallal (kötél) csapkodó alumíniumárboc „ting-ting”-je
+     a kikötött hajók árbocairól, térben; időnként a móló deszkáinak nyikorgása; a víz csobogása a cölöpökön (a környezeti csatornán) */
+  function hbAmbience(dt) { const a = T.ac(); if (!a || !HB.boats || !HB.boats.length) return; HB.amb = HB.amb || { ting: 1.5, creak: 6, lap: 2 };
+    const A = HB.amb; A.ting -= dt; A.creak -= dt; A.lap -= dt;
+    if (A.ting <= 0) { A.ting = .6 + Math.random() * 2.6; const o = HB.boats[(Math.random() * HB.boats.length) | 0], p = new THREE.Vector3(); o.g.getWorldPosition(p); p.y += 6 + Math.random() * 4;
+      const sp = sp3(p, "amb", 6); if (sp) { const t0 = a.currentTime + sp.delay, n = 1 + (Math.random() < .45 ? 1 : 0) + (Math.random() < .2 ? 1 : 0), f0 = 1700 + Math.random() * 900;
+        for (let k = 0; k < n; k++) { const t = t0 + k * (.16 + Math.random() * .12); [1, 2.76, 5.4].forEach((m, j) => { const os = a.createOscillator(), g = a.createGain(); os.type = "sine"; os.frequency.value = f0 * m * (1 + (Math.random() - .5) * .01);
+            g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05 / (j + 1), t + .002); g.gain.exponentialRampToValueAtTime(.0004, t + (j ? .35 : 1.1)); os.connect(g).connect(sp.node); os.start(t); os.stop(t + 1.2); }); } } }
+    if (A.creak <= 0 && HB.walk) { A.creak = 7 + Math.random() * 12; try { const t = a.currentTime, n = a.createBufferSource(); n.buffer = T.noiseBuf(.8); const f = a.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 18;
+        f.frequency.setValueAtTime(380 + Math.random() * 200, t); f.frequency.linearRampToValueAtTime(220 + Math.random() * 120, t + .6); const g = a.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t + .08); g.gain.exponentialRampToValueAtTime(.001, t + .7);
+        n.connect(f).connect(g).connect(T.outBus("amb") || T.outBus()); n.start(t); n.stop(t + .8); } catch (e) {} }
+    if (A.lap <= 0) { A.lap = .7 + Math.random() * 1.8; try { const t = a.currentTime, n = a.createBufferSource(); n.buffer = T.noiseBuf(.4); const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 500 + Math.random() * 400;
+        const g = a.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.06 + Math.random() * .05, t + .05); g.gain.exponentialRampToValueAtTime(.001, t + .35); n.connect(f).connect(g).connect(T.outBus("amb") || T.outBus()); n.start(t); n.stop(t + .4); } catch (e) {} } }
   function hbTick(dt) {
     if (HB.wizOn) { try { msTick(dt); } catch (e) {} wzTick(dt); return; }
     try { stmTick(dt, false); } catch (e) {}
+    try { hbAmbience(dt); } catch (e) {}
     try { msTick(dt); } catch (e) {}
     try { hullMaskSet(HB.water && HB.water.userData.mat, (HB.boats || []).map((o) => o.g).concat(HB.prev ? [HB.prev.g] : [])); } catch (e) {}
     const hp = HB.pos || { x: 0, z: 0 }; W.root.position.set(-hp.x, T.inVR ? -.66 : -.66 - 1.62, -hp.z); W.root.quaternion.identity();   /* séta: a választott pallópontra lépsz · a móló felszíne a padló (VR) / a szemmagasság alatt 1,62 m (2D) */

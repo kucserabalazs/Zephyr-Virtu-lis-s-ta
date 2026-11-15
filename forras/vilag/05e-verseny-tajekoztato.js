@@ -20,7 +20,7 @@
     const mw = o.mw || 1.2, mh = mw * o.h / o.w;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(mw, mh), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false })); m.renderOrder = 996;
     const B = { o, cv, g, tex, m, btns: [], hov: null, dirty: 1, t: 0, open: false, dom: null, kbd: null };
-    B.btn = (x, y, w, h, label, fn, st) => { st = st || {}; const id = B.btns.length, hv = B.hov === id && !st.off; B.btns.push({ x, y, w, h, fn: st.off ? null : fn });
+    B.btn = (x, y, w, h, label, fn, st) => { st = st || {}; const id = B.btns.length, hv = B.hov === id && !st.off; B.btns.push({ x, y, w, h, fn: st.off ? null : fn, label: String(label || ""), off: !!st.off });
       /* 2026-11-14 (tulajdonos: „sokkal érthetőbb, kidolgozottabb, balatoni hangulatú”): domború, színátmenetes gomb rajzolt ikonnal és magyarázó alsorral */
       let ic = st.ic || null, lab = String(label); if (!ic) { const m = uiEmo(lab); if (m) { ic = m[0]; lab = m[1]; } }
       const r = st.r != null ? st.r : Math.min(22, h / 3), pri = st.gold, kind = st.off ? "off" : pri ? "gold" : st.green ? "green" : st.red ? "red" : st.night || /^rgba\(20,24,70/.test(st.bg || "") ? "night" : "blue";
@@ -40,8 +40,8 @@
       g.textAlign = "left"; g.textBaseline = "alphabetic"; void sz; return fs; };
     B.draw = () => { B.btns = []; g.clearRect(0, 0, o.w, o.h); o.draw(B, g); tex.needsUpdate = true; B.dirty = 0; if (B.dom) B.domDraw(); };
     B.hit = (x, y) => B.btns.findIndex((q) => q.fn && x >= q.x && x <= q.x + q.w && y >= q.y && y <= q.y + q.h);
-    B.click = (x, y) => { const i = B.hit(x, y); if (i >= 0) { try { const a = T.ac(); if (a) { const os = a.createOscillator(), gg = a.createGain(); os.frequency.value = 660; gg.gain.setValueAtTime(.05, a.currentTime); gg.gain.exponentialRampToValueAtTime(.001, a.currentTime + .08); os.connect(gg).connect(T.outBus()); os.start(); os.stop(a.currentTime + .1); } } catch (e) {} B.btns[i].fn(); B.dirty = 1; return true; } return false; };
-    B.setHov = (i) => { if (i !== B.hov) { B.hov = i; B.dirty = 1; } };
+    B.click = (x, y) => { const i = B.hit(x, y); if (i >= 0) { const bt = B.btns[i]; uiSnd(bt.off || !bt.fn ? "warn" : /vissza|bezár|mégse|‹|✕/i.test(bt.label || "") ? "back" : "press"); if (bt.fn) bt.fn(); B.dirty = 1; return true; } return false; };
+    B.setHov = (i) => { if (i !== B.hov) { if (i >= 0) uiSnd("hover"); B.hov = i; B.dirty = 1; } };
     const uv = (h) => (h && h.uv ? [h.uv.x * o.w, (1 - h.uv.y) * o.h] : null);
     m.userData.xr = {
       hover: (on, h) => { const p = on && uv(h); B.setHov(p ? B.hit(p[0], p[1]) : null); },

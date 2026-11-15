@@ -68,7 +68,7 @@
     let hi = 0; S.riv.forEach((r, i) => { r.human = false; r.remote = false; r.aiTook = false; r.out = false; r.key = "ai" + i; r.owner = N.host; r.netS = null; });
     N.members.forEach((mm, i) => { if (i === N.me) return; const r = S.riv[hi++]; if (!r) return; r.human = true; r.key = mm.id; r.owner = mm.id; r.remote = true; r.o = Object.assign({}, r.o, { name: mm.name || "Játékos", num: "HUN " + (11 + i) }); if (r.lbl) r.lbl.userData.set([r.o.name, ""]); });
     for (let i = hi; i < S.riv.length; i++) { const r = S.riv[i]; if (N.priv) { r.out = true; r.g.visible = false; r.lbl.visible = false; r.x += 9e4; r.z += 9e4; } else if (N.host !== NET.id) r.remote = true; }
-    S.t = (Date.now() - N.startAt) / 1000 - 45; S.msg = N.priv ? "SAJÁT FUTAM – a meghívott játékosokkal" : `ONLINE FUTAM – ${N.members.length} játékos + gépi ellenfelek`; S.msgT = 6;
+    S.t = (Date.now() - N.startAt) / 1000 - 45; S.t0 = -45; S.msg = N.priv ? "SAJÁT FUTAM – a meghívott játékosokkal" : `ONLINE FUTAM – ${N.members.length} játékos + gépi ellenfelek`; S.msgT = 6;
     return ST;
   }
   function netState(m) {

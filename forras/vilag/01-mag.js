@@ -92,7 +92,10 @@
       if (kind === "water") { f.type = "lowpass"; f.frequency.value = 700; }
       if (kind === "rush") { f.type = "bandpass"; f.frequency.value = 1400; f.Q.value = .7; }
       if (kind === "wind") { f.type = "bandpass"; f.frequency.value = 600; f.Q.value = .5; }
-      n.connect(f).connect(g).connect(out); n.start(); const o = { n, f, g }; AU.nodes.push(o); return o;
+      /* 2026-11-15 (szakértői jelentés F.2): a víz és a szél a környezeti csatornán, a szél sztereó panorámával („szél a fülön”), a rohanás az effekteken */
+      const bus = (kind === "rush" ? T.outBus("fx") : T.outBus("amb")) || out; let tail = g;
+      if (kind === "wind" && a.createStereoPanner) { const pn = a.createStereoPanner(); g.connect(pn); tail = pn; AU.windPan = pn; }
+      n.connect(f).connect(g); tail.connect(bus); n.start(); const o = { n, f, g }; AU.nodes.push(o); return o;
     };
     AU.water = mk("water"); AU.rush = mk("rush"); AU.wind = mk("wind");
     AU.set = (k, v, tc) => { const o = AU[k]; if (o) o.g.gain.setTargetAtTime(v, a.currentTime, tc || .3); };
@@ -104,12 +107,37 @@
   }
   AU.set = () => {};
   /* hajókürt (rajtjelzés): két hangolt fűrészfog, enyhe torzítással, távolság szerint halkítva */
-  function horn(dur, vol) {
-    const a = T.ac(); if (!a) return; const t0 = a.currentTime, g = a.createGain(), lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1500;
+  /* TÉRBELI HANG (szakértői jelentés F.2): egy világbeli pontból szóló hang – a hallgató (a fej) helyzetéhez és irányához képest HRTF-panorámával, távolság szerinti
+     halkulással és a hang terjedési késésével (343 m/s). Rövid hangokhoz: a kiinduló pillanat helyzetét rögzíti. Visszaad: { node, delay } */
+  function sp3(wp, busName, ref) { const a = T.ac(); if (!a || !wp) return null; try { const cam = T.sceneEl.camera; cam.updateMatrixWorld(); const v = wp.clone().applyMatrix4(new THREE.Matrix4().copy(cam.matrixWorld).invert());
+      const p = a.createPanner(); p.panningModel = "HRTF"; p.distanceModel = "inverse"; p.refDistance = ref || 20; p.rolloffFactor = 1; p.maxDistance = 4000;
+      if (p.positionX) { p.positionX.value = v.x; p.positionY.value = v.y; p.positionZ.value = v.z; } else p.setPosition(v.x, v.y, v.z);
+      try { const L = a.listener; if (L.positionX) { L.positionX.value = 0; L.positionY.value = 0; L.positionZ.value = 0; L.forwardX.value = 0; L.forwardY.value = 0; L.forwardZ.value = -1; L.upX.value = 0; L.upY.value = 1; L.upZ.value = 0; } else { L.setPosition(0, 0, 0); L.setOrientation(0, 0, -1, 0, 1, 0); } } catch (e) {}
+      p.connect(T.outBus(busName || "race") || T.outBus()); return { node: p, delay: Math.min(3, v.length() / 343) }; } catch (e) { return null; } }
+  /* hajókürt (rajtjelzés): két enyhén elhangolt fűrészfog + formánsszűrők, légzésszerű ingadozás; ha világbeli pontot kap (rendezőhajó), onnan szól, késéssel */
+  function horn(dur, vol, wp) {
+    const a = T.ac(); if (!a) return; const sp = wp ? sp3(wp, "race", 25) : null, t0 = a.currentTime + (sp ? sp.delay : 0), g = a.createGain(), lp = a.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1500;
+    if (sp) { vol = (vol || .25) * 2.2; const f1 = a.createBiquadFilter(); f1.type = "peaking"; f1.frequency.value = 450; f1.Q.value = 1.2; f1.gain.value = 6; const f2 = a.createBiquadFilter(); f2.type = "peaking"; f2.frequency.value = 1100; f2.Q.value = 1.5; f2.gain.value = 4;
+      lp.disconnect(); lp.connect(f1).connect(f2).connect(g).connect(sp.node); const lfo = a.createOscillator(), lg = a.createGain(); lfo.frequency.value = 5.5; lg.gain.value = vol * .06; lfo.connect(lg).connect(g.gain); lfo.start(t0); lfo.stop(t0 + dur + .1); }
     g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime((vol || .25), t0 + .06); g.gain.setValueAtTime(vol || .25, t0 + dur - .15); g.gain.linearRampToValueAtTime(0, t0 + dur);
     [233, 235.5, 466].forEach((f, i) => { const o = a.createOscillator(); o.type = "sawtooth"; o.frequency.value = f; const og = a.createGain(); og.gain.value = i === 2 ? .25 : .5; o.connect(og).connect(lp); o.start(t0); o.stop(t0 + dur + .05); });
-    lp.connect(g).connect(T.outBus());
+    if (!sp) lp.connect(g).connect(T.outBus("race") || T.outBus());
   }
+  /* 2026-11-15 (szakértői jelentés F.3): EGYSÉGES GOMBHANGOK – egy „hangszer” (fa-klikk + rövid, harangszerű csengés), a gombok csatornáján (szünetben is szól).
+     hover: rámutatás (halk pattintás) · press: megnyomás · back: vissza/bezárás · success: siker · warn: figyelmeztetés · error: hiba. Kézkövetésnél ez pótolja a tapintást. */
+  /* 2026-11-15 (szakértői jelentés F.7): REZGÉS a kontrollerben (kézkövetésnél nincs – ott a hang pótolja); localStorage zephyr-rezges = 0 kikapcsolja */
+  function hapt(v, ms) { try { if (localStorage.getItem("zephyr-rezges") === "0") return; const se = T.sceneEl.renderer.xr.getSession && T.sceneEl.renderer.xr.getSession(); if (!se) return;
+      for (const src of se.inputSources) { const h = src.gamepad && src.gamepad.hapticActuators && src.gamepad.hapticActuators[0]; if (h && h.pulse) h.pulse(v, ms); } } catch (e) {} }
+  function uiSnd(kind) { const a = T.ac(); if (!a) return; const now = a.currentTime; if (kind === "hover") { if (now - (uiSnd.lastH || 0) < .06) return; uiSnd.lastH = now; }
+    try { const out = T.outBus("ui") || T.outBus(), tone = (f, t, d, v, type) => { const o = a.createOscillator(), g = a.createGain(); o.type = type || "sine"; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .004); g.gain.exponentialRampToValueAtTime(.0004, t + d); o.connect(g).connect(out); o.start(t); o.stop(t + d + .02); },
+      click = (t, v) => { const n = a.createBufferSource(); n.buffer = T.noiseBuf(.05); const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 3000; f.Q.value = 2.5; const g = a.createGain(); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0005, t + .03); n.connect(f).connect(g).connect(out); n.start(t); n.stop(t + .05); };
+      if (kind === "hover") tone(1000, now, .025, .025);
+      if (kind === "press") hapt(.15, 25); else if (kind === "success") { hapt(.3, 60); setTimeout(() => hapt(.3, 60), 140); } else if (kind === "error") hapt(.9, 200); else if (kind === "warn") hapt(.4, 60);
+      else if (kind === "press") { click(now, .12); tone(600, now, .06, .07); }
+      else if (kind === "back") { tone(660, now, .07, .05); tone(440, now + .06, .09, .05); }
+      else if (kind === "success") { [523, 659, 784].forEach((f, i) => tone(f, now + i * .07, .35, .06)); }
+      else if (kind === "warn") { tone(330, now, .1, .08, "triangle"); tone(330, now + .14, .1, .08, "triangle"); }
+      else if (kind === "error") { tone(196, now, .3, .08, "triangle"); tone(207, now, .3, .06, "triangle"); } } catch (e) {} }
   function flap(vol) {   /* vitorlacsapkodás fordulóban */
     const a = T.ac(); if (!a) return; const t0 = a.currentTime;
     for (let k = 0; k < 6; k++) { const s = a.createBufferSource(); s.buffer = T.noiseBuf(.12); const f = a.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 300 + rand() * 300; const g = a.createGain();
