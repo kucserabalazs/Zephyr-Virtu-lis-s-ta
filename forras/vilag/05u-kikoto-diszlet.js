@@ -38,7 +38,9 @@
       const bm = std({ color: "#fff3d0", emissive: "#ffcf70", emissiveIntensity: 1.1, roughness: .3 }); const bi = new THREE.InstancedMesh(new THREE.SphereGeometry(.045, 10, 8), bm, bulbs.length); bulbs.forEach((m, i) => bi.setMatrixAt(i, m)); bi.frustumCulled = false; G.add(bi); W.disposables.push(bi.geometry); HB.bulbs = bm; }
     /* ---------- SÉTÁNYI LÁMPÁK (öntöttvas oszlop, négyszögletes lámpaház üveggel, kettős konzol) ---------- */
     { const paths = HOUSES.filter((h) => h.dr).map((h) => h.dr.wall === "n" ? h.dr.c : (h.box.x0 + h.box.x1) / 2), spots = [];
-      for (let x = -36; x <= 36; x += .5) { if (Math.abs(x) < 4.8 || paths.some((px) => Math.abs(px - x) < 1.9) || (spots.length && x - spots[spots.length - 1] < 7.5)) continue; spots.push(x); }
+      /* 2026-11-15 este: egy lámpa a Természetvédelmi ház belsejébe került (a sétány ott a házakig ér) – a házak alaprajzán (+0,7 m) nem állhat lámpa */
+      const inHouse = (x, z) => HOUSES.some((h) => x > h.box.x0 - .7 && x < h.box.x1 + .7 && z > h.box.z0 - .7 && z < h.box.z1 + .7);
+      for (let x = -36; x <= 36; x += .5) { if (Math.abs(x) < 4.8 || paths.some((px) => Math.abs(px - x) < 1.9) || (spots.length && x - spots[spots.length - 1] < 7.5) || inHouse(x, landPromZ(x) + 1.65)) continue; spots.push(x); }
       const parts = [], heads = []; spots.forEach((x) => { const z = landPromZ(x) + 1.65, y = landWalkY(x, z) - .05;
         parts.push([new THREE.CylinderGeometry(.16, .2, .45, 12), M4(x, y + .22, z)], [new THREE.CylinderGeometry(.05, .07, 3.0, 10), M4(x, y + 1.9, z)], [new THREE.SphereGeometry(.08, 10, 8), M4(x, y + 3.42, z)]);
         { const c = new THREE.TorusGeometry(.32, .025, 6, 16, Math.PI); parts.push([c, M4(x, y + 3.25, z, 0, 0, 0)]); }

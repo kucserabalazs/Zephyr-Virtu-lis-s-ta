@@ -68,7 +68,7 @@
       /* 2026-11-15 este (tulajdonos: „a kikötőben kezdődik a játék, a móló végén a vitorlázás megkezdése”): a kikötő mindig sétával indul a kikötői téren;
          futam után („Kikötő”) a versenyirodánál; VR-be lépéskor / kilépéskor ott folytatódik, ahol voltál (a menüben is) */
       if (st && st.wiz) { HB.pos = st.pos || { x: 0, z: -45.5 }; wzGo(st.step || 1); }
-      else { hbWalk(true); if (st && st.pos) { HB.pos = st.pos; } else if (at === "station") { HB.pos = { x: 0, z: -45.5 }; } else { HB.pos = { x: -1.0, z: 4.6 }; } faceYaw(st && st.yaw != null ? st.yaw : 0); } } W._hb = { preview: hbPreview, board: hbBoard, go: hbGo, HB, wz: wzGo, walk: hbWalk, school: hbSchool, SCH, rooms: ROOMS, sit: roomSit, stand: roomStand, houses: HOUSES, LAND, start: () => { wzPlan(); wzStart(); } };
+      else { hbWalk(true); if (st && st.pos) { HB.pos = st.pos; } else if (at === "station") { HB.pos = { x: 0, z: -45.5 }; } else { HB.pos = { x: -1.0, z: 4.6 }; } faceYaw(st && st.yaw != null ? st.yaw : 0); } } W._hb = { preview: hbPreview, board: hbBoard, go: hbGo, HB, wz: wzGo, walk: hbWalk, school: hbSchool, SCH, rooms: ROOMS, sit: roomSit, stand: roomStand, houses: HOUSES, LAND, greet: GREET, vhash: vHash, start: () => { wzPlan(); wzStart(); } };
     /* 2026-11-15 (tulajdonos: „nem lehet megfordulni … ott a tenyér menü, ha valamire szükség van”): a tenyérmenüben forgás és lépés,
        a házban a tanterem minden gombja; a kontroller karjával is fordulsz (balra/jobbra 45°) és lépsz (előre/hátra) */
     return { noPanel: true, menu: () => hbMenu(), tick: hbTick, panel: hbPanel, hud: hbHud, stick: hbStick, wrist: hbWrist };

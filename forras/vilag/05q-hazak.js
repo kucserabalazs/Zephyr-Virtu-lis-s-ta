@@ -6,7 +6,7 @@
   const HOUSES = [
     { id: "izek", name: "Magyar Ízek Háza", sub: "ételek · borok · hungarikumok", col: "#8e1b2e", flag: "E", kind: "csarda", box: { x0: 15.4, x1: 24.4, z0: 13.2, z1: 19.6 }, teacher: "anya", voice: "berta" },
     { id: "ter", name: "Természetvédelmi ház", sub: "a Balaton élővilága", col: "#3d9a4b", flag: "A", kind: "cabin", box: { x0: 4.6, x1: 11.6, z0: 13, z1: 18.6 }, teacher: "apa", voice: "imre" },
-    { id: "vih", name: "Viharjelző torony", sub: "vihar, felhők, szél", col: "#e0a800", flag: "Y", kind: "tower", box: { x0: -29.0, x1: -23.4, z0: 13, z1: 18.4 }, teacher: "matroz2", voice: "imre" },
+    { id: "vih", name: "Viharjelző torony", sub: "vihar, felhők, szél", col: "#e0a800", flag: "Y", kind: "tower", box: { x0: -29.0, x1: -23.4, z0: 13, z1: 18.4 }, teacher: "matroz2", voice: "berta" },   /* 2026-11-15: az előadó nő (Kovács Réka, ~30 éves meteorológus) – női hang */
     { id: "cso", name: "Csomózóház", sub: "csomók és kötélmunka", col: "#7a4ea3", flag: "K", kind: "cabin", box: { x0: -20.2, x1: -14.6, z0: 13, z1: 18.2 }, teacher: "matroz4", voice: "imre" },
     { id: "mel", name: "Mentőmellény-pont", sub: "mellény, mentőöv, mentés", col: "#f07a12", flag: "O", kind: "cabin", box: { x0: -11.2, x1: -6.2, z0: 12.6, z1: 17.4 }, teacher: "matroz1", voice: "imre" },
     { id: "isk", name: "Vitorlásiskola", sub: "a nagypapa szabályai", col: "#2f6fb7", flag: "P", kind: "school", box: { x0: 3.5, x1: 9.5, z0: -1.5, z1: 4 }, teacher: "nagypapa", voice: "imre" },
@@ -127,9 +127,12 @@
     houseFound(G, B, F);
     if (h.kind === "csarda") { csardaBuild(G, h); }
     else {
-      const C = cabinBuild(G, { box: B, F, door: "n", dc: h.id === "ter" ? B.x0 + 1.6 : xc - .9, win: [["n", h.id === "ter" ? xc + 1.4 : xc + 1.3, 1.2], ["w", zc, 1.1], ["e", zc, 1.1]], h, flagX: B.x0 - .15 });
+      /* 2026-11-15 este (tulajdonos: „egy csomó ablakba rönk került, bentről nem látom a vizet”): a sorban álló házak oldalablakai a szomszéd rönkfalára néztek –
+         helyettük a vízre néző (északi) homlokzaton széles, kétszárnyú ablak van; oldalablak csak ott marad, ahol szabad kilátás nyílik (a kikötői térre) */
+      const WIN = { vih: [["n", xc + 1.25, 2.1]], cso: [["n", xc + 1.25, 2.1]], mel: [["n", xc + 1.2, 1.8], ["e", zc, 1.1]], ter: [["n", xc + 1.0, 2.6], ["w", zc, 1.1]] }[h.id] || [["n", xc + 1.3, 1.2], ["w", zc, 1.1], ["e", zc, 1.1]];
+      const C = cabinBuild(G, { box: B, F, door: "n", dc: h.id === "ter" ? B.x0 + 1.6 : xc - .9, win: WIN, h, flagX: B.x0 - .15 });
       houseSteps(G, h.id === "ter" ? B.x0 + 1.6 : xc - .9, B.z0, F, -1);
-      if (h.id === "ter") natureProps(G, h, C); else if (h.id === "cso") knotProps(G, h, C); else if (h.id === "mel") { vestProps(G, h, C); h.studs = []; } else if (h.id === "vih") stormProps(G, h, C);
+      if (h.id === "ter") natureProps(G, h, C); else if (h.id === "cso") { try { knotHouseBuild(G, h, C); } catch (e) { console.warn("csomózóház", e); knotProps(G, h, C); } } else if (h.id === "mel") { vestProps(G, h, C); h.studs = []; } else if (h.id === "vih") { try { cloudHouseBuild(G, h, C); } catch (e) { console.warn("felhők háza", e); stormProps(G, h, C); } }
       if (h.kind === "tower") stormTower(G, h, C);
     }
     /* belső elrendezés: tábla a hátsó (déli) falon, a tanár mellette, a szék középen, a tanulók oldalt */
@@ -269,7 +272,7 @@
       [[zc - .5, "#d9a35a"], [zc + .05, "#e8c48a"], [zc + .6, "#c27a3a"]].forEach(([z, c], i) => { mesh(new THREE.CylinderGeometry(.15, .1, .06, 18).translate(B.x0 + .7, F + 1.02, z), std({ color: "#f4f1e8", roughness: .3 }), G); if (i === 1) { const l = new THREE.CylinderGeometry(.13, .13, .03, 16); l.scale(1, 1, .8); mesh(l.translate(B.x0 + .7, F + 1.06, z), std({ color: c, roughness: .8 }), G); mesh(new THREE.CylinderGeometry(.1, .1, .01, 14).translate(B.x0 + .7, F + 1.08, z), std({ color: "#f8f4e8", roughness: .7 }), G); } else mesh(new THREE.SphereGeometry(.09, 12, 8).translate(B.x0 + .7, F + 1.08, z), std({ color: c, roughness: .8 }), G); });
       /* dobostorta a pult végén (karamell-teteje) */ mesh(new THREE.CylinderGeometry(.16, .16, .14, 20).translate(B.x0 + .7, F + 1.06, zc + 1.1), std({ color: "#7a4a24", roughness: .6 }), G); mesh(new THREE.CylinderGeometry(.165, .165, .02, 20).translate(B.x0 + .7, F + 1.14, zc + 1.1), std({ color: "#c8892a", roughness: .25 }), G);
       /* borospolc a keleti falon palackokkal (fehér, vörös, aszú) */ { const sx = B.x1 - .3; for (let r = 0; r < 4; r++) { mesh(new THREE.BoxGeometry(.35, .04, 2.4).translate(sx, F + .5 + r * .45, zc), wood, G); for (let k = 0; k < 8; k++) { const c = r === 3 ? "#c99a2a" : k % 2 ? "#3a1018" : "#cfd8a0"; const b = new THREE.CylinderGeometry(.035, .035, .26, 10); b.rotateZ(Math.PI / 2); mesh(b.translate(sx, F + .57 + r * .45, zc - 1.05 + k * .3), std({ color: c, roughness: .15, metalness: .1, transparent: r !== 1, opacity: .85 }), G); } } }
-      /* hordók */ [[B.x1 - .6, B.z1 - .7], [B.x1 - 1.4, B.z1 - .6]].forEach(([x, z]) => { const br = new THREE.LatheGeometry([[0, 0], [.26, 0], [.31, .2], [.33, .4], [.31, .6], [.26, .8], [0, .8]].map(([a, b]) => new THREE.Vector2(a, b)), 18); br.rotateZ(Math.PI / 2); mesh(br.translate(x + .4, F + .34, z), std({ map: HZ.logT, roughness: .8 }), G); });
+      /* hordók */ [[B.x1 - .6, B.z1 - .7], [B.x1 - 1.4, B.z1 - .6]].forEach(([x, z]) => { const br = new THREE.LatheGeometry([[0, 0], [.26, 0], [.31, .2], [.33, .4], [.31, .6], [.26, .8], [0, .8]].map(([a, b]) => new THREE.Vector2(a, b)), 18); br.rotateZ(Math.PI / 2); mesh(br.translate(x + .4, F + .34, z), std(HZ.logT ? { map: HZ.logT, roughness: .8 } : { color: "#7a5532", roughness: .8 }), G); });
       /* pálinkás üvegek (szilva, barack, körte) és az Unicum gömbölyű üvege a polcon */ { const sg = shelf(G, B.x0 + .2, F + 1.85, zc + .2, Math.PI / 2, 1.3, wood); ["#e8e4d0", "#f2c46a", "#e9e6c8", "#1b1b1b"].forEach((c, k) => { if (k === 3) { mesh(new THREE.SphereGeometry(.08, 14, 10).translate(-.45 + k * .3, .1, 0), std({ color: c, roughness: .2 }), sg); mesh(new THREE.CylinderGeometry(.015, .015, .08, 8).translate(-.45 + k * .3, .2, 0), std({ color: "#c9a23a", metalness: .7 }), sg); return; } mesh(new THREE.CylinderGeometry(.04, .05, .24, 12).translate(-.45 + k * .3, .14, 0), std({ color: c, roughness: .1, transparent: true, opacity: .7 }), sg); mesh(new THREE.CylinderGeometry(.015, .02, .08, 8).translate(-.45 + k * .3, .3, 0), std({ color: "#2b2b2b" }), sg); }); }
       /* lógó téliszalámi és kolbász a gerendán */ for (let k = 0; k < 4; k++) { const sx = B.x0 + 1.5 + k * .4; rodBetween(new THREE.Vector3(sx, F + 2.85, B.z0 + .9), new THREE.Vector3(sx, F + 2.55, B.z0 + .9), .004, std({ color: "#ddd" }), G, 3); mesh(new THREE.CylinderGeometry(.045, .045, .5, 10).translate(sx, F + 2.28, B.z0 + .9), std({ color: k % 2 ? "#d9d0bd" : "#7a2a1a", roughness: .9 }), G); }
       poster(G, ["HUNGARIKUM", "pálinka · Tokaji aszú", "PICK és HERZ szalámi", "szegedi, kalocsai", "paprika · Unicum"], h.col, B.x1 - .2, F + 2.05, B.z0 + 1.0, -Math.PI / 2, .7); }
@@ -341,5 +344,7 @@
   function houseTick(dt) { const t = W.t;
     HZ.flags.forEach((f) => { if (!f.parent) return; const pa = f.geometry.attributes.position, b0 = f.userData.base; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 5 - t * 5.5 + f.userData.ph) * .07 * x; pa.array[i * 3 + 1] = b0[i * 3 + 1] + Math.sin(x * 3 - t * 3) * .015 * x; } pa.needsUpdate = true; });
     const night = (typeof NGT !== "undefined" && NGT.on) || !!HB.night; HZ.beams.forEach((b) => { b.rotation.y = t * .9; b.visible = night; });
-    const l = (typeof STM !== "undefined" && STM.lv) ? (STM.lv.keleti || 0) : 0, per = l === 2 ? 60 / 90 : l === 1 ? 60 / 45 : 0, on = per && (t % per) / per < .34;
-    HZ.lamps.forEach((q) => { q.glow.visible = !!on; q.lamp.material.color.set(on ? "#ffe066" : l ? "#7a6420" : "#4a4a40"); q.lamp.material.emissive.set(on ? "#ffaa00" : "#000000"); }); }
+    /* 2026-11-15 (tulajdonos): a viharjelző tornyon „menjen a sárga villogó fény percenként 45” – alaphelyzetben elsőfok, valódi másodfoknál 90/perc */
+    const l = (typeof STM !== "undefined" && STM.lv) ? (STM.lv.keleti || 0) : 0, per = l === 2 ? 60 / 90 : 60 / 45, on = per && (t % per) / per < .34;
+    HZ.lamps.forEach((q) => { q.glow.visible = !!on; q.lamp.material.color.set(on ? "#ffe066" : "#7a6420"); q.lamp.material.emissive.set(on ? "#ffaa00" : "#000000"); });
+    try { cloudHouseTick(dt); } catch (e) {} try { knotHouseTick(dt); } catch (e) {} }
