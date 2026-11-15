@@ -487,20 +487,30 @@
         ponyva: () => { g.fillStyle = "#4f5d3c"; g.fillRect(0, 0, w, h); for (let k = 0; k < 60; k++) { g.fillStyle = `rgba(20,25,10,${R() * .3})`; g.beginPath(); g.ellipse(R() * w, R() * h, rr2(20, 90), rr2(8, 40), R() * 3, 0, TAU); g.fill(); } g.fillStyle = "#c9c4b5"; for (let k = 0; k < 6; k++) { g.beginPath(); g.arc(R() * w, R() * h, 9, 0, TAU); g.fill(); } } };
       /* minden anyag egy saját vászonra, onnan vágjuk ki a foltokat */
       const pat = {}; Object.keys(MAT).forEach((k) => { const c = document.createElement("canvas"); c.width = c.height = 512; const g0 = g; g = c.getContext("2d"); const w0 = w, h0 = h; w = h = 512; MAT[k](); w = w0; h = h0; g = g0; pat[k] = g.createPattern(c, "repeat"); });
-      /* szabálytalan foltrács: 4×5 cella, eltolt csúcsokkal; a két legnagyobb mező vászon és zsák (a tulajdonos kérése) */
-      const NX = 4, NY = 5, P = []; for (let j = 0; j <= NY; j++) for (let i = 0; i <= NX; i++) P.push([i / NX * w + (i && i < NX ? rr2(-55, 55) : 0), j / NY * h + (j && j < NY ? rr2(-45, 45) : 0)]);
-      const kinds = ["vaszon", "zsak", "farmer", "vaszon", "kocka", "zsak", "matrac", "vaszon", "virag", "zsak", "torolkozo", "ponyva", "vaszon", "zsak", "farmer", "kocka", "vaszon", "matrac", "zsak", "virag"];
-      const cells = []; for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++) { const q = [P[j * (NX + 1) + i], P[j * (NX + 1) + i + 1], P[(j + 1) * (NX + 1) + i + 1], P[(j + 1) * (NX + 1) + i]]; cells.push(q); }
-      /* két nagy egybefüggő mező: a felső-orr felé vászon, a hátsó-alsó zsák */
-      cells.forEach((q, k) => { g.save(); g.beginPath(); q.forEach((p2, i) => (i ? g.lineTo(p2[0], p2[1]) : g.moveTo(p2[0], p2[1]))); g.closePath(); g.fillStyle = pat[kinds[(k * 7) % kinds.length]]; g.translate(rr2(-200, 200), rr2(-200, 200)); g.fill(); g.restore(); });
-      /* kopás, piszok, vízfoltok */
-      for (let k = 0; k < 70; k++) { g.fillStyle = `rgba(70,50,25,${R() * .14})`; g.beginPath(); g.ellipse(R() * w, R() * h, rr2(8, 70), rr2(6, 50), R() * 3, 0, TAU); g.fill(); }
+      /* 01:03 (tulajdonos: „nem hiteles – rohadó, sokat úszott, elrohadt anyagokból, szabálytalan formákból, itt-ott szakadással”):
+         SZABÁLYTALAN, egymásra varrt foltok (8–13 csúcsú, csipkés szélű sokszögek, egymást átfedve), alul zsák, fölötte minden más rongy. */
+      g.fillStyle = pat.zsak; g.fillRect(0, 0, w, h);
+      const kinds = ["vaszon", "zsak", "farmer", "vaszon", "kocka", "zsak", "matrac", "ponyva", "virag", "zsak", "torolkozo", "vaszon", "farmer", "zsak", "kocka", "vaszon", "matrac", "zsak", "ponyva", "vaszon", "virag", "zsak", "torolkozo", "vaszon", "farmer", "zsak"];
+      const polys = []; for (let k = 0; k < 26; k++) { const cx = rr2(-40, w + 40), cy = rr2(-40, h + 40), rx = rr2(110, 260), ry = rr2(90, 230), n = 8 + Math.floor(R() * 6), rot = R() * TAU, q = [];
+        for (let i = 0; i < n; i++) { const a = rot + i / n * TAU + rr2(-.18, .18), f = rr2(.72, 1.15); q.push([cx + Math.cos(a) * rx * f, cy + Math.sin(a) * ry * f]); }
+        polys.push(q); g.save(); g.beginPath(); q.forEach((p2, i) => (i ? g.lineTo(p2[0], p2[1]) : g.moveTo(p2[0], p2[1]))); g.closePath(); g.fillStyle = pat[kinds[k % kinds.length]]; g.translate(rr2(-200, 200), rr2(-200, 200)); g.fill(); g.restore();
+        /* a folt széle kirojtosodott, kopott (világos szálak kifelé) */
+        g.strokeStyle = "rgba(225,210,175,.45)"; g.lineWidth = 1.2; for (let i = 0; i < n; i++) { const a = q[i], b = q[(i + 1) % n]; for (let t = 0; t < 1; t += .04) { const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t; g.beginPath(); g.moveTo(x, y); g.lineTo(x + rr2(-7, 7), y + rr2(-7, 7)); g.stroke(); } } }
       /* varratok: a foltok szélén vastag, durva férc (szaggatott) és sűrű X-öltések, helyenként kilógó cérnavég */
       const seam = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L; g.strokeStyle = "rgba(30,20,10,.35)"; g.lineWidth = 5; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
         g.strokeStyle = R() < .5 ? "#2a1a0c" : "#efe6cf"; g.lineWidth = 3.2; for (let d = 8; d < L - 8; d += 17) { const x = a[0] + dx * d / L + rr2(-1.5, 1.5), y = a[1] + dy * d / L + rr2(-1.5, 1.5); g.beginPath(); g.moveTo(x - nx * 9 - dx / L * 5, y - ny * 9 - dy / L * 5); g.lineTo(x + nx * 9 + dx / L * 5, y + ny * 9 + dy / L * 5); g.moveTo(x + nx * 9 - dx / L * 5, y + ny * 9 - dy / L * 5); g.lineTo(x - nx * 9 + dx / L * 5, y - ny * 9 + dy / L * 5); g.stroke(); }
         if (R() < .4) { const t = R(), x = a[0] + dx * t, y = a[1] + dy * t; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 18, y + 10, x + rr2(10, 30), y + rr2(20, 40)); g.stroke(); } };
-      for (let j = 0; j <= NY; j++) for (let i = 0; i < NX; i++) seam(P[j * (NX + 1) + i], P[j * (NX + 1) + i + 1]);
-      for (let j = 0; j < NY; j++) for (let i = 0; i <= NX; i++) seam(P[j * (NX + 1) + i], P[(j + 1) * (NX + 1) + i]);
+      polys.forEach((q) => { for (let i = 0; i < q.length; i++) if (R() < .85) seam(q[i], q[(i + 1) % q.length]); });
+      /* ÖREGÍTÉS: a nap kiszívta a színeket, a víz és a só megfakította, rothadó, penészes – szürkésbarna fakulás, sárgás szennyeződés */
+      g.globalCompositeOperation = "saturation"; g.fillStyle = "rgba(128,128,128,.5)"; g.fillRect(0, 0, w, h);
+      g.globalCompositeOperation = "multiply"; { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "rgba(205,190,160,1)"); gr.addColorStop(.6, "rgba(180,160,125,1)"); gr.addColorStop(1, "rgba(135,115,85,1)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+      g.globalCompositeOperation = "source-over";
+      /* sókarikák és vízfoltok */
+      for (let k = 0; k < 12; k++) { const x = R() * w, y = R() * h, r = rr2(30, 110); g.strokeStyle = `rgba(245,240,225,${rr2(.06, .16)})`; g.lineWidth = rr2(3, 8); g.beginPath(); for (let i = 0; i <= 24; i++) { const a = i / 24 * TAU, f = rr2(.8, 1.15); const px = x + Math.cos(a) * r * f, py = y + Math.sin(a) * r * .75 * f; i ? g.lineTo(px, py) : g.moveTo(px, py); } g.stroke(); g.fillStyle = "rgba(90,70,40,.07)"; g.fill(); }
+      /* penész és rothadás: zöldes-fekete pöttyfelhők, főleg alul és a varratok mentén */
+      for (let k = 0; k < 34; k++) { const cx = R() * w, cy = h * Math.pow(R(), .55), r = rr2(15, 70); for (let q = 0; q < 70; q++) { const a = R() * TAU, d = r * Math.sqrt(R()); g.fillStyle = R() < .5 ? `rgba(35,50,25,${rr2(.15, .5)})` : `rgba(20,20,15,${rr2(.15, .45)})`; g.beginPath(); g.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, rr2(1, 4.5), 0, TAU); g.fill(); } }
+      /* kopott, elvékonyodott foltok (átsejlik a szövés) */
+      for (let k = 0; k < 14; k++) { g.fillStyle = "rgba(230,215,185,.18)"; g.beginPath(); g.ellipse(R() * w, R() * h, rr2(20, 70), rr2(12, 40), R() * 3, 0, TAU); g.fill(); }
       /* kézírás: „SOS” vastag kátránnyal, remegő, kézzel húzott betűk (több rétegben, csorgással), alatta a játékos neve szénnel */
       const hand = (txt, cx, cy, size, col, wob, drip) => { g.save(); g.translate(cx, cy); g.rotate(rr2(-.06, .03)); g.textAlign = "center"; g.textBaseline = "middle"; g.font = `italic 800 ${size}px Inter, "Comic Sans MS", "Chalkboard SE", system-ui, sans-serif`;
         for (let k = 0; k < 7; k++) { g.save(); g.translate(rr2(-wob, wob), rr2(-wob, wob)); g.rotate(rr2(-.015, .015)); g.globalAlpha = k ? .28 : .9; g.fillStyle = col; g.fillText(txt, 0, 0); g.restore(); }
@@ -515,7 +525,15 @@
       g.fillStyle = "#1b1209"; for (let k = 0; k < 7; k++) { const x = sx + rr2(-330, 330), y = sy + sz * .95, L = rr2(20, 90); g.globalAlpha = .8; g.fillRect(x, y, rr2(4, 8), L); g.beginPath(); g.arc(x + 3, y + L, 6, 0, TAU); g.fill(); } g.globalAlpha = 1;
       /* alatta a játékos neve: szénnel, kézírásszerűen (dőlt, remegő, többször átrajzolva) */
       const nm = o.name ? String(o.name).slice(0, 14) : ""; if (nm) hand(nm, w * .5, h * .68, nm.length > 9 ? 100 : 128, "#2b1d12", 3, false);
-      g.globalCompositeOperation = "destination-out"; for (let k = 0; k < 30; k++) { g.beginPath(); g.arc(rr(0, w), h - rr(0, 18), rr(4, 14), 0, TAU); g.fill(); g.beginPath(); g.arc(w - rr(0, 14), rr(0, h), rr(4, 12), 0, TAU); g.fill(); } g.globalCompositeOperation = "source-over"; });
+      /* SZAKADÁSOK: csipkés szélű lyukak és hasadások – a lyuk körül sötétebb, rothadt perem, kilógó szálak; hosszú L alakú hasadék is */
+      const tear = (cx, cy, rx, ry) => { const n = 18, q = []; for (let i = 0; i < n; i++) { const a = i / n * TAU, f = rr2(.45, 1.1); q.push([cx + Math.cos(a) * rx * f, cy + Math.sin(a) * ry * f]); }
+        g.fillStyle = "rgba(40,28,15,.55)"; g.beginPath(); q.forEach((p2, i) => (i ? g.lineTo(p2[0] * 1 + (p2[0] - cx) * .25, p2[1] + (p2[1] - cy) * .25) : g.moveTo(p2[0] + (p2[0] - cx) * .25, p2[1] + (p2[1] - cy) * .25))); g.closePath(); g.fill();
+        g.globalCompositeOperation = "destination-out"; g.fillStyle = "#000"; g.beginPath(); q.forEach((p2, i) => (i ? g.lineTo(p2[0], p2[1]) : g.moveTo(p2[0], p2[1]))); g.closePath(); g.fill(); g.globalCompositeOperation = "source-over";
+        g.strokeStyle = "rgba(220,200,160,.9)"; g.lineWidth = 1.6; q.forEach((p2) => { for (let t = 0; t < 3; t++) { g.beginPath(); g.moveTo(p2[0], p2[1]); g.quadraticCurveTo(p2[0] + (cx - p2[0]) * .3 + rr2(-8, 8), p2[1] + (cy - p2[1]) * .3 + rr2(-8, 8), p2[0] + (cx - p2[0]) * rr2(.3, .7), p2[1] + (cy - p2[1]) * rr2(.3, .8)); g.stroke(); } }); };
+      [[.2, .84, 70, 46], [.8, .14, 52, 74], [.88, .62, 44, 34], [.33, .2, 30, 24], [.6, .9, 80, 40], [.1, .47, 28, 42], [.5, .55, 22, 30]].forEach(([x, y, a, b]) => tear(w * x, h * y, a, b));
+      { /* hosszú hasadék a szél felől */ g.globalCompositeOperation = "destination-out"; g.strokeStyle = "#000"; g.lineWidth = 9; g.lineCap = "round"; g.beginPath(); g.moveTo(w * .7, h * .32); g.lineTo(w * .74, h * .4); g.lineTo(w * .72, h * .47); g.lineTo(w * .8, h * .5); g.stroke(); g.globalCompositeOperation = "source-over";
+        g.strokeStyle = "rgba(220,200,160,.8)"; g.lineWidth = 1.3; for (let k = 0; k < 40; k++) { const t = R(), x = w * (.7 + .1 * t) + rr2(-4, 4), y = h * (.32 + .18 * t); g.beginPath(); g.moveTo(x, y); g.lineTo(x + rr2(-9, 9), y + rr2(-6, 6)); g.stroke(); } }
+      g.globalCompositeOperation = "destination-out"; g.fillStyle = "#000"; for (let k = 0; k < 30; k++) { g.beginPath(); g.arc(rr(0, w), h - rr(0, 18), rr(4, 14), 0, TAU); g.fill(); g.beginPath(); g.arc(w - rr(0, 14), rr(0, h), rr(4, 12), 0, TAU); g.fill(); } g.globalCompositeOperation = "source-over"; });
     const sailM = std({ map: sT, roughness: 1, side: THREE.DoubleSide, transparent: true, alphaTest: .4 });
     const sailG = new THREE.Group(); sailG.position.set(0, 0, SF + .02); mast.add(sailG);
     const sail = softSail({ parent: sailG, nu: 8, nv: 8, loose: true, bend: 0, telltales: false, mat: sailM, camber: .16, twist: .05, sag: .05,
