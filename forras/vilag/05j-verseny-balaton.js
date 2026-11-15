@@ -69,6 +69,10 @@
   /* vitorláskikötők (a település partján): a bejárat fényei éjjel – a tó felől behajózva balra vörös, jobbra zöld (IALA „A”) */
   const BAL_HARBORS = ["Siófok", "Balatonfüred", "Tihany", "Balatonföldvár", "Zamárdi", "Badacsonytomaj", "Keszthely", "Fonyód", "Balatonlelle", "Balatonboglár", "Révfülöp", "Balatonalmádi", "Balatonkenese", "Szigliget", "Balatonszemes", "Alsóörs", "Csopak", "Balatonakali", "Zánka", "Balatonmáriafürdő", "Balatonfenyves", "Balatongyörök", "Vonyarcvashegy", "Balatonszárszó", "Balatonvilágos"];
   /* a part legközelebbi pontja egy (lat, lon)-hoz, és onnan a tó felé mutató egységvektor */
+  /* 2026-11-15: a partvonal LEGKÖZELEBBI PONTJA (a szakaszokra vetítve – a ritka csúcsú, egyenes partszakaszokon is pontos; az új pályák nevezetességeihez) */
+  function balShorePt2(lat, lon) { const B = balData(), [x, z] = balXY(lat, lon), P = B.P, N = P.length; let bd = 1e18, bx = 0, bz = 0, bi = 0;
+    for (let i = 0; i < N; i++) { const a = P[i], b = P[(i + 1) % N], ex = b[0] - a[0], ez = b[1] - a[1], L2 = ex * ex + ez * ez || 1, t = clamp(((x - a[0]) * ex + (z - a[1]) * ez) / L2, 0, 1), px = a[0] + ex * t, pz = a[1] + ez * t, d = (px - x) ** 2 + (pz - z) ** 2; if (d < bd) { bd = d; bx = px; bz = pz; bi = i; } }
+    const a = P[bi], b = P[(bi + 1) % N]; let tx = b[0] - a[0], tz = b[1] - a[1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl; let nx = -tz, nz = tx; if (!balInLake(bx + nx * 40, bz + nz * 40)) { nx = -nx; nz = -nz; } return { x: bx, z: bz, nx, nz, tx, tz }; }
   function balShorePt(lat, lon) { const B = balData(), [x, z] = balXY(lat, lon); let bi = 0, bd = 1e18; B.P.forEach((p, i) => { const d = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (d < bd) { bd = d; bi = i; } });
     const N = B.P.length, a = B.P[(bi + N - 2) % N], b = B.P[(bi + 2) % N], p = B.P[bi]; let tx = b[0] - a[0], tz = b[1] - a[1]; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
     let nx = -tz, nz = tx; if (!balInLake(p[0] + nx * 60, p[1] + nz * 60)) { nx = -nx; nz = -nz; } return { x: p[0], z: p[1], nx, nz, tx, tz }; }
@@ -86,14 +90,15 @@
     { id: "boglar", n: "Balatonboglár – a gömbkilátó alatt", lat: 46.7955, lon: 17.660, basin: "kozepso", d: "Délen a boglári Várdomb, a tetején az ezüst gömbkilátó; szemben, északon Révfülöp és a Fülöp-hegy, nyugatra a Badacsony." },
     { id: "keszthely", n: "Keszthely – az öbölben", lat: 46.738, lon: 17.292, basin: "nyugati", d: "Északnyugaton a Keszthelyi-hegység, előtte a város a Festetics-kastéllyal; keletre a Szent György-hegy és a Badacsony." },
     { id: "zamardi", n: "Zamárdi – a Zephyr előtt", lat: 46.898, lon: 17.945, basin: "keleti", d: "Hazai pálya a Zephyr Apartmanház előtt: délen a Kőhegy a kilátóval, nyugatra a Tihanyi-félsziget az apátsággal, északon Füred és Alsóörs." }];
-  function vrVenue(lvl) { return VENUES[((lvl || 1) - 1 + VENUES.length) % VENUES.length]; }
+  function vrVenue(lvl) { if (typeof vrIsNew === "function" && vrIsNew(lvl)) return vrVenueNew(lvl);   /* 2026-11-15: az új pályák saját helyszínnel (05zb) */
+    return VENUES[((lvl || 1) - 1 + VENUES.length) % VENUES.length]; }
   /* a kikötő: Zamárdi, a Zephyr-háztól egyenesen a partra lépve (a móló a part elejétől észak felé fut) */
   function balHarborCentre() { const s = balShorePt(46.8915, 17.9575); return [s.x + s.nx * 12, s.z + s.nz * 12]; }
   function vrShoresBuild(far) { const S = VRR; S.shoreG = new THREE.Group(); (S.env || far).add(S.shoreG); S.shoreOld = makeShores(far); S.shoreOld.visible = false; }
 
   /* ---------------------------------------------------------------- a táj felépítése egy helyszínhez */
   function vrShoresSet(C, venue) {
-    W._bal = { balXY, balLL, balInLake, balHgt, balCls, balShorePt, balHarborCentre, balGround, STM };
+    W._bal = { balXY, balLL, balInLake, balHgt, balCls, balShorePt, balHarborCentre, balGround, STM, BAL };
     const S = VRR; let G = S.shoreG; if (!G) return;
     if (S.env && G.parent !== S.env && !venue.harbor) S.env.add(G);
     while (G.children.length) { const o = G.children[0]; G.remove(o); o.traverse((q) => { if (q.geometry) q.geometry.dispose(); }); }
@@ -296,7 +301,7 @@
   function balLandmarks(G, cx, cz, NL) {
     BAL.live = [];
     const parts = [], partsG = [], mat = balMatL(); BAL.lmLabels = [];
-    BAL_LM.forEach((L) => { let [x, z] = balXY(L.lat, L.lon); if (L.harbour) { const s = balShorePt(L.lat, L.lon); x = s.x + s.nx * 30; z = s.z + s.nz * 30; }
+    BAL_LM.forEach((L) => { let [x, z] = balXY(L.lat, L.lon); if (L.harbour) { const s = L.seg ? balShorePt2(L.lat, L.lon) : balShorePt(L.lat, L.lon), ho = L.hoff != null ? L.hoff : 30; x = s.x + s.nx * ho; z = s.z + s.nz * ho; if (L.align) L.ry = Math.atan2(s.nx, s.nz) + (L.ry0 || 0); }   /* 2026-11-15: kikötő/móló a part normálisához igazítva (05zb) */
       const d = Math.hypot(x - cx, z - cz); if (d < 60) return; const sc = L.sc || 1; let gy = 0;
       /* 19:34 (tulajdonos: „az apátság tornya belelóg a hegybe”): az épület alapja a TALAJ LEGMAGASABB pontja az egész alaprajz alatt (tornyok, hajó, szárnyak),
          így semmi nem süllyed a hegybe; lejtő felé a kőlábazat mélyen lenyúlik, hogy ne lebegjen. */

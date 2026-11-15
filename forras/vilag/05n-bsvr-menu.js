@@ -107,8 +107,15 @@
       B.btn(44, 840, 380, 116, "‹ Vissza", () => wzGo(1), { fs: 36 }); B.btn(444, 840, 1002, 116, "TOVÁBB ▶  a pálya kiválasztása", () => wzGo(3), { gold: true, fs: 40 });
     } else if (p === "w3") {
       wzFrame(B, g, 3, "3 · PÁLYA", "Válassz egy pályát egyetlen futamra – vagy indíts 3–5 futamos sorozatot véletlenszerű pályákkal");
-      for (let i = 0; i < 10; i++) { const lvl = i + 1, C = HB.wzC && HB.wzC[lvl] || ((HB.wzC = HB.wzC || {})[lvl] = vrCourse(lvl)), v = vrVenue(lvl), x = 44 + (i % 2) * 436, y = 244 + Math.floor(i / 2) * 104, on = Z.kind === "one" && Z.lvl === lvl;
-        B.btn(x, y, 424, 94, `${lvl}. ${C.name}`, () => { Z.kind = "one"; Z.lvl = lvl; wzSave(); B.dirty = 1; }, { green: on, sub: `${v.n.split(" – ")[0]} · ${C.marks.length + (C.fin ? 0 : 0)} bója`, fs: 26 }); }
+      /* 2026-11-15: lapfülek – a klasszikus 10 pálya, az 5 új nappali és az 5 új éjszakai (05zb) */
+      const tab = Z.tab || (Z.lvl >= 106 && Z.lvl <= 110 ? "ej" : Z.lvl >= 101 && Z.lvl <= 105 ? "nap" : "klassz");
+      [["klassz", "Klasszikus 1–10"], ["nap", "☀ Új nappali pályák"], ["ej", "🌙 Új éjszakai pályák"]].forEach(([k, l], j) => B.btn(44 + j * 284, 240, 272, 66, l, () => { Z.tab = k; wzSave(); B.dirty = 1; }, { gold: tab === k, fs: 23 }));
+      const cOf = (lvl) => HB.wzC && HB.wzC[lvl] || ((HB.wzC = HB.wzC || {})[lvl] = vrCourse(lvl));
+      if (tab === "klassz") for (let i = 0; i < 10; i++) { const lvl = i + 1, C = cOf(lvl), v = vrVenue(lvl), x = 44 + (i % 2) * 436, y = 318 + Math.floor(i / 2) * 86, on = Z.kind === "one" && Z.lvl === lvl;
+        B.btn(x, y, 424, 78, `${lvl}. ${C.name}`, () => { Z.kind = "one"; Z.lvl = lvl; wzSave(); B.dirty = 1; }, { green: on, sub: `${v.n.split(" – ")[0]} · ${C.marks.length} bója`, fs: 24 }); }
+      else VR_NEW_IDS.filter((l) => (tab === "ej") === !!VR_NEW[l].night).forEach((lvl, i) => { const C = cOf(lvl), v = vrVenue(lvl), on = Z.kind === "one" && Z.lvl === lvl, nG = C.marks.filter((m) => m.gate).length, nS = C.marks.filter((m) => m.sd === -1).length, nL = C.marks.filter((m) => m.lm).length;
+        const sub = [v.n.split(" – ")[0], `${C.marks.length} jel`, nG ? `${nG} kapu` : "", nS ? `${nS} jobb kéz felőli` : "", nL ? "nevezetesség" : "", C.storm === 2 ? "⚡ zivatar" : C.storm === 1 ? "távoli villámlás" : ""].filter(Boolean).join(" · ");
+        B.btn(44, 318 + i * 86, 860, 78, C.name, () => { Z.kind = "one"; Z.lvl = lvl; wzSave(); B.dirty = 1; }, { green: on, sub, fs: 26 }); });
       wzPanel(g, 940, 244, 506, 400, Z.kind === "one");
       if (Z.kind === "one") { const C = HB.wzC[Z.lvl]; drawCoursePlan(g, C, 952, 256, 482, 330, B.t); g.fillStyle = "#fff"; g.font = `700 19px ${UIF}`; uiFit(g, `${vrVenue(Z.lvl).n} · ${(C.tws / KN).toFixed(0)} csomó`, 470, 19, 700); g.fillText(`${vrVenue(Z.lvl).n} · ${(C.tws / KN).toFixed(0)} csomó`, 960, 620); }
       else { g.fillStyle = "#ffd166"; g.font = `900 34px ${UIF}`; g.fillText(`${Z.n} FUTAMOS SOROZAT`, 970, 310); g.fillStyle = "rgba(225,235,248,.88)"; g.font = `600 21px ${UIF}`; uiWrap(g, "Minden futam más pályán és más helyszínen – véletlenszerűen sorsolva. Futamonként kapitányi tájékoztató, a végén eredménylista" + (Z.fleet === "mix" ? " (vegyes flotta: pontozás nélkül)." : " és serleg az első háromnak (RRS A4 pontozás)."), 970, 352, 450, 30, 8); }
@@ -138,10 +145,12 @@
     if (plan && plan.length > 1) { g.fillStyle = "rgba(255,214,102,.9)"; g.font = `800 18px ${UIF}`; g.fillText("A SOROZAT PÁLYÁI", rx + 24, y + 452); g.fillStyle = "rgba(225,235,248,.85)"; g.font = `600 16px ${UIF}`; const t = plan.map((l, i) => `${i + 1}. ${VR_TPL[(l - 1) % VR_TPL.length].n}`).join(" · "); uiWrap(g, t, rx + 24, y + 478, rw - 48, 22, 3); }
     { const tx = `⚠ Balatoni viharjelzés – ${stmText()}`; g.fillStyle = "#ffd166"; g.font = `700 17px ${UIF}`; uiFit(g, tx, rw - 48, 17, 700); g.fillText(tx, rx + 24, y + 578); } }
   function vrLimitOf(C) { try { vrLimitSetC(C); } catch (e) {} return C.limit || 0; }
-  function wzNight(lvl) { const Z = HB.wz || wzLoad(); return Z.tod === "ej" ? true : Z.tod === "nap" ? false : ((lvl * 2654435761) >>> 0) % 3 === 1; }
+  function wzNight(lvl) { if (vrIsNew(lvl)) return !!VR_NEW[lvl].night; const Z = HB.wz || wzLoad(); return Z.tod === "ej" ? true : Z.tod === "nap" ? false : ((lvl * 2654435761) >>> 0) % 3 === 1; }
   /* a sorozat pályái: egyetlen futam = a választott; sorozat = n különböző, véletlen pálya (sablon × helyszín, 1–40) */
   function wzPlan() { const Z = HB.wz; let plan; if (Z.kind === "one") plan = [Z.lvl]; else { const pool = []; for (let i = 1; i <= 40; i++) pool.push(i); for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-      const used = {}; plan = []; for (const l of pool) { const t = (l - 1) % VR_TPL.length; if (used[t]) continue; used[t] = 1; plan.push(l); if (plan.length >= Z.n) break; } }
+      /* 2026-11-15: az új pályák (101–110) is bekerülnek – a választott napszakhoz illők (nappal: 101–105, éjjel: 106–110, vegyes: mind) */
+      VR_NEW_IDS.filter((l) => Z.tod === "nap" ? !VR_NEW[l].night : Z.tod === "ej" ? VR_NEW[l].night : true).forEach((l) => pool.splice(Math.floor(Math.random() * (pool.length + 1)), 0, l));
+      const used = {}; plan = []; for (const l of pool) { const t = vrIsNew(l) ? "n" + l : (l - 1) % VR_TPL.length; if (used[t]) continue; used[t] = 1; plan.push(l); if (plan.length >= Z.n) break; } }
     HB.wzPlan = plan; return plan; }
   function wzApply() { const Z = HB.wz, plan = HB.wzPlan || wzPlan(); wzSave();
     VRR.mixFleet = Z.fleet === "mix"; VRR.todMix = Z.tod === "vegyes"; VRR.nightForce = Z.tod === "ej" ? true : Z.tod === "nap" ? false : null; HB.wzKeep = true;

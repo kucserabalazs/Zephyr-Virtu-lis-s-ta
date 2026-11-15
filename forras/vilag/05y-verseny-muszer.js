@@ -22,12 +22,15 @@
     /* ================= 1) FELSŐ TÁBLA ================= */
     muPill(g, 14, 14, 996, 290, 26, "#0b2236", "#24506f", 3);
     const lbl = S.pen > 0 ? "BÜNTETÉS" : S.ocs ? "KORAI RAJT" : S.st === "pre" ? "RAJT ELŐTT" : S.fin ? "BEFUTOTTÁL" : "KÖVETKEZŐ CÉL";
-    const name = S.fin ? "CÉL ✓" : S.ocs ? "VISSZA A VONAL MÖGÉ" : gate ? (finNow ? "CÉLVONAL" : "RAJTVONAL") : `${S.next + 1}. BÓJA`, of = !gate && !S.fin ? ` / ${S.marks.length}` : "";
+    const mkN = !gate && !S.fin ? S.marks[S.next] : null, name = S.fin ? "CÉL ✓" : S.ocs ? "VISSZA A VONAL MÖGÉ" : gate ? (finNow ? "CÉLVONAL" : "RAJTVONAL") : vrMkName(mkN, S.next).toUpperCase(), of = !gate && !S.fin ? ` / ${S.marks.length}` : "";
     g.textAlign = "left"; g.textBaseline = "alphabetic"; g.fillStyle = "#ffd166"; g.font = F(800, 32); g.fillText(lbl, 44, 66);
     { const s = muFit(g, name, 500, 80, 900); g.fillStyle = "#ffffff"; g.fillText(name, 44, 64 + s * .98); const w0 = g.measureText(name).width; if (of) { g.font = F(700, 40); g.fillStyle = "#7f9fb8"; g.fillText(of, 44 + w0 + 8, 64 + s * .98); } }
     /* kerülés iránya – nemzetközi színekkel: bal kéz felől = PIROS (port), kapu = zöld */
     { const y = 164; if (S.fin) { muPill(g, 40, y, 520, 54, 27, "#1e8e4f"); g.fillStyle = "#fff"; g.font = F(800, 32); g.fillText("🏁  gratulálunk!", 64, y + 38); }
       else if (gate) { muPill(g, 40, y, 520, 54, 27, "#1e8e4f"); g.fillStyle = "#fff"; muFit(g, finNow ? "⇥  a két célbója KÖZÖTT át" : "⇥  a két rajtbója KÖZÖTT át", 480, 32, 800); g.fillText(finNow ? "⇥  a két célbója KÖZÖTT át" : "⇥  a két rajtbója KÖZÖTT át", 64, y + 38); }
+      /* 2026-11-15: kapu a pálya közepén = zöld „KÖZÖTT át”; jobb kéz felőli jel = ZÖLD (starboard); bal kéz felőli = PIROS (port) */
+      else if (mkN && mkN.gate) { muPill(g, 40, y, 520, 54, 27, "#1e8e4f"); g.fillStyle = "#fff"; g.font = F(800, 32); g.fillText("⇥  KAPU: a két bója KÖZÖTT át", 64, y + 38); }
+      else if (mkN && mkN.sd === -1) { muPill(g, 40, y, 520, 54, 27, "#1e8e4f"); g.fillStyle = "#fff"; g.font = F(800, 32); g.fillText("↻  JOBB KÉZ FELŐL kerüld", 64, y + 38); }
       else { muPill(g, 40, y, 520, 54, 27, "#c9302c"); g.fillStyle = "#fff"; g.font = F(800, 32); g.fillText("↺  BAL KÉZ FELŐL kerüld", 64, y + 38); } }
     /* távolság + érkezés */
     { g.fillStyle = "#ffffff"; g.font = F(900, 58); const ds = dT >= 1000 ? (dT / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(dT) + " m"; g.fillText(ds, 44, 284); const w0 = g.measureText(ds).width;
@@ -69,9 +72,14 @@
       line(C.line.a, C.line.b, gate && !finNow, "#3ddc84"); if (C.fin) line(C.fin.a, C.fin.b, finNow, "#ffe14d"); else if (finNow) line(C.line.a, C.line.b, true, "#ffe14d");
       /* bóják; a következőnél a kerülési ív (az óramutatóval ellentétes, a bója BAL kéz felől marad) */
       S.marks.forEach((m, i) => { const [x, y] = P(m.x, m.z), cur = i === S.next && !gate, done = i < S.next, r = cur ? 24 : 15;
-        if (cur) { const Ra = Math.max(24 * k, r + 20), a0 = Math.atan2(oy - y, ox - x) - .8; g.strokeStyle = "#ff6b5a"; g.lineWidth = 7; g.lineCap = "round"; g.beginPath(); g.arc(x, y, Ra, a0, a0 - Math.PI * 1.45, true); g.stroke(); g.lineCap = "butt";
-          const th = a0 - Math.PI * 1.45, ex = x + Ra * Math.cos(th), ey = y + Ra * Math.sin(th), tx = Math.sin(th), ty = -Math.cos(th); g.fillStyle = "#ff6b5a"; g.beginPath(); g.moveTo(ex + tx * 18, ey + ty * 18); g.lineTo(ex + Math.cos(th) * 13 - tx * 6, ey + Math.sin(th) * 13 - ty * 6); g.lineTo(ex - Math.cos(th) * 13 - tx * 6, ey - Math.sin(th) * 13 - ty * 6); g.closePath(); g.fill(); }
-        g.beginPath(); g.arc(x, y, r, 0, TAU); g.fillStyle = done ? "#2fbf71" : cur ? "#ffb703" : "#ff7a00"; g.fill(); g.lineWidth = 4; g.strokeStyle = "#fff"; g.stroke();
+        /* 2026-11-15: kapu = két pont, köztük a vonal (az aktuális zöld); jobb kéz felőli jelnél az ív az óramutató járásával egyező, zöld */
+        if (m.gate) { const a = P(m.gate.a.x, m.gate.a.z), b = P(m.gate.b.x, m.gate.b.z); g.strokeStyle = done ? "rgba(47,191,113,.6)" : cur ? "#3ddc84" : "rgba(233,242,58,.75)"; g.lineWidth = cur ? 8 : 5; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+          [a, b].forEach((q) => { g.beginPath(); g.arc(q[0], q[1], cur ? 13 : 9, 0, TAU); g.fillStyle = done ? "#2fbf71" : "#e9f23a"; g.fill(); g.lineWidth = 3; g.strokeStyle = "#fff"; g.stroke(); });
+          g.fillStyle = "#fff"; g.font = F(800, cur ? 24 : 18); g.textAlign = "center"; g.fillText(done ? "✓" : "K", x, y - 14); g.textAlign = "left"; return; }
+        if (cur) { const stb = m.sd === -1, col = stb ? "#3ddc84" : "#ff6b5a", Ra = Math.max(24 * k, r + 20), a0 = Math.atan2(oy - y, ox - x) + (stb ? .8 : -.8), th = a0 + (stb ? 1 : -1) * Math.PI * 1.45;
+          g.strokeStyle = col; g.lineWidth = 7; g.lineCap = "round"; g.beginPath(); g.arc(x, y, Ra, a0, th, !stb); g.stroke(); g.lineCap = "butt";
+          const ex = x + Ra * Math.cos(th), ey = y + Ra * Math.sin(th), tx = (stb ? -1 : 1) * Math.sin(th), ty = (stb ? 1 : -1) * Math.cos(th); g.fillStyle = col; g.beginPath(); g.moveTo(ex + tx * 18, ey + ty * 18); g.lineTo(ex + Math.cos(th) * 13 - tx * 6, ey + Math.sin(th) * 13 - ty * 6); g.lineTo(ex - Math.cos(th) * 13 - tx * 6, ey - Math.sin(th) * 13 - ty * 6); g.closePath(); g.fill(); }
+        g.beginPath(); g.arc(x, y, r, 0, TAU); g.fillStyle = done ? "#2fbf71" : cur ? "#ffb703" : "#ff7a00"; g.fill(); g.lineWidth = m.sd === -1 && !done ? 6 : 4; g.strokeStyle = m.sd === -1 && !done ? "#3ddc84" : "#fff"; g.stroke();
         g.fillStyle = done ? "#fff" : "#0b1b2a"; g.font = F(900, cur ? 30 : 20); g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(done ? "✓" : String(i + 1), x, y + 1); g.textBaseline = "alphabetic"; });
       /* ellenfelek */
       (S.riv || []).forEach((r, i) => { if (!r || r.out) return; const [x, y] = P(r.x, r.z), col = MU.rcol[i % MU.rcol.length]; g.save(); g.translate(x, y); g.rotate(r.b - S.b); g.fillStyle = col; g.strokeStyle = "#04121f"; g.lineWidth = 3; g.beginPath(); g.moveTo(0, -20); g.quadraticCurveTo(11, -5, 8, 15); g.lineTo(-8, 15); g.quadraticCurveTo(-11, -5, 0, -20); g.closePath(); g.fill(); g.stroke(); g.restore();

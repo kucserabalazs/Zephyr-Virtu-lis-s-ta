@@ -84,8 +84,8 @@
 
   /* ------------------------------------------------------------------ VERSENYBÓJA */
   function vrBuoyShade(hex, k) { const c = new THREE.Color(hex), h = {}; c.getHSL(h); c.setHSL(h.h, clamp(h.s * (1 - Math.abs(k) * .25), 0, 1), clamp(h.l + k * .5, 0, 1)); return "#" + c.getHexString(); }
-  function vrBuoyTex(col, label) {
-    const key = "vr-buoy|" + col + "|" + label; if (TEXC[key]) return TEXC[key];
+  function vrBuoyTex(col, label, ring) {
+    ring = ring || "#0b2f5e"; const key = "vr-buoy|" + col + "|" + label + "|" + ring; if (TEXC[key]) return TEXC[key];
     return (TEXC[key] = canvasTex(1024, 512, (g, w, h) => {
       /* alap: függőleges színátmenet (lent sötétebb, fent a nap fénye), a vízvonalon algás sáv */
       const gr = g.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, vrBuoyShade(col, -.3)); gr.addColorStop(.13, vrBuoyShade(col, -.1)); gr.addColorStop(.55, col); gr.addColorStop(1, vrBuoyShade(col, .08));
@@ -103,7 +103,7 @@
       /* szám / felirat háromszor körben */
       const cy = h * (1 - .36);
       [1 / 6, 3 / 6, 5 / 6].forEach((u) => { const cx = w * u;
-        if (/^\d+$/.test(label)) { const r = h * .135; g.fillStyle = "#ffffff"; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill(); g.lineWidth = 7; g.strokeStyle = "#0b2f5e"; g.stroke();
+        if (/^\d+$/.test(label)) { const r = h * .135; g.fillStyle = "#ffffff"; g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.fill(); g.lineWidth = ring === "#0b2f5e" ? 7 : 14; g.strokeStyle = ring; g.stroke();
           g.fillStyle = "#0b2f5e"; g.font = `900 ${Math.round(r * 1.45)}px ${UIF}`; g.fillText(label, cx, cy + r * .06); }
         else { const rw = w * .2, rh = h * .2; g.fillStyle = "#ffffff"; g.beginPath(); g.roundRect ? g.roundRect(cx - rw / 2, cy - rh / 2, rw, rh, 22) : g.rect(cx - rw / 2, cy - rh / 2, rw, rh); g.fill(); g.lineWidth = 6; g.strokeStyle = "#0b2f5e"; g.stroke();
           g.fillStyle = "#0b2f5e"; let fs = Math.round(rh * .62); g.font = `900 ${fs}px ${UIF}`; while (g.measureText(label).width > rw * .86 && fs > 20) { fs -= 2; g.font = `900 ${fs}px ${UIF}`; } g.fillText(label, cx, cy + 3); } });
@@ -121,15 +121,15 @@
     }));
   }
   /* kind: "mark" (narancs, szám), "last" (sárga, szám), "pin" (narancs, RAJT), "fin" (sárga, CÉL); H: a test magassága (a csoport utólag skálázható) */
-  function vrRaceBuoy(kind, num, H) {
-    H = H || 2.4; const col = kind === "last" || kind === "fin" ? "#ffcb1f" : "#ff6f0f", label = kind === "pin" ? "RAJT" : kind === "fin" ? "CÉL" : String(num || 1);
+  function vrRaceBuoy(kind, num, H, opt) {
+    opt = opt || {}; H = H || 2.4; const col = kind === "last" || kind === "fin" ? "#ffcb1f" : kind === "gate" ? "#e9f23a" : "#ff6f0f", label = kind === "pin" ? "RAJT" : kind === "fin" ? "CÉL" : kind === "gate" ? "KAPU" : String(num || 1), ring = opt.stb ? "#1f9e4a" : "#0b2f5e", fcol = opt.stb || kind === "gate" ? "#1fa34a" : col;
     const g = new THREE.Group(), I = new THREE.Matrix4(), R = .8;
     /* test: felfújt henger, kissé domború oldalfallal és kerek vállal */
     const prof = [[0, -.42], [.52, -.42], [.72, -.33], [.79, -.12], [.806, H * .18], [.812, H * .5], [.804, H * .76], [.77, H * .88], [.66, H * .965], [.46, H * 1.02], [.2, H * 1.045], [0, H * 1.05]].map(([r, y]) => new THREE.Vector2(r, y));
     const lg = new THREE.LatheGeometry(new THREE.SplineCurve(prof).getPoints(40), 44), P = lg.attributes.position, U = lg.attributes.uv; let y0 = 1e9, y1 = -1e9;
     for (let i = 0; i < P.count; i++) { y0 = Math.min(y0, P.getY(i)); y1 = Math.max(y1, P.getY(i)); }
     for (let i = 0; i < P.count; i++) U.setY(i, (P.getY(i) - y0) / (y1 - y0));
-    const body = mesh(lg, std({ color: "#ffffff", map: vrBuoyTex(col, label), roughness: .3, metalness: 0 }), g); body.userData.buoyBody = 1;
+    const body = mesh(lg, std({ color: "#ffffff", map: vrBuoyTex(col, label, ring), roughness: .3, metalness: 0 }), g); body.userData.buoyBody = 1;
     /* fekete gumiperem a talpnál, fogantyúhevederek a vállon, rozsdamentes emelőfül */
     const dk = std({ color: "#17191d", roughness: .62 }), ch = std({ color: "#d9dee3", roughness: .22, metalness: .85 });
     { const parts = []; const rim = new THREE.TorusGeometry(.79, .075, 10, 44); rim.rotateX(Math.PI / 2); rim.translate(0, -.16, 0); parts.push([rim, I]);
@@ -141,7 +141,7 @@
     /* lengő háromszögletű zászló (a bója színében, sötét szegéllyel) */
     const fg = new THREE.BufferGeometry(); { const NX = 8, pos = [], uv = [], idx = []; for (let i = 0; i <= NX; i++) { const u = i / NX, hh = .42 * (1 - u * .92); pos.push(u * .78, hh / 2, 0, u * .78, -hh / 2, 0); uv.push(u, 1, u, 0); } for (let i = 0; i < NX; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
       fg.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); fg.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); fg.setIndex(idx); fg.computeVertexNormals(); }
-    const fT = canvasTex(64, 32, (gg, w, h) => { gg.fillStyle = col; gg.fillRect(0, 0, w, h); gg.fillStyle = "#0b2f5e"; gg.fillRect(0, 0, w, 3); gg.fillRect(0, h - 3, w, 3); gg.fillRect(0, 0, 5, h); });
+    const fT = canvasTex(64, 32, (gg, w, h) => { gg.fillStyle = fcol; gg.fillRect(0, 0, w, h); gg.fillStyle = "#0b2f5e"; gg.fillRect(0, 0, w, 3); gg.fillRect(0, h - 3, w, 3); gg.fillRect(0, 0, 5, h); });
     const flag = mesh(fg, std({ map: fT, roughness: .7, side: THREE.DoubleSide }), g); flag.position.set(.03, H * 1.05 + 1.36, 0); flag.userData.noBake = true; flag.frustumCulled = false;
     const lamp = mesh(new THREE.SphereGeometry(.07, 12, 8), basic({ color: "#fff3b0" }), g); lamp.position.y = H * 1.05 + 1.64; lamp.userData.noBake = true;
     /* habgallér + sodorvonal a vízen (a csoporttal együtt ring; a szél alá fordítjuk) */
@@ -176,7 +176,7 @@
       if (Bu) { const d = Math.hypot(g.position.x - S.x, g.position.z - S.z);
         if (d < 260) { const A = Bu.fg.attributes.position, base = Bu.base; for (let i = 0; i < A.count; i++) { const x = base[i * 3], wv = Math.sin(t * 7.5 - x * 7 + Bu.ph) * .07 * x + Math.sin(t * 4.1 - x * 4) * .03 * x; A.setZ(i, wv); } A.needsUpdate = true; }
         Bu.wash.material.opacity = night ? .14 : .62; } };
-    (S.marks || []).forEach((m) => buoy(m.g)); buoy(S.pin); buoy(S.pin2); (S.fb || []).forEach(buoy);
+    (S.marks || []).forEach((m) => { buoy(m.g); if (m.g2) buoy(m.g2); }); buoy(S.pin); buoy(S.pin2); (S.fb || []).forEach(buoy);
     if (S.cb) rwFloatOne(S.cb, 13, 4.6, .85, 3.2, dt, null);
     (S.spect || []).forEach((q) => rwFloatOne(q.g, 11 * (q.sc || 1), 4 * (q.sc || 1), .85, 3.4, dt, null));
     /* a rajt- és célvonal csíkja a hullámokra simul */
