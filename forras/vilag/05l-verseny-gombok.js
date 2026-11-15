@@ -71,43 +71,73 @@
     S.raceMenu.show(true); }
 
   /* ---------------------------------------------------------------- RÖGZÍTÉS ÉS DRÓN-VISSZAJÁTSZÁS */
-  function vrRecTick(dt) { const S = VRR; if (S.replay || !S.C || S.st === "pre" && S.t < -20) return; const R = S.rec || (S.rec = { f: [], acc: 0, lvl: S.lvl });
-    if (R.lvl !== S.lvl) { S.rec = { f: [], acc: 0, lvl: S.lvl }; return; } if (S.st === "done" && R.end) return; R.acc += dt; if (R.acc < .25) return; R.acc = 0;
+  /* 2026-11-15 19:56 (tulajdonos: „a visszajátszásban a vitorla állása az aktuális állapotot mutatja, nem a felvételkorit”): a felvétel most a vitorlák
+     állapotát is rögzíti (látszólagos szélszög és -erő, melyik oldalon áll a vitorla, spinakker, dőlés, bólintás) – minden hajónál, 4 kép/mp-cel. */
+  const REC_OWN = 11, REC_RIV = 9;
+  function vrRecSail(OS) { return OS ? [OS.awa != null ? OS.awa : 60, OS.aws != null ? OS.aws : 5, OS.side || 1, OS.spin != null ? +OS.spin || 0 : 0] : [60, 5, 1, 0]; }
+  function vrRecTick(dt) { const S = VRR; if (S.replay || !S.C || S.st === "pre" && S.t < -20) return; const R = S.rec || (S.rec = { f: [], acc: 0, lvl: S.lvl, v: 2 });
+    if (R.lvl !== S.lvl || R.v !== 2) { S.rec = { f: [], acc: 0, lvl: S.lvl, v: 2 }; return; } if (S.st === "done" && R.end) return; R.acc += dt; if (R.acc < .25) return; R.acc = 0;
     const own = S.pb || S.boat, OS = own && own.userData.S;
-    const fr = [S.t, S.x, S.z, S.b, OS ? OS.heel || 0 : 0, S.v || 0]; S.riv.forEach((r) => { const rs = r.g && r.g.userData.S; fr.push(r.x, r.z, r.b, rs ? rs.heel || 0 : 0); }); R.f.push(fr);
+    const fr = [S.t, S.x, S.z, S.b, OS ? OS.heel || 0 : 0, S.v || 0].concat(vrRecSail(OS), [OS ? OS.pitch || 0 : 0]);
+    S.riv.forEach((r) => { const rs = r.g && r.g.userData.S; fr.push(r.x, r.z, r.b, rs ? rs.heel || 0 : 0); fr.push.apply(fr, vrRecSail(rs)); fr.push(r.v || 0); }); R.f.push(fr);
     if (R.f.length > 9000) R.f.splice(0, 1); if (S.st === "done") R.end = true; }
   function vrReplay(on) { const S = VRR;
     if (!on) { if (!S.replay) return; const P = S.replay; S.replay = null; if (S.repB) { S.repB.destroy(); S.repB = null; }
       /* az állapot visszaállítása, ahol a futam tartott */ Object.assign(S, P.save); S.riv.forEach((r, i) => Object.assign(r, P.rsave[i])); S.cal = P.cal; W.panelDirty = 1; return; }
     if (!S.rec || S.rec.f.length < 3) return; if (S.rec.f[S.rec.f.length - 1][0] <= 0) { S.msg = "🎥 A visszajátszás a rajt után indítható."; S.msgT = 4; return; }   /* szakértői jelentés B.14 */
     if (S.paused) { S.paused = false; vrPauseBoard(false); }
-    S.replay = { i: 0, t: S.rec.f[0][0], spd: 1, play: true, a: 0, save: { x: S.x, z: S.z, b: S.b, v: S.v }, rsave: S.riv.map((r) => ({ x: r.x, z: r.z, b: r.b, v: r.v })), cal: S.cal };
-    S.repB = uiBoard({ w: 1300, h: 300, mw: 1.0, dist: 1.1, y: -.35, fps: 4, bar: 80, draw: (B, g) => { const P = S.replay; if (!P) return; const F = S.rec.f, t0 = F[0][0], t1 = F[F.length - 1][0];
-      uiFrame(B, g, "🎥 VISSZAJÁTSZÁS – DRÓNNÉZET", `${mmss(Math.max(0, P.t))} / ${mmss(Math.max(0, t1))} · ${P.spd}× sebesség`);
+    S.replay = { i: 0, t: S.rec.f[0][0], spd: 1, play: true, a: 0, cam: "auto", camT: 0, save: { x: S.x, z: S.z, b: S.b, v: S.v }, rsave: S.riv.map((r) => ({ x: r.x, z: r.z, b: r.b, v: r.v })), cal: S.cal };
+    S.repB = uiBoard({ w: 1300, h: 410, mw: .82, dist: 1.2, y: -.42, dock: "bottom", fps: 4, bar: 80, draw: (B, g) => { const P = S.replay; if (!P) return; const F = S.rec.f, t0 = F[0][0], t1 = F[F.length - 1][0];
+      const cn = (REP_CAMS.find((q) => q[0] === P.cam) || REP_CAMS[0])[1]; uiFrame(B, g, "🎥 VISSZAJÁTSZÁS", `${mmss(Math.max(0, P.t))} / ${mmss(Math.max(0, t1))} · ${P.spd}× · ${cn}${P.cam === "auto" ? " (" + ((REP_CAMS.find((q) => q[0] === P.mode) || [0, ""])[1]) + ")" : ""}`);
       g.fillStyle = "rgba(255,255,255,.15)"; g.fillRect(40, 150, 1220, 14); g.fillStyle = "#ffd166"; g.fillRect(40, 150, 1220 * clamp((P.t - t0) / Math.max(1, t1 - t0), 0, 1), 14);
       B.btn(40, 186, 230, 90, P.play ? "⏸ Szünet" : "▶ Lejátszás", () => { P.play = !P.play; B.dirty = 1; }, { gold: true });
       B.btn(290, 186, 200, 90, "⏮ Elejére", () => { P.t = t0; P.i = 0; B.dirty = 1; });
       [1, 4, 8].forEach((k, j) => B.btn(510 + j * 150, 186, 136, 90, k + "×", () => { P.spd = k; B.dirty = 1; }, { green: P.spd === k }));
-      B.btn(980, 186, 280, 90, "✕ Kilépés", () => vrReplay(false), { red: true }); } });
+      B.btn(980, 186, 280, 90, "✕ Kilépés", () => vrReplay(false), { red: true });
+      REP_CAMS.forEach(([id, lb], j) => B.btn(40 + j * 205, 296, 195, 90, lb, () => { P.cam = id; P.camT = 0; P.cut = true; B.dirty = 1; }, { green: P.cam === id, fs: 26 })); } });
     S.repB.show(true); }
   /* lejátszás: a hajók a rögzített helyükre kerülnek, a nézőpont egy lassan körbeszálló drón (a hajók fölött ~30 m, 60 m-re) */
+  /* 2026-11-15 19:56 (tulajdonos: „a visszajátszás minősége és látványossága legyen magasabb szintű”): mozi-kamerák. Az „Automatikus” mód 9 másodpercenként
+     vált: körbeszálló drón · követő kamera a hajó mögött · oldalról kísérő kamera a vitorlákkal · a következő bója mellől a víz színéről · felülnézet.
+     2D-ben a kamera simán úszik át egyik nézetből a másikba; VR-ben (hogy ne szédülj) a váltás egy rövid elsötétüléssel történik, és a kamera csak lassan mozog.
+     A hajók a valódi (látott) hullámokon ringanak, a vitorlák a felvétel szerint állnak, a nyomvonal és a permet is a felvételből épül újra. */
+  const REP_CAMS = [["auto", "🎬 Automatikus"], ["dron", "🚁 Drón"], ["kov", "⛵ Követő"], ["old", "↔ Oldalról"], ["boja", "🟠 Bójánál"], ["fent", "🗺 Felülről"]];
+  function vrRepCam(P, S, dt) {
+    const mode = P.cam === "auto" ? REP_CAMS[1 + Math.floor(P.camT / 9) % 5][0] : P.cam; if (mode !== P.mode) { P.mode = mode; P.cut = true; } P.camT += dt;
+    const f = vfwd(S.b), side = [-f[1], f[0]]; let eye, look;   /* tó-koordinátában */
+    if (mode === "dron") { P.a += dt * .09; let cx = S.x, cz = S.z, n = 1; S.riv.forEach((r) => { if (Math.hypot(r.x - S.x, r.z - S.z) < 220) { cx += r.x; cz += r.z; n++; } }); cx /= n; cz /= n; eye = [cx + Math.sin(P.a) * 70, 32, cz + Math.cos(P.a) * 70]; look = [cx, 0, cz]; }
+    else if (mode === "kov") { eye = [S.x - f[0] * 26 + side[0] * 4, 7.5, S.z - f[1] * 26 + side[1] * 4]; look = [S.x + f[0] * 12, 3, S.z + f[1] * 12]; }
+    else if (mode === "old") { const sd = (Math.floor(P.camT / 18) % 2) ? 1 : -1; eye = [S.x + side[0] * 17 * sd + f[0] * 6, 2.6, S.z + side[1] * 17 * sd + f[1] * 6]; look = [S.x, 4.5, S.z]; }
+    else if (mode === "boja") { const m = S.marks[Math.min(S.marks.length - 1, P.mi || 0)] || { x: S.x, z: S.z }; const d = Math.hypot(m.x - S.x, m.z - S.z), ux = (S.x - m.x) / (d || 1), uz = (S.z - m.z) / (d || 1);
+      eye = [m.x - uz * 14 - ux * 6, 1.6, m.z + ux * 14 - uz * 6]; look = [S.x, 3, S.z]; }
+    else { eye = [S.x - f[0] * 30, 140, S.z - f[1] * 30]; look = [S.x + f[0] * 40, 0, S.z + f[1] * 40]; }
+    /* a következő bója kiválasztása a „Bójánál” nézethez: amelyikhez a saját hajó a legközelebb van */
+    if (S.marks && S.marks.length) { let bi = 0, bd = 1e9; S.marks.forEach((m, i) => { const d = Math.hypot(m.x - S.x, m.z - S.z); if (d < bd) { bd = d; bi = i; } }); P.mi = bi; }
+    const k = P.cut || !P.eye ? 1 : Math.min(1, dt * (T.inVR ? .7 : 1.6)); if (P.cut && T.inVR) { try { locBlink(260); } catch (e) {} }
+    if (P.cut) { P.eye = eye.slice(); P.look = look.slice(); P.cut = false; } else for (let q = 0; q < 3; q++) { P.eye[q] += (eye[q] - P.eye[q]) * k; P.look[q] += (look[q] - P.look[q]) * k; }
+    return { eye: P.eye, look: P.look };
+  }
   function vrReplayTick(dt) { const S = VRR, P = S.replay, F = S.rec.f; if (!P) return false;
     if (P.play) P.t += dt * P.spd; const tEnd = F[F.length - 1][0]; if (P.t >= tEnd) { P.t = tEnd; P.play = false; if (S.repB) S.repB.dirty = 1; }
     while (P.i < F.length - 2 && F[P.i + 1][0] <= P.t) P.i++; while (P.i > 0 && F[P.i][0] > P.t) P.i--;
-    const A = F[P.i], Bf = F[Math.min(F.length - 1, P.i + 1)], k = Bf[0] > A[0] ? clamp((P.t - A[0]) / (Bf[0] - A[0]), 0, 1) : 0, L = (j) => A[j] + (Bf[j] - A[j]) * k, LA = (j) => A[j] + wrapA(Bf[j] - A[j]) * k;
+    const A = F[P.i], Bf = F[Math.min(F.length - 1, P.i + 1)], k = Bf[0] > A[0] ? clamp((P.t - A[0]) / (Bf[0] - A[0]), 0, 1) : 0, L = (j) => A[j] + (Bf[j] - A[j]) * k, LA = (j) => A[j] + wrapA(Bf[j] - A[j]) * k, Q = (j) => (k < .5 ? A[j] : Bf[j]);
+    const sail = (OS, j) => { if (!OS) return; OS.awa = L(j); OS.aws = L(j + 1); OS.side = Q(j + 2); if (OS.spin != null) OS.spin = L(j + 3); };
     S.x = L(1); S.z = L(2); S.b = LA(3); S.v = L(5); const own = S.pb || S.boat;
-    if (own) { const OS = own.userData.S; if (OS) { OS.heel = L(4); OS.pitch = 0; } if (own.userData.body) own.userData.body.rotation.set(0, 0, L(4), "YXZ"); try { own.userData.update(dt); } catch (e) {} }
-    S.riv.forEach((r, i) => { const j = 6 + i * 4; if (j + 3 >= A.length) return; r.x = L(j); r.z = L(j + 1); r.b = LA(j + 2); const f = vfwd(r.b); r.g.position.set(r.x, Math.sin(W.t * 1.5 + r.ph) * .06, r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);
-      const rs = r.g.userData.S; if (rs) rs.heel = L(j + 3); try { r.g.userData.update(dt); } catch (e) {} });
+    if (own) { const OS = own.userData.S; if (OS) { OS.heel = L(4); OS.pitch = A.length > 10 ? L(10) : 0; sail(OS, 6); } try { own.userData.update(dt); } catch (e) {} own.position.y = rwHeight(S.x, S.z) * .5; }
+    S.riv.forEach((r, i) => { const j = REC_OWN + i * REC_RIV; if (j + REC_RIV - 1 >= A.length) return; r.x = L(j); r.z = L(j + 1); r.b = LA(j + 2); r.v = L(j + 8); const f = vfwd(r.b);
+      r.g.position.set(r.x, rwHeight(r.x, r.z) * .62, r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);
+      const rs = r.g.userData.S; if (rs) { rs.heel = L(j + 3); sail(rs, j + 4); const sl = rwSlope(r.x, r.z); rs.pitch = clamp(-(sl[0] * f[0] + sl[1] * f[1]) * .55, -.06, .06); } try { r.g.userData.update(dt); } catch (e) {}
+      try { if (r.wk) r.wk.push(r.x, r.z, r.g.rotation.y, r.v || 0, dt * P.spd, .05); } catch (e) {} });
+    try { const f = vfwd(S.b); S.wake.push(S.x, S.z, Math.atan2(f[0], f[1]), S.v, dt * P.spd, .05); } catch (e) {}
     /* környezet a saját hajó körül (mint a futamban) */
     S.env.rotation.y = S.b; S.far.rotation.y = S.b; S.env.position.set(-S.x, 0, -S.z).applyAxisAngle(_YAX, S.b);
     try { rwUpdate(dt); } catch (e) {}   /* VÍZ 2.0 (05x) */
-    /* a flotta közepe (a hajó terében) és a drón */
-    let cx = 0, cz = 0, n = 1; S.riv.forEach((r) => { const dx = r.x - S.x, dz = r.z - S.z; if (Math.hypot(dx, dz) < 250) { const q = new THREE.Vector3(dx, 0, dz).applyAxisAngle(_YAX, S.b); cx += q.x; cz += q.z; n++; } }); cx /= n; cz /= n;
-    P.a += dt * .07; P.cx = P.cx == null ? cx : P.cx + (cx - P.cx) * Math.min(1, dt * .8); P.cz = P.cz == null ? cz : P.cz + (cz - P.cz) * Math.min(1, dt * .8);
-    const R = 62, H = 30, D = new THREE.Vector3(P.cx + Math.sin(P.a) * R, H, P.cz + Math.cos(P.a) * R), yaw = Math.atan2(D.x - P.cx, D.z - P.cz);
-    /* a néző (a rig origója) a drónban ül: a világot úgy forgatjuk és toljuk, hogy a drón pontja az origóba, a nézése a flotta felé essen */
-    W.root.quaternion.setFromAxisAngle(_YAX, -yaw); W.root.position.copy(D).applyAxisAngle(_YAX, -yaw).negate(); if (!T.inVR) W.root.position.y -= 0;
+    try { if (P.play && S.v > 4.5 && Math.random() < dt * .6) S.sprayBurst = 1; rwSprayTick(dt); } catch (e) {}
+    /* mozi-kamera: a világot úgy forgatjuk és toljuk, hogy a kamera pontja az origóba, a nézése a választott cél felé essen */
+    const cam = vrRepCam(P, S, dt), c = Math.cos(S.b), s2 = Math.sin(S.b), toRoot = (x, y, z) => { const dx = x - S.x, dz = z - S.z; return new THREE.Vector3(dx * c + dz * s2, y, -dx * s2 + dz * c); };
+    const E = toRoot(cam.eye[0], cam.eye[1], cam.eye[2]), Lk = toRoot(cam.look[0], cam.look[1], cam.look[2]), yaw = Math.atan2(-(Lk.x - E.x), -(Lk.z - E.z));
+    W.root.quaternion.setFromAxisAngle(_YAX, -yaw); W.root.position.copy(E).applyAxisAngle(_YAX, -yaw).negate();
+    if (!T.inVR) { const pitch = Math.atan2(Lk.y - E.y, Math.hypot(Lk.x - E.x, Lk.z - E.z)); try { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject && !P.userLook) { lc.pitchObject.rotation.x += (pitch - lc.pitchObject.rotation.x) * Math.min(1, dt * 2); lc.yawObject.rotation.y += (0 - lc.yawObject.rotation.y) * Math.min(1, dt * 2); } } catch (e) {} }
     vrBtnTick(dt); uiTickAll(dt); return true; }
   /* 2D: P = szünet / folytatás, Esc = versenymenü */
   try { document.addEventListener("keydown", (e) => { if (W.kind !== "race" || !W.active || T.inVR || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return;

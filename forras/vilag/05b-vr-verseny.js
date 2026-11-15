@@ -1393,7 +1393,7 @@
       return [`Cirkálj: a ${S.next + 1}. bója a szélben van, ${Math.round(dT)} m · tartsd ${tw < 36 ? "lejjebb – túl éles vagy!" : "a csapást"}`, "#1f6fb5"]; }
     return [`${S.next + 1}. bója: ${Math.round(dT)} m · ${deg < 6 ? "egyenesen előtted ✓" : "kormányozz " + deg + "°-ot " + side}`, "#1f6fb5"];
   }
-  function vrChart() {
+  function vrChartOld() {   /* 2026-11-15: helyette az új kijelző (05y: vrChart) */
     const S = VRR, t = S.ck.chartT; if (!t) return; const g = t._canvas.getContext("2d"), W2 = 1024, C = S.C;
     const cx = W2 / 2, cy = 562, RR = 288, RCOL = ["#7fd3ff", "#b6f09c", "#f5a6ff", "#ffd9a0"];
     const bgG = g.createLinearGradient(0, 0, 0, W2); bgG.addColorStop(0, "#061726"); bgG.addColorStop(1, "#020a12"); g.fillStyle = bgG; g.fillRect(0, 0, W2, W2);

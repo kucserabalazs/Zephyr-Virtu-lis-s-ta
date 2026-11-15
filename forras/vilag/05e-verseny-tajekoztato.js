@@ -58,6 +58,8 @@
     /* 2D: a vászon a képernyőn */
     B.domMake = () => { if (B.dom) return; const d = document.createElement("div"); d.className = "zx-board"; d.style.cssText = "position:fixed;inset:0;z-index:85;display:flex;align-items:center;justify-content:center;background:rgba(3,12,26,.35);pointer-events:auto";
       const c = document.createElement("canvas"); c.width = o.w; c.height = o.h; c.style.cssText = "max-width:97vw;max-height:94vh;width:auto;height:auto;border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.5);touch-action:manipulation;cursor:pointer"; d.appendChild(c); document.body.appendChild(d);
+      /* 2026-11-15: alulra dokkolt, átlátszó hátterű tábla (pl. a visszajátszás vezérlője) – a jelenet középen szabadon látszik */
+      if (o.dock === "bottom") { d.style.alignItems = "flex-end"; d.style.background = "transparent"; d.style.pointerEvents = "none"; d.style.paddingBottom = "max(8px, env(safe-area-inset-bottom))"; c.style.pointerEvents = "auto"; c.style.maxWidth = "min(97vw, 860px)"; c.style.maxHeight = "34vh"; }
       const pos = (e) => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * o.w, (e.clientY - r.top) / r.height * o.h]; };
       c.addEventListener("pointermove", (e) => { const p = pos(e); B.setHov(B.hit(p[0], p[1])); });
       c.addEventListener("pointerup", (e) => { const p = pos(e); B.click(p[0], p[1]); e.preventDefault(); });
