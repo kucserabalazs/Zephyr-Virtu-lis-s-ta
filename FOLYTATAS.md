@@ -1194,3 +1194,4 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - A világokban a „Vissza a sétához” a játékoldalon „Játékok főmenü” (01-mag.js BACK_T/BACK_S/GM_ON).
 - Teendő: a tulajdonos hozza létre a GitHubon a VR-Zephyr-Games tárolót → add_repo → a weboldal/vr-zephyr-games tartalmát oda kell tenni (gyökérbe), Pages bekapcsolás.
 - Fényképező: kucserabalazs/zephyr-hibafotok privát tároló + finomhangolt kulcs kell (tulajdonos készíti), utána add_repo, és a fotok/ mappát olvasom.
+- 16:03–16:04 tulajdonos: a fotós szekció CSAK fejlesztéshez kell, vendég ne lássa (kész: csak „?fejleszto” után / kulcsos eszközön látszik); A MUNKA VÉGÉN A FOTÓS SZEKCIÓT TÖRÖLNI KELL (FOTO*, foto* függvények, #zfoto, alkar-kamera az xrWatch-ban, watchItems 📷 sor, games CSS :not(#zfoto)).

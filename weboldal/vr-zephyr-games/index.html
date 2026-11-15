@@ -12465,7 +12465,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const panelOpen = !!(VRS.panel || (XRP.wristP && XRP.wristP.open));   /* 2026-11-11: nyitott panel (pl. foglalási naptár) mellett az útjelzők láthatatlan fogófelülete NEM viheti el a sugarat – ettől volt „nem jelölhető” a naptár nagy része */
     XRP.extra.forEach((o) => { if (panelOpen && o.userData && o.userData.navSign) return; if (isShown(o)) list.push(o); });
     if (XRP.wrist && XRP.wrist.visible) list.push(XRP.wrist);
-    if (XRP.camBtn && XRP.wristP && XRP.wristP.small && XRP.wristP.small.visible) list.push(XRP.camBtn);
+    if (XRP.camBtn && XRP.wristP && XRP.wristP.small && XRP.wristP.small.visible && XRP.wristP.camPod && XRP.wristP.camPod.visible) list.push(XRP.camBtn);
     if (XRP.wristP && XRP.wristP.m.visible) list.push(XRP.wristP.m);
     return list;
   }
@@ -12625,6 +12625,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
      A kép a 3D jelenetet újrarajzolja egy saját képpufferbe (VR-ben is működik, ahol a vásznat nem lehet kiolvasni), 2D-ben ráteszi a látható táblákat,
      alul pedig rávési, hol készült (hely, pozíció, idő, verzió). A képek a böngészőben maradnak (IndexedDB), a galériában letölthetők / megoszthatók. */
   const FOTO = { db: null, n: 0, busy: false, ui: null };
+  /* 2026-11-15 16:03 (tulajdonos: „a fotós szekció csak a fejlesztés ideje alatt kell, azt ne tüntesd fel sehol”): a fényképező csak a tulajdonos eszközein látszik.
+     Bekapcsolás eszközönként egyszer: a cím végére „?fejleszto” (megjegyzi); kikapcsolás: „?fejleszto-ki”. Bekötött (kulcsos) eszközön magától látszik. Vendég soha nem látja. */
+  function fotoDev() { try { const q = location.search; if (/[?&]fejleszto-ki\b/.test(q)) localStorage.removeItem("zephyrFejleszto"); else if (/[?&]fejleszto\b/.test(q)) localStorage.setItem("zephyrFejleszto", "1");
+      return localStorage.getItem("zephyrFejleszto") === "1" || !!localStorage.getItem("zephyrFotoKulcs"); } catch (e) { return false; } }
   function fotoDB() {
     if (FOTO.db) return Promise.resolve(FOTO.db);
     return new Promise((ok, no) => { try { const rq = indexedDB.open("zephyrFotok", 1); rq.onupgradeneeded = () => { try { rq.result.createObjectStore("f", { keyPath: "id" }); } catch (e) {} };
@@ -12768,7 +12772,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   }
   /* ---------------------------------------------------------------- a mindig látható gombok (2D) */
   function fotoButtons() {
-    if (FOTO.ui) return; const box = document.createElement("div"); box.id = "zfoto";
+    if (FOTO.ui || !fotoDev()) return; const box = document.createElement("div"); box.id = "zfoto";
     { const st = document.createElement("style"); st.textContent = "#zfoto{right:10px}body.world-on #zfoto{right:auto;left:10px}"; document.head.appendChild(st); }   /* a sétában jobb szélen (bal oldalt az alaprajz van), a 3D világokban bal szélen (jobbra a táblák) */
     box.style.cssText = "position:fixed;top:50%;transform:translateY(-50%);z-index:2147482000;display:flex;flex-direction:column;gap:10px;pointer-events:none";
     const mk = (ico, tip, fn) => { const b = document.createElement("button"); b.type = "button"; b.title = tip; b.setAttribute("aria-label", tip); b.textContent = ico;
@@ -12845,7 +12849,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     }
     if (window.ZEPHYR_GAMES) it = it.map((q) => q[1] === "A sétához" ? [q[0], "Játékok főmenü", q[2]] : q);
     if (!it.some((q) => q[1] === "Óra beállítás")) it = it.concat([watchSettings()]);
-    it = [["📷", fotoKey() ? (FOTO.err ? "Fotó (küldés hiba!)" : "Fotó → Claude") : FOTO.n ? `Fotó a hibáról (${FOTO.n})` : "Fotó a hibáról", () => fotoSnap()]].concat(it);   /* 2026-11-15: a fényképező mindig az első */
+    if (fotoDev()) it = [["📷", fotoKey() ? (FOTO.err ? "Fotó (küldés hiba!)" : "Fotó → Claude") : FOTO.n ? `Fotó a hibáról (${FOTO.n})` : "Fotó a hibáról", () => fotoSnap()]].concat(it);   /* 2026-11-15: a fényképező mindig az első */
     return it.slice(0, 12);
   }
   function sceneGroup() { const sc = SCENES[current]; return sc ? sc.g : null; }
@@ -12962,7 +12966,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
        (könyök felé 7 cm-re, hogy ne nyissa véletlenül a menüt). Mindig ott van, minden világban. A jobb mutatóujjal megérintve fotóz; kontrollerrel rámutatsz + ravasz.
        Színe: zöld = bekötve Claude-hoz, kék = csak helyben menti, sárga = küldi, piros = hiba. */
     { const cv = document.createElement("canvas"); cv.width = 128; cv.height = 128; const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
-      const pod = new THREE.Group(); pod.position.set(-.07, 0, .004); small.add(pod); P.camPod = pod;
+      const pod = new THREE.Group(); pod.position.set(-.07, 0, .004); small.add(pod); P.camPod = pod; pod.visible = fotoDev();
       const bd = new THREE.ExtrudeGeometry(rrect(.03, .03, .009), { depth: .006, bevelEnabled: true, bevelThickness: .0015, bevelSize: .0015, bevelSegments: 2, curveSegments: 6 }); bd.translate(0, 0, -.003); pod.add(new THREE.Mesh(bd, gold));
       const face = new THREE.Mesh(new THREE.PlaneGeometry(.028, .028), new THREE.MeshBasicMaterial({ map: tx, transparent: true })); face.position.z = .0047; pod.add(face);
       const ch = new THREE.Mesh(new THREE.SphereGeometry(.032, 10, 8), new THREE.MeshBasicMaterial({ visible: false })); pod.add(ch); XRP.camBtn = ch;
@@ -13209,7 +13213,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         _wm.makeBasis(x, y, z); P.small.quaternion.setFromRotationMatrix(_wm);
       } else { _wm.lookAt(_wv2.set(0, 0, 0), nrm.clone().multiplyScalar(-1), axis); P.small.quaternion.setFromRotationMatrix(_wm); }
       P.small.position.copy(base); }
-    if (P.camPod && base) { const Rt = XRP.src.right; if (Rt && Rt.hand && Rt.tip) { P.camPod.getWorldPosition(_wv4); const d = Rt.tip.distanceTo(_wv4); if (d < .022 && (P.camPrevD == null || P.camPrevD >= .022)) P.camPress(); P.camPrevD = d; } }
+    if (P.camPod && P.camPod.visible && base) { const Rt = XRP.src.right; if (Rt && Rt.hand && Rt.tip) { P.camPod.getWorldPosition(_wv4); const d = Rt.tip.distanceTo(_wv4); if (d < .022 && (P.camPrevD == null || P.camPrevD >= .022)) P.camPress(); P.camPrevD = d; } }
     P.small.visible = !!base; if (P.strapG) P.strapG.visible = !!(L && L.hand);
     XRP.wrist.visible = !!(L && !L.hand) && P.t < .05;
     const sz = WSTY.size[WS.size] || 1, e = wEase(P.t / .5);
@@ -13712,7 +13716,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "fbf0b56495"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "18a9497df6"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
