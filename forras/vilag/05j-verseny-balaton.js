@@ -90,13 +90,15 @@
     { id: "boglar", n: "Balatonboglár – a gömbkilátó alatt", lat: 46.7955, lon: 17.660, basin: "kozepso", d: "Délen a boglári Várdomb, a tetején az ezüst gömbkilátó; szemben, északon Révfülöp és a Fülöp-hegy, nyugatra a Badacsony." },
     { id: "keszthely", n: "Keszthely – az öbölben", lat: 46.738, lon: 17.292, basin: "nyugati", d: "Északnyugaton a Keszthelyi-hegység, előtte a város a Festetics-kastéllyal; keletre a Szent György-hegy és a Badacsony." },
     { id: "zamardi", n: "Zamárdi – a Zephyr előtt", lat: 46.898, lon: 17.945, basin: "keleti", d: "Hazai pálya a Zephyr Apartmanház előtt: délen a Kőhegy a kilátóval, nyugatra a Tihanyi-félsziget az apátsággal, északon Füred és Alsóörs." }];
-  function vrVenue(lvl) { if (typeof vrIsNew === "function" && vrIsNew(lvl)) return vrVenueNew(lvl);   /* 2026-11-15: az új pályák saját helyszínnel (05zb) */
+  function vrVenue(lvl) { if (lvl === 201 || lvl === 202) return kekVenue(KEK.on ? KEK.si : 0); if (typeof vrIsNew === "function" && vrIsNew(lvl)) return vrVenueNew(lvl);   /* 2026-11-15: az új pályák saját helyszínnel (05zb) */
     return VENUES[((lvl || 1) - 1 + VENUES.length) % VENUES.length]; }
   /* a kikötő: Zamárdi, a Zephyr-háztól egyenesen a partra lépve (a móló a part elejétől észak felé fut) */
   function balHarborCentre() { const s = balShorePt(46.8915, 17.9575); return [s.x + s.nx * 12, s.z + s.nz * 12]; }
   function vrShoresBuild(far) { const S = VRR; S.shoreG = new THREE.Group(); (S.env || far).add(S.shoreG); S.shoreOld = makeShores(far); S.shoreOld.visible = false; }
 
   /* ---------------------------------------------------------------- a táj felépítése egy helyszínhez */
+  /* 2026-11-15: víz-e egy pont a verseny koordinátáiban (a tó helyszínein; a kikötői helyszínen és a régi, tó nélküli pályákon mindig igen) */
+  function vrWet(x, z) { const S = VRR, c = S.balC; if (!c || !S.venue || S.venue.harbor || !S.shoreG || S.shoreG.parent !== S.env) return true; return balInLake(x + c[0], z + c[1]); }
   function vrShoresSet(C, venue) {
     W._bal = { balXY, balLL, balInLake, balHgt, balCls, balShorePt, balHarborCentre, balGround, STM, BAL };
     const S = VRR; let G = S.shoreG; if (!G) return;

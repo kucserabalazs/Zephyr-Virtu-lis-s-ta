@@ -229,6 +229,7 @@
     if (S.st === "done" && S.doneT && !S.briefShown && S.lvl && W.t - (S.doneWT || (S.doneWT = W.t)) > 6) vrBriefOpen();
     if (S.st !== "done") S.doneWT = 0;
     try { vrNightTick(dt); } catch (e) {}
+    try { kekTick(dt); } catch (e) { console.warn("kékszalag", e); }   /* 2026-11-15 (05zc) */
     if (typeof vrBriefTick === "function") vrBriefTick(dt);
     if (typeof vrNetTick === "function") vrNetTick(dt);
   }

@@ -100,7 +100,7 @@
   /* a helyi szél: szélszorzó és irányeltérés (a lökésben a szél kicsit jobbra fordul, a lavórban balra – mint a valóságban) */
   function rwWindAt(x, z) {
     const [g0, l0] = rwFieldAt(x, z), sm = (v) => { const k = clamp((v - .18) / .4, 0, 1); return k * k * (3 - 2 * k); }, l = sm(l0), g = sm(g0) * (1 - l);
-    return { k: 1 + .3 * g - .58 * l, dir: (6 * g - 4 * l) * D2R, g, l };
+    return { k: (1 + .3 * g - .58 * l) * (RW.kekGrad ? kekGradK(x, z) : 1), dir: (6 * g - 4 * l) * D2R, g, l };   /* 2026-11-15: Kékszalag – a tó egyik része szelesebb (05zc) */
   }
 
   /* ------------------------------------------------------------------ A VÍZ: poláris háló a hajó körül, a világhoz rögzített mintázattal */
@@ -116,7 +116,7 @@
     const mat = new THREE.ShaderMaterial({
       uniforms: { uT: { value: 0 }, uOff: { value: new THREE.Vector2() }, uWind: { value: 0 }, uW: { value: v4() }, uWp: { value: v2() }, uSun: { value: opt.sun || SUN }, uCam: { value: new THREE.Vector3() },
         uSkyH: { value: new THREE.Color(.70, .80, .87) }, uSkyZ: { value: new THREE.Color(.25, .45, .75) }, uDeep: { value: new THREE.Color(.045, .2, .19) }, uShallow: { value: new THREE.Color(.14, .4, .35) },
-        uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 }, uFlk: { value: 1 }, uFoam: { value: 1 }, uFlD: { value: new THREE.Vector3(0, .05, -1) }, uFlC: { value: new THREE.Color(0, 0, 0) },
+        uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 }, uFlk: { value: 1 }, uFoam: { value: 1 }, uFlD: { value: new THREE.Vector3(0, .05, -1) }, uFlC: { value: new THREE.Color(0, 0, 0) }, uKg: { value: new THREE.Vector4() }, uKg2: { value: new THREE.Vector4(0, 0, 1, 0) },
         uRip: { value: rwRipTex() }, uRipM: { value: new THREE.Vector4(5.3, 1.7, .26, 0) }, uWf: { value: RW.ft }, uWfM: { value: new THREE.Vector4(0, 0, 1 / RW.fL, 1) }, uWc: { value: new THREE.Vector4(.9, 1, 0, 0) },
         uBt: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, uBs: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) },
         uHull: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uHullS: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector3(0, 0, 0)) },
@@ -138,7 +138,7 @@
         }`,
       fragmentShader: `
         uniform sampler2D uSkyT, uRip, uWf; uniform float uSkyOn, uFlk, uT, uWind, uLight, uSpec, uFoam; uniform vec2 uSkyRot;
-        uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze, uFlD, uFlC; uniform vec4 uW[6]; uniform vec2 uWp[6]; uniform vec4 uRipM, uWfM, uWc;
+        uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze, uFlD, uFlC; uniform vec4 uW[6]; uniform vec2 uWp[6]; uniform vec4 uRipM, uWfM, uWc, uKg, uKg2;
         uniform vec4 uBt[4], uBs[4]; uniform vec4 uHull[6]; uniform vec3 uHullS[6];
         varying vec3 vP; varying float vDist; varying vec2 vW; varying vec2 vWP;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -153,6 +153,9 @@
           float n1 = vn(vW * .06), n2 = vn(vW * .23 + 7.3);
           float lu = smoothstep(.2, .55, F.g + (n1 - .5) * .3 + (n2 - .5) * .12);
           float gu = smoothstep(.2, .55, F.r + (n1 - .5) * .34 + (n2 - .5) * .14) * (1. - lu);
+          /* 2026-11-15: Kékszalag – a szelesebb tórész sötétebb, fodrosabb; a gyengébb világosabb, simább (05zc kekGradK-val egyező alak) */
+          if (uKg2.w > .5) { float ks = clamp(dot(vW - uKg.xy, uKg.zw) / uKg2.z, -1.3, 1.3), kf = (uKg2.x == 0. ? 1. - 2. * min(1., ks * ks) : clamp(ks * uKg2.x, -1., 1.)) * uKg2.y;
+            gu = clamp(gu + max(kf, 0.) * 2.4 * (1. - lu), 0., 1.); lu = clamp(lu + max(-kf, 0.) * 1.9, 0., 1.); }
           /* nagy hullámok: pixelenként számolt Gerstner-normális (a pixelnél rövidebb hullám elhalványul – nincs vibrálás) */
           vec3 n = vec3(0., 1., 0.); float crest = 0.;
           for (int i = 0; i < 6; i++) {

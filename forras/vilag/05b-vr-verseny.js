@@ -34,6 +34,7 @@
   /* pálya + szél egy futamhoz: a rajtvonal közepe (0,0); a szél iránya és ereje futamonként más */
   function vrCourse(lvl) {
     if (typeof vrIsNew === "function" && vrIsNew(lvl)) return vrCourseNew(lvl);   /* 2026-11-15: új pályák (101–110, 05zb) */
+    if (lvl === 201 || lvl === 202) return kekCourse(KEK.on ? KEK.si : 0);   /* 2026-11-15: Kékszalag – az aktuális szakasz (05zc) */
     if (!lvl) { const wf = 320 * D2R, u = vfwd(wf), c = [-u[1], u[0]], L = 70 * Math.max(.6, vrCs());   /* OKTATÓ FUTAM: egyetlen bója szél felé, 170 m-re; egyenletes, közepes szél */
       return { name: "Oktató futam", lvl: 0, wf, tws: 9 * KN, marks: [{ x: u[0] * 170 * vrCs(), z: u[1] * 170 * vrCs() }], u, c, line: { a: { x: -c[0] * L / 2, z: -c[1] * L / 2 }, b: { x: c[0] * L / 2, z: c[1] * L / 2 } } }; }
     const R = vrRng(lvl * 7919 + 13), tp = VR_TPL[(lvl - 1) % VR_TPL.length];
@@ -617,6 +618,7 @@
     else if (st === 5) { if (T2.sd0 == null || twa < 110) T2.sd0 = sd; else if (sd !== T2.sd0 && twa > 120) next(); if (S.fin) T2.step = 6; }
     if (T2.step < VR_TUT.length && !S.fin && S.msgT < 1.5 && !/^⚠/.test(S.msg || "")) { S.msg = VR_TUT[T2.step][0] + " – " + VR_TUT[T2.step][1]; S.msgT = 1.6; if (T2.shown !== T2.step) { T2.shown = T2.step; W.panelDirty = 1; } } }
   function vrSetup(lvl) {
+    try { kekSkyReset(); } catch (e) {}   /* 2026-11-15: a Kékszalag naplementés ege / fényei előbb visszaállnak (05zc) – minden futam tiszta nappali állapotból indul */
     /* 22:48: új futamnál a szünet, a versenymenü és a visszajátszás lezárul; a kalibrálás megmarad */
     try { if (VRR.replay) vrReplay(false); VRR.paused = false; vrPauseBoard(false); if (VRR.raceMenu) { VRR.raceMenu.destroy(); VRR.raceMenu = null; } VRR.menuPaused = false; VRR.rec = null; } catch (e) {}
     if (!VRR.diff) { try { VRR.diff = localStorage.getItem("zephyr-vr-nehezseg") || "halado"; } catch (e) { VRR.diff = "halado"; } } if (!VR_DIFF[VRR.diff]) VRR.diff = "halado";
@@ -649,6 +651,7 @@
     try { vrBriefClose(); } catch (e) {} vrLimitSet(C); vrLavGen(C); vrSpectPlace(C); try { msStart(W.root, 3); } catch (e) {} vrShoresSet(C, vrVenue(lvl || 1)); try { stmLevels(C, vrVenue(lvl || 1)); } catch (e) { console.warn("vihar", e); } try { vrNightShore(); vrNightSet(vrIsNight(lvl), C); } catch (e) { console.warn("éjszaka", e); } if (!VRR.series) VRR.series = vrSeriesLoad();
     /* oktató futam: nincs visszaszámlálás és nincs ellenfél – a hajó a vonal alól indul, azonnal „versenyben” */
     VRR.setup = vrSetup;   /* (teszteléshez elérhető) */
+    try { if (C.kek) kekSetupHook(C); else if (KEK.on) kekEnd(); } catch (e) { console.warn("kékszalag", e); }   /* 2026-11-15 (05zc) */
     VRR.tut = lvl ? null : { step: 0 }; VRR.riv.forEach((r) => { r.g.visible = !!lvl; if (!lvl) { r.x += 9000; r.z += 9000; r.lbl.visible = false; } });
     if (!lvl) Object.assign(VRR, { t: 0, st: "race", started: true, msg: "OKTATÓ FUTAM – lépésről lépésre megtanulod a hajót. Nincs ellenfél, nincs időnyomás.", msgT: 6 });
     W.panelDirty = 1;
@@ -1030,7 +1033,11 @@
       if (Math.abs(S.penAcc) >= TAU) { S.pen--; S.penAcc = 0; uiSnd("success"); S.msg = S.pen ? `✓ Büntetőforduló kész – még ${S.pen} van hátra.` : "✓ Büntetőforduló letudva – tiszta vagy, mehet a verseny!"; S.msgT = 6; W.panelDirty = 1; } }
     /* 2026-11-12 14:09 (tulajdonos: „apró kis csalás a versenyélmény fenntartására – minden fizika megtartása mellett a mi hajónk legyen 5%-kal gyorsabb a többinél”):
        a fizika, a vitorlák és a kijelzett sebesség változatlan; csak a megtett út 5%-kal több */
-    const [fx, fz] = vfwd(S.b); S.x += fx * S.v * 1.05 * dt; S.z += fz * S.v * 1.05 * dt;
+    const [fx, fz] = vfwd(S.b), _ox = S.x, _oz = S.z; S.x += fx * S.v * 1.05 * dt; S.z += fz * S.v * 1.05 * dt;
+    /* 2026-11-15: a hajó nem vitorlázhat át a szárazföldön (a Kékszalag szakaszai a part közelében, a Tihanyi-szorosban és a keszthelyi öbölben is haladnak):
+       ha a következő helyzet már a parton volna, a hajó megfeneklik – megáll, és ki kell fordulni a nyílt víz felé (a kormány állóhelyzetben is fordít) */
+    if ((S.st === "race" || S.st === "pre") && !vrWet(S.x, S.z)) { S.x = _ox; S.z = _oz; S.v *= Math.max(0, 1 - dt * 4);
+      if (!S.gndT || W.t - S.gndT > 7) { S.gndT = W.t; S.msg = "⚠ ZÁTONY – itt már a part! Fordulj ki a nyílt víz felé."; S.msgT = 5; uiSnd("warn"); } }
     /* látszólagos szél, vitorlák, dőlés */
     const wfv = vfwd(S.wf), tw = [wfv[0] * S.tws * S.gk, wfv[1] * S.tws * S.gk], aw = [tw[0] + fx * S.v, tw[1] + fz * S.v], aws = Math.hypot(aw[0], aw[1]);
     const awa = Math.acos(clamp((aw[0] * fx + aw[1] * fz) / (aws || 1), -1, 1)) * R2D;
@@ -1143,7 +1150,8 @@
     if (S.st === "race" && !S.fin && !S.ocs && S.started) {
       if (S.next < S.marks.length) { const m = S.marks[S.next], d = Math.hypot(m.x - S.x, m.z - S.z), rc = vrRoundCheck(S, S.next);
         if (d < 45) S.nearMk = S.next + 1;
-        if (rc === 1) { const mk = S.marks[S.next]; S.next++; S.nearMk = 0; S.guideT = W.t + 10; uiSnd("success"); S.msg = S.next < S.marks.length ? `✓ ${vrMkName(mk, S.next - 1)} ${mk.gate ? "– átmentél" : "megkerülve"} – jöhet: ${vrMkName(S.marks[S.next], S.next)} (${vrMkHow(S.marks[S.next])})` : "✓ Utolsó jel teljesítve – irány a befutó: a két bója KÖZÖTT!"; S.msgT = 5; S.wrongT = 0; }
+        if (rc === 1 && KEK.on && S.C.kek && S.next === S.marks.length - 1) { S.next++; kekStageDone(); }   /* Kékszalag: a szakaszkapu (05zc) */
+        else if (rc === 1) { const mk = S.marks[S.next]; S.next++; S.nearMk = 0; S.guideT = W.t + 10; uiSnd("success"); S.msg = S.next < S.marks.length ? `✓ ${vrMkName(mk, S.next - 1)} ${mk.gate ? "– átmentél" : "megkerülve"} – jöhet: ${vrMkName(S.marks[S.next], S.next)} (${vrMkHow(S.marks[S.next])})` : "✓ Utolsó jel teljesítve – irány a befutó: a két bója KÖZÖTT!"; S.msgT = 5; S.wrongT = 0; }
         else if (rc === -1 && (!S.wrongT || W.t - S.wrongT > 6)) { S.wrongT = W.t; const mk = S.marks[S.next]; S.msg = mk.gate ? "⚠ Rossz irányban mentél át a kapun! Fordulj vissza, és a pálya irányában menj át a két bója KÖZÖTT" : mk.sd === -1 ? "⚠ Rossz irány! Ezt a bóját JOBB kéz felől kell megkerülni – fordulj vissza, és kerüld meg az óramutató járásával egyezően" : "⚠ Rossz irány! A bóját BAL kéz felől kell megkerülni – fordulj vissza, és kerüld meg az óramutatóval ellentétesen"; S.msgT = 6; S.guideT = W.t + 12; beep(); }
         else if (S.nearMk === S.next + 1 && d > 80) { S.nearMk = 0; S.msg = `⚠ Nem teljesítetted: ${vrMkName(m, S.next)} (${vrMkHow(m)})! Vissza kell menned – enélkül nincs érvényes futam.`; S.msgT = 7; S.guideT = W.t + 15; beep(); setTimeout(beep, 250); } }
       else if (crossLine(S) && S.pen > 0) { S.msg = `⚠ ÉRVÉNYTELEN BEFUTÓ! Még ${S.pen} büntetőforduló (360°) hátravan – tedd meg, aztán fuss be újra.`; S.msgT = 9; beep(); setTimeout(beep, 250); }
@@ -1309,7 +1317,8 @@
     const vt = polar(twa, spin) * KN * VR_SPD * heelPen * vrClsSpd(twa) * (r.spdK || 1) * (S.tws * (r.gkL || 1) / (12 * KN)) ** .5 * (1 + .08 * Math.sin(W.t * .23) * Math.sin(W.t * .07)) * (r.fin ? .4 : 1);
     r.v += (vt - r.v) * Math.min(1, dt / (vt > r.v ? 2.8 : 5)); r.v *= 1 - Math.abs(r.del) * .16 * dt;
     r.yr += Math.sign(wrapA(S.wf - r.b)) * Math.max(0, r.heel || 0) * .1 * Math.min(1, r.v / 5) * dt * 3;
-    const f = vfwd(r.b); r.x += f[0] * r.v * dt; r.z += f[1] * r.v * dt;
+    const f = vfwd(r.b), _rx = r.x, _rz = r.z; r.x += f[0] * r.v * dt; r.z += f[1] * r.v * dt;
+    if (!vrWet(r.x, r.z)) { r.x = _rx; r.z = _rz; r.v *= .5; if (W.t - (r.gndT || 0) > 4) { r.gndT = W.t; r.tack = -(r.tack || 1); r.lastTack = W.t; } }   /* a part elől: visszafordul a másik csapásra */
     /* bójakerülés: ugyanaz a szabály, mint nálad (26 m-en belül, a bója a hajó BAL oldalán) */
     /* 2026-11-15: biztonsági háló a gépi hajóknak – ha egy jelnél 2,5 percnél tovább nem boldogul (ütközés, kikerülés, hiba miatt köröz), és már közel jár hozzá,
        a jelet teljesítettnek vesszük; aki 2 perccel a rajtjel után sem rajtolt el szabályosan, azt elindítjuk (a gépi próbán ritkán egy-egy hajó beragadt) */
@@ -1554,7 +1563,7 @@
   /* --------------------------------------------------------------- panel, csuklómenü, 2D */
   function vrPanel(P) {
     const S = VRR;
-    P.title(`Balaton Sailing VR · ${S.lvl ? S.lvl + ". futam" : "🎓"} · ${S.C.name} · ${vrDiff().n} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.nightInfo ? S.nightInfo + " · " : ""}${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · ${S.C.wxn || "szél"} ${(S.tws / KN).toFixed(0)} csomó`);
+    P.title(`Balaton Sailing VR · ${S.C.kek ? "" : (S.lvl ? S.lvl + ". futam · " : "🎓 · ")}${S.C.name} · ${vrDiff().n} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.nightInfo ? S.nightInfo + " · " : ""}${S.st === "pre" ? "Rajt: " + mmss(-S.t) : S.st === "done" ? "Vége" : "Idő: " + mmss(S.t)} · ${(S.v / KN).toFixed(1)} csomó · ${S.C.wxn || "szél"} ${(S.tws / KN).toFixed(0)} csomó`);
     P.row(0, S.msgT > 0 ? S.msg : "Kormány: zárd ökölbe a kezed magad előtt, és mozdítsd balra-jobbra (15–15 cm a teljes kitérés). Nyitott tenyérrel engeded el.", "#ffd166");
     P.row(1, S.pen > 0 ? `⚠ BÜNTETŐ: ${S.pen} × 360° forduló hátravan (${Math.round(Math.abs(S.penAcc || 0) * R2D)}° megvan) – enélkül a befutó érvénytelen` : S.ocs ? "KORAI RAJT – menj vissza a rajtvonal mögé, aztán lépd át újra" : S.st === "pre" ? "Rajt előtt maradj a vonal mögött – a rajtjelre (hosszú kürt) lépd át" : S.next < S.marks.length ? `Következő: ${vrMkName(S.marks[S.next], S.next)} (${S.marks.length} jel van) – ${vrMkHow(S.marks[S.next])}` : "Utolsó szakasz: át a rajtvonalon!", "#ffffff");
     P.row(2, S.st === "done" ? S.res.map((q, i) => `${i + 1}. ${q.n} ${mmss(q.t)}`).join(" · ") : `⚠ Balatoni viharjelzés – ${stmText()} (${STM.src})`, "#7fd3ff");
@@ -1582,7 +1591,7 @@
   }
   function vrHud(H) {
     const S = VRR;
-    H.title(`Balaton Sailing VR · ${S.lvl}. futam · ${S.C.name}${S.nightInfo ? " · " + S.nightInfo : ""} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.msgT > 0 ? S.msg + " · " : ""}${S.st === "pre" ? "rajt " + mmss(-S.t) : "idő " + mmss(S.t) + " / limit " + mmss(S.C.limit || 0)} · ${(S.v / KN).toFixed(1)} csomó · ${S.next < S.marks.length ? (S.next + 1) + ". bója" : "befutó"}`);
+    H.title(`Balaton Sailing VR · ${S.C.kek ? "" : S.lvl + ". futam · "}${S.C.name}${S.nightInfo ? " · " + S.nightInfo : ""} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.msgT > 0 ? S.msg + " · " : ""}${S.st === "pre" ? "rajt " + mmss(-S.t) : S.C.kek ? "összidő " + kekHms(KEK.T + (S.st === "kek" || KEK.done ? 0 : S.t)) + (KEK.done ? " – vége" : " / időkeret 3:00:00") : "idő " + mmss(S.t) + " / limit " + mmss(S.C.limit || 0)} · ${(S.v / KN).toFixed(1)} csomó · ${S.next < S.marks.length ? vrMkName(S.marks[S.next], S.next) : "befutó"}`);
     if (S.st === "done") H.steer([["⚓ Tájékoztató", vrBriefOpen], ["🎥 Visszajátszás", () => vrReplay(true)], ["☰ Menü", () => vrRaceMenu(true)]], () => { S.wa = 0; });
     else if (S.fin && S.st === "race") H.steer([["Tovább ▸", vrSkip], ["⚓ Kikötő", vrToHarbor]], () => { S.wa = 0; });
     else H.steer([["☰ Menü", () => vrRaceMenu(true)], [S.paused ? "▶ Folytatás" : "⏸ Szünet", () => vrPause(!S.paused)], ["↻ Újrakezdés", () => vrSetup(S.lvl)]], () => { S.wa = 0; });

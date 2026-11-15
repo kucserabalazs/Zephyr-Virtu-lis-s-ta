@@ -108,23 +108,28 @@
     } else if (p === "w3") {
       wzFrame(B, g, 3, "3 · PÁLYA", "Válassz egy pályát egyetlen futamra – vagy indíts 3–5 futamos sorozatot véletlenszerű pályákkal");
       /* 2026-11-15: lapfülek – a klasszikus 10 pálya, az 5 új nappali és az 5 új éjszakai (05zb) */
-      const tab = Z.tab || (Z.lvl >= 106 && Z.lvl <= 110 ? "ej" : Z.lvl >= 101 && Z.lvl <= 105 ? "nap" : "klassz");
-      [["klassz", "Klasszikus 1–10"], ["nap", "☀ Új nappali pályák"], ["ej", "🌙 Új éjszakai pályák"]].forEach(([k, l], j) => B.btn(44 + j * 284, 240, 272, 66, l, () => { Z.tab = k; wzSave(); B.dirty = 1; }, { gold: tab === k, fs: 23 }));
+      const tab = Z.tab || (Z.lvl >= 201 ? "kek" : Z.lvl >= 106 && Z.lvl <= 110 ? "ej" : Z.lvl >= 101 && Z.lvl <= 105 ? "nap" : "klassz");
+      [["klassz", "Klasszikus 1–10"], ["nap", "☀ Új nappali"], ["ej", "🌙 Új éjszakai"], ["kek", "🏆 Kékszalag"]].forEach(([k, l], j) => B.btn(44 + j * 214, 240, 202, 66, l, () => { Z.tab = k; wzSave(); B.dirty = 1; }, { gold: tab === k, fs: 21 }));
       const cOf = (lvl) => HB.wzC && HB.wzC[lvl] || ((HB.wzC = HB.wzC || {})[lvl] = vrCourse(lvl));
       if (tab === "klassz") for (let i = 0; i < 10; i++) { const lvl = i + 1, C = cOf(lvl), v = vrVenue(lvl), x = 44 + (i % 2) * 436, y = 318 + Math.floor(i / 2) * 86, on = Z.kind === "one" && Z.lvl === lvl;
         B.btn(x, y, 424, 78, `${lvl}. ${C.name}`, () => { Z.kind = "one"; Z.lvl = lvl; wzSave(); B.dirty = 1; }, { green: on, sub: `${v.n.split(" – ")[0]} · ${C.marks.length} bója`, fs: 24 }); }
+      else if (tab === "kek") { [[201, "🏆 KÉKSZALAG – a Balaton körül", "9 szakasz Füredtől Keszthelyig és Kenesééig · 200 hajó · változó szél: hol az északi, hol a déli part, hol a közép a jobb · délutáni rajt, éjszakai befutó · legjobb idő ~1 óra, időkeret 3 óra · nagyhajóval"],
+          [202, "🦩 BOLONDOK KÉKSZALAGJA", "Ugyanaz az útvonal, de a mezőny harmada rönktutaj, harmada flamingó, a többi nagyhajó – itt bármelyik hajóval indulhatsz"]].forEach(([lvl, t, sub], i) => {
+          const on = Z.kind === "one" && Z.lvl === lvl; B.btn(44, 318 + i * 214, 860, 200, "", () => { Z.kind = "one"; Z.lvl = lvl; wzSave(); B.dirty = 1; }, { green: on });
+          g.fillStyle = "#fff"; g.font = `900 34px ${UIF}`; g.textAlign = "left"; g.fillText(t, 74, 372 + i * 214); g.fillStyle = "rgba(225,235,248,.9)"; g.font = `600 21px ${UIF}`; uiWrap(g, sub, 74, 410 + i * 214, 800, 28, 4); }); }
       else VR_NEW_IDS.filter((l) => (tab === "ej") === !!VR_NEW[l].night).forEach((lvl, i) => { const C = cOf(lvl), v = vrVenue(lvl), on = Z.kind === "one" && Z.lvl === lvl, nG = C.marks.filter((m) => m.gate).length, nS = C.marks.filter((m) => m.sd === -1).length, nL = C.marks.filter((m) => m.lm).length;
         const sub = [v.n.split(" – ")[0], `${C.marks.length} jel`, nG ? `${nG} kapu` : "", nS ? `${nS} jobb kéz felőli` : "", nL ? "nevezetesség" : "", C.storm === 2 ? "⚡ zivatar" : C.storm === 1 ? "távoli villámlás" : ""].filter(Boolean).join(" · ");
         B.btn(44, 318 + i * 86, 860, 78, C.name, () => { Z.kind = "one"; Z.lvl = lvl; wzSave(); B.dirty = 1; }, { green: on, sub, fs: 26 }); });
       wzPanel(g, 940, 244, 506, 400, Z.kind === "one");
-      if (Z.kind === "one") { const C = HB.wzC[Z.lvl]; drawCoursePlan(g, C, 952, 256, 482, 330, B.t); g.fillStyle = "#fff"; g.font = `700 19px ${UIF}`; uiFit(g, `${vrVenue(Z.lvl).n} · ${(C.tws / KN).toFixed(0)} csomó`, 470, 19, 700); g.fillText(`${vrVenue(Z.lvl).n} · ${(C.tws / KN).toFixed(0)} csomó`, 960, 620); }
+      if (Z.kind === "one" && Z.lvl >= 201) { kekMapDraw(g, 952, 256, 482, 330, B.t); g.fillStyle = "#fff"; g.font = `700 19px ${UIF}`; g.textAlign = "left"; uiWrap(g, "Füred → Tihany → Badacsony → Keszthely → Fonyód → Boglár → Siófok → Kenese → Füred", 960, 618, 466, 25, 2); }
+      else if (Z.kind === "one") { const C = HB.wzC[Z.lvl]; drawCoursePlan(g, C, 952, 256, 482, 330, B.t); g.fillStyle = "#fff"; g.font = `700 19px ${UIF}`; uiFit(g, `${vrVenue(Z.lvl).n} · ${(C.tws / KN).toFixed(0)} csomó`, 470, 19, 700); g.fillText(`${vrVenue(Z.lvl).n} · ${(C.tws / KN).toFixed(0)} csomó`, 960, 620); }
       else { g.fillStyle = "#ffd166"; g.font = `900 34px ${UIF}`; g.fillText(`${Z.n} FUTAMOS SOROZAT`, 970, 310); g.fillStyle = "rgba(225,235,248,.88)"; g.font = `600 21px ${UIF}`; uiWrap(g, "Minden futam más pályán és más helyszínen – véletlenszerűen sorsolva. Futamonként kapitányi tájékoztató, a végén eredménylista" + (Z.fleet === "mix" ? " (vegyes flotta: pontozás nélkül)." : " és serleg az első háromnak (RRS A4 pontozás)."), 970, 352, 450, 30, 8); }
       g.fillStyle = "#fff"; g.font = `800 26px ${UIF}`; g.fillText("Sorozat véletlen pályákkal:", 44, 806 - 0);
       [3, 4, 5].forEach((n, j) => B.btn(400 + j * 190, 760, 176, 70, `${n} futam`, () => { Z.kind = "series"; Z.n = n; wzSave(); B.dirty = 1; }, { green: Z.kind === "series" && Z.n === n, fs: 28 }));
       B.btn(44, 856, 380, 100, "‹ Vissza", () => wzGo(2), { fs: 36 }); B.btn(444, 856, 1002, 100, "TOVÁBB ▶  kapitányi tájékoztató", () => { wzPlan(); wzGo(4); }, { gold: true, fs: 40 });
     } else if (p === "w4") {
       const plan = HB.wzPlan || wzPlan(), lvl = plan[0], C = vrCourse(lvl), ven = vrVenue(lvl), night = wzNight(lvl);
-      wzFrame(B, g, 4, "4 · KAPITÁNYI TÁJÉKOZTATÓ", `${Z.kind === "one" ? "Egyetlen futam" : `1. futam a ${plan.length} futamos sorozatból`} · ${C.name} · ${ven.n} · ${boatCls(Z.cls).n}${Z.fleet === "mix" ? " · vegyes flotta" : ""}`);
+      wzFrame(B, g, 4, "4 · KAPITÁNYI TÁJÉKOZTATÓ", C.kek ? `${lvl === 202 ? "Bolondok Kékszalagja" : "Kékszalag"} – Balaton-kerülő túraverseny, 9 szakasz · ${boatCls(lvl === 201 ? "zephyr" : Z.cls).n}` : `${Z.kind === "one" ? "Egyetlen futam" : `1. futam a ${plan.length} futamos sorozatból`} · ${C.name} · ${ven.n} · ${boatCls(Z.cls).n}${Z.fleet === "mix" ? " · vegyes flotta" : ""}`);
       drawPreBrief(B, g, C, ven, night, 44, 244, plan);
       B.btn(44, 856, 380, 100, "‹ Vissza", () => wzGo(3), { fs: 36 }); B.btn(444, 856, 1002, 100, "▶  START", () => wzStart(), { gold: true, fs: 54 });
     } else if (p === "w5") {
@@ -136,6 +141,7 @@
   }
   /* a tájékoztató tartalma (a 4. lépés és a futam közbeni „Kapitányi tájékoztató” közös rajza) */
   function drawPreBrief(B, g, C, ven, night, x, y, plan) {
+    if (C.kek) { drawKekBrief(B, g, x, y, plan && plan.length === 1 && plan[0] >= 201 ? plan[0] === 202 : !!KEK.fun, KEK.on && VRR.C && VRR.C.kek ? KEK.si : -1); return; }   /* 2026-11-15: a Kékszalag saját tájékoztatója (05zc) */
     wzPanel(g, x, y, 900, 590, false); drawCoursePlan(g, C, x + 10, y + 10, 560, 420, B.t); drawCourse3D(g, C, x + 584, y + 10, 306, 210, B.t); drawBalMap(g, x + 584, y + 228, 306, 202, { venue: ven, wf: C.wf, t: B.t, labels: "kevés" });
     const legs = vrCourseLegs(C); g.font = `700 19px ${UIF}`; legs.forEach((l, i) => { const yy = y + 462 + i * 27; if (yy > y + 580) return; g.fillStyle = "#ffd166"; g.fillText(`${i + 1}.`, x + 20, yy); g.fillStyle = "#fff"; const tx = `${i ? i + ". bója" : "rajt"} → ${i + 1 < legs.length ? (i + 1) + ". bója" : "cél (a két bója KÖZÖTT)"} · ${Math.round(l.d)} m · ${l.kind}`; uiFit(g, tx, 850, 19, 700); g.fillText(tx, x + 52, yy); g.font = `700 19px ${UIF}`; });
     const rx = x + 920, rw = 1402 - 920; wzPanel(g, rx, y, rw, 590, true);
@@ -154,7 +160,11 @@
     HB.wzPlan = plan; return plan; }
   function wzApply() { const Z = HB.wz, plan = HB.wzPlan || wzPlan(); wzSave();
     VRR.mixFleet = Z.fleet === "mix"; VRR.todMix = Z.tod === "vegyes"; VRR.nightForce = Z.tod === "ej" ? true : Z.tod === "nap" ? false : null; HB.wzKeep = true;
-    VRR.series = { races: [], done: false, id: Date.now(), n: plan.length, plan: plan.slice(), mix: VRR.mixFleet }; try { vrSeriesSave(); } catch (e) {} VRR.lvl = plan[0]; HB.sel = Z.cls; return plan; }
+    VRR.series = { races: [], done: false, id: Date.now(), n: plan.length, plan: plan.slice(), mix: VRR.mixFleet }; try { vrSeriesSave(); } catch (e) {} VRR.lvl = plan[0]; HB.sel = Z.cls;
+    /* 2026-11-15: Kékszalag (05zc) – a normál Kékszalag nagyhajós (rönktutaj, flamingó a Bolondok Kékszalagján) */
+    if (plan[0] === 201 || plan[0] === 202) { kekBegin(plan[0]); if (plan[0] === 201) HB.sel = "zephyr"; VRR.nightForce = null; VRR.todMix = false; } else if (KEK.on) kekEnd();
+    VRR.forceCls = plan[0] === 201 ? "zephyr" : null;   /* a Kékszalagon nagyhajóval – a választott hajó (a mentett beállítás) a többi futamra megmarad */
+    return plan; }
   function wzStart() { const Z = HB.wz; wzApply();
     if (Z.mode === "online") { try { netStart(); } catch (e) {} if (NET.on && netActive().length) { NET.queue = { t: Date.now(), ann: 0 }; try { netPost({ k: "q", on: 1, cls: Z.cls }); } catch (e) {} hbBoard("w5"); return; } }
     uiCloseAll(); setTimeout(() => { W._raceGo = true; W.open("race"); }, 30); }

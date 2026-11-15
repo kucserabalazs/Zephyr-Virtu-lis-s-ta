@@ -95,8 +95,10 @@
         g.fillStyle = col || "#fff"; muFit(g, big, cw - 30, 88, 900); g.fillText(big, x + cw / 2 - 3, y0 + 128); if (unit) { g.fillStyle = "#9fc3dc"; g.font = F(700, 24); g.fillText(unit, x + cw / 2 - 3, y0 + 166); }
         if (badge) { muPill(g, x + 16, y0 + 140, cw - 38, 38, 19, badge[1]); g.fillStyle = badge[2] || "#fff"; g.font = F(800, 22); g.fillText(badge[0], x + cw / 2 - 3, y0 + 166); } };
       cell(0, "SEBESSÉG", (S.v / KN).toFixed(1).replace(".", ","), "csomó");
-      cell(1, "HELYEZÉS", S.st === "pre" ? "–" : `${S.fin ? S.res.findIndex((q) => q.me) + 1 : vrPlace()}.`, `a ${(S.riv || []).length + 1} hajóból`);
-      cell(2, S.st === "pre" ? "RAJTIG" : "IDŐ", mmss(S.st === "pre" ? -S.t : S.t), S.st === "pre" ? (S.t > -10 ? "KÉSZÜLJ!" : "perc:mp") : "perc:mp", S.st === "pre" && S.t > -10 ? "#ffd166" : null);
+      if (KEK.on && S.C && S.C.kek) { const rk = kekRank(), me = rk.findIndex((q) => q.me) + 1; cell(1, "ÖSSZETETT", S.st === "pre" ? "–" : `${me}.`, `a ${rk.length} hajóból`); }   /* Kékszalag (05zc) */
+      else cell(1, "HELYEZÉS", S.st === "pre" ? "–" : `${S.fin ? S.res.findIndex((q) => q.me) + 1 : vrPlace()}.`, `a ${(S.riv || []).length + 1} hajóból`);
+      if (KEK.on && S.C && S.C.kek && S.st !== "pre") cell(2, "ÖSSZIDŐ", kekHms(KEK.T + (S.st === "kek" || KEK.done ? 0 : S.t)), `${KEK.si + 1}/${KEK_ST.length}. szakasz`, null);
+      else cell(2, S.st === "pre" ? "RAJTIG" : "IDŐ", mmss(S.st === "pre" ? -S.t : S.t), S.st === "pre" ? (S.t > -10 ? "KÉSZÜLJ!" : "perc:mp") : "perc:mp", S.st === "pre" && S.t > -10 ? "#ffd166" : null);
       const wk = (S.tws * (S.gk || 1)) / KN, bd = lw.g > .35 ? [`LÖKÉS +${Math.round((lw.k - 1) * 100)}%`, "#0d3f6e"] : lw.l > .35 ? [`LAVÓR −${Math.round((1 - lw.k) * 100)}%`, "#cfe9f7", "#06223a"] : null;
       cell(3, "SZÉL", wk.toFixed(0), bd ? "" : "csomó", null, bd); g.textAlign = "left"; }
     t.needsUpdate = true;

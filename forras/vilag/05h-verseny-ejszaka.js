@@ -14,7 +14,7 @@
        tükörcsíkok a vízen; tücsökciripelés a part felől. */
   const NGT = { on: false }; W._ngt = NGT;   /* (tesztekhez) */
   function vrNightPref() { try { return localStorage.getItem("zephyr-napszak") || "valt"; } catch (e) { return "valt"; } }
-  function vrIsNight(lvl) { if (typeof vrIsNew === "function" && vrIsNew(lvl)) return !!VR_NEW[lvl].night;   /* 2026-11-15: az új pályák napszaka rögzített */ if (VRR.nightForce != null) return !!VRR.nightForce; if (VRR.todMix) return (((lvl || 0) * 2654435761) >>> 0) % 3 === 1;   /* 22:48: vegyes napszak – futamonként változik */ if (VRR.net && VRR.net.night != null) return !!VRR.net.night; const p = vrNightPref(); return p === "ej" ? true : p === "nap" ? false : !!lvl && lvl % 3 === 0; }
+  function vrIsNight(lvl) { if (lvl === 201 || lvl === 202) return /dusk|night/.test(KEK_ST[KEK.on ? KEK.si : 0].tod); if (typeof vrIsNew === "function" && vrIsNew(lvl)) return !!VR_NEW[lvl].night;   /* 2026-11-15: az új pályák napszaka rögzített */ if (VRR.nightForce != null) return !!VRR.nightForce; if (VRR.todMix) return (((lvl || 0) * 2654435761) >>> 0) % 3 === 1;   /* 22:48: vegyes napszak – futamonként változik */ if (VRR.net && VRR.net.night != null) return !!VRR.net.night; const p = vrNightPref(); return p === "ej" ? true : p === "nap" ? false : !!lvl && lvl % 3 === 0; }
   /* ragyogó pont-textúra */
   function glowTex() { if (NGT.gtex && NGT.gtex.image) return NGT.gtex; NGT.gtex = canvasTex(128, 128, (g) => { const r = g.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(.12, "rgba(255,255,255,.95)"); r.addColorStop(.3, "rgba(255,255,255,.35)"); r.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = r; g.fillRect(0, 0, 128, 128); }); return NGT.gtex; }
   function glowSprite(col, sz) { const m = new THREE.SpriteMaterial({ map: glowTex(), color: new THREE.Color(col), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }); W.disposables.push(m); const s = new THREE.Sprite(m); s.scale.setScalar(sz || .5); s.renderOrder = 8; s.userData.night = 1; return s; }
@@ -23,9 +23,9 @@
     const S = VRR; Object.keys(NGT).forEach((k) => { if (k !== "gtex") delete NGT[k]; }); NGT.on = false;
     const far = S.far, G = new THREE.Group(); G.visible = false; G.userData.night = 1; far.add(G); NGT.G = G; { const GE = new THREE.Group(); GE.visible = false; GE.userData.night = 1; S.env.add(GE); NGT.GE = GE; }   /* 2026-11-14: a parti fények a valódi tájhoz (env) kötve */
     /* ÉJSZAKAI ÉG: mélykék → a horizonton halvány meleg fényszennyezés a part felől; Tejút-sáv */
-    const skyM = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uMoon: { value: new THREE.Vector3(0, .25, -1).normalize() }, uAx: { value: 0 } },
+    const skyM = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: { uMoon: { value: new THREE.Vector3(0, .25, -1).normalize() }, uAx: { value: 0 }, uTw: { value: 0 }, uTwA: { value: 4.45 } },
       vertexShader: "varying vec3 vD; void main(){ vD = normalize(position); vec4 p = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * p; gl_Position.z = gl_Position.w; }",
-      fragmentShader: `uniform vec3 uMoon; uniform float uAx; varying vec3 vD;
+      fragmentShader: `uniform vec3 uMoon; uniform float uAx, uTw, uTwA; varying vec3 vD;
         float h3(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
         float n3(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(mix(h3(i), h3(i + vec3(1,0,0)), f.x), mix(h3(i + vec3(0,1,0)), h3(i + vec3(1,1,0)), f.x), f.y), mix(mix(h3(i + vec3(0,0,1)), h3(i + vec3(1,0,1)), f.x), mix(h3(i + vec3(0,1,1)), h3(i + vec3(1,1,1)), f.x), f.y), f.z); }
         void main(){ vec3 d = normalize(vD); float el = d.y;
@@ -34,6 +34,8 @@
           float m = max(dot(d, uMoon), 0.); col += vec3(.55, .62, .78) * (pow(m, 60.) * .35 + pow(m, 8.) * .07);   /* a hold udvara */
           vec3 gal = normalize(vec3(.42, .55, -.72)); float band = exp(-pow(dot(d, gal) * 5.2, 2.)); float cl = n3(d * 7.) * .6 + n3(d * 19.) * .4;
           col += vec3(.20, .21, .27) * band * smoothstep(.25, .9, cl) * smoothstep(0., .25, el) * .32;   /* Tejút (halványabb, holdfényes éjszakán) */
+          /* 2026-11-15: alkonyat (Kékszalag, 05zc): a nap épp lement – nyugaton narancs-rózsaszín derengés, fölötte mélykék */
+          if (uTw > 0.) { float sw = .5 + .5 * cos(az - uTwA); vec3 tw = mix(vec3(.62, .30, .18) * (.35 + .65 * sw * sw), vec3(.10, .16, .36), smoothstep(0., .5, el)); tw = mix(tw, vec3(.03, .06, .17), smoothstep(.35, 1., el)); col = mix(col, tw, uTw * (1. - .35 * smoothstep(.6, 1., el))); }
           if (el < 0.) col = mix(hor * .8, vec3(.01, .02, .035), clamp(-el * 5., 0., 1.));
           gl_FragColor = vec4(col, 1.);
           #include <colorspace_fragment>
