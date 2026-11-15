@@ -13904,7 +13904,12 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const open = (kind, tut) => { hub.classList.add("gh-hide"); if (fxStop) { fxStop(); fxStop = null; } if (tut) window.__ghTut = 1;
       if (ghHs()) ghEnterVR();   /* 18:56: a kártyára bökve rögtön VR – akkor is, ha a „támogatja-e” ellenőrzés még nem futott le */
       openWorld(kind);
-      const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function () { const r = c0.apply(this, arguments); try { if (sceneEl && sceneEl.is("vr-mode")) sceneEl.exitVR(); } catch (e) {} hub.classList.remove("gh-hide"); draw(); return r; }; }
+      const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function (after, silent) { const r = c0.apply(this, arguments);
+          /* 2026-11-15 19:07 – A VR-HIBA OKA (tulajdonos: „továbbra sem lép be a VR módba”): VR-be lépéskor a világ újraépül (vrChanged → csendes bezárás + újranyitás),
+             és ez a horog a CSENDES belső bezárásnál is kiléptetett a VR-ből – a szemüveg azonnal visszadobott a böngészőbe. Csendes bezárásnál (újraépítés,
+             világváltás) most nem lépünk ki, és a főmenü sem jön elő; csak a „Játékok főmenü” gomb hozza vissza. */
+          if (silent) return r;
+          try { if (sceneEl && sceneEl.is("vr-mode")) sceneEl.exitVR(); } catch (e) {} hub.classList.remove("gh-hide"); draw(); return r; }; }
         if (window.__ghTut && Z.vrr && Z.vrSetup && Z.vrr.C) { window.__ghTut = 0; try { Z.vrSetup(0); } catch (e) {} } if (!window.__ghTut) clearInterval(iv); }, 400); setTimeout(() => clearInterval(iv), 60000); };
     /* ===== 2026-11-15 18:56 VR-BELÉPÉS A JÁTÉKOLDALON (tulajdonos: „A játékot nem tudom VR szemüveg módba rakni! … miért nem indul a szemüvegben azonnal
        VR módba?”). A hiba: a játékoldal minden gombot elrejtett, a VR-gombot is, és a kártyák csak akkor kapcsoltak VR-be, ha a „támogatja-e” ellenőrzés

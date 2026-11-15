@@ -13714,7 +13714,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "63020401a4"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "18dd2c2faf"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -13748,7 +13748,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "a4795f7429"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "2822843b0c"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
@@ -13920,7 +13920,12 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const open = (kind, tut) => { hub.classList.add("gh-hide"); if (fxStop) { fxStop(); fxStop = null; } if (tut) window.__ghTut = 1;
       if (ghHs()) ghEnterVR();   /* 18:56: a kártyára bökve rögtön VR – akkor is, ha a „támogatja-e” ellenőrzés még nem futott le */
       openWorld(kind);
-      const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function () { const r = c0.apply(this, arguments); try { if (sceneEl && sceneEl.is("vr-mode")) sceneEl.exitVR(); } catch (e) {} hub.classList.remove("gh-hide"); draw(); return r; }; }
+      const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function (after, silent) { const r = c0.apply(this, arguments);
+          /* 2026-11-15 19:07 – A VR-HIBA OKA (tulajdonos: „továbbra sem lép be a VR módba”): VR-be lépéskor a világ újraépül (vrChanged → csendes bezárás + újranyitás),
+             és ez a horog a CSENDES belső bezárásnál is kiléptetett a VR-ből – a szemüveg azonnal visszadobott a böngészőbe. Csendes bezárásnál (újraépítés,
+             világváltás) most nem lépünk ki, és a főmenü sem jön elő; csak a „Játékok főmenü” gomb hozza vissza. */
+          if (silent) return r;
+          try { if (sceneEl && sceneEl.is("vr-mode")) sceneEl.exitVR(); } catch (e) {} hub.classList.remove("gh-hide"); draw(); return r; }; }
         if (window.__ghTut && Z.vrr && Z.vrSetup && Z.vrr.C) { window.__ghTut = 0; try { Z.vrSetup(0); } catch (e) {} } if (!window.__ghTut) clearInterval(iv); }, 400); setTimeout(() => clearInterval(iv), 60000); };
     /* ===== 2026-11-15 18:56 VR-BELÉPÉS A JÁTÉKOLDALON (tulajdonos: „A játékot nem tudom VR szemüveg módba rakni! … miért nem indul a szemüvegben azonnal
        VR módba?”). A hiba: a játékoldal minden gombot elrejtett, a VR-gombot is, és a kártyák csak akkor kapcsoltak VR-be, ha a „támogatja-e” ellenőrzés
