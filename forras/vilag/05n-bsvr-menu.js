@@ -40,7 +40,7 @@
     const nm = vrProfile().name || ""; let g;
     /* 00:46: a Zephyr modellje ugyanaz a kidolgozott hajó, mint a futamon (díszes vitorlák, vitorlaablakok, finom részletek) */
     if (id === "zephyr") g = makeBoat({ sailName: nm, detail: 0, vis: false, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, win: true, fine: true, sheetPt: [0, hullShape(.2).sheer + .07 + .19 / VR_SC, hullShape(.14).z + 2.25 / VR_SC], travHalf: hullShape(.2).hb - .55 / VR_SC });
-    else g = makeClassBoat(id, { zephyr: id === "j420" || id === "finn", crew: id === "j420" ? 2 : 1, name: nm, num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
+    else g = makeClassBoat(id, { full: true, zephyr: id === "j420" || id === "finn", crew: id === "j420" ? 2 : 1, name: nm, num: "HUN " + (id === "j420" ? "420" : "7"), seed: 5 });
     const holder = new THREE.Group(); holder.add(g); const S = g.userData.S; if (S) { S.awa = 95; S.aws = 6; S.side = 1; if (S.spin != null) S.spin = 0; } try { g.userData.update(.016); } catch (e) {}
     const bb = new THREE.Box3().setFromObject(g), sz = bb.getSize(new THREE.Vector3()), k = 2.5 / Math.max(sz.x, sz.z, sz.y * .82); holder.scale.setScalar(k); holder.position.y = .64 - bb.min.y * k + (id === "zephyr" ? .25 * k : .05);
     HB.wzPed.add(holder); HB.wzM = { id, g: holder, boat: g };

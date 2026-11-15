@@ -153,8 +153,108 @@
       g.strokeStyle = "rgba(255,255,255,.07)"; g.lineWidth = 1; [.12, .3, .45, .55, .7, .88].forEach((u) => { g.beginPath(); g.moveTo(w * u, 0); g.lineTo(w * u, h); g.stroke(); }); });
     return _zvTex;
   }
+  /* =====================================================================================================================
+     2026-11-15 01:19 (tulajdonos: „a mancsaftok legyenek sokkal részletesebben kidolgozottak, olyan részletességgel, mint a család, amit az
+     ügyvédes weboldalhoz csináltunk, sőt ha az egyszerűbb, használd azokat”) – A LEGÉNYSÉG AZ UGYVEDHEZ.HU CSALÁD-FIGURÁIBÓL ÉPÜL
+     (forras/csalad → 05bz-csalad.js: FAM.Character): élő arc pislogással, szemmozgással és mimikával, ötujjú kéz (a szkótát / rudat markolja),
+     tincsekből épülő, a szélben lobogó haj, redőzött ruha, cipő fűzővel. Valósághű (nem rajzfilm-) arányok: 1,78 m, kisebb fej, hosszú láb.
+     A csontváz a posePerson felé ugyanazt a felületet adja (csípő, törzs, fej, karok, lábak), így minden hajón változatlanul ül, kihasal, húz.
+     Teljesítmény: a fizikai anyagok helyett szabványos anyagok (Quest), az ellenfeleken ritkább haj; az álló részek a figurán belül össze vannak olvasztva.
+     ===================================================================================================================== */
+  let famN = 0;
+  function famStd(root) {
+    const cache = new Map();
+    root.traverse((m) => { if (!m.isMesh || !m.material || !m.material.isMeshPhysicalMaterial) return; const om = m.material;
+      if (!cache.has(om)) { const nm = new THREE.MeshStandardMaterial({ color: om.color, map: om.map, roughness: om.roughness, metalness: om.metalness, transparent: om.transparent, opacity: om.transmission > .5 ? Math.min(om.opacity, .25) : om.opacity, side: om.side, depthWrite: om.depthWrite, emissive: om.emissive, emissiveIntensity: om.emissiveIntensity, alphaTest: om.alphaTest, vertexColors: om.vertexColors });
+        if (om.onBeforeCompile && om.onBeforeCompile.toString().indexOf("uWind") >= 0) { nm.onBeforeCompile = om.onBeforeCompile; nm.customProgramCacheKey = () => "fam-wind-" + (om.userData.kind || "") + om.onBeforeCompile.toString().length; }
+        else if (om.onBeforeCompile) { nm.onBeforeCompile = om.onBeforeCompile; nm.customProgramCacheKey = () => "fam-" + om.uuid; }
+        nm.userData = om.userData; W.disposables.push(nm); cache.set(om, nm); }
+      m.material = cache.get(om); });
+  }
+  function bananaHat(head) {
+    const lt = canvasTex(256, 128, (gg, w, h) => { const gr = gg.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#5f9a2c"); gr.addColorStop(1, "#3f7a1e"); gg.fillStyle = gr; gg.fillRect(0, 0, w, h);
+      gg.strokeStyle = "rgba(220,240,160,.75)"; gg.lineWidth = 4; gg.beginPath(); gg.moveTo(0, h * .92); gg.lineTo(w, h * .92); gg.stroke();
+      gg.strokeStyle = "rgba(30,70,15,.55)"; gg.lineWidth = 1.5; for (let x = -h; x < w; x += 9) { gg.beginPath(); gg.moveTo(x, h * .9); gg.lineTo(x + h * .5, 0); gg.stroke(); }
+      gg.fillStyle = "rgba(140,110,40,.5)"; for (let k = 0; k < 6; k++) { gg.beginPath(); gg.ellipse(Math.random() * w, Math.random() * h * .8, 6, 3, 0, 0, TAU); gg.fill(); } });
+    const lm = std({ map: lt, roughness: .55, side: THREE.DoubleSide }), bh = new THREE.Group(); bh.position.set(0, .17, -.005); bh.rotation.y = Math.PI / 2; head.add(bh);
+    [-1, 1].forEach((sd) => { const sh = new THREE.Shape(); sh.moveTo(-.19, 0); sh.lineTo(.19, 0); sh.lineTo(.03, .2); sh.lineTo(-.02, .19); sh.closePath(); const sg = new THREE.ShapeGeometry(sh); sg.rotateX(sd * -.32); sg.translate(0, 0, sd * .055); mesh(sg, lm, bh);
+      const br = new THREE.BoxGeometry(.4, .045, .012); br.rotateX(sd * -.32); br.translate(0, .02, sd * .07); mesh(br, std({ color: "#4f8a24", roughness: .6 }), bh); });
+    mesh(new THREE.CylinderGeometry(.006, .008, .06, 5).rotateZ(.4).translate(.04, .22, 0), std({ color: "#7a8a2a", roughness: .8 }), bh);
+    return bh;
+  }
+  /* „KISÜTÉS” (tulajdonos 2026-11-14: „hogy ne zabálja a memóriát”): a távolabbi (ellenfél-) legénységen az arc és a kéz egy beállt
+     kifejezésben / markolásban megfagy, és minden csont alatti részlet anyagonként egyetlen hálóvá olvad – ~120 helyett ~25 rajzolás/fő.
+     A saját hajó legénysége és a bemutató modell teljes, élő részletességű marad. */
+  function famFreeze(c) {
+    for (let k = 0; k < 6; k++) { c.face.update(.5, k, { x: 0, y: 0 }); c.arms.forEach((A) => { A.hand.set("fog"); A.hand.update(.5, 0); }); }
+    const bones = new Set([c.root, c.mover, c.squash, c.pelvis, c.spine, c.chest, c.neck, c.headG]);
+    c.arms.forEach((A) => [A.sh, A.elbow, A.wrist].forEach((b) => bones.add(b))); c.legs.forEach((L) => [L.hip, L.knee, L.foot].forEach((b) => bones.add(b)));
+    c.root.updateMatrixWorld(true); const inv = new THREE.Matrix4(), rel = new THREE.Matrix4();
+    bones.forEach((B) => { const list = []; const walk = (n) => n.children.forEach((ch) => { if (bones.has(ch)) return; if (ch.isMesh && !ch.isInstancedMesh && ch.visible && ch.geometry.attributes.normal) list.push(ch); if (!ch.isMesh || ch.children.length) walk(ch); }); walk(B);
+      if (list.length < 2) return; inv.copy(B.matrixWorld).invert(); const buckets = new Map();
+      list.forEach((m) => { const key = m.material.uuid + "|" + Object.keys(m.geometry.attributes).filter((k2) => k2 !== "uv" || m.material.map).sort().join(",") + "|" + (m.customDepthMaterial ? m.customDepthMaterial.uuid : ""); if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(m); });
+      buckets.forEach((ms) => { const keepUv = !!ms[0].material.map, geos = ms.map((m) => { rel.multiplyMatrices(inv, m.matrixWorld); let g2 = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone(); g2.applyMatrix4(rel);
+          Object.keys(g2.attributes).forEach((k2) => { if (!["position", "normal", "aSway", "aT", "aPhase", "aLen", "color"].includes(k2) && !(k2 === "uv" && keepUv)) g2.deleteAttribute(k2); }); g2.morphAttributes = {}; return g2; });
+        let mg = null; try { mg = FAM.mergeGeometries(geos); } catch (e) { mg = null; } if (!mg) return;
+        const nm = new THREE.Mesh(mg, ms[0].material); nm.customDepthMaterial = ms[0].customDepthMaterial; nm.castShadow = ms[0].castShadow; nm.renderOrder = ms[0].renderOrder; B.add(nm); W.disposables.push(mg);
+        ms.forEach((m) => { m.parent.remove(m); }); }); });
+    c._frozen = true;
+  }
+  function makeFamPerson(o) {
+    const sd0 = o.seed || 0, key = "_lg" + (famN++), cast = !!o.beard, lod = o.lod != null ? o.lod : (W._famFull || o.full ? 1 : .5);
+    const hairC = cast ? "#5e4228" : (o.hair || HAIR[sd0 % 6]), brow = new THREE.Color(hairC).multiplyScalar(.7).getStyle();
+    FAM.CAST[key] = { name: "Matróz", kind: "ember", height: 1.78, H: .118, sc: [1, 1.07, .99], skin: o.skin || SKIN[sd0 % 5], lip: "#B9776E", hairC, brow,
+      hair: cast ? "antik-hosszu" : (o.cap || o.sunhat || o.banana ? "rovid-kocos" : ["rovid-kocos", "rovid-kocos", "hosszu-hullamos"][sd0 % 3]), hairAmp: cast ? 1.5 : .9, hairCount: lod < 1 ? 110 : cast ? 300 : undefined,
+      iris: ["#5B7FA6", "#4E7A5C", "#6B4A2F", "#5B6E7E"][sd0 % 4], top: o.top || "#1f5fa8", bottom: o.bot || "#27303c", shoes: o.shoe || "#f2f2f2", sole: o.pro ? "#e8e8e8" : "#d9d6cc",
+      b: { sh: .205, hip: .165, torso: .5, leg: .82, arm: .64, belly: 1 }, sleeve: o.sleeve === false ? "rovid" : "hosszu", bareLegs: !!o.bareLegs, stubble: !!o.pro || sd0 % 2 === 1, hand: .092, browW: .26, lashes: false };
+    const c = new FAM.Character(key, { expr: cast ? "vidam" : ["hatarozott", "vidam", "gondolkodo"][sd0 % 3] }); delete FAM.CAST[key];
+    c.blob.visible = false; famStd(c.root); c.root.userData.noMerge = true; c.root.traverse((m) => { if (m.isMesh) m.castShadow = false; });
+    const g = new THREE.Group(); g.add(c.root);
+    const sk = c.skin, T = .5;
+    /* MENTŐMELLÉNY a ruha fölött (Zephyr: piros-fekete, hátul egyszínű fekete) – a törzs redőzött profiljára szabva */
+    if (o.zvest || o.vest) { const pr = [[.04, .02], [.205, .03], [.215, .14], [.222, .3], [.224, .42], [.2, .48], [.13, .505]].map(([r, y]) => new THREE.Vector2(r * 1.06, y)), vg = new THREE.LatheGeometry(pr, 40);
+      vg.scale(1, 1, .84); const vm = o.zvest ? std({ map: zephyrVestTex(), roughness: .55 }) : std({ color: o.vest, roughness: .6 }); mesh(vg, vm, c.spine);
+      if (o.zvest) { const bk = mesh(new THREE.BoxGeometry(.07, .045, .02), std({ color: "#0c0c0d", roughness: .4 }), c.spine); bk.position.set(0, .14, .2);
+        [-1, 1].forEach((sd) => { const sp = new THREE.CapsuleGeometry(.04, .1, 3, 8); sp.rotateZ(Math.PI / 2); sp.translate(sd * .13, .5, 0); sp.scale(1, 1, .9); mesh(sp, std({ color: "#c8101c", roughness: .55 }), c.spine); });
+        const cl = new THREE.TorusGeometry(.1, .028, 6, 18, Math.PI * 1.25); cl.rotateX(Math.PI / 2); cl.rotateY(Math.PI * .375 + Math.PI); cl.translate(0, .52, -.01); mesh(cl, std({ color: "#17181b", roughness: .6 }), c.spine); } }
+    /* kiegészítők a régi fej-koordinátákban (gömb középpont y = .09, r ≈ .112) – a családfej H = .118-as gömbjére igazítva */
+    const acc = new THREE.Group(), kk = .118 / .112; acc.scale.setScalar(kk); acc.position.y = -.09 * kk + .004; c.head.add(acc);
+    if (o.cap) { const cp = new THREE.SphereGeometry(.136, 22, 10, 0, TAU, 0, Math.PI * .47); cp.scale(1, 1.02, 1.06); cp.translate(0, .1, -.006); mesh(cp, std({ color: o.cap, roughness: .7 }), acc); const br = new THREE.CylinderGeometry(.09, .09, .008, 20, 1, false, -Math.PI / 2, Math.PI); br.scale(1.05, 1, 1.2); br.translate(0, .125, .1); mesh(br, std({ color: o.cap, roughness: .7 }), acc); mesh(new THREE.SphereGeometry(.012, 8, 6).translate(0, .238, 0), std({ color: o.cap, roughness: .7 }), acc); }
+    if (o.sunhat) { const hb = new THREE.CylinderGeometry(.24, .26, .012, 28); hb.translate(0, .16, 0); mesh(hb, std({ color: o.sunhat, roughness: .9 }), acc); const hc = new THREE.CylinderGeometry(.11, .125, .1, 20); hc.translate(0, .21, 0); mesh(hc, std({ color: o.sunhat, roughness: .9 }), acc); const bd = new THREE.CylinderGeometry(.127, .127, .025, 20, 1, true); bd.translate(0, .17, 0); mesh(bd, std({ color: "#5a3a22", roughness: .7, side: THREE.DoubleSide }), acc); }
+    if (o.glasses || o.pro) { const gm = std({ color: "#0d0f12", roughness: .15, metalness: .5 }); [-1, 1].forEach((sd) => { const ln = new THREE.SphereGeometry(.03, 14, 8, 0, TAU, 0, Math.PI * .4); ln.rotateX(Math.PI / 2); ln.scale(1.25, .85, .5); ln.translate(sd * .041, .118, .103); mesh(ln, std({ color: o.pro ? "#20303c" : "#101418", roughness: .05, metalness: .8 }), acc);
+        const tm = new THREE.BoxGeometry(.006, .008, .11); tm.translate(sd * .1, .125, .05); mesh(tm, gm, acc); }); const br = new THREE.BoxGeometry(.03, .006, .008); br.translate(0, .126, .112); mesh(br, gm, acc); }
+    if (o.banana) bananaHat(acc).position.y -= .05;
+    if (o.cap || o.sunhat) c.hair.scale.set(.93, .9, .93);
+    /* kesztyű (versenyzők): a kéz anyaga fekete, csúszásgátló */
+    if (o.pro) { const gl = std({ color: "#1b1d22", roughness: .85 }); c.arms.forEach((A) => A.hand.group.traverse((m) => { if (m.isMesh) m.material = gl; })); }
+    /* HAJÓTÖRÖTT (rönktutaj): évek óta nyíró nélkül – vállon túl érő, a naptól kiszőkült, csimbókos haj (antik-hosszú, erősebb szél) +
+       a mellkasig érő, kócos szakáll és lelógó bajusz: tincsenként, a szélben lobogva (a tincsek töve sötétebb, a vége kifakult) */
+    if (cast) { const H = .118, f = c.face, R = FAM.rng(77 + sd0), geos = [], V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+      for (let i = 0; i < 150; i++) { const a = (R() * 2 - 1) * 1.45, x0 = Math.sin(a) * H * .8, y0 = -H * (.5 + R() * .3) + Math.pow(Math.abs(Math.sin(a)), 1.5) * H * .42, z0 = (f.Z ? f.Z(x0 * .9, y0) : Math.cos(a) * H * .8) - H * .02;
+        const L = H * (1.6 + R() * 1.4) * (1 - Math.abs(a) * .25), pts = [V3(x0, y0, z0)]; let p = pts[0].clone(), d = V3(Math.sin(a) * .35 + (R() - .5) * .3, -1, .55 + R() * .2).normalize();
+        for (let k = 1; k <= 6; k++) { d.y -= .25; d.x += (R() - .5) * .5; d.z -= .12; d.normalize(); p = p.clone().addScaledVector(d, L / 6); if (p.z < H * .15 && p.y < -H * .9) p.z = H * .15 + (R() * .02); pts.push(p); }
+        geos.push(FAM.lockGeometry(pts, H * (.07 + R() * .05), { tip: .12, segs: 10, radial: 4, flat: .5, phase: R() })); }
+      for (let i = 0; i < 40; i++) { const s = i % 2 ? 1 : -1, x0 = s * H * (.02 + R() * .2), y0 = -H * .28 + R() * H * .04, z0 = (f.Z ? f.Z(x0, y0) : H * .9) + H * .01, pts = [V3(x0, y0, z0)]; let p = pts[0].clone();
+        for (let k = 1; k <= 5; k++) { p = p.clone().add(V3(s * H * .05, -H * .06 * k * .6, -H * .006 * k)); pts.push(p); } geos.push(FAM.lockGeometry(pts, H * .035, { tip: .2, segs: 7, radial: 4, phase: R() })); }
+      const bc = new THREE.Color("#6a4a2a"), bm = FAM.windify(new THREE.MeshStandardMaterial({ color: bc, roughness: .75, side: THREE.DoubleSide }), "hair", { amp: .9 });
+      /* a tincsek vége kifakult: a „aT” (tő 0 → vég 1) alapján a színt a világosabb, napszítta árnyalat felé keverjük */
+      const ob = bm.onBeforeCompile; bm.onBeforeCompile = (sh) => { ob(sh); sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying float vTip;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvTip = aT;");
+        sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying float vTip;").replace("vec4 diffuseColor = vec4( diffuse, opacity );", "vec4 diffuseColor = vec4( mix(diffuse, vec3(.62,.47,.28), smoothstep(.4,1.,vTip)), opacity );"); };
+      bm.customProgramCacheKey = () => "fam-beard-tip"; W.disposables.push(bm);
+      const bmesh = mesh(FAM.mergeGeometries(geos), bm, c.head); bmesh.customDepthMaterial = FAM.windDepth("hair", .9);
+      /* a haj vége is kifakul (ugyanaz a keverés a fejhaj anyagán) */
+      c.hair.traverse((m) => { if (m.isMesh && m.material.onBeforeCompile && m.material.onBeforeCompile.toString().indexOf("uWind") >= 0 && !m.material.userData.tip) { const mm = m.material, ob2 = mm.onBeforeCompile; mm.userData.tip = 1;
+        mm.onBeforeCompile = (sh) => { ob2(sh); sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying float vTip;").replace("#include <begin_vertex>", "#include <begin_vertex>\nvTip = aT;");
+          sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying float vTip;").replace("vec4 diffuseColor = vec4( diffuse, opacity );", "vec4 diffuseColor = vec4( mix(diffuse, vec3(.66,.5,.3), smoothstep(.45,1.,vTip)), opacity );"); };
+        mm.customProgramCacheKey = () => "fam-hair-tip"; mm.needsUpdate = true; } }); }
+    if (!W._famFull && !o.full) famFreeze(c);
+    const L0 = c.legs[0], L1 = c.legs[1], A0 = c.arms[0], A1 = c.arms[1];
+    const P = { g, hips: c.pelvis, torso: c.spine, head: c.headG, aL: { sh: A0.sh, el: A0.elbow }, aR: { sh: A1.sh, el: A1.elbow }, lL: { hp: L0.hip, kn: L0.knee }, lR: { hp: L1.hip, kn: L1.knee },
+      t: Math.random() * 9, fall: 0, wave: o.wave || 0, sit: o.sit || 0, shout: 0, fam: c, hy: c.pelvis.position.y, lt: .82 * .52, ls: .82 * .46 + .05 };
+    g.userData.P = P; return g;
+  }
   function makePerson(o) {
-    o = o || {}; const g = new THREE.Group(), sk = std({ color: o.skin || SKIN[(o.seed || 0) % 5], roughness: .75 }), top = std({ color: o.top || "#1f5fa8", roughness: .8 }), bot = std({ color: o.bot || "#27303c", roughness: .85 }), hr = std({ color: o.hair || HAIR[(o.seed || 0) % 6], roughness: .9 });
+    o = o || {}; if (!o.old && W.famCrew !== false && typeof FAM !== "undefined") return makeFamPerson(o); const g = new THREE.Group(), sk = std({ color: o.skin || SKIN[(o.seed || 0) % 5], roughness: .75 }), top = std({ color: o.top || "#1f5fa8", roughness: .8 }), bot = std({ color: o.bot || "#27303c", roughness: .85 }), hr = std({ color: o.hair || HAIR[(o.seed || 0) % 6], roughness: .9 });
     const hips = new THREE.Group(); hips.position.y = .9; g.add(hips);
     const torso = new THREE.Group(); hips.add(torso);
     { const tg = new THREE.CapsuleGeometry(.155, .36, 4, 12); tg.scale(1, 1, .72); tg.translate(0, .33, 0); mesh(tg, top, torso); }
@@ -180,6 +280,22 @@
           for (let k = 0; k < 6; k++) { const pg = new THREE.IcosahedronGeometry(.02 + R2() * .012, 0); pg.translate(sd * (.1 + R2() * .015), .06 + k * .016, .02 + R2() * .03); mesh(pg, bm[k % 5], head); } });
         for (let k = 0; k < 22; k++) { const a = R2() * TAU, el = R2() * 1.1, cg = new THREE.ConeGeometry(.018 + R2() * .014, .07 + R2() * .07, 4); cg.rotateX(-Math.PI / 2 + (R2() - .5) * 1.2); cg.rotateY(a);
           cg.translate(Math.cos(a) * .1 * Math.cos(el * .8), .14 + Math.sin(el) * .07, Math.sin(a) * .1 * Math.cos(el * .8) - .01); mesh(cg, bm[k % 5], head); } }
+      /* 01:17 (tulajdonos: „a haja is legyen hosszú és ápolatlan, mint egy hajótöröttnek, akinek minden szőrzete megnőtt”) – a hajótörött-kinézet
+         (mint évekig egy szigeten): vállon túl érő, kócos, csimbókokba összeállt, tincsenként kunkorodó haj, a vége a naptól és a sós víztől kiszőkült;
+         a szakáll a mellkasig ér, szintén kifakult végekkel; bozontos szemöldök. */
+      if (o.beard) { const R3 = (() => { let x = 2718 + (o.seed || 0); return () => (x = (x * 16807) % 2147483647) / 2147483647; })(), root = std({ color: "#4a3220", roughness: 1 }), mid = std({ color: "#7a5a36", roughness: 1 }), tip = std({ color: "#b89a64", roughness: 1 });
+        const strand = (p0, dir, len, r0, n) => { let p = p0.clone(), d = dir.clone().normalize(); for (let k = 0; k < n; k++) { const t = k / n, seg = len / n; d.y -= 1.1 + .4 * t; d.x += (R3() - .5) * .45; d.z += (R3() - .5) * .35; d.normalize(); const q = p.clone().addScaledVector(d, seg);
+            rodBetween(p, q, r0 * (1 - t * .75), t < .34 ? root : t < .7 ? mid : tip, head, 5); p = q; } };
+        /* hosszú haj: a fejtetőről és a tarkóról hátra és a vállakra omlik */
+        for (let k = 0; k < 64; k++) { /* tőpont a fejbőrön: a fejtető, a halánték és a tarkó (az arc elől szabadon marad) */
+          const a = (R3() * 1.5 + .25) * Math.PI, el = .1 + R3() * 1.1, nx = Math.cos(a) * Math.cos(el), nz = -Math.abs(Math.sin(a)) * Math.cos(el) * (1 - .6 * Math.max(0, Math.abs(Math.cos(a)) - .6)), ny = Math.sin(el);
+          const sp = new THREE.Vector3(nx * .118, .1 + ny * .12, nz * .12 - .005), dir = new THREE.Vector3(nx * .9, -.35, nz * .9 - .25); strand(sp, dir, .28 + R3() * .22, .013 + R3() * .008, 5); }
+        /* a homlokba lógó, kócos tincsek */
+        for (let k = 0; k < 9; k++) { const x = (R3() - .5) * .16; strand(new THREE.Vector3(x, .2, .06), new THREE.Vector3(x * 2, .5, 1), .07 + R3() * .05, .011, 2); }
+        /* a mellkasig érő szakáll: lelógó, kifakult végű csimbókok */
+        for (let k = 0; k < 18; k++) { const a = -1 + R3() * 2; strand(new THREE.Vector3(Math.sin(a) * .07, -.01 - R3() * .03, Math.cos(a) * .075), new THREE.Vector3(Math.sin(a) * .3, -.2, .55), .14 + R3() * .14, .02 + R3() * .01, 3); }
+        /* bozontos szemöldök */
+        [-1, 1].forEach((sd) => { for (let k = 0; k < 4; k++) { const eg = new THREE.ConeGeometry(.008, .03, 4); eg.rotateZ(sd * (1.2 + R3() * .5)); eg.translate(sd * (.025 + k * .013), .148 + R3() * .008, .1); mesh(eg, root, head); } }); }
       /* 00:53 (tulajdonos): BANÁNLEVÉL CSÁKÓ – összehajtogatott papírcsákó formájú, banánlevélből: a két háromszög-oldal a fejtetőn gerincben
          találkozik, alul felhajtott szegély, a levél zöld, középér és párhuzamos oldalerek, szakadozott szél, egy levélszár-pöcök a csúcson */
       if (o.banana) { const lt = canvasTex(256, 128, (gg, w, h) => { const gr = gg.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#5f9a2c"); gr.addColorStop(1, "#3f7a1e"); gg.fillStyle = gr; gg.fillRect(0, 0, w, h);
@@ -214,10 +330,11 @@
   /* póz: sit (0 áll – 1 ül), wave (integetés 0..1), hike (kihajlás 0..1, a test hátradől), fall (0..1: elesik, hanyatt, lábak fel), cheer */
   function posePerson(g, dt, o) {
     const P = g.userData.P; if (!P) return; P.t += dt; const t = P.t, sit = o.sit != null ? o.sit : P.sit, wave = o.wave != null ? o.wave : P.wave, hike = o.hike || 0, fall = o.fall || 0;
-    P.hips.position.y = .9 - .45 * sit - .5 * fall; P.hips.rotation.x = 0;
+    const HY = P.hy || .9, LT = P.lt || .44, LS = P.ls || .46;
+    P.hips.position.y = HY - .45 * sit - .5 * fall; P.hips.rotation.x = 0;
     P.lL.hp.rotation.x = P.lR.hp.rotation.x = -1.45 * sit - 1.3 * fall + (o.legs || 0); P.lL.kn.rotation.x = P.lR.kn.rotation.x = 1.5 * sit * (1 - hike) + .2 * fall;
     /* 2026-11-14 18:50: a láb soha nem lóghat bele a hajótestbe – ha o.floor (a padló magassága a csípőhöz képest) meg van adva, a térd annyit hajlik, hogy a talp a padlón legyen */
-    if (o.floor != null) { const a = P.lL.hp.rotation.x, yk = -.44 * Math.cos(a), need = (yk - o.floor) / .46; if (o.footOn || -.46 * Math.cos(a + P.lL.kn.rotation.x) + yk < o.floor) { const k = Math.acos(clamp(need, -1, 1)) - a; P.lL.kn.rotation.x = P.lR.kn.rotation.x = k; } }
+    if (o.floor != null) { const a = P.lL.hp.rotation.x, yk = -LT * Math.cos(a), need = (yk - o.floor) / LS; if (o.footOn || -LS * Math.cos(a + P.lL.kn.rotation.x) + yk < o.floor) { const k = Math.acos(clamp(need, -1, 1)) - a; P.lL.kn.rotation.x = P.lR.kn.rotation.x = k; } }
     P.lL.hp.rotation.z = -.08 - .25 * fall; P.lR.hp.rotation.z = .08 + .25 * fall;
     P.torso.rotation.x = -hike * 1.05 - fall * 1.25 + .03 * Math.sin(t * 1.3); P.torso.rotation.z = .02 * Math.sin(t * .9);
     P.head.rotation.x = hike * .6 + fall * .4 + (o.look || 0); P.head.rotation.y = (o.turn != null ? o.turn : .35 * Math.sin(t * .37));
@@ -227,6 +344,13 @@
     if (o.cheer) P.aR.sh.rotation.z = 2.4 + wv * .2;
     if (fall > .01) { P.lL.hp.rotation.x += Math.sin(t * 14) * .25 * fall; P.lR.hp.rotation.x += Math.sin(t * 14 + 1.5) * .25 * fall; }
     const mo = P.head.userData.mouth; if (mo) mo.scale.set(1, 1 + (o.shout || 0) * 2.5, 1);
+    /* családfigura: élő arc (pislogás, szemmozgás, mimika – kiáltásnál nevet/kiált), markoló kezek, a szél lobogtatja a hajat */
+    if (P.fam && !P.fam._frozen) { const c = P.fam, want = (o.shout || 0) > .3 || o.cheer ? "nevet" : fall > .3 ? "meglepett" : hike > .5 ? "hatarozott" : null;
+      if (want && c.exprName !== want) { P._ex = P._ex || c.exprName; c.setExpr(want); } else if (!want && P._ex) { c.setExpr(P._ex); P._ex = null; }
+      c.face.update(dt, t, { x: clamp(-(o.turn != null ? o.turn : 0) * .3, -.5, .5), y: 0 });
+      c.arms.forEach((A, i) => { A.hand.set((i === 0 ? o.pull : true) && !(wave > 0 && i === 1) ? "fog" : wave > 0 && i === 1 ? "nyitott" : "laza"); A.hand.update(dt, t + A.s); });
+    }
+    if (P.fam) { const now = performance.now() / 1000; if (FAM.WIND._t !== now) { FAM.WIND._t = now; FAM.WIND.strength = .75; FAM.WIND.update(0, now); } }
   }
 
   /* --------------------------------------------------------------- közös dingi-test (lofton hajótest két oldalra), fedélzettel */
@@ -793,4 +917,4 @@
     G.userData.update(0); return G;
   }
   /* egy osztály hajómodellje (a Zephyr kivételével – az a 05b-ben készül) */
-  function makeClassBoat(id, o) { return id === "finn" ? makeFinn(o) : id === "j420" ? make420(o) : id === "tutaj" ? makeRaft(o) : id === "flamingo" ? makeFlamingo(o) : null; }
+  function makeClassBoat(id, o) { const pf = W._famFull; W._famFull = !!(o && o.full); try { return id === "finn" ? makeFinn(o) : id === "j420" ? make420(o) : id === "tutaj" ? makeRaft(o) : id === "flamingo" ? makeFlamingo(o) : null; } finally { W._famFull = pf; } }

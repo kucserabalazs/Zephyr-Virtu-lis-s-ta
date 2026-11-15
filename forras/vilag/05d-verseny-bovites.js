@@ -29,7 +29,7 @@
     const S = VRR, id = S.cls.id; S.pb = null;
     if (id === "zephyr") return;
     S.boat.visible = false;
-    const pb = makeClassBoat(id, { steer: (() => { try { return localStorage.getItem("zephyr-kormany") || "bot"; } catch (e) { return "bot"; } })(), zephyr: id === "j420" || id === "finn", name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
+    const pb = makeClassBoat(id, { full: true, steer: (() => { try { return localStorage.getItem("zephyr-kormany") || "bot"; } catch (e) { return "bot"; } })(), zephyr: id === "j420" || id === "finn", name: S.prof.name || "", num: "HUN " + (7 + (S.prof.id.charCodeAt(2) % 80)), crew: id === "j420" ? 1 : 0, seed: 9, hull: id === "finn" ? "#f6f3ea" : undefined }); W.root.add(pb); S.pb = pb;
     /* fedélzeti térkép (a nagy hajó taktikai kijelzője) a kis hajó fedélzetén, a kormányos előtt */
     if (S.ck && S.ck.chartT) { const c = S.ck.chartT._canvas, w = id === "flamingo" ? .34 : id === "tutaj" ? .3 : .5, h = w * c.height / c.width; const pl = mesh(new THREE.PlaneGeometry(w, h), basic({ map: S.ck.chartT, side: THREE.DoubleSide }), pb.userData.body); const at = pb.userData.chartAt;
       /* 2026-11-14 (tulajdonos: „a műszer nem felém mutat”): a kijelző a kormányos szeme felé néz (eddig hátulról, tükrözve látszott) */
@@ -146,7 +146,7 @@
     const spots = [[0, d0 + 1.5 + .02, .35 + zz(.45) * 0, 1], [-.55, dy(.12) + .04, zz(.13), 0], [.55, dy(.12) + .04, zz(.11), 0], [0, dy(.12) + .04, zz(.07), 0], [-.4, dy(.85) + .13, zz(.83), 2], [.45, dy(.82) + .13, zz(.86), 2]];
     const TOPS = ["#e5262f", "#1f5fa8", "#ffd166", "#f4f4f0", "#2fa85a", "#ff7a1a", "#8e44ad"], out = [];
     for (let k = 0; k < Math.min(n, spots.length); k++) { const s = spots[(k + seed) % spots.length], sit = s[3] === 2 ? 1 : 0;
-      const p = makePerson({ top: TOPS[(k + seed) % 7], bot: ["#27303c", "#f2f2f2", "#5a6a7a", "#2a4a8a"][(k + seed) % 4], seed: k * 3 + seed, cap: k % 3 === 1 ? "#ffffff" : null, glasses: k % 2 === 0, sunhat: k % 4 === 3 ? "#e8d29a" : null, sleeve: k % 2 === 1 });
+      const p = makePerson({ old: true, top: TOPS[(k + seed) % 7], bot: ["#27303c", "#f2f2f2", "#5a6a7a", "#2a4a8a"][(k + seed) % 4], seed: k * 3 + seed, cap: k % 3 === 1 ? "#ffffff" : null, glasses: k % 2 === 0, sunhat: k % 4 === 3 ? "#e8d29a" : null, sleeve: k % 2 === 1 });
       p.position.set(s[0], s[1] - (sit ? .45 : 0), s[2]); p.rotation.y = s[3] === 1 ? Math.PI : (k % 2 ? .9 : -.9) + Math.PI * (s[2] > 0 ? 0 : 1); g.add(p); out.push({ p, sit, wave: 0, waveT: rr(2, 9), fall: 0, ph: rand() * 9 }); }
     return out;
   }
