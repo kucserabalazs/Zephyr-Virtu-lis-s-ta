@@ -284,7 +284,9 @@
     document.body.classList.add("world-on");
     W.hud = makeHud(); W.hud.el.style.display = T.inVR ? "none" : ""; W.hud.draw();
     W.panel = makePanel(); W.panel.draw();
-    if (T.inVR) { placePanel(); if (W.panelHidden) { T.xr.extra.delete(W.panel.m); placePill(); } }
+    /* 2026-11-15 (tulajdonos: „a fölösleges régi menütáblákat, amiket már kiváltanak más gombok, tüntesd el”): a Balaton Sailing VR-ben (kikötő, futam)
+       a régi nagy panel nem jelenik meg – helyette a műszer gombjai (MENÜ · SZÜNET · KALIBRÁL), a versenymenü és a kikötői táblák szolgálnak */
+    if (T.inVR && !(W.spec && W.spec.noPanel)) { placePanel(); if (W.panelHidden) { T.xr.extra.delete(W.panel.m); placePill(); } }
     const cvs = T.sceneEl.canvas;
     cvs.addEventListener("pointermove", on2DMove); cvs.addEventListener("pointerdown", on2DDown); cvs.addEventListener("pointerup", on2DUp);
     addEventListener("keydown", kd); addEventListener("keyup", ku);
@@ -295,11 +297,11 @@
     W.t += dt;
     W.upd.forEach((f) => f(dt));
     W.spec.tick(dt);
-    if (W.panel) { W.panel.m.visible = T.inVR && !W.panelHidden; if (W.panel.pill) { W.panel.pill.visible = false; T.xr.extra.delete(W.panel.pill); }   /* 2026-11-11 (tulajdonos): a bezárt menü után SEMMI nem marad a térben – a kis „Menü” fül megszűnt; visszahozás: tenyérmozdulat, csuklóóra vagy lenézve az öv-gomb */ if (T.inVR) W.panel.tick(dt); }
+    if (W.panel) { const np = !!(W.spec && W.spec.noPanel); if (np) T.xr.extra.delete(W.panel.m); W.panel.m.visible = T.inVR && !W.panelHidden && !np; if (W.panel.pill) { W.panel.pill.visible = false; T.xr.extra.delete(W.panel.pill); }   /* 2026-11-11 (tulajdonos): a bezárt menü után SEMMI nem marad a térben – a kis „Menü” fül megszűnt; visszahozás: tenyérmozdulat, csuklóóra vagy lenézve az öv-gomb */ if (T.inVR) W.panel.tick(dt); }
     W.hudT += dt; if (!T.inVR && W.hud && W.hudT > .4) { W.hudT = 0; W.hud.draw(); }
   };
   W.togglePanel = function () {
-    if (!W.panel) return; W.panelHidden = !W.panelHidden;
+    if (!W.panel) return; if (W.spec && W.spec.noPanel) { try { if (W.spec.menu) W.spec.menu(); } catch (e) {} return; } W.panelHidden = !W.panelHidden;
     const P = W.panel;
     if (W.panelHidden && P.pill) {   /* a fül a panel bal felső sarkánál marad, ugyanabban az irányban */
       T.xr.extra.delete(P.m); placePill();

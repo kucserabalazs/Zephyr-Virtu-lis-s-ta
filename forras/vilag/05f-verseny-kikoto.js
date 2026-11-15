@@ -54,7 +54,7 @@
     try { wzBuild(root); } catch (e) { console.warn("menü-terem", e); }
     hbTpSurf(env, 0, -pierL / 2 + 2, 3, pierL); HB.berths.forEach((b) => { const fl = b.big ? 13 : 6; hbTpSurf(env, b.sd * (1.5 + fl / 2), b.z + (b.big ? 4.2 : 2.6), fl, 1.1); }); HB.pos = { x: 0, z: 0 };
     HB.wz = wzLoad(); if (W._hbWalk) { W._hbWalk = false; hbWalk(true); } else wzGo(1); W._hb = { preview: hbPreview, board: hbBoard, go: hbGo, HB, wz: wzGo, walk: hbWalk, school: hbSchool, SCH, start: () => { wzPlan(); wzStart(); } };
-    return { tick: hbTick, panel: hbPanel, hud: hbHud, wrist: () => [["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["‹", "A sétához", () => W.close()]] };
+    return { noPanel: true, menu: () => hbMenu(), tick: hbTick, panel: hbPanel, hud: hbHud, wrist: () => [["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["‹", "A sétához", () => W.close()]] };
   }
   /* ---------------------------------------------------------------- 2026-11-14: balatoni kikötői részletek – viharjelző oszlop (a keleti medence valódi fokozatával),
      hattyúk, nádas a part mentén, útjelző tábla a valódi távolságokkal, pad, virágládák */
@@ -73,7 +73,7 @@
       T0.forEach(([n, la, lo], i) => { const tx = canvasTex(512, 96, (g, w, h) => { g.fillStyle = "#0b3a5e"; g.fillRect(0, 0, w, h); g.strokeStyle = "#e9c46a"; g.lineWidth = 6; g.strokeRect(4, 4, w - 8, h - 8); g.fillStyle = "#fff"; g.font = "800 40px system-ui, sans-serif"; g.fillText(n, 22, 62); g.textAlign = "right"; g.fillStyle = "#ffd166"; g.fillText(dist(la, lo) + " km", w - 22, 62); });
         const b = mesh(new THREE.BoxGeometry(1.5, .28, .04), [std({ color: "#0b3a5e" }), std({ color: "#0b3a5e" }), std({ color: "#0b3a5e" }), std({ color: "#0b3a5e" }), basic({ map: tx }), basic({ map: tx })], G); const a = brg(la, lo);
         b.position.set(Math.sin(a) * .7, 2.95 - i * .34, -Math.cos(a) * .7); b.rotation.y = -a + Math.PI / 2; });
-      const lbl = labelSprite(["Zamárdi · Balaton", "a táblán a valódi távolságok, légvonalban"], { size: 1.4, fs: 54, w: 760 }); lbl.position.set(0, 3.7, 0); G.add(lbl); }
+      const lbl = labelSprite(["Zamárdi · Balaton", "a táblán a valódi távolságok, légvonalban"], { size: 1.4, fs: 54, w: 760 }); lbl.position.set(0, 3.7, 0); G.add(lbl); HB.signLbl = lbl; }
     /* pad és virágládák a móló elején */
     { const wood = std({ color: "#8a6a4a", roughness: .8 }); const G = new THREE.Group(); G.position.set(-1.15, .66, -10); env.add(G); mesh(new THREE.BoxGeometry(.45, .06, 1.6).translate(0, .45, 0), wood, G); mesh(new THREE.BoxGeometry(.06, .45, 1.6).translate(-.2, .7, 0), wood, G); [-.7, .7].forEach((z) => mesh(new THREE.BoxGeometry(.4, .45, .06).translate(0, .22, z), dark, G));
       [[-1.25, -2.8], [1.25, -20.5], [-1.25, -27]].forEach(([x, z]) => { const b = mesh(new THREE.BoxGeometry(.32, .3, .9), wood, env); b.position.set(x, .8, z); for (let k = 0; k < 9; k++) { const f = mesh(new THREE.SphereGeometry(.07, 6, 5), std({ color: ["#e63946", "#ffb703", "#f1faee", "#c77dff"][k % 4], roughness: .7 }), env); f.position.set(x + (Math.random() - .5) * .24, 1.0 + Math.random() * .08, z + (Math.random() - .5) * .8); } }); }

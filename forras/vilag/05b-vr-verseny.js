@@ -110,13 +110,13 @@
       /* 2026-11-12 08:29 (tulajdonos: „a fedélzeti computer kinézetre legyen a hajó része – ne odabiggyesztett kirajzolás, hanem úgy legyen megtervezve, mintha a hajóhoz
          tartozna”): beépített műszerkonzol – a kormányoszlop fejéből kinövő, öntött karbon nyak és merevítő, lekerekített ház, szatén keret, napellenző, gombsor,
          forgatógomb, állapot-LED, rozsdamentes kapaszkodókeret; a képernyő a keretbe süllyesztve ül. */
-      if (sd < 0) { const pod = new THREE.Group(); ped.add(pod); pod.position.set(-.8 * sd, .84, -.3); pod.rotation.set(.9, Math.PI - .5 * sd, 0); pod.scale.setScalar(.8);
+      if (sd < 0) { const pod = new THREE.Group(); ped.add(pod); pod.position.set(-.8 * sd, 1.0, -.3); pod.rotation.set(.74, Math.PI - .5 * sd, 0); pod.scale.setScalar(.86);   /* 2026-11-15 02:57 (tulajdonos): a kijelző feljebb és kevésbé döntve, hogy az új gombok jól látsszanak és kézre essenek */
         /* 2026-11-12 08:36 (tulajdonos: „a műszer ne zavarja a kilátást – lefelé nézve inkább a hajótestet takarja, ne a horizontot; lehet kisebb is, ne a kellős közepén
            legyen, mint egy tévé”): a konzol alacsonyan (csípőmagasságban), a hajó középvonala felé, erősen felfelé döntve ül, 20%-kal kisebb – a horizont szabad. */
         const rrect = (w, h, r) => { const sp = new THREE.Shape(), x = -w / 2, y = -h / 2; sp.moveTo(x + r, y); sp.lineTo(x + w - r, y); sp.quadraticCurveTo(x + w, y, x + w, y + r); sp.lineTo(x + w, y + h - r); sp.quadraticCurveTo(x + w, y + h, x + w - r, y + h); sp.lineTo(x + r, y + h); sp.quadraticCurveTo(x, y + h, x, y + h - r); sp.lineTo(x, y + r); sp.quadraticCurveTo(x, y, x + r, y); return sp; };
         const satin = std({ color: "#8d949b", roughness: .35, metalness: .85 }), rubber = std({ color: "#15181c", roughness: .9 });
         /* ház (hátrafelé vastagodó, lekerekített élekkel) */
-        { const gh = new THREE.ExtrudeGeometry(rrect(.56, .54, .05), { depth: .075, bevelEnabled: true, bevelThickness: .014, bevelSize: .014, bevelSegments: 3, curveSegments: 8 }); W.disposables.push(gh); const h = mesh(gh, carbon, pod); h.position.set(0, -.035, -.092); }
+        { const gh = new THREE.ExtrudeGeometry(rrect(.56, .66, .05), { depth: .075, bevelEnabled: true, bevelThickness: .014, bevelSize: .014, bevelSegments: 3, curveSegments: 8 }); W.disposables.push(gh); const h = mesh(gh, carbon, pod); h.position.set(0, -.095, -.092); }
         /* szatén keret a képernyő körül (lyukas lap) */
         { const sp = rrect(.52, .5, .035), ho = new THREE.Path(); ho.moveTo(-.228, -.203 + .035); ho.lineTo(.228, -.203 + .035); ho.lineTo(.228, .203 + .035); ho.lineTo(-.228, .203 + .035); ho.closePath(); sp.holes.push(ho);
           const gb = new THREE.ExtrudeGeometry(sp, { depth: .012, bevelEnabled: true, bevelThickness: .004, bevelSize: .004, bevelSegments: 2 }); W.disposables.push(gb); const bz = mesh(gb, satin, pod); bz.position.set(0, -.035, .0); }
@@ -126,11 +126,11 @@
         { const hd = mesh(new THREE.BoxGeometry(.6, .018, .13), carbon, pod); hd.position.set(0, .245, .05); hd.rotation.x = .12;
           [-1, 1].forEach((q) => { const ck = mesh(new THREE.BoxGeometry(.016, .3, .1), carbon, pod); ck.position.set(q * .292, .09, .04); }); }
         /* gombsor, forgatógomb, LED a képernyő alatt */
-        /* 2026-11-14 22:48 (tulajdonos): a műszer alatt három gomb – MENÜ, SZÜNET, KALIBRÁLÁS */ vrPodBtns(pod, .4, -.258, .02); void rubber;
-        { const kn = mesh(new THREE.CylinderGeometry(.024, .027, .026, 20), satin, pod); kn.rotation.x = Math.PI / 2; kn.position.set(.205, -.243, .022);
-          const led = mesh(new THREE.SphereGeometry(.006, 8, 6), basic({ color: "#3dff7a" }), pod); led.position.set(.155, -.243, .016); led.userData.noBake = true; }
+        /* 2026-11-14 22:48 (tulajdonos): a műszer alatt három gomb – MENÜ, SZÜNET, KALIBRÁLÁS */ vrPodBtns(pod, .46, -.345, .02, .6); void rubber;
+        { const kn = mesh(new THREE.CylinderGeometry(.024, .027, .026, 20), satin, pod); kn.rotation.x = Math.PI / 2; kn.position.set(.262, -.39, .022); kn.scale.setScalar(.62);
+          const led = mesh(new THREE.SphereGeometry(.006, 8, 6), basic({ color: "#3dff7a" }), pod); led.position.set(-.262, -.39, .016); led.userData.noBake = true; }
         /* rozsdamentes kapaszkodókeret a ház körül (alul-oldalt), ahogy a valódi kormányállásokon */
-        { const pts = [[-.31, .12], [-.31, -.3], [-.26, -.34], [.26, -.34], [.31, -.3], [.31, .12]].map((q) => new THREE.Vector3(q[0], q[1], .03)); const gr = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, "catmullrom", .2), 40, .011, 8, false); W.disposables.push(gr); mesh(gr, chrome, pod);
+        { const pts = [[-.31, .12], [-.31, -.4], [-.26, -.45], [.26, -.45], [.31, -.4], [.31, .12]].map((q) => new THREE.Vector3(q[0], q[1], .03)); const gr = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, "catmullrom", .2), 40, .011, 8, false); W.disposables.push(gr); mesh(gr, chrome, pod);
           [[-.31, .12], [.31, .12]].forEach((q) => { const st = mesh(new THREE.CylinderGeometry(.011, .011, .1, 8), chrome, pod); st.rotation.x = Math.PI / 2; st.position.set(q[0], q[1], -.02); }); }
         /* öntött karbon nyak a kormányoszlop fejéből a ház hátuljába + merevítő az oszlop derekáról, rozsdamentes gallérokkal */
         { pod.updateMatrix(); const back = new THREE.Vector3(0, -.06, -.1).applyMatrix4(pod.matrix), low = new THREE.Vector3(0, -.26, -.09).applyMatrix4(pod.matrix);
@@ -494,7 +494,7 @@
     vrSetup(VRR.lvl != null ? VRR.lvl : 1);
     faceYaw(0);
     audioStart({ water: .04, wind: .035 });
-    return { tick: vrTick, panel: vrPanel, hud: vrHud, wrist: vrWrist };
+    return { tick: vrTick, panel: vrPanel, hud: vrHud, wrist: vrWrist, noPanel: true, menu: () => vrRaceMenu(true) };
   }
   /* ===== PÁLYAJELZÉSEK (2026. nov. 9., a tulajdonos kérésére: „a bója fölött legyen az iránymutató nyíl, sokkal jobban látsszon,
      honnan és mit kell megkerülni; a két bója közötti áthaladás egyértelmű jelzést kapjon; az utak legyenek nyilvánvalóan jelezve”)
@@ -1559,7 +1559,7 @@
   function vrWrist() {
     const S = VRR;
     return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", S.fin && S.st === "race" ? "Tovább (nem várok)" : "Kapitányi tájékoztató", () => (S.fin && S.st === "race" ? vrSkip() : vrBriefOpen())], ["⛵", "Főmenü", vrToHarbor], ["⏸", S.paused ? "Folytatás" : "Szünet", () => vrPause(!S.paused)], ["◎", "Kalibrálás", vrCalibrate], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
-      ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
+      ["☰", "Versenymenü", () => vrRaceMenu(true)], ["‹", "A sétához", () => W.close()]];
   }
   function vrHud(H) {
     const S = VRR;

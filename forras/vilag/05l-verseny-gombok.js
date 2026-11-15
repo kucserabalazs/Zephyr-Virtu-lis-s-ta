@@ -12,9 +12,9 @@
       let fs = 46; do { g.font = `900 ${fs}px system-ui, sans-serif`; fs -= 2; } while (g.measureText(label).width > w - 22 && fs > 20); g.fillText(label, w / 2, sub ? 50 : 64); if (sub) { g.font = "700 22px system-ui, sans-serif"; g.fillStyle = "rgba(255,255,255,.85)"; g.fillText(sub, w / 2, 96); } });
   }
   /* a három gomb egy szülőn (a műszerházon / a kijelzőn): w = a sor szélessége, (x, y, z) a sor közepe a szülő terében */
-  function vrPodBtns(parent, w, y, z) {
+  function vrPodBtns(parent, w, y, z, hk) {
     const defs = [["☰ MENÜ", "versenymenü", ["#1d5a8e", "#0d3560"], () => vrRaceMenu(true)], ["⏸ SZÜNET", "megállít", ["#c98a00", "#7a5200"], () => vrPause(!VRR.paused)], ["◎ KALIBRÁL", "ide igazít", ["#2aa866", "#16703f"], () => vrCalibrate()]];
-    const bw = w / 3 * .9, bh = bw * .45, out = [];
+    const bw = w / 3 * .92, bh = bw * (hk || .45), out = [];
     defs.forEach(([l, sb, col, fn], i) => { const tex = vrBtnTex(l, sb, col), mtx = new THREE.MeshBasicMaterial({ map: tex }), side = new THREE.MeshStandardMaterial({ color: col[1], roughness: .5 });
       W.disposables.push(tex, mtx, side); const geo = new THREE.BoxGeometry(bw, bh, bw * .12); W.disposables.push(geo);
       const b = new THREE.Mesh(geo, [side, side, side, side, mtx, side]); b.position.set(-w / 3 + i * w / 3, y, z); b.userData.noBake = 1; b.userData.noMerge = 1; parent.add(b);
