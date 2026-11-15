@@ -166,10 +166,16 @@
       #worldHud .wh-tog{pointer-events:auto;font:800 17px/1 inherit;padding:12px 18px;border-radius:999px;border:2px solid rgba(255,209,102,.9);background:rgba(7,28,58,.88);color:#ffd166;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
       #worldHud.wh-min .wh-card,#worldHud.wh-min .wh-hint,#worldHud.wh-min .wh-btns:not(.wh-steer){display:none}
       @media (max-width:700px),(max-height:520px){#worldHud .wh-btns{gap:7px;max-height:38vh;overflow-y:auto;pointer-events:auto;-webkit-overflow-scrolling:touch}#worldHud .wh-b{font-size:15px;padding:10px 12px;min-width:0;border-radius:13px}#worldHud .wh-hint{font-size:13px;padding:6px 10px}#worldHud .wh-card{padding:9px 13px}#worldHud .wh-back{font-size:16px;padding:11px 15px}}
-    </style><div class="wh-top"><button type="button" class="wh-back">‹ ${BACK_T()}</button><div class="wh-card"><div class="wh-t"></div><div class="wh-s"></div><ul class="wh-list"></ul></div></div>
+      #worldHud .wh-vr{pointer-events:auto;display:inline-flex;align-items:center;gap:10px;font:900 19px/1 inherit;padding:12px 20px 12px 16px;border-radius:999px;border:2px solid #ffe08a;background:linear-gradient(180deg,#ffe49a,#e4bb63);color:#0b2f5e;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.35)}
+      #worldHud .wh-vr[hidden]{display:none} #worldHud .wh-vr svg{width:34px;height:22px}
+    </style><div class="wh-top"><button type="button" class="wh-back">‹ ${BACK_T()}</button><button type="button" class="wh-vr" hidden aria-label="Belépés VR szemüvegben"><svg viewBox="0 0 48 30" aria-hidden="true"><path d="M6 4h36a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H31l-4-6h-6l-4 6H6a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/><circle cx="14" cy="15" r="4" fill="currentColor"/><circle cx="34" cy="15" r="4" fill="currentColor"/></svg>VR szemüveg</button><div class="wh-card"><div class="wh-t"></div><div class="wh-s"></div><ul class="wh-list"></ul></div></div>
     <div class="wh-bot"><button type="button" class="wh-tog"></button><div class="wh-btns"></div><div class="wh-hint"></div></div>`;
     document.body.appendChild(el);
     el.querySelector(".wh-back").addEventListener("click", () => W.close());
+    /* 2026-11-15 18:56 (tulajdonos: „A játékot nem tudom VR szemüveg módba rakni!”): a 3D világban (2D nézetben) is át lehet lépni VR-be */
+    { const vb = el.querySelector(".wh-vr"), show = () => { vb.hidden = false; };
+      vb.addEventListener("click", () => { try { const sc = T.sceneEl; if (sc && !sc.is("vr-mode")) { const pr = sc.enterVR(); if (pr && pr.catch) pr.catch(() => {}); } } catch (e) {} });
+      try { if (window.AFRAME && AFRAME.utils.device.checkHeadsetConnected()) show(); else if (navigator.xr && navigator.xr.isSessionSupported) navigator.xr.isSessionSupported("immersive-vr").then((ok) => { if (ok) show(); }).catch(() => {}); } catch (e) {} }
     /* összecsukható menü (mobilon alapból összecsukva, hogy a jelenet látsszon); az állapotot megjegyezzük */
     { const tog = el.querySelector(".wh-tog"); let min; try { min = localStorage.getItem("zephyr-hud-min"); } catch (e) {}
       min = min == null ? (innerWidth < 700 || innerHeight < 520) : min === "1";

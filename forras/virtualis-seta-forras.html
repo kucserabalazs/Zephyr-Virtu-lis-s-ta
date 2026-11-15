@@ -13757,6 +13757,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       #gameHub h1{margin:0;font-size:clamp(36px,6.4vw,76px);font-weight:900;letter-spacing:-.025em;line-height:.95}
       #gameHub .gh-tag{margin:10px 0 0;font-size:clamp(16px,2vw,22px);max-width:62ch;line-height:1.4}
       #gameHub .gh-sty{display:flex;gap:6px;align-items:center;font-size:15px;font-weight:700;padding:6px 8px 6px 14px;border-radius:999px}
+      /* 2026-11-15 18:56 (tulajdonos: „A játékot nem tudom VR szemüveg módba rakni!”): nagy, mindig látható VR-gomb a játékoldal fejlécében */
+      #gameHub .gh-vr{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:14px;padding:16px 28px 16px 22px;border-radius:999px;font:900 clamp(19px,2.3vw,26px)/1 Inter,system-ui,sans-serif;color:#0b2f5e;background:linear-gradient(180deg,#ffe49a,#e4bb63);box-shadow:0 12px 32px rgba(0,0,0,.38),inset 0 0 0 3px rgba(255,255,255,.4);transition:transform .2s}
+      #gameHub .gh-vr:hover,#gameHub .gh-vr:focus-visible{transform:translateY(-3px) scale(1.03)}
+      #gameHub .gh-vr[hidden]{display:none}
+      #gameHub .gh-vr svg{width:44px;height:28px;flex:none}
       #gameHub .gh-sty button{all:unset;cursor:pointer;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:850;font-size:16px}
       #gameHub .gh-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(14px,2vw,24px);margin-top:clamp(22px,3.6vw,40px)}
       #gameHub .gh-card{all:unset;box-sizing:border-box;cursor:pointer;position:relative;overflow:hidden;display:flex;flex-direction:column;grid-column:span 6;min-height:360px;border-radius:28px;padding:0;transition:transform .25s,box-shadow .25s}
@@ -13875,6 +13880,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       hub.innerHTML = `<div class="gh-bg">${STY === "2" ? '<canvas class="gh-fx"></canvas>' : STY === "1" ? '<canvas class="gh-fx"></canvas>' : `<svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%"><path d="M1600 0 L980 0 L1600 760 Z" fill="#d61f26" opacity=".9"/><path d="M1600 120 L1260 980 L1600 980 Z" fill="#141d4d"/><path d="M0 1000 L0 640 L520 1000 Z" fill="#219ebc"/><circle cx="1380" cy="300" r="120" fill="#ffb703"/>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<rect x="${40 + i * 46}" y="930" width="40" height="40" fill="${["#d61f26", "#ffb703", "#141d4d", "#fffaf0", "#219ebc", "#d61f26", "#141d4d", "#ffb703"][i]}" stroke="#141d4d" stroke-width="3"/>`).join("")}</svg>`}</div>
       <div class="gh-wrap">
         <div class="gh-bar"><div class="gh-brand"><div class="gh-logo">${logoSvg(P)}</div><div><h1>VR Zephyr <em>Games</em></h1><p class="gh-tag">Vitorlázás, sakk és hullámvasút a Balatonon – VR-szemüvegben a legszebb, de telefonon és gépen is játszható.</p></div></div>
+          <button type="button" class="gh-vr" data-a="vr"${ghHs() ? "" : " hidden"} aria-label="Belépés VR szemüvegben"><svg viewBox="0 0 48 30" aria-hidden="true"><path d="M6 4h36a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H31l-4-6h-6l-4 6H6a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round"/><circle cx="14" cy="15" r="4" fill="currentColor"/><circle cx="34" cy="15" r="4" fill="currentColor"/></svg>Belépés VR-be</button>
           <div class="gh-sty" aria-label="Kinézet">Kinézet ${["1", "2", "3"].map((k) => `<button type="button" data-sty="${k}" class="${STY === k ? "on" : ""}" aria-label="${k}. kinézet">${k}</button>`).join("")}</div></div>
         <div class="gh-grid">${GAMES.map((q, i) => `<button type="button" class="gh-card${q.big ? " big" : ""}" data-g="${q.g}"><div class="gh-art">${q.art(P, "a" + i)}</div><div class="gh-txt"><span class="gh-kick">${q.kick}</span><b>${q.t}</b><p>${q.p}</p><div class="gh-feat">${q.f.map((x) => `<span>${x}</span>`).join("")}</div>${q.rec ? `<div class="gh-rec">${recs()}</div>` : ""}<span class="gh-go">${q.go}</span></div></button>`).join("")}</div>
         <div class="gh-row"><button class="gh-pill" data-a="tut">🎓 Oktató futam</button><button class="gh-pill" data-a="diff">Nehézség: ${DIFF[ls("zephyr-vr-nehezseg", "halado")] || "Haladó"}</button><button class="gh-pill" data-a="steer">Kormány: ${ls("zephyr-kormany", "bot") === "kerek" ? "kerék" : "botkormány"}</button></div>
@@ -13896,15 +13902,32 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         raf = requestAnimationFrame(loop); };
       raf = requestAnimationFrame(loop); return () => cancelAnimationFrame(raf); }
     const open = (kind, tut) => { hub.classList.add("gh-hide"); if (fxStop) { fxStop(); fxStop = null; } if (tut) window.__ghTut = 1;
-      try { if (VRS.ok && sceneEl && !sceneEl.is("vr-mode")) sceneEl.enterVR(); } catch (e) {}
+      if (ghHs()) ghEnterVR();   /* 18:56: a kártyára bökve rögtön VR – akkor is, ha a „támogatja-e” ellenőrzés még nem futott le */
       openWorld(kind);
       const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function () { const r = c0.apply(this, arguments); try { if (sceneEl && sceneEl.is("vr-mode")) sceneEl.exitVR(); } catch (e) {} hub.classList.remove("gh-hide"); draw(); return r; }; }
         if (window.__ghTut && Z.vrr && Z.vrSetup && Z.vrr.C) { window.__ghTut = 0; try { Z.vrSetup(0); } catch (e) {} } if (!window.__ghTut) clearInterval(iv); }, 400); setTimeout(() => clearInterval(iv), 60000); };
+    /* ===== 2026-11-15 18:56 VR-BELÉPÉS A JÁTÉKOLDALON (tulajdonos: „A játékot nem tudom VR szemüveg módba rakni! … miért nem indul a szemüvegben azonnal
+       VR módba?”). A hiba: a játékoldal minden gombot elrejtett, a VR-gombot is, és a kártyák csak akkor kapcsoltak VR-be, ha a „támogatja-e” ellenőrzés
+       (a jelenet betöltése után) már lefutott. Most:
+       • a szemüvegben az oldal betöltése után a Quest böngésző SAJÁT „Belépés VR-be” ajánlata azonnal megjelenik (WebXR offerSession) – egy mozdulat,
+         és VR-ben vagy; ha így lépsz be, rögtön a Balaton Sailing VR kikötője nyílik (a csuklómenüből a többi játék is elérhető);
+       • a fejlécben nagy „Belépés VR-be” gomb; a kártyára bökve is azonnal VR-be lép (akkor is, ha a jelenet még töltődik);
+       • a 3D világokban (2D nézetben) a bal felső sarokban „VR szemüveg” gomb – menet közben is át lehet lépni. */
+    function ghHs() { try { if (VRS.ok) return true; return !!(window.AFRAME && AFRAME.utils && AFRAME.utils.device && AFRAME.utils.device.checkHeadsetConnected()); } catch (e) { return !!VRS.ok; } }
+    function ghEnterVR() { if (!sceneEl) return; const go = () => { try { if (!sceneEl.is("vr-mode")) { const p = sceneEl.enterVR(); if (p && p.catch) p.catch(() => {}); } } catch (e) {} };
+      if (sceneEl.hasLoaded) go(); else sceneEl.addEventListener("loaded", go, { once: true }); }
+    function ghOffer() { try { if (!sceneEl || !sceneEl.hasLoaded || sceneEl.is("vr-mode") || !navigator.xr || !navigator.xr.offerSession || !ghHs()) return; const p = sceneEl.enterVR(false, true); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+    { let tries = 0, hooked = false; const iv = setInterval(() => { tries++; if (tries > 120) clearInterval(iv);
+        if (!sceneEl || !sceneEl.hasLoaded) return;
+        if (!hooked) { hooked = true;
+          sceneEl.addEventListener("enter-vr", () => setTimeout(() => { if (!sceneEl.is("vr-mode")) return; if (!(window.ZephyrWorld && ZephyrWorld.active)) { try { open("race"); } catch (e) {} } }, 350));
+          sceneEl.addEventListener("exit-vr", () => setTimeout(ghOffer, 1500)); }
+        if (ghHs()) { clearInterval(iv); const b = hub.querySelector(".gh-vr"); if (b) b.hidden = false; setTimeout(ghOffer, 600); } }, 250); }
     window.ZephyrGamesHub = { open, show: () => { hub.classList.remove("gh-hide"); draw(); } };
     hub.addEventListener("click", (ev) => { const c = ev.target.closest("[data-g]"), a = ev.target.closest("[data-a]"), s = ev.target.closest("[data-sty]");
       if (s) { STY = s.getAttribute("data-sty"); try { localStorage.setItem("zephyr-games-stilus", STY); } catch (e) {} draw(); return; }
       if (c) open(c.getAttribute("data-g"));
-      else if (a) { const k = a.getAttribute("data-a"); if (k === "tut") open("race", true);
+      else if (a) { const k = a.getAttribute("data-a"); if (k === "vr") open("race"); else if (k === "tut") open("race", true);
         else if (k === "diff") { const o = ["kezdo", "halado", "verseny"], i = o.indexOf(ls("zephyr-vr-nehezseg", "halado")); try { localStorage.setItem("zephyr-vr-nehezseg", o[(i + 1) % 3]); } catch (e) {} draw(); }
         else if (k === "steer") { try { localStorage.setItem("zephyr-kormany", ls("zephyr-kormany", "bot") === "kerek" ? "bot" : "kerek"); } catch (e) {} draw(); } } });
     const mount = () => { draw(); document.body.appendChild(hub); }; if (document.body) mount(); else document.addEventListener("DOMContentLoaded", mount);
