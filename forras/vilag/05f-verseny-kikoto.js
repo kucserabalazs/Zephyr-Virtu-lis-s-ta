@@ -55,6 +55,7 @@
     try { schoolBuild(env); } catch (e) { console.warn("vitorlásiskola", e); }
     try { housesBuild(env); } catch (e) { console.warn("oktatóházak", e); }
     try { roomsBuild(env); } catch (e) { console.warn("tantermek", e); }
+    try { hbPolish(env); } catch (e) { console.warn("kikötő-hangulat", e); }   /* 2026-11-15 este: horgony-emlékmű, fényfüzér, sétányi lámpák, virágládák (05u) */
     /* szakértői jelentés B.25: nyilvános hálózathoz csak online módban kapcsolódunk (egyedül játszva nem) */
     try { const z = wzLoad(); if (z && z.mode === "online") netStart(); } catch (e) {}
     faceYaw(0);
