@@ -1,13 +1,13 @@
   /* =================================================================== 2/Q. A KIKÖTŐ OKTATÓHÁZAI (2026. nov. 15., a tulajdonos jóváhagyta a kikötő-jelentés tervét:
      7 + 1 ház, „nagyon igényes legyen az elrendezés és szép”; jelölés: B + C – jelzőzászló az oromzaton és saját szín az ajtó- és ablakkereten,
      a tetőgerincen, a móló tövétől a házig vezető ösvénycsíkon és a kikötőtérképen).
-     A házak a part mentén, a sétány mögött állnak, a kikötő felé néznek; a Vitorlásiskola és az Elsősegély cölöpökön a víz fölött, egymás mellett,
+     A házak a part mentén, a sétány mögött állnak, a kikötő felé néznek (2026. nov. 15. este: tömörebben, a kikötői tér két oldalán – nyugatra a Mentőmellény-pont, a Csomózóház és a Viharjelző torony, keletre a Természetvédelmi ház és a Magyar Ízek Háza; korábban 60 m-en szétszórva); a Vitorlásiskola és az Elsősegély cölöpökön a víz fölött, egymás mellett,
      közös fedett tornáccal; a világítótorony a keleti hullámtörő végén. A belső tér (tábla, tanár, szék, könyv, tanulók) a 05o-ban él. */
   const HOUSES = [
-    { id: "izek", name: "Magyar Ízek Háza", sub: "ételek · borok · hungarikumok", col: "#8e1b2e", flag: "E", kind: "csarda", box: { x0: -57, x1: -48, z0: 13.2, z1: 19.6 }, teacher: "anya", voice: "berta" },
-    { id: "ter", name: "Természetvédelmi ház", sub: "a Balaton élővilága", col: "#3d9a4b", flag: "A", kind: "cabin", box: { x0: -43.5, x1: -36.5, z0: 13, z1: 18.6 }, teacher: "apa", voice: "imre" },
-    { id: "vih", name: "Viharjelző torony", sub: "vihar, felhők, szél", col: "#e0a800", flag: "Y", kind: "tower", box: { x0: -31, x1: -25.4, z0: 13, z1: 18.4 }, teacher: "matroz2", voice: "imre" },
-    { id: "cso", name: "Csomózóház", sub: "csomók és kötélmunka", col: "#7a4ea3", flag: "K", kind: "cabin", box: { x0: -21.5, x1: -15.9, z0: 13, z1: 18.2 }, teacher: "matroz4", voice: "imre" },
+    { id: "izek", name: "Magyar Ízek Háza", sub: "ételek · borok · hungarikumok", col: "#8e1b2e", flag: "E", kind: "csarda", box: { x0: 15.4, x1: 24.4, z0: 13.2, z1: 19.6 }, teacher: "anya", voice: "berta" },
+    { id: "ter", name: "Természetvédelmi ház", sub: "a Balaton élővilága", col: "#3d9a4b", flag: "A", kind: "cabin", box: { x0: 4.6, x1: 11.6, z0: 13, z1: 18.6 }, teacher: "apa", voice: "imre" },
+    { id: "vih", name: "Viharjelző torony", sub: "vihar, felhők, szél", col: "#e0a800", flag: "Y", kind: "tower", box: { x0: -29.0, x1: -23.4, z0: 13, z1: 18.4 }, teacher: "matroz2", voice: "imre" },
+    { id: "cso", name: "Csomózóház", sub: "csomók és kötélmunka", col: "#7a4ea3", flag: "K", kind: "cabin", box: { x0: -20.2, x1: -14.6, z0: 13, z1: 18.2 }, teacher: "matroz4", voice: "imre" },
     { id: "mel", name: "Mentőmellény-pont", sub: "mellény, mentőöv, mentés", col: "#f07a12", flag: "O", kind: "cabin", box: { x0: -11.2, x1: -6.2, z0: 12.6, z1: 17.4 }, teacher: "matroz1", voice: "imre" },
     { id: "isk", name: "Vitorlásiskola", sub: "a nagypapa szabályai", col: "#2f6fb7", flag: "P", kind: "school", box: { x0: 3.5, x1: 9.5, z0: -1.5, z1: 4 }, teacher: "nagypapa", voice: "imre" },
     { id: "els", name: "Elsősegély", sub: "a nagymama tanít", col: "#d0342c", flag: "W", kind: "cabin", stilts: true, box: { x0: 11.2, x1: 16.2, z0: -1.5, z1: 4 }, teacher: "nagymama", voice: "anna" },
@@ -54,6 +54,7 @@
     const wallLogs = (ax, c, a0, a1, phase, holes) => { const n = Math.round(Hh / (2 * LR)); for (let i = 0; i < n; i++) { const y = F + LR + i * 2 * LR + (phase ? LR : 0), r = LR * (1.04 + .05 * Math.sin(i * 2.7 + c)); if (y > F + Hh + LR * .5) break;
         let segs = [[a0 - .32, a1 + .32]]; (holes || []).forEach(([h0, h1, y0, y1]) => { if (y > F + y0 - LR * .6 && y < F + y1 + LR * .6) segs = segs.flatMap(([s0, s1]) => [[s0, Math.min(s1, h0)], [Math.max(s0, h1), s1]].filter(([q0, q1]) => q1 - q0 > .05)); }); segs.forEach(([s0, s1]) => addLog(ax, c, s0, s1, y, r)); } };
     const dw = o.dw || 1.2, d0 = o.dc - dw / 2, d1 = o.dc + dw / 2, wy0 = .9, wy1 = 2.2;
+    h.dr = { wall: o.door, c: o.dc, w: dw };   /* 2026-11-15 este: az ajtónyílás a falütközéshez (05s) */
     const holes = { n: [], s: [], w: [], e: [] }; holes[o.door].push([d0, d1, -1, 2.2]); (o.win || []).forEach(([wall, c, w]) => holes[wall].push([c - w / 2, c + w / 2, wy0, wy1]));
     wallLogs("x", B.z0, B.x0, B.x1, 0, holes.n); wallLogs("x", B.z1, B.x0, B.x1, 0, holes.s); wallLogs("z", B.x0, B.z0, B.z1, 1, holes.w); wallLogs("z", B.x1, B.z0, B.z1, 1, holes.e);
     /* oromzat: a tető gerince x irányban fut (a hosszabbik oldal mentén) */
@@ -226,7 +227,7 @@
     poster(G, ["BEAUFORT", "0–1 szélcsend", "3–4 jó vitorlás szél", "5–6 erős szél", "7+ viharos"], "#e0a800", B.x1 - .2, F + 1.75, B.z0 + 1.3, -Math.PI / 2, .72);
     poster(G, ["VIHARJELZÉS", "I. fok: 45 / perc", "II. fok: 90 / perc", "Siófoki", "Meteorológiai obszerv."], "#e0a800", B.x1 - .2, F + 1.75, B.z1 - 1.3, -Math.PI / 2, .72); }
   /* a viharjelző torony: karcsú, merevített fa rácstorony a ház nyugati oldalán, a csúcson sárga villogóval (a kikötő viharjelzésével együtt villan) */
-  function stormTower(G, h, C) { const B = h.box, F = C.F, x = B.x0 - 1.4, z = (B.z0 + B.z1) / 2, H = 11, post = std({ color: "#6b4a2a", roughness: .9 }), y0 = landY(x, z) - .1;
+  function stormTower(G, h, C) { const B = h.box, F = C.F, x = B.x0 - 1.4, z = (B.z0 + B.z1) / 2, H = 11, post = std({ color: "#6b4a2a", roughness: .9 }), y0 = landY(x, z) - .1; (HB.solids || (HB.solids = [])).push({ x0: x - .65, x1: x + .65, z0: z - .65, z1: z + .65 });
     const pts = [[-.6, -.6], [.6, -.6], [.6, .6], [-.6, .6]]; pts.forEach(([dx, dz]) => rodBetween(new THREE.Vector3(x + dx, y0, z + dz), new THREE.Vector3(x + dx * .45, y0 + H, z + dz * .45), .07, post, G, 6));
     for (let k = 1; k < 7; k++) { const y = y0 + k * H / 7, s = 1 - (k / 7) * .55; for (let i = 0; i < 4; i++) { const [ax, az] = pts[i], [bx, bz] = pts[(i + 1) % 4]; rodBetween(new THREE.Vector3(x + ax * s, y, z + az * s), new THREE.Vector3(x + bx * s, y, z + bz * s), .035, post, G, 5); const y2 = y0 + (k - 1) * H / 7, s2 = 1 - ((k - 1) / 7) * .55; rodBetween(new THREE.Vector3(x + ax * s2, y2, z + az * s2), new THREE.Vector3(x + bx * s, y, z + bz * s), .025, post, G, 4); } }
     mesh(new THREE.BoxGeometry(1.0, .08, 1.0).translate(x, y0 + H, z), post, G); const lampM = new THREE.MeshStandardMaterial({ color: "#4a4a40", emissive: "#000000", roughness: .4 }); W.disposables.push(lampM); const lamp = mesh(new THREE.SphereGeometry(.28, 16, 12).translate(x, y0 + H + .4, z), lampM, G); lamp.userData.noMerge = true;
@@ -234,7 +235,7 @@
     /* létra */ for (let k = 0; k < 24; k++) mesh(new THREE.BoxGeometry(.4, .03, .04).translate(x + .62 - k * .012, y0 + .3 + k * .42, z), post, G); }
   /* ---------------------------------------------------------------- MAGYAR ÍZEK HÁZA – fehérre meszelt csárda, vastag nádtető, oszlopos tornác, paprikafüzérek */
   function csardaBuild(G, h) { const B = h.box, F = h.F, Hh = 2.9, xc = xMid(B), zc = zMid(B), white = std({ map: canvasTex(256, 256, (g, w, hh) => { g.fillStyle = "#f3efe4"; g.fillRect(0, 0, w, hh); for (let k = 0; k < 500; k++) { g.fillStyle = `rgba(${150 + rand() * 60 | 0},${140 + rand() * 50 | 0},${120 + rand() * 40 | 0},${rand() * .08})`; g.fillRect(rand() * w, rand() * hh, 2 + rand() * 20, 2 + rand() * 12); } }, { repeat: [2, 1] }), roughness: .95 });
-    const t = .3, dw = 1.3, dc = xc, wins = [xc - 2.6, xc + 2.6];
+    const t = .3, dw = 1.3, dc = xc, wins = [xc - 2.6, xc + 2.6]; h.dr = { wall: "n", c: dc, w: dw };
     /* falak darabokban (ajtó és ablakok kihagyva) */
     const wall = (x0, x1, z0, z1, y0, y1) => mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0).translate((x0 + x1) / 2, F + (y0 + y1) / 2, (z0 + z1) / 2), white, G);
     wall(B.x0, B.x1, B.z1 - t, B.z1, 0, Hh); wall(B.x0, B.x0 + t, B.z0, B.z1, 0, Hh); wall(B.x1 - t, B.x1, B.z0, B.z1, 0, Hh);
@@ -311,16 +312,20 @@
     const west = HOUSES.filter((h) => h.box.x1 < 0).sort((a, b) => b.box.x0 - a.box.x0);
     west.forEach((h, i) => { const off = -.5 + i * .2, B = h.box, dx = h.kind === "csarda" ? xMid(B) : h.id === "ter" ? B.x0 + 1.6 : xMid(B) - .9, pz = landPromZ(dx), dz = h.kind === "csarda" ? B.z0 - 1.9 : B.z0 - 1.6;
       ribbon([[start.x - .3, start.z], [start.x - .6, landPromZ(0) - .2], [dx + 1.2, pz - .2], [dx, pz + .8], [dx, dz]], h.col, off); });
+    /* 2026-11-15 este: a keleti szárny (Természetvédelmi ház, Magyar Ízek Háza) ösvényei – a tértől a sétányon kelet felé, majd fel a házhoz */
+    const east = HOUSES.filter((h) => h.box.x0 > 0 && !["isk", "els", "vil"].includes(h.id)).sort((a, b) => a.box.x0 - b.box.x0);
+    east.forEach((h, i) => { const off = .5 + i * .2, B = h.box, dx = h.kind === "csarda" ? xMid(B) : h.id === "ter" ? B.x0 + 1.6 : xMid(B) - .9, pz = landPromZ(dx), dz = h.kind === "csarda" ? B.z0 - 1.9 : B.z0 - 1.6;
+      ribbon([[start.x + .3, start.z], [start.x + .7, landPromZ(0) + .2], [dx - 1.2, pz + .2], [dx, pz + .9], [dx, dz]], h.col, off); });
     const isk = HZ.byId.isk, els = HZ.byId.els, vil = HZ.byId.vil;
     ribbon([[1.7, 4.3], [2.6, 3.6], [2.9, 2.2]], isk.col, 0); ribbon([[1.7, 4.5], [9.9, 4.45], [10.4, 3.4], [10.6, 2.3]], els.col, 0);
     ribbon([[start.x + .4, start.z + .2], [3, landPromZ(3) - .4], [22.5, landPromZ(22.5) - .4], [24.6, 3.4], [25.6, -10], [26.6, -20], [27.7, -23.6]], vil.col, 0);
     const m = new THREE.Mesh(mergeGeoms(parts), std({ map: dash, vertexColors: true, transparent: true, alphaTest: .4, roughness: .7, depthWrite: true, polygonOffset: true, polygonOffsetFactor: -2 })); m.renderOrder = 1; dash.wrapT = THREE.RepeatWrapping; env.add(m); }
   /* ---------------------------------------------------------------- KIKÖTŐTÉRKÉP a móló tövénél (a házak a saját színükkel és zászlójukkal) */
-  function harborMap(env) { const tx = canvasTex(1400, 900, (g, w, hh) => { g.fillStyle = "#f6f1e6"; g.fillRect(0, 0, w, hh); const MX0 = 40, MX1 = 900, MY0 = 130, MY1 = 860, X = (x) => MX0 + (x + 60) / 96 * (MX1 - MX0), Z = (z) => MY0 + (z + 28) / 50 * (MY1 - MY0);
+  function harborMap(env) { const tx = canvasTex(1400, 900, (g, w, hh) => { g.fillStyle = "#f6f1e6"; g.fillRect(0, 0, w, hh); const KM = 9.36, MX0 = 40 + (860 - 66 * KM) / 2, MX1 = MX0 + 66 * KM, MY0 = 130, MY1 = 130 + 78 * KM, X = (x) => MX0 + (x + 32) * KM, Z = (z) => MY0 + (z + 54) * KM;   /* 2026-11-15 este: torzítás nélküli lépték, a móló végi versenyirodával együtt */
       g.save(); g.beginPath(); g.rect(MX0, MY0, MX1 - MX0, MY1 - MY0); g.clip(); g.fillStyle = "#7fb8cf"; g.fillRect(MX0, MY0, MX1 - MX0, MY1 - MY0);
-      g.fillStyle = "#ecdcb2"; g.beginPath(); g.moveTo(MX0, MY1); for (let x = -60; x <= 36; x += 2) g.lineTo(X(x), Z(landShore(x))); g.lineTo(MX1, MY1); g.fill(); g.fillStyle = "#93c25e"; g.beginPath(); g.moveTo(MX0, MY1); for (let x = -60; x <= 36; x += 2) g.lineTo(X(x), Z(landPromZ(x) + 1.6)); g.lineTo(MX1, MY1); g.fill();
-      g.strokeStyle = "#d6cbb3"; g.lineWidth = 12; g.beginPath(); for (let x = -60; x <= 36; x += 2) x === -60 ? g.moveTo(X(x), Z(landPromZ(x))) : g.lineTo(X(x), Z(landPromZ(x))); g.stroke();
-      g.fillStyle = "#a07a52"; g.fillRect(X(-1.5), Z(-28), X(1.5) - X(-1.5), Z(2) - Z(-28)); [-8, -18, -31].forEach((z) => { g.fillRect(X(-7), Z(z + 2.4), X(7) - X(-7), 6); }); g.fillRect(X(1.5), Z(-2.5), X(17.5) - X(1.5), Z(4.9) - Z(-2.5)); g.fillStyle = "#b9b3a8"; g.fillRect(X(-6.6), Z(1.4), X(1.7) - X(-6.6), Z(6.8) - Z(1.4));
+      g.fillStyle = "#ecdcb2"; g.beginPath(); g.moveTo(MX0, MY1); for (let x = -32; x <= 34; x += 2) g.lineTo(X(x), Z(landShore(x))); g.lineTo(MX1, MY1); g.fill(); g.fillStyle = "#93c25e"; g.beginPath(); g.moveTo(MX0, MY1); for (let x = -32; x <= 34; x += 2) g.lineTo(X(x), Z(landPromZ(x) + 1.6)); g.lineTo(MX1, MY1); g.fill();
+      g.strokeStyle = "#d6cbb3"; g.lineWidth = 12; g.beginPath(); for (let x = -32; x <= 34; x += 2) x === -32 ? g.moveTo(X(x), Z(landPromZ(x))) : g.lineTo(X(x), Z(landPromZ(x))); g.stroke();
+      g.fillStyle = "#a07a52"; g.fillRect(X(-1.5), Z(-44), X(1.5) - X(-1.5), Z(2) - Z(-44)); g.fillRect(X(-7), Z(-52), X(7) - X(-7), Z(-44) - Z(-52)); g.fillStyle = "#ffffff"; g.fillRect(X(-4.2), Z(-51.7), X(4.2) - X(-4.2), Z(-48.6) - Z(-51.7)); g.fillStyle = "#0b2f5e"; g.font = `900 24px ${UIF}`; g.textAlign = "left"; g.fillText("⛵ RAJT · VERSENYIRODA", X(7.6), Z(-47.2)); g.fillStyle = "#a07a52"; [-8, -18, -31].forEach((z) => { g.fillRect(X(-7), Z(z + 2.4), X(7) - X(-7), 6); }); g.fillRect(X(1.5), Z(-2.5), X(17.5) - X(1.5), Z(4.9) - Z(-2.5)); g.fillStyle = "#b9b3a8"; g.fillRect(X(-6.6), Z(1.4), X(1.7) - X(-6.6), Z(6.8) - Z(1.4));
       g.strokeStyle = "#8f897d"; g.lineWidth = 16; g.beginPath(); g.moveTo(X(24.5), Z(4)); g.lineTo(X(25.6), Z(-10)); g.lineTo(X(26.6), Z(-20)); g.lineTo(X(29.5), Z(-24.2)); g.stroke();
       HOUSES.forEach((h, i) => { const B = h.box, x0 = X(B.x0), x1 = X(B.x1), z0 = Z(B.z0), z1 = Z(B.z1); g.fillStyle = h.col; uiRR(g, x0, z0, x1 - x0, z1 - z0, 6); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 3; g.stroke(); g.fillStyle = "#fff"; g.font = `900 30px ${UIF}`; g.textAlign = "center"; g.fillText(String(i + 1), (x0 + x1) / 2, (z0 + z1) / 2 + 11); });
       g.fillStyle = "#d61f26"; g.beginPath(); g.arc(X(-1), Z(3.6), 13, 0, TAU); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 4; g.stroke(); g.fillStyle = "#14161b"; g.font = `900 26px ${UIF}`; g.textAlign = "left"; g.fillText("ITT VAGY", X(-1) + 18, Z(3.6) - 14); g.restore();

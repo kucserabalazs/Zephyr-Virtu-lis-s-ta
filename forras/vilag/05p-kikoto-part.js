@@ -55,7 +55,7 @@
         const s = .6 + rand() * .9; m4.compose(new THREE.Vector3(x, landY(x, z) - .02, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rand() * TAU, 0)), new THREE.Vector3(s, s * (.7 + rand() * .6), s)); im.setMatrixAt(k, m4); cl.setHSL(.24 + rand() * .05, .45, .42 + rand() * .2); im.setColorAt(k, cl); k++; }
       im.count = k; im.frustumCulled = false; G.add(im); W.disposables.push(tg); }
     /* ---------- NAPÁGYAK, KEMPINGÁGYAK és NAPERNYŐK – csoportokban, mintha emberek tették volna le őket (példányosítva) ---------- */
-    { const L = []; const spots = []; for (let t = 0; t < 400 && spots.length < 34; t++) { const x = -96 + rand() * 186, z = landPromZ(x) + 3.2 + rand() * 18; if (LAND_NOGRASS(x, z) || spots.some((s) => Math.hypot(s[0] - x, s[1] - z) < 7.5)) continue; spots.push([x, z]); }
+    { const L = []; const spots = []; for (let t = 0; t < 400 && spots.length < 34; t++) { const x = -96 + rand() * 186, z = landPromZ(x) + 3.2 + rand() * 18; if (LAND_NOGRASS(x, z) || LAND_NEAR(x, z, 4.5) || spots.some((s) => Math.hypot(s[0] - x, s[1] - z) < 7.5)) continue;   /* 2026-11-15 este: napernyő, napágy ne érjen a házakhoz */ spots.push([x, z]); }
       spots.forEach(([x, z], si) => { const r0 = (rand() - .5) * .8 + Math.PI, n = rand() < .25 ? 3 : 2; for (let k = 0; k < n; k++) { const off = (k - (n - 1) / 2) * 1.05; L.push({ x: x + Math.cos(r0) * off, z: z - Math.sin(r0) * off, r: r0 + (rand() - .5) * .25, camp: rand() < .35, c: si }); } });
       LAND.spots = spots;
       /* napágy: fehér műanyag keret, emelt háttámla, 4 láb + párna (külön példányos háló, csoportonként azonos színű) */
@@ -81,7 +81,7 @@
       if (parts.length) mesh(mergeGeoms(parts), std({ vertexColors: true, roughness: .95 }), G); }
     /* ---------- ÖLTÖZŐKABINOK, PADOK, SZEMETESEK a sétány mentén ---------- */
     { const cab = canvasTex(256, 128, (g, w, h) => { for (let k = 0; k < 16; k++) { g.fillStyle = k % 2 ? "#ffffff" : "#1f5fa8"; g.fillRect(k * 16, 0, 16, h); } }, { repeat: [1, 1] }); const cm = std({ map: cab, roughness: .8, side: THREE.DoubleSide }), top = std({ color: "#1f5fa8", roughness: .7 });
-      [-58, -14, 34, 70].forEach((x, i) => { const z = landPromZ(x) + 2.1, y = landY(x, z), cg = new THREE.CylinderGeometry(.62, .62, 1.9, 20, 1, true, .5, TAU - 1); mesh(cg.translate(x, y + 1.08, z), cm, G); mesh(new THREE.ConeGeometry(.72, .35, 20).translate(x, y + 2.2, z), top, G); void i; });
+      [-40, -31, 31, 44, 70].forEach((x, i) => { if (LAND_NEAR(x, landPromZ(x) + 2.1, 2.5)) return;   /* 2026-11-15 este: az öltözőkabinok a házak közé ne kerüljenek */ const z = landPromZ(x) + 2.1, y = landY(x, z), cg = new THREE.CylinderGeometry(.62, .62, 1.9, 20, 1, true, .5, TAU - 1); mesh(cg.translate(x, y + 1.08, z), cm, G); mesh(new THREE.ConeGeometry(.72, .35, 20).translate(x, y + 2.2, z), top, G); void i; });
       const wood = std({ color: "#8a6440", roughness: .8 }), iron = std({ color: "#2b3036", roughness: .5, metalness: .6 });
       for (let x = -94; x <= 96; x += 13) { if (Math.abs(x - 8) < 12) continue; const z = landPromZ(x) - 1.75, y = landY(x, z); for (let k = 0; k < 4; k++) mesh(new THREE.BoxGeometry(1.6, .04, .1).translate(x, y + .44, z - .15 + k * .11), wood, G); mesh(new THREE.BoxGeometry(1.6, .3, .04).translate(x, y + .68, z + .3), wood, G); [-.7, .7].forEach((dx) => mesh(new THREE.BoxGeometry(.06, .44, .5).translate(x + dx, y + .22, z), iron, G));
         if ((x | 0) % 2) { mesh(new THREE.CylinderGeometry(.2, .18, .7, 12).translate(x + 1.5, y + .35, z), std({ color: "#2f6a3a", roughness: .6 }), G); } } }
@@ -117,6 +117,7 @@
     LAND.built = true;
   }
   /* ahol nincs fű és napágy: a házak, a sétány melletti épületek helye */
+  function LAND_NEAR(x, z, m) { return HOUSES.some((h) => { const B = h.box; return x > B.x0 - m && x < B.x1 + m && z > B.z0 - m && z < B.z1 + m; }); }
   function LAND_NOGRASS(x, z) { return (HOUSES_FOOT || []).some((f) => x > f[0] - 1.5 && x < f[1] + 1.5 && z > f[2] - 1.5 && z < f[3] + 3); }
   /* a séta-pozíció padlómagassága: a pallókon .66, a parton a felszín */
   function landWalkY(x, z) { if (!LAND.built) return .66; for (let i = 0; i < HOUSES.length; i++) { const B = HOUSES[i].box; if (HOUSES[i].F != null && x > B.x0 - .3 && x < B.x1 + .3 && z > B.z0 - .3 && z < B.z1 + .3) return HOUSES[i].F; } if (z < 4.95 && z > -2.6 && x > 1.4 && x < 17.6) return .66; if (x > -1.6 && x < 1.6 && z < 2.6) return .66; if (x > -6.6 && x < 1.7 && z > 1.4 && z < 6.9) return .66; const d = z - landShore(x); if (d < .5) return .66; return Math.max(.62, landY(x, z)) + .04; }

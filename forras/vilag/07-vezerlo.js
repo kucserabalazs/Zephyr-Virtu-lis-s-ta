@@ -318,6 +318,8 @@
     if (W.hud) W.hud.el.style.display = on ? "none" : "";
     /* a szemmagasság VR-ben más – újraépítjük, de csak ha már van fej-póz (különben 0 m-t mérnénk) */
     const k = W.kind, tok = W.gen; let n = 0;
+    /* 2026-11-15 este: a kikötőben ott folytatódik, ahol voltál (séta vagy a verseny menüje) */
+    if (k === "harbor" && W._hb && W._hb.HB) { const H = W._hb.HB; W._hbState = { pos: H.pos ? { x: H.pos.x, z: H.pos.z } : null, wiz: !!H.wizOn, step: H.page && /^w(\d)/.test(H.page) ? +H.page.slice(1, 2) : 1, yaw: (() => { try { return T.camYaw(); } catch (e) { return 0; } })() }; }
     const tryIt = () => { if (tok !== W.gen) return; if (!on || T.headY() > .5 || ++n > 90) { W.close(null, true); W._raceGo = k === "race"; W.open(k); } else T.xrRaf(tryIt); };
     tryIt();
   };

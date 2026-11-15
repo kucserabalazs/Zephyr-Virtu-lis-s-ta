@@ -310,4 +310,4 @@
     else { B.btn(34, by, 520, bh, "‹ Vissza a tájékoztatóhoz", () => { B.page = 0; B.dirty = 1; }, { gold: true }); B.btn(580, by, 420, bh, "⚓ Vissza a kikötőbe", () => { vrBriefClose(); vrToHarbor(); }); }
   }
   /* vissza a kikötőbe (a verseny világát bezárja, a kikötőt nyitja) */
-  function vrToHarbor() { try { vrNetLeaveRace && vrNetLeaveRace(); } catch (e) {} setTimeout(() => { W._raceGo = false; W.open("harbor"); }, 30); }
+  function vrToHarbor() { try { vrNetLeaveRace && vrNetLeaveRace(); } catch (e) {} setTimeout(() => { W._raceGo = false; W._hbAt = "station"; W.open("harbor"); }, 30); }   /* futam után a versenyirodánál (a móló végén) */

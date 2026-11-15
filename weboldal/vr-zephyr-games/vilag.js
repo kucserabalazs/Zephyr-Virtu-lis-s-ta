@@ -7685,7 +7685,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     else { B.btn(34, by, 520, bh, "‹ Vissza a tájékoztatóhoz", () => { B.page = 0; B.dirty = 1; }, { gold: true }); B.btn(580, by, 420, bh, "⚓ Vissza a kikötőbe", () => { vrBriefClose(); vrToHarbor(); }); }
   }
   /* vissza a kikötőbe (a verseny világát bezárja, a kikötőt nyitja) */
-  function vrToHarbor() { try { vrNetLeaveRace && vrNetLeaveRace(); } catch (e) {} setTimeout(() => { W._raceGo = false; W.open("harbor"); }, 30); }
+  function vrToHarbor() { try { vrNetLeaveRace && vrNetLeaveRace(); } catch (e) {} setTimeout(() => { W._raceGo = false; W._hbAt = "station"; W.open("harbor"); }, 30); }   /* futam után a versenyirodánál (a móló végén) */
   /* =================================================================== 2/F. A KIKÖTŐ – a vitorlásverseny kezdőhelye (2026. nov. 14., a tulajdonos 8., 10., 15. kérése)
      A verseny nem a futammal indul, hanem a zamárdi kikötőben: fapallós móló, a kikötőhelyeken ringanak a választható hajók (Zephyr, Finn dingi, 420-as,
      rönktutaj, flamingó). Egy hajóra bökve a hajó a móló előtti forgókorongra kerül, és előtted forog – ott döntöd el, ezt választod-e.
@@ -7714,12 +7714,14 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     /* lámpák, mentőöv, zászlók, kikötői iroda „ZEPHYR KIKÖTŐ” felirattal */
     for (let z = -4; z > -pierL; z -= 12) [-1.35, 1.35].forEach((x) => { const lp = mesh(new THREE.CylinderGeometry(.04, .05, 2.6, 8), std({ color: "#1d232b" }), env); lp.position.set(x, 1.95, z); const lh = mesh(new THREE.SphereGeometry(.13, 12, 8), std({ color: "#fff6d6", emissive: "#ffe9a8", emissiveIntensity: .6 }), env); lh.position.set(x, 3.3, z); });
     { const ring = mesh(new THREE.TorusGeometry(.32, .08, 10, 24), std({ color: "#ff7a1a", roughness: .5 }), env); ring.position.set(1.42, 1.3, -2.5); ring.rotation.y = Math.PI / 2; }
-    { const hut = new THREE.Group(); hut.position.set(-3.2, .65, 1.2); env.add(hut); mesh(new THREE.BoxGeometry(3, 2.6, 2.4).translate(0, 1.3, 0), white, hut); const rf = new THREE.ConeGeometry(2.4, 1.2, 4); rf.rotateY(Math.PI / 4); rf.translate(0, 3.2, 0); mesh(rf, std({ color: "#1f3a6a", roughness: .7 }), hut);
-      const sg = canvasTex(1024, 256, (g, w, h) => { g.fillStyle = "#0b2f5e"; g.fillRect(0, 0, w, h); g.strokeStyle = "#d4a13a"; g.lineWidth = 10; g.strokeRect(8, 8, w - 16, h - 16); g.fillStyle = "#ffd166"; g.font = `900 110px ${UIF}`; g.textAlign = "center"; g.fillText("ZEPHYR KIKÖTŐ", w / 2, 150); g.fillStyle = "#fff"; g.font = `700 44px ${UIF}`; g.fillText("Zamárdi · vitorlásverseny", w / 2, 215); });
-      const s = mesh(new THREE.PlaneGeometry(2.8, .7), basic({ map: sg }), hut); s.position.set(1.52, 2.1, 0); s.rotation.y = Math.PI / 2; }
-    [[-1.4, -44], [1.4, -44]].forEach(([x, z], i) => { const fp = mesh(new THREE.CylinderGeometry(.035, .04, 6, 8), white, env); fp.position.set(x, 3.5, z);
-      const ft = canvasTex(192, 128, (g) => { if (i) { g.fillStyle = "#ce2939"; g.fillRect(0, 0, 192, 43); g.fillStyle = "#fff"; g.fillRect(0, 43, 192, 42); g.fillStyle = "#477050"; g.fillRect(0, 85, 192, 43); } else { g.fillStyle = "#0b2f5e"; g.fillRect(0, 0, 192, 128); g.fillStyle = "#ffd166"; g.font = `900 40px ${UIF}`; g.textAlign = "center"; g.fillText("ZEPHYR", 96, 78); } });
-      const fl = mesh(new THREE.PlaneGeometry(1.4, .9, 8, 1), basic({ map: ft, side: THREE.DoubleSide }), env); fl.position.set(x + .72, 6.0, z); HB["flag" + i] = fl; fl.userData.base = fl.geometry.attributes.position.array.slice(); });
+    /* 2026-11-15 este: a móló elején a régi fehér „iroda-doboz” helyett (eltakarta a mólót) kapu: két fehér oszlop, rajta a sötétkék, arany szegélyű
+       „ZEPHYR KIKÖTŐ” tábla – mindkét oldalán felirattal; a mólón végigsétálva a végén a versenyiroda (a rajt) vár */
+    { const A = new THREE.Group(); A.position.set(0, .66, 1.5); env.add(A); const wpost = std({ color: "#f5f4ef", roughness: .5 }), navyA = std({ color: "#0b2f5e", roughness: .5 }), goldA = std({ color: "#d4a13a", metalness: .8, roughness: .3 });
+      [-1.75, 1.75].forEach((x) => { mesh(new THREE.CylinderGeometry(.11, .13, 3.6, 16).translate(x, 1.8, 0), wpost, A); mesh(new THREE.SphereGeometry(.15, 16, 12).translate(x, 3.66, 0), goldA, A); mesh(new THREE.CylinderGeometry(.2, .22, .2, 16).translate(x, .1, 0), navyA, A); });
+      mesh(new THREE.BoxGeometry(3.9, .7, .16).translate(0, 3.15, 0), navyA, A); mesh(new THREE.BoxGeometry(3.98, .05, .2).translate(0, 3.52, 0), goldA, A); mesh(new THREE.BoxGeometry(3.98, .05, .2).translate(0, 2.78, 0), goldA, A);
+      const sg = canvasTex(1536, 280, (g, w, h) => { g.fillStyle = "#0b2f5e"; g.fillRect(0, 0, w, h); g.textAlign = "center"; g.fillStyle = "#ffd166"; g.font = `900 132px ${UIF}`; g.fillText("ZEPHYR KIKÖTŐ", w / 2, 140); g.fillStyle = "#fff"; g.font = `700 58px ${UIF}`; g.fillText("Balaton Sailing VR  ·  a rajt a móló végén  ▸", w / 2, 236); });
+      [1, -1].forEach((sd) => { const pl = mesh(new THREE.PlaneGeometry(3.8, .66), basic({ map: sg }), A); pl.position.set(0, 3.15, sd * .085); if (sd < 0) pl.rotation.y = Math.PI; }); }
+    /* (a móló végi két zászló a versenyirodára költözött – 05t) */
     /* a kikötött hajók – mindegyik rámutatható / rábökhető */
     HB.boats = HB.berths.map((b) => { let g;
       if (b.id === "zephyr") { g = makeBoat({ detail: 0, vis: true, crew: 0, hull: "#f5f2e8", boot: "#141d4d", stripe: "#141d4d", jib: "#f6f4ec", main: "#d61f26", num: " ", cls: " ", logoImg: "img/zephyr-hajo-logo.png", reg: "H-30381", lazyBag: "#6e1423", nsCol: "#3f6fa6", teakDeck: true, spin: ["#ffffff", "#ffffff", "#f3f3ee"], spinArt: true, sailName: vrProfile().name || "" }); g.scale.setScalar(VR_SC);
@@ -7735,6 +7737,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     HB.sel = vrClsId(); HB.prev = null; HB.mode = "menu";
     HB.gulls = makeGulls(env);
     try { hbDecor(env); } catch (e) { console.warn("kikötő-díszlet", e); }
+    try { hbStation(env); } catch (e) { console.warn("versenyiroda", e); }   /* 2026-11-15 este: a rajt a móló végén (05t) */
     /* 2026-11-15 (kikötő-jelentés): saját part (strand, sétány, napozórét, platánok, hullámtörő), a 8 oktatóház és a tantermek */
     try { harborLand(env); } catch (e) { console.warn("kikötő-part", e); }
     try { schoolBuild(env); } catch (e) { console.warn("vitorlásiskola", e); }
@@ -7748,7 +7751,11 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     /* 2026-11-14 22:48: a fekete bemutatóterem (Balaton Sailing VR menü) és a mólón járható felületek (séta a kikötőben) */
     try { wzBuild(root); } catch (e) { console.warn("menü-terem", e); }
     hbTpSurf(env, 0, -pierL / 2 + 2, 2.8, pierL, .67, .45); HB.berths.forEach((b) => { const fl = b.big ? 13 : 6; hbTpSurf(env, b.sd * (1.5 + fl / 2), b.z + (b.big ? 4.2 : 2.6), fl, 1.0, .67, .4); }); HB.pos = { x: 0, z: 0 };
-    HB.wz = wzLoad(); if (W._hbWalk) { W._hbWalk = false; hbWalk(true); } else wzGo(1); W._hb = { preview: hbPreview, board: hbBoard, go: hbGo, HB, wz: wzGo, walk: hbWalk, school: hbSchool, SCH, rooms: ROOMS, sit: roomSit, stand: roomStand, houses: HOUSES, LAND, start: () => { wzPlan(); wzStart(); } };
+    HB.wz = wzLoad(); { const st = W._hbState, at = W._hbAt; W._hbState = null; W._hbAt = null; W._hbWalk = false;
+      /* 2026-11-15 este (tulajdonos: „a kikötőben kezdődik a játék, a móló végén a vitorlázás megkezdése”): a kikötő mindig sétával indul a kikötői téren;
+         futam után („Kikötő”) a versenyirodánál; VR-be lépéskor / kilépéskor ott folytatódik, ahol voltál (a menüben is) */
+      if (st && st.wiz) { HB.pos = st.pos || { x: 0, z: -45.5 }; wzGo(st.step || 1); }
+      else { hbWalk(true); if (st && st.pos) { HB.pos = st.pos; } else if (at === "station") { HB.pos = { x: 0, z: -45.5 }; } else { HB.pos = { x: -1.0, z: 4.6 }; } faceYaw(st && st.yaw != null ? st.yaw : 0); } } W._hb = { preview: hbPreview, board: hbBoard, go: hbGo, HB, wz: wzGo, walk: hbWalk, school: hbSchool, SCH, rooms: ROOMS, sit: roomSit, stand: roomStand, houses: HOUSES, LAND, start: () => { wzPlan(); wzStart(); } };
     /* 2026-11-15 (tulajdonos: „nem lehet megfordulni … ott a tenyér menü, ha valamire szükség van”): a tenyérmenüben forgás és lépés,
        a házban a tanterem minden gombja; a kontroller karjával is fordulsz (balra/jobbra 45°) és lépsz (előre/hátra) */
     return { noPanel: true, menu: () => hbMenu(), tick: hbTick, panel: hbPanel, hud: hbHud, stick: hbStick, wrist: hbWrist };
@@ -7757,16 +7764,11 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
      hattyúk, nádas a part mentén, útjelző tábla a valódi távolságokkal, pad, virágládák */
   function hbDecor(env) {
     const white = std({ color: "#f2f2ee", roughness: .5 }), dark = std({ color: "#2a2e33", roughness: .6 }), yel = std({ color: "#f2c21a", roughness: .45 });
-    /* viharjelző oszlop a móló végén (a valódiak: magas oszlop, tetején sárga villogó lámpa) */
-    { const G = new THREE.Group(); G.position.set(-1.35, .62, -45.2); env.add(G); mesh(new THREE.CylinderGeometry(.09, .12, 7.5, 10).translate(0, 3.75, 0), white, G); mesh(new THREE.BoxGeometry(.5, .5, .5).translate(0, 7.7, 0), dark, G);
-      const lamp = mesh(new THREE.CylinderGeometry(.22, .22, .55, 14).translate(0, 8.25, 0), basic({ color: "#4a4a40" }), G); mesh(new THREE.ConeGeometry(.3, .25, 14).translate(0, 8.65, 0), dark, G);
-      const glow = glowSprite("#ffcc22", 2.6); glow.position.set(0, 8.25, 0); glow.userData.night = 0; G.add(glow); glow.visible = false;
-      const sg = canvasTex(512, 160, (g, w, h) => { g.fillStyle = "#f2c21a"; g.fillRect(0, 0, w, h); g.fillStyle = "#14161b"; g.font = "900 52px system-ui, sans-serif"; g.textAlign = "center"; g.fillText("VIHARJELZŐ", w / 2, 66); g.font = "700 30px system-ui, sans-serif"; g.fillText("45/perc: elsőfok · 90/perc: másodfok", w / 2, 122); });
-      const pl = mesh(new THREE.PlaneGeometry(1.4, .44), basic({ map: sg, side: THREE.DoubleSide }), G); pl.position.set(0, 2.2, .14); HB.storm = { lamp, glow }; }
+    /* (a viharjelző lámpa a versenyiroda jelzőárbocára költözött – 05t) */
     /* útjelző tábla a móló elején: a valódi távolságok légvonalban */
     { const [hx, hz] = balHarborCentre(), dist = (la, lo) => { const [x, z] = balXY(la, lo); return (Math.hypot(x - hx, z - hz) / 1000).toFixed(1).replace(".", ","); }, brg = (la, lo) => { const [x, z] = balXY(la, lo); return Math.atan2(x - hx, -(z - hz)); };
       const T0 = [["Tihanyi apátság", 46.91389, 17.88944], ["Balatonfüred", 46.9537, 17.8955], ["Siófok, víztorony", 46.90541, 18.0522], ["Szántódi rév", 46.8793, 17.9006], ["Badacsony", 46.80351, 17.49584]];
-      const G = new THREE.Group(); G.position.set(2.15, .62, 2.6); env.add(G); mesh(new THREE.CylinderGeometry(.06, .07, 3.2, 8).translate(0, 1.6, 0), std({ color: "#5d4630", roughness: .9 }), G);
+      const G = new THREE.Group(); G.position.set(-6.0, .66, 2.0); env.add(G);   /* 2026-11-15 este: a tér nyugati sarkán (eddig az iskola névtáblája elé lógott) */ mesh(new THREE.CylinderGeometry(.06, .07, 3.2, 8).translate(0, 1.6, 0), std({ color: "#5d4630", roughness: .9 }), G);
       T0.forEach(([n, la, lo], i) => { const tx = canvasTex(512, 96, (g, w, h) => { g.fillStyle = "#0b3a5e"; g.fillRect(0, 0, w, h); g.strokeStyle = "#e9c46a"; g.lineWidth = 6; g.strokeRect(4, 4, w - 8, h - 8); g.fillStyle = "#fff"; g.font = "800 40px system-ui, sans-serif"; g.fillText(n, 22, 62); g.textAlign = "right"; g.fillStyle = "#ffd166"; g.fillText(dist(la, lo) + " km", w - 22, 62); });
         const b = mesh(new THREE.BoxGeometry(1.5, .28, .04), [std({ color: "#0b3a5e" }), std({ color: "#0b3a5e" }), std({ color: "#0b3a5e" }), std({ color: "#0b3a5e" }), basic({ map: tx }), basic({ map: tx })], G); const a = brg(la, lo);
         b.position.set(Math.sin(a) * .7, 2.95 - i * .34, -Math.cos(a) * .7); b.rotation.y = -a + Math.PI / 2; });
@@ -7802,7 +7804,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     if (A.lap <= 0) { A.lap = .7 + Math.random() * 1.8; try { const t = a.currentTime, n = a.createBufferSource(); n.buffer = T.noiseBuf(.4); const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 500 + Math.random() * 400;
         const g = a.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.06 + Math.random() * .05, t + .05); g.gain.exponentialRampToValueAtTime(.001, t + .35); n.connect(f).connect(g).connect(T.outBus("amb") || T.outBus()); n.start(t); n.stop(t + .4); } catch (e) {} } }
   function hbTick(dt) {
-    if (HB.wizOn) { try { msTick(dt); } catch (e) {} wzTick(dt); return; }
+    if (HB.wizOn) { try { msTick(dt); } catch (e) {} wzTick(dt); try { locTick(dt); } catch (e) {} return; }
     try { stmTick(dt, false); } catch (e) {}
     try { hbAmbience(dt); } catch (e) {}
     try { msTick(dt); } catch (e) {}
@@ -7818,13 +7820,15 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     /* előnézet: a hajó a móló előtti forgókorongon forog */
     if (HB.prev) { const P = HB.prev; P.rot += dt * .45; P.g.rotation.y = P.rot; P.g.position.y = P.y0 + Math.sin(W.t * 1.2) * .04; const S = P.g.userData.S; S.awa = 70 + 50 * Math.sin(W.t * .3); S.aws = 5; S.side = Math.sin(W.t * .15) > 0 ? 1 : -1; if (S.spin != null && P.id !== "zephyr") S.spin = clamp(Math.sin(W.t * .25) * 2, 0, 1); P.g.userData.update(dt); P.disc.rotation.y = P.rot; }
     try { schoolTick(dt); } catch (e) { console.warn("iskola", e); }
+    try { hbStationTick(dt); } catch (e) { if (!HB.stErr) { HB.stErr = 1; console.warn("versenyiroda", e); } }
+    try { locTick(dt); } catch (e) { if (!HB.locErr) { HB.locErr = 1; console.warn("mozgás", e); } }
     try { houseTick(dt); if (LAND.foam) LAND.foam.offset.set((W.t * .01) % 1, Math.sin(W.t * .7) * .06); } catch (e) {}
     uiTickAll(dt); if (NET.on) { vrNetTick(dt); if (HB.page === "net" && HB.B) HB.B.dirty = 1; }
   }
   function hbPanel(P) { P.title("Zephyr kikötő · vitorlásverseny", `Hajó: ${boatCls(HB.sel).n} · játékos: ${vrProfile().name || "névtelen"}`);
     P.row(0, "Bökj rá egy kikötött hajóra: előtted megforog, és kiválaszthatod. A kikötői menüben minden beállítás megvan.", "#ffd166");
     P.buttons([["⛵ Indulás", () => hbGo(false)], ["⚓ Kikötői menü", hbMenu], ["‹ " + BACK_T(), () => W.close()]]); }
-  function hbHud(H) { H.title("Zephyr kikötő · vitorlásverseny", `Hajó: ${boatCls(HB.sel).n} · bökj rá egy kikötött hajóra`); H.steer([["⚓ Kikötői menü", hbMenu], ["⛵ Indulás", () => hbGo(false)]], () => {}); H.hint("Bökj rá egy hajóra: előtted forog, és kiválaszthatod · a kikötői menüben: játékos, beállítások, eredmények, többjátékos"); }
+  function hbHud(H) { H.title("Zephyr kikötő · vitorlásverseny", `Hajó: ${boatCls(HB.sel).n} · bökj rá egy kikötött hajóra`); H.steer([["⛵ A rajthoz", () => hbToStation()], ["🏁 Verseny indítása", () => hbStationGo()]], () => {}); H.hint(matchMedia("(pointer: coarse)").matches ? "Séta: a bal alsó kör-karral · nézelődés: húzd az ujjad · a móló végén, a versenyirodánál indul a verseny" : "Séta: W A S D vagy a nyilak · fordulás: Q / E vagy egérrel húzva · a móló végén, a versenyirodánál indul a verseny"); }
   /* indulás a versenyre (W.open("race") a kikötő helyett közvetlenül a futamot nyitja) */
   function hbGo(tut, lvl, force, night) { if (night) VRR.nightForce = true; else if (!HB.wzKeep) VRR.nightForce = null; if (!tut && !force && NET.on && netActive().length && !NET.queue) { NET.queue = { t: Date.now(), ann: 0 }; netPost({ k: "q", on: 1, cls: HB.sel }); hbBoard("net"); return; } try { localStorage.setItem("zephyr-hajo", HB.sel || vrClsId()); } catch (e) {} uiCloseAll(); VRR.forceCls = null; if (tut) VRR.lvl = 0; else if (lvl) VRR.lvl = lvl; else if (!VRR.lvl) VRR.lvl = (VRR.series && VRR.series.races ? VRR.series.races.length % 5 : 0) + 1;
     setTimeout(() => { W._raceGo = true; W.open("race"); }, 30); }
@@ -7836,11 +7840,11 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   function hbStep(dir) { if (!HB.walk) return; if (HB.seat) { roomStand(); return; } const p = HB.pos || { x: 0, z: 0 }; let yaw = 0; try { yaw = T.camYaw(); } catch (e) {} const nx = p.x - Math.sin(yaw) * 1.2 * dir, nz = p.z - Math.cos(yaw) * 1.2 * dir;
     const rc = new THREE.Raycaster(), surf = []; try { T.xr.extra.forEach((o) => { if (o.userData && o.userData.tp && o.parent) surf.push(o); }); } catch (e) {} const o = new THREE.Vector3(nx, 6, nz); W.root.localToWorld(o); rc.set(o, new THREE.Vector3(0, -1, 0)); rc.far = 12; const h = rc.intersectObjects(surf, false)[0];
     if (h && h.object.userData.xr && h.object.userData.xr.click) h.object.userData.xr.click(h); else { try { uiSnd("warn"); } catch (e) {} } }
-  function hbStick(ax, ay) { if (Math.abs(ax) >= Math.abs(ay)) hbTurn(ax > 0 ? -Math.PI / 4 : Math.PI / 4); else hbStep(ay < 0 ? 1 : -1); }
-  function hbWrist() { const it = [["🧭", "Forgás és lépés", [["↺", "Balra 45°", () => hbTurn(Math.PI / 4)], ["↻", "Jobbra 45°", () => hbTurn(-Math.PI / 4)], ["⤾", "Megfordulok", () => hbTurn(Math.PI)], ["⬆", "Előre lépek", () => hbStep(1)], ["⬇", "Hátra lépek", () => hbStep(-1)]]]];
+  function hbStick(ax, ay) { if (locActive()) return;   /* sétában a kar folyamatosan működik (05s – Mozgás 2.0) */ if (Math.abs(ax) >= Math.abs(ay)) hbTurn(ax > 0 ? -Math.PI / 4 : Math.PI / 4); else hbStep(ay < 0 ? 1 : -1); }
+  function hbWrist() { const it = [["🧭", "Forgás és mozgás", locMenu()]];
     const R = SCH.R; if (R) { const n = R.h.name; it.push(["🎓", n, [HB.seat ? ["🧍", "Felállok", () => roomStand()] : ["🪑", "Leülök a táblával szemben", () => roomSit(R)], [R.playing ? "⏸" : "▶", R.playing ? "Szünet" : (R.t > 0 ? "Folytatás" : "Teljes anyag sorban"), () => { if (R.playing || R.t > 0) roomPause(R); else { R.mode = "all"; roomGo(R, 0, true); } }],
         ["⏭", "Következő lecke", () => roomGo(R, R.i + 1, true)], ["⏮", "Előző lecke", () => roomGo(R, R.i - 1, true)], [SCH.voice ? "🔇" : "🔊", SCH.voice ? "Hang ki" : "Hang be", () => { SCH.voice = !SCH.voice; if (!SCH.voice) roomHush(); }], ["🚪", "Ki a házból", () => schoolLeave(false)]]]); }
-    it.push(["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["↩", "Vissza a móló elejére", () => { roomOut(); HB.pos = { x: 0, z: 0 }; faceYaw(0); }], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]); return it; }
+    it.push(["⛵", "A rajthoz (a móló végére)", () => hbToStation()], ["🏁", "Verseny indítása", () => hbStationGo()], ["⚓", "Kikötői menü", hbMenu], ["↩", "Vissza a kikötői térre", () => { roomOut(); try { locBlink(200); } catch (e) {} HB.pos = { x: -1.0, z: 4.6 }; faceYaw(0); }], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]); return it; }
   function hbPreview(id) {
     if (HB.prev) { const o = HB.prev; HB.env.remove(o.g); HB.env.remove(o.disc); }
     const big = id === "zephyr"; let g;
@@ -9011,7 +9015,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const bb = new THREE.Box3().setFromObject(g), sz = bb.getSize(new THREE.Vector3()), k = 2.5 / Math.max(sz.x, sz.z, sz.y * .82); holder.scale.setScalar(k); holder.position.y = .64 - bb.min.y * k + (id === "zephyr" ? .25 * k : .05);
     HB.wzPed.add(holder); HB.wzM = { id, g: holder, boat: g };
   }
-  function wzShow(on) { HB.wizOn = !!on; if (HB.wzG) HB.wzG.visible = !!on; if (HB.env) HB.env.visible = !on; if (HB.far) HB.far.visible = !on; if (on) { if (HB.prev) { HB.env.remove(HB.prev.g); HB.env.remove(HB.prev.disc); HB.prev = null; } wzModel(HB.wz.cls); } }
+  function wzShow(on) { HB.wizOn = !!on; if (HB.wzG) { HB.wzG.visible = !!on; if (on) { const p = HB.pos || { x: 0, z: 0 }; HB.wzG.position.set(p.x, 0, p.z); } }   /* 2026-11-15 este: a bemutatóterem ott nyílik, ahol állsz (a versenyirodánál) */ if (HB.env) HB.env.visible = !on; if (HB.far) HB.far.visible = !on; if (on) { if (HB.prev) { HB.env.remove(HB.prev.g); HB.env.remove(HB.prev.disc); HB.prev = null; } wzModel(HB.wz.cls); } }
   function wzGo(step) { HB.wz = HB.wz || wzLoad(); wzShow(true); HB.walk = false; HB.B && (HB.B.o.side = -.36); hbBoard("w" + step); if (HB.B) HB.B.o.side = -.36; if (T.inVR && HB.B) HB.B.place(); }
   /* 00:39 (tulajdonos): forgás közben egy látványos pillanatban kinyílik a spinakker – amikor a hajó oldalról-elölről fordul felénk, hátszélre fordul,
      a spinakker felhúzódik, kidagad és pár másodpercig repül, majd a következő kör előtt bevonják. */
@@ -9128,7 +9132,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     /* 2026-11-15 (tulajdonos: „egy hatalmas tábla fogad, amit nem lehet bezárni … ott a tenyér menü”): sétáláskor nincs tábla – VR-ben a tenyérmenü, 2D-ben a lenti sáv gombjai */
     if (on) { HB.pos = HB.pos || { x: 0, z: 0 }; if (HB.B) HB.B.show(false); } }
   /* teleport-felület: w × d téglalap; y: a felület magassága (alap: a palló, .67); pad: ennyivel nagyobb a célozható terület (könnyebb eltalálni), de a lépés a téglalapon belül marad */
-  function hbTpSurf(env, x, z, w, d, y, pad) { pad = pad || 0; const t = new THREE.Mesh(new THREE.BoxGeometry(w + 2 * pad, .08, d + 2 * pad), new THREE.MeshBasicMaterial({ visible: false })); t.position.set(x, y == null ? .67 : y, z); env.add(t); W.disposables.push(t.geometry, t.material);
+  function hbTpSurf(env, x, z, w, d, y, pad) { pad = pad || 0; const t = new THREE.Mesh(new THREE.BoxGeometry(w + 2 * pad, .08, d + 2 * pad), new THREE.MeshBasicMaterial({ visible: false })); t.position.set(x, y == null ? .67 : y, z); env.add(t); W.disposables.push(t.geometry, t.material); (HB.tps || (HB.tps = [])).push({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, y: y == null ? .67 : y });   /* 2026-11-15 este: a folyamatos sétához (05s) */
     t.userData.tp = () => !!HB.walk; t.userData.xr = { click: (h) => { if (!HB.walk || !h || !h.point) return; const p = W.root.worldToLocal(h.point.clone()); HB.pos = { x: clamp(p.x, x - w / 2 + .3, x + w / 2 - .3), z: clamp(p.z, z - d / 2 + .3, z + d / 2 - .3) }; try { beep(); } catch (e) {} } };
     try { T.xr.extra.add(t); W.objs.push(t); } catch (e) {} return t; }
   function hbDrawWalk(B, g) { uiFrame(B, g, "⚓ SÉTA A KIKÖTŐBEN", "a hajók valódi méretben ringanak a mólónál");
@@ -9673,7 +9677,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
         const s = .6 + rand() * .9; m4.compose(new THREE.Vector3(x, landY(x, z) - .02, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rand() * TAU, 0)), new THREE.Vector3(s, s * (.7 + rand() * .6), s)); im.setMatrixAt(k, m4); cl.setHSL(.24 + rand() * .05, .45, .42 + rand() * .2); im.setColorAt(k, cl); k++; }
       im.count = k; im.frustumCulled = false; G.add(im); W.disposables.push(tg); }
     /* ---------- NAPÁGYAK, KEMPINGÁGYAK és NAPERNYŐK – csoportokban, mintha emberek tették volna le őket (példányosítva) ---------- */
-    { const L = []; const spots = []; for (let t = 0; t < 400 && spots.length < 34; t++) { const x = -96 + rand() * 186, z = landPromZ(x) + 3.2 + rand() * 18; if (LAND_NOGRASS(x, z) || spots.some((s) => Math.hypot(s[0] - x, s[1] - z) < 7.5)) continue; spots.push([x, z]); }
+    { const L = []; const spots = []; for (let t = 0; t < 400 && spots.length < 34; t++) { const x = -96 + rand() * 186, z = landPromZ(x) + 3.2 + rand() * 18; if (LAND_NOGRASS(x, z) || LAND_NEAR(x, z, 4.5) || spots.some((s) => Math.hypot(s[0] - x, s[1] - z) < 7.5)) continue;   /* 2026-11-15 este: napernyő, napágy ne érjen a házakhoz */ spots.push([x, z]); }
       spots.forEach(([x, z], si) => { const r0 = (rand() - .5) * .8 + Math.PI, n = rand() < .25 ? 3 : 2; for (let k = 0; k < n; k++) { const off = (k - (n - 1) / 2) * 1.05; L.push({ x: x + Math.cos(r0) * off, z: z - Math.sin(r0) * off, r: r0 + (rand() - .5) * .25, camp: rand() < .35, c: si }); } });
       LAND.spots = spots;
       /* napágy: fehér műanyag keret, emelt háttámla, 4 láb + párna (külön példányos háló, csoportonként azonos színű) */
@@ -9699,7 +9703,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       if (parts.length) mesh(mergeGeoms(parts), std({ vertexColors: true, roughness: .95 }), G); }
     /* ---------- ÖLTÖZŐKABINOK, PADOK, SZEMETESEK a sétány mentén ---------- */
     { const cab = canvasTex(256, 128, (g, w, h) => { for (let k = 0; k < 16; k++) { g.fillStyle = k % 2 ? "#ffffff" : "#1f5fa8"; g.fillRect(k * 16, 0, 16, h); } }, { repeat: [1, 1] }); const cm = std({ map: cab, roughness: .8, side: THREE.DoubleSide }), top = std({ color: "#1f5fa8", roughness: .7 });
-      [-58, -14, 34, 70].forEach((x, i) => { const z = landPromZ(x) + 2.1, y = landY(x, z), cg = new THREE.CylinderGeometry(.62, .62, 1.9, 20, 1, true, .5, TAU - 1); mesh(cg.translate(x, y + 1.08, z), cm, G); mesh(new THREE.ConeGeometry(.72, .35, 20).translate(x, y + 2.2, z), top, G); void i; });
+      [-40, -31, 31, 44, 70].forEach((x, i) => { if (LAND_NEAR(x, landPromZ(x) + 2.1, 2.5)) return;   /* 2026-11-15 este: az öltözőkabinok a házak közé ne kerüljenek */ const z = landPromZ(x) + 2.1, y = landY(x, z), cg = new THREE.CylinderGeometry(.62, .62, 1.9, 20, 1, true, .5, TAU - 1); mesh(cg.translate(x, y + 1.08, z), cm, G); mesh(new THREE.ConeGeometry(.72, .35, 20).translate(x, y + 2.2, z), top, G); void i; });
       const wood = std({ color: "#8a6440", roughness: .8 }), iron = std({ color: "#2b3036", roughness: .5, metalness: .6 });
       for (let x = -94; x <= 96; x += 13) { if (Math.abs(x - 8) < 12) continue; const z = landPromZ(x) - 1.75, y = landY(x, z); for (let k = 0; k < 4; k++) mesh(new THREE.BoxGeometry(1.6, .04, .1).translate(x, y + .44, z - .15 + k * .11), wood, G); mesh(new THREE.BoxGeometry(1.6, .3, .04).translate(x, y + .68, z + .3), wood, G); [-.7, .7].forEach((dx) => mesh(new THREE.BoxGeometry(.06, .44, .5).translate(x + dx, y + .22, z), iron, G));
         if ((x | 0) % 2) { mesh(new THREE.CylinderGeometry(.2, .18, .7, 12).translate(x + 1.5, y + .35, z), std({ color: "#2f6a3a", roughness: .6 }), G); } } }
@@ -9735,19 +9739,20 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     LAND.built = true;
   }
   /* ahol nincs fű és napágy: a házak, a sétány melletti épületek helye */
+  function LAND_NEAR(x, z, m) { return HOUSES.some((h) => { const B = h.box; return x > B.x0 - m && x < B.x1 + m && z > B.z0 - m && z < B.z1 + m; }); }
   function LAND_NOGRASS(x, z) { return (HOUSES_FOOT || []).some((f) => x > f[0] - 1.5 && x < f[1] + 1.5 && z > f[2] - 1.5 && z < f[3] + 3); }
   /* a séta-pozíció padlómagassága: a pallókon .66, a parton a felszín */
   function landWalkY(x, z) { if (!LAND.built) return .66; for (let i = 0; i < HOUSES.length; i++) { const B = HOUSES[i].box; if (HOUSES[i].F != null && x > B.x0 - .3 && x < B.x1 + .3 && z > B.z0 - .3 && z < B.z1 + .3) return HOUSES[i].F; } if (z < 4.95 && z > -2.6 && x > 1.4 && x < 17.6) return .66; if (x > -1.6 && x < 1.6 && z < 2.6) return .66; if (x > -6.6 && x < 1.7 && z > 1.4 && z < 6.9) return .66; const d = z - landShore(x); if (d < .5) return .66; return Math.max(.62, landY(x, z)) + .04; }
   /* =================================================================== 2/Q. A KIKÖTŐ OKTATÓHÁZAI (2026. nov. 15., a tulajdonos jóváhagyta a kikötő-jelentés tervét:
      7 + 1 ház, „nagyon igényes legyen az elrendezés és szép”; jelölés: B + C – jelzőzászló az oromzaton és saját szín az ajtó- és ablakkereten,
      a tetőgerincen, a móló tövétől a házig vezető ösvénycsíkon és a kikötőtérképen).
-     A házak a part mentén, a sétány mögött állnak, a kikötő felé néznek; a Vitorlásiskola és az Elsősegély cölöpökön a víz fölött, egymás mellett,
+     A házak a part mentén, a sétány mögött állnak, a kikötő felé néznek (2026. nov. 15. este: tömörebben, a kikötői tér két oldalán – nyugatra a Mentőmellény-pont, a Csomózóház és a Viharjelző torony, keletre a Természetvédelmi ház és a Magyar Ízek Háza; korábban 60 m-en szétszórva); a Vitorlásiskola és az Elsősegély cölöpökön a víz fölött, egymás mellett,
      közös fedett tornáccal; a világítótorony a keleti hullámtörő végén. A belső tér (tábla, tanár, szék, könyv, tanulók) a 05o-ban él. */
   const HOUSES = [
-    { id: "izek", name: "Magyar Ízek Háza", sub: "ételek · borok · hungarikumok", col: "#8e1b2e", flag: "E", kind: "csarda", box: { x0: -57, x1: -48, z0: 13.2, z1: 19.6 }, teacher: "anya", voice: "berta" },
-    { id: "ter", name: "Természetvédelmi ház", sub: "a Balaton élővilága", col: "#3d9a4b", flag: "A", kind: "cabin", box: { x0: -43.5, x1: -36.5, z0: 13, z1: 18.6 }, teacher: "apa", voice: "imre" },
-    { id: "vih", name: "Viharjelző torony", sub: "vihar, felhők, szél", col: "#e0a800", flag: "Y", kind: "tower", box: { x0: -31, x1: -25.4, z0: 13, z1: 18.4 }, teacher: "matroz2", voice: "imre" },
-    { id: "cso", name: "Csomózóház", sub: "csomók és kötélmunka", col: "#7a4ea3", flag: "K", kind: "cabin", box: { x0: -21.5, x1: -15.9, z0: 13, z1: 18.2 }, teacher: "matroz4", voice: "imre" },
+    { id: "izek", name: "Magyar Ízek Háza", sub: "ételek · borok · hungarikumok", col: "#8e1b2e", flag: "E", kind: "csarda", box: { x0: 15.4, x1: 24.4, z0: 13.2, z1: 19.6 }, teacher: "anya", voice: "berta" },
+    { id: "ter", name: "Természetvédelmi ház", sub: "a Balaton élővilága", col: "#3d9a4b", flag: "A", kind: "cabin", box: { x0: 4.6, x1: 11.6, z0: 13, z1: 18.6 }, teacher: "apa", voice: "imre" },
+    { id: "vih", name: "Viharjelző torony", sub: "vihar, felhők, szél", col: "#e0a800", flag: "Y", kind: "tower", box: { x0: -29.0, x1: -23.4, z0: 13, z1: 18.4 }, teacher: "matroz2", voice: "imre" },
+    { id: "cso", name: "Csomózóház", sub: "csomók és kötélmunka", col: "#7a4ea3", flag: "K", kind: "cabin", box: { x0: -20.2, x1: -14.6, z0: 13, z1: 18.2 }, teacher: "matroz4", voice: "imre" },
     { id: "mel", name: "Mentőmellény-pont", sub: "mellény, mentőöv, mentés", col: "#f07a12", flag: "O", kind: "cabin", box: { x0: -11.2, x1: -6.2, z0: 12.6, z1: 17.4 }, teacher: "matroz1", voice: "imre" },
     { id: "isk", name: "Vitorlásiskola", sub: "a nagypapa szabályai", col: "#2f6fb7", flag: "P", kind: "school", box: { x0: 3.5, x1: 9.5, z0: -1.5, z1: 4 }, teacher: "nagypapa", voice: "imre" },
     { id: "els", name: "Elsősegély", sub: "a nagymama tanít", col: "#d0342c", flag: "W", kind: "cabin", stilts: true, box: { x0: 11.2, x1: 16.2, z0: -1.5, z1: 4 }, teacher: "nagymama", voice: "anna" },
@@ -9794,6 +9799,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const wallLogs = (ax, c, a0, a1, phase, holes) => { const n = Math.round(Hh / (2 * LR)); for (let i = 0; i < n; i++) { const y = F + LR + i * 2 * LR + (phase ? LR : 0), r = LR * (1.04 + .05 * Math.sin(i * 2.7 + c)); if (y > F + Hh + LR * .5) break;
         let segs = [[a0 - .32, a1 + .32]]; (holes || []).forEach(([h0, h1, y0, y1]) => { if (y > F + y0 - LR * .6 && y < F + y1 + LR * .6) segs = segs.flatMap(([s0, s1]) => [[s0, Math.min(s1, h0)], [Math.max(s0, h1), s1]].filter(([q0, q1]) => q1 - q0 > .05)); }); segs.forEach(([s0, s1]) => addLog(ax, c, s0, s1, y, r)); } };
     const dw = o.dw || 1.2, d0 = o.dc - dw / 2, d1 = o.dc + dw / 2, wy0 = .9, wy1 = 2.2;
+    h.dr = { wall: o.door, c: o.dc, w: dw };   /* 2026-11-15 este: az ajtónyílás a falütközéshez (05s) */
     const holes = { n: [], s: [], w: [], e: [] }; holes[o.door].push([d0, d1, -1, 2.2]); (o.win || []).forEach(([wall, c, w]) => holes[wall].push([c - w / 2, c + w / 2, wy0, wy1]));
     wallLogs("x", B.z0, B.x0, B.x1, 0, holes.n); wallLogs("x", B.z1, B.x0, B.x1, 0, holes.s); wallLogs("z", B.x0, B.z0, B.z1, 1, holes.w); wallLogs("z", B.x1, B.z0, B.z1, 1, holes.e);
     /* oromzat: a tető gerince x irányban fut (a hosszabbik oldal mentén) */
@@ -9966,7 +9972,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     poster(G, ["BEAUFORT", "0–1 szélcsend", "3–4 jó vitorlás szél", "5–6 erős szél", "7+ viharos"], "#e0a800", B.x1 - .2, F + 1.75, B.z0 + 1.3, -Math.PI / 2, .72);
     poster(G, ["VIHARJELZÉS", "I. fok: 45 / perc", "II. fok: 90 / perc", "Siófoki", "Meteorológiai obszerv."], "#e0a800", B.x1 - .2, F + 1.75, B.z1 - 1.3, -Math.PI / 2, .72); }
   /* a viharjelző torony: karcsú, merevített fa rácstorony a ház nyugati oldalán, a csúcson sárga villogóval (a kikötő viharjelzésével együtt villan) */
-  function stormTower(G, h, C) { const B = h.box, F = C.F, x = B.x0 - 1.4, z = (B.z0 + B.z1) / 2, H = 11, post = std({ color: "#6b4a2a", roughness: .9 }), y0 = landY(x, z) - .1;
+  function stormTower(G, h, C) { const B = h.box, F = C.F, x = B.x0 - 1.4, z = (B.z0 + B.z1) / 2, H = 11, post = std({ color: "#6b4a2a", roughness: .9 }), y0 = landY(x, z) - .1; (HB.solids || (HB.solids = [])).push({ x0: x - .65, x1: x + .65, z0: z - .65, z1: z + .65 });
     const pts = [[-.6, -.6], [.6, -.6], [.6, .6], [-.6, .6]]; pts.forEach(([dx, dz]) => rodBetween(new THREE.Vector3(x + dx, y0, z + dz), new THREE.Vector3(x + dx * .45, y0 + H, z + dz * .45), .07, post, G, 6));
     for (let k = 1; k < 7; k++) { const y = y0 + k * H / 7, s = 1 - (k / 7) * .55; for (let i = 0; i < 4; i++) { const [ax, az] = pts[i], [bx, bz] = pts[(i + 1) % 4]; rodBetween(new THREE.Vector3(x + ax * s, y, z + az * s), new THREE.Vector3(x + bx * s, y, z + bz * s), .035, post, G, 5); const y2 = y0 + (k - 1) * H / 7, s2 = 1 - ((k - 1) / 7) * .55; rodBetween(new THREE.Vector3(x + ax * s2, y2, z + az * s2), new THREE.Vector3(x + bx * s, y, z + bz * s), .025, post, G, 4); } }
     mesh(new THREE.BoxGeometry(1.0, .08, 1.0).translate(x, y0 + H, z), post, G); const lampM = new THREE.MeshStandardMaterial({ color: "#4a4a40", emissive: "#000000", roughness: .4 }); W.disposables.push(lampM); const lamp = mesh(new THREE.SphereGeometry(.28, 16, 12).translate(x, y0 + H + .4, z), lampM, G); lamp.userData.noMerge = true;
@@ -9974,7 +9980,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     /* létra */ for (let k = 0; k < 24; k++) mesh(new THREE.BoxGeometry(.4, .03, .04).translate(x + .62 - k * .012, y0 + .3 + k * .42, z), post, G); }
   /* ---------------------------------------------------------------- MAGYAR ÍZEK HÁZA – fehérre meszelt csárda, vastag nádtető, oszlopos tornác, paprikafüzérek */
   function csardaBuild(G, h) { const B = h.box, F = h.F, Hh = 2.9, xc = xMid(B), zc = zMid(B), white = std({ map: canvasTex(256, 256, (g, w, hh) => { g.fillStyle = "#f3efe4"; g.fillRect(0, 0, w, hh); for (let k = 0; k < 500; k++) { g.fillStyle = `rgba(${150 + rand() * 60 | 0},${140 + rand() * 50 | 0},${120 + rand() * 40 | 0},${rand() * .08})`; g.fillRect(rand() * w, rand() * hh, 2 + rand() * 20, 2 + rand() * 12); } }, { repeat: [2, 1] }), roughness: .95 });
-    const t = .3, dw = 1.3, dc = xc, wins = [xc - 2.6, xc + 2.6];
+    const t = .3, dw = 1.3, dc = xc, wins = [xc - 2.6, xc + 2.6]; h.dr = { wall: "n", c: dc, w: dw };
     /* falak darabokban (ajtó és ablakok kihagyva) */
     const wall = (x0, x1, z0, z1, y0, y1) => mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0).translate((x0 + x1) / 2, F + (y0 + y1) / 2, (z0 + z1) / 2), white, G);
     wall(B.x0, B.x1, B.z1 - t, B.z1, 0, Hh); wall(B.x0, B.x0 + t, B.z0, B.z1, 0, Hh); wall(B.x1 - t, B.x1, B.z0, B.z1, 0, Hh);
@@ -10051,16 +10057,20 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const west = HOUSES.filter((h) => h.box.x1 < 0).sort((a, b) => b.box.x0 - a.box.x0);
     west.forEach((h, i) => { const off = -.5 + i * .2, B = h.box, dx = h.kind === "csarda" ? xMid(B) : h.id === "ter" ? B.x0 + 1.6 : xMid(B) - .9, pz = landPromZ(dx), dz = h.kind === "csarda" ? B.z0 - 1.9 : B.z0 - 1.6;
       ribbon([[start.x - .3, start.z], [start.x - .6, landPromZ(0) - .2], [dx + 1.2, pz - .2], [dx, pz + .8], [dx, dz]], h.col, off); });
+    /* 2026-11-15 este: a keleti szárny (Természetvédelmi ház, Magyar Ízek Háza) ösvényei – a tértől a sétányon kelet felé, majd fel a házhoz */
+    const east = HOUSES.filter((h) => h.box.x0 > 0 && !["isk", "els", "vil"].includes(h.id)).sort((a, b) => a.box.x0 - b.box.x0);
+    east.forEach((h, i) => { const off = .5 + i * .2, B = h.box, dx = h.kind === "csarda" ? xMid(B) : h.id === "ter" ? B.x0 + 1.6 : xMid(B) - .9, pz = landPromZ(dx), dz = h.kind === "csarda" ? B.z0 - 1.9 : B.z0 - 1.6;
+      ribbon([[start.x + .3, start.z], [start.x + .7, landPromZ(0) + .2], [dx - 1.2, pz + .2], [dx, pz + .9], [dx, dz]], h.col, off); });
     const isk = HZ.byId.isk, els = HZ.byId.els, vil = HZ.byId.vil;
     ribbon([[1.7, 4.3], [2.6, 3.6], [2.9, 2.2]], isk.col, 0); ribbon([[1.7, 4.5], [9.9, 4.45], [10.4, 3.4], [10.6, 2.3]], els.col, 0);
     ribbon([[start.x + .4, start.z + .2], [3, landPromZ(3) - .4], [22.5, landPromZ(22.5) - .4], [24.6, 3.4], [25.6, -10], [26.6, -20], [27.7, -23.6]], vil.col, 0);
     const m = new THREE.Mesh(mergeGeoms(parts), std({ map: dash, vertexColors: true, transparent: true, alphaTest: .4, roughness: .7, depthWrite: true, polygonOffset: true, polygonOffsetFactor: -2 })); m.renderOrder = 1; dash.wrapT = THREE.RepeatWrapping; env.add(m); }
   /* ---------------------------------------------------------------- KIKÖTŐTÉRKÉP a móló tövénél (a házak a saját színükkel és zászlójukkal) */
-  function harborMap(env) { const tx = canvasTex(1400, 900, (g, w, hh) => { g.fillStyle = "#f6f1e6"; g.fillRect(0, 0, w, hh); const MX0 = 40, MX1 = 900, MY0 = 130, MY1 = 860, X = (x) => MX0 + (x + 60) / 96 * (MX1 - MX0), Z = (z) => MY0 + (z + 28) / 50 * (MY1 - MY0);
+  function harborMap(env) { const tx = canvasTex(1400, 900, (g, w, hh) => { g.fillStyle = "#f6f1e6"; g.fillRect(0, 0, w, hh); const KM = 9.36, MX0 = 40 + (860 - 66 * KM) / 2, MX1 = MX0 + 66 * KM, MY0 = 130, MY1 = 130 + 78 * KM, X = (x) => MX0 + (x + 32) * KM, Z = (z) => MY0 + (z + 54) * KM;   /* 2026-11-15 este: torzítás nélküli lépték, a móló végi versenyirodával együtt */
       g.save(); g.beginPath(); g.rect(MX0, MY0, MX1 - MX0, MY1 - MY0); g.clip(); g.fillStyle = "#7fb8cf"; g.fillRect(MX0, MY0, MX1 - MX0, MY1 - MY0);
-      g.fillStyle = "#ecdcb2"; g.beginPath(); g.moveTo(MX0, MY1); for (let x = -60; x <= 36; x += 2) g.lineTo(X(x), Z(landShore(x))); g.lineTo(MX1, MY1); g.fill(); g.fillStyle = "#93c25e"; g.beginPath(); g.moveTo(MX0, MY1); for (let x = -60; x <= 36; x += 2) g.lineTo(X(x), Z(landPromZ(x) + 1.6)); g.lineTo(MX1, MY1); g.fill();
-      g.strokeStyle = "#d6cbb3"; g.lineWidth = 12; g.beginPath(); for (let x = -60; x <= 36; x += 2) x === -60 ? g.moveTo(X(x), Z(landPromZ(x))) : g.lineTo(X(x), Z(landPromZ(x))); g.stroke();
-      g.fillStyle = "#a07a52"; g.fillRect(X(-1.5), Z(-28), X(1.5) - X(-1.5), Z(2) - Z(-28)); [-8, -18, -31].forEach((z) => { g.fillRect(X(-7), Z(z + 2.4), X(7) - X(-7), 6); }); g.fillRect(X(1.5), Z(-2.5), X(17.5) - X(1.5), Z(4.9) - Z(-2.5)); g.fillStyle = "#b9b3a8"; g.fillRect(X(-6.6), Z(1.4), X(1.7) - X(-6.6), Z(6.8) - Z(1.4));
+      g.fillStyle = "#ecdcb2"; g.beginPath(); g.moveTo(MX0, MY1); for (let x = -32; x <= 34; x += 2) g.lineTo(X(x), Z(landShore(x))); g.lineTo(MX1, MY1); g.fill(); g.fillStyle = "#93c25e"; g.beginPath(); g.moveTo(MX0, MY1); for (let x = -32; x <= 34; x += 2) g.lineTo(X(x), Z(landPromZ(x) + 1.6)); g.lineTo(MX1, MY1); g.fill();
+      g.strokeStyle = "#d6cbb3"; g.lineWidth = 12; g.beginPath(); for (let x = -32; x <= 34; x += 2) x === -32 ? g.moveTo(X(x), Z(landPromZ(x))) : g.lineTo(X(x), Z(landPromZ(x))); g.stroke();
+      g.fillStyle = "#a07a52"; g.fillRect(X(-1.5), Z(-44), X(1.5) - X(-1.5), Z(2) - Z(-44)); g.fillRect(X(-7), Z(-52), X(7) - X(-7), Z(-44) - Z(-52)); g.fillStyle = "#ffffff"; g.fillRect(X(-4.2), Z(-51.7), X(4.2) - X(-4.2), Z(-48.6) - Z(-51.7)); g.fillStyle = "#0b2f5e"; g.font = `900 24px ${UIF}`; g.textAlign = "left"; g.fillText("⛵ RAJT · VERSENYIRODA", X(7.6), Z(-47.2)); g.fillStyle = "#a07a52"; [-8, -18, -31].forEach((z) => { g.fillRect(X(-7), Z(z + 2.4), X(7) - X(-7), 6); }); g.fillRect(X(1.5), Z(-2.5), X(17.5) - X(1.5), Z(4.9) - Z(-2.5)); g.fillStyle = "#b9b3a8"; g.fillRect(X(-6.6), Z(1.4), X(1.7) - X(-6.6), Z(6.8) - Z(1.4));
       g.strokeStyle = "#8f897d"; g.lineWidth = 16; g.beginPath(); g.moveTo(X(24.5), Z(4)); g.lineTo(X(25.6), Z(-10)); g.lineTo(X(26.6), Z(-20)); g.lineTo(X(29.5), Z(-24.2)); g.stroke();
       HOUSES.forEach((h, i) => { const B = h.box, x0 = X(B.x0), x1 = X(B.x1), z0 = Z(B.z0), z1 = Z(B.z1); g.fillStyle = h.col; uiRR(g, x0, z0, x1 - x0, z1 - z0, 6); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 3; g.stroke(); g.fillStyle = "#fff"; g.font = `900 30px ${UIF}`; g.textAlign = "center"; g.fillText(String(i + 1), (x0 + x1) / 2, (z0 + z1) / 2 + 11); });
       g.fillStyle = "#d61f26"; g.beginPath(); g.arc(X(-1), Z(3.6), 13, 0, TAU); g.fill(); g.strokeStyle = "#fff"; g.lineWidth = 4; g.stroke(); g.fillStyle = "#14161b"; g.font = `900 26px ${UIF}`; g.textAlign = "left"; g.fillText("ITT VAGY", X(-1) + 18, Z(3.6) - 14); g.restore();
@@ -10218,6 +10228,369 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
         d: (g, t) => { dBg(g, "#fbf3e6", "#f0dfc4"); dBowl(g, 150, 100, "#a8331c", true, t); kT(g, "JÓ ÉTVÁGYAT!", 150, 166, 20, "#8e1b2e", "center", 900); } }
     ]
   };
+  /* =================================================================== 2/S. MOZGÁS 2.0 – szabad séta és fordulás a kikötőben (2026. nov. 15. este)
+     A tulajdonos kérése: „nem megoldott a VR térben történő megfordulás … a legfejlettebb mozgási megoldással, mint szabadkezes, mint kontrolleres módon”.
+     A Meta (Quest) kényelmi irányelvei és a mai VR-játékok bevett gyakorlata szerint:
+     KONTROLLERREL
+       • bal kar: folyamatos séta arra, amerre nézel (a kar kitérésével arányos sebességgel), a látótér szélén finom „alagútlátással” (szédülés ellen);
+       • jobb kar oldalra: ugrásszerű fordulás (alap 30°, beállítható 45°, 90° vagy folyamatos), egy pillanatnyi elsötétüléssel;
+       • jobb kar előre, tartva: teleport-ív a kontrollerből, a végén célkör – elengedve odaugrasz (ha piros, oda nem lehet);
+       • jobb kar hátra: megfordulás (180°).
+     KÉZZEL (kontroller nélkül)
+       • mutass a pallóra / a partra: célkör jelenik meg – csippents, és odaugrasz;
+       • csippents bárhová (nem gombra), és RÁNTSD a kezed oldalra: fordulás arra (újabb rántás = újabb fordulás);
+       • a tenyérmenüben (bal tenyér felfelé): ↺ ↻ ⤾, lépés előre/hátra, és a mozgás beállításai.
+     Falakon nem lehet átmenni (a házakba az ajtón át), a vízre nem lehet lépni.
+     2D-ben: W/A/S/D vagy a nyilak (Q/E: fordulás), telefonon a bal alsó sarokban kör alakú „kar”. */
+  const LOC = { cfg: null, hand: {}, aim: null, vigM: null, vigK: 0, blinkM: null, blinkT: 0, snapArm: true, backArm: true, keys: {}, joy: null, mv: 0, sturn: 0, joyEl: null, help: null };
+  function locCfg() { if (LOC.cfg) return LOC.cfg; let o = {}; try { o = JSON.parse(localStorage.getItem("zephyr-mozgas") || "{}"); } catch (e) {}
+    return (LOC.cfg = Object.assign({ turn: "snap", deg: 30, vig: true, spd: 1.7 }, o)); }
+  function locSet(k, v) { const c = locCfg(); c[k] = v; try { localStorage.setItem("zephyr-mozgas", JSON.stringify(c)); } catch (e) {} try { uiSnd("press"); } catch (e) {} }
+  function locActive() { return W.active && W.kind === "harbor" && !!HB.walk && !HB.wizOn; }
+  /* ---------------------------------------------------------------- hol lehet állni? (a teleport-felületek téglalapjai + a part) */
+  function locFloor(x, z) {
+    const L = HB.tps || []; for (let i = 0; i < L.length; i++) { const r = L[i]; if (x >= r.x0 - .3 && x <= r.x1 + .3 && z >= r.z0 - .3 && z <= r.z1 + .3) return landWalkY(x, z); }
+    if (LAND.built && x > -98 && x < 98 && z > 1.4 && z < 46 && z - landShore(x) > .45) return landWalkY(x, z);
+    return null;
+  }
+  /* ---------------------------------------------------------------- falak: a házak téglalapja, nyílás csak az ajtónál */
+  const locIn = (p, B, m) => p.x > B.x0 - m && p.x < B.x1 + m && p.z > B.z0 - m && p.z < B.z1 + m;
+  function locDoor(h) { if (h.dr) return h.dr; if (h.kind === "school") return { wall: "w", c: 2.2, w: 1.2 }; return null; }
+  function locDoorOk(h, x, z) { const d = locDoor(h), B = h.box; if (!d) return false; const ns = d.wall === "n" || d.wall === "s";
+    const along = ns ? x : z, wc = d.wall === "n" ? B.z0 : d.wall === "s" ? B.z1 : d.wall === "w" ? B.x0 : B.x1, perp = ns ? z : x;
+    return Math.abs(along - d.c) < d.w / 2 - .1 && Math.abs(perp - wc) < .7; }
+  function locWallD(p, B) { if (locIn(p, B, 0)) return Math.min(p.x - B.x0, B.x1 - p.x, p.z - B.z0, B.z1 - p.z); const dx = Math.max(B.x0 - p.x, 0, p.x - B.x1), dz = Math.max(B.z0 - p.z, 0, p.z - B.z1); return Math.hypot(dx, dz); }
+  function locBlocked(p, q) {
+    const S = HB.solids || []; for (let i = 0; i < S.length; i++) { const r = S[i]; if (q.x > r.x0 - .2 && q.x < r.x1 + .2 && q.z > r.z0 - .2 && q.z < r.z1 + .2) return true; }
+    const HL = STN.house ? HOUSES.concat([STN.house]) : HOUSES;
+    for (let i = 0; i < HL.length; i++) { const h = HL[i], B = h.box; if (!B || h.kind === "light" && !h.dr) continue;
+      if (Math.abs(q.x - (B.x0 + B.x1) / 2) > 12 || Math.abs(q.z - (B.z0 + B.z1) / 2) > 12) continue;
+      const a = locIn(p, B, 0), b = locIn(q, B, 0);
+      if (a !== b && !locDoorOk(h, (p.x + q.x) / 2, (p.z + q.z) / 2)) return true;
+      /* a fal 25 cm-es sávjába se lépj bele (a fejed ne lógjon át a falon) – kivéve az ajtónyílásban; kifelé mindig mehetsz */
+      const dq = locWallD(q, B); if (dq < .25 && !locDoorOk(h, q.x, q.z) && dq < locWallD(p, B)) return true; }
+    return false;
+  }
+  function locMove(dx, dz) {
+    const p = HB.pos || { x: 0, z: 0 }; const ok = (q) => locFloor(q.x, q.z) != null && !locBlocked(p, q);
+    let q = { x: p.x + dx, z: p.z + dz };
+    if (!ok(q)) { const qa = { x: p.x + dx, z: p.z }, qb = { x: p.x, z: p.z + dz }; if (Math.abs(dx) > 1e-4 && ok(qa)) q = qa; else if (Math.abs(dz) > 1e-4 && ok(qb)) q = qb; else return false; }
+    HB.pos = q; return true;
+  }
+  /* ---------------------------------------------------------------- fordulás a FEJED körül (nem a játéktér közepe körül) */
+  function locTurn(a, smooth) {
+    if (!a) return; let v = null;
+    try { if (T.inVR && T.rig && T.headPos) { const h = T.headPos(), rp = T.rig.object3D.position; if (h) v = { x: h.x - rp.x, z: h.z - rp.z }; } } catch (e) {}
+    if (smooth) { try { T.rig.object3D.rotation.y += a; } catch (e) {} } else hbTurn(a);   /* folyamatos fordulásnál nincs kattanó hang minden képkockán */
+    if (v && HB.pos) { const c = Math.cos(a), s = Math.sin(a), nx = v.x * c + v.z * s, nz = -v.x * s + v.z * c; HB.pos = { x: HB.pos.x + v.x - nx, z: HB.pos.z + v.z - nz }; }
+    if (!smooth) { locBlink(130); try { hapt(.25, 18); } catch (e) {} }
+  }
+  /* ---------------------------------------------------------------- pillanatnyi elsötétülés (ugrásnál) és alagútlátás (folyamatos mozgásnál) – a kamerán */
+  function locCamObj() { return T.cam && T.cam.object3D; }
+  function locBlink(ms) {
+    const c = locCamObj(); if (!c) return;
+    if (!LOC.blinkM) { const m = new THREE.Mesh(new THREE.SphereGeometry(.18, 16, 10), new THREE.MeshBasicMaterial({ color: 0x02060c, side: THREE.BackSide, transparent: true, opacity: 0, depthTest: false, depthWrite: false })); m.renderOrder = 1003; m.frustumCulled = false; m.visible = false; LOC.blinkM = m; }
+    if (LOC.blinkM.parent !== c) c.add(LOC.blinkM);
+    LOC.blinkT = performance.now(); LOC.blinkD = ms || 130; LOC.blinkM.visible = true; LOC.blinkM.material.opacity = .9;
+  }
+  function locVig(target, dt) {
+    const c = locCamObj(); if (!c) return;
+    if (!LOC.vigM) { const cv = document.createElement("canvas"); cv.width = cv.height = 256; const g = cv.getContext("2d"), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+      gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(.52, "rgba(0,0,0,0)"); gr.addColorStop(.78, "rgba(2,8,16,.72)"); gr.addColorStop(1, "rgba(2,8,16,.96)"); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+      const t = new THREE.CanvasTexture(cv); const m = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity: 0, depthTest: false, depthWrite: false }));
+      m.position.set(0, 0, -.26); m.renderOrder = 1002; m.frustumCulled = false; m.visible = false; LOC.vigM = m; }
+    if (LOC.vigM.parent !== c) c.add(LOC.vigM);
+    LOC.vigK += (target - LOC.vigK) * Math.min(1, dt * (target > LOC.vigK ? 7 : 4));
+    LOC.vigM.visible = T.inVR && LOC.vigK > .02; LOC.vigM.material.opacity = LOC.vigK;
+  }
+  function locFxTick(dt) {
+    const m = LOC.blinkM; if (m && m.visible) { const k = (performance.now() - LOC.blinkT) / LOC.blinkD; if (k >= 1) { m.visible = false; m.material.opacity = 0; } else m.material.opacity = .9 * (1 - k * k); }
+  }
+  /* ---------------------------------------------------------------- teleport-ív (pöttyös ív + célkör), a jelenetben világkoordinátában */
+  function locAimObj() {
+    if (LOC.aimG && LOC.aimG.parent) return LOC.aimG;
+    const G = new THREE.Group(); G.renderOrder = 990; T.sceneEl.object3D.add(G);
+    const dotM = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .9, depthWrite: false }), N = 48;
+    const dots = new THREE.InstancedMesh(new THREE.SphereGeometry(.022, 8, 6), dotM, N); dots.count = 0; dots.frustumCulled = false; G.add(dots);
+    const ring = new THREE.Group(); G.add(ring);
+    const rM = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .95, depthWrite: false, side: THREE.DoubleSide });
+    const r1 = new THREE.Mesh(new THREE.RingGeometry(.34, .4, 48), rM); r1.rotation.x = -Math.PI / 2; ring.add(r1);
+    const dM = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide });
+    const r2 = new THREE.Mesh(new THREE.CircleGeometry(.34, 40), dM); r2.rotation.x = -Math.PI / 2; r2.position.y = -.003; ring.add(r2);
+    /* lábnyom-jel a kör közepén (merre nézel majd) */
+    const fM = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, depthWrite: false, side: THREE.DoubleSide });
+    const sh = new THREE.Shape(); sh.moveTo(0, -.2); sh.lineTo(.11, .02); sh.lineTo(.04, .02); sh.lineTo(.04, .14); sh.lineTo(-.04, .14); sh.lineTo(-.04, .02); sh.lineTo(-.11, .02); sh.closePath();
+    const ar = new THREE.Mesh(new THREE.ShapeGeometry(sh), fM); ar.rotation.x = -Math.PI / 2; ar.position.y = .004; ring.add(ar);
+    /* fénylő oszlop a célpont fölött (messziről is látszik) */
+    const cM = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .16, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(.36, .4, 1.6, 32, 1, true), cM); col.position.y = .8; ring.add(col);
+    G.visible = false; LOC.aimG = G; LOC.aimP = { dots, ring, rM, dM, dotM, cM, ar, N }; return G;
+  }
+  function locAimHide() { if (LOC.aimG) LOC.aimG.visible = false; if (LOC.aim) LOC.aim = null; }
+  const _lm4 = new THREE.Matrix4(), _lv = new THREE.Vector3();
+  function locAim(S0, key) {
+    if (!S0 || !S0.o || !S0.d) return; const G = locAimObj(), P = LOC.aimP, A = LOC.aim || (LOC.aim = {}); A.key = key;
+    const rp = W.root.position; let p = S0.o.clone(); const v = S0.d.clone().multiplyScalar(9); A.ok = false; let n = 0, landed = null, wet = false;
+    for (let i = 0; i < 70; i++) {
+      const st = .028, np = p.clone().addScaledVector(v, st); v.y -= 9.8 * st;
+      const lx = np.x - rp.x, lz = np.z - rp.z, ly = np.y - rp.y, fl = locFloor(lx, lz), fy = fl != null ? fl : 0;
+      if (ly <= fy) { if (fl != null && Math.hypot(lx - HB.pos.x, lz - HB.pos.z) < 40) { landed = { x: lx, z: lz, y: fl }; A.ok = true; } else wet = true; landed = landed || { x: lx, z: lz, y: Math.max(0, fy) }; break; }
+      if (n < P.N && i % 1 === 0) { _lm4.makeTranslation(np.x, np.y, np.z); P.dots.setMatrixAt(n++, _lm4); }
+      p = np;
+    }
+    P.dots.count = n; P.dots.instanceMatrix.needsUpdate = true;
+    const col = A.ok ? 0xffd166 : 0xe5533d; P.dotM.color.setHex(col); P.rM.color.setHex(col); P.dM.color.setHex(col); P.cM.color.setHex(col);
+    if (landed) { P.ring.visible = true; P.ring.position.set(landed.x + rp.x, landed.y + rp.y + .02, landed.z + rp.z); let yaw = 0; try { yaw = T.camYaw(); } catch (e) {} P.ring.rotation.y = yaw; P.ar.visible = A.ok;
+      const pu = 1 + .06 * Math.sin(performance.now() / 120); P.ring.scale.set(pu, 1, pu); A.x = landed.x; A.z = landed.z; } else P.ring.visible = false;
+    void wet; G.visible = true;
+  }
+  function locAimGo() {
+    const A = LOC.aim; LOC.aim = null; if (LOC.aimG) LOC.aimG.visible = false; if (!A) return;
+    if (!A.ok) { try { uiSnd("warn"); } catch (e) {} return; }
+    if (HB.seat) { try { roomStand(); } catch (e) {} }
+    locBlink(160); HB.pos = { x: A.x, z: A.z }; try { hapt(.35, 25); } catch (e) {} try { uiSnd("press"); } catch (e) {}
+  }
+  /* a sugár célköre: ha a kéz/kontroller sugara járható felületen áll, ott látszik, hová lépsz (csippentésre / ravaszra) */
+  function locHoverRing() {
+    if (LOC.aim) return; const X = T.xr; let hit = null;
+    ["right", "left"].some((k) => { const hv = X && X.hov && X.hov[k]; if (hv && hv.kind === "obj" && hv.o && hv.o.userData && hv.o.userData.tp && hv.hit && hv.hit.point) { hit = hv.hit.point; return true; } return false; });
+    if (!hit) { if (LOC.aimG && !LOC.aim) LOC.aimG.visible = false; return; }
+    const G = locAimObj(), P = LOC.aimP; P.dots.count = 0; const rp = W.root.position, lx = hit.x - rp.x, lz = hit.z - rp.z, fl = locFloor(lx, lz);
+    const col = fl != null ? 0xffd166 : 0xe5533d; P.rM.color.setHex(col); P.dM.color.setHex(col); P.cM.color.setHex(col); P.ar.visible = fl != null;
+    P.ring.visible = true; P.ring.position.set(hit.x, (fl != null ? fl : 0) + rp.y + .02, hit.z); let yaw = 0; try { yaw = T.camYaw(); } catch (e) {} P.ring.rotation.y = yaw; P.ring.scale.set(.8, 1, .8); G.visible = true;
+  }
+  /* ---------------------------------------------------------------- a jobb kar: fordulás, teleport, megfordulás */
+  function locRight(ax, ay, S0, dt) {
+    const C = locCfg();
+    if (C.turn === "smooth") { if (Math.abs(ax) > .25 && Math.abs(ax) >= Math.abs(ay)) { locTurn(-Math.sign(ax) * (Math.abs(ax) - .25) / .75 * 1.7 * dt, true); LOC.sturn = 1; } else LOC.sturn = 0; }
+    else { if (Math.abs(ax) < .35) LOC.snapArm = true; else if (LOC.snapArm && Math.abs(ax) > .7 && Math.abs(ax) >= Math.abs(ay)) { LOC.snapArm = false; locTurn(-Math.sign(ax) * (C.deg || 30) * D2R); } }
+    if (ay < -.55 && Math.abs(ay) > Math.abs(ax)) locAim(S0, "right");
+    else if (LOC.aim && LOC.aim.key === "right" && ay > -.3) locAimGo();
+    if (ay < .4) LOC.backArm = true; else if (LOC.backArm && ay > .8 && Math.abs(ay) > Math.abs(ax)) { LOC.backArm = false; locTurn(Math.PI); }
+  }
+  /* ---------------------------------------------------------------- kézzel: csippentés + oldalra rántás = fordulás */
+  function locHands() {
+    const X = T.xr; if (!X || !X.src) return;
+    ["left", "right"].forEach((key) => {
+      const S0 = X.src[key], st = LOC.hand[key] || (LOC.hand[key] = { on: false, H: [] });
+      if (!S0 || !S0.hand || !(X.seen && X.seen[key])) { st.on = false; return; }
+      const pin = !!(X.pinch && X.pinch[key]);
+      if (pin && !st.on) { const pr = X.press && X.press[key]; st.on = true; st.H = []; st.ui = !!(pr && !(pr.kind === "obj" && pr.o && pr.o.userData && pr.o.userData.tp)); }
+      if (!pin) { st.on = false; return; }
+      if (st.ui || S0.fist || (X.drag && X.drag[key]) || S0.palmUp) return;
+      let h = null; try { h = T.headPos(); } catch (e) {} if (!h || !S0.o) return;
+      let yaw = 0; try { yaw = T.camYaw(); } catch (e) {} const lat = (S0.o.x - h.x) * Math.cos(yaw) + (S0.o.z - h.z) * -Math.sin(yaw), now = performance.now();
+      st.H.push([now, lat]); while (st.H.length > 2 && now - st.H[1][0] > 400) st.H.shift();
+      const dl = lat - st.H[0][1];
+      if (Math.abs(dl) > .09 && now - st.H[0][0] < 450) { const C = locCfg(); locTurn(-Math.sign(dl) * ((C.turn === "smooth" ? 30 : C.deg) || 30) * D2R); st.H = []; if (X.press) X.press[key] = null; }
+    });
+  }
+  /* ---------------------------------------------------------------- 2D: billentyűzet és telefonos kör-kar */
+  let _locKeysOn = false;
+  function locKeysInit() {
+    if (_locKeysOn) return; _locKeysOn = true;
+    const skip = (e) => { const t = e.target; return t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable); };
+    document.addEventListener("keydown", (e) => { if (!locActive() || T.inVR || skip(e) || HB.page === "acct") return; const k = e.code; if (/^(Key[WASDQE]|Arrow(Up|Down|Left|Right))$/.test(k)) { LOC.keys[k] = true; e.preventDefault(); } });
+    document.addEventListener("keyup", (e) => { LOC.keys[e.code] = false; });
+    window.addEventListener("blur", () => { LOC.keys = {}; });
+  }
+  function locJoy() {
+    const want = locActive() && !T.inVR && matchMedia("(pointer: coarse)").matches;
+    if (!want) { if (LOC.joyEl) LOC.joyEl.style.display = "none"; LOC.joy = null; return; }
+    if (!LOC.joyEl || !LOC.joyEl.isConnected) {
+      const host = document.getElementById("worldHud") || document.body, el = document.createElement("div"); el.className = "zloc-joy";
+      el.innerHTML = '<div class="zloc-knob"></div><span>séta</span>';
+      const css = document.getElementById("zloc-css") || document.createElement("style"); css.id = "zloc-css";
+      css.textContent = ".zloc-joy{position:fixed;left:18px;bottom:calc(196px + env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;background:radial-gradient(circle,rgba(11,47,94,.55),rgba(7,24,44,.78));border:2.5px solid rgba(228,187,99,.85);box-shadow:0 6px 22px rgba(0,0,0,.35);z-index:99995;touch-action:none;pointer-events:auto;visibility:visible!important}"
+        + ".zloc-joy span{position:absolute;left:0;right:0;bottom:-26px;text-align:center;font:700 15px Inter,system-ui,sans-serif;color:#fff;text-shadow:0 1px 4px #000}"
+        + ".zloc-knob{position:absolute;left:41px;top:41px;width:50px;height:50px;border-radius:50%;background:linear-gradient(#ffe29a,#d4a13a);box-shadow:0 3px 10px rgba(0,0,0,.4)}";
+      document.head.appendChild(css); host.appendChild(el); LOC.joyEl = el; const kn = el.firstChild;
+      const upd = (t) => { const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2; let dx = (t.clientX - cx) / 48, dy = (t.clientY - cy) / 48; const L = Math.hypot(dx, dy); if (L > 1) { dx /= L; dy /= L; } LOC.joy = { x: dx, y: dy }; kn.style.transform = `translate(${dx * 40}px,${dy * 40}px)`; };
+      el.addEventListener("pointerdown", (e) => { el.setPointerCapture(e.pointerId); upd(e); e.preventDefault(); e.stopPropagation(); });
+      el.addEventListener("pointermove", (e) => { if (LOC.joy) upd(e); e.preventDefault(); });
+      const end = () => { LOC.joy = null; kn.style.transform = ""; }; el.addEventListener("pointerup", end); el.addEventListener("pointercancel", end);
+    }
+    LOC.joyEl.style.display = "";
+  }
+  /* ---------------------------------------------------------------- rövid súgó a szemüvegben (először, 12 mp-ig, csippentésre eltűnik) */
+  function locHelp(force) {
+    if (!T.inVR) return; let seen = false; try { seen = localStorage.getItem("zephyr-mozgas-sugo") === "2"; } catch (e) {} if (seen && !force) return;
+    try { localStorage.setItem("zephyr-mozgas-sugo", "2"); } catch (e) {}
+    if (LOC.help) { try { LOC.help.parent.remove(LOC.help); } catch (e) {} LOC.help = null; }
+    const hasCtl = Object.keys(T.xr.src || {}).some((k) => T.xr.src[k] && T.xr.src[k].src && !T.xr.src[k].hand);
+    const tx = canvasTex(1400, 820, (g, w, h) => { g.fillStyle = "rgba(7,24,44,.94)"; uiRR(g, 6, 6, w - 12, h - 12, 46); g.fill(); g.lineWidth = 6; g.strokeStyle = "#E4BB63"; g.stroke();
+      g.fillStyle = "#ffd166"; g.font = `900 64px ${UIF}`; g.fillText("Így mozogsz a kikötőben", 60, 110);
+      const L = hasCtl ? [["🕹", "Bal kar", "séta arra, amerre nézel"], ["↻", "Jobb kar oldalra", "fordulás (30°)"], ["⤴", "Jobb kar előre, tartva", "teleport-ív – elengedve odaugrasz"], ["⤾", "Jobb kar hátra", "megfordulás"], ["✋", "Bal tenyér felfelé", "menü: forgás, beállítások"]]
+        : [["👉", "Mutass a pallóra, csippents", "odaugrasz (a célkör mutatja)"], ["🤏", "Csippents és rántsd oldalra", "fordulás arra"], ["✋", "Bal tenyér felfelé", "menü: ↺ ↻ ⤾, beállítások"], ["⛵", "A móló végén", "a verseny indítása"]];
+      L.forEach(([ic, a, b], i) => { const y = 200 + i * 118; g.font = `64px ${UIF}`; g.fillStyle = "#fff"; g.fillText(ic, 70, y + 18); g.font = `800 46px ${UIF}`; g.fillText(a, 170, y); g.font = `600 38px ${UIF}`; g.fillStyle = "#bcd3ea"; g.fillText(b, 170, y + 48); });
+      g.fillStyle = "#9fb6cc"; g.font = `600 30px ${UIF}`; g.fillText("csippents rá, és eltűnik · a tenyérmenüben bármikor újra megnézheted", 60, h - 34); });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 1.05 * 820 / 1400), new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false }));
+    let h = null, yaw = 0; try { h = T.headPos(); yaw = T.camYaw(); } catch (e) {} if (!h) return;
+    m.position.set(h.x - Math.sin(yaw) * 1.3, h.y - .12, h.z - Math.cos(yaw) * 1.3); m.rotation.y = yaw; m.renderOrder = 994; T.sceneEl.object3D.add(m);
+    m.userData.xr = { click: () => locHelpClose() }; try { T.xr.extra.add(m); } catch (e) {} LOC.help = m; LOC.helpT = performance.now();
+  }
+  function locHelpClose() { const m = LOC.help; if (!m) return; LOC.help = null; try { T.xr.extra.delete(m); } catch (e) {} if (m.parent) m.parent.remove(m); m.geometry.dispose(); m.material.dispose(); }
+  /* ---------------------------------------------------------------- a mozgás menüje (tenyérmenü) */
+  function locMenu() { const C = locCfg(), D = C.deg || 30;
+    return [["↺", `Balra ${D}°`, () => locTurn(D * D2R)], ["↻", `Jobbra ${D}°`, () => locTurn(-D * D2R)], ["⤾", "Megfordulok", () => locTurn(Math.PI)], ["⬆", "Előre lépek", () => hbStep(1)], ["⬇", "Hátra lépek", () => hbStep(-1)],
+      ["⚙", "Mozgás beállításai", [["↻", "Fordulás 30°", () => { locSet("turn", "snap"); locSet("deg", 30); }, C.turn === "snap" && D === 30], ["↻", "Fordulás 45°", () => { locSet("turn", "snap"); locSet("deg", 45); }, C.turn === "snap" && D === 45],
+        ["↻", "Fordulás 90°", () => { locSet("turn", "snap"); locSet("deg", 90); }, C.turn === "snap" && D === 90], ["⟳", "Folyamatos fordulás", () => locSet("turn", "smooth"), C.turn === "smooth"],
+        ["◎", C.vig ? "Alagútlátás ki" : "Alagútlátás be", () => locSet("vig", !C.vig), !!C.vig],
+        ["🐢", "Lassú séta", () => locSet("spd", 1.1), C.spd < 1.4], ["🚶", "Normál séta", () => locSet("spd", 1.7), C.spd >= 1.4 && C.spd < 2.2], ["🏃", "Gyors séta", () => locSet("spd", 2.8), C.spd >= 2.2]]],
+      ["❔", "Hogyan mozogjak?", () => locHelp(true)]]; }
+  /* ---------------------------------------------------------------- minden képkockán (a hbTick-ből) */
+  function locTick(dt) {
+    locKeysInit(); locFxTick(dt); locJoy();
+    if (LOC.help && (performance.now() - LOC.helpT > 14000 || !T.inVR)) locHelpClose();
+    if (!locActive()) { locVig(0, dt); locAimHide(); return; }
+    const C = locCfg(); let mx = 0, mz = 0; LOC.sturn = 0;
+    if (T.inVR) {
+      const X = T.xr || {}, S = X.src || {};
+      ["left", "right"].forEach((key) => { const S0 = S[key]; if (!S0 || !S0.src || S0.hand || !(X.seen && X.seen[key])) return; const gp = S0.src.gamepad; if (!gp || !gp.axes) return;
+        const ax = (gp.axes.length >= 4 ? gp.axes[2] : gp.axes[0]) || 0, ay = (gp.axes.length >= 4 ? gp.axes[3] : gp.axes[1]) || 0;
+        if (key === "left") { mx = ax; mz = ay; } else locRight(ax, ay, S0, dt); });
+      locHands(); locHoverRing();
+      if (!LOC.helpTried) { LOC.helpTried = 1; setTimeout(() => { if (locActive()) locHelp(false); }, 2500); }
+    } else {
+      const K = LOC.keys; mz = (K.KeyS || K.ArrowDown ? 1 : 0) - (K.KeyW || K.ArrowUp ? 1 : 0); mx = (K.KeyD ? 1 : 0) - (K.KeyA ? 1 : 0);
+      const tr = (K.KeyQ || K.ArrowLeft ? 1 : 0) - (K.KeyE || K.ArrowRight ? 1 : 0); if (tr) { locTurn(tr * 1.6 * dt, true); }
+      if (LOC.joy) { mx = LOC.joy.x; mz = LOC.joy.y; }
+    }
+    const m = Math.hypot(mx, mz);
+    if (m > .18) {
+      if (HB.seat) { try { roomStand(); } catch (e) {} return; }
+      const k = Math.min(1, (m - .18) / .72), sp = C.spd * (.35 + .65 * k) * (T.inVR ? 1 : 1.25); let yaw = 0; try { yaw = T.camYaw(); } catch (e) {}
+      const fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw), f = -mz / m, r = mx / m;
+      locMove((fx * f + rx * r) * sp * dt, (fz * f + rz * r) * sp * dt); LOC.mv = 1;
+    } else LOC.mv = 0;
+    locVig(C.vig && (LOC.mv || LOC.sturn) ? .9 : 0, dt);
+  }
+  W._loc = { LOC, move: (dx, dz) => locMove(dx, dz), floor: locFloor, blocked: locBlocked, turn: locTurn, cfg: locCfg, help: locHelp, aim: locAim, aimGo: locAimGo, right: locRight };   /* tesztekhez */
+  /* =================================================================== 2/T. A RAJT A MÓLÓ VÉGÉN – VERSENYIRODA (2026. nov. 15. este, a tulajdonos kérése:
+     „a kikötőben kezdődik a játék, és a móló végén ott a vitorlázás játék megkezdése, ahol a hajóválasztás és a többi veszi kezdetét”)
+     A VR Zephyr Games a kikötői téren indul (a móló tövében). A móló végén T alakú pallófej, rajta a versenyiroda: fehér, üvegfalas pavilon
+     „BALATON SAILING VR · VERSENYIRODA” homlokzattal, bent pult rajtórával, serleggel, rádióval, távcsővel, a falon a mai pályák és a Balaton-térkép;
+     előtte a RAJTPULT a nagy arany gombbal – rábökve indul a verseny menüje (játékmód → hajó → pálya → kapitányi tájékoztató).
+     Mellette a rendezőhajók jelzőárboca a jelzőzászlókkal és a viharjelző lámpával, a sarkon réz rajtágyú, a korlátokon mentőöv, nemzeti és Zephyr-zászló.
+     Futam után a „Kikötő” gomb ide, a versenyirodához hoz vissza. */
+  const STN = { z0: -44, z1: -52, x: 7, F: .66 };
+  function hbStation(env) {
+    const G = new THREE.Group(); G.name = "versenyiroda"; env.add(G); STN.G = G; const F = STN.F, zc = (STN.z0 + STN.z1) / 2, D = STN.z0 - STN.z1;
+    const plank = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#8a6a4a"; g.fillRect(0, 0, w, h); for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? "#7f5f40" : "#93724f"; g.fillRect(0, k * h / 8, w, h / 8 - 3); g.fillStyle = "rgba(30,18,8,.6)"; g.fillRect(0, (k + 1) * h / 8 - 3, w, 3); }
+      for (let k = 0; k < 160; k++) { g.fillStyle = `rgba(40,25,10,${rand() * .2})`; g.fillRect(rand() * w, rand() * h, 20 + rand() * 60, 1); } }, { repeat: [7, 4] });
+    const deck = std({ map: plank, roughness: .9 }), post = std({ color: "#5d4630", roughness: .95 }), white = std({ color: "#f5f4ef", roughness: .55 }), navy = std({ color: "#0b2f5e", roughness: .5 }),
+      gold = std({ color: "#d4a13a", metalness: .8, roughness: .28 }), steel = std({ color: "#c9ccd0", metalness: .75, roughness: .3 }), dark = std({ color: "#1d232b", roughness: .5 });
+    /* T alakú pallófej (14 × 8 m) cölöpökön, vastag peremgerendával */
+    mesh(new THREE.BoxGeometry(2 * STN.x, .22, D).translate(0, F - .11, zc), deck, G);
+    mesh(new THREE.BoxGeometry(2 * STN.x + .2, .26, .18).translate(0, F - .2, STN.z1 - .05), post, G); [-1, 1].forEach((s) => mesh(new THREE.BoxGeometry(.18, .26, D).translate(s * (STN.x + .05), F - .2, zc), post, G));
+    for (let x = -STN.x + .3; x <= STN.x; x += 2.3) for (let z = STN.z0 - .3; z >= STN.z1; z -= 2.5) mesh(new THREE.CylinderGeometry(.13, .15, 2.6, 8).translate(x, F - 1.4, z), post, G);
+    /* korlát (fa kapaszkodó, fém oszlopok) – a pavilon előtti szabad rész három oldalán, a móló csatlakozásánál nyitva */
+    { const rail = (x0, z0, x1, z1) => { const L = Math.hypot(x1 - x0, z1 - z0); const r = mesh(new THREE.BoxGeometry(.08, .07, L), post, G); r.position.set((x0 + x1) / 2, F + 1.02, (z0 + z1) / 2); r.rotation.y = Math.atan2(x1 - x0, z1 - z0);
+        const r2 = mesh(new THREE.BoxGeometry(.026, .026, L), steel, G); r2.rotation.y = r.rotation.y; r2.position.set((x0 + x1) / 2, F + .55, (z0 + z1) / 2);
+        for (let k = 0; k <= L + .01; k += 1.25) mesh(new THREE.CylinderGeometry(.025, .025, 1.02, 8).translate(x0 + (x1 - x0) * k / L, F + .51, z0 + (z1 - z0) * k / L), steel, G); };
+      rail(-STN.x, STN.z0, -1.6, STN.z0); rail(1.6, STN.z0, STN.x, STN.z0); rail(-STN.x, STN.z0, -STN.x, STN.z1); rail(STN.x, STN.z0, STN.x, STN.z1); rail(-STN.x, STN.z1, STN.x, STN.z1); }
+    /* festett rajtvonal és „RAJT” felirat a pallón, a móló felől érkezve */
+    { const t = canvasTex(1024, 256, (g, w, h) => { g.clearRect(0, 0, w, h); g.fillStyle = "rgba(255,209,102,.92)"; g.fillRect(0, 10, w, 16); g.font = `900 150px ${UIF}`; g.textAlign = "center"; g.fillStyle = "rgba(255,255,255,.88)"; g.fillText("RAJT", w / 2, 200); });
+      const p = mesh(new THREE.PlaneGeometry(5.2, 1.3), basic({ map: t, transparent: true, depthWrite: false }), G); p.rotation.x = -Math.PI / 2; p.position.set(0, F + .006, STN.z0 - 1.0); p.renderOrder = 2; }
+    /* ---- a VERSENYIRODA: fehér pavilon, üveg hátfal a tóra, nyitott eleje lapos, előreugró tetővel ---- */
+    const px0 = -4.2, px1 = 4.2, pz0 = -48.6, pz1 = -51.7, PH = 2.85;
+    STN.pav = { x0: px0, x1: px1, z0: pz0, z1: pz1 };
+    { const wallT = canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#f3f1ea"; g.fillRect(0, 0, w, h); for (let y = 0; y < h; y += 26) { g.fillStyle = "rgba(0,0,0,.07)"; g.fillRect(0, y, w, 2); g.fillStyle = "rgba(255,255,255,.5)"; g.fillRect(0, y + 2, w, 1); } }, { repeat: [1, 4] });
+      const wm = std({ map: wallT, roughness: .7 });
+      [px0, px1].forEach((x, i) => { mesh(new THREE.BoxGeometry(.16, PH, pz0 - pz1).translate(x + (i ? -.08 : .08), F + PH / 2, (pz0 + pz1) / 2), wm, G); mesh(new THREE.BoxGeometry(.2, .2, pz0 - pz1 + .1).translate(x + (i ? -.08 : .08), F + .1, (pz0 + pz1) / 2), navy, G); });
+      /* üveg hátfal fehér keretben, alul mellvéddel */
+      mesh(new THREE.BoxGeometry(px1 - px0, .9, .16).translate(0, F + .45, pz1 + .08), wm, G); mesh(new THREE.BoxGeometry(px1 - px0, .3, .18).translate(0, F + PH - .15, pz1 + .08), wm, G);
+      const glass = new THREE.MeshStandardMaterial({ color: "#a9d4ec", roughness: .05, metalness: .1, transparent: true, opacity: .28, depthWrite: false }); W.disposables.push(glass);
+      mesh(new THREE.PlaneGeometry(px1 - px0 - .2, PH - 1.2).translate(0, F + .9 + (PH - 1.2) / 2, pz1 + .1), glass, G);
+      for (let k = 0; k <= 4; k++) mesh(new THREE.BoxGeometry(.07, PH - 1.2, .1).translate(px0 + .1 + k * (px1 - px0 - .2) / 4, F + .9 + (PH - 1.2) / 2, pz1 + .1), white, G);
+      /* lapos tető, előreugró ereszfallal; a homlokzati sávon a felirat */
+      mesh(new THREE.BoxGeometry(px1 - px0 + .9, .16, pz0 - pz1 + 1.9).translate(0, F + PH + .08, (pz0 + pz1) / 2 + .5), white, G);
+      mesh(new THREE.BoxGeometry(px1 - px0 + 1.0, .62, .14).translate(0, F + PH - .05, pz0 + 1.47), navy, G);
+      const sg = canvasTex(2048, 256, (g, w, h) => { g.fillStyle = "#0b2f5e"; g.fillRect(0, 0, w, h); g.strokeStyle = "#d4a13a"; g.lineWidth = 8; g.strokeRect(10, 10, w - 20, h - 20);
+        g.textAlign = "center"; g.fillStyle = "#ffd166"; g.font = `900 120px ${UIF}`; g.fillText("BALATON SAILING VR", w / 2, 135); g.fillStyle = "#ffffff"; g.font = `700 54px ${UIF}`; g.fillText("VERSENYIRODA  ·  RAJT  ·  ZEPHYR KIKÖTŐ", w / 2, 212); });
+      const s = mesh(new THREE.PlaneGeometry(px1 - px0 + .9, .56), basic({ map: sg }), G); s.position.set(0, F + PH - .05, pz0 + 1.55);
+      /* karcsú oszlopok az eresz alatt */
+      [px0 + .25, px1 - .25].forEach((x) => mesh(new THREE.CylinderGeometry(.06, .07, PH, 12).translate(x, F + PH / 2, pz0 + 1.3), white, G));
+      /* belső mennyezet-lámpák */
+      for (let k = -1; k <= 1; k++) { const l = mesh(new THREE.CylinderGeometry(.2, .2, .04, 20).translate(k * 2.6, F + PH - .02, (pz0 + pz1) / 2), std({ color: "#fff8e6", emissive: "#ffe9b8", emissiveIntensity: .8 }), G); void l; } }
+    /* pult a hátfal előtt: rajtóra, serleg, rádió, távcső, zászlós doboz */
+    { const cz = pz1 + .75, wood = std({ color: "#7a5636", roughness: .7 }); mesh(new THREE.BoxGeometry(5.6, .95, .7).translate(0, F + .475, cz), wood, G); mesh(new THREE.BoxGeometry(5.8, .06, .8).translate(0, F + .98, cz), std({ color: "#3b2a1c", roughness: .45 }), G);
+      /* rajtóra: piros számjegyek „5:00” fekete keretben */
+      const ck = canvasTex(512, 220, (g, w, h) => { g.fillStyle = "#0a0a0a"; g.fillRect(0, 0, w, h); g.fillStyle = "#ff3b2f"; g.font = `900 170px ${UIF}`; g.textAlign = "center"; g.shadowColor = "#ff3b2f"; g.shadowBlur = 24; g.fillText("5:00", w / 2, 175); });
+      const cb = mesh(new THREE.BoxGeometry(1.1, .5, .18).translate(-1.4, F + 1.28, cz - .05), dark, G); void cb; const cs = mesh(new THREE.PlaneGeometry(1.0, .43), basic({ map: ck }), G); cs.position.set(-1.4, F + 1.28, cz + .045); STN.clock = { tex: ck, t: 0 };
+      /* serleg */
+      { const cup = new THREE.Group(); cup.position.set(1.5, F + 1.01, cz); G.add(cup); const pts = [[.0, 0], [.13, 0], [.13, .05], [.05, .08], [.04, .2], [.06, .24], [.16, .3], [.19, .48], [.2, .52], [.0, .52]].map(([r, y]) => new THREE.Vector2(r, y));
+        mesh(new THREE.LatheGeometry(pts, 28), gold, cup); [-1, 1].forEach((s) => { const hd = mesh(new THREE.TorusGeometry(.08, .014, 8, 20, Math.PI), gold, cup); hd.position.set(s * .2, .4, 0); hd.rotation.z = s * Math.PI / 2; }); }
+      /* rádió (VHF) antennával, távcső */
+      mesh(new THREE.BoxGeometry(.32, .16, .2).translate(.4, F + 1.09, cz), dark, G); mesh(new THREE.CylinderGeometry(.008, .008, .36, 6).translate(.52, F + 1.35, cz), dark, G);
+      [-.06, .06].forEach((dx) => { const b = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), dark, G); b.rotation.z = Math.PI / 2; b.position.set(2.35 + dx * 0, F + 1.06, cz + dx); });
+      /* jelzőzászlós láda */ mesh(new THREE.BoxGeometry(.7, .3, .4).translate(-2.4, F + 1.16, cz), std({ color: "#a01f1f", roughness: .6 }), G); }
+    /* a falon: MAI FUTAMOK tábla (bal) és a Balaton-térkép (jobb) */
+    { const CN = ["Felszél–hátszél", "Háromszög", "Szlalom", "Tihanyi kör", "Nagy ív"];
+      const bt = canvasTex(768, 768, (g, w, h) => { g.fillStyle = "#123a2a"; g.fillRect(0, 0, w, h); g.strokeStyle = "#8a6a4a"; g.lineWidth = 26; g.strokeRect(13, 13, w - 26, h - 26); g.fillStyle = "#ffd166"; g.font = `900 64px ${UIF}`; g.fillText("MAI FUTAMOK", 60, 120);
+        g.font = `700 46px ${UIF}`; CN.forEach((n, i) => { g.fillStyle = "#f2f2ea"; g.fillText(`${i + 1}. ${n}`, 60, 220 + i * 92); }); g.fillStyle = "#9fd0b4"; g.font = `600 36px ${UIF}`; g.fillText("szél: ÉNy 3–4 Bf · rajt: 5 perc", 60, h - 60); });
+      const b = mesh(new THREE.PlaneGeometry(1.6, 1.6), basic({ map: bt }), G); b.position.set(px0 + .2, F + 1.75, (pz0 + pz1) / 2); b.rotation.y = Math.PI / 2;
+      const mt = canvasTex(1024, 640, (g, w, h) => { g.fillStyle = "#f4ecd8"; g.fillRect(0, 0, w, h); g.strokeStyle = "#5d4630"; g.lineWidth = 22; g.strokeRect(11, 11, w - 22, h - 22);
+        g.fillStyle = "#7fb4d8"; g.beginPath(); const P = [[90, 470], [200, 420], [330, 400], [470, 330], [600, 300], [720, 250], [830, 200], [930, 160], [945, 210], [860, 280], [760, 330], [640, 390], [520, 450], [380, 500], [240, 540], [120, 560]]; g.moveTo(P[0][0], P[0][1]); P.forEach(([x, y]) => g.lineTo(x, y)); g.closePath(); g.fill();
+        g.fillStyle = "#3b2a1c"; g.font = `800 40px ${UIF}`; g.fillText("BALATON", 80, 80); g.font = `600 28px ${UIF}`; [["Keszthely", 70, 520], ["Badacsony", 250, 590], ["Tihany", 600, 270], ["Zamárdi ⚓", 640, 460], ["Siófok", 790, 380], ["Kenese", 880, 140]].forEach(([n, x, y]) => g.fillText(n, x, y));
+        g.fillStyle = "#d61f26"; g.beginPath(); g.arc(655, 405, 12, 0, TAU); g.fill(); });
+      const mp = mesh(new THREE.PlaneGeometry(1.9, 1.19), basic({ map: mt }), G); mp.position.set(px1 - .2, F + 1.75, (pz0 + pz1) / 2); mp.rotation.y = -Math.PI / 2; }
+    /* ---- a RAJTPULT: sötétkék talapzat arany szegéllyel, ferde kijelző és a NAGY ARANY GOMB ---- */
+    { const P = new THREE.Group(); P.position.set(0, F, -46.9); G.add(P); STN.pult = P;
+      mesh(new THREE.BoxGeometry(.9, .95, .55).translate(0, .475, 0), navy, P); mesh(new THREE.BoxGeometry(.96, .05, .6).translate(0, .02, 0), gold, P);
+      const top = new THREE.Group(); top.position.set(0, .98, 0); top.rotation.x = .5; P.add(top); mesh(new THREE.BoxGeometry(1.0, .07, .66), navy, top); mesh(new THREE.BoxGeometry(1.04, .02, .7).translate(0, -.04, 0), gold, top);
+      const sc = canvasTex(1024, 640, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#0e3b6e"); gr.addColorStop(1, "#06182e"); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+        g.fillStyle = "#ffd166"; g.font = `900 92px ${UIF}`; g.textAlign = "center"; g.fillText("⛵ VERSENYRE FEL!", w / 2, 120); g.fillStyle = "#fff"; g.font = `700 50px ${UIF}`; g.fillText("játékmód · hajó · pálya · tájékoztató", w / 2, 210);
+        g.fillStyle = "#bcd3ea"; g.font = `600 44px ${UIF}`; g.fillText("bökj a nagy arany gombra", w / 2, 300); });
+      const scr = mesh(new THREE.PlaneGeometry(.86, .34), basic({ map: sc }), top); scr.rotation.x = -Math.PI / 2; scr.position.set(0, .037, -.13);
+      const btnM = std({ color: "#f2c14e", metalness: .55, roughness: .28, emissive: "#ffb000", emissiveIntensity: .35 });
+      const bt = mesh(new THREE.CylinderGeometry(.13, .14, .07, 40), btnM, top); bt.position.set(0, .07, .18); mesh(new THREE.TorusGeometry(.15, .018, 10, 40).rotateX(Math.PI / 2).translate(0, .045, .18), gold, top);
+      STN.btn = bt; STN.btnM = btnM;
+      /* fénykör a padlón a pult körül */
+      const glT = canvasTex(256, 256, (g, w, h) => { const r = g.createRadialGradient(w / 2, h / 2, w * .2, w / 2, h / 2, w / 2); r.addColorStop(0, "rgba(255,209,102,0)"); r.addColorStop(.75, "rgba(255,209,102,.45)"); r.addColorStop(1, "rgba(255,209,102,0)"); g.fillStyle = r; g.fillRect(0, 0, w, h); });
+      const gl = mesh(new THREE.PlaneGeometry(2.6, 2.6), basic({ map: glT, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }), P); gl.rotation.x = -Math.PI / 2; gl.position.y = .01; STN.glow = gl;
+      /* a gomb (és az egész pult) rámutatható / rábökhető – kézzel, kontrollerrel, egérrel, ujjal */
+      const hit = mesh(new THREE.BoxGeometry(1.1, 1.5, .9).translate(0, .75, 0), basic({ visible: false }), P); hit.material.visible = false;
+      hit.userData.xr = { hover: (on) => { STN.hov = on; }, click: () => hbStationGo() }; T.xr.extra.add(hit); W.objs.push(hit); STN.hit = hit;
+      const lbl = labelSprite(["⛵ Balaton Sailing VR", "a verseny itt indul – bökj a nagy gombra"], { size: 1.7, fs: 60, w: 900 }); lbl.position.set(0, 2.6, 0); P.add(lbl); STN.lbl = lbl; }
+    /* ---- jelzőárboc (rendezőhajó-zászlók) a viharjelző lámpával a tetején ---- */
+    { const M = new THREE.Group(); M.position.set(5.7, F, -45.3); G.add(M); mesh(new THREE.CylinderGeometry(.07, .1, 8.2, 12).translate(0, 4.1, 0), white, M); mesh(new THREE.BoxGeometry(2.4, .07, .07).translate(0, 6.3, 0), white, M);
+      [[-1.1, "P"], [-.4, "E"], [.4, "L"], [1.1, "Y"]].forEach(([x, f], i) => { const ft = canvasTex(96, 64, (g, w, h) => { try { icsFlag(g, f, w, h); } catch (e) { g.fillStyle = "#1f4fa0"; g.fillRect(0, 0, w, h); } });
+        mesh(new THREE.CylinderGeometry(.006, .006, 1.1 + i * .2, 4).translate(x, 6.3 - (1.1 + i * .2) / 2, 0), dark, M); const fl = mesh(new THREE.PlaneGeometry(.66, .44, 6, 1), std({ map: ft, side: THREE.DoubleSide, roughness: .8 }), M);
+        fl.position.set(x + .34, 6.0 - i * .2, 0); fl.userData.base = fl.geometry.attributes.position.array.slice(); (STN.flags = STN.flags || []).push(fl); });
+      mesh(new THREE.BoxGeometry(.42, .42, .42).translate(0, 8.4, 0), dark, M);
+      const lamp = mesh(new THREE.CylinderGeometry(.22, .22, .5, 14).translate(0, 8.85, 0), basic({ color: "#4a4a40" }), M); mesh(new THREE.ConeGeometry(.3, .25, 14).translate(0, 9.25, 0), dark, M);
+      const glow = glowSprite("#ffcc22", 2.6); glow.position.set(0, 8.85, 0); glow.userData.night = 0; M.add(glow); glow.visible = false; HB.storm = { lamp, glow };
+      const sg = canvasTex(512, 160, (g, w, h) => { g.fillStyle = "#f2c21a"; g.fillRect(0, 0, w, h); g.fillStyle = "#14161b"; g.font = "900 52px system-ui, sans-serif"; g.textAlign = "center"; g.fillText("VIHARJELZŐ", w / 2, 66); g.font = "700 30px system-ui, sans-serif"; g.fillText("45/perc: elsőfok · 90/perc: másodfok", w / 2, 122); });
+      [1, -1].forEach((s) => { const pl = mesh(new THREE.PlaneGeometry(1.2, .38), basic({ map: sg }), M); pl.position.set(0, 1.9, s * .11); if (s < 0) pl.rotation.y = Math.PI; }); }
+    /* ---- réz rajtágyú fa lövegtalpon, a tó felé ---- */
+    { const C = new THREE.Group(); C.position.set(-5.6, F, -45.6); C.rotation.y = .5; G.add(C); const brass = std({ color: "#b8893a", metalness: .85, roughness: .3 }), oak = std({ color: "#6b4a2a", roughness: .8 });
+      mesh(new THREE.BoxGeometry(.5, .28, .9).translate(0, .3, 0), oak, C); [-1, 1].forEach((s) => [-.32, .32].forEach((z) => { const wh = mesh(new THREE.CylinderGeometry(.16, .16, .07, 16), oak, C); wh.rotation.z = Math.PI / 2; wh.position.set(s * .29, .16, z); }));
+      const bar = mesh(new THREE.CylinderGeometry(.09, .14, 1.05, 20), brass, C); bar.rotation.x = Math.PI / 2 - .12; bar.position.set(0, .55, -.15); mesh(new THREE.SphereGeometry(.15, 16, 12).translate(0, .6, .38), brass, C);
+      mesh(new THREE.TorusGeometry(.1, .02, 8, 20).translate(0, .52, -.62), brass, C); }
+    /* ---- zászlók a sarkokon (a móló végéről ide költöztek) és mentőöv ---- */
+    [[-6.6, STN.z1 + .4, 1], [6.6, STN.z1 + .4, 0]].forEach(([x, z, i], k) => { const fp = mesh(new THREE.CylinderGeometry(.035, .04, 6, 8), white, G); fp.position.set(x, F + 3, z);
+      const ft = canvasTex(192, 128, (g) => { if (i) { g.fillStyle = "#ce2939"; g.fillRect(0, 0, 192, 43); g.fillStyle = "#fff"; g.fillRect(0, 43, 192, 42); g.fillStyle = "#477050"; g.fillRect(0, 85, 192, 43); } else { g.fillStyle = "#0b2f5e"; g.fillRect(0, 0, 192, 128); g.fillStyle = "#ffd166"; g.font = `900 40px ${UIF}`; g.textAlign = "center"; g.fillText("ZEPHYR", 96, 78); } });
+      const fl = mesh(new THREE.PlaneGeometry(1.4, .9, 8, 1), basic({ map: ft, side: THREE.DoubleSide }), G); fl.position.set(x + .72, F + 5.45, z); fl.userData.base = fl.geometry.attributes.position.array.slice(); HB["flag" + k] = fl; });
+    { const ring = mesh(new THREE.TorusGeometry(.32, .08, 10, 24), std({ color: "#ff7a1a", roughness: .5 }), G); ring.position.set(STN.x + .05, F + .8, -47.5); ring.rotation.y = Math.PI / 2; }
+    /* járható felület + falak (a pavilon nyitott eleje az „ajtó”), a pult nem átjárható */
+    hbTpSurf(env, 0, zc, 2 * STN.x - .3, D - .3, .67, .3);
+    STN.house = { id: "stn", kind: "pavilon", box: { x0: px0, x1: px1, z0: pz1, z1: pz0 }, dr: { wall: "s", c: 0, w: px1 - px0 - .5 } };
+    HB.solids = [{ x0: -.55, x1: .55, z0: -47.25, z1: -46.55 }];
+  }
+  function hbStationTick(dt) {
+    if (!STN.G || !STN.btnM) return; const t = W.t, hp = HB.pos || { x: 0, z: 0 }, near = Math.hypot(hp.x, hp.z + 46.9);
+    STN.btnM.emissiveIntensity = (STN.hov ? 1.1 : .35) + .3 * Math.sin(t * 3.2); STN.btn.position.y = STN.hov ? .055 : .07;
+    if (STN.glow) STN.glow.material.opacity = .55 + .35 * Math.sin(t * 2.2);
+    if (STN.lbl) STN.lbl.visible = HB.walk && near < 30 && near > 3.6;
+    (STN.flags || []).forEach((f, i) => { const pa = f.geometry.attributes.position, b0 = f.userData.base; for (let k = 0; k < pa.count; k++) { const x = b0[k * 3]; pa.array[k * 3 + 2] = Math.sin(x * 6 - t * 5 - i) * .05 * (x + .34); } pa.needsUpdate = true; });
+    /* a rajtóra visszaszámol (5:00 → 0:00, aztán újra) – a hangulatért */
+    if (STN.clock && (STN.clock.t += dt) > 1) { STN.clock.t = 0; const s = 300 - Math.floor(W.t) % 300, tx = STN.clock.tex, g = tx._canvas.getContext("2d"); g.fillStyle = "#0a0a0a"; g.fillRect(0, 0, 512, 220); g.fillStyle = "#ff3b2f"; g.font = `900 170px ${UIF}`; g.textAlign = "center"; g.shadowColor = "#ff3b2f"; g.shadowBlur = 24; g.fillText(Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"), 256, 175); g.shadowBlur = 0; tx.needsUpdate = true; }
+  }
+  /* a rajthoz (a móló végére, a pult elé, arccal a pult felé) */
+  function hbToStation() { try { roomOut(); } catch (e) {} if (!HB.walk) hbWalk(true); try { locBlink(200); } catch (e) {} HB.pos = { x: 0, z: -45.5 }; faceYaw(0); }
+  /* a nagy gomb: a verseny menüje (játékmód → hajó → pálya → tájékoztató) – a fekete bemutatóterem ott nyílik, ahol állsz */
+  function hbStationGo() { try { uiSnd("success"); } catch (e) {} try { hapt(.5, 40); } catch (e) {} HB.atStation = true; faceYaw(0); wzGo(1); }
 
   /* =================================================================== 3. A HÁZ MAKETTJE – varázslatos helyszínen, asztaltól életnagyságig (2026. nov. 6., 2. változat)
      • Helyszín (2026. nov. 6-tól): regatta-bója a Balaton közepén, körülötte életnagyságú verseny és jelenetek (06d); a part ~260 m-re (06c) – valódi napállás szerinti égbolt, a túlpart nevezetességeivel, élővilággal.
@@ -16392,6 +16765,8 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     if (W.hud) W.hud.el.style.display = on ? "none" : "";
     /* a szemmagasság VR-ben más – újraépítjük, de csak ha már van fej-póz (különben 0 m-t mérnénk) */
     const k = W.kind, tok = W.gen; let n = 0;
+    /* 2026-11-15 este: a kikötőben ott folytatódik, ahol voltál (séta vagy a verseny menüje) */
+    if (k === "harbor" && W._hb && W._hb.HB) { const H = W._hb.HB; W._hbState = { pos: H.pos ? { x: H.pos.x, z: H.pos.z } : null, wiz: !!H.wizOn, step: H.page && /^w(\d)/.test(H.page) ? +H.page.slice(1, 2) : 1, yaw: (() => { try { return T.camYaw(); } catch (e) { return 0; } })() }; }
     const tryIt = () => { if (tok !== W.gen) return; if (!on || T.headY() > .5 || ++n > 90) { W.close(null, true); W._raceGo = k === "race"; W.open(k); } else T.xrRaf(tryIt); };
     tryIt();
   };

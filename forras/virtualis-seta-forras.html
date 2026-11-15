@@ -18803,7 +18803,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]); } catch (e) {}
     try {
       await Promise.race([buildScene(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 12000))]);
-      if (window.ZEPHYR_GAMES) { try { sky.setAttribute("color", "#0a1c34"); } catch (e) {} } else await go(firstId, true);   /* VR Zephyr Games: nincs séta-panoráma */
+      if (window.ZEPHYR_GAMES) { try { sky.setAttribute("color", "#0a1c34"); } catch (e) {} try { animateFade(0, 350); } catch (e) {} } else await go(firstId, true);   /* 2026-11-15 este: a játékoldalon nincs panoráma-betöltés, ezért a sötét áttűnő gömb (fade) eddig a kamerán maradt – a 3D-kép 2D-ben teljesen sötét volt */   /* VR Zephyr Games: nincs séta-panoráma */
       wireEdit3D();
       try { initCube3D(); } catch (e) {}
     } catch (e) { switchToFlat(firstId); try { initCube3D(); } catch (e2) {} return; }
