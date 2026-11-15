@@ -185,7 +185,7 @@
       const m = (a0 + a1) / 2; g.translate(ax === "x" ? m : c, y, ax === "x" ? c : m); logParts.push([g, M0]);
       (ends || [0, 1]).forEach((e) => { const cg = new THREE.CircleGeometry(r * .98, 12); const at = e ? a1 : a0; if (ax === "x") { cg.rotateY(e ? Math.PI / 2 : -Math.PI / 2); cg.translate(at, y, c); } else { cg.rotateY(e ? 0 : Math.PI); cg.translate(c, y, at); } endParts.push([cg, M0]); }); };
     /* fal: a nyílásoknál (ajtó, ablak) a rönk megszakad */
-    const wallLogs = (ax, c, a0, a1, phase, holes) => { const n = Math.round(Hh / (2 * LR)); for (let i = 0; i < n; i++) { const y = F + LR + i * 2 * LR + (phase ? LR : 0), r = LR * (.94 + .1 * Math.sin(i * 2.7 + c)); if (y > F + Hh + LR * .5) break;
+    const wallLogs = (ax, c, a0, a1, phase, holes) => { const n = Math.round(Hh / (2 * LR)); for (let i = 0; i < n; i++) { const y = F + LR + i * 2 * LR + (phase ? LR : 0), r = LR * (1.04 + .05 * Math.sin(i * 2.7 + c));   /* a rönkök fedik egymást – a réseken nem látszik át az ég */ if (y > F + Hh + LR * .5) break;
         let segs = [[a0 - .32, a1 + .32]]; (holes || []).forEach(([h0, h1, y0, y1]) => { if (y > F + y0 - LR * .6 && y < F + y1 + LR * .6) segs = segs.flatMap(([s0, s1]) => [[s0, Math.min(s1, h0)], [Math.max(s0, h1), s1]].filter(([q0, q1]) => q1 - q0 > .05)); });
         segs.forEach(([s0, s1]) => addLog(ax, c, s0, s1, y, r)); } };
     wallLogs("x", B.z0, B.x0, B.x1, 0, []); wallLogs("x", B.z1, B.x0, B.x1, 0, [[wx0, wx1, wy0, wy1]]); wallLogs("z", B.x0, B.z0, B.z1, 1, [[dz0, dz1, -1, 2.2]]); wallLogs("z", B.x1, B.z0, B.z1, 1, [[ex0, ex1, wy0, wy1]]);
@@ -201,9 +201,10 @@
         g.fillStyle = gr; g.fillRect(x, y, ww, 34); g.fillStyle = "rgba(20,14,8,.6)"; g.fillRect(x, y + 30, ww, 4); g.fillRect(x + ww - 2, y, 2, 34); if (Math.random() < .15) { g.fillStyle = "rgba(90,110,60,.35)"; g.fillRect(x + 4, y + 4, ww * .6, 12); } } }, { repeat: [3, 2] });
     const shM = std({ map: shT, roughness: .95, side: THREE.DoubleSide }), rl = B.x1 - B.x0 + 1.2;
     [-1, 1].forEach((s2) => { const L = Math.hypot(rw, rH) + .25, r = mesh(new THREE.BoxGeometry(rl, .09, L), shM, G); r.position.set((B.x0 + B.x1) / 2, F + Hh + rH / 2 + .1, zc + s2 * (rw / 2 + .05)); r.rotation.x = s2 * Math.atan2(rH, rw);
+      const inr = mesh(new THREE.BoxGeometry(rl - .3, .03, L - .25), deckM, G); inr.position.copy(r.position); inr.rotation.copy(r.rotation); inr.translateY(-.07);   /* belül deszka-mennyezet a zsindely alatt */
       const fb = mesh(new THREE.BoxGeometry(rl, .16, .05), std({ color: "#3a2a1c", roughness: .9 }), G); fb.position.set((B.x0 + B.x1) / 2, F + Hh - .02, zc + s2 * (rw + .1)); });
-    { const stone = std({ map: canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#6c6a66"; g.fillRect(0, 0, w, h); for (let r = 0; r < 8; r++) for (let c = 0; c < 5; c++) { g.fillStyle = `rgb(${rr(110, 160) | 0},${rr(105, 150) | 0},${rr(95, 140) | 0})`; uiRR(g, c * 52 + (r % 2) * 26 - 10 + rr(-3, 3), r * 32 + 2, 48, 28, 8); g.fill(); } }), roughness: .95 });
-      mesh(new THREE.BoxGeometry(.55, 1.6, .55).translate(B.x1 - .9, F + Hh + .9, zc - 1.1), stone, G); mesh(new THREE.BoxGeometry(.65, .1, .65).translate(B.x1 - .9, F + Hh + 1.72, zc - 1.1), stone, G); }
+    { const stone = std({ map: canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#6c6a66"; g.fillRect(0, 0, w, h); for (let r = 0; r < 8; r++) for (let c = 0; c < 5; c++) { { const v = rr(95, 150) | 0; g.fillStyle = `rgb(${v + 6},${v},${v - 8})`; } uiRR(g, c * 52 + (r % 2) * 26 - 10 + rr(-3, 3), r * 32 + 2, 48, 28, 8); g.fill(); } }), roughness: .95 });
+      mesh(new THREE.BoxGeometry(.55, 1.0, .55).translate(B.x1 - .9, F + Hh + 1.6, zc - 1.1), stone, G); mesh(new THREE.BoxGeometry(.65, .1, .65).translate(B.x1 - .9, F + Hh + 2.12, zc - 1.1), stone, G);   /* a kémény a tető síkja fölött indul – belülről nem látszik */ }
     /* ajtó- és ablakkeretek (vastag gyalult gerenda), nyitott deszkaajtó, üveg */
     const frameM = std({ color: "#6b4a2a", roughness: .8 }), glass = new THREE.MeshStandardMaterial({ color: "#bfe3f5", roughness: .05, metalness: .2, transparent: true, opacity: .22, depthWrite: false }); W.disposables.push(glass);
     const frame = (ax, c, a0, a1, y0, y1, win) => { const L = a1 - a0, m = (a0 + a1) / 2, put = (w, h, d, x, y, z) => mesh(new THREE.BoxGeometry(w, h, d).translate(x, y, z), frameM, G), X = (a) => (ax === "x" ? a : c), Z = (a) => (ax === "x" ? c : a), dd = th + .06;
@@ -254,8 +255,9 @@
     [-1, 1].forEach((sd) => { const og = new THREE.Group(); og.position.set(B.x0 + LR + .08, F + 1.8, .85); og.rotation.set(sd * .7, Math.PI / 2, 0); G.add(og); const ow = std({ color: "#b98a55", roughness: .7 });
       mesh(new THREE.CylinderGeometry(.025, .025, 2.0, 8), ow, og); const bl = mesh(new THREE.BoxGeometry(.16, .5, .02).translate(0, -1.15, 0), std({ color: sd > 0 ? "#c8102e" : "#1f3a6a", roughness: .6 }), og); void bl; });
     /* halászháló parafa úszókkal a sarokban */
-    { const parts = [], cx = B.x1 - LR - .1, z0 = B.z0 + .3; for (let i = 0; i <= 8; i++) { const a = new THREE.Vector3(cx, F + 2.7, z0 + i * .14), b = new THREE.Vector3(cx - .1, F + .4 + Math.sin(i) * .1, z0 + i * .12 + .2); const g = new THREE.CylinderGeometry(.004, .004, a.distanceTo(b), 3); g.translate(0, a.distanceTo(b) / 2, 0); g.lookAt(b.clone().sub(a)); g.rotateX(Math.PI / 2); g.translate(a.x, a.y, a.z); parts.push([g, M0]); }
-      for (let j = 0; j < 9; j++) { const y = F + .5 + j * .25, g = new THREE.CylinderGeometry(.004, .004, 1.25, 3); g.rotateX(Math.PI / 2); g.translate(cx - .05, y, z0 + .6); parts.push([g, M0]); } const ng = mergeGeoms(parts); W.disposables.push(ng); mesh(ng, std({ color: "#7a6a4a", roughness: 1 }), G);
+    { const cx = B.x1 - LR - .1, z0 = B.z0 + .3, nm = std({ color: "#7a6a4a", roughness: 1 });   /* halászháló: függőleges szálak a falon lelógva, vízszintes szemsorok */
+      for (let i = 0; i <= 8; i++) rodBetween(new THREE.Vector3(cx, F + 2.7, z0 + i * .14), new THREE.Vector3(cx - .1, F + .4 + Math.sin(i) * .1, z0 + i * .12 + .2), .004, nm, G, 3);
+      for (let j = 0; j < 9; j++) { const y = F + .5 + j * .25, t = (2.7 - .5 - j * .25) / 2.3; rodBetween(new THREE.Vector3(cx - .1 * (1 - t), y, z0 + .2 * (1 - t)), new THREE.Vector3(cx - .1 * (1 - t), y, z0 + 1.12 + .2 * (1 - t) - .16 * t), .004, nm, G, 3); }
       for (let k = 0; k < 5; k++) mesh(new THREE.CylinderGeometry(.05, .05, .08, 10).rotateZ(Math.PI / 2).translate(cx - .06, F + 2.55 - k * .02, z0 + .1 + k * .28), std({ color: "#c9965a", roughness: .9 }), G); }
     /* horgony, hordó, feltekert kötél a padlón */
     { const iron = std({ color: "#3a3d40", roughness: .6, metalness: .7 }), ag = new THREE.Group(); ag.position.set(B.x1 - .55, F, B.z1 - .55); ag.rotation.set(0, -.6, -.25); G.add(ag);
