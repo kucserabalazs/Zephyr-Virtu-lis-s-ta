@@ -2408,5 +2408,9 @@
  "Kiváltás!": "Zrušené!",
  "Mentés a tározóból": "Zachránené zo zásobníka",
  "Új": "Nová",
- "Kikötő": "Prístav"
+ "Kikötő": "Prístav",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "Ťukni na voľný kameň: vyletí do zásobníka so 4 miestami a hľadá tam svoju dvojicu. Keď ju nájde, oba sa roztrieštia a dajú body (každý kameň má inú hodnotu; dvojnásobok, ak je susedom ±1 predchádzajúcej dvojice). Keď sa zásobník zaplní, hra končí.",
+ "SOROZAT ×2!": "RADA ×2!",
+ "×2 SOROZAT": "×2 RADA",
+ "Ez a lap a tározóban várja a párját.": "Tento kameň čaká v zásobníku na svoju dvojicu."
 }

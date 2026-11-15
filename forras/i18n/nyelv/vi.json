@@ -2406,5 +2406,9 @@
  "Kiváltás!": "Triệt tiêu nhau!",
  "Mentés a tározóból": "Cứu từ khay",
  "Új": "Mới",
- "Kikötő": "Bến cảng"
+ "Kikötő": "Bến cảng",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "Chạm vào một quân trống: nó bay lên khay 4 ô và tìm cặp ở đó. Nếu tìm thấy, cả hai vỡ tung và cho điểm (mỗi quân một giá trị; nhân đôi nếu là quân kề ±1 của cặp trước). Khay đầy là thua.",
+ "SOROZAT ×2!": "CHUỖI ×2!",
+ "×2 SOROZAT": "×2 CHUỖI",
+ "Ez a lap a tározóban várja a párját.": "Quân này đang chờ cặp trong khay."
 }

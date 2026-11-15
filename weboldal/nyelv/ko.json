@@ -2406,5 +2406,9 @@
  "Kiváltás!": "상쇄!",
  "Mentés a tározóból": "보관함에서 구출",
  "Új": "새 게임",
- "Kikötő": "항구"
+ "Kikötő": "항구",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "빈 패를 누르세요: 4칸 보관함으로 날아가 짝을 찾습니다. 찾으면 둘 다 부서지며 점수를 줍니다(패마다 점수가 다르고, 직전 짝의 ±1 이웃이면 두 배). 보관함이 차면 게임 끝.",
+ "SOROZAT ×2!": "연속 ×2!",
+ "×2 SOROZAT": "×2 연속",
+ "Ez a lap a tározóban várja a párját.": "이 패는 보관함에서 짝을 기다리고 있습니다."
 }

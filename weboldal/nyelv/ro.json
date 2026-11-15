@@ -2408,5 +2408,9 @@
  "Kiváltás!": "Anulate!",
  "Mentés a tározóból": "Salvată din tavă",
  "Új": "Nou",
- "Kikötő": "Port"
+ "Kikötő": "Port",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "Atinge o piesă liberă: zboară în tava cu 4 locuri și își caută acolo perechea. Dacă o găsește, ambele explodează și aduc puncte (fiecare piesă valorează altfel; dublu dacă e vecina ±1 a perechii anterioare). Dacă tava se umple, jocul s-a terminat.",
+ "SOROZAT ×2!": "SERIE ×2!",
+ "×2 SOROZAT": "×2 SERIE",
+ "Ez a lap a tározóban várja a párját.": "Această piesă își așteaptă perechea în tavă."
 }

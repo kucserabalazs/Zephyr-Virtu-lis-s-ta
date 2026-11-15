@@ -45,6 +45,12 @@ Kész (main):
 - Rövid címek: /uj/ és /virtualis-seta/ a tároló gyökerében átirányít a weboldal/ alá.
 Hátra (javaslatok): iránytű-lépésjelző és ±3 nap bóják a VR-ben, kapitányi adatpult (billentyűzet 3D), fókuszcsapda a 2D párbeszédablakokban, valódi Quest 2-es mérés.
 
+## 2026-11-15 este: mahjong ÚJ SZABÁLY (a tulajdonos döntése) + Zephyr-lap
+- **Szabály:** a kiválasztott szabad lap mindig a felső 4 helyes tározóba repül, és ott keresi a párját. Ha ott van: a két lap megreped (`S.pend`, 0,2 mp), szétrobban háromszög-szilánkokra (`shards`, `S.sh`), villanás/gyűrűk/szikrák/szirmok (`burst`), és kiugrik a pontszám, majd a pontszámlálóba repül (`S.pop`, `S.disp`, `S.cnt`). Ha nincs párja: ott ragad. Ha megtelik (4 lap): vége (Visszalépek / Új játék). A tározóbeli lap nem koppintható. Nincs többé „két lap kijelölése”.
+- **Pontok:** minden laptípus más értékű (`VAL`): 萬 10–90, kormánykerék 15–95, nád 12–92, szelek 110–140, 中 160, 發 170, Balaton 250, festett képek 105–195, **Zephyr Apartman 500** (a legmagasabb). Pár = 2 × érték. **SOROZAT ×2:** ha a pár az előzőleg eltüntetett pár ±1 szomszédja ugyanabban a csoportban (萬/kerék/nád sor, szelek, sárkányok, festett képek; a Balaton és a Zephyr kimarad) – `isSeq`, `S.lastK`; a tározó bal oldalán „SOR” jelző mutatja az utolsó lapot. A tározóban minden lapon látszik a pontértéke. Győzelem: időbónusz; a panel a sorozatok számát is mutatja.
+- **Zephyr Apartman lap** (index 44, `forras/referencia/mahjong/zephyr-lap-minta.png`, `compose.py`): minden osztásban szerepel; párjánál külön ünneplés („ZEPHYR APARTMAN!”, három robbanás, győzelmi dallam).
+- Új hangok: `lift` (felkapás + suhanás), `crack` (repedés), `shatter` (porcelán-csörömpölés + dallam, sorozatnál taiko és harangfutam), `coin` (a pont beérkezik).
+
 ## 2026-11-15 délelőtt: mahjong – sötét filc, pontozás, ranglista, látványos párok, új hangok
 - **Háttér:** sötétebb zöld filc (`felt`).
 - **Pontozás:** pár 100 pont + kombó (6 mp-en belüli párok: +50/kombószint, legfeljebb ×10), tározóból mentett pár +50, tározóbeli kiváltás +150; tipp −50 (és +10 mp), visszalépés −50, keverés −200; győzelemkor időbónusz (3000 − 8 × mp) és +500, ha a tározót nem használta. A számláló mutatja a pontot.

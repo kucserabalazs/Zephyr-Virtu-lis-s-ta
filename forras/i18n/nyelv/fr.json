@@ -2408,5 +2408,9 @@
  "Kiváltás!": "Annulées !",
  "Mentés a tározóból": "Sauvée du bac",
  "Új": "Nouveau",
- "Kikötő": "Port"
+ "Kikötő": "Port",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "Touche une tuile libre : elle s’envole dans le bac à 4 places et y cherche sa paire. Si elle la trouve, les deux éclatent et rapportent des points (chaque tuile vaut un nombre différent ; double si c’est la voisine ±1 de la paire précédente). Si le bac est plein, la partie est finie.",
+ "SOROZAT ×2!": "SUITE ×2 !",
+ "×2 SOROZAT": "×2 SUITE",
+ "Ez a lap a tározóban várja a párját.": "Cette tuile attend sa paire dans le bac."
 }

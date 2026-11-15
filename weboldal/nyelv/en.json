@@ -2408,5 +2408,9 @@
  "Kiváltás!": "Cancelled out!",
  "Mentés a tározóból": "Saved from the tray",
  "Új": "New",
- "Kikötő": "Harbour"
+ "Kikötő": "Harbour",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "Tap a free tile: it flies up into the 4-slot tray and looks for its pair there. If it finds it, both burst and score points (every tile is worth different points; if it is the ±1 neighbour of the previous pair, double). If the tray fills up, the game is over.",
+ "SOROZAT ×2!": "SEQUENCE ×2!",
+ "×2 SOROZAT": "×2 SEQUENCE",
+ "Ez a lap a tározóban várja a párját.": "This tile is waiting for its pair in the tray."
 }

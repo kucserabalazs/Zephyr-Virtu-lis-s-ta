@@ -2408,5 +2408,9 @@
  "Kiváltás!": "Zniesione!",
  "Mentés a tározóból": "Uratowany ze schowka",
  "Új": "Nowa",
- "Kikötő": "Port"
+ "Kikötő": "Port",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "Dotknij wolnego kafelka: wlatuje do schowka na 4 miejsca i tam szuka pary. Jeśli ją znajdzie, oba pękają i dają punkty (każdy kafelek jest wart inaczej; podwójnie, gdy to sąsiad ±1 poprzedniej pary). Gdy schowek się zapełni, koniec gry.",
+ "SOROZAT ×2!": "SERIA ×2!",
+ "×2 SOROZAT": "×2 SERIA",
+ "Ez a lap a tározóban várja a párját.": "Ten kafelek czeka w schowku na swoją parę."
 }

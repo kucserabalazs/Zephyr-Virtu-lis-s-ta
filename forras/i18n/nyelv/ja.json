@@ -2406,5 +2406,9 @@
  "Kiváltás!": "相殺！",
  "Mentés a tározóból": "トレイから救出",
  "Új": "新規",
- "Kikötő": "港"
+ "Kikötő": "港",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "空いている牌をタップ：4マスのトレイへ飛び、そこで相方を探します。見つかれば2枚が砕けて得点（牌ごとに点数が違い、前のペアの±1の隣なら2倍）。トレイがいっぱいになると終了。",
+ "SOROZAT ×2!": "連番 ×2！",
+ "×2 SOROZAT": "×2 連番",
+ "Ez a lap a tározóban várja a párját.": "この牌はトレイで相方を待っています。"
 }

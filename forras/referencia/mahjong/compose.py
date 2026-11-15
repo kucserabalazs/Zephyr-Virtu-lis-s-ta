@@ -58,6 +58,11 @@ for b in PICS:
     mk = np.ones((176, 184), np.float32); f = 5
     mk[:f] *= np.linspace(0, 1, f)[:, None]; mk[-f:] *= np.linspace(1, 0, f)[:, None]; mk[:, :f] *= np.linspace(0, 1, f)[None]; mk[:, -f:] *= np.linspace(1, 0, f)[None]
     yy = (CH - 176) // 2; c[yy:yy + 176, 8:192] = c[yy:yy + 176, 8:192] * (1 - mk[..., None]) + p * mk[..., None]; cells.append(c)
+# 44: ZEPHYR APARTMAN – a legértékesebb lap (külön mintakép: zephyr-lap-minta.png)
+import os
+zp = os.path.join(os.path.dirname(os.path.abspath(SRC)), 'zephyr-lap-minta.png') if not os.path.exists('zephyr.png') else 'zephyr.png'
+zi = Image.open(zp).convert('RGB')
+cells.append(np.asarray(zi.crop((246, 62, 1040, 1160)).resize((CW, CH), Image.LANCZOS).filter(ImageFilter.UnsharpMask(1.5, 50, 2))).astype(np.float32))
 print(len(cells))
 at = np.zeros((6 * CH, 8 * CW, 3), np.float32) + ivory
 for i, c in enumerate(cells): at[(i // 8) * CH:(i // 8 + 1) * CH, (i % 8) * CW:(i % 8 + 1) * CW] = c

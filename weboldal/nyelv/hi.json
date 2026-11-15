@@ -2406,5 +2406,9 @@
  "Kiváltás!": "एक-दूसरे को काट दिया!",
  "Mentés a tározóból": "ट्रे से बचाया",
  "Új": "नया",
- "Kikötő": "बंदरगाह"
+ "Kikötő": "बंदरगाह",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "किसी खाली टाइल को छुएँ: वह 4 खानों वाली ट्रे में उड़कर अपनी जोड़ी ढूँढती है। मिल जाए तो दोनों फूटकर अंक देती हैं (हर टाइल का मूल्य अलग; पिछली जोड़ी की ±1 पड़ोसी हो तो दोगुना)। ट्रे भर गई तो खेल खत्म।",
+ "SOROZAT ×2!": "क्रम ×2!",
+ "×2 SOROZAT": "×2 क्रम",
+ "Ez a lap a tározóban várja a párját.": "यह टाइल ट्रे में अपनी जोड़ी का इंतज़ार कर रही है।"
 }

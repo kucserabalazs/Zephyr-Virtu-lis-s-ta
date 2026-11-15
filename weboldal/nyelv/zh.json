@@ -2406,5 +2406,9 @@
  "Kiváltás!": "互相抵消！",
  "Mentés a tározóból": "从托盘救回",
  "Új": "新局",
- "Kikötő": "港口"
+ "Kikötő": "港口",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "点一张空闲的牌：它会飞进上方4格托盘，在那里寻找配对。找到后两张牌爆裂并得分（每种牌分值不同；若是上一对的±1相邻牌，得分翻倍）。托盘满了，游戏结束。",
+ "SOROZAT ×2!": "连续 ×2！",
+ "×2 SOROZAT": "×2 连续",
+ "Ez a lap a tározóban várja a párját.": "这张牌在托盘里等它的配对。"
 }

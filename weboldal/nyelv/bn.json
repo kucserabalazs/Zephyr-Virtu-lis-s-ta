@@ -2406,5 +2406,9 @@
  "Kiváltás!": "একে অপরকে বাতিল করল!",
  "Mentés a tározóból": "ট্রে থেকে উদ্ধার",
  "Új": "নতুন",
- "Kikötő": "বন্দর"
+ "Kikötő": "বন্দর",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "একটি মুক্ত টাইলে চাপ দাও: সেটি ৪ ঘরের ট্রেতে উড়ে গিয়ে জোড়া খোঁজে। পেলে দুটোই ফেটে পয়েন্ট দেয় (প্রতিটি টাইলের মান আলাদা; আগের জোড়ার ±1 প্রতিবেশী হলে দ্বিগুণ)। ট্রে ভরে গেলে খেলা শেষ।",
+ "SOROZAT ×2!": "ক্রম ×2!",
+ "×2 SOROZAT": "×2 ক্রম",
+ "Ez a lap a tározóban várja a párját.": "এই টাইলটি ট্রেতে জোড়ার অপেক্ষায় আছে।"
 }

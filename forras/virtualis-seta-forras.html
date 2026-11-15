@@ -16917,7 +16917,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
        0–8 萬 1–9 · 9–17 kormánykerék 1–9 · 18–26 nád 1–9 · 27–30 東南西北 · 31 中 · 32 發 · 33 Balaton-térkép · 34–43 festett képek */
     const MJ_CN = ["一", "二", "三", "四", "五", "六", "七", "八", "九"], MJ_NAMES = [];
     ["萬", "kormánykerék", "nád"].forEach((sn) => MJ_CN.forEach((c, v) => MJ_NAMES.push(`${v + 1}-es ${sn === "萬" ? "萬 (" + c + "萬)" : sn}`)));
-    MJ_NAMES.push("Kelet (東)", "Dél (南)", "Nyugat (西)", "Észak (北)", "Piros sárkány (中)", "Zöld sárkány (發)", "Balaton", "Vitorlás", "Tihany", "Badacsony", "Víztorony", "Gém", "Szőlő", "Fogas", "Naplemente", "Világítótorony", "Hattyú");
+    MJ_NAMES.push("Kelet (東)", "Dél (南)", "Nyugat (西)", "Észak (北)", "Piros sárkány (中)", "Zöld sárkány (發)", "Balaton", "Vitorlás", "Tihany", "Badacsony", "Víztorony", "Gém", "Szőlő", "Fogas", "Naplemente", "Világítótorony", "Hattyú", "Zephyr Apartman");
     const tName = (k) => MJ_NAMES[+k.slice(1)] || "";
     const MJ_AT = new Image(); let mjAtOk = false;
     MJ_AT.onload = () => { mjAtOk = true; IMG.w = 0; IMG2.m = {}; IMG2.n = 0; }; MJ_AT.src = "img/mahjong-balaton.webp";
@@ -16966,6 +16966,15 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       win() { const a = ac(); if (!a) return; const t = a.currentTime, o = mOut(.42);   /* győzelem: taiko, guzheng-glissando, harangakkord */
         this.taiko(t, .45, o); this.taiko(t + .32, .35, o); for (let i = 0; i < 15; i++) this.pluck(noteF(i), t + .45 + i * .055, .09, o);
         [10, 12, 14].forEach((n, i) => this.bell(noteF(n), t + 1.35 + i * .02, .07, o)); this.taiko(t + 1.35, .5, o); for (let i = 0; i < 10; i++) mOsc("sine", noteF(17 + Math.floor(Math.random() * 6)), t + 1.4 + Math.random() * 1.2, .3, .025, o); },
+      lift(v) { const a = ac(); if (!a) return; const t = a.currentTime, o = mOut(.25); this.clack(1 + Math.min(.25, v / 1000)); mNz(t + .02, .3, .13, "bandpass", 500, 1.2, o, 2600); mOsc("sine", noteF(Math.min(14, Math.round(v / 20))), t + .04, .22, .035, o); },   /* felkapás + suhanás a tározó felé */
+      crack() { const a = ac(); if (!a) return; const t = a.currentTime, o = mOut(.2); for (let i = 0; i < 5; i++) { mNz(t + i * .028, .02, .2, "highpass", 5200 + Math.random() * 2400, .8, o); mOsc("sine", 3600 + Math.random() * 3200, t + i * .028, .03, .05, o); } mOsc("triangle", 880, t, .15, .05, o, .002, 1.3); },   /* repedés */
+      shatter(mult, v) { const a = ac(); if (!a) return; const t = a.currentTime, o = mOut(.4);   /* porcelán szétrobbanása, aztán dallam és érme */
+        mOsc("sine", 70, t, .4, .38, o, .002, 2.4); mNz(t, .35, .28, "bandpass", 1800, .7, o, 500);
+        for (let i = 0; i < 22; i++) { const tt = t + Math.random() * .3; mNz(tt, .03 + Math.random() * .05, .08 + Math.random() * .1, "bandpass", 3000 + Math.random() * 6000, 2 + Math.random() * 6, o); if (i % 2) mOsc("sine", 2600 + Math.random() * 5200, tt, .06 + Math.random() * .12, .03, o); }
+        const base = Math.min(8, Math.round(v / 30)), pats = [[0, 2, 4, 7], [0, 4, 5, 7], [2, 4, 7, 9], [0, 3, 5, 8]], pat = pats[Math.floor(Math.random() * pats.length)];
+        pat.forEach((n, i) => this.pluck(noteF(base + n), t + .1 + i * .07, .12, o)); this.bell(noteF(base + 9), t + .42, .07, o);
+        if (mult > 1) { this.taiko(t + .05, .45, o); [0, 2, 4, 5, 7, 9, 10, 12].forEach((n, i) => this.bell(noteF(base + 5 + n), t + .45 + i * .045, .05, o)); } },
+      coin() { const a = ac(); if (!a) return; const t = a.currentTime, o = mOut(.3); mOsc("sine", 1975, t, .12, .07, o); mOsc("sine", 2637, t + .06, .28, .08, o); mOsc("sine", 5274, t + .06, .12, .02, o); },   /* a pontszám beérkezik */
       rank() { const a = ac(); if (!a) return; const t = a.currentTime, o = mOut(.4); [0, 2, 4].forEach((n, i) => this.pluck(noteF(5 + n), t + i * .08, .1, o)); },
     };
     /* ---------- PONTOZÁS és RANGLISTA ---------- */
@@ -17016,15 +17025,14 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       for (let i = 0; i < 26 + combo * 4; i++) { const an = rnd() * TAU, v = (90 + rnd() * 260) * big; S.sp.push({ x, y, vx: Math.cos(an) * v, vy: Math.sin(an) * v - 60, l: .6 + rnd() * .7, c: rnd() < .55 ? "#ffd978" : rnd() < .5 ? "#ffffff" : "#ffb84d", k: 0 }); }
       for (let i = 0; i < 16; i++) { const an = rnd() * TAU, v = 60 + rnd() * 170; S.sp.push({ x, y, vx: Math.cos(an) * v, vy: Math.sin(an) * v - 90, l: 1.3 + rnd() * .9, c: PETALS[rnd() * PETALS.length | 0], k: 1, r: rnd() * TAU, vr: (rnd() - .5) * 9, s: w * (.09 + rnd() * .07) }); }
       for (let i = 0; i < 12; i++) { const an = i / 12 * TAU + rnd() * .3; S.sp.push({ x, y, vx: Math.cos(an) * 520 * big, vy: Math.sin(an) * 520 * big, l: .28, c: "#fff6d0", k: 2, an }); }
-      S.txt.push({ x, y: y - w * .4, s: "+" + pts, l: label, t: 0, big: combo >= 3 });
-      if (combo >= 3) { S.qk = Math.min(.45, .15 + combo * .04); S.cb = { n: combo, t: 0 }; }
+      if (pts != null) { S.txt.push({ x, y: y - w * .4, s: "+" + pts, l: label, t: 0, big: combo >= 3 }); if (combo >= 3) { S.qk = Math.min(.45, .15 + combo * .04); S.cb = { n: combo, t: 0 }; } }
     }
     const MJ_SPL = new Image(), MJ_SPLM = new Image(); MJ_SPL.src = "img/mahjong-kezdokep.webp"; MJ_SPLM.src = "img/mahjong-kezdokep-mobil.webp";   /* fekvő (gép) és álló (telefon) kezdőkép */   /* kezdőképernyő: a díszdobozos készlet képe, 3 mp */
-    const BUF_N = 4, AR = 1.3, MJ_N = 44;   /* tározó helyei · a lap magassága / szélessége */
+    const BUF_N = 4, AR = 1.3, MJ_N = 45;   /* 44: Zephyr Apartman – a legértékesebb lap */   /* tározó helyei · a lap magassága / szélessége */
     const mix = (hex, to, k) => { const a = parseInt(hex.slice(1), 16), b = parseInt(to.slice(1), 16); const c = (s) => Math.round(((a >> s) & 255) * (1 - k) + ((b >> s) & 255) * k); return `rgb(${c(16)},${c(8)},${c(0)})`; };
     function pairDeck() {   /* fajtánként 2 pár (4 lap); a képes lapok és a számos lapok váltakozva, véletlen sorrendben */
-      const pics = shuffle(Array.from({ length: MJ_N - 27 }, (_, i) => "p" + (27 + i))), nums = shuffle(Array.from({ length: 27 }, (_, i) => "p" + i));
-      const kinds = []; while (pics.length || nums.length) { if (pics.length) kinds.push(pics.pop()); if (nums.length) kinds.push(nums.pop()); }
+      const pics = shuffle(Array.from({ length: MJ_N - 28 }, (_, i) => "p" + (27 + i))), nums = shuffle(Array.from({ length: 27 }, (_, i) => "p" + i));
+      const kinds = ["p44"]; while (pics.length || nums.length)   /* a Zephyr-lap minden osztásban benne van */ { if (pics.length) kinds.push(pics.pop()); if (nums.length) kinds.push(nums.pop()); }
       const P = []; kinds.forEach((k) => P.push([k, k], [k, k]));
       return P;
     }
@@ -17071,7 +17079,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     }
     const BEST_KEY = "zephyr-mahjong";
     const NEXT = { kik: "hab", hab: "vit", vit: "tek", tek: "kik" };
-    const S = { lay: null, zoom: 1, px: 0, py: 0, zoomAt: 0, menu: false, ptr: {}, pinch: null, drag: null, panHint: false, T: [], sel: null, hint: null, hintT: 0, undo: [], fx: [], sp: [], conf: [], el: 0, run: false, st: "new", msg: "", msgT: 0, moves: 0, btn: [], tr: false, best: {}, shufT: 0, shake: null, buf: [], fly: [], stuckOK: false, B: null, splash: 3.6, score: 0, combo: 0, lastT: -99, mt: [], rg: [], flsh: [], txt: [], qk: 0, cb: null, rank: null, final: null, usedTray: false };
+    const S = { lay: null, zoom: 1, px: 0, py: 0, zoomAt: 0, menu: false, ptr: {}, pinch: null, drag: null, panHint: false, T: [], sel: null, hint: null, hintT: 0, undo: [], fx: [], sp: [], conf: [], el: 0, run: false, st: "new", msg: "", msgT: 0, moves: 0, btn: [], tr: false, best: {}, shufT: 0, shake: null, buf: [], fly: [], stuckOK: false, B: null, splash: 3.6, score: 0, combo: 0, lastT: -99, mt: [], rg: [], flsh: [], txt: [], qk: 0, cb: null, rank: null, final: null, usedTray: false, sh: [], pend: [], pop: [], disp: 0, cntP: 0, lastK: null, seqN: 0, cnt: null };
     try { S.best = JSON.parse(localStorage.getItem(BEST_KEY) || "{}") || {}; } catch (e) { S.best = {}; }
     if (window.__zephyrTest) window.__zephyrTest.mahj = { S, freeIn, grpOf, tile: (g, x, y, w, k) => drawTile(g, x, y, w, w * AR, w * .14, k), tName };   /* csak automatikus teszthez */
     function newGame(lay, W, H) {
@@ -17079,81 +17087,94 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       S.tr = S.lay === "tek" && H > W * 1.1; S.zoom = 1; S.px = 0; S.py = 0;
       const pos = positions(S.lay, S.tr); let T = null;
       for (let i = 0; i < 6 && !T; i++) T = deal(pos, pairDeck().slice(0, pos.length / 2));
-      S.T = T || []; S.buf = []; S.fly = []; S.stuckOK = false; S.sel = null; S.score = 0; S.combo = 0; S.lastT = -99; S.mt = []; S.final = null; S.usedTray = false; S.hint = null; S.undo = []; S.fx = []; S.sp = []; S.conf = []; S.el = 0; S.run = false; S.st = "play"; S.msg = ""; S.ghost = null;
+      S.T = T || []; S.buf = []; S.fly = []; S.stuckOK = false; S.sel = null; S.score = 0; S.combo = 0; S.lastT = -99; S.mt = []; S.final = null; S.usedTray = false; S.sh = []; S.pend = []; S.pop = []; S.disp = 0; S.lastK = null; S.seqN = 0; S.hint = null; S.undo = []; S.fx = []; S.sp = []; S.conf = []; S.el = 0; S.run = false; S.st = "play"; S.msg = ""; S.ghost = null;
       refresh();
     }
+    /* ===== SZABÁLY (a tulajdonos döntése, 2026-11-15 este) =====
+       A kiválasztott (szabad) lap mindig a felső 4 helyes tározóba repül, és ott keresi a párját. Ha ott van a párja: a két lap
+       megreped, szétrobban, és kiugrik belőle a pontszám. Ha nincs: ott ragad. Ha a tározó megtelik (4 lap, pár nélkül): vége.
+       Minden laptípus más pontot ér (VAL); ha a pár az előzőleg eltüntetett pár „következője” (ugyanaz a sor ±1, egymás utáni szél,
+       sárkány vagy festett kép), a pont kétszeres (SOROZAT ×2). */
+    function VAL(i) { return i < 9 ? 10 * (i + 1) : i < 18 ? 10 * (i - 8) + 5 : i < 27 ? 10 * (i - 17) + 2 : i < 31 ? 110 + 10 * (i - 27) : i < 33 ? 160 + 10 * (i - 31) : i === 33 ? 250 : i === 44 ? 500 : 105 + 10 * (i - 34); }
+    const GRP = (i) => (i < 9 ? 0 : i < 18 ? 1 : i < 27 ? 2 : i < 31 ? 3 : i < 33 ? 4 : i === 33 ? 5 : i === 44 ? 7 : 6);
+    const isSeq = (p, i) => p != null && p >= 0 && GRP(p) === GRP(i) && GRP(i) !== 5 && GRP(i) !== 7 && Math.abs(p - i) === 1;
     function refresh() {
       const fr = S.T.filter((t) => !t.gone); S.T.forEach((t) => (t.free = !t.gone && freeIn(S.T, t)));
-      const m = {}; fr.forEach((t) => { if (t.free) m[t.k] = (m[t.k] || 0) + 1; });
-      S.moves = Object.values(m).reduce((s, n) => s + n * (n - 1) / 2, 0) + S.buf.reduce((s, b) => s + (m[b.k] || 0), 0); S.left = fr.length;
+      S.moves = fr.filter((t) => t.free).length; S.left = fr.length;
     }
-    function findPair() {   /* előbb a tározót ürítjük */
-      for (const b of S.buf) { const t = S.T.find((o) => !o.gone && o.free && o.k === b.k); if (t) return [b, t]; }
+    function findPair() {   /* tipp: előbb olyan szabad lap, amelynek a párja már a tározóban van; aztán két szabad egyforma lap */
+      for (const b of S.buf) { const t = S.T.find((o) => !o.gone && o.free && o.k === b.k); if (t) return [t, b]; }
       const m = {}; for (const t of S.T) { if (t.gone || !t.free) continue; if (m[t.k]) return [m[t.k], t]; m[t.k] = t; } return null;
     }
-    function snap() { S.undo.push({ g: S.T.map((t) => t.gone), b: S.buf.slice(), s: S.score, c: S.combo }); if (S.undo.length > 500) S.undo.shift(); }
+    function snap() { S.undo.push({ g: S.T.map((t) => t.gone), b: S.buf.slice(), s: S.score, c: S.combo, lk: S.lastK, sq: S.seqN }); if (S.undo.length > 500) S.undo.shift(); }
     function sparks(x, y) { for (let i = 0; i < 14; i++) { const an = rnd() * TAU, v = 40 + rnd() * 120; S.sp.push({ x, y, vx: Math.cos(an) * v, vy: Math.sin(an) * v - 30, l: .5 + rnd() * .5, c: rnd() < .5 ? "#ffd978" : "#ffffff" }); } }
     function checkEnd() {
-      if (S.buf.length >= BUF_N) { S.st = "full"; S.run = false; S.sel = null; mjSnd.gong(); return; }
-      if (S.fly.length) return;
-      if (!S.left && !S.buf.length) { S.st = "win"; S.run = false; setTimeout(() => mjSnd.win(), 420);
-        { const tb = Math.max(0, Math.round(3000 - S.el * 8)), cl = S.usedTray ? 0 : 500; S.final = { base: S.score, tb, cl, total: S.score + tb + cl, ido: S.el, lay: S.lay }; S.score = S.final.total; setTimeout(nameDialog, 1700); } const k = S.lay + (S.tr ? "t" : ""); if (!S.best[k] || S.el < S.best[k]) { S.best[k] = S.el; S.rec = true; try { localStorage.setItem(BEST_KEY, JSON.stringify(S.best)); } catch (e) {} } else S.rec = false;
-        for (let i = 0; i < 90; i++) S.conf.push({ x: rnd(), y: -rnd() * .6, vy: .12 + rnd() * .18, vx: (rnd() - .5) * .06, r: rnd() * TAU, vr: (rnd() - .5) * 6, f: rnd() * 4 | 0 }); return; }
-      if (!S.moves && !S.stuckOK && S.left) S.st = "stuck";
+      if (S.buf.length >= BUF_N) { S.st = "full"; S.run = false; S.sel = null; S.fly.forEach((f) => (f.t.gone = false)); S.fly = []; refresh(); setTimeout(() => mjSnd.gong(), 150); S.qk = .35; return; }
+      if (S.fly.length || S.pend.length) return;
+      if (!S.left && !S.buf.length) { S.st = "win"; S.run = false; setTimeout(() => mjSnd.win(), 520);
+        { const tb = Math.max(0, Math.round(3000 - S.el * 8)); S.final = { base: S.score, tb, cl: 0, total: S.score + tb, ido: S.el, lay: S.lay, sq: S.seqN }; S.score = S.final.total; setTimeout(nameDialog, 1900); } const k = S.lay + (S.tr ? "t" : ""); if (!S.best[k] || S.el < S.best[k]) { S.best[k] = S.el; S.rec = true; try { localStorage.setItem(BEST_KEY, JSON.stringify(S.best)); } catch (e) {} } else S.rec = false;
+        for (let i = 0; i < 120; i++) S.conf.push({ x: rnd(), y: -rnd() * .6, vy: .12 + rnd() * .18, vx: (rnd() - .5) * .06, r: rnd() * TAU, vr: (rnd() - .5) * 6, f: rnd() * 4 | 0 }); return; }
     }
-    /* a nem összeillő lapok a tározóba repülnek; amelyiknek ott van a párja, az megy előbb (és kiváltják egymást) */
-    function toBuffer(list) {
-      list.sort((a, b) => (S.buf.some((x) => x.k === b.k) ? 1 : 0) - (S.buf.some((x) => x.k === a.k) ? 1 : 0));
-      list.forEach((t, i) => { t.gone = true; S.fly.push({ t, x: t.sx, y: t.sy, w: t.sw || (G ? G.w : 50), a: -i * .12 }); });
-      S.hint = null; S.usedTray = true; S.combo = 0; refresh(); mjSnd.tray();
-      flash(list.length > 1 ? "Nem pár – mindkét lap a tározóba került." : "Nem pár – a lap a tározóba került.", 2);
+    function toBuffer(list) {   /* (régi név) – a lapok a tározóba repülnek */
+      list.forEach((t, i) => { t.gone = true; S.fly.push({ t, x: t.sx, y: t.sy, w: t.sw || (G ? G.w : 50), a: -i * .1 }); });
+      S.hint = null; refresh();
     }
     function slotXY(B, i) { return [B.x + B.pad + i * (B.sw + B.gap), B.y + B.pad]; }
+    /* széttörés: a lapot rácsszerű, véletlenszerűen eltolt háromszögekre vágjuk; a darabok forogva, pörögve szétrepülnek */
+    function shards(k, x, y, w, cx, cy, power) {
+      const h = w * AR, C = 3, R = 4, P = [];
+      for (let r = 0; r <= R; r++) { P.push([]); for (let c = 0; c <= C; c++) { const ex = c === 0 || c === C, ey = r === 0 || r === R; P[r].push([c * w / C + (ex ? 0 : (rnd() - .5) * w * .22), r * h / R + (ey ? 0 : (rnd() - .5) * h * .18)]); } }
+      for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+        const a = P[r][c], b = P[r][c + 1], d = P[r + 1][c], e = P[r + 1][c + 1], tris = rnd() < .5 ? [[a, b, e], [a, e, d]] : [[a, b, d], [b, e, d]];
+        tris.forEach((tri) => { const mx = (tri[0][0] + tri[1][0] + tri[2][0]) / 3, my = (tri[0][1] + tri[1][1] + tri[2][1]) / 3, px = x + mx, py = y + my, dx = px - cx, dy = py - cy, dl = Math.hypot(dx, dy) || 1, sp = (240 + rnd() * 420) * power;
+          S.sh.push({ k, w, poly: tri.map(([u, v]) => [u - mx, v - my]), ox: mx, oy: my, x: px, y: py, vx: dx / dl * sp + (rnd() - .5) * 120, vy: dy / dl * sp - 260 * power - rnd() * 200, r: 0, vr: (rnd() - .5) * 16, l: 1 + rnd() * .35 }); });
+      }
+    }
     function land(t) {
-      if (S.st === "full") { t.gone = false; refresh(); return; }   /* közben megtelt: ez a lap a táblán marad */
-      const p = S.buf.find((b) => b.k === t.k);
-      if (p) {
-        const B = S.B; S.buf.splice(S.buf.indexOf(p), 1); p.buf = false;
-        if (B) { const w = B.sw; S.mt.push({ a: { k: p.k, x: p.sx - w * .3, y: p.sy, w }, b: { k: t.k, x: p.sx + w * .3, y: p.sy, w }, t: .12, combo: 2, pts: 150, lbl: "Kiváltás!" }); }
-        S.score += 150; mjSnd.cancel(); S.stuckOK = false; flash(`Két „${tName(t.k)}” kiváltotta egymást a tározóban!`, 2.2);
+      if (S.st !== "play") { t.gone = false; refresh(); return; }
+      const p = S.buf.find((b) => b.k === t.k), B = S.B;
+      if (p) {   /* megvan a pár: megreped, aztán szétrobban (S.pend) */
+        S.buf.splice(S.buf.indexOf(p), 1); p.buf = false;
+        const i = +t.k.slice(1), mult = isSeq(S.lastK, i) ? 2 : 1, pts = 2 * VAL(i) * mult; S.lastK = i; if (mult > 1) S.seqN++;
+        S.score += pts; S.combo = mult > 1 ? S.combo + 1 : 0;
+        const w = B ? B.sw : 40, x = p.sx, y = p.sy;
+        S.pend.push({ k: t.k, x, y, w, t: 0, pts, mult, crack: Array.from({ length: 5 }, () => { const pts2 = []; let u = rnd() * w, v = rnd() * w * AR * .3; for (let j = 0; j < 4; j++) { pts2.push([u, v]); u += (rnd() - .5) * w * .5; v += w * AR * (.15 + rnd() * .2); } return pts2; }) });
+        mjSnd.crack();
       } else {
-        t.buf = true; S.buf.push(t); mjSnd.drop();
+        t.buf = true; t.bnc = 1; S.buf.push(t); mjSnd.drop();
         if (S.buf.length === BUF_N - 1) { flash("Vigyázz: már csak egy hely maradt a tározóban!", 2.6); setTimeout(() => mjSnd.warn(), 160); }
       }
       refresh(); checkEnd();
     }
-    function flash(m, sec) { S.msg = m; S.msgT = sec || 2.6; }
-    function remove(a, b) {
-      const fromBuf = a.buf || b.buf;
-      [a, b].forEach((t) => { if (t.buf) { S.buf.splice(S.buf.indexOf(t), 1); t.buf = false; } t.gone = true; });
-      S.combo = S.el - S.lastT < 6 ? S.combo + 1 : 1; S.lastT = S.el;   /* 6 mp-en belüli párok: kombó */
-      const pts = 100 + 50 * (Math.min(10, S.combo) - 1) + (fromBuf ? 50 : 0); S.score += pts;
-      const P = (t) => ({ k: t.k, x: t.sx, y: t.sy, w: t.sw || (G ? G.w : 50) });
-      S.mt.push({ a: P(a), b: P(b), t: 0, combo: S.combo, pts, lbl: S.combo >= 2 ? `KOMBÓ ×${S.combo}` : fromBuf ? "Mentés a tározóból" : "" });
-      S.hint = null; S.stuckOK = false; mjSnd.match(S.combo, +a.k.slice(1));
-      refresh(); checkEnd();
+    function explode(m) {   /* a repedt pár szétrobban: szilánkok, villanás, gyűrűk, szikrák, szirmok, és kiugrik a pontszám */
+      const w = m.w, cx = m.x + w / 2, cy = m.y + w * AR / 2;
+      shards(m.k, m.x - w * .06, m.y, w, cx, cy + w * .3, m.mult > 1 ? 1.25 : 1); shards(m.k, m.x + w * .06, m.y - w * .05, w, cx, cy + w * .3, m.mult > 1 ? 1.25 : 1);
+      burst(cx, cy, w * 1.15, m.mult > 1 ? 5 : 2, null, "");
+      S.pop.push({ x: cx, y: cy + w * .2, s: "+" + fmtN(m.pts), mult: m.mult, t: 0 });
+      if (m.mult > 1) { S.cb = { n: 2, t: 0, s: "SOROZAT ×2!" }; S.qk = .4; }
+      if (m.k === "p44") { S.cb = { n: 9, t: 0, s: "ZEPHYR APARTMAN!" }; S.qk = .5; burst(cx, cy, w * 1.6, 8, null, ""); setTimeout(() => burst(cx - w, cy - w * .5, w, 5, null, ""), 180); setTimeout(() => burst(cx + w, cy - w * .4, w, 5, null, ""), 330); }
+      mjSnd.shatter(m.k === "p44" ? 2 : m.mult, VAL(+m.k.slice(1))); if (m.k === "p44") setTimeout(() => mjSnd.win(), 300);
     }
+    function flash(m, sec) { S.msg = m; S.msgT = sec || 2.6; }
+    function remove(a, b) { [a, b].forEach((t) => { if (t.buf) { S.buf.splice(S.buf.indexOf(t), 1); t.buf = false; } t.gone = true; }); refresh(); checkEnd(); }
     function tap(t) {
-      if (S.fly.length || S.st !== "play") return;
-      if (!t.buf && !t.free) { mjSnd.deny(); S.shake = { t, a: 0 }; flash("Ez a lap még nem szabad – fölötte vagy mindkét oldalán lap van."); return; }
-      S.run = true;
-      if (!S.sel) { S.sel = t; mjSnd.clack(t.buf ? .9 : 1); return; }
-      if (S.sel === t) { S.sel = null; mjSnd.clack(.8); return; }
-      const a = S.sel; S.sel = null;
-      if (a.k === t.k) { snap(); remove(a, t); return; }
-      if (a.buf && t.buf) { S.sel = t; mjSnd.clack(.9); return; }   /* két tározóbeli lap: csak átjelölünk */
-      snap(); toBuffer([a, t].filter((x) => !x.buf));
+      if (S.st !== "play") return;
+      if (t.buf) { mjSnd.deny(); t.bnc = .8; flash("Ez a lap a tározóban várja a párját."); return; }
+      if (!t.free) { mjSnd.deny(); S.shake = { t, a: 0 }; flash("Ez a lap még nem szabad – fölötte vagy mindkét oldalán lap van."); return; }
+      if (S.buf.length + S.fly.length >= BUF_N) return;   /* a tározó helyei már foglaltak (repülő lapok) */
+      S.run = true; snap(); S.sel = null; mjSnd.lift(VAL(+t.k.slice(1)));
+      toBuffer([t]);
     }
     function undo() {
-      if (S.fly.length) return;
+      if (S.fly.length || S.pend.length) return;
       const p = S.undo.pop(); if (!p) { flash("Nincs mit visszavonni."); return; }
       S.T.forEach((t, i) => { t.gone = p.g[i]; t.buf = false; }); S.buf = p.b.slice(); S.buf.forEach((t) => (t.buf = true));
-      S.score = Math.max(0, (p.s || 0) - 50); S.combo = 0; S.mt = [];   /* visszalépés: 50 pont levonás */
+      S.score = Math.max(0, (p.s || 0) - 50); S.disp = Math.min(S.disp, S.score); S.combo = 0; S.lastK = p.lk; S.seqN = p.sq || 0; S.mt = [];   /* visszalépés: 50 pont levonás */
       S.sel = null; S.hint = null; S.st = "play"; S.stuckOK = false; S.msgT = 0; refresh(); mjSnd.undo();
     }
     function hint() {
       const p = findPair(); if (!p) { flash("Nincs szabad pár – keverjük meg a lapokat!"); return; }
-      S.hint = p; S.hintT = 3.2; S.el += 10; S.score = Math.max(0, S.score - 50); mjSnd.hint();   /* a tipp 10 mp-be és 50 pontba kerül */
+      S.hint = p; S.hintT = 3.2; S.el += 10; S.score = Math.max(0, S.score - 50); S.disp = Math.min(S.disp, S.score); mjSnd.hint();   /* a tipp 10 mp-be és 50 pontba kerül */
     }
     function reshuffle() {
       const rem = S.T.filter((t) => !t.gone); if (rem.length < 2) return;
@@ -17169,7 +17190,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       }
       if (!T2) { S.st = "dead"; S.sel = null; mjSnd.gong(); return; }   /* pl. egymás tetején maradt lapok: keveréssel sem oldható meg */
       rem.forEach((t, i) => { t.k = T2[i].k; });
-      S.undo = []; S.sel = null; S.hint = null; S.st = "play"; S.stuckOK = false; S.shufT = .6; S.score = Math.max(0, S.score - 200); S.combo = 0; refresh(); mjSnd.shuffle();
+      S.undo = []; S.sel = null; S.hint = null; S.st = "play"; S.stuckOK = false; S.shufT = .6; S.score = Math.max(0, S.score - 200); S.disp = Math.min(S.disp, S.score); S.combo = 0; refresh(); mjSnd.shuffle();
       flash("Megkevertem a maradék lapokat – a visszalépés törlődött.");
     }
 
@@ -17509,11 +17530,17 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         rrp(g, sx, sy, B.sw, B.sh, B.sw * .12); g.fillStyle = sg; g.fill(); g.lineWidth = 1.2; g.strokeStyle = "rgba(255,214,140,.22)"; g.stroke(); }
       if (warn || full) { g.save(); g.shadowColor = "#ff4a3a"; g.shadowBlur = 14 + pl * 10; g.lineWidth = 2.5; g.strokeStyle = `rgba(255,${full ? 60 : 110},70,${.55 + .45 * pl})`; rrp(g, B.x - 5, B.y - 5, B.fw + 10, B.fh + 10, 16); g.stroke(); g.restore(); }
       const tw = B.sw * 1.18;   /* a lapok a mélyedésből kicsit kiemelkedve */
-      S.buf.forEach((b, i) => { const [sx, sy] = slotXY(B, i); b.sx = sx; b.sy = sy - B.sw * .04; b.sw = B.sw;
-        blitAt(g, b.k, b.sx, b.sy, B.sw, dpr);
+      S.buf.forEach((b, i) => { const [sx, sy] = slotXY(B, i); b.ax = b.ax == null ? sx : b.ax + (sx - b.ax) * .22; b.sx = b.ax; b.sy = sy - B.sw * .04; b.sw = B.sw;
+        const bn = b.bnc || 0; g.save(); g.translate(b.sx + B.sw / 2, b.sy + B.sh); g.scale(1 + bn * .08, 1 - bn * .1); blitAt(g, b.k, -B.sw / 2, -B.sh, B.sw, dpr); g.restore();
+        { const v = String(VAL(+b.k.slice(1))); g.font = `900 ${W_PH ? 11 : 12}px ${SANS}`; const vw = g.measureText(v).width + 10, vh = W_PH ? 16 : 17, vx = b.sx + B.sw / 2 - vw / 2, vy = b.sy + B.sh - vh * .55;   /* a lap pontértéke */
+          rrp(g, vx, vy, vw, vh, vh / 2); g.fillStyle = "#7a1f12"; g.fill(); g.lineWidth = 1; g.strokeStyle = "#f2cf74"; g.stroke(); g.fillStyle = "#ffe9a8"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(v, vx + vw / 2, vy + vh / 2 + .5); }
         const hn = S.hint && (S.hint[0] === b || S.hint[1] === b);
         if (b === S.sel || hn) { g.save(); rrp(g, b.sx - 1, b.sy - 1, B.sw + 2, B.sh + 2, B.sw * .13); g.shadowColor = b === S.sel ? "#ffd23f" : "#4fe3ff"; g.shadowBlur = 14; g.lineWidth = 3; g.strokeStyle = b === S.sel ? "#ffcc33" : `rgba(79,227,255,${.6 + .4 * pl})`; g.stroke(); g.restore(); } });
       void tw;
+      /* SOROZAT-jelző a doboz bal oldalán: az utoljára eltüntetett lap – ennek ±1 szomszédja kétszeres pontot ér */
+      if (S.lastK != null && B.x > 46) { const mw = Math.min(B.x - 18, W_PH ? 30 : 40), mx = B.x - mw - 12, my = B.y + (B.fh - mw * AR) / 2 + 4;
+        g.font = `900 ${W_PH ? 10 : 11}px ${SANS}`; g.textAlign = "center"; g.textBaseline = "bottom"; g.fillStyle = "#ffd978"; g.fillText("SOR", mx + mw / 2, my - 3);
+        blitAt(g, "p" + S.lastK, mx, my, mw, dpr); g.textBaseline = "top"; g.fillStyle = "#9ff0ff"; g.fillText("±1 ×2", mx + mw / 2, my + mw * AR + mw * .2); }
       /* felirat a doboz alatt */
       /* számláló jelvény a doboz jobb alsó sarkán */
       { const lbl = `${S.buf.length}/${BUF_N}`; g.font = `900 ${W_PH ? 13 : 14}px ${SANS}`; const bw2 = g.measureText(lbl).width + 16, bh2 = W_PH ? 22 : 24, bx = B.x + B.fw - bw2 + 10, by = B.y + B.fh - bh2 / 2 + 3;
@@ -17651,6 +17678,13 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         S.fx.forEach((f) => (f.t += dt)); S.fx = S.fx.filter((f) => f.t < .55);
         S.fly.forEach((f) => (f.a += dt / .42)); while (S.fly.length && S.fly[0].a >= 1) land(S.fly.shift().t);
         S.sp.forEach((p) => { p.x += p.vx * dt; p.y += p.vy * dt; if (p.k === 1) { p.vx *= Math.pow(.25, dt); p.vy = p.vy * Math.pow(.3, dt) + 60 * dt; p.r += p.vr * dt; p.x += Math.sin(p.l * 7) * 20 * dt; } else if (p.k === 2) { p.vx *= Math.pow(.02, dt); p.vy *= Math.pow(.02, dt); } else { p.vx *= Math.pow(.35, dt); p.vy += 260 * dt; } p.l -= dt; }); S.sp = S.sp.filter((p) => p.l > 0);
+        S.pend.forEach((m) => { m.t += dt; if (!m.done && m.t >= .2) { m.done = true; explode(m); } }); if (S.pend.some((m) => m.done)) { S.pend = S.pend.filter((m) => !m.done); refresh(); checkEnd(); }
+        S.sh.forEach((q) => { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 1150 * dt; q.vx *= Math.pow(.6, dt); q.r += q.vr * dt; q.l -= dt; }); S.sh = S.sh.filter((q) => q.l > 0);
+        S.pop.forEach((q) => { q.t += dt; if (q.t > .95 && !q.arr && S.cnt) { const k3 = Math.min(1, (q.t - .95) / .45); if (k3 >= 1) { q.arr = true; S.cntP = 1; mjSnd.coin(); }
+            if (Math.random() < .7) S.sp.push({ x: q.x + (S.cnt.x - q.x) * k3, y: q.y + (S.cnt.y - q.y) * k3, vx: (rnd() - .5) * 40, vy: (rnd() - .5) * 40, l: .45, c: "#ffd978", k: 0 }); } });
+        S.pop = S.pop.filter((q) => !q.arr && q.t < 2.2);
+        if ((!S.pop.length && !S.pend.length) || S.disp > S.score) S.disp += (S.score - S.disp) * Math.min(1, dt * 6); if (Math.abs(S.score - S.disp) < 1) S.disp = S.score; if (S.cntP > 0) S.cntP = Math.max(0, S.cntP - dt * 2.5);
+        S.buf.forEach((b) => { if (b.bnc) b.bnc = Math.max(0, b.bnc - dt * 3.2); });
         S.mt.forEach((m) => { m.t += dt; if (!m.fired && m.t >= .27) { m.fired = true; const w = m.a.w, cx = (m.a.x + m.b.x) / 2 + w / 2, cy = (m.a.y + m.b.y) / 2 + w * AR / 2 - w * .35; burst(cx, cy, w, m.combo, m.pts, m.lbl); } }); S.mt = S.mt.filter((m) => m.t < .62);
         S.rg.forEach((r) => (r.t += dt)); S.rg = S.rg.filter((r) => r.t < .6); S.flsh.forEach((f) => (f.t += dt)); S.flsh = S.flsh.filter((f) => f.t < .4);
         S.txt.forEach((x) => (x.t += dt)); S.txt = S.txt.filter((x) => x.t < 1.3); if (S.qk > 0) S.qk = Math.max(0, S.qk - dt); if (S.cb) { S.cb.t += dt; if (S.cb.t > 1.4) S.cb = null; }
@@ -17714,6 +17748,28 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           else if (p.k === 2) { g.globalCompositeOperation = "lighter"; g.rotate(p.an); g.fillStyle = p.c; g.globalAlpha = Math.max(0, p.l / .28) * .8; g.fillRect(-26, -1.2, 52, 2.4); }
           else { g.globalCompositeOperation = "lighter"; g.fillStyle = p.c; g.rotate(p.l * 6); const s = 3 + p.l * 3.5; g.beginPath(); for (let i = 0; i < 8; i++) { const r = i % 2 ? s * .32 : s, a = i * Math.PI / 4; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.fill(); }
           g.restore(); g.globalAlpha = 1; });
+        /* a tározóban egymásra talált pár: fehéren izzik, rázkódik, megreped */
+        S.pend.forEach((m) => { const k2 = Math.min(1, m.t / .2), w = m.w, j = (rnd() - .5) * w * .08 * k2;
+          g.save(); g.translate(m.x + w / 2 + j, m.y + w * AR / 2 - k2 * w * .12); g.scale(1 + k2 * .12, 1 + k2 * .12); g.shadowColor = "#fff2b0"; g.shadowBlur = 30 * k2;
+          blitAt(g, m.k, -w / 2 - w * .06, -w * AR / 2, w, dpr); blitAt(g, m.k, -w / 2 + w * .06, -w * AR / 2 - w * .05, w, dpr);
+          g.shadowBlur = 0; g.globalCompositeOperation = "lighter"; g.globalAlpha = .55 * k2; rrp(g, -w / 2 - w * .06, -w * AR / 2 - w * .05, w * 1.12, w * AR + w * .05, w * .12); g.fillStyle = "#fff7d6"; g.fill();
+          g.globalAlpha = 1; g.strokeStyle = "rgba(255,255,255,.95)"; g.lineWidth = Math.max(1, w * .03); g.lineCap = "round";
+          m.crack.forEach((c) => { const n = Math.max(2, Math.round(c.length * k2)); g.beginPath(); c.slice(0, n).forEach(([u, v], q) => (q ? g.lineTo(u - w / 2, v - w * AR / 2) : g.moveTo(u - w / 2, v - w * AR / 2))); g.stroke(); });
+          g.restore(); });
+        /* szilánkok: a lap képének darabjai, pörögve, zuhanva, a végén elhalványulva */
+        S.sh.forEach((q) => { g.save(); g.globalAlpha = Math.max(0, Math.min(1, q.l / .35)); g.translate(q.x, q.y); g.rotate(q.r);
+          g.beginPath(); q.poly.forEach(([u, v], i) => (i ? g.lineTo(u, v) : g.moveTo(u, v))); g.closePath(); g.save(); g.clip(); blitAt(g, q.k, -q.ox, -q.oy, q.w, dpr); g.restore();
+          g.strokeStyle = "rgba(255,248,220,.85)"; g.lineWidth = 1; g.stroke(); g.restore(); });
+        /* kiugró pontszám: rugalmasan felnagyul, lebeg, majd a pontszámlálóba repül */
+        S.pop.forEach((q) => { const t2 = q.t; let sc, x = q.x, y = q.y - Math.min(1, t2 / .5) * 60;
+          if (t2 < .35) { const u = t2 / .35; sc = 1.5 * (1 - Math.pow(1 - u, 3)) + Math.sin(u * Math.PI) * .25; } else if (t2 < .95) sc = 1.5 - (t2 - .35) * .25; else sc = 1.35;
+          if (t2 > .95 && S.cnt) { const k3 = Math.min(1, (t2 - .95) / .45), e = k3 * k3; x = x + (S.cnt.x - x) * e; y = y + (S.cnt.y - y) * e - Math.sin(Math.PI * k3) * 60; sc *= 1 - k3 * .65; }
+          const sz = Math.min(W * .11, 46);
+          g.save(); g.translate(x, y); g.scale(sc, sc); g.textAlign = "center"; g.textBaseline = "middle"; g.font = `900 ${sz}px ${SANS}`;
+          g.shadowColor = q.mult > 1 ? "#4fe3ff" : "#ffb43a"; g.shadowBlur = 22; g.lineWidth = 7; g.strokeStyle = "rgba(50,22,0,.85)"; g.strokeText(q.s, 0, 0); g.shadowBlur = 0;
+          const tg = g.createLinearGradient(0, -sz / 2, 0, sz / 2); tg.addColorStop(0, "#ffffff"); tg.addColorStop(.45, q.mult > 1 ? "#9ff0ff" : "#ffe58a"); tg.addColorStop(1, q.mult > 1 ? "#2fb2ff" : "#ff9d1f"); g.fillStyle = tg; g.fillText(q.s, 0, 0);
+          if (q.mult > 1) { g.font = `900 ${sz * .42}px ${SANS}`; g.lineWidth = 5; g.strokeText("×2 SOROZAT", 0, -sz * .78); g.fillStyle = "#7fe3ff"; g.fillText("×2 SOROZAT", 0, -sz * .78); }
+          g.restore(); });
         /* lebegő pontszámok és kombó-felirat */
         S.txt.forEach((x) => { const k2 = x.t / 1.3, sz = (x.big ? 30 : 24) * (k2 < .15 ? .6 + k2 / .15 * .5 : 1.1 - (k2 - .15) * .1);
           g.save(); g.globalAlpha = k2 > .7 ? (1 - k2) / .3 : 1; g.translate(x.x, x.y - k2 * 70); g.textAlign = "center"; g.textBaseline = "middle"; g.font = `900 ${sz}px ${SANS}`; g.lineWidth = 5; g.strokeStyle = "rgba(40,20,0,.75)"; g.strokeText(x.s, 0, 0);
@@ -17722,15 +17778,17 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         if (qk) g.restore();
         /* számláló: jobb felső sarok, a fejléc sorában */
         if (!GM_PANELS_OFF) {
-          const l1 = gmFmt(S.el * 1000), l2 = ph ? `${fmtN(S.score)} pont · ${S.left + S.buf.length} lap` : `${fmtN(S.score)} pont · ${S.left + S.buf.length} lap · ${S.moves} szabad pár`;
+          const l1 = fmtN(S.disp) + " pont", l2 = `${gmFmt(S.el * 1000)} · ${S.left + S.buf.length} lap`;
           g.font = `700 ${ph ? 11 : 12}px ${SANS}`; const w2 = g.measureText(l2).width; g.font = `900 ${ph ? 18 : 20}px ${SANS}`; const w1 = g.measureText(l1).width + 22;
           const cw = Math.max(w1, w2) + 24, chh = ph ? 44 : 48; let cx = W - cw - 10, cy = GM_HD.top;
           if (GM_HD.right > cx - 6) { if (ph || GM_HD.min) { cx = W / 2 - cw / 2; cy = H - chh - 14; } else cy = GM_HD.bottom + 8; }   /* a hosszú cím mellett: telefonon alul középre (a nagyítás és a Menü közé) */
           g.fillStyle = "rgba(7,29,56,.82)"; g.beginPath(); g.roundRect ? g.roundRect(cx, cy, cw, chh, 14) : g.rect(cx, cy, cw, chh); g.fill(); g.strokeStyle = "rgba(242,178,51,.45)"; g.lineWidth = 1; g.stroke();
           g.textAlign = "center"; g.textBaseline = "middle";
           g.save(); g.translate(cx + cw / 2 - w1 / 2 + 7, cy + chh * .33); g.strokeStyle = "#ffd978"; g.lineWidth = 1.6; g.beginPath(); g.arc(0, 0, 5.5, 0, TAU); g.stroke(); ln(g, 0, 0, 0, -3.4, 1.4, "#ffd978"); ln(g, 0, 0, 2.6, 0, 1.4, "#ffd978"); g.restore();
-          g.fillStyle = "#fff"; g.font = `900 ${ph ? 18 : 20}px ${SANS}`; g.fillText(l1, cx + cw / 2 + 9, cy + chh * .35);
-          g.fillStyle = S.moves ? "#c9dbee" : "#ffb3a8"; g.font = `700 ${ph ? 11 : 12}px ${SANS}`; g.fillText(l2, cx + cw / 2, cy + chh * .76);
+          S.cnt = { x: cx + cw / 2, y: cy + chh * .36 };
+          if (S.cntP > 0) { g.save(); g.shadowColor = "#ffd23f"; g.shadowBlur = 24 * S.cntP; g.strokeStyle = `rgba(255,214,90,${S.cntP})`; g.lineWidth = 2.5; g.beginPath(); g.roundRect ? g.roundRect(cx, cy, cw, chh, 14) : g.rect(cx, cy, cw, chh); g.stroke(); g.restore(); }
+          g.save(); g.translate(cx + cw / 2 + 9, cy + chh * .35); g.scale(1 + S.cntP * .18, 1 + S.cntP * .18); g.fillStyle = "#ffd978"; g.font = `900 ${ph ? 18 : 20}px ${SANS}`; g.fillText(l1, 0, 0); g.restore();
+          g.fillStyle = "#c9dbee"; g.font = `700 ${ph ? 11 : 12}px ${SANS}`; g.fillText(l2, cx + cw / 2, cy + chh * .76);
         }
         /* alsó sáv: nagyítás bal oldalt, összecsukható menü jobb oldalt */
         S.btn = []; const bh = 44, yb = H - bh - 12;
@@ -17762,11 +17820,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           S.conf.forEach((c) => { g.save(); g.translate(c.x * W, c.y * H); g.rotate(c.r); drawFlag(g, c.f, 6); g.restore(); });
           const k = S.lay + (S.tr ? "t" : ""), best = S.best[k];
           const F = S.final || { base: S.score, tb: 0, cl: 0, total: S.score };
-          bigPanel(g, W, H, `${fmtN(F.total)} pont`, [`Idő: ${gmFmt(S.el * 1000)}${S.rec ? " – a legjobb időd!" : best ? ` (legjobb: ${gmFmt(best * 1000)})` : ""}`, `Párok: ${fmtN(F.base)} · időbónusz: +${fmtN(F.tb)}`, F.cl ? `Tározó nélkül: +${fmtN(F.cl)}` : "A tározót is használtad – nincs tisztasági bónusz.", F.helyS ? `Saját ranglista: ${F.helyS}. hely${F.helyV ? ` · Világ: ${F.helyV}. hely` : ""}` : ""], "Új játék", "🏆 Ranglista");
+          bigPanel(g, W, H, `${fmtN(F.total)} pont`, [`Idő: ${gmFmt(S.el * 1000)}${S.rec ? " – a legjobb időd!" : best ? ` (legjobb: ${gmFmt(best * 1000)})` : ""}`, `Párok: ${fmtN(F.base)} · időbónusz: +${fmtN(F.tb)}`, `Sorozatok (×2): ${F.sq || 0}`, F.helyS ? `Saját ranglista: ${F.helyS}. hely${F.helyV ? ` · Világ: ${F.helyV}. hely` : ""}` : ""], "Új játék", "🏆 Ranglista");
         }
         if (S.cb && !GM_PANELS_OFF) { const k2 = S.cb.t / 1.4, sz = Math.min(W * .12, 54) * (k2 < .12 ? .5 + k2 / .12 * .7 : 1.2 - k2 * .15);   /* KOMBÓ */
           g.save(); g.globalAlpha = k2 > .75 ? (1 - k2) / .25 : 1; g.translate(W / 2, (S.B ? S.B.y + S.B.fh : GM_TOP) + 60); g.rotate(-.05); g.textAlign = "center"; g.textBaseline = "middle"; g.font = `900 ${sz}px ${SANS}`;
-          g.lineWidth = 8; g.strokeStyle = "rgba(60,10,0,.8)"; g.strokeText(`KOMBÓ ×${S.cb.n}!`, 0, 0); const cg = g.createLinearGradient(0, -sz / 2, 0, sz / 2); cg.addColorStop(0, "#ffffff"); cg.addColorStop(.5, "#ffd24a"); cg.addColorStop(1, "#ff7a2a"); g.fillStyle = cg; g.fillText(`KOMBÓ ×${S.cb.n}!`, 0, 0); g.restore(); }
+          g.lineWidth = 8; g.strokeStyle = "rgba(60,10,0,.8)"; g.strokeText(S.cb.s || `KOMBÓ ×${S.cb.n}!`, 0, 0); const cg = g.createLinearGradient(0, -sz / 2, 0, sz / 2); cg.addColorStop(0, "#ffffff"); cg.addColorStop(.5, "#ffd24a"); cg.addColorStop(1, "#ff7a2a"); g.fillStyle = cg; g.fillText(S.cb.s || `KOMBÓ ×${S.cb.n}!`, 0, 0); g.restore(); }
         if (S.rank) drawRank(g, W, H);
         if (S.splash > 0) {   /* kezdőképernyő: a díszdobozos készlet, elmosott háttérrel kitöltve, a végén elhalványul */
           const al = Math.min(1, S.splash / .5); g.save(); g.globalAlpha = al; g.fillStyle = "#0b1a10"; g.fillRect(0, 0, W, H);
@@ -17780,7 +17838,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
           g.restore();
         }
       },
-      help: "Koppints két egyforma, szabad lapra. Ha nem pár, mindkettő a felső tározóba kerül (4 hely). Ott az egyforma lapok kiváltják egymást, és a tározóból is párosíthatsz. Ha megtelik, vége a játéknak."
+      help: "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége."
     };
   }
 

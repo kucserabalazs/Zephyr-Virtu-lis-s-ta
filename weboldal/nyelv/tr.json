@@ -2406,5 +2406,9 @@
  "Kiváltás!": "Birbirini götürdü!",
  "Mentés a tározóból": "Tepsiden kurtarıldı",
  "Új": "Yeni",
- "Kikötő": "Liman"
+ "Kikötő": "Liman",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "Serbest bir taşa dokun: 4 yerli tepsiye uçar ve orada eşini arar. Bulursa ikisi patlar ve puan verir (her taşın puanı farklı; önceki çiftin ±1 komşusuysa iki katı). Tepsi dolarsa oyun biter.",
+ "SOROZAT ×2!": "SERİ ×2!",
+ "×2 SOROZAT": "×2 SERİ",
+ "Ez a lap a tározóban várja a párját.": "Bu taş tepside eşini bekliyor."
 }

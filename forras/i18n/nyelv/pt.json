@@ -2408,5 +2408,9 @@
  "Kiváltás!": "Anuladas!",
  "Mentés a tározóból": "Salva da bandeja",
  "Új": "Novo",
- "Kikötő": "Porto"
+ "Kikötő": "Porto",
+ "Koppints egy szabad lapra: felrepül a 4 helyes tározóba, és ott keresi a párját. Ha megtalálja, szétrobban és pontot ad (minden lap más pontot ér; ha az előző pár ±1 szomszédja, kétszerest). Ha megtelik a tározó, vége.": "Toca numa peça livre: voa para a bandeja de 4 lugares e procura lá o seu par. Se o encontrar, ambas explodem e dão pontos (cada peça vale diferente; a dobrar se for a vizinha ±1 do par anterior). Se a bandeja encher, o jogo acaba.",
+ "SOROZAT ×2!": "SEQUÊNCIA ×2!",
+ "×2 SOROZAT": "×2 SEQUÊNCIA",
+ "Ez a lap a tározóban várja a párját.": "Esta peça espera o seu par na bandeja."
 }
