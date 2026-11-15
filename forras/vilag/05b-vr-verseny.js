@@ -801,7 +801,7 @@
      BÓJAKERÜLÉS: a bója akkor számít megkerültnek, ha a hajó – a bóját BAL kéz felől hagyva (felülről nézve az óramutatóval ellentétesen haladva) – átlépi a bójából
      a forduló KÜLSŐ oldala felé húzott félegyenest (legfeljebb 45 m-re a bójától). Nem elég a közelében elhaladni; a rossz irányú átlépés hibát jelez. Ugyanez a szabály
      érvényes a játékosra és a gépi hajókra.  ÚTJOG: ellentétes csapáson a szelet JOBBRÓL kapó hajónak van útjoga (bumja a bal oldalon), azonos csapáson a szél felőli tér ki.
-     A kitérésre kötelezett gépi hajó kitér; ha a játékos a kötelezett, az útjogos hajó rákiált („Backbord!”); ütközésnél a vétkes kap büntetést. A gépi hajók is hibáznak. */
+     A kitérésre kötelezett gépi hajó kitér; ha a játékos a kötelezett, az útjogos hajó rákiált („Starboard!”); ütközésnél a vétkes kap büntetést. A gépi hajók is hibáznak. */
   function vrMarkO(i) { const S = VRR, C = S.C, lm = { x: (C.line.a.x + C.line.b.x) / 2, z: (C.line.a.z + C.line.b.z) / 2 }, m = S.marks[i], p = i ? S.marks[i - 1] : lm, n = i + 1 < S.marks.length ? S.marks[i + 1] : finMid();
     let ix = m.x - p.x, iz = m.z - p.z, il = Math.hypot(ix, iz) || 1, ox = n.x - m.x, oz = n.z - m.z, ol = Math.hypot(ox, oz) || 1; ix /= il; iz /= il; ox /= ol; oz /= ol;
     let x = ix - ox, z = iz - oz, l = Math.hypot(x, z); if (l < .35) { x = -iz; z = ix; l = 1; } return [x / l, z / l]; }
@@ -847,13 +847,13 @@
   function vrGiveWay(a, o) { return vrRule(a, o).keep === a; }   /* igaz: „a”-nak kell kitérnie */
   /* a rákiáltás legyen nagyon intenzív és haragos (a tulajdonos kérése): háromszor, hangosan, gyorsan, mély dühös hangon + éles, ismétlődő kürt */
   /* 2026-11-12 13:37 (tulajdonos: „a bekiabálás ne gépi hang legyen – emberi kiáltás, ami többször elhangzik; szívesen felveszem a hangomat”):
-     a kiáltás FELVETT emberi hangból szól, ha van ilyen fájl: hang/bekbord.mp3 (útjog-kiáltás), hang/protest.mp3 (ütközés után). Amíg nincs felvétel, a böngésző
+     a kiáltás FELVETT emberi hangból szól, ha van ilyen fájl: hang/starboard.mp3 (útjog-kiáltás), hang/protest.mp3 (ütközés után). Amíg nincs felvétel, a böngésző
      beszédhangja szól (ahol van magyar hang – a Questen általában nincs, ott csak a felirat látszik). A korábbi fűrészfog-csipogás megszűnt. */
   const VR_VOX = {};
-  function vrVoxLoad() { ["bekbord", "protest"].forEach((n) => { if (VR_VOX[n] !== undefined) return; VR_VOX[n] = null; try { const au = new Audio(); au.preload = "auto"; au.addEventListener("canplaythrough", () => { VR_VOX[n] = au; }, { once: true }); au.addEventListener("error", () => { VR_VOX[n] = null; }, { once: true }); au.src = "hang/" + n + ".mp3?v=" + (window.ZEPHYR_BV || ""); } catch (e) {} }); }
+  function vrVoxLoad() { ["starboard", "protest"].forEach((n) => { if (VR_VOX[n] !== undefined) return; VR_VOX[n] = null; try { const au = new Audio(); au.preload = "auto"; au.addEventListener("canplaythrough", () => { VR_VOX[n] = au; }, { once: true }); au.addEventListener("error", () => { VR_VOX[n] = null; }, { once: true }); au.src = "hang/" + n + ".mp3?v=" + (window.ZEPHYR_BV || ""); } catch (e) {} }); }
   function vrHail(txt) {
-    vrVoxLoad(); const key = /protest/i.test(txt) && !/^bekbord/i.test(txt) ? "protest" : "bekbord", au = VR_VOX[key] || VR_VOX.bekbord;
-    if (au) { const play = (vol, rate) => { try { const c = au.cloneNode(); c.volume = vol; c.playbackRate = rate; c.play().catch(() => {}); } catch (e) {} }; play(1, 1); setTimeout(() => play(1, 1.06), 1300); if (VR_VOX.protest && /protest/i.test(txt) && key === "bekbord") setTimeout(() => { try { const c = VR_VOX.protest.cloneNode(); c.play().catch(() => {}); } catch (e) {} }, 2600); return; }
+    vrVoxLoad(); const key = /protest/i.test(txt) && !/^starboard/i.test(txt) ? "protest" : "starboard", au = VR_VOX[key] || VR_VOX.starboard;
+    if (au) { const play = (vol, rate) => { try { const c = au.cloneNode(); c.volume = vol; c.playbackRate = rate; c.play().catch(() => {}); } catch (e) {} }; play(1, 1); setTimeout(() => play(1, 1.06), 1300); if (VR_VOX.protest && /protest/i.test(txt) && key === "starboard") setTimeout(() => { try { const c = VR_VOX.protest.cloneNode(); c.play().catch(() => {}); } catch (e) {} }, 2600); return; }
     try { speechSynthesis.cancel(); const hu = (speechSynthesis.getVoices() || []).find((v) => /^hu/i.test(v.lang));
       [txt.toUpperCase() + "!", txt.toUpperCase() + "!!", "Térj már ki! " + txt.toUpperCase() + "!!!"].forEach((q, i) => { const u = new SpeechSynthesisUtterance(q); u.lang = "hu-HU"; if (hu) u.voice = hu; u.rate = 1.45 + i * .1; u.pitch = .55 + i * .12; u.volume = 1; speechSynthesis.speak(u); }); } catch (e) {}
   }
@@ -978,7 +978,7 @@
       const want = G ? 1.5 : (S.near ? .6 : 0) + (!S.everGrab && S.st === "pre" ? .3 + .3 * Math.sin(W.t * 4) : 0); TI.gripM.emissiveIntensity += (want - TI.gripM.emissiveIntensity) * Math.min(1, dt * 8); }
     if (S.grab) S.everGrab = true;
     if (S.helpL) { S.helpL.visible = T.inVR && !S.everGrab && S.st !== "done"; }   /* (2D-ben billentyű/gomb kormányoz – ott nem kell) */
-    if (S.msgL) { const on = S.msgT > 0 && !!S.msg && S.st !== "done" && /⚠|BACKBORD|SZABÁLY|Korai rajt|szabálytalan|BEFUTÓ|✓/.test(S.msg); S.msgL.visible = on;   /* csak szabálysértés / visszaigazolás – nincs állandó szöveg */
+    if (S.msgL) { const on = S.msgT > 0 && !!S.msg && S.st !== "done" && /⚠|STARBOARD|SZABÁLY|Korai rajt|szabálytalan|BEFUTÓ|✓/.test(S.msg); S.msgL.visible = on;   /* csak szabálysértés / visszaigazolás – nincs állandó szöveg */
       if (on) { const m = S.msg; let k = m.indexOf(" – "), L; if (k > 0) L = [m.slice(0, k), m.slice(k + 3)]; else if ((k = m.indexOf("! ")) > 0) L = [m.slice(0, k + 1), m.slice(k + 2)]; else L = [m, ""]; S.msgL.userData.set(L); } }   /* +z körüli forgás a kormányos felől nézve óramutató szerinti */
     /* fizika (a vitorlázás modellje, a nagyobb hajóhoz igazítva) */
     /* a szél lassan leng (±7°) – mint a Balatonon; a pálya ugyanaz marad */
@@ -1272,8 +1272,8 @@
       const brg = wrapA(Math.atan2(dx, -dz) - r.b), ahead = Math.abs(brg) < 1.9, racing = S.st === "race" && !r.fin && !o.fin, gw = racing ? vrGiveWay(r, o) : true, careless = (r.errGW || 0) > W.t;
       if (gw && !careless) { if (d < 36 * kz && ahead) want += (brg > 0 ? -1 : 1) * .7 * (1 - d / (36 * kz)); }
       else if (d < 9 * kz) want += (brg > 0 ? -1 : 1) * .35 * (1 - d / (9 * kz));   /* az útjogos tartja az irányát, csak az utolsó pillanatban tér ki */
-      if (o === S && racing && !gw) { const closing = r._dS != null && d < r._dS - .002; if (d < 26 * kz && closing && Math.abs(wrapA(Math.atan2(-dx, dz) - S.b)) < 1.7 && (!S.hailT || W.t - S.hailT > 4.5)) { S.hailT = W.t; const rn = vrRule(S, r).n, sh = { 10: "BEKBORD!!! BEKBORD!!!", 11: "SZÉL ALATT VAGYOK – FEL, FEL!", 12: "ELŐTTED VAGYOK – NE GYERE BELÉM!", 13: "FORDULSZ – TÉRJ KI!", 18: "HELYET A BÓJÁNÁL! HELYET!", 21: "BÜNTETŐT FUTSZ – TÉRJ KI!" }[rn] || "TÉRJ KI!";
-          S.msg = `„${sh}” – a(z) ${r.o.name} hajónak útjoga van (${VR_RRS[rn] ? VR_RRS[rn][0] : "útjog"}): TÉRJ KI AZONNAL!`; S.msgT = 6; vrHail(rn === 10 ? "Bekbord!" : "Térj ki!"); } }
+      if (o === S && racing && !gw) { const closing = r._dS != null && d < r._dS - .002; if (d < 26 * kz && closing && Math.abs(wrapA(Math.atan2(-dx, dz) - S.b)) < 1.7 && (!S.hailT || W.t - S.hailT > 4.5)) { S.hailT = W.t; const rn = vrRule(S, r).n, sh = { 10: "STARBOARD!!! STARBOARD!!!", 11: "SZÉL ALATT VAGYOK – FEL, FEL!", 12: "ELŐTTED VAGYOK – NE GYERE BELÉM!", 13: "FORDULSZ – TÉRJ KI!", 18: "HELYET A BÓJÁNÁL! HELYET!", 21: "BÜNTETŐT FUTSZ – TÉRJ KI!" }[rn] || "TÉRJ KI!";
+          S.msg = `„${sh}” – a(z) ${r.o.name} hajónak útjoga van (${VR_RRS[rn] ? VR_RRS[rn][0] : "útjog"}): TÉRJ KI AZONNAL!`; S.msgT = 6; vrHail(rn === 10 ? "Starboard!" : "Térj ki!"); } }
       if (o === S) r._dS = d; });
     /* a kitérés se fordítsa a hajót a szélbe (holtszög): legalább 40°-kal a szél mellett maradjon */
     { const relW = wrapA(want - S.wf); if (Math.abs(relW) < (UPA - 4) * D2R) want = S.wf + (relW === 0 ? r.tack : Math.sign(relW)) * (UPA - 4) * D2R; }
@@ -1301,7 +1301,7 @@
     r.prevSide = lineSide(r);
     /* ütközés a saját hajónkkal: szétlöki a két hajót, mindkettő lelassul, koppanás és kiabálás helyett kürt */
     { const hg = vrHullGap(S, r), d = hg.d, dx = hg.nx, dz = hg.nz, HT = S.cls ? S.cls.hit : 4.6; if (d < HT) { const k = (HT - d) / 2; r.x += dx * k; r.z += dz * k; S.x -= dx * k; S.z -= dz * k;
-      if (!r.bumpT || W.t - r.bumpT > 3) { r.bumpT = W.t; r.v *= .6; S.v *= .6; try { const a2 = T.ac(); if (a2) { const s2 = a2.createBufferSource(); s2.buffer = T.noiseBuf(.6); const f2 = a2.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = 220; const g2 = a2.createGain(); g2.gain.setValueAtTime(.35, a2.currentTime); g2.gain.exponentialRampToValueAtTime(.001, a2.currentTime + .6); s2.connect(f2).connect(g2).connect(T.outBus()); s2.start(); } } catch (e) {} /* 2026-11-12 13:36 (tulajdonos): büntetés CSAK ütközésért jár. Ha az egyik hajó HÁTULRÓL megy bele a másikba, nem az útjog (bekbord/stribord) dönt:
+      if (!r.bumpT || W.t - r.bumpT > 3) { r.bumpT = W.t; r.v *= .6; S.v *= .6; try { const a2 = T.ac(); if (a2) { const s2 = a2.createBufferSource(); s2.buffer = T.noiseBuf(.6); const f2 = a2.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = 220; const g2 = a2.createGain(); g2.gain.setValueAtTime(.35, a2.currentTime); g2.gain.exponentialRampToValueAtTime(.001, a2.currentTime + .6); s2.connect(f2).connect(g2).connect(T.outBus()); s2.start(); } } catch (e) {} /* 2026-11-12 13:36 (tulajdonos): büntetés CSAK ütközésért jár. Ha az egyik hajó HÁTULRÓL megy bele a másikba, nem az útjog (starboard) dönt:
            aki hátulról jött bele, az a hibás. Egyébként az útjogra kötelezett hajó a hibás. Aki a figyelmeztetésre időben kitér, és nincs ütközés, nem kap büntetést. */
         const racing2 = S.st === "race" && !S.fin && !r.fin; let rule = racing2 ? vrRule(S, r) : null;
         /* 15. szabály: aki tisztán hátulról, szél alatt létesített fedést, és ezzel útjogot szerzett, kezdetben helyet kell adnia – ha 3 mp-en belül ütköznek, ő a hibás */
@@ -1311,7 +1311,7 @@
           else if (bowR && (rule.n === 12 || fresh || r._rel !== "O")) rule = { keep: r, n: 12 };       /* az ő orra érte az én faromat */
           else if (rule.n === 11 && fresh && r._ovBy && r._ovBy !== rule.keep) rule = { keep: r._ovBy, n: 15 }; }
         if (!racing2) { S.msg = "Koccanás a(z) " + r.o.name + " hajóval!"; S.msgT = 3; }
-        else if (rule.keep === S) { vrFoulMe(r, rule.n); vrHail(rule.n === 10 ? "Bekbord! Protest!" : "Protest!"); }
+        else if (rule.keep === S) { vrFoulMe(r, rule.n); vrHail(rule.n === 10 ? "Starboard! Protest!" : "Protest!"); }
         else vrFoulRiv(r, rule.n); } } }
     /* a fedés kialakulásának követése (a 15. szabályhoz) és a forduló-állapot (a 13. szabályhoz) */
     /* 2026-11-12 14:05 (tulajdonos: „a helyadás a bójánál betehető”) – 18. szabály: amikor a páros első hajója eléri a zónát (3 hajóhossz = 45 m), rögzítjük, ki jogosult

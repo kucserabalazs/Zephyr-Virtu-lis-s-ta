@@ -4145,7 +4145,7 @@ const PLANS = {
            ["Lépcsőház", 3.2, 17.66, 8.8, 2.48, null],
            ["Emelet · Kalóz", 3.2, 12.56, 8.8, 2.48, "kaloz", "#9b6be2"], ["Földszint · Dingi", 3.2, 15.04, 8.8, 2.49, "dingi", "#3fb37f"],
            ["Emelet · Kadett", 3.2, 7.45, 8.8, 2.48, "kadett", "#f08a24"], ["Földszint · Schooner", 3.2, 9.93, 8.8, 2.5, "schooner", "#2bb3c0"]],
-    outs: [["Gáspár András utca 54.", 0, 27.7, 12, 2.6]],
+    outs: [["Gáspár András utca 58.", 0, 27.7, 12, 2.6]],
     /* Kültéri tereptárgyak: [típus, x, y, szélesség, mélység, felirat, forgatás, extra] – a burkolatok ("area") legyenek elöl */
     furn: [
       ["area", 3.2, 25.35, 8.8, 2.25, "", 0, "lawn"],
@@ -4195,7 +4195,7 @@ const PLANS = {
     ],
     /* Feliratok helye a vázlaton, hogy ne takarják a pontok: [x, y, igazítás, elforgatás] */
     lp: { "Kert": [10.2, -5.45], "Parkoló": [4.6, 2.96], "Belső út": [1.5, 15.29, "middle", -90], "Előkert": [10.3, 25.95],
-          "Gáspár András utca 54.": [4.6, 29.25], "Lépcsőház": [3.9, 18.9, "start"] } }
+          "Gáspár András utca 58.": [4.6, 29.25], "Lépcsőház": [3.9, 18.9, "start"] } }
 };
 /* Kadett (6): a Schooner pontos mása az emeleten; a terasz nem fedett, bal sarkában csigalépcső a tetőteraszra */
 /* Dingi (2) és Kalóz (4): közös stúdió-alaprajz a felhasználó elrendezése szerint */
@@ -10244,7 +10244,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         svg(`${wind(150, 30, 180)}${buoy(50, 90)}${buoy(250, 90)}<path d="M50 90 H250" stroke="${N}" stroke-width="2" stroke-dasharray="4 4"/>${boat(110, 140, -30, S, 1, .85)}${boat(190, 146, 20, "#cfe3f3", -1, .85)}<text x="150" y="82" text-anchor="middle" class="zsd-t">RAJTVONAL</text>`)],
       ["3. A bójákat bal kéz felől kerüljük", "A pályán a bóják sorban jönnek: 1., 2., 3. … Mindegyiket úgy kell megkerülni, hogy a BAL kezed felé essen (óramutatóval ellentétesen). Aki kihagy egyet vagy rossz oldalról kerüli, annak vissza kell mennie.",
         svg(`${buoy(150, 80, 1)}${arc("M210 160 C230 90 200 40 150 44 C110 46 96 84 110 130")}<path d="M110 130 l-8 -14 M110 130 l12 -9" stroke="${G}" stroke-width="3" fill="none" stroke-linecap="round"/>${boat(214, 150, -14, S, -1, .85)}<text x="74" y="76" text-anchor="middle" class="zsd-t">bal kéz</text><text x="74" y="92" text-anchor="middle" class="zsd-t">felől</text>`)],
-      ["4. „Backbord!” – a jobbcsapású hajónak van elsőbbsége", "Ha a szél a hajó JOBB oldala felől fúj (a bum a bal oldalon van), az a hajó „jobbcsapáson” megy, és ELSŐBBSÉGE van. A balcsapású hajónak ki kell térnie. Ilyenkor kiabálják: „Backbord!” – vagyis: „Térj ki, nekem van elsőbbségem!”",
+      ["4. „Starboard!” – a jobbcsapású hajónak van elsőbbsége", "Ha a szél a hajó JOBB oldala felől fúj (a bum a bal oldalon van), az a hajó „jobbcsapáson” megy, és ELSŐBBSÉGE van. A balcsapású hajónak ki kell térnie. Ilyenkor kiabálják: „Starboard!” – vagyis: „Térj ki, nekem van elsőbbségem!”",
         svg(`${wind(150, 30, 180)}${boat(96, 122, 45, "#d7f0d7", -1, 1.05, "jobbcsapás ✔")}${boat(206, 122, -45, "#f6d5d5", 1, 1.05, "balcsapás – kitér")}<path d="M228 96 q22 -22 30 -52" fill="none" stroke="${R}" stroke-width="3" stroke-dasharray="6 5"/>`)],
       ["5. Azonos csapáson: a szél felőli tér ki", "Ha két hajó ugyanazon az oldalon kapja a szelet, akkor a szélhez KÖZELEBBI (luv) hajónak kell kitérnie a szél alatti (lee) hajó elől.",
         svg(`${wind(150, 30, 180)}${boat(120, 96, 50, "#f6d5d5", -1, 1, "")}${boat(170, 142, 50, "#d7f0d7", -1, 1, "")}<text x="58" y="92" text-anchor="middle" class="zsd-t">luv – kitér</text><text x="236" y="150" text-anchor="middle" class="zsd-t">lee ✔</text>`)],
