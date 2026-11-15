@@ -174,7 +174,7 @@
   function vrSpectTick(dt) {
     const S = VRR, list = (S.spect || []).concat(S.cbHit ? [S.cbHit] : []);
     list.forEach((q) => {
-      if (!q.cb) { q.g.position.y = Math.sin(W.t * 1.1 + q.ph) * .08; q.g.rotation.z = Math.sin(W.t * .9 + q.ph) * .03; q.g.rotation.x = Math.sin(W.t * .7 + q.ph * 2) * .02; }
+      /* (a ringás: 05z rwFloatTick – a valódi hullámokon) */
       /* ütközés a saját hajóddal és az ellenfelekkel */
       const hitR = (S.cls ? S.cls.rad : 2.3) * (S.cls && S.cls.id === "zephyr" ? 1 : 1) + q.rad;
       [S].concat(S.riv || []).forEach((o) => { if (o.x == null || (o.g && o.g.visible === false)) return; const gp = vrSpectGap(o, q), lim = o === S ? hitR + (S.cls.id === "zephyr" ? 3.5 : .4) : hitR + (S.cls.id === "zephyr" ? 3 : .4);

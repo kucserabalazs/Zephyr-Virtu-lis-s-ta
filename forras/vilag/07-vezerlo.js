@@ -233,9 +233,16 @@
     const h = pick2D(e); if (h && h.object.userData.xr.click) h.object.userData.xr.click(h);
   }
   function onKey(e, v) {
-    if (!W.active || W.kind !== "sail") return;
+    /* 2026-11-15: a VERSENYBEN is (W.kind === "race") – addig a ← → / A D billentyű csak a gyakorló vitorlázásban kormányzott, a versenyben nem, pedig a súgó ezt ígérte.
+       Szövegmezőbe (név, üzenet) gépelve nem kormányoz; a visszajátszás alatt sem. */
+    if (!W.active || (W.kind !== "sail" && W.kind !== "race") || T.inVR) return;
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (v && W.kind === "race" && VRR.replay) return;
     const k = e.key; if (k === "ArrowLeft" || k === "a" || k === "A") { SAIL.keys.L = v; e.preventDefault(); } if (k === "ArrowRight" || k === "d" || k === "D") { SAIL.keys.R = v; e.preventDefault(); }
   }
+  /* 2026-11-15: ha a lap elveszti a fókuszt (másik ablak, értesítés) miközben a billentyű / gomb le van nyomva, a felengedés nem érkezik meg – a hajó a végtelenségig fordulna */
+  try { const relK = () => { try { if (SAIL.keys) { SAIL.keys.L = false; SAIL.keys.R = false; } document.querySelectorAll("#worldHud .wh-steer .wh-b.on").forEach((b) => b.classList.remove("on")); } catch (e) {} };
+    window.addEventListener("blur", relK); document.addEventListener("visibilitychange", () => { if (document.hidden) relK(); }); } catch (e) {}
   const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false);
 
   /* ------------------------------------------------------------------ MEGNYITÁS / BEZÁRÁS */

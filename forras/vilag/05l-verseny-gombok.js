@@ -131,7 +131,7 @@
     try { const f = vfwd(S.b); S.wake.push(S.x, S.z, Math.atan2(f[0], f[1]), S.v, dt * P.spd, .05); } catch (e) {}
     /* környezet a saját hajó körül (mint a futamban) */
     S.env.rotation.y = S.b; S.far.rotation.y = S.b; S.env.position.set(-S.x, 0, -S.z).applyAxisAngle(_YAX, S.b);
-    try { rwUpdate(dt); } catch (e) {}   /* VÍZ 2.0 (05x) */
+    try { rwUpdate(dt); } catch (e) {}   /* VÍZ 2.0 (05x) */ try { rwFloatTick(dt); } catch (e) {}
     try { if (P.play && S.v > 4.5 && Math.random() < dt * .6) S.sprayBurst = 1; rwSprayTick(dt); } catch (e) {}
     /* mozi-kamera: a világot úgy forgatjuk és toljuk, hogy a kamera pontja az origóba, a nézése a választott cél felé essen */
     const cam = vrRepCam(P, S, dt), c = Math.cos(S.b), s2 = Math.sin(S.b), toRoot = (x, y, z) => { const dx = x - S.x, dz = z - S.z; return new THREE.Vector3(dx * c + dz * s2, y, -dx * s2 + dz * c); };

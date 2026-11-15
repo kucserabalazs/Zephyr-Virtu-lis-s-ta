@@ -317,8 +317,9 @@
         if (d.cap) { const cp = mesh(new THREE.SphereGeometry(.128, 16, 8, 0, TAU, 0, Math.PI / 2), std({ color: "#ffffff", roughness: .7 }), hg); cp.position.y = .03; const vz = mesh(new THREE.BoxGeometry(.15, .012, .11), std({ color: "#0b2f5e" }), hg); vz.position.set(0, .04, .15); vz.rotation.x = .12; } }
       const strands = [];
       { const mk = (x, y, z, len, w, th) => { const sg = new THREE.BoxGeometry(w, th, len, 1, 1, 5); const P = sg.attributes.position; for (let i = 0; i < P.count; i++) { const zz = P.getZ(i) + len / 2, q = zz / len; P.setZ(i, zz); P.setX(i, P.getX(i) * (1 - .55 * q)); } sg.computeVertexNormals(); const m2 = mesh(sg, hairM, hg); m2.position.set(x, y, z); m2.userData.noBake = true; strands.push({ m: m2, len, ph: rand() * 9, k: .6 + rand() * .8 }); };
-        if (d.style === "long") for (let q = 0; q < 11; q++) { const a = (q / 10 - .5) * 2.6; mk(Math.sin(a) * .1, .03 - Math.abs(Math.sin(a)) * .05, -Math.cos(a) * .1, .3 + rand() * .12, .05, .012); }
-        else if (d.style === "pony") { for (let q = 0; q < 5; q++) mk((q - 2) * .012, .05, -.11, .34 + rand() * .08, .03, .014); const tie = mesh(new THREE.TorusGeometry(.022, .008, 6, 12), std({ color: "#e5262f" }), hg); tie.position.set(0, .05, -.118); }
+        /* 2026-11-15: a lófarok és a hosszú haj élethű, tagoltan hajló tincsekből (05z vrHairBuild) – a merev „szalmaszálak” helyett */
+        if (d.style === "long") { /* (a tincsek a vrHairBuild-ben) */ }
+        else if (d.style === "pony") { const tie = mesh(new THREE.TorusGeometry(.022, .008, 6, 12), std({ color: "#e5262f" }), hg); tie.position.set(0, .05, -.118); }
         else for (let q = 0; q < 7; q++) { const a = (q / 6 - .5) * 2.4; mk(Math.sin(a) * .09, .1 - Math.abs(Math.sin(a)) * .03, -Math.cos(a) * .06 - .02, .07 + rand() * .04, .035, .01); } }
       /* dzsekigallér, ami a szélben lebben */
       const collar = mesh(new THREE.BoxGeometry(.2, .07, .012), jk, up); collar.position.set(0, .6, -.085); collar.userData.noBake = true;
@@ -335,7 +336,8 @@
         const shoe = mesh(new THREE.BoxGeometry(.09, .06, .2), shoeM, g2); shoe.position.set(sd * .09, -.1, .49); });
       /* a kezében a szkótakötél: a két kéz között, onnan le a fedélzeti csigához */
       const rope = mesh(mergeGeoms([rodGeom(new THREE.Vector3(-.18, .42, .45), new THREE.Vector3(.18, .42, .45), .012, 5), rodGeom(new THREE.Vector3(.18, .42, .45), new THREE.Vector3(.05, -.02, .95), .012, 5), rodGeom(new THREE.Vector3(-.18, .42, .45), new THREE.Vector3(-.3, .3, .2), .012, 5)]), ropeM, g2);
-      crew.push({ g: g2, u, up, hg, strands, collar, arms, ph: rand() * 9 }); });
+      let hair = null; try { hair = vrHairBuild(hg, d.style, d.hair); } catch (e) { console.warn("haj", e); }
+      crew.push({ g: g2, u, up, hg, strands, hair, collar, arms, ph: rand() * 9 }); });
     return { G, wheels, tiller: TIL, instT, chartT, deckY, helm: new THREE.Vector3(hs.hb - .74, deckY, hs.z - .62), crew, sh };
   }
   /* --------------------------------------------------------------- felépítés */
@@ -429,7 +431,7 @@
     VRR.markG = new THREE.Group(); env.add(VRR.markG);
     VRR.cb = makeCommittee(); VRR.cb.scale.setScalar(1.2); env.add(VRR.cb);
     VRR.cdL = labelSprite(["RAJT", "0:45"], { size: 7, fs: 70, w: 640 }); env.add(VRR.cdL);
-    VRR.pin = makeBuoy("#ff7a00", 2.0); VRR.pin.scale.setScalar(1.3); env.add(VRR.pin); try { vrBake(VRR.cb); vrBake(VRR.pin); } catch (e) {}   /* 2026-11-11: a rendezőhajó és a bóják is kisütve */
+    VRR.pin = vrRaceBuoy("pin", 0, 2.0); VRR.pin.scale.setScalar(1.3); env.add(VRR.pin); try { vrBake(VRR.cb); vrBake(VRR.pin); } catch (e) {}   /* 2026-11-11: a rendezőhajó és a bóják is kisütve */
     const beamT = canvasTex(32, 256, (gg, w, h) => { const gr = gg.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, "rgba(255,209,102,.9)"); gr.addColorStop(1, "rgba(255,209,102,0)"); gg.fillStyle = gr; gg.fillRect(0, 0, w, h); });
     VRR.beam = mesh(new THREE.CylinderGeometry(2.4, 2.4, 60, 16, 1, true), basic({ map: beamT, transparent: true, opacity: .5, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }), env); VRR.beam.renderOrder = 5;
     VRR.beamLbl = labelSprite(["1. bója", "kerüld bal kéz felől"], { size: 14, fs: 64, w: 760 }); env.add(VRR.beamLbl);
@@ -456,13 +458,13 @@
       const cm = basic({ color: "#ffe14d", transparent: true, opacity: .95, depthWrite: false, side: THREE.DoubleSide, fog: false }); const g4 = new THREE.Group(); env.add(g4); const ring = mesh(cg, cm, g4); ring.frustumCulled = false; ring.renderOrder = 6;
       const hoop = mesh(new THREE.TorusGeometry(R1, .07, 6, 40), cm, g4); hoop.rotation.x = Math.PI / 2; hoop.position.y = y; const stem = mesh(new THREE.CylinderGeometry(.04, .04, 2.6, 6), cm, g4); stem.position.y = y - 1.9; VRR.ringUp = g4; VRR.ringUpM = cm; g4.visible = false; }
     /* a rajt-/célkapu MINDKÉT vége bója: a rendezőhajó előtt is áll egy kapubója, és a kapunál mindkettő fényoszlopot kap */
-    VRR.pin2 = makeBuoy("#ff7a00", 2.0); VRR.pin2.scale.setScalar(1.3); env.add(VRR.pin2); try { vrBake(VRR.pin2); } catch (e) {}
+    VRR.pin2 = vrRaceBuoy("pin", 0, 2.0); VRR.pin2.scale.setScalar(1.3); env.add(VRR.pin2); try { vrBake(VRR.pin2); } catch (e) {}
     /* célkapu (ahol a pálya külön célvonalat ad): két sárga célbója, köztük a vízen a célvonal */
-    VRR.fb = [0, 1].map(() => { const b = makeBuoy("#ffd21a", 2.0); b.scale.setScalar(1.3); b.visible = false; env.add(b); try { vrBake(b); } catch (e) {} return b; });
-    VRR.finM = mesh(new THREE.PlaneGeometry(1, .5), basic({ color: "#fff3a0", transparent: true, opacity: .55, depthWrite: false, side: THREE.DoubleSide }), env); VRR.finM.rotation.x = -Math.PI / 2; VRR.finM.visible = false;
+    VRR.fb = [0, 1].map(() => { const b = vrRaceBuoy("fin", 0, 2.0); b.scale.setScalar(1.3); b.visible = false; env.add(b); try { vrBake(b); } catch (e) {} return b; });
+    VRR.finM = mesh(new THREE.PlaneGeometry(1, .5, 64, 1), basic({ color: "#fff3a0", transparent: true, opacity: .55, depthWrite: false, side: THREE.DoubleSide }), env); VRR.finM.rotation.x = -Math.PI / 2; VRR.finM.visible = false;
     VRR.beam2 = mesh(new THREE.CylinderGeometry(2.4, 2.4, 60, 16, 1, true), VRR.beam.material, env); VRR.beam2.renderOrder = 5; VRR.beam2.visible = false;
     buildCourseMarks(env);
-    VRR.lineM = mesh(new THREE.PlaneGeometry(1, .5), basic({ color: "#ffd166", transparent: true, opacity: .55, depthWrite: false, side: THREE.DoubleSide }), env); VRR.lineM.rotation.x = -Math.PI / 2; VRR.lineM.renderOrder = 4;
+    VRR.lineM = mesh(new THREE.PlaneGeometry(1, .5, 64, 1), basic({ color: "#ffd166", transparent: true, opacity: .55, depthWrite: false, side: THREE.DoubleSide }), env); VRR.lineM.rotation.x = -Math.PI / 2; VRR.lineM.renderOrder = 4;
     /* nagy műszerkijelző az árbócon (mint a valódi versenyhajókon): idő, helyezés, bója */
     const mastT = canvasTex(1024, 256, (gg) => { gg.fillStyle = "#06090d"; gg.fillRect(0, 0, 1024, 256); });
     const mastS = mesh(new THREE.PlaneGeometry(1.6, .4), basic({ map: mastT }), boat.userData.body); mastS.scale.setScalar(1 / VR_SC); mastS.position.set(0, (hullShape(.42).sheer + .46) + 2.1 / VR_SC * 1.4, .95 - .12); mastS.rotation.y = Math.PI;
@@ -515,7 +517,7 @@
     const beamT = canvasTex(32, 256, (gg, w, h) => { const gr = gg.createLinearGradient(0, h, 0, 0); gr.addColorStop(0, "rgba(120,255,170,.95)"); gr.addColorStop(1, "rgba(120,255,170,0)"); gg.fillStyle = gr; gg.fillRect(0, 0, w, h); });
     M.gate = new THREE.Group(); env.add(M.gate); M.posts = [0, 1].map(() => { const m = mesh(new THREE.CylinderGeometry(1.6, 1.6, 50, 16, 1, true), basic({ map: beamT, transparent: true, opacity: .75, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }), M.gate); m.renderOrder = 5; return m; });
     const chk = canvasTex(256, 32, (gg, w, h) => { for (let i = 0; i < 16; i++) { gg.fillStyle = i % 2 ? "rgba(255,255,255,.95)" : "rgba(20,30,40,.85)"; gg.fillRect(i * 16, 0, 16, 16); gg.fillStyle = i % 2 ? "rgba(20,30,40,.85)" : "rgba(255,255,255,.95)"; gg.fillRect(i * 16, 16, 16, 16); } });
-    M.strip = mesh(new THREE.PlaneGeometry(1, 3), basic({ map: chk, transparent: true, opacity: .8, depthWrite: false }), M.gate); M.strip.rotation.x = -Math.PI / 2; M.strip.renderOrder = 4;
+    M.strip = mesh(new THREE.PlaneGeometry(1, 3, 64, 1), basic({ map: chk, transparent: true, opacity: .8, depthWrite: false }), M.gate); M.strip.rotation.x = -Math.PI / 2; M.strip.renderOrder = 4;
     const ag = new THREE.ShapeGeometry(new THREE.Shape([new THREE.Vector2(0, 7), new THREE.Vector2(5, 1), new THREE.Vector2(2, 1), new THREE.Vector2(2, -6), new THREE.Vector2(-2, -6), new THREE.Vector2(-2, 1), new THREE.Vector2(-5, 1)])); W.disposables.push(ag);
     const gm = basic({ color: "#7dffb0", transparent: true, opacity: .8, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
     M.garrows = [-1, 0, 1].map(() => { const m = new THREE.Mesh(ag, gm); m.rotation.x = -Math.PI / 2; m.renderOrder = 6; M.gate.add(m); return m; });
@@ -621,10 +623,10 @@
     const C = VRR.C = vrCourse(lvl); VRR.lvl = lvl; if (lvl) C.tws *= vrDiff().wind;
     VRR.wf = C.wf; VRR.tws = C.tws;
     while (VRR.markG.children.length) VRR.markG.remove(VRR.markG.children[0]);
-    VRR.marks = C.marks.map((m, i) => { const b = makeBuoy(i === C.marks.length - 1 && C.marks.length > 2 ? "#ffd166" : "#ff7a00", 2.4); b.scale.setScalar(1.5); b.position.set(m.x, 0, m.z); VRR.markG.add(b); try { vrBake(b); } catch (e) {}
-      const nt = canvasTex(128, 128, (gg) => { gg.fillStyle = "#14161b"; gg.font = "900 110px system-ui"; gg.textAlign = "center"; gg.textBaseline = "middle"; gg.fillText(String(i + 1), 64, 70); });
-      [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((ry) => { const p = mesh(new THREE.PlaneGeometry(.7, .7), basic({ map: nt, transparent: true, depthWrite: false }), b); p.position.set(Math.sin(ry) * .66, 1.4, Math.cos(ry) * .66); p.rotation.y = ry; });
+    /* 2026-11-15: valódi felfújható versenybóják (05z vrRaceBuoy) – szám körben háromszor, reklámcsík, lengő zászló, habgallér; a hullámokon ringanak */
+    VRR.marks = C.marks.map((m, i) => { const b = vrRaceBuoy(i === C.marks.length - 1 && C.marks.length > 2 ? "last" : "mark", i + 1, 2.4); b.scale.setScalar(1.5); b.position.set(m.x, 0, m.z); VRR.markG.add(b); try { vrBake(b); } catch (e) {} vrBuoyWind(b, C.wf);
       return { x: m.x, z: m.z, g: b }; });
+    [VRR.pin, VRR.pin2].concat(VRR.fb || []).forEach((b) => vrBuoyWind(b, C.wf));
     /* rajtvonal: bal végén a rendezőhajó, jobb végén a narancs bója */
     VRR.cb.position.set(C.line.b.x, 0, C.line.b.z); VRR.cb.rotation.y = Math.atan2(C.u[0], C.u[1]);
     if (VRR.fb) { const F = C.fin; VRR.fb.forEach((b, i) => { b.visible = !!F; if (F) { const p = i ? F.b : F.a; b.position.set(p.x, 0, p.z); } }); VRR.finM.visible = !!F;
@@ -1098,6 +1100,7 @@
       _wv.set(-S.crewSide * .55, .0, -1).normalize().applyAxisAngle(_ty, -ry - c.hg.rotation.y);   /* szélirány a fej helyi terében */
       c.strands.forEach((q, k2) => { const fl = Math.sin(t * (6.5 + q.k * 3) + q.ph + k2), fl2 = Math.sin(t * (4.1 + q.k * 2) + q.ph * 1.7);
         _wb.set(_wv.x + .3 * fl * U, -.55 / (.4 + U) + .28 * fl2 * U, _wv.z).normalize(); q.m.quaternion.setFromUnitVectors(_tz, _wb); });
+      if (c.hair) { try { c.hair.tick(t, _wv, U); } catch (e) {} }
       c.collar.rotation.x = -.5 - .35 * U * (.6 + .4 * Math.sin(t * 9.3)); });
     /* környezet a hajó körül */
     S.env.rotation.y = S.b; S.far.rotation.y = S.b;
@@ -1106,7 +1109,7 @@
     rwUpdate(dt);
     S.wake.push(S.x, S.z, Math.atan2(fx, fz), S.v, dt, .05);
     S.gulls.tick(dt, S.x, S.z);
-    (S.spect || []).forEach((q) => { q.g.position.y = Math.sin(W.t * 1.1 + q.ph) * .08; q.g.rotation.z = Math.sin(W.t * .9 + q.ph) * .03; q.g.rotation.x = Math.sin(W.t * .7 + q.ph * 2) * .02; });
+    try { rwFloatTick(dt); } catch (e) {}   /* 2026-11-15: a bóják, a rendezőhajó és a nézőhajók a valódi hullámokon ringanak (05z) */
     /* verseny-állapot */
     S.t += dt; if (S.net && S.net.startAt) S.t = (Date.now() - S.net.startAt) / 1000 - 45;
     /* 2026-11-15 (szakértői jelentés F.4 – SZABÁLYOS RAJTELJÁRÁS, RRS 26): figyelmeztető jel (5 perc: osztályzászló fel, 1 hangjel) → előkészítő jel
