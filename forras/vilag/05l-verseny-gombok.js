@@ -19,11 +19,20 @@
       W.disposables.push(tex, mtx, side); const geo = new THREE.BoxGeometry(bw, bh, bw * .12); W.disposables.push(geo);
       const b = new THREE.Mesh(geo, [side, side, side, side, mtx, side]); b.position.set(-w / 3 + i * w / 3, y, z); b.userData.noBake = 1; b.userData.noMerge = 1; parent.add(b);
       const st = { b, z0: z, t: 0, hov: false, fn, l };
-      b.userData.xr = { hover: (on) => { st.hov = on; }, click: () => { st.t = .18; try { beep(); } catch (e) {} try { fn(); } catch (e) { console.warn("gomb", e); } } };
+      b.userData.xr = { hover: (on) => { st.hov = on; }, click: () => { st.t = .18; try { uiSnd("press"); } catch (e) {} try { fn(); } catch (e) { console.warn("gomb", e); } } };
       try { T.xr.extra.add(b); W.objs.push(b); } catch (e) {} out.push(st); VBTN.list.push(st); });
     return out;
   }
-  function vrBtnTick(dt) { VBTN.list = VBTN.list.filter((st) => st.b.parent); VBTN.list.forEach((st) => { st.t = Math.max(0, st.t - dt); const d = st.b.geometry.parameters.depth; st.b.position.z = st.z0 - (st.t > 0 ? d * .6 : 0); st.b.scale.setScalar(st.hov ? 1.06 : 1);
+  /* 2026-11-15 (szakértői jelentés D.3): KÖZVETLEN MEGNYOMÁS (bökés) – a műszer gombjait a mutatóujj hegyével is meg lehet nyomni, mint egy valódi gombot:
+     ha az ujjhegy a gomb fölé ér és belenyom (~1 cm), a gomb besüpped, kattan és rezeg; elengedés, ha az ujj 3 cm-re eltávolodott. A sugaras kattintás is megmarad. */
+  const _pv = new THREE.Vector3();
+  function vrBtnPoke(st, now) { const X = T.xr && T.xr.src; if (!X) return; const P = st.b.geometry.parameters, hw = P.width / 2 + .006, hh = P.height / 2 + .006, fz = P.depth / 2; let near = false;
+    ["left", "right"].forEach((hd) => { const R = X[hd]; if (!R || !R.hand || !R.tip) return; const lp = st.b.worldToLocal(_pv.copy(R.tip)); if (Math.abs(lp.x) > hw || Math.abs(lp.y) > hh) { if (st.pokeH === hd) st.pokeH = null; return; }
+      if (lp.z < fz + .04 && lp.z > -fz - .02) near = true;
+      if (!st.pokeH && lp.z < fz + .004 && lp.z > -fz - .02 && now - (st.pokeT || 0) > 400) { st.pokeH = hd; st.pokeT = now; try { st.b.userData.xr.click(); } catch (e) {} try { hapt(.5, 25); } catch (e) {} }
+      if (st.pokeH === hd && lp.z > fz + .03) st.pokeH = null; });
+    st.pokeNear = near; }
+  function vrBtnTick(dt) { const now = performance.now(); VBTN.list = VBTN.list.filter((st) => st.b.parent); VBTN.list.forEach((st) => { if (T.inVR) vrBtnPoke(st, now); st.t = Math.max(0, st.t - dt); const d = st.b.geometry.parameters.depth; st.b.position.z = st.z0 - (st.t > 0 ? d * .6 : 0); st.b.scale.setScalar(st.hov || st.pokeNear ? 1.06 : 1);
     if (st.l.indexOf("SZÜNET") >= 0 || st.l.indexOf("FOLYTAT") >= 0) { const want = VRR.paused ? "▶ FOLYTAT" : "⏸ SZÜNET"; if (st.l !== want) { st.l = want; const m = st.b.material[4]; if (m.map) m.map.dispose(); m.map = vrBtnTex(want, VRR.paused ? "tovább" : "megállít", VRR.paused ? ["#2aa866", "#16703f"] : ["#c98a00", "#7a5200"]); m.needsUpdate = true; } } }); }
 
   /* ---------------------------------------------------------------- SZÜNET */
@@ -105,7 +114,11 @@
     /* a flotta közepe (a hajó terében) és a drón */
     let cx = 0, cz = 0, n = 1; S.riv.forEach((r) => { const dx = r.x - S.x, dz = r.z - S.z; if (Math.hypot(dx, dz) < 250) { const q = new THREE.Vector3(dx, 0, dz).applyAxisAngle(_YAX, S.b); cx += q.x; cz += q.z; n++; } }); cx /= n; cz /= n;
     P.a += dt * .07; P.cx = P.cx == null ? cx : P.cx + (cx - P.cx) * Math.min(1, dt * .8); P.cz = P.cz == null ? cz : P.cz + (cz - P.cz) * Math.min(1, dt * .8);
-    const R = 62, H = 30, D = new THREE.Vector3(P.cx + Math.sin(P.a) * R, H, P.cz + Math.cos(P.a) * R), yaw = Math.atan2(D.x - P.cx, D.z - P.cz);
+    let R = 62, H = 30, D = new THREE.Vector3(P.cx + Math.sin(P.a) * R, H, P.cz + Math.cos(P.a) * R), yaw = Math.atan2(D.x - P.cx, D.z - P.cz);
+    /* 2026-11-15 (szakértői jelentés A.4 – kényelem): VR-szemüvegben a drón NEM kering és nem követi a flottát – egy rögzített, magas pontból nézed,
+       a hajók alattad mozognak (a világ nem mozdul körülötted, így nem émelyít). A pont a visszajátszás elején a flotta közepe fölé, kissé hátra kerül. */
+    if (T.inVR || W._replayFix) { if (!P.fixW) { let wx = S.x, wz = S.z, m = 1; S.riv.forEach((r) => { if (Math.hypot(r.x - S.x, r.z - S.z) < 400) { wx += r.x; wz += r.z; m++; } }); wx /= m; wz /= m; const a0 = (S.b || 0) + Math.PI; P.fixW = { x: wx + Math.sin(a0) * 90, z: wz + Math.cos(a0) * 90, a0: a0 - Math.PI * 0 }; }
+      const F0 = P.fixW; D = new THREE.Vector3(F0.x - S.x, 0, F0.z - S.z).applyAxisAngle(_YAX, S.b); D.y = 55; yaw = F0.a0 + S.b; }
     /* a néző (a rig origója) a drónban ül: a világot úgy forgatjuk és toljuk, hogy a drón pontja az origóba, a nézése a flotta felé essen */
     W.root.quaternion.setFromAxisAngle(_YAX, -yaw); W.root.position.copy(D).applyAxisAngle(_YAX, -yaw).negate(); if (!T.inVR) W.root.position.y -= 0;
     vrBtnTick(dt); uiTickAll(dt); return true; }

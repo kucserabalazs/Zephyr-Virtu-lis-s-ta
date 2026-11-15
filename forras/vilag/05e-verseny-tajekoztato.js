@@ -271,7 +271,7 @@
       g.fillStyle = q.place === 1 ? "#ffd166" : "#fff"; g.font = `900 30px ${UIF}`; g.fillText(q.place ? q.place + "." : "–", 66, y + 4);
       g.font = `800 26px ${UIF}`; g.fillStyle = "#fff"; uiFit(g, q.n, 300, 26, 800); g.fillText(q.n, 120, y + 2);
       g.font = `600 20px ${UIF}`; g.fillStyle = q.code ? "#ff9a8a" : "rgba(255,255,255,.85)"; g.fillText(q.code === "TLE" ? "időlimit után (TLE)" : q.code === "DNC" ? "gépi vezetés – nem számít" : q.code ? q.code : (q.est ? "becsült: " : "") + mmss(q.t || 0), 440, y + 2);
-      g.font = `900 26px ${UIF}`; g.fillStyle = "#ffd166"; g.textAlign = "right"; g.fillText(q.pts + " p", 704, y + 4); g.textAlign = "left";
+      g.font = `900 26px ${UIF}`; g.fillStyle = "#ffd166"; g.textAlign = "right"; g.fillText(ser.mix ? (q.t && last.rows[0] && last.rows[0].t && q.place > 1 ? "+" + mmss(q.t - last.rows[0].t) : "") : q.pts + " p", 704, y + 4); g.textAlign = "left";   /* B.20: vegyes flottán nincs pontverseny – időkülönbség */
       if (q.ai && q.human) { g.fillStyle = "#ff9a8a"; g.font = `700 16px ${UIF}`; g.fillText("⚠ a játékos kiesett – a gép vezette tovább", 120, y + 22); } });
     uiCard(g, 34, 566, 700, 300); uiH(g, "SZABÁLYTALANSÁGOK", 60, 610, "x");
     const F = (last && last.fouls) || []; g.font = `600 21px ${UIF}`;
@@ -283,7 +283,7 @@
     drawCoursePlan(g, N.C, 774, 244, 470, 430, B.t); drawCourse3D(g, N.C, 1256, 244, 296, 206, B.t); drawBalMap(g, 1256, 458, 296, 216, { venue: N.venue, wf: N.C.wf, t: B.t, labels: "kevés" });
     const legs = vrCourseLegs(N.C); g.font = `700 19px ${UIF}`; legs.forEach((l, i) => { const y = 702 + i * 30; if (y > 812) return; g.fillStyle = "#ffd166"; g.fillText(`${i + 1}.`, 780, y); g.fillStyle = "#fff"; g.fillText(`${i ? i + ". bója" : "rajt"} → ${i + 1 < legs.length ? (i + 1) + ". bója" : "cél (a két bója KÖZÖTT)"} · ${Math.round(l.d)} m · ${l.kind}`, 812, y); });
     { const tx = "A bójákat bal kéz felől kell megkerülni (felülről nézve az óramutatóval ellentétesen). A szaggatott vonal az ajánlott cirkálási útvonal."; g.fillStyle = "rgba(255,255,255,.75)"; uiFit(g, tx, 770, 17, 600); g.fillText(tx, 780, 836); }
-    { const tx = `⚠ Balatoni viharjelzés – ${stmText()} · ${STM.src}`; g.fillStyle = "#ffd166"; uiFit(g, tx, 770, 18, 700); g.fillText(tx, 780, 862); }
+    { let tx = `⚠ Balatoni viharjelzés – ${stmText()} · ${STM.src}`; g.font = `700 18px ${UIF}`; if (g.measureText(tx).width > 770) tx = `⚠ Viharjelzés – ${stmText(true)} · ${STM.src}`; if (g.measureText(tx).width > 770) tx = `⚠ Viharjelzés – ${stmText(true)}`; g.fillStyle = "#ffd166"; uiFit(g, tx, 770, 18, 700); g.fillText(tx, 780, 862); }   /* szakértői jelentés B.13: nem lóg ki – rövidebb változat, ha nem fér */
     /* gombok */
     const by = 890, bh = 84;
     B.btn(34, by, 460, bh, `▶  START: ${ser.plan ? ser.races.length + 1 : N.lvl}. futam`, () => { vrBriefClose(); vrSetup(N.lvl); }, { gold: true });

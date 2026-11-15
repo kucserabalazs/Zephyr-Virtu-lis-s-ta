@@ -7641,7 +7641,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       g.fillStyle = q.place === 1 ? "#ffd166" : "#fff"; g.font = `900 30px ${UIF}`; g.fillText(q.place ? q.place + "." : "–", 66, y + 4);
       g.font = `800 26px ${UIF}`; g.fillStyle = "#fff"; uiFit(g, q.n, 300, 26, 800); g.fillText(q.n, 120, y + 2);
       g.font = `600 20px ${UIF}`; g.fillStyle = q.code ? "#ff9a8a" : "rgba(255,255,255,.85)"; g.fillText(q.code === "TLE" ? "időlimit után (TLE)" : q.code === "DNC" ? "gépi vezetés – nem számít" : q.code ? q.code : (q.est ? "becsült: " : "") + mmss(q.t || 0), 440, y + 2);
-      g.font = `900 26px ${UIF}`; g.fillStyle = "#ffd166"; g.textAlign = "right"; g.fillText(q.pts + " p", 704, y + 4); g.textAlign = "left";
+      g.font = `900 26px ${UIF}`; g.fillStyle = "#ffd166"; g.textAlign = "right"; g.fillText(ser.mix ? (q.t && last.rows[0] && last.rows[0].t && q.place > 1 ? "+" + mmss(q.t - last.rows[0].t) : "") : q.pts + " p", 704, y + 4); g.textAlign = "left";   /* B.20: vegyes flottán nincs pontverseny – időkülönbség */
       if (q.ai && q.human) { g.fillStyle = "#ff9a8a"; g.font = `700 16px ${UIF}`; g.fillText("⚠ a játékos kiesett – a gép vezette tovább", 120, y + 22); } });
     uiCard(g, 34, 566, 700, 300); uiH(g, "SZABÁLYTALANSÁGOK", 60, 610, "x");
     const F = (last && last.fouls) || []; g.font = `600 21px ${UIF}`;
@@ -7653,7 +7653,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     drawCoursePlan(g, N.C, 774, 244, 470, 430, B.t); drawCourse3D(g, N.C, 1256, 244, 296, 206, B.t); drawBalMap(g, 1256, 458, 296, 216, { venue: N.venue, wf: N.C.wf, t: B.t, labels: "kevés" });
     const legs = vrCourseLegs(N.C); g.font = `700 19px ${UIF}`; legs.forEach((l, i) => { const y = 702 + i * 30; if (y > 812) return; g.fillStyle = "#ffd166"; g.fillText(`${i + 1}.`, 780, y); g.fillStyle = "#fff"; g.fillText(`${i ? i + ". bója" : "rajt"} → ${i + 1 < legs.length ? (i + 1) + ". bója" : "cél (a két bója KÖZÖTT)"} · ${Math.round(l.d)} m · ${l.kind}`, 812, y); });
     { const tx = "A bójákat bal kéz felől kell megkerülni (felülről nézve az óramutatóval ellentétesen). A szaggatott vonal az ajánlott cirkálási útvonal."; g.fillStyle = "rgba(255,255,255,.75)"; uiFit(g, tx, 770, 17, 600); g.fillText(tx, 780, 836); }
-    { const tx = `⚠ Balatoni viharjelzés – ${stmText()} · ${STM.src}`; g.fillStyle = "#ffd166"; uiFit(g, tx, 770, 18, 700); g.fillText(tx, 780, 862); }
+    { let tx = `⚠ Balatoni viharjelzés – ${stmText()} · ${STM.src}`; g.font = `700 18px ${UIF}`; if (g.measureText(tx).width > 770) tx = `⚠ Viharjelzés – ${stmText(true)} · ${STM.src}`; if (g.measureText(tx).width > 770) tx = `⚠ Viharjelzés – ${stmText(true)}`; g.fillStyle = "#ffd166"; uiFit(g, tx, 770, 18, 700); g.fillText(tx, 780, 862); }   /* szakértői jelentés B.13: nem lóg ki – rövidebb változat, ha nem fér */
     /* gombok */
     const by = 890, bh = 84;
     B.btn(34, by, 460, bh, `▶  START: ${ser.plan ? ser.races.length + 1 : N.lvl}. futam`, () => { vrBriefClose(); vrSetup(N.lvl); }, { gold: true });
@@ -8804,11 +8804,20 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       W.disposables.push(tex, mtx, side); const geo = new THREE.BoxGeometry(bw, bh, bw * .12); W.disposables.push(geo);
       const b = new THREE.Mesh(geo, [side, side, side, side, mtx, side]); b.position.set(-w / 3 + i * w / 3, y, z); b.userData.noBake = 1; b.userData.noMerge = 1; parent.add(b);
       const st = { b, z0: z, t: 0, hov: false, fn, l };
-      b.userData.xr = { hover: (on) => { st.hov = on; }, click: () => { st.t = .18; try { beep(); } catch (e) {} try { fn(); } catch (e) { console.warn("gomb", e); } } };
+      b.userData.xr = { hover: (on) => { st.hov = on; }, click: () => { st.t = .18; try { uiSnd("press"); } catch (e) {} try { fn(); } catch (e) { console.warn("gomb", e); } } };
       try { T.xr.extra.add(b); W.objs.push(b); } catch (e) {} out.push(st); VBTN.list.push(st); });
     return out;
   }
-  function vrBtnTick(dt) { VBTN.list = VBTN.list.filter((st) => st.b.parent); VBTN.list.forEach((st) => { st.t = Math.max(0, st.t - dt); const d = st.b.geometry.parameters.depth; st.b.position.z = st.z0 - (st.t > 0 ? d * .6 : 0); st.b.scale.setScalar(st.hov ? 1.06 : 1);
+  /* 2026-11-15 (szakértői jelentés D.3): KÖZVETLEN MEGNYOMÁS (bökés) – a műszer gombjait a mutatóujj hegyével is meg lehet nyomni, mint egy valódi gombot:
+     ha az ujjhegy a gomb fölé ér és belenyom (~1 cm), a gomb besüpped, kattan és rezeg; elengedés, ha az ujj 3 cm-re eltávolodott. A sugaras kattintás is megmarad. */
+  const _pv = new THREE.Vector3();
+  function vrBtnPoke(st, now) { const X = T.xr && T.xr.src; if (!X) return; const P = st.b.geometry.parameters, hw = P.width / 2 + .006, hh = P.height / 2 + .006, fz = P.depth / 2; let near = false;
+    ["left", "right"].forEach((hd) => { const R = X[hd]; if (!R || !R.hand || !R.tip) return; const lp = st.b.worldToLocal(_pv.copy(R.tip)); if (Math.abs(lp.x) > hw || Math.abs(lp.y) > hh) { if (st.pokeH === hd) st.pokeH = null; return; }
+      if (lp.z < fz + .04 && lp.z > -fz - .02) near = true;
+      if (!st.pokeH && lp.z < fz + .004 && lp.z > -fz - .02 && now - (st.pokeT || 0) > 400) { st.pokeH = hd; st.pokeT = now; try { st.b.userData.xr.click(); } catch (e) {} try { hapt(.5, 25); } catch (e) {} }
+      if (st.pokeH === hd && lp.z > fz + .03) st.pokeH = null; });
+    st.pokeNear = near; }
+  function vrBtnTick(dt) { const now = performance.now(); VBTN.list = VBTN.list.filter((st) => st.b.parent); VBTN.list.forEach((st) => { if (T.inVR) vrBtnPoke(st, now); st.t = Math.max(0, st.t - dt); const d = st.b.geometry.parameters.depth; st.b.position.z = st.z0 - (st.t > 0 ? d * .6 : 0); st.b.scale.setScalar(st.hov || st.pokeNear ? 1.06 : 1);
     if (st.l.indexOf("SZÜNET") >= 0 || st.l.indexOf("FOLYTAT") >= 0) { const want = VRR.paused ? "▶ FOLYTAT" : "⏸ SZÜNET"; if (st.l !== want) { st.l = want; const m = st.b.material[4]; if (m.map) m.map.dispose(); m.map = vrBtnTex(want, VRR.paused ? "tovább" : "megállít", VRR.paused ? ["#2aa866", "#16703f"] : ["#c98a00", "#7a5200"]); m.needsUpdate = true; } } }); }
 
   /* ---------------------------------------------------------------- SZÜNET */
@@ -8890,7 +8899,11 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     /* a flotta közepe (a hajó terében) és a drón */
     let cx = 0, cz = 0, n = 1; S.riv.forEach((r) => { const dx = r.x - S.x, dz = r.z - S.z; if (Math.hypot(dx, dz) < 250) { const q = new THREE.Vector3(dx, 0, dz).applyAxisAngle(_YAX, S.b); cx += q.x; cz += q.z; n++; } }); cx /= n; cz /= n;
     P.a += dt * .07; P.cx = P.cx == null ? cx : P.cx + (cx - P.cx) * Math.min(1, dt * .8); P.cz = P.cz == null ? cz : P.cz + (cz - P.cz) * Math.min(1, dt * .8);
-    const R = 62, H = 30, D = new THREE.Vector3(P.cx + Math.sin(P.a) * R, H, P.cz + Math.cos(P.a) * R), yaw = Math.atan2(D.x - P.cx, D.z - P.cz);
+    let R = 62, H = 30, D = new THREE.Vector3(P.cx + Math.sin(P.a) * R, H, P.cz + Math.cos(P.a) * R), yaw = Math.atan2(D.x - P.cx, D.z - P.cz);
+    /* 2026-11-15 (szakértői jelentés A.4 – kényelem): VR-szemüvegben a drón NEM kering és nem követi a flottát – egy rögzített, magas pontból nézed,
+       a hajók alattad mozognak (a világ nem mozdul körülötted, így nem émelyít). A pont a visszajátszás elején a flotta közepe fölé, kissé hátra kerül. */
+    if (T.inVR || W._replayFix) { if (!P.fixW) { let wx = S.x, wz = S.z, m = 1; S.riv.forEach((r) => { if (Math.hypot(r.x - S.x, r.z - S.z) < 400) { wx += r.x; wz += r.z; m++; } }); wx /= m; wz /= m; const a0 = (S.b || 0) + Math.PI; P.fixW = { x: wx + Math.sin(a0) * 90, z: wz + Math.cos(a0) * 90, a0: a0 - Math.PI * 0 }; }
+      const F0 = P.fixW; D = new THREE.Vector3(F0.x - S.x, 0, F0.z - S.z).applyAxisAngle(_YAX, S.b); D.y = 55; yaw = F0.a0 + S.b; }
     /* a néző (a rig origója) a drónban ül: a világot úgy forgatjuk és toljuk, hogy a drón pontja az origóba, a nézése a flotta felé essen */
     W.root.quaternion.setFromAxisAngle(_YAX, -yaw); W.root.position.copy(D).applyAxisAngle(_YAX, -yaw).negate(); if (!T.inVR) W.root.position.y -= 0;
     vrBtnTick(dt); uiTickAll(dt); return true; }
@@ -9074,7 +9087,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const rows = [["map", "Helyszín", ven.n], ["wind", "Szél", `${wd} felől, ${(C.tws / KN).toFixed(0)} csomó · ${C.wxn || ""}`], [night ? "moon" : "dot", "Napszak", night ? "éjszaka – világító bóják, navigációs fények" : "nappal"], ["clock", "Időlimit", mmss(C.limit || vrLimitOf(C))], ["boat", "Kerülés", "minden bóját BAL kéz felől (↺)"], ["check", "Cél", C.fin ? "a két sárga célbója KÖZÖTT" : "a rajtvonalon át, a két bója között"]];
     rows.forEach(([ic, a, b], i) => { const yy = y + 50 + i * 66; uiIcon(g, ic, rx + 40, yy - 8, 30, "#ffd166"); g.fillStyle = "#ffd166"; g.font = `800 20px ${UIF}`; g.fillText(a.toUpperCase(), rx + 74, yy - 14); g.fillStyle = "#fff"; g.font = `700 21px ${UIF}`; uiFit(g, b, rw - 96, 21, 700); g.fillText(b, rx + 74, yy + 14); });
     if (plan && plan.length > 1) { g.fillStyle = "rgba(255,214,102,.9)"; g.font = `800 18px ${UIF}`; g.fillText("A SOROZAT PÁLYÁI", rx + 24, y + 452); g.fillStyle = "rgba(225,235,248,.85)"; g.font = `600 16px ${UIF}`; const t = plan.map((l, i) => `${i + 1}. ${VR_TPL[(l - 1) % VR_TPL.length].n}`).join(" · "); uiWrap(g, t, rx + 24, y + 478, rw - 48, 22, 3); }
-    { const tx = `⚠ Balatoni viharjelzés – ${stmText()}`; g.fillStyle = "#ffd166"; g.font = `700 17px ${UIF}`; uiFit(g, tx, rw - 48, 17, 700); g.fillText(tx, rx + 24, y + 578); } }
+    { let tx = `⚠ Balatoni viharjelzés – ${stmText()}`; g.font = `700 17px ${UIF}`; if (g.measureText(tx).width > rw - 48) tx = `⚠ Viharjelzés – ${stmText(true)}`; g.fillStyle = "#ffd166"; uiFit(g, tx, rw - 48, 17, 700); g.fillText(tx, rx + 24, y + 578); } }
   function vrLimitOf(C) { try { vrLimitSetC(C); } catch (e) {} return C.limit || 0; }
   function wzNight(lvl) { const Z = HB.wz || wzLoad(); return Z.tod === "ej" ? true : Z.tod === "nap" ? false : ((lvl * 2654435761) >>> 0) % 3 === 1; }
   /* a sorozat pályái: egyetlen futam = a választott; sorozat = n különböző, véletlen pálya (sablon × helyszín, 1–40) */

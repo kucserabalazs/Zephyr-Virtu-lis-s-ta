@@ -1704,6 +1704,8 @@ body.in-vr .zx-bar, body.in-vr .zx-book, body.world-on .zx-bar, body.world-on .z
 :root[data-device="pc"] body.zx #zxPlacesBtn { display: none !important; }
 
 /* ===================== FEJLÉC: CSAK „FOGLALÁS” + „MENÜ” (2026-11-10, a tulajdonos kérése) ===================== */
+/* 2026-11-15 (szakértői jelentés B.18): keskeny telefonon (≤ 430 px) a Menü gomb csak ikon – így nem lóg ki a képből (a Foglalás és a VR mellett) */
+@media (max-width: 430px) { body.zx #zxMenuBtn > span { display: none !important; } body.zx #zxMenuBtn { padding: 0 11px !important; min-width: 44px; } }
 body.zx #btnSun, body.zx #sunPanel, body.zx #btnTools { display: none !important; }
 .zx-menu-btn svg { stroke: #E4BB63; }
 .zx-menu-btn .zx-t, .zx-menu-btn span { display: inline !important; }
@@ -12590,7 +12592,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     strap: ["Fém lánc", "Barna bőr", "Kék szilikon", "Vitorlakötél"]
   };
   const WS_DEF = { size: "Nagy", metal: "Arany", dial: "Tengerkék", strap: "Fém lánc", compass: true, sound: true, tap: false, face: "Digitális", loco: true, turnDeg: 30, spin: true, spinV: 3, watch: false, big: false };
-  let WS = (() => { try { const o = Object.assign({}, WS_DEF, JSON.parse(localStorage.getItem("zephyrOra") || "{}")); if ((o.spinV || 0) < 3) { o.spin = true; o.spinV = 3; o.turnDeg = 30; } return o; } catch (e) { return Object.assign({}, WS_DEF); } })();   /* 2026. nov.: a csippentve forgatás alapból bekapcsolva (a tulajdonos kérése) */
+  let WS = (() => { try { const o = Object.assign({}, WS_DEF, JSON.parse(localStorage.getItem("zephyrOra") || "{}")); if ((o.spinV || 0) < 3) { o.spin = true; o.spinV = 3; o.turnDeg = 30; } if (!o.bigV) { o.bigV = 1; if (/OculusBrowser|Quest/i.test(navigator.userAgent)) o.big = true; }   /* 2026-11-15 (szakértői jelentés D.5): a szemüvegben alapból a nagy kezelőfelület (aki kikapcsolta, annál marad) */ return o; } catch (e) { return Object.assign({}, WS_DEF); } })();   /* 2026. nov.: a csippentve forgatás alapból bekapcsolva (a tulajdonos kérése) */
   /* 2026. nov. 6. (3. kör, a tulajdonos kérésére): a kéz fölötti ↑↓←→ „mikrogesztus” mozgás alapból KI (zavaró volt), és a csuklómenü
      koppintás nélkül, a csukló felfordításával + ránézéssel AZONNAL nyílik – egy régebben elmentett „koppintásos” beállítás sem írja felül. */
   WS.tap = false; WS.loco = false;
@@ -13485,7 +13487,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "d426217ce4"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "e7778cac4e"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -13519,7 +13521,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "9945685564"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "769df21a16"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
