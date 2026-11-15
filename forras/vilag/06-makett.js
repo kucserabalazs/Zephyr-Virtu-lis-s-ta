@@ -561,7 +561,7 @@
     const sunMenu = ["☀", "Napszak", [["◂☀", "Fél órával korábban", () => nudgeHour(-.5)], ["☀▸", "Fél órával később", () => nudgeHour(.5)]]
       .concat(PRESETS.map(([n], i) => [["🌅", "🌄", "🌞", "🌤", "🌇", "🌆", "🌃", "🌙"][i], n, () => setPreset(i), MAQ.preset === i]))];
     const turnMenu = ["🧭", "Forgás", [["↺", "Balra 45°", () => turn(turnA)], ["↻", "Jobbra 45°", () => turn(-turnA)], ["⤾", "Megfordulok", () => turn(Math.PI)]]];
-    const back = ["‹", "A sétához", () => W.close()];
+    const back = ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()];
     const flyM = ["🦸", MAQ.fly ? "Leszállás" : "Repülés", () => toggleFly(), !!MAQ.fly];
     if (life) return [
       ["🏢", "Szintek", [["⬆", "Emelet", () => goLevel(1), MAQ.level === 1], ["⬇", "Földszint", () => goLevel(0), MAQ.level === 0], ["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }]]],

@@ -20,6 +20,8 @@
 
   const W = { active: false, kind: null, root: null, objs: [], disposables: [], upd: [], hud: null, panel: null, t: 0, scale: 1 };
   window.ZephyrWorld = W;
+  /* 2026-11-15: a VR Zephyr Games oldalon a „vissza” a játékok főmenüjébe visz (nincs séta) */
+  const GM_ON = () => !!window.ZEPHYR_GAMES, BACK_T = () => GM_ON() ? "Játékok főmenü" : "Vissza a sétához", BACK_S = (d) => GM_ON() ? "VR Zephyr Games" : d;
   /* a kontroller karja a világokban: ha a világ kezeli (pl. a kikötő: fordulás, lépés), annak adjuk tovább (2026-11-15) */
   W.stick = (ax, ay) => { const s = W.spec; if (s && s.stick) try { s.stick(ax, ay); } catch (e) { console.warn("kar", e); } };
 
@@ -1483,7 +1485,7 @@
     P.title("Zephyr Kupa · Balaton", regStatus());
     const rk = REG.rank || REG.boats;
     rk.slice(0, 6).forEach((st, i) => P.row(i, `${i + 1}. ${st.b.num}  ${st.b.name}`, st.b.jib === "#d61f26" ? "#d61f26" : st.b.hull, st.done ? "célban" : ""));
-    P.buttons([["×1", () => REG.speed = 1, REG.speed === 1], ["×2", () => REG.speed = 2, REG.speed === 2], ["×4", () => REG.speed = 4, REG.speed === 4], ["Új futam", regRestart], ["‹ Vissza a sétához", () => W.close()]]);
+    P.buttons([["×1", () => REG.speed = 1, REG.speed === 1], ["×2", () => REG.speed = 2, REG.speed === 2], ["×4", () => REG.speed = 4, REG.speed === 4], ["Új futam", regRestart], ["‹ " + BACK_T(), () => W.close()]]);
   }
   function regHud(H) {
     H.title("Regatta a napozóstégnél", regStatus());
@@ -1644,7 +1646,7 @@
     P.row(1, "A rúd jobbra → a hajó balra fordul (mint a valóságban).", "#ffffff");
     P.row(2, "Fordulóhoz vezesd át az orrot a szél irányán.", "#ffffff");
     P.row(3, "Tihany az orrtól balra-előre, Badacsony messze nyugaton.", "#7fd3ff");
-    P.buttons([["Egyenesbe", () => SAIL.del = 0], ["‹ Vissza a sétához", () => W.close()]]);
+    P.buttons([["Egyenesbe", () => SAIL.del = 0], ["‹ " + BACK_T(), () => W.close()]]);
   }
   function sailHud(H) {
     const S = SAIL;
@@ -3266,7 +3268,7 @@
   function vrWrist() {
     const S = VRR;
     return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", S.fin && S.st === "race" ? "Tovább (nem várok)" : "Kapitányi tájékoztató", () => (S.fin && S.st === "race" ? vrSkip() : vrBriefOpen())], ["⛵", "Főmenü", vrToHarbor], ["⏸", S.paused ? "Folytatás" : "Szünet", () => vrPause(!S.paused)], ["◎", "Kalibrálás", vrCalibrate], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
-      ["☰", "Versenymenü", () => vrRaceMenu(true)], ["‹", "A sétához", () => W.close()]];
+      ["☰", "Versenymenü", () => vrRaceMenu(true)], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]];
   }
   function vrHud(H) {
     const S = VRR;
@@ -7821,7 +7823,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   }
   function hbPanel(P) { P.title("Zephyr kikötő · vitorlásverseny", `Hajó: ${boatCls(HB.sel).n} · játékos: ${vrProfile().name || "névtelen"}`);
     P.row(0, "Bökj rá egy kikötött hajóra: előtted megforog, és kiválaszthatod. A kikötői menüben minden beállítás megvan.", "#ffd166");
-    P.buttons([["⛵ Indulás", () => hbGo(false)], ["⚓ Kikötői menü", hbMenu], ["‹ Vissza a sétához", () => W.close()]]); }
+    P.buttons([["⛵ Indulás", () => hbGo(false)], ["⚓ Kikötői menü", hbMenu], ["‹ " + BACK_T(), () => W.close()]]); }
   function hbHud(H) { H.title("Zephyr kikötő · vitorlásverseny", `Hajó: ${boatCls(HB.sel).n} · bökj rá egy kikötött hajóra`); H.steer([["⚓ Kikötői menü", hbMenu], ["⛵ Indulás", () => hbGo(false)]], () => {}); H.hint("Bökj rá egy hajóra: előtted forog, és kiválaszthatod · a kikötői menüben: játékos, beállítások, eredmények, többjátékos"); }
   /* indulás a versenyre (W.open("race") a kikötő helyett közvetlenül a futamot nyitja) */
   function hbGo(tut, lvl, force, night) { if (night) VRR.nightForce = true; else if (!HB.wzKeep) VRR.nightForce = null; if (!tut && !force && NET.on && netActive().length && !NET.queue) { NET.queue = { t: Date.now(), ann: 0 }; netPost({ k: "q", on: 1, cls: HB.sel }); hbBoard("net"); return; } try { localStorage.setItem("zephyr-hajo", HB.sel || vrClsId()); } catch (e) {} uiCloseAll(); VRR.forceCls = null; if (tut) VRR.lvl = 0; else if (lvl) VRR.lvl = lvl; else if (!VRR.lvl) VRR.lvl = (VRR.series && VRR.series.races ? VRR.series.races.length % 5 : 0) + 1;
@@ -7838,7 +7840,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   function hbWrist() { const it = [["🧭", "Forgás és lépés", [["↺", "Balra 45°", () => hbTurn(Math.PI / 4)], ["↻", "Jobbra 45°", () => hbTurn(-Math.PI / 4)], ["⤾", "Megfordulok", () => hbTurn(Math.PI)], ["⬆", "Előre lépek", () => hbStep(1)], ["⬇", "Hátra lépek", () => hbStep(-1)]]]];
     const R = SCH.R; if (R) { const n = R.h.name; it.push(["🎓", n, [HB.seat ? ["🧍", "Felállok", () => roomStand()] : ["🪑", "Leülök a táblával szemben", () => roomSit(R)], [R.playing ? "⏸" : "▶", R.playing ? "Szünet" : (R.t > 0 ? "Folytatás" : "Teljes anyag sorban"), () => { if (R.playing || R.t > 0) roomPause(R); else { R.mode = "all"; roomGo(R, 0, true); } }],
         ["⏭", "Következő lecke", () => roomGo(R, R.i + 1, true)], ["⏮", "Előző lecke", () => roomGo(R, R.i - 1, true)], [SCH.voice ? "🔇" : "🔊", SCH.voice ? "Hang ki" : "Hang be", () => { SCH.voice = !SCH.voice; if (!SCH.voice) roomHush(); }], ["🚪", "Ki a házból", () => schoolLeave(false)]]]); }
-    it.push(["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["↩", "Vissza a móló elejére", () => { roomOut(); HB.pos = { x: 0, z: 0 }; faceYaw(0); }], ["‹", "A sétához", () => W.close()]); return it; }
+    it.push(["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["↩", "Vissza a móló elejére", () => { roomOut(); HB.pos = { x: 0, z: 0 }; faceYaw(0); }], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]); return it; }
   function hbPreview(id) {
     if (HB.prev) { const o = HB.prev; HB.env.remove(o.g); HB.env.remove(o.disc); }
     const big = id === "zephyr"; let g;
@@ -7894,7 +7896,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       B.btn(36 + 2 * (bw + 14), y1, bw, bh, "👥 Többjátékos", () => hbBoard("net"), { sub: "négyes csoportok, meghívás, saját futam" });
       B.btn(36, y2, bw, bh, "🏆 Eredmények és trófeák", () => hbBoard("trophy"), { sub: "a sorozatok állása és a serlegek" });
       B.btn(36 + bw + 14, y2, bw, bh, "⚙ Beállítások", () => hbBoard("set"), { sub: "ellenfelek, kormány, napszak, ülve/állva" });
-      B.btn(36 + 2 * (bw + 14), y2, bw, bh, "‹ Vissza a sétához", () => { uiCloseAll(); W.close(); }, { sub: "a Zephyr Apartmanház virtuális sétája" });
+      B.btn(36 + 2 * (bw + 14), y2, bw, bh, "‹ " + BACK_T(), () => { uiCloseAll(); W.close(); }, { sub: BACK_S("a Zephyr Apartmanház virtuális sétája") });
     } else if (p === "boat") {
       const c = boatCls(HB.sel); uiFrame(B, g, c.n.toUpperCase(), "előtted forog a forgókorongon");
       uiCard(g, 40, 160, 1420, 560); g.fillStyle = "#fff"; g.font = `800 30px ${UIF}`; g.fillText(c.len, 70, 220); g.fillText(c.crew, 70, 262); g.font = `600 27px ${UIF}`; uiWrap(g, c.d, 70, 320, 1360, 38, 4);
@@ -8878,7 +8880,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       B.btn(x2, 450, bw, bh, S.seated ? "🧍 Álló mód" : "🪑 Ülő mód", () => { vrSeat(); B.dirty = 1; }, { sub: "testhelyzet a VR-ben" });
       B.btn(x1, 590, bw, bh, "🎥 Visszajátszás (drón)", () => { vrRaceMenu(false); vrReplay(true); }, { sub: "az eddigi futam külső nézetből", off: !(S.rec && S.rec.f.length > 2) });
       B.btn(x2, 590, bw, bh, "⛵ Főmenü – Balaton Sailing VR", () => { vrRaceMenu(false); vrToHarbor(); }, { sub: "hajó, pálya, egyedül / online" });
-      B.btn(x1, 730, 1320, 110, "‹ Kilépés a virtuális sétához", () => { vrRaceMenu(false); uiCloseAll(); W.close(); }, { sub: "a Zephyr Apartmanház sétája" }); } });
+      B.btn(x1, 730, 1320, 110, "‹ " + BACK_T(), () => { vrRaceMenu(false); uiCloseAll(); W.close(); }, { sub: BACK_S("a Zephyr Apartmanház sétája") }); } });
     S.raceMenu.show(true); }
 
   /* ---------------------------------------------------------------- RÖGZÍTÉS ÉS DRÓN-VISSZAJÁTSZÁS */
@@ -9055,7 +9057,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       B.btn(44, 716, 340, 96, "⚓ Séta a kikötőben", () => hbWalk(true), { sub: "a hajók között, valódi méretben" });
       B.btn(398, 716, 340, 96, "🏆 Eredmények", () => hbBoard("trophy"), { sub: "sorozatok és serlegek" });
       B.btn(752, 716, 340, 96, "🎓 Oktatás", () => { hbSchool(); }, { sub: "szabályok a nagypapával, aztán a pálya" });
-      B.btn(1106, 716, 340, 96, "‹ Vissza a sétához", () => { uiCloseAll(); W.close(); }, { sub: "Zephyr Apartmanház" });
+      B.btn(1106, 716, 340, 96, "‹ " + BACK_T(), () => { uiCloseAll(); W.close(); }, { sub: BACK_S("Zephyr Apartmanház") });
       B.btn(44, 840, 1402, 116, "TOVÁBB ▶  a hajó kiválasztása", () => wzGo(2), { gold: true, fs: 44 });
     } else if (p === "w2") {
       const c = boatCls(Z.cls); wzFrame(B, g, 2, "2 · HAJÓ ÉS BEÁLLÍTÁSOK", `${c.n} · ${c.len} · ${c.crew}`);
@@ -9133,7 +9135,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     uiCard(g, 40, 160, 1420, 420); g.fillStyle = "#fff"; g.font = `700 30px ${UIF}`; uiWrap(g, "Sétálj a mólón: bökj rá a pallóra (VR-ben: ökölbe zárt kéz + hüvelykujj, az ív végén koppints), és odalépsz. Egy kikötött hajóra bökve előtted megforog – ott ki is választhatod.", 70, 230, 1360, 44, 6);
     B.btn(40, 470, 1420, 100, "✕ Bezárás – sétálok tovább", () => { if (HB.B) HB.B.show(false); }, { fs: 34 });
     B.btn(40, 620, 700, 140, "⛵ Vissza a főmenübe", () => wzGo(1), { gold: true, fs: 40 }); B.btn(760, 620, 700, 140, "↺ Vissza a móló elejére", () => { HB.pos = { x: 0, z: 0 }; }, { fs: 34 });
-    B.btn(40, 790, 1420, 110, "‹ Vissza a virtuális sétához", () => { uiCloseAll(); W.close(); }, { fs: 32 }); }
+    B.btn(40, 790, 1420, 110, "‹ " + BACK_T(), () => { uiCloseAll(); W.close(); }, { fs: 32 }); }
   /* ---------------------------------------------------------------- FIÓK: regisztráció / belépés e-maillel (a táblán billentyűzettel is) */
   const AK = { mode: "reg", f: 0, v: ["", "", "", ""], shift: false };
   const AK_ROWS = ["1234567890", "QWERTZUIOP", "ASDFGHJKLÉ", "YXCVBNMÁŐŰ", "@._-ÖÜÓÚÍ+"];
@@ -10779,7 +10781,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const sunMenu = ["☀", "Napszak", [["◂☀", "Fél órával korábban", () => nudgeHour(-.5)], ["☀▸", "Fél órával később", () => nudgeHour(.5)]]
       .concat(PRESETS.map(([n], i) => [["🌅", "🌄", "🌞", "🌤", "🌇", "🌆", "🌃", "🌙"][i], n, () => setPreset(i), MAQ.preset === i]))];
     const turnMenu = ["🧭", "Forgás", [["↺", "Balra 45°", () => turn(turnA)], ["↻", "Jobbra 45°", () => turn(-turnA)], ["⤾", "Megfordulok", () => turn(Math.PI)]]];
-    const back = ["‹", "A sétához", () => W.close()];
+    const back = ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()];
     const flyM = ["🦸", MAQ.fly ? "Leszállás" : "Repülés", () => toggleFly(), !!MAQ.fly];
     if (life) return [
       ["🏢", "Szintek", [["⬆", "Emelet", () => goLevel(1), MAQ.level === 1], ["⬇", "Földszint", () => goLevel(0), MAQ.level === 0], ["⌂", MAQ.roofOn ? "Tető le" : "Tető fel", () => { MAQ.roofOn = !MAQ.roofOn; }]]],
@@ -13972,7 +13974,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     return [["🔭", "Nézőpont", VIEW_CYCLE.map((k) => [VIEWS[k][0], VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])],
       ["💡", "Ötlet", hint], ["↶", "Visszalépés", undo], ["♟", "Új játszma", newGame],
       ["📶", "Szint", [["−", "Könnyebb", () => setLvl(-1)], ["+", "Nehezebb", () => setLvl(1)]]],
-      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["🪧", CS.noSign ? "Tábla mutatása" : "Tábla elrejtése", toggleSign], ["🎬", cineOn() ? "Csatakamera ki" : "Csatakamera be", toggleCine], ["🪑", inVRSeatRaw() ? "Álló mód" : "Ülő mód", toggleSeat], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
+      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["🪧", CS.noSign ? "Tábla mutatása" : "Tábla elrejtése", toggleSign], ["🎬", cineOn() ? "Csatakamera ki" : "Csatakamera be", toggleCine], ["🪑", inVRSeatRaw() ? "Álló mód" : "Ülő mód", toggleSeat], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]];
   }
 
   /* ------------------------------------------------------------------ FELÉPÍTÉS */
@@ -15737,12 +15739,12 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     return `VAD MENET · ${kmh} km/h · magasság ${Math.round(HV.alt || 0)} m · ${pct}%`;
   }
   function hvButtons() {
-    if (HV.st === "ride") return [["■ Kiszállok (megállás)", hvStop], ["‹ Vissza a sétához", () => W.close()]];
+    if (HV.st === "ride") return [["■ Kiszállok (megállás)", hvStop], ["‹ " + BACK_T(), () => W.close()]];
     if (HV.warn) return [["✔ Vállalom – INDULJON a vad menet!", () => hvStart("wild")], ["Mégsem", () => { HV.warn = false; W.panelDirty = 1; }]];
     const hang = [hvVoice() ? "🔊 Idegenvezetés: be" : "🔇 Idegenvezetés: ki", () => { try { localStorage.setItem("zephyr-hv-hang", hvVoice() ? "0" : "1"); } catch (e) {} hvQuiet(); W.panelDirty = 1; }];
-    if (HV.st === "table") return [["🎢 Beszállok – Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { hvToTable(false); HV.warn = true; W.panelDirty = 1; }], ["＋ Nagyítás", () => { HVT.zoomT = clamp(HVT.zoomT * 1.6, 1, 12); }], ["－ Kicsinyítés", () => { HVT.zoomT = clamp(HVT.zoomT / 1.6, 1, 12); }], [HVT.follow ? "✓ Követem a vonatot" : "🚆 Kövesd a vonatot", () => { HVT.follow = !HVT.follow; if (HVT.follow && HVT.zoomT < 3) HVT.zoomT = 4; W.panelDirty = 1; }], ["⌖ Alaphelyzet", () => { HVT.zoomT = 1; HVT.cx = HVT.cx0; HVT.cz = HVT.cz0; HVT.follow = false; HVT.pos = null; W.panelDirty = 1; }], [HVT.spin ? "⏸ Asztal megállítása" : "↻ Asztal forgatása", () => { HVT.spin = !HVT.spin; W.panelDirty = 1; }], ["‹ Vissza a sétához", () => W.close()]];
+    if (HV.st === "table") return [["🎢 Beszállok – Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { hvToTable(false); HV.warn = true; W.panelDirty = 1; }], ["＋ Nagyítás", () => { HVT.zoomT = clamp(HVT.zoomT * 1.6, 1, 12); }], ["－ Kicsinyítés", () => { HVT.zoomT = clamp(HVT.zoomT / 1.6, 1, 12); }], [HVT.follow ? "✓ Követem a vonatot" : "🚆 Kövesd a vonatot", () => { HVT.follow = !HVT.follow; if (HVT.follow && HVT.zoomT < 3) HVT.zoomT = 4; W.panelDirty = 1; }], ["⌖ Alaphelyzet", () => { HVT.zoomT = 1; HVT.cx = HVT.cx0; HVT.cz = HVT.cz0; HVT.follow = false; HVT.pos = null; W.panelDirty = 1; }], [HVT.spin ? "⏸ Asztal megállítása" : "↻ Asztal forgatása", () => { HVT.spin = !HVT.spin; W.panelDirty = 1; }], ["‹ " + BACK_T(), () => W.close()]];
     const mx = [hvMaxOn() ? "✨ Maximális részletesség: BE" : "✨ Maximális részletesség: ki", () => { try { localStorage.setItem("zephyr-hv-max", hvMaxOn() ? "0" : "1"); } catch (e) {} const k = W.kind; W.close(); setTimeout(() => { try { T.openWorld ? T.openWorld(k) : W.open(k); } catch (e) {} }, 900); }];
-    return [["🗺 Balaton-körút", () => hvStart("calm")], mx, ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], hang, ["‹ Vissza a sétához", () => W.close()]];
+    return [["🗺 Balaton-körút", () => hvStart("calm")], mx, ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], hang, ["‹ " + BACK_T(), () => W.close()]];
   }
   function hvPanel(P) {
     P.title(HV.st === "table" ? "Balaton-terepasztal" : "Balatoni hullámvasút", hvInfo());
@@ -16238,7 +16240,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       #worldHud .wh-tog{pointer-events:auto;font:800 17px/1 inherit;padding:12px 18px;border-radius:999px;border:2px solid rgba(255,209,102,.9);background:rgba(7,28,58,.88);color:#ffd166;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
       #worldHud.wh-min .wh-card,#worldHud.wh-min .wh-hint,#worldHud.wh-min .wh-btns:not(.wh-steer){display:none}
       @media (max-width:700px),(max-height:520px){#worldHud .wh-btns{gap:7px;max-height:38vh;overflow-y:auto;pointer-events:auto;-webkit-overflow-scrolling:touch}#worldHud .wh-b{font-size:15px;padding:10px 12px;min-width:0;border-radius:13px}#worldHud .wh-hint{font-size:13px;padding:6px 10px}#worldHud .wh-card{padding:9px 13px}#worldHud .wh-back{font-size:16px;padding:11px 15px}}
-    </style><div class="wh-top"><button type="button" class="wh-back">‹ Vissza a sétához</button><div class="wh-card"><div class="wh-t"></div><div class="wh-s"></div><ul class="wh-list"></ul></div></div>
+    </style><div class="wh-top"><button type="button" class="wh-back">‹ ${BACK_T()}</button><div class="wh-card"><div class="wh-t"></div><div class="wh-s"></div><ul class="wh-list"></ul></div></div>
     <div class="wh-bot"><button type="button" class="wh-tog"></button><div class="wh-btns"></div><div class="wh-hint"></div></div>`;
     document.body.appendChild(el);
     el.querySelector(".wh-back").addEventListener("click", () => W.close());

@@ -67,7 +67,7 @@
       B.btn(x2, 450, bw, bh, S.seated ? "🧍 Álló mód" : "🪑 Ülő mód", () => { vrSeat(); B.dirty = 1; }, { sub: "testhelyzet a VR-ben" });
       B.btn(x1, 590, bw, bh, "🎥 Visszajátszás (drón)", () => { vrRaceMenu(false); vrReplay(true); }, { sub: "az eddigi futam külső nézetből", off: !(S.rec && S.rec.f.length > 2) });
       B.btn(x2, 590, bw, bh, "⛵ Főmenü – Balaton Sailing VR", () => { vrRaceMenu(false); vrToHarbor(); }, { sub: "hajó, pálya, egyedül / online" });
-      B.btn(x1, 730, 1320, 110, "‹ Kilépés a virtuális sétához", () => { vrRaceMenu(false); uiCloseAll(); W.close(); }, { sub: "a Zephyr Apartmanház sétája" }); } });
+      B.btn(x1, 730, 1320, 110, "‹ " + BACK_T(), () => { vrRaceMenu(false); uiCloseAll(); W.close(); }, { sub: BACK_S("a Zephyr Apartmanház sétája") }); } });
     S.raceMenu.show(true); }
 
   /* ---------------------------------------------------------------- RÖGZÍTÉS ÉS DRÓN-VISSZAJÁTSZÁS */

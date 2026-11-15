@@ -1187,3 +1187,10 @@ A tulajdonos: „A Balatoni viharjelzést vedd alapul. A kikötő és az egész 
 - forras/kutatas/*.md: házanként a netes kutatás (forrásokkal) + README a talált hibákkal és a hangnemmel (felnőtt megszólítás).
 - Következő: falak ne legyenek átjárhatók, ablakok üvegesek; leckék átírása felnőtt hangnemre + a kutatás beépítése; viharjelző: női ~30 éves hang, magasabb torony, 45/perc villogás; felhők háza részletes, barométer, díszítés; hullámpermet-fulladás fejezet; csomózóház átépítés. Hangok: /home/claude/hang/gen.py.
 - Fényképező gomb kész (📷/🖼, IndexedDB „zephyrFotok”, VR: tenyérmenü első pont) – v=fcd2710557.
+
+## 2026-11-15 16:20 – VR Zephyr Games leválasztva
+- Új oldal: weboldal/vr-zephyr-games/ (build.sh állítja elő: ugyanaz a motor window.ZEPHYR_GAMES=1-gyel, séta-panoráma nélkül, csak a játékok fájljai, ~27 MB). Kezdőképernyő 3 kinézettel (Kinézet 1·2·3, localStorage zephyr-games-stilus).
+- A sétában a „VR játékok” helyén „Stégjátékok” (gmOpen); VR-ben a sétából csak a ház makettje érhető el. Semmi nem köti össze a két oldalt (tulajdonos 15:55).
+- A világokban a „Vissza a sétához” a játékoldalon „Játékok főmenü” (01-mag.js BACK_T/BACK_S/GM_ON).
+- Teendő: a tulajdonos hozza létre a GitHubon a VR-Zephyr-Games tárolót → add_repo → a weboldal/vr-zephyr-games tartalmát oda kell tenni (gyökérbe), Pages bekapcsolás.
+- Fényképező: kucserabalazs/zephyr-hibafotok privát tároló + finomhangolt kulcs kell (tulajdonos készíti), utána add_repo, és a fotok/ mappát olvasom.

@@ -1579,7 +1579,7 @@
   function vrWrist() {
     const S = VRR;
     return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", S.fin && S.st === "race" ? "Tovább (nem várok)" : "Kapitányi tájékoztató", () => (S.fin && S.st === "race" ? vrSkip() : vrBriefOpen())], ["⛵", "Főmenü", vrToHarbor], ["⏸", S.paused ? "Folytatás" : "Szünet", () => vrPause(!S.paused)], ["◎", "Kalibrálás", vrCalibrate], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
-      ["☰", "Versenymenü", () => vrRaceMenu(true)], ["‹", "A sétához", () => W.close()]];
+      ["☰", "Versenymenü", () => vrRaceMenu(true)], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]];
   }
   function vrHud(H) {
     const S = VRR;

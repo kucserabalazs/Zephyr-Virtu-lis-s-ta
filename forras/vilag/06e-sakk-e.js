@@ -85,7 +85,7 @@
     return [["🔭", "Nézőpont", VIEW_CYCLE.map((k) => [VIEWS[k][0], VIEWS[k][1].split(" – ")[0], () => goView(k), CS.viewId === k])],
       ["💡", "Ötlet", hint], ["↶", "Visszalépés", undo], ["♟", "Új játszma", newGame],
       ["📶", "Szint", [["−", "Könnyebb", () => setLvl(-1)], ["+", "Nehezebb", () => setLvl(1)]]],
-      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["🪧", CS.noSign ? "Tábla mutatása" : "Tábla elrejtése", toggleSign], ["🎬", cineOn() ? "Csatakamera ki" : "Csatakamera be", toggleCine], ["🪑", inVRSeatRaw() ? "Álló mód" : "Ülő mód", toggleSeat], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", "A sétához", () => W.close()]];
+      ["👥", GS.two ? "Gép ellen" : "Két játékos", toggleTwo], ["⇄", "Színcsere", swapSide], ["🪧", CS.noSign ? "Tábla mutatása" : "Tábla elrejtése", toggleSign], ["🎬", cineOn() ? "Csatakamera ki" : "Csatakamera be", toggleCine], ["🪑", inVRSeatRaw() ? "Álló mód" : "Ülő mód", toggleSeat], ["☰", "Nagy panel", () => W.togglePanel()], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]];
   }
 
   /* ------------------------------------------------------------------ FELÉPÍTÉS */

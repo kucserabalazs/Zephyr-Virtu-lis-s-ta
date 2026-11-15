@@ -13,6 +13,20 @@ BV=$(md5sum $R/weboldal/virtualis-seta/index.html | cut -c1-10)
 sed -i "s/__BV__/$BV/g" $R/weboldal/virtualis-seta/index.html
 echo "{\"v\":\"$BV\"}" > $R/weboldal/virtualis-seta/verzio.json
 python3 $R/forras/tools/build_i18n.py $R/weboldal/virtualis-seta/index.html
+# ---- VR Zephyr Games (2026-11-15): a játékok külön oldala – ugyanaz a motor, ZEPHYR_GAMES jelzővel, séta nélkül; csak a játékokhoz kellő fájlok ----
+G=$R/weboldal/vr-zephyr-games; S=$R/weboldal/virtualis-seta
+mkdir -p $G/img
+python3 - "$S/index.html" "$G/index.html" <<'PY'
+import sys,re
+s=open(sys.argv[1]).read()
+s=s.replace('<head>','<head>\n<script>window.ZEPHYR_GAMES=1;</script>',1)
+s=re.sub(r'<title>[^<]*</title>','<title>VR Zephyr Games</title>',s,count=1)
+open(sys.argv[2],'w').write(s)
+PY
+cp $S/vilag.js $S/p2p.js $S/verzio.json $S/jatek.webmanifest $G/
+rm -rf $G/hang $G/fonts; cp -r $S/hang $G/hang; cp -r $S/fonts $G/fonts
+for d in eg kapu kit melleny tex jatek; do rm -rf $G/img/$d; cp -r $S/img/$d $G/img/$d; done
+cp $S/img/zephyr-hajo-logo.png $S/img/kapitanyi-hatter.jpg $S/img/zephyr-logo.png $S/img/zephyr-logo-s.png $G/img/
 cp $R/weboldal/virtualis-seta/index.html $W/tour/index.html
 cp $R/forras/kezdooldal-forras.html $W/home/src.html
 cp $R/forras/tools/build_home.py $W/

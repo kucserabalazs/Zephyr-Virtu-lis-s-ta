@@ -20,6 +20,8 @@
 
   const W = { active: false, kind: null, root: null, objs: [], disposables: [], upd: [], hud: null, panel: null, t: 0, scale: 1 };
   window.ZephyrWorld = W;
+  /* 2026-11-15: a VR Zephyr Games oldalon a „vissza” a játékok főmenüjébe visz (nincs séta) */
+  const GM_ON = () => !!window.ZEPHYR_GAMES, BACK_T = () => GM_ON() ? "Játékok főmenü" : "Vissza a sétához", BACK_S = (d) => GM_ON() ? "VR Zephyr Games" : d;
   /* a kontroller karja a világokban: ha a világ kezeli (pl. a kikötő: fordulás, lépés), annak adjuk tovább (2026-11-15) */
   W.stick = (ax, ay) => { const s = W.spec; if (s && s.stick) try { s.stick(ax, ay); } catch (e) { console.warn("kar", e); } };
 

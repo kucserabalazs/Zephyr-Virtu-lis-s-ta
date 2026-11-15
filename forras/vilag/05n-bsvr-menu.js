@@ -91,7 +91,7 @@
       B.btn(44, 716, 340, 96, "⚓ Séta a kikötőben", () => hbWalk(true), { sub: "a hajók között, valódi méretben" });
       B.btn(398, 716, 340, 96, "🏆 Eredmények", () => hbBoard("trophy"), { sub: "sorozatok és serlegek" });
       B.btn(752, 716, 340, 96, "🎓 Oktatás", () => { hbSchool(); }, { sub: "szabályok a nagypapával, aztán a pálya" });
-      B.btn(1106, 716, 340, 96, "‹ Vissza a sétához", () => { uiCloseAll(); W.close(); }, { sub: "Zephyr Apartmanház" });
+      B.btn(1106, 716, 340, 96, "‹ " + BACK_T(), () => { uiCloseAll(); W.close(); }, { sub: BACK_S("Zephyr Apartmanház") });
       B.btn(44, 840, 1402, 116, "TOVÁBB ▶  a hajó kiválasztása", () => wzGo(2), { gold: true, fs: 44 });
     } else if (p === "w2") {
       const c = boatCls(Z.cls); wzFrame(B, g, 2, "2 · HAJÓ ÉS BEÁLLÍTÁSOK", `${c.n} · ${c.len} · ${c.crew}`);
@@ -169,7 +169,7 @@
     uiCard(g, 40, 160, 1420, 420); g.fillStyle = "#fff"; g.font = `700 30px ${UIF}`; uiWrap(g, "Sétálj a mólón: bökj rá a pallóra (VR-ben: ökölbe zárt kéz + hüvelykujj, az ív végén koppints), és odalépsz. Egy kikötött hajóra bökve előtted megforog – ott ki is választhatod.", 70, 230, 1360, 44, 6);
     B.btn(40, 470, 1420, 100, "✕ Bezárás – sétálok tovább", () => { if (HB.B) HB.B.show(false); }, { fs: 34 });
     B.btn(40, 620, 700, 140, "⛵ Vissza a főmenübe", () => wzGo(1), { gold: true, fs: 40 }); B.btn(760, 620, 700, 140, "↺ Vissza a móló elejére", () => { HB.pos = { x: 0, z: 0 }; }, { fs: 34 });
-    B.btn(40, 790, 1420, 110, "‹ Vissza a virtuális sétához", () => { uiCloseAll(); W.close(); }, { fs: 32 }); }
+    B.btn(40, 790, 1420, 110, "‹ " + BACK_T(), () => { uiCloseAll(); W.close(); }, { fs: 32 }); }
   /* ---------------------------------------------------------------- FIÓK: regisztráció / belépés e-maillel (a táblán billentyűzettel is) */
   const AK = { mode: "reg", f: 0, v: ["", "", "", ""], shift: false };
   const AK_ROWS = ["1234567890", "QWERTZUIOP", "ASDFGHJKLÉ", "YXCVBNMÁŐŰ", "@._-ÖÜÓÚÍ+"];

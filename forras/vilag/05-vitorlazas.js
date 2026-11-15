@@ -151,7 +151,7 @@
     P.row(1, "A rúd jobbra → a hajó balra fordul (mint a valóságban).", "#ffffff");
     P.row(2, "Fordulóhoz vezesd át az orrot a szél irányán.", "#ffffff");
     P.row(3, "Tihany az orrtól balra-előre, Badacsony messze nyugaton.", "#7fd3ff");
-    P.buttons([["Egyenesbe", () => SAIL.del = 0], ["‹ Vissza a sétához", () => W.close()]]);
+    P.buttons([["Egyenesbe", () => SAIL.del = 0], ["‹ " + BACK_T(), () => W.close()]]);
   }
   function sailHud(H) {
     const S = SAIL;

@@ -1,0 +1,2 @@
+Texturak (CC0): fu.jpg = ambientCG Grass004; szikla.jpg = ambientCG Rock030; homok.jpg = Poly Haven aerial_beach_01; ret.jpg = Poly Haven aerial_grass_rock.
+Szabadon hasznalhatok (Creative Commons Zero). Letoltve 2026-11-11, GitHub-tukrokbol, 512 px-re kicsinyitve.

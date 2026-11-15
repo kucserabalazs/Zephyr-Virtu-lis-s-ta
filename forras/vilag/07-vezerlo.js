@@ -166,7 +166,7 @@
       #worldHud .wh-tog{pointer-events:auto;font:800 17px/1 inherit;padding:12px 18px;border-radius:999px;border:2px solid rgba(255,209,102,.9);background:rgba(7,28,58,.88);color:#ffd166;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)}
       #worldHud.wh-min .wh-card,#worldHud.wh-min .wh-hint,#worldHud.wh-min .wh-btns:not(.wh-steer){display:none}
       @media (max-width:700px),(max-height:520px){#worldHud .wh-btns{gap:7px;max-height:38vh;overflow-y:auto;pointer-events:auto;-webkit-overflow-scrolling:touch}#worldHud .wh-b{font-size:15px;padding:10px 12px;min-width:0;border-radius:13px}#worldHud .wh-hint{font-size:13px;padding:6px 10px}#worldHud .wh-card{padding:9px 13px}#worldHud .wh-back{font-size:16px;padding:11px 15px}}
-    </style><div class="wh-top"><button type="button" class="wh-back">‹ Vissza a sétához</button><div class="wh-card"><div class="wh-t"></div><div class="wh-s"></div><ul class="wh-list"></ul></div></div>
+    </style><div class="wh-top"><button type="button" class="wh-back">‹ ${BACK_T()}</button><div class="wh-card"><div class="wh-t"></div><div class="wh-s"></div><ul class="wh-list"></ul></div></div>
     <div class="wh-bot"><button type="button" class="wh-tog"></button><div class="wh-btns"></div><div class="wh-hint"></div></div>`;
     document.body.appendChild(el);
     el.querySelector(".wh-back").addEventListener("click", () => W.close());

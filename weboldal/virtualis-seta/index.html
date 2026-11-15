@@ -10212,9 +10212,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function worldButton() {
     if ($("btnWorld")) return;
     const b = document.createElement("button"); b.type = "button"; b.id = "btnWorld"; b.className = "vr-btn world-btn";
-    b.innerHTML = `<svg viewBox="0 0 48 30" aria-hidden="true"><path d="M24 2v22M24 3l13 19H24M24 7 12 22h12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M4 25c5 3 10 3 15 0s10-3 15 0 8 3 11 1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span>3D</span>`;
-    b.title = "VR játékok: vitorlásverseny, sakk, hullámvasút, terepasztal, makett"; b.setAttribute("aria-label", "VR játékok");
-    b.addEventListener("click", () => { if (walking) { stopWalk(); return; } if (!busy) worldChooser(); });
+    b.innerHTML = `<svg viewBox="0 0 48 30" aria-hidden="true"><path d="M24 2v22M24 3l13 19H24M24 7 12 22h12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M4 25c5 3 10 3 15 0s10-3 15 0 8 3 11 1" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><span>Stégjátékok</span>`;
+    b.title = "Stégjátékok: nyerőautomata, kacsaetetés, mentőöv-dobás, regatta, mahjong, sakk"; b.setAttribute("aria-label", "Stégjátékok");
+    /* 2026-11-15: a VR játékok külön oldalra költöztek (VR Zephyr Games) – a helyükön a stégjátékok, a választó nyitva */
+    b.addEventListener("click", () => { if (walking) { stopWalk(); return; } if (!busy) { gmOpen(); setTimeout(() => gmMenu(true), 60); } });
     document.body.appendChild(b);
   }
   function worldChooser() {
@@ -11107,7 +11108,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     btn(g, X(1), y0, W3, H1, "🛏\nApartmanok", () => { VRS.page = "apts"; vrDraw(); });
     btn(g, X(2), y0, W3, H1, bkGo ? "📅\nFoglalás folytatása" : "📅\nFoglalás", () => { if (VRS.book && (VRS.book.step === "done" || (!VRS.book.ready && !VRS.book.loading))) VRS.book = null; vrBookInit(); VRS.page = "book"; vrDraw(); vrPlace(); }, { on: 1 });
     btn(g, X(0), y1, W3, H1, "☀\nNapállás", () => { sunSet(true); VRS.page = "sun"; vrDraw(); }, { on: SUN.on });
-    btn(g, X(1), y1, W3, H1, "🎮\nVR játékok", () => { VRS.page = "world"; vrDraw(); });
+    btn(g, X(1), y1, W3, H1, "🏠\nA ház makettje", () => { vrClose(); openWorld("maquette"); });   /* 2026-11-15: a VR játékok a VR Zephyr Games oldalra költöztek */
     btn(g, X(2), y1, W3, H1, "⚙\nBeállítások", () => { VRS.page = "set"; vrDraw(); });
     const y2 = y1 + H1 + 26, H2 = VH - 36 - y2, W6 = (VW - 80 - 5 * 16) / 6, X6 = (i) => 40 + i * (W6 + 16), step = (WS.turnDeg || 30) * Math.PI / 180;
     btn(g, X6(0), y2, W6, H2, "↺ Balra", () => { snapBlink(); vrTurn(step); }, { fs: 30 });
@@ -11179,10 +11180,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function pWorld(g) {
     /* 2026. nov. 6.: a tulajdonos kérésére VR-ben csak két világ marad – a vitorlásverseny a kormánynál és a makett */
     /* 2026-11-11 este: „VR játékok” – a hullámvasút és a terepasztal is ide került (a tulajdonos kérése) */
-    const items = [["race", "⛵  Balaton Sailing VR", "5 hajóosztály, 10 pálya, futam vagy sorozat · vitorlásiskola."],
+    const items = window.ZEPHYR_GAMES ? [["race", "⛵  Balaton Sailing VR", "5 hajóosztály, 10 pálya, futam vagy sorozat · vitorlásiskola."],
                    ["coaster", "🎢  Balatoni hullámvasút", "A Zephyr fedélzetén a tó 14 látnivalója között – vagy a vad menet."],
-                   ["chess", "♞  Vitorlás sakk", "A tábla a Balaton naplementében, a bábuk életnagyságú hajók."],
-                   ["maquette", "🏠  A ház makettje", "Egy regatta-bóján a tó közepén; széthúzva életnagyságú lesz."]];
+                   ["chess", "♞  Vitorlás sakk", "A tábla a Balaton naplementében, a bábuk életnagyságú hajók."]]
+                 : [["maquette", "🏠  A ház makettje", "Egy regatta-bóján a tó közepén; széthúzva életnagyságú lesz."]];   /* 2026-11-15: a sétában csak a makett (a játékok a VR Zephyr Games oldalon) */
     items.forEach(([k, t, d], i) => {
       const y = 132 + i * 142;
       btn(g, 40, y, VW - 80, 130, "", () => { vrClose(); openWorld(k); });
@@ -12826,8 +12827,9 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     let it = null;
     if (world && ZephyrWorld.spec && ZephyrWorld.spec.wrist) { try { it = ZephyrWorld.spec.wrist(); } catch (e) {} }
     if (!it && world) it = [["☰", "Panel", () => ZephyrWorld.togglePanel()], ["🧭", "Forgás", [["↺", "Balra 45°", () => vrTurn(TURN)], ["↻", "Jobbra 45°", () => vrTurn(-TURN)], ["⤾", "Megfordulok", () => vrTurn(Math.PI)]]],
-      ["🎮", "VR játékok", [["⛵", "Balaton Sailing VR", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "Makett", () => openWorld("maquette")]]],
+      (window.ZEPHYR_GAMES ? ["🎮", "VR játékok", [["⛵", "Balaton Sailing VR", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")]]] : ["🏠", "A ház makettje", () => openWorld("maquette")]),
       ["‹", "A sétához", () => ZephyrWorld.close()], ["❔", "Súgó", () => { ZephyrWorld.close(() => vrOpen("help")); }], ["✕", "Kilépés", () => vrEndSession()]];
+    if (!it && window.ZEPHYR_GAMES) it = [["⛵", "Balaton Sailing VR", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["✕", "Kilépés a VR-ből", () => vrEndSession()]];
     if (!it) {
       const pg = (p, f) => () => { if (f) f(); vrOpen(p); VRS.page = p; vrDraw(); vrPlace(); };
       const apts = GROUPS.map((g) => [g.no ? String(g.no) : g.id === "strand" ? "🏖" : "🏡", g.name, () => go(g.entry), sceneGroup() === g.id]);
@@ -12836,10 +12838,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         ["🏠", "Lakások", apts],
         ["📅", "Foglalás", [["📅", "Időpont és foglalás", pg("book", () => vrBookInit())], ["🗺", "Melyik lakás hol van", pg("map")], ["❔", "Hogyan foglalok?", pg("help")]]],
         ["☀", "Napállás", pg("sun", () => sunSet(true))],
-        ["🎮", "VR játékok", [["⛵", "Balaton Sailing VR", () => openWorld("race")], ["🎢", "Hullámvasút", () => openWorld("coaster")], ["♞", "Vitorlás sakk", () => openWorld("chess")], ["🏠", "A ház makettje", () => openWorld("maquette")]]],
+        ["🏠", "A ház makettje", () => openWorld("maquette")],
         ["↺", "Balra", () => vrTurn(TURN)], ["↻", "Jobbra", () => vrTurn(-TURN)], ["☰", "Nagy menü", () => vrToggle()],
         ["❔", "Súgó", pg("help")], ["✕", "Kilépés", () => vrEndSession()]];
     }
+    if (window.ZEPHYR_GAMES) it = it.map((q) => q[1] === "A sétához" ? [q[0], "Játékok főmenü", q[2]] : q);
     if (!it.some((q) => q[1] === "Óra beállítás")) it = it.concat([watchSettings()]);
     it = [["📷", fotoKey() ? (FOTO.err ? "Fotó (küldés hiba!)" : "Fotó → Claude") : FOTO.n ? `Fotó a hibáról (${FOTO.n})` : "Fotó a hibáról", () => fotoSnap()]].concat(it);   /* 2026-11-15: a fényképező mindig az első */
     return it.slice(0, 12);
@@ -13708,7 +13711,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "ba96b3416e"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "fbf0b56495"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -13742,75 +13745,177 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "0909d68a9f"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "baf3c72867"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 
-  /* ================= 2026-11-12 12:14 – ÖNÁLLÓ JÁTÉKCSOMAG KEZDŐKÉPERNYŐJE (a tulajdonos kérése: a játékok az apartmanos részek nélkül, önálló csomagként) =================
-     A cím végére írt „?jatek” (vagy „#jatek”) a sétát eltakaró, saját kezdőképernyőt nyit: cím, mottó, három játék kártyája, rekordok, beállítás (nehézség). A játékból
-     kilépve ide térünk vissza, nem a sétába. A név („Zephyr Sailing VR”) MUNKACÍM – a tulajdonos dönt róla. A sima cím (paraméter nélkül) változatlanul a sétát nyitja. */
+  /* ================= 2026-11-15 15:49 – VR ZEPHYR GAMES (tulajdonos: „válasszuk le a Zephyr apartman sétáról a VR játékokat, legyen teljesen külön szekció,
+     VR Zephyr Games néven, saját kezdőképernyővel”; 15:55: „semmi ne kösse össze őket”, a kezdőképernyőből válogatni akar) =================
+     Csak a játékoldalon fut (window.ZEPHYR_GAMES, a weboldal/vr-zephyr-games/ oldal fejlécéből), vagy a régi „?jatek” címmel. A sétából NINCS ide link.
+     Három kinézet közül lehet választani (jobb felső sarok „Kinézet 1 · 2 · 3”), a választás megmarad. */
   (function gameHub() {
-    if (!/[?&#]jatek/.test(location.search + location.hash)) return;
+    if (!window.ZEPHYR_GAMES && !/[?&#]jatek/.test(location.search + location.hash)) return;
+    window.ZEPHYR_GAMES = 1; document.documentElement.classList.add("games-on");
     const css = document.createElement("style"); css.textContent = `
-      #gameHub{position:fixed;inset:0;z-index:99990;overflow:auto;color:#fff;font-family:Inter,system-ui,sans-serif;background:radial-gradient(1200px 700px at 70% -10%,#1d5c8f 0%,rgba(29,92,143,0) 60%),linear-gradient(180deg,#06203a 0%,#041326 55%,#020a16 100%)}
-      #gameHub .gh-wrap{max-width:1180px;margin:0 auto;padding:clamp(18px,4vw,48px)}
-      #gameHub .gh-top{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-      #gameHub .gh-logo{width:clamp(64px,9vw,104px);height:clamp(64px,9vw,104px);border-radius:24px;background:linear-gradient(160deg,#e3262a,#8f1216);display:grid;place-items:center;box-shadow:0 14px 40px rgba(0,0,0,.45)}
-      #gameHub h1{margin:0;font-size:clamp(34px,6vw,68px);font-weight:900;letter-spacing:-.02em;line-height:1}
-      #gameHub h1 span{color:#E4BB63}
-      #gameHub .gh-tag{margin:8px 0 0;font-size:clamp(17px,2.2vw,24px);color:#b9d6ee;max-width:60ch}
-      #gameHub .gh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;margin-top:clamp(22px,4vw,44px)}
-      #gameHub .gh-card{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;min-height:300px;border-radius:26px;padding:26px;background:linear-gradient(170deg,rgba(40,90,140,.55),rgba(12,36,62,.9));border:2px solid rgba(228,187,99,.28);box-shadow:0 18px 50px rgba(0,0,0,.4);transition:transform .18s,border-color .18s}
-      #gameHub .gh-card:hover,#gameHub .gh-card:focus-visible{transform:translateY(-6px);border-color:#E4BB63}
-      #gameHub .gh-ic{font-size:64px;line-height:1}
-      #gameHub .gh-card b{display:block;font-size:30px;font-weight:850;margin-top:14px}
-      #gameHub .gh-card p{margin:10px 0 0;font-size:19px;line-height:1.45;color:#cfe3f2;flex:1}
-      #gameHub .gh-rec{margin-top:14px;font-size:17px;color:#E4BB63;font-weight:700;min-height:22px}
-      #gameHub .gh-go{margin-top:14px;align-self:flex-start;background:#E4BB63;color:#0b1b2a;font-weight:850;font-size:21px;padding:13px 22px;border-radius:999px}
-      #gameHub .gh-main{grid-column:1/-1;min-height:340px;background:linear-gradient(120deg,rgba(227,38,42,.5),rgba(12,36,62,.92) 55%)}
-      #gameHub .gh-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:28px}
-      #gameHub .gh-pill{all:unset;cursor:pointer;font-size:19px;font-weight:750;padding:12px 20px;border-radius:999px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.22)}
-      #gameHub .gh-pill:hover{border-color:#E4BB63}
-      #gameHub .gh-foot{margin-top:26px;font-size:16px;color:#8fb3d1;line-height:1.5}
-      #gameHub .gh-recs{margin-top:30px;padding:22px 26px;border-radius:22px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
-      #gameHub .gh-recs h2{margin:0 0 12px;font-size:26px;color:#E4BB63}
-      #gameHub .gh-recs table{border-collapse:collapse;font-size:20px;width:100%;max-width:640px}
-      #gameHub .gh-recs td{padding:7px 14px 7px 0;border-bottom:1px solid rgba(255,255,255,.1)}
-      #gameHub .gh-recs p{font-size:19px;color:#cfe3f2;margin:14px 0 0}
-      #gameHub.gh-hide{display:none}`; document.head.appendChild(css);
-    { const lk = document.createElement("link"); lk.rel = "manifest"; lk.href = "jatek.webmanifest"; document.head.appendChild(lk); document.title = "Balaton Sailing VR"; }   /* 9. lépés előkészítése: a csomagoló (Bubblewrap) ebből a leírásból dolgozik */
-    const hub = document.createElement("div"); hub.id = "gameHub"; hub.setAttribute("role", "dialog"); hub.setAttribute("aria-label", "Játékok");
+      html.games-on body > *:not(#stage):not(#gameHub):not(#worldHud):not(.zfb):not(.zx-board):not(#zfoto):not(#zfotoGal):not(#toast):not(script):not(style):not(.zv-ujver):not(a-scene){visibility:hidden!important}
+      html.games-on #stage{visibility:visible!important}
+      #gameHub{position:fixed;inset:0;z-index:99990;overflow:auto;color:#fff;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+      #gameHub.gh-hide{display:none}
+      #gameHub .gh-bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+      #gameHub canvas.gh-fx{position:absolute;inset:0;width:100%;height:100%}
+      #gameHub .gh-wrap{position:relative;max-width:1240px;margin:0 auto;padding:clamp(16px,3.6vw,44px)}
+      #gameHub .gh-bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+      #gameHub .gh-brand{display:flex;align-items:center;gap:16px;flex:1 1 420px}
+      #gameHub .gh-logo{width:clamp(66px,8vw,96px);height:clamp(66px,8vw,96px);border-radius:24px;display:grid;place-items:center;flex:none}
+      #gameHub h1{margin:0;font-size:clamp(36px,6.4vw,76px);font-weight:900;letter-spacing:-.025em;line-height:.95}
+      #gameHub .gh-tag{margin:10px 0 0;font-size:clamp(16px,2vw,22px);max-width:62ch;line-height:1.4}
+      #gameHub .gh-sty{display:flex;gap:6px;align-items:center;font-size:15px;font-weight:700;padding:6px 8px 6px 14px;border-radius:999px}
+      #gameHub .gh-sty button{all:unset;cursor:pointer;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:850;font-size:16px}
+      #gameHub .gh-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(14px,2vw,24px);margin-top:clamp(22px,3.6vw,40px)}
+      #gameHub .gh-card{all:unset;box-sizing:border-box;cursor:pointer;position:relative;overflow:hidden;display:flex;flex-direction:column;grid-column:span 6;min-height:360px;border-radius:28px;padding:0;transition:transform .25s,box-shadow .25s}
+      #gameHub .gh-card.big{grid-column:span 12;min-height:400px;flex-direction:row}
+      #gameHub .gh-card:hover,#gameHub .gh-card:focus-visible{transform:translateY(-6px)}
+      #gameHub .gh-art{position:relative;height:190px;flex:none}
+      #gameHub .gh-card.big .gh-art{height:auto;flex:1 1 52%;min-height:300px}
+      #gameHub .gh-art svg{position:absolute;inset:0;width:100%;height:100%}
+      #gameHub .gh-txt{display:flex;flex-direction:column;flex:1;padding:22px 24px 24px}
+      #gameHub .gh-card.big .gh-txt{flex:1 1 48%;padding:34px 36px}
+      #gameHub .gh-kick{font-size:14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+      #gameHub .gh-card b{display:block;font-size:clamp(26px,2.8vw,34px);font-weight:900;margin-top:6px;line-height:1.05}
+      #gameHub .gh-card.big b{font-size:clamp(32px,4.2vw,52px)}
+      #gameHub .gh-card p{margin:12px 0 0;font-size:18px;line-height:1.5;flex:1}
+      #gameHub .gh-feat{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+      #gameHub .gh-feat span{font-size:14px;font-weight:750;padding:6px 11px;border-radius:999px}
+      #gameHub .gh-rec{margin-top:14px;font-size:16px;font-weight:700;min-height:20px}
+      #gameHub .gh-go{margin-top:16px;align-self:flex-start;font-weight:900;font-size:20px;padding:14px 26px;border-radius:999px}
+      #gameHub .gh-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:26px}
+      #gameHub .gh-pill{all:unset;cursor:pointer;font-size:18px;font-weight:750;padding:12px 20px;border-radius:999px}
+      #gameHub .gh-recs{margin-top:28px;padding:22px 26px;border-radius:22px}
+      #gameHub .gh-recs h2{margin:0 0 12px;font-size:24px}
+      #gameHub .gh-recs table{border-collapse:collapse;font-size:19px;width:100%;max-width:640px}
+      #gameHub .gh-recs td{padding:7px 14px 7px 0;border-bottom:1px solid rgba(127,127,127,.25)}
+      #gameHub .gh-foot{margin-top:26px;font-size:15px;line-height:1.55;opacity:.8}
+      @media (max-width:900px){#gameHub .gh-card{grid-column:span 12}#gameHub .gh-card.big{flex-direction:column}#gameHub .gh-card.big .gh-art{min-height:220px}}
+      /* --- 1: Balatoni nyár – napfényes, a valódi balatoni fotóval, sodródó vitorlákkal --- */
+      #gameHub[data-s="1"]{color:#0c2440}
+      #gameHub[data-s="1"] .gh-bg{background:url(img/kapitanyi-hatter.jpg) center/cover}
+      #gameHub[data-s="1"] .gh-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.08) 0%,rgba(240,248,255,.55) 52%,rgba(240,248,255,.92) 100%)}
+      #gameHub[data-s="1"] h1{color:#fff;text-shadow:0 4px 24px rgba(4,30,60,.55)} #gameHub[data-s="1"] h1 em{font-style:normal;color:#ffd166}
+      #gameHub[data-s="1"] .gh-tag{color:#fff;text-shadow:0 2px 12px rgba(4,30,60,.6)}
+      #gameHub[data-s="1"] .gh-logo{background:#fff;box-shadow:0 12px 30px rgba(0,40,80,.3)}
+      #gameHub[data-s="1"] .gh-sty{background:rgba(255,255,255,.85);color:#0c2440} #gameHub[data-s="1"] .gh-sty button{background:#e6eef6} #gameHub[data-s="1"] .gh-sty button.on{background:#d61f26;color:#fff}
+      #gameHub[data-s="1"] .gh-card{background:#fff;box-shadow:0 18px 50px rgba(8,40,80,.22)} #gameHub[data-s="1"] .gh-card:hover{box-shadow:0 26px 60px rgba(8,40,80,.32)}
+      #gameHub[data-s="1"] .gh-kick{color:#d61f26} #gameHub[data-s="1"] .gh-card p{color:#31506e}
+      #gameHub[data-s="1"] .gh-feat span{background:#eaf3fb;color:#14507f} #gameHub[data-s="1"] .gh-rec{color:#b5801c}
+      #gameHub[data-s="1"] .gh-go{background:#d61f26;color:#fff;box-shadow:0 8px 20px rgba(214,31,38,.35)}
+      #gameHub[data-s="1"] .gh-pill{background:rgba(255,255,255,.9);color:#0c2440;box-shadow:0 4px 14px rgba(8,40,80,.15)}
+      #gameHub[data-s="1"] .gh-recs{background:rgba(255,255,255,.9);color:#0c2440} #gameHub[data-s="1"] .gh-recs h2{color:#d61f26}
+      /* --- 2: Éjszakai regatta – csillagos ég, hold és világítótorony-fény, arany izzás --- */
+      #gameHub[data-s="2"] .gh-bg{background:radial-gradient(1200px 600px at 78% 8%,#1b3f6e 0%,rgba(27,63,110,0) 60%),linear-gradient(180deg,#040c1c 0%,#071a33 55%,#0a2442 100%)}
+      #gameHub[data-s="2"] h1 em{font-style:normal;background:linear-gradient(90deg,#ffe29a,#E4BB63 40%,#ff9f43);-webkit-background-clip:text;background-clip:text;color:transparent}
+      #gameHub[data-s="2"] .gh-tag{color:#a9c6e4} #gameHub[data-s="2"] .gh-logo{background:linear-gradient(160deg,#16335a,#0a1c34);border:2px solid #E4BB63;box-shadow:0 0 40px rgba(228,187,99,.35)}
+      #gameHub[data-s="2"] .gh-sty{background:rgba(255,255,255,.08);border:1px solid rgba(228,187,99,.4)} #gameHub[data-s="2"] .gh-sty button{background:rgba(255,255,255,.1);color:#fff} #gameHub[data-s="2"] .gh-sty button.on{background:#E4BB63;color:#0a1c34}
+      #gameHub[data-s="2"] .gh-card{background:linear-gradient(170deg,rgba(26,58,98,.75),rgba(8,22,42,.92));border:1.5px solid rgba(228,187,99,.38);box-shadow:0 20px 60px rgba(0,0,0,.45)}
+      #gameHub[data-s="2"] .gh-card:hover{border-color:#E4BB63;box-shadow:0 0 0 1px #E4BB63,0 26px 70px rgba(228,187,99,.18)}
+      #gameHub[data-s="2"] .gh-kick{color:#E4BB63} #gameHub[data-s="2"] .gh-card p{color:#c3d8ee}
+      #gameHub[data-s="2"] .gh-feat span{background:rgba(228,187,99,.12);color:#f3d48b;border:1px solid rgba(228,187,99,.3)} #gameHub[data-s="2"] .gh-rec{color:#E4BB63}
+      #gameHub[data-s="2"] .gh-go{background:linear-gradient(180deg,#ffe29a,#E4BB63);color:#0a1c34;box-shadow:0 0 30px rgba(228,187,99,.35)}
+      #gameHub[data-s="2"] .gh-pill{background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.2)} #gameHub[data-s="2"] .gh-pill:hover{border-color:#E4BB63}
+      #gameHub[data-s="2"] .gh-recs{background:rgba(255,255,255,.05);border:1px solid rgba(228,187,99,.25)} #gameHub[data-s="2"] .gh-recs h2{color:#E4BB63}
+      /* --- 3: Vitorlavászon plakát – retró hajós plakát, jelzőzászló-színek, merész vitorlaformák --- */
+      #gameHub[data-s="3"]{color:#1c1a33}
+      #gameHub[data-s="3"] .gh-bg{background:#f3e9d2}
+      #gameHub[data-s="3"] h1{color:#141d4d} #gameHub[data-s="3"] h1 em{font-style:normal;color:#d61f26}
+      #gameHub[data-s="3"] .gh-tag{color:#3e3a5c} #gameHub[data-s="3"] .gh-logo{background:#141d4d;box-shadow:8px 8px 0 #d61f26}
+      #gameHub[data-s="3"] .gh-sty{background:#141d4d;color:#f3e9d2} #gameHub[data-s="3"] .gh-sty button{background:#f3e9d2;color:#141d4d} #gameHub[data-s="3"] .gh-sty button.on{background:#ffb703}
+      #gameHub[data-s="3"] .gh-card{background:#fffaf0;border:3px solid #141d4d;border-radius:18px;box-shadow:10px 10px 0 #141d4d} #gameHub[data-s="3"] .gh-card:hover{box-shadow:14px 16px 0 #d61f26}
+      #gameHub[data-s="3"] .gh-kick{color:#d61f26} #gameHub[data-s="3"] .gh-card p{color:#3e3a5c}
+      #gameHub[data-s="3"] .gh-feat span{background:#141d4d;color:#f3e9d2} #gameHub[data-s="3"] .gh-rec{color:#c1121f}
+      #gameHub[data-s="3"] .gh-go{background:#ffb703;color:#141d4d;border:3px solid #141d4d;box-shadow:4px 4px 0 #141d4d}
+      #gameHub[data-s="3"] .gh-pill{background:#fffaf0;color:#141d4d;border:2.5px solid #141d4d}
+      #gameHub[data-s="3"] .gh-foot{background:#fffaf0;color:#141d4d;padding:10px 14px;border-radius:12px;border:2px solid #141d4d;opacity:1}
+      #gameHub[data-s="3"] .gh-recs{background:#fffaf0;border:3px solid #141d4d;color:#141d4d} #gameHub[data-s="3"] .gh-recs h2{color:#d61f26}`;
+    document.head.appendChild(css);
+    { const lk = document.createElement("link"); lk.rel = "manifest"; lk.href = "jatek.webmanifest"; document.head.appendChild(lk); document.title = "VR Zephyr Games"; }
+    const hub = document.createElement("div"); hub.id = "gameHub"; hub.setAttribute("role", "dialog"); hub.setAttribute("aria-label", "VR Zephyr Games");
     const DIFF = { kezdo: "Kezdő", halado: "Haladó", verseny: "Versenyző" }, ls = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+    let STY = ls("zephyr-games-stilus", "2");
     const mmss = (t) => { t = Math.max(0, Math.round(t)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
     const recs = () => { let best = {}, ch = null; try { best = JSON.parse(ls("zephyr-vr-verseny", "{}")); ch = JSON.parse(ls("zephyr-vr-bajnoksag", "null")); } catch (e) {}
       const ts = Object.keys(best).map((k) => best[k]).filter((v) => v > 0), parts = [];
       if (ts.length) parts.push(`${ts.length} pályán van időd · legjobb: ${mmss(Math.min.apply(null, ts))}`); if (ch && ch.won) parts.push(`🏆 megnyert bajnokság: ${ch.won}`); if (ch && ch.n && ch.n < 5) parts.push(`bajnokság: ${ch.n}/5 futam`);
       if (!ls("zephyr-vr-oktato", "")) parts.unshift("Először vagy itt? Kezdd az oktató futammal!"); return parts.join(" · "); };
-    /* 6. lépés: rekordok – pályánkénti legjobb idők és a bajnokság állása */
     const CN = ["Felszél–hátszél", "Háromszög", "Szlalom", "Tihanyi kör", "Nagy ív", "Trapéz", "Hosszú cirkáló", "Balatoni átkelés", "Cikkcakk", "Kékszalag-kör"];
     const recTable = () => { let best = {}, ch = null; try { best = JSON.parse(ls("zephyr-vr-verseny", "{}")); ch = JSON.parse(ls("zephyr-vr-bajnoksag", "null")); } catch (e) {}
       const ks = Object.keys(best).map(Number).filter((k) => k > 0 && best[k] > 0).sort((a, b) => a - b); if (!ks.length && !(ch && ch.n)) return "";
       const rows = ks.map((k) => `<tr><td>${k}. futam</td><td>${CN[(k - 1) % CN.length]}</td><td><b>${mmss(best[k])}</b></td></tr>`).join("");
       const tb = ch && ch.pts ? Object.keys(ch.pts).map((n) => [n, ch.pts[n]]).sort((a, b) => a[1] - b[1]).map((q, i) => `${i + 1}. ${q[0]} – ${q[1]} pont`).join(" · ") : "";
       return `<div class="gh-recs"><h2>Rekordjaid</h2>${rows ? `<table>${rows}</table>` : ""}${tb ? `<p>${ch.n >= 5 ? "🏆 Bajnokság végeredménye" : "Bajnokság " + ch.n + "/5 futam után"}: ${tb}</p>` : ""}</div>`; };
-    const draw = () => { hub.innerHTML = `<div class="gh-wrap">
-        <div class="gh-top"><div class="gh-logo"><svg viewBox="0 0 64 64" width="70%" height="70%" aria-hidden="true"><path d="M30 6v44H10z" fill="#fff"/><path d="M34 14v36h20z" fill="#ffd9a0"/><path d="M6 54h52l-6 6H12z" fill="#fff"/></svg></div>
-          <div><h1>Zephyr <span>Sailing VR</span></h1><p class="gh-tag">Valódi vitorlázás a Balatonon – kézzel kormányzott versenyhajó, élethű szél és vitorlák, versenyszabályok.</p></div></div>
-        <div class="gh-grid">
-          <button class="gh-card gh-main" data-g="race"><span class="gh-ic">⛵</span><b>Balaton Sailing VR</b><p>Állj a Zephyr kormányához: rajt a két bója között, cirkálás, bójakerülés, spinakker, befutó. Három ellenfél, öt pálya, ötfutamos bajnokság, oktató futam kezdőknek.</p><span class="gh-rec">${recs()}</span><span class="gh-go">Vízre szállok ▸</span></button>
-          <button class="gh-card" data-g="chess"><span class="gh-ic">♞</span><b>Vitorlás sakk</b><p>A tábla maga a Balaton naplementében, a bábuk igazi hajók. Parancsnoki hídról vagy hőlégballonból vezényelsz.</p><span class="gh-go">Játszom ▸</span></button>
-          <button class="gh-card" data-g="coaster"><span class="gh-ic">🎢</span><b>Balatoni hullámvasút</b><p>Körbe a Balaton partján, 14 látnivalóval és 33 kikötővel – nyugodt városnézés vagy vad menet hurkokkal.</p><span class="gh-go">Beszállok ▸</span></button>
-        </div>
-        <div class="gh-row"><button class="gh-pill" data-a="tut">🎓 Oktató futam</button><button class="gh-pill" data-a="diff">Nehézség: ${DIFF[ls("zephyr-vr-nehezseg", "halado")] || "Haladó"}</button><button class="gh-pill" data-a="steer">Kormány: ${ls("zephyr-kormany", "bot") === "kerek" ? "kormánykerék" : "botkormány"}</button></div>
+    /* --- illusztrációk (saját rajz, SVG) – minden kinézethez saját színekkel --- */
+    const PAL = { 1: { sky1: "#7cc4f0", sky2: "#d8eefb", sea1: "#3d9cc7", sea2: "#1d6f9c", sun: "#ffd166", red: "#d61f26", navy: "#141d4d", sail: "#ffffff", gold: "#E4BB63" },
+                  2: { sky1: "#081a33", sky2: "#173f6c", sea1: "#0d2a4d", sea2: "#06162b", sun: "#f6e7b0", red: "#e3262a", navy: "#0a1c34", sail: "#f4efe2", gold: "#E4BB63" },
+                  3: { sky1: "#ffb703", sky2: "#fb8500", sea1: "#219ebc", sea2: "#023047", sun: "#fff3d6", red: "#d61f26", navy: "#141d4d", sail: "#fffaf0", gold: "#ffb703" } };
+    const waves = (P, y, n) => { let d = ""; for (let i = 0; i < n; i++) { const yy = y + i * 14; d += `<path d="M0 ${yy} q20 -8 40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0 t40 0" fill="none" stroke="rgba(255,255,255,${.35 - i * .07})" stroke-width="2.4"/>`; } return d; };
+    const skySea = (P, id, hz) => `<defs><linearGradient id="s${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${P.sky1}"/><stop offset="1" stop-color="${P.sky2}"/></linearGradient><linearGradient id="w${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${P.sea1}"/><stop offset="1" stop-color="${P.sea2}"/></linearGradient></defs>
+      <rect width="600" height="400" fill="url(#s${id})"/><circle cx="470" cy="${hz - 70}" r="46" fill="${P.sun}" opacity=".95"/><path d="M0 ${hz} Q120 ${hz - 18} 240 ${hz - 6} T600 ${hz - 4} V${hz} Z" fill="${P.navy}" opacity=".35"/><rect y="${hz}" width="600" height="${400 - hz}" fill="url(#w${id})"/>${waves(P, hz + 22, 5)}`;
+    const boat = (P, x, y, s, main, jib, num) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-70 0 H78 L62 22 Q0 30 -58 22 Z" fill="${P.sail}" stroke="${P.navy}" stroke-width="3"/><path d="M-66 8 H74" stroke="${P.navy}" stroke-width="5"/>
+      <path d="M2 -168 V0" stroke="${P.navy}" stroke-width="4"/><path d="M6 -164 Q62 -96 70 -10 H6 Z" fill="${main}" stroke="${P.navy}" stroke-width="2.5"/><path d="M-2 -158 Q-46 -90 -62 -8 H-2 Z" fill="${jib}" stroke="${P.navy}" stroke-width="2.5"/>
+      ${num ? `<text x="38" y="-70" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="900" font-size="22" fill="${P.sail}">${num}</text>` : ""}</g>`;
+    const artRace = (P, id) => `<svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice">${skySea(P, id, 250)}
+      ${boat(P, 120, 300, .55, P.sail, P.gold, "")}${boat(P, 500, 286, .42, P.navy, P.sail, "")}
+      <circle cx="220" cy="292" r="10" fill="#ff8a1e" stroke="${P.navy}" stroke-width="3"/>
+      ${boat(P, 320, 345, 1.05, P.red, P.sail, "Z")}
+      <path d="M250 372 q40 10 80 0 t80 0" stroke="#fff" stroke-width="5" fill="none" opacity=".7"/></svg>`;
+    const artChess = (P, id) => { let sq = ""; for (let r = 0; r < 4; r++) for (let c = 0; c < 9; c++) { const x0 = 300 + (c - 4.5) * (70 + r * 22), w = 70 + r * 22, y0 = 250 + r * (22 + r * 6), h = 22 + r * 6; if ((r + c) % 2) sq += `<path d="M${x0} ${y0} h${w} l${(c - 4) * 4} ${h} h${-w - (c - 4) * 0} Z" fill="rgba(255,255,255,.18)"/>`; }
+      return `<svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice">${skySea(P, id, 250)}${sq}
+      <g transform="translate(300 360)"><ellipse cx="0" cy="8" rx="80" ry="14" fill="rgba(0,0,0,.25)"/><path d="M-60 0 h120 l-10 -26 h-100 Z" fill="${P.gold}" stroke="${P.navy}" stroke-width="4"/>
+      <path d="M-46 -26 C-52 -70 -44 -112 -22 -146 C-14 -160 -6 -170 4 -176 L8 -196 L22 -178 C44 -172 62 -150 74 -122 C82 -104 90 -90 86 -80 C82 -70 68 -68 58 -76 C50 -82 40 -86 30 -84 C20 -82 14 -72 18 -60 C24 -44 38 -38 44 -26 Z" fill="${P.sail}" stroke="${P.navy}" stroke-width="5" stroke-linejoin="round"/><path d="M-30 -60 C-34 -96 -24 -130 -6 -156" fill="none" stroke="${P.navy}" stroke-width="4" stroke-linecap="round" opacity=".55"/><circle cx="40" cy="-140" r="6" fill="${P.navy}"/><path d="M76 -96 l6 4" stroke="${P.navy}" stroke-width="4" stroke-linecap="round"/>
+      <path d="M-12 -190 v-40 M-12 -228 q30 12 0 28" stroke="${P.red}" stroke-width="5" fill="${P.red}"/></g>
+      <g transform="translate(110 300) scale(.5)"><path d="M-40 0 h80 l-8 -20 h-64 Z" fill="${P.navy}"/><path d="M-20 -20 v-90 h40 v90" fill="${P.sail}" stroke="${P.navy}" stroke-width="5"/><path d="M-30 -110 h60 v-24 h-60 Z" fill="${P.red}" stroke="${P.navy}" stroke-width="5"/></g>
+      <g transform="translate(500 296) scale(.45)"><path d="M-40 0 h80 l-8 -20 h-64 Z" fill="${P.navy}"/><circle cx="0" cy="-70" r="40" fill="${P.sail}" stroke="${P.navy}" stroke-width="6"/><path d="M0 -110 v-34 M-14 -130 h28" stroke="${P.navy}" stroke-width="7"/></g></svg>`; };
+    const artCoaster = (P, id) => `<svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice">${skySea(P, id, 270)}
+      <path d="M-10 330 C80 330 110 120 200 120 C300 120 260 300 330 300 C390 300 370 150 430 150 C520 150 470 330 610 330" fill="none" stroke="${P.navy}" stroke-width="16" stroke-linecap="round"/>
+      <path d="M-10 330 C80 330 110 120 200 120 C300 120 260 300 330 300 C390 300 370 150 430 150 C520 150 470 330 610 330" fill="none" stroke="${P.red}" stroke-width="7" stroke-dasharray="14 10" stroke-linecap="round"/>
+      ${[60, 130, 200, 270, 330, 400, 470, 540].map((x) => `<path d="M${x} 400 V${x === 200 ? 130 : x === 430 ? 160 : 240}" stroke="${P.navy}" stroke-width="5" opacity=".55"/>`).join("")}
+      <circle cx="430" cy="215" r="52" fill="none" stroke="${P.gold}" stroke-width="10"/><g transform="translate(196 104) rotate(-4)"><rect x="-34" y="-20" width="68" height="26" rx="8" fill="${P.red}" stroke="${P.navy}" stroke-width="4"/><circle cx="-18" cy="-24" r="8" fill="${P.sun}"/><circle cx="6" cy="-24" r="8" fill="${P.sun}"/></g></svg>`;
+    const logoSvg = (P) => `<svg viewBox="0 0 64 64" width="72%" height="72%" aria-hidden="true"><path d="M31 6v42H9z" fill="${P.red}"/><path d="M35 12v36h21z" fill="${STY === "1" ? P.navy : P.sail}"/><path d="M5 52h54l-7 7H12z" fill="${STY === "1" ? P.navy : P.gold}"/></svg>`;
+    const GAMES = [
+      { g: "race", big: 1, kick: "A fő játék · kikötővel és vitorlásiskolával", t: "Balaton Sailing VR", p: "Állj a Zephyr kormányához: rajt a két bója között, cirkálás, bójakerülés, spinakker, befutó – a valódi versenyszabályokkal, „Starboard!” kiáltással. Előtte sétálj a kikötőben, ülj be a vitorlásiskolába és a nyolc oktatóházba.", f: ["5 hajóosztály", "10 pálya", "nappal / éjjel", "online is", "kormány vagy botkormány"], go: "Indulás a kikötőbe ▸", art: artRace, rec: 1 },
+      { g: "chess", kick: "Életnagyságban", t: "Vitorlás sakk", p: "A tábla maga a Balaton naplementében, a bábuk igazi hajók. Parancsnoki hídról, stégről vagy hőlégballonból vezényelsz.", f: ["gép ellen", "minden ütés más jelenet"], go: "Játszom ▸", art: artChess },
+      { g: "coaster", kick: "A Zephyr fedélzetén", t: "Balatoni hullámvasút", p: "Körbe a Balaton partján 14 látnivalóval és a vitorláskikötőkkel – nyugodt idegenvezetés vagy vad menet hurokkal.", f: ["14 látnivaló", "360° hurok"], go: "Beszállok ▸", art: artCoaster }];
+    let fxStop = null;
+    const draw = () => { const P = PAL[STY] || PAL[2]; hub.setAttribute("data-s", STY);
+      hub.innerHTML = `<div class="gh-bg">${STY === "2" ? '<canvas class="gh-fx"></canvas>' : STY === "1" ? '<canvas class="gh-fx"></canvas>' : `<svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%"><path d="M1600 0 L980 0 L1600 760 Z" fill="#d61f26" opacity=".9"/><path d="M1600 120 L1260 980 L1600 980 Z" fill="#141d4d"/><path d="M0 1000 L0 640 L520 1000 Z" fill="#219ebc"/><circle cx="1380" cy="300" r="120" fill="#ffb703"/>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<rect x="${40 + i * 46}" y="930" width="40" height="40" fill="${["#d61f26", "#ffb703", "#141d4d", "#fffaf0", "#219ebc", "#d61f26", "#141d4d", "#ffb703"][i]}" stroke="#141d4d" stroke-width="3"/>`).join("")}</svg>`}</div>
+      <div class="gh-wrap">
+        <div class="gh-bar"><div class="gh-brand"><div class="gh-logo">${logoSvg(P)}</div><div><h1>VR Zephyr <em>Games</em></h1><p class="gh-tag">Vitorlázás, sakk és hullámvasút a Balatonon – VR-szemüvegben a legszebb, de telefonon és gépen is játszható.</p></div></div>
+          <div class="gh-sty" aria-label="Kinézet">Kinézet ${["1", "2", "3"].map((k) => `<button type="button" data-sty="${k}" class="${STY === k ? "on" : ""}" aria-label="${k}. kinézet">${k}</button>`).join("")}</div></div>
+        <div class="gh-grid">${GAMES.map((q, i) => `<button type="button" class="gh-card${q.big ? " big" : ""}" data-g="${q.g}"><div class="gh-art">${q.art(P, "a" + i)}</div><div class="gh-txt"><span class="gh-kick">${q.kick}</span><b>${q.t}</b><p>${q.p}</p><div class="gh-feat">${q.f.map((x) => `<span>${x}</span>`).join("")}</div>${q.rec ? `<div class="gh-rec">${recs()}</div>` : ""}<span class="gh-go">${q.go}</span></div></button>`).join("")}</div>
+        <div class="gh-row"><button class="gh-pill" data-a="tut">🎓 Oktató futam</button><button class="gh-pill" data-a="diff">Nehézség: ${DIFF[ls("zephyr-vr-nehezseg", "halado")] || "Haladó"}</button><button class="gh-pill" data-a="steer">Kormány: ${ls("zephyr-kormany", "bot") === "kerek" ? "kerék" : "botkormány"}</button></div>
         ${recTable()}
-        <p class="gh-foot">VR-szemüvegben: indítsd el a játékot, aztán nyomd meg a „VR” gombot. Kézkövetéssel és kontrollerrel is játszható; szemüveg nélkül billentyűzettel vagy érintéssel.<br>Balaton Sailing VR · ${String(window.ZEPHYR_BV || "").slice(0, 5)}</p></div>`; };
-    const open = (kind, tut) => { hub.classList.add("gh-hide"); if (tut) window.__ghTut = 1;
-      /* 2026-11-12 13:29 (tulajdonos: „ha elindítom, nem lép be a VR-be”): szemüvegben a kártya megnyomása azonnal VR-be lép (a kattintás a szükséges felhasználói művelet) */
+        <p class="gh-foot">VR-szemüvegben: koppints egy játékra – a szemüveg magától VR-be lép. Kézkövetéssel és kontrollerrel is játszható; szemüveg nélkül egérrel, billentyűzettel vagy érintéssel.<br>VR Zephyr Games · ${String(window.ZEPHYR_BV || "").slice(0, 10)}</p>
+      </div>`;
+      if (fxStop) fxStop(); fxStop = null; const cv = hub.querySelector("canvas.gh-fx"); if (cv) fxStop = fx(cv, STY); };
+    /* háttéranimáció: 2 = csillagok, hold tükröződése, söprő világítótorony-fény; 1 = lassan sodródó vitorlák a fotó felett */
+    function fx(cv, s) { const g = cv.getContext("2d"); let raf = 0, t0 = performance.now(); const st = []; for (let i = 0; i < 220; i++) st.push([Math.random(), Math.random() * .62, Math.random() * 1.6 + .3, Math.random() * 6]);
+      const sails = [[.12, .55, 1, .00012], [.6, .6, .7, .00008], [.82, .57, .55, .0001], [.35, .62, .45, .00006]];
+      const loop = (now) => { const w = cv.width = cv.clientWidth * Math.min(2, devicePixelRatio || 1), h = cv.height = cv.clientHeight * Math.min(2, devicePixelRatio || 1), t = (now - t0) / 1000; g.clearRect(0, 0, w, h);
+        if (s === "2") { for (const q of st) { g.globalAlpha = .35 + .65 * Math.abs(Math.sin(t * .8 + q[3])); g.fillStyle = "#fff"; g.beginPath(); g.arc(q[0] * w, q[1] * h, q[2] * (w / 1600 + .5), 0, 7); g.fill(); }
+          g.globalAlpha = 1; const mx = w * .64, my = h * .24, mr = Math.max(26, w * .03); const mg = g.createRadialGradient(mx, my, 0, mx, my, mr * 4); mg.addColorStop(0, "rgba(255,240,200,.35)"); mg.addColorStop(1, "rgba(255,240,200,0)"); g.fillStyle = mg; g.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8); g.fillStyle = "#fbf1d2"; g.beginPath(); g.arc(mx, my, mr, 0, 7); g.fill();
+          const hz = h * .7; g.fillStyle = "rgba(4,14,30,.92)"; g.fillRect(0, hz, w, h - hz); for (let i = 0; i < 40; i++) { const yy = hz + 6 + i * i * .5; if (yy > h) break; const ww = mr * (1.4 + i * .18) * (1 + .15 * Math.sin(t * 1.5 + i)); g.fillStyle = `rgba(255,236,190,${.5 - i * .012})`; g.fillRect(mx - ww / 2 + Math.sin(t + i) * 6, yy, ww, 2); }
+          const lx = w * .1, ly = hz - h * .14; g.fillStyle = "#0c1c33"; g.fillRect(lx - 9, ly, 18, hz - ly); g.fillStyle = "#e3262a"; for (let k = 0; k < 3; k++) g.fillRect(lx - 9, ly + 12 + k * 26, 18, 10); g.fillStyle = "#ffe9a8"; g.beginPath(); g.arc(lx, ly - 6, 7, 0, 7); g.fill();
+          const a = t * .5; g.save(); g.translate(lx, ly - 6); g.rotate(Math.sin(a) * .5 - .1); const bg = g.createLinearGradient(0, 0, w * .6, 0); bg.addColorStop(0, "rgba(255,233,168,.45)"); bg.addColorStop(1, "rgba(255,233,168,0)"); g.fillStyle = bg; g.beginPath(); g.moveTo(0, 0); g.lineTo(w * .6, -h * .06); g.lineTo(w * .6, h * .05); g.closePath(); g.fill(); g.restore();
+          const hx = w * (.25 + .5 * ((t * .01) % 1)); g.fillStyle = "#06101f"; g.beginPath(); g.moveTo(hx - 40, hz - 2); g.lineTo(hx + 44, hz - 2); g.lineTo(hx + 34, hz + 8); g.lineTo(hx - 32, hz + 8); g.fill(); g.beginPath(); g.moveTo(hx, hz - 4); g.lineTo(hx, hz - 70); g.lineTo(hx + 30, hz - 6); g.fill(); g.fillStyle = "#e3262a"; g.beginPath(); g.arc(hx - 40, hz - 4, 2.5, 0, 7); g.fill(); g.fillStyle = "#2fd47a"; g.beginPath(); g.arc(hx + 44, hz - 4, 2.5, 0, 7); g.fill(); }
+        else { for (const q of sails) { const x = ((q[0] + t * q[3] * 60) % 1.2 - .1) * w, y = q[1] * h, k = q[2] * h / 900; g.save(); g.translate(x, y); g.scale(k, k); g.globalAlpha = .9; g.fillStyle = "#fff"; g.beginPath(); g.moveTo(0, -150); g.quadraticCurveTo(50, -80, 56, 0); g.lineTo(0, 0); g.fill(); g.fillStyle = "#d61f26"; g.beginPath(); g.moveTo(-4, -140); g.quadraticCurveTo(-40, -70, -50, 0); g.lineTo(-4, 0); g.fill(); g.fillStyle = "#141d4d"; g.beginPath(); g.moveTo(-60, 4); g.lineTo(66, 4); g.lineTo(54, 18); g.lineTo(-48, 18); g.fill(); g.restore(); } }
+        raf = requestAnimationFrame(loop); };
+      raf = requestAnimationFrame(loop); return () => cancelAnimationFrame(raf); }
+    const open = (kind, tut) => { hub.classList.add("gh-hide"); if (fxStop) { fxStop(); fxStop = null; } if (tut) window.__ghTut = 1;
       try { if (VRS.ok && sceneEl && !sceneEl.is("vr-mode")) sceneEl.enterVR(); } catch (e) {}
       openWorld(kind);
-      const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function () { const r = c0.apply(this, arguments); try { if (sceneEl && sceneEl.is("vr-mode")) sceneEl.exitVR(); } catch (e) {} setTimeout(() => { draw(); hub.classList.remove("gh-hide"); }, 50); return r; }; }
+      const iv = setInterval(() => { const Z = window.ZephyrWorld; if (!Z) return; if (!Z.__ghHook) { Z.__ghHook = 1; const c0 = Z.close; Z.close = function () { const r = c0.apply(this, arguments); try { if (sceneEl && sceneEl.is("vr-mode")) sceneEl.exitVR(); } catch (e) {} hub.classList.remove("gh-hide"); draw(); return r; }; }
         if (window.__ghTut && Z.vrr && Z.vrSetup && Z.vrr.C) { window.__ghTut = 0; try { Z.vrSetup(0); } catch (e) {} } if (!window.__ghTut) clearInterval(iv); }, 400); setTimeout(() => clearInterval(iv), 60000); };
-    hub.addEventListener("click", (ev) => { const c = ev.target.closest("[data-g]"), a = ev.target.closest("[data-a]");
+    window.ZephyrGamesHub = { open, show: () => { hub.classList.remove("gh-hide"); draw(); } };
+    hub.addEventListener("click", (ev) => { const c = ev.target.closest("[data-g]"), a = ev.target.closest("[data-a]"), s = ev.target.closest("[data-sty]");
+      if (s) { STY = s.getAttribute("data-sty"); try { localStorage.setItem("zephyr-games-stilus", STY); } catch (e) {} draw(); return; }
       if (c) open(c.getAttribute("data-g"));
       else if (a) { const k = a.getAttribute("data-a"); if (k === "tut") open("race", true);
         else if (k === "diff") { const o = ["kezdo", "halado", "verseny"], i = o.indexOf(ls("zephyr-vr-nehezseg", "halado")); try { localStorage.setItem("zephyr-vr-nehezseg", o[(i + 1) % 3]); } catch (e) {} draw(); }
@@ -18711,7 +18816,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     try { await Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]); } catch (e) {}
     try {
       await Promise.race([buildScene(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 12000))]);
-      await go(firstId, true);
+      if (window.ZEPHYR_GAMES) { try { sky.setAttribute("color", "#0a1c34"); } catch (e) {} } else await go(firstId, true);   /* VR Zephyr Games: nincs séta-panoráma */
       wireEdit3D();
       try { initCube3D(); } catch (e) {}
     } catch (e) { switchToFlat(firstId); try { initCube3D(); } catch (e2) {} return; }
@@ -18951,7 +19056,7 @@ html.zi-rtl body { text-align: start; }`;
     mb.innerHTML = `<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Menü</span>`;
     $("zxRight").appendChild(mb);
     const tools = $("tools");
-    const ZXL = { btnWorld: "VR játékok", btnVR: "VR szemüveg", zxPlacesBtn: "Helyek", btnDevice: "Nézet váltása", btnMap: "Alaprajz", btnGyro: "Mozgásérzékelő", btnMusic: "Zene", btnSound: "Hangerő", btnRotate: "Körbenézés", btnFull: "Teljes képernyő" };
+    const ZXL = { btnWorld: "Stégjátékok", btnVR: "VR szemüveg", zxPlacesBtn: "Helyek", btnDevice: "Nézet váltása", btnMap: "Alaprajz", btnGyro: "Mozgásérzékelő", btnMusic: "Zene", btnSound: "Hangerő", btnRotate: "Körbenézés", btnFull: "Teljes képernyő" };
     const zxLabels = () => Object.keys(ZXL).forEach((id) => { const b = $(id); if (b) b.dataset.zx = window.ZI18N && ZI18N.lang !== "hu" ? ZI18N.t(ZXL[id]) : ZXL[id]; });
     const setM = (on) => { document.body.classList.toggle("zx-menu", on); if (tools) tools.classList.toggle("open", on); mb.setAttribute("aria-expanded", on ? "true" : "false"); if (on) zxLabels(); };
     mb.addEventListener("click", (ev) => { ev.stopPropagation(); setM(!document.body.classList.contains("zx-menu")); });

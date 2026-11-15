@@ -384,12 +384,12 @@
     return `VAD MENET · ${kmh} km/h · magasság ${Math.round(HV.alt || 0)} m · ${pct}%`;
   }
   function hvButtons() {
-    if (HV.st === "ride") return [["■ Kiszállok (megállás)", hvStop], ["‹ Vissza a sétához", () => W.close()]];
+    if (HV.st === "ride") return [["■ Kiszállok (megállás)", hvStop], ["‹ " + BACK_T(), () => W.close()]];
     if (HV.warn) return [["✔ Vállalom – INDULJON a vad menet!", () => hvStart("wild")], ["Mégsem", () => { HV.warn = false; W.panelDirty = 1; }]];
     const hang = [hvVoice() ? "🔊 Idegenvezetés: be" : "🔇 Idegenvezetés: ki", () => { try { localStorage.setItem("zephyr-hv-hang", hvVoice() ? "0" : "1"); } catch (e) {} hvQuiet(); W.panelDirty = 1; }];
-    if (HV.st === "table") return [["🎢 Beszállok – Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { hvToTable(false); HV.warn = true; W.panelDirty = 1; }], ["＋ Nagyítás", () => { HVT.zoomT = clamp(HVT.zoomT * 1.6, 1, 12); }], ["－ Kicsinyítés", () => { HVT.zoomT = clamp(HVT.zoomT / 1.6, 1, 12); }], [HVT.follow ? "✓ Követem a vonatot" : "🚆 Kövesd a vonatot", () => { HVT.follow = !HVT.follow; if (HVT.follow && HVT.zoomT < 3) HVT.zoomT = 4; W.panelDirty = 1; }], ["⌖ Alaphelyzet", () => { HVT.zoomT = 1; HVT.cx = HVT.cx0; HVT.cz = HVT.cz0; HVT.follow = false; HVT.pos = null; W.panelDirty = 1; }], [HVT.spin ? "⏸ Asztal megállítása" : "↻ Asztal forgatása", () => { HVT.spin = !HVT.spin; W.panelDirty = 1; }], ["‹ Vissza a sétához", () => W.close()]];
+    if (HV.st === "table") return [["🎢 Beszállok – Balaton-körút", () => hvStart("calm")], ["⚡ VAD menet ⚠", () => { hvToTable(false); HV.warn = true; W.panelDirty = 1; }], ["＋ Nagyítás", () => { HVT.zoomT = clamp(HVT.zoomT * 1.6, 1, 12); }], ["－ Kicsinyítés", () => { HVT.zoomT = clamp(HVT.zoomT / 1.6, 1, 12); }], [HVT.follow ? "✓ Követem a vonatot" : "🚆 Kövesd a vonatot", () => { HVT.follow = !HVT.follow; if (HVT.follow && HVT.zoomT < 3) HVT.zoomT = 4; W.panelDirty = 1; }], ["⌖ Alaphelyzet", () => { HVT.zoomT = 1; HVT.cx = HVT.cx0; HVT.cz = HVT.cz0; HVT.follow = false; HVT.pos = null; W.panelDirty = 1; }], [HVT.spin ? "⏸ Asztal megállítása" : "↻ Asztal forgatása", () => { HVT.spin = !HVT.spin; W.panelDirty = 1; }], ["‹ " + BACK_T(), () => W.close()]];
     const mx = [hvMaxOn() ? "✨ Maximális részletesség: BE" : "✨ Maximális részletesség: ki", () => { try { localStorage.setItem("zephyr-hv-max", hvMaxOn() ? "0" : "1"); } catch (e) {} const k = W.kind; W.close(); setTimeout(() => { try { T.openWorld ? T.openWorld(k) : W.open(k); } catch (e) {} }, 900); }];
-    return [["🗺 Balaton-körút", () => hvStart("calm")], mx, ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], hang, ["‹ Vissza a sétához", () => W.close()]];
+    return [["🗺 Balaton-körút", () => hvStart("calm")], mx, ["⚡ VAD menet ⚠", () => { HV.warn = true; W.panelDirty = 1; }], hang, ["‹ " + BACK_T(), () => W.close()]];
   }
   function hvPanel(P) {
     P.title(HV.st === "table" ? "Balaton-terepasztal" : "Balatoni hullámvasút", hvInfo());

@@ -135,7 +135,7 @@
   }
   function hbPanel(P) { P.title("Zephyr kikötő · vitorlásverseny", `Hajó: ${boatCls(HB.sel).n} · játékos: ${vrProfile().name || "névtelen"}`);
     P.row(0, "Bökj rá egy kikötött hajóra: előtted megforog, és kiválaszthatod. A kikötői menüben minden beállítás megvan.", "#ffd166");
-    P.buttons([["⛵ Indulás", () => hbGo(false)], ["⚓ Kikötői menü", hbMenu], ["‹ Vissza a sétához", () => W.close()]]); }
+    P.buttons([["⛵ Indulás", () => hbGo(false)], ["⚓ Kikötői menü", hbMenu], ["‹ " + BACK_T(), () => W.close()]]); }
   function hbHud(H) { H.title("Zephyr kikötő · vitorlásverseny", `Hajó: ${boatCls(HB.sel).n} · bökj rá egy kikötött hajóra`); H.steer([["⚓ Kikötői menü", hbMenu], ["⛵ Indulás", () => hbGo(false)]], () => {}); H.hint("Bökj rá egy hajóra: előtted forog, és kiválaszthatod · a kikötői menüben: játékos, beállítások, eredmények, többjátékos"); }
   /* indulás a versenyre (W.open("race") a kikötő helyett közvetlenül a futamot nyitja) */
   function hbGo(tut, lvl, force, night) { if (night) VRR.nightForce = true; else if (!HB.wzKeep) VRR.nightForce = null; if (!tut && !force && NET.on && netActive().length && !NET.queue) { NET.queue = { t: Date.now(), ann: 0 }; netPost({ k: "q", on: 1, cls: HB.sel }); hbBoard("net"); return; } try { localStorage.setItem("zephyr-hajo", HB.sel || vrClsId()); } catch (e) {} uiCloseAll(); VRR.forceCls = null; if (tut) VRR.lvl = 0; else if (lvl) VRR.lvl = lvl; else if (!VRR.lvl) VRR.lvl = (VRR.series && VRR.series.races ? VRR.series.races.length % 5 : 0) + 1;
@@ -152,7 +152,7 @@
   function hbWrist() { const it = [["🧭", "Forgás és lépés", [["↺", "Balra 45°", () => hbTurn(Math.PI / 4)], ["↻", "Jobbra 45°", () => hbTurn(-Math.PI / 4)], ["⤾", "Megfordulok", () => hbTurn(Math.PI)], ["⬆", "Előre lépek", () => hbStep(1)], ["⬇", "Hátra lépek", () => hbStep(-1)]]]];
     const R = SCH.R; if (R) { const n = R.h.name; it.push(["🎓", n, [HB.seat ? ["🧍", "Felállok", () => roomStand()] : ["🪑", "Leülök a táblával szemben", () => roomSit(R)], [R.playing ? "⏸" : "▶", R.playing ? "Szünet" : (R.t > 0 ? "Folytatás" : "Teljes anyag sorban"), () => { if (R.playing || R.t > 0) roomPause(R); else { R.mode = "all"; roomGo(R, 0, true); } }],
         ["⏭", "Következő lecke", () => roomGo(R, R.i + 1, true)], ["⏮", "Előző lecke", () => roomGo(R, R.i - 1, true)], [SCH.voice ? "🔇" : "🔊", SCH.voice ? "Hang ki" : "Hang be", () => { SCH.voice = !SCH.voice; if (!SCH.voice) roomHush(); }], ["🚪", "Ki a házból", () => schoolLeave(false)]]]); }
-    it.push(["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["↩", "Vissza a móló elejére", () => { roomOut(); HB.pos = { x: 0, z: 0 }; faceYaw(0); }], ["‹", "A sétához", () => W.close()]); return it; }
+    it.push(["⚓", "Kikötői menü", hbMenu], ["⛵", "Indulás a versenyre", () => hbGo(false)], ["↩", "Vissza a móló elejére", () => { roomOut(); HB.pos = { x: 0, z: 0 }; faceYaw(0); }], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]); return it; }
   function hbPreview(id) {
     if (HB.prev) { const o = HB.prev; HB.env.remove(o.g); HB.env.remove(o.disc); }
     const big = id === "zephyr"; let g;
@@ -208,7 +208,7 @@
       B.btn(36 + 2 * (bw + 14), y1, bw, bh, "👥 Többjátékos", () => hbBoard("net"), { sub: "négyes csoportok, meghívás, saját futam" });
       B.btn(36, y2, bw, bh, "🏆 Eredmények és trófeák", () => hbBoard("trophy"), { sub: "a sorozatok állása és a serlegek" });
       B.btn(36 + bw + 14, y2, bw, bh, "⚙ Beállítások", () => hbBoard("set"), { sub: "ellenfelek, kormány, napszak, ülve/állva" });
-      B.btn(36 + 2 * (bw + 14), y2, bw, bh, "‹ Vissza a sétához", () => { uiCloseAll(); W.close(); }, { sub: "a Zephyr Apartmanház virtuális sétája" });
+      B.btn(36 + 2 * (bw + 14), y2, bw, bh, "‹ " + BACK_T(), () => { uiCloseAll(); W.close(); }, { sub: BACK_S("a Zephyr Apartmanház virtuális sétája") });
     } else if (p === "boat") {
       const c = boatCls(HB.sel); uiFrame(B, g, c.n.toUpperCase(), "előtted forog a forgókorongon");
       uiCard(g, 40, 160, 1420, 560); g.fillStyle = "#fff"; g.font = `800 30px ${UIF}`; g.fillText(c.len, 70, 220); g.fillText(c.crew, 70, 262); g.font = `600 27px ${UIF}`; uiWrap(g, c.d, 70, 320, 1360, 38, 4);
