@@ -8719,12 +8719,15 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
      • ŐRSZEM: félmásodpercenként ellenőrizzük az eredetieket – ha bármelyik később mégis megmozdul, eltűnik/megjelenik vagy színt vált
        (pl. a zsűrihajó zászlói, éjszakai színezés), az a csoport azonnal visszaáll eredeti formájára. Így a játék viselkedése nem változhat.
      • Az eredetiek a fáknál maradnak, csak egy nem rajzolt rétegre (31) kerülnek – a játék kódja továbbra is hozzájuk nyúlhat. */
-  const MS = { list: [], snap: null, t: 0, wd: 0, root: null, stat: {} };
+  const MS = { list: [], snap: null, t: 0, wd: 0, root: null, stat: {} }; W._ms = MS;
   function msSig(o) { const m = o.material, c = m && m.color ? m.color.getHex() : 0; return [o.position.x, o.position.y, o.position.z, o.quaternion.x, o.quaternion.y, o.quaternion.z, o.quaternion.w, o.scale.x, o.scale.y, o.scale.z, o.visible ? 1 : 0, o.geometry && o.geometry.attributes.position ? o.geometry.attributes.position.version : 0, c, m ? m.opacity : 1, m ? m.uuid : ""].join("|"); }
   function msNSig(o) { return [o.position.x, o.position.y, o.position.z, o.quaternion.x, o.quaternion.y, o.quaternion.z, o.quaternion.w, o.scale.x, o.scale.y, o.scale.z, o.visible ? 1 : 0].join("|"); }
   function msOk(o) {
     if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || !o.visible || !o.parent) return false; const m = o.material; if (!m || Array.isArray(m)) return false;
-    if (m.map || m.alphaMap || m.envMap || m.transparent || m.opacity < 1 || m.alphaTest > 0 || m.wireframe || (m.emissive && m.emissive.getHex()) || m.isShaderMaterial) return false;
+    /* 2026-11-15 (szakértői jelentés B.2 – kikötő 560 hívás): a TEXTÚRÁS, átlátszatlan anyagú hálók is összeolvadhatnak, de csak az UGYANAZT az anyagot használók
+       egymással (az eredeti anyag marad, a textúra-koordinátákkal együtt) – a kép pixelre ugyanaz */
+    if (m.alphaMap || m.envMap || m.transparent || m.opacity < 1 || m.wireframe || (m.emissive && m.emissive.getHex() && !m.map) || m.isShaderMaterial || m.onBeforeCompile && m.onBeforeCompile.toString().length > 40) return false;
+    if (m.map && (!o.geometry.attributes.uv || m.isMeshMatcapMaterial)) return false;
     if (!(m.isMeshBasicMaterial || m.isMeshMatcapMaterial || m.isMeshStandardMaterial)) return false; if (m.isMeshMatcapMaterial && !m.matcap) return false;
     if (o.renderOrder || o.userData.xr || o.userData.night || o.userData.noMerge || o.geometry.morphAttributes && Object.keys(o.geometry.morphAttributes).length) return false;
     if (T.xr && T.xr.extra && T.xr.extra.has && T.xr.extra.has(o)) return false; if (W.objs && W.objs.indexOf(o) >= 0) return false;
@@ -8745,6 +8748,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     MS.list = MS.list.filter((G) => !G.gone);
   }
   function msKey(o) { const m = o.material, side = m.side, nk = m.userData && m.userData.nightK ? m.userData.nightK.join(",") : "";
+    if (m.map) return `X|${m.uuid}`;
     if (m.isMeshBasicMaterial) return `B|${side}|${m.fog}|${m.depthTest}|${m.depthWrite}|${m.toneMapped}|${nk}`;
     if (m.isMeshMatcapMaterial) return `M|${side}|${m.matcap.uuid}|${m.flatShading}|${nk}`;
     return `S|${side}|${Math.round(m.roughness * 4)}|${Math.round(m.metalness * 2)}|${m.flatShading}|${nk}`; }
@@ -8765,12 +8769,17 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
           col[k * 3] = c.r * (ca ? ca.getX(i) : 1); col[k * 3 + 1] = c.g * (ca ? ca.getY(i) : 1); col[k * 3 + 2] = c.b * (ca ? ca.getZ(i) : 1); }
         if (flip) for (let t = k0; t < k; t += 3) for (const A of [pos, nor, col]) for (let q = 0; q < 3; q++) { const x = A[(t + 1) * 3 + q]; A[(t + 1) * 3 + q] = A[(t + 2) * 3 + q]; A[(t + 2) * 3 + q] = x; }   /* tükrözött elem: a háromszögek körüljárása megfordul */
         if (g !== o.geometry) g.dispose(); });
-      const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)); geo.setAttribute("normal", new THREE.BufferAttribute(nor, 3)); geo.setAttribute("color", new THREE.BufferAttribute(col, 3)); geo.computeBoundingSphere();
-      let mat; if (m0.isMeshBasicMaterial) mat = new THREE.MeshBasicMaterial({ vertexColors: true, side: m0.side, fog: m0.fog, depthTest: m0.depthTest, depthWrite: m0.depthWrite, toneMapped: m0.toneMapped });
+      const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)); geo.setAttribute("normal", new THREE.BufferAttribute(nor, 3)); if (!m0.map) geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+      if (m0.map) { const uv = new Float32Array(n * 2); let q = 0; parts.forEach(([o, g0]) => { const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry, ua = g.attributes.uv; for (let i = 0; i < ua.count; i++, q++) { uv[q * 2] = ua.getX(i); uv[q * 2 + 1] = ua.getY(i); } if (g !== o.geometry) g.dispose(); void g0; });
+        geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+        /* tükrözött elemnél a háromszögek körüljárása megfordult – az uv-t is ugyanígy cseréljük */
+        { let k2 = 0; parts.forEach(([o]) => { const c2 = (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count); rel.multiplyMatrices(inv, o.matrixWorld); if (rel.determinant() < 0) for (let t = k2; t < k2 + c2; t += 3) for (let q2 = 0; q2 < 2; q2++) { const x = uv[(t + 1) * 2 + q2]; uv[(t + 1) * 2 + q2] = uv[(t + 2) * 2 + q2]; uv[(t + 2) * 2 + q2] = x; } k2 += c2; }); } }
+      geo.computeBoundingSphere();
+      let mat; if (m0.map) mat = m0; else if (m0.isMeshBasicMaterial) mat = new THREE.MeshBasicMaterial({ vertexColors: true, side: m0.side, fog: m0.fog, depthTest: m0.depthTest, depthWrite: m0.depthWrite, toneMapped: m0.toneMapped });
       else if (m0.isMeshMatcapMaterial) mat = new THREE.MeshMatcapMaterial({ vertexColors: true, matcap: m0.matcap, side: m0.side, flatShading: m0.flatShading });
       else mat = new THREE.MeshStandardMaterial({ vertexColors: true, side: m0.side, roughness: m0.roughness, metalness: m0.metalness, flatShading: m0.flatShading });
-      if (m0.userData && m0.userData.nightK) mat.userData.nightK = m0.userData.nightK; mat.userData.msMerged = 1;
-      W.disposables.push(geo, mat); const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = arr.some((o) => o.castShadow); mesh.receiveShadow = arr.some((o) => o.receiveShadow); mesh.userData.msMerged = 1; P.add(mesh);
+      if (mat !== m0) { if (m0.userData && m0.userData.nightK) mat.userData.nightK = m0.userData.nightK; mat.userData.msMerged = 1; }
+      W.disposables.push(geo); if (mat !== m0) W.disposables.push(mat); const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = arr.some((o) => o.castShadow); mesh.receiveShadow = arr.some((o) => o.receiveShadow); mesh.userData.msMerged = 1; P.add(mesh);
       arr.forEach((o) => o.layers.set(31)); MS.list.push({ mesh, src: arr.map((o) => ({ o, sig: msSig(o) })), chain: Array.from(chain.entries()) }); saved += arr.length - 1; });
     MS.stat.saved = saved; MS.stat.groups = MS.list.length;
   }
