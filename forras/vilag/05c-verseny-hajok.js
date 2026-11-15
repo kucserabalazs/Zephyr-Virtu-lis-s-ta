@@ -753,18 +753,94 @@
       { const hm = std({ color: "#8a5a2e", roughness: 1 }), hm2 = std({ color: "#a8743c", roughness: 1 }); for (let k = 0; k < 46; k++) { const a = Math.random() * TAU, el = .35 + Math.random() * .9, L = .07 + Math.random() * .09, st = new THREE.ConeGeometry(.012, L, 4); st.translate(0, L / 2, 0); const m = mesh(st, k % 3 ? hm : hm2, coco);
           m.position.set(Math.cos(a) * Math.cos(el) * .15, .05 + Math.sin(el) * .14, Math.sin(a) * Math.cos(el) * .15 - .02); m.lookAt(m.position.clone().multiplyScalar(3).add(new THREE.Vector3(Math.random() - .5, .6, Math.random() - .5).multiplyScalar(.2))); m.rotateX(Math.PI / 2); }
         const bw = std({ color: "#ff3d7f", roughness: .5 }); [-1, 1].forEach((sd) => { const b = mesh(new THREE.ConeGeometry(.035, .07, 8), bw, coco); b.rotation.z = sd * Math.PI / 2; b.position.set(.1 + sd * .035, .12, .02); }); mesh(new THREE.SphereGeometry(.018, 8, 6), bw, coco).position.set(.1, .12, .02); } FC.smile = mesh(new THREE.TorusGeometry(.045, .01, 6, 14, Math.PI), mth, FC.mouth); FC.smile.rotation.z = Math.PI; FC.o = mesh(new THREE.TorusGeometry(.028, .012, 8, 16), mth, FC.mouth); FC.flat = mesh(new THREE.BoxGeometry(.07, .012, .012), mth, FC.mouth); }
-    /* ESŐKABÁT-SPINAKKER: nagy, sárga, sáros halászesőkabát, ujjai és csuklyája lobog; hátszélben az árboccsúcsról az orr elé dagad */
-    const coatT = canvasTex(256, 384, (g, w, h) => { g.fillStyle = "#e7c22a"; g.fillRect(0, 0, w, h); g.fillStyle = "rgba(90,70,30,.45)"; for (let k = 0; k < 70; k++) { g.beginPath(); g.ellipse(rr(0, w), h * Math.pow(Math.random(), .5), rr(4, 22), rr(3, 12), rr(0, 3), 0, TAU); g.fill(); }
-      g.fillStyle = "rgba(60,45,20,.5)"; g.fillRect(0, h - 40, w, 40); g.strokeStyle = "#9a7d16"; g.lineWidth = 4; g.beginPath(); g.moveTo(w / 2, 40); g.lineTo(w / 2, h); g.stroke(); g.fillStyle = "#3a3a3a"; for (let y = 80; y < h - 40; y += 60) { g.beginPath(); g.arc(w / 2 + 14, y, 7, 0, TAU); g.fill(); }
-      g.fillStyle = "#cfa91c"; g.fillRect(30, h * .55, 60, 50); g.fillRect(w - 90, h * .55, 60, 50); g.strokeStyle = "rgba(80,60,20,.7)"; g.strokeRect(30, h * .55, 60, 50); g.strokeRect(w - 90, h * .55, 60, 50); });
-    const coatM = std({ map: coatT, roughness: .45, side: THREE.DoubleSide }), coat = new THREE.Group(); mast.add(coat); coat.visible = false;
-    const cN = 8, cM = 10, cPos = new Float32Array((cN + 1) * (cM + 1) * 3), cUv = new Float32Array((cN + 1) * (cM + 1) * 2), cIdx = [];
-    for (let j = 0; j <= cM; j++) for (let i = 0; i <= cN; i++) { const k = j * (cN + 1) + i; cUv[k * 2] = i / cN; cUv[k * 2 + 1] = j / cM; }
+    /* ESŐKABÁT-SPINAKKER (2026-11-15 01:47, tulajdonos: „a sárga esőkabát legyen sokkal kidolgozottabb és részletesebb, mert így alig hasonlít
+       egy esőkabátra, és legyen itt-ott lyukas”): régi, sárga PVC halász-esőkabát – raglános vállvarratok hegesztett, duplán tűzött varrással,
+       viharlécezés a cipzár fölött patentokkal, mellzseb tépőzáras fedővel, két nagy rátett zseb fedővel (az egyik félig leszakadva), álló gallér,
+       zsinóros kapucni stopperekkel, ráncos ujjak tépőzáras mandzsettával, akasztóhurok, kifakult címke. Kopás: sár- és olajfoltok, sókivirágzás,
+       penészpöttyök, horzsolások, ahol kilátszik a szövetháló; ragasztószalagos és damillal varrt foltozás; ITT-OTT LYUKAS: szakadt, rojtos
+       szélű lyukak (átlátszanak), kirojtolódott alsó szegély, felhasadt varrás. Domborítás (bump) a varratokra, zsebekre, ráncokra. */
+    const rcY = (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, "#f6cb1e"); gr.addColorStop(.5, "#ecbb16"); gr.addColorStop(1, "#dca812"); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      for (let k = 0; k < 16; k++) { const x = rr(0, w), wd = rr(10, 60), sh = g.createLinearGradient(x - wd, 0, x + wd, 0); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.5, `rgba(255,250,210,${rr(.06, .18)})`); sh.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = sh; g.fillRect(x - wd, 0, wd * 2, h); }
+      for (let k = 0; k < 2600; k++) { g.fillStyle = Math.random() < .5 ? "rgba(120,90,10,.05)" : "rgba(255,255,220,.05)"; g.fillRect(rr(0, w), rr(0, h), 2, 2); } };
+    /* ráncok: puha világos–sötét párok */
+    const rcCrease = (g, x0, y0, x1, y1, wd) => { const nx = -(y1 - y0), ny = x1 - x0, L = Math.hypot(nx, ny) || 1, ox = nx / L * wd * .35, oy = ny / L * wd * .35, cx = (x0 + x1) / 2 + rr(-20, 20), cy = (y0 + y1) / 2 + rr(-20, 20);
+      [["rgba(90,60,0,.16)", ox, oy, wd], ["rgba(255,250,200,.2)", -ox, -oy, wd * .6]].forEach(([c, dx, dy, lw]) => { g.strokeStyle = c; g.lineWidth = lw; g.lineCap = "round"; g.beginPath(); g.moveTo(x0 + dx, y0 + dy); g.quadraticCurveTo(cx + dx, cy + dy, x1 + dx, y1 + dy); g.stroke(); }); };
+    const rcStitch = (g, pts, col) => { g.save(); g.strokeStyle = col || "rgba(110,80,0,.75)"; g.lineWidth = 2.2; g.setLineDash([9, 6]); g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); g.restore(); };
+    const rcSeam = (g, pts) => { g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.strokeStyle = "rgba(150,110,0,.55)"; g.lineWidth = 14; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+      g.strokeStyle = "rgba(255,240,160,.35)"; g.lineWidth = 3; g.stroke(); g.restore(); rcStitch(g, pts.map(([x, y]) => [x - 6, y])); rcStitch(g, pts.map(([x, y]) => [x + 6, y])); };
+    const rcSnap = (g, x, y, r) => { const gr = g.createRadialGradient(x - r * .3, y - r * .3, 1, x, y, r); gr.addColorStop(0, "#f4f4f0"); gr.addColorStop(.5, "#a9a9a2"); gr.addColorStop(1, "#5a5a54"); g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.strokeStyle = "rgba(60,40,0,.6)"; g.lineWidth = 2; g.stroke();
+      g.fillStyle = "rgba(120,60,20,.5)"; g.beginPath(); g.arc(x + r * .3, y + r * .5, r * .5, 0, TAU); g.fill(); };   /* rozsdafolt a patent alatt */
+    const rcPocket = (g, x, y, w, h, torn) => { g.save(); g.fillStyle = "rgba(0,0,0,.18)"; uiRR(g, x + 6, y + 8, w, h, 14); g.fill(); g.fillStyle = "#efbf18"; uiRR(g, x, y, w, h, 14); g.fill(); g.strokeStyle = "rgba(140,100,0,.6)"; g.lineWidth = 4; g.stroke();
+      rcStitch(g, [[x + 10, y + 10], [x + 10, y + h - 10], [x + w - 10, y + h - 10], [x + w - 10, y + 10]]); g.fillStyle = "rgba(90,60,0,.18)"; g.fillRect(x + 8, y + h * .55, w - 16, 6);
+      g.save(); g.translate(x + (torn ? w * .78 : 0), y - 10); g.rotate(torn ? .32 : 0); g.translate(torn ? -w * .78 : 0, 0); g.fillStyle = "rgba(0,0,0,.25)"; uiRR(g, 4, 6, w + 8, h * .32, 12); g.fill(); g.fillStyle = "#f3c51c"; uiRR(g, -4, 0, w + 8, h * .32, 12); g.fill(); g.strokeStyle = "rgba(140,100,0,.7)"; g.lineWidth = 3; g.stroke();
+      rcStitch(g, [[6, h * .32 - 10], [w + 2, h * .32 - 10]]); rcSnap(g, w * .25, h * .2, 11); rcSnap(g, w * .75, h * .2, 11); g.restore();
+      if (torn) { g.strokeStyle = "rgba(70,50,10,.8)"; g.lineWidth = 2; for (let k = 0; k < 8; k++) { g.beginPath(); g.moveTo(x + rr(4, w * .3), y - 8); g.lineTo(x + rr(4, w * .3), y + rr(4, 18)); g.stroke(); } } g.restore(); };
+    /* rojtos lyuk: sötét szakadt perem → kivágás → átfutó szövetszálak (a lyukban is látszanak) */
+    const rcHole = (g, x, y, r) => { const n = 18, pts = []; for (let i = 0; i < n; i++) { const a = i / n * TAU, q = r * (.55 + Math.random() * .7) * (i % 3 ? 1 : .75); pts.push([x + Math.cos(a) * q * 1.2, y + Math.sin(a) * q]); }
+      g.save(); g.fillStyle = "rgba(90,60,10,.55)"; g.beginPath(); pts.forEach(([px, py], i) => { const ex = x + (px - x) * 1.35, ey = y + (py - y) * 1.35; i ? g.lineTo(ex, ey) : g.moveTo(ex, ey); }); g.closePath(); g.fill();
+      g.fillStyle = "rgba(255,245,200,.5)"; g.beginPath(); pts.forEach(([px, py], i) => { const ex = x + (px - x) * 1.12, ey = y + (py - y) * 1.12; i ? g.lineTo(ex, ey) : g.moveTo(ex, ey); }); g.closePath(); g.fill();
+      g.globalCompositeOperation = "destination-out"; g.fillStyle = "#000"; g.beginPath(); pts.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py))); g.closePath(); g.fill(); g.globalCompositeOperation = "source-over";
+      g.strokeStyle = "rgba(240,232,205,.95)"; g.lineWidth = 2; for (let k = 0; k < 5; k++) { const a = rr(0, TAU), L2 = r * rr(.4, 1); g.beginPath(); g.moveTo(x + Math.cos(a) * r * 1.1, y + Math.sin(a) * r); g.lineTo(x + Math.cos(a) * r * 1.1 - Math.cos(a) * L2, y + Math.sin(a) * r - Math.sin(a) * L2 + rr(-6, 6)); g.stroke(); } g.restore(); };
+    const rcMud = (g, w, h, n, yMin) => { for (let k = 0; k < n; k++) { const x = rr(0, w), y = rr(yMin * h, h), r0 = rr(4, 26); g.fillStyle = `rgba(${rr(55, 85) | 0},${rr(40, 58) | 0},${rr(18, 30) | 0},${rr(.45, .8)})`; g.beginPath(); g.ellipse(x, y, r0, r0 * rr(.5, 1), rr(0, 3), 0, TAU); g.fill();
+        if (Math.random() < .5) { g.fillRect(x - 1.5, y, 3, rr(10, 60)); } for (let s = 0; s < 4; s++) { g.beginPath(); g.arc(x + rr(-r0 * 2, r0 * 2), y + rr(-r0 * 2, r0 * 2), rr(1, 4), 0, TAU); g.fill(); } } };
+    const rcSalt = (g, w, h, n) => { for (let k = 0; k < n; k++) { g.strokeStyle = `rgba(255,255,250,${rr(.15, .35)})`; g.lineWidth = rr(1.5, 4); g.beginPath(); g.ellipse(rr(0, w), rr(0, h), rr(15, 60), rr(8, 30), rr(0, 3), 0, TAU); g.stroke(); } };
+    const rcScuff = (g, x, y, w, h) => { g.save(); g.fillStyle = "rgba(250,240,200,.55)"; g.beginPath(); g.ellipse(x, y, w, h, rr(-.5, .5), 0, TAU); g.fill(); g.clip(); g.strokeStyle = "rgba(160,140,90,.5)"; g.lineWidth = 1; for (let k = -w; k < w; k += 5) { g.beginPath(); g.moveTo(x + k, y - h); g.lineTo(x + k, y + h); g.stroke(); g.beginPath(); g.moveTo(x - w, y + k); g.lineTo(x + w, y + k); g.stroke(); } g.restore(); };
+    const rcTape = (g, x, y, w, h, a) => { g.save(); g.translate(x, y); g.rotate(a); g.fillStyle = "rgba(0,0,0,.2)"; g.fillRect(-w / 2 + 4, -h / 2 + 5, w, h); const gr = g.createLinearGradient(0, -h / 2, 0, h / 2); gr.addColorStop(0, "#a9adb0"); gr.addColorStop(.5, "#d4d7d9"); gr.addColorStop(1, "#8e9295"); g.fillStyle = gr; g.fillRect(-w / 2, -h / 2, w, h);
+      g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = 1; for (let k = -w / 2; k < w / 2; k += 4) { g.beginPath(); g.moveTo(k, -h / 2); g.lineTo(k + 2, h / 2); g.stroke(); } g.fillStyle = "rgba(60,50,30,.35)"; g.fillRect(-w / 2, -h / 2, w, h * .12); for (let k = 0; k < 6; k++) g.fillRect(rr(-w / 2, w / 2), rr(-h / 2, h / 2), rr(6, 20), rr(3, 8)); g.restore(); };
+    const coatT = canvasTex(1024, 1536, (g, w, h) => { rcY(g, w, h);
+      for (let k = 0; k < 46; k++) { const x = rr(0, w), y = rr(0, h); rcCrease(g, x, y, x + rr(-160, 160), y + rr(40, 220), rr(10, 28)); }
+      for (let k = 0; k < 10; k++) { const y = rr(h * .35, h * .95); rcCrease(g, rr(0, w * .3), y, rr(w * .7, w), y + rr(-60, 60), rr(14, 30)); }
+      /* raglános vállvarratok és oldalvarratok */
+      rcSeam(g, [[w * .38, 0], [w * .3, h * .06], [w * .14, h * .2]]); rcSeam(g, [[w * .62, 0], [w * .7, h * .06], [w * .86, h * .2]]); rcSeam(g, [[w * .06, h * .22], [w * .05, h]]); rcSeam(g, [[w * .94, h * .22], [w * .95, h]]);
+      /* nyakkivágás + álló gallér pereme, akasztóhurok */
+      g.fillStyle = "rgba(150,110,0,.6)"; g.beginPath(); g.ellipse(w / 2, 0, 150, 92, 0, 0, Math.PI); g.fill(); g.globalCompositeOperation = "destination-out"; g.beginPath(); g.ellipse(w / 2, 0, 128, 76, 0, 0, Math.PI); g.fill(); g.globalCompositeOperation = "source-over"; rcStitch(g, Array.from({ length: 13 }, (_, i) => [w / 2 + Math.cos(i / 12 * Math.PI) * 140, Math.sin(i / 12 * Math.PI) * 86]));
+      /* viharléc a cipzár fölött, patentokkal */
+      g.fillStyle = "rgba(0,0,0,.22)"; g.fillRect(w / 2 - 30, h * .055, 14, h); g.fillStyle = "#f1c21a"; g.fillRect(w / 2 - 18, h * .05, 84, h); g.strokeStyle = "rgba(140,100,0,.7)"; g.lineWidth = 4; g.strokeRect(w / 2 - 18, h * .05, 84, h);
+      rcStitch(g, [[w / 2 - 6, h * .06], [w / 2 - 6, h]]); rcStitch(g, [[w / 2 + 54, h * .06], [w / 2 + 54, h]]); for (let k = 0; k < 8; k++) rcSnap(g, w / 2 + 24, h * (.1 + k * .11), 15);
+      g.strokeStyle = "#7d7d76"; g.lineWidth = 6; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(w / 2 - 24, h * .06); g.lineTo(w / 2 - 24, h); g.stroke(); g.setLineDash([]);   /* kilátszó cipzárfogak */
+      /* mellzseb tépőzárral, kifakult címke */
+      g.fillStyle = "rgba(0,0,0,.16)"; uiRR(g, w * .66 + 5, h * .22 + 6, 170, 140, 10); g.fill(); g.fillStyle = "#efbf18"; uiRR(g, w * .66, h * .22, 170, 140, 10); g.fill(); rcStitch(g, [[w * .66 + 8, h * .22 + 8], [w * .66 + 8, h * .22 + 132], [w * .66 + 162, h * .22 + 132], [w * .66 + 162, h * .22 + 8]]);
+      g.fillStyle = "#e3b414"; uiRR(g, w * .66 - 6, h * .22 - 12, 182, 52, 10); g.fill(); g.fillStyle = "rgba(80,70,50,.5)"; g.fillRect(w * .66 + 40, h * .22 + 30, 90, 14);
+      g.fillStyle = "rgba(20,20,24,.75)"; uiRR(g, w * .17, h * .24, 150, 56, 6); g.fill(); g.fillStyle = "rgba(240,230,200,.6)"; g.font = "900 30px system-ui, sans-serif"; g.fillText("ZEPHYR", w * .17 + 14, h * .24 + 38); g.fillStyle = "rgba(240,215,60,.25)"; g.fillRect(w * .17, h * .24 + 30, 150, 26);
+      /* két nagy rátett zseb (a jobb félig leszakadva) */
+      rcPocket(g, w * .1, h * .6, 290, 240, false); rcPocket(g, w * .6, h * .6, 290, 240, true);
+      /* kopás: horzsolások, ahol kilátszik a szövetháló; sár, olaj, só, penész */
+      for (let k = 0; k < 9; k++) rcScuff(g, rr(60, w - 60), rr(h * .1, h * .95), rr(14, 46), rr(8, 24));
+      rcMud(g, w, h, 70, .45); g.fillStyle = "rgba(40,30,20,.3)"; for (let k = 0; k < 5; k++) { g.beginPath(); g.ellipse(rr(0, w), rr(h * .2, h), rr(20, 50), rr(10, 26), rr(0, 3), 0, TAU); g.fill(); }   /* olajfoltok */
+      rcSalt(g, w, h, 30); for (let k = 0; k < 260; k++) { g.fillStyle = `rgba(${rr(40, 70) | 0},${rr(60, 80) | 0},${rr(30, 50) | 0},${rr(.2, .5)})`; g.beginPath(); g.arc(rr(0, w), h - Math.pow(Math.random(), 2) * h * .3, rr(1, 4), 0, TAU); g.fill(); }
+      g.fillStyle = "rgba(90,65,20,.35)"; g.fillRect(0, h * .9, w, h * .1);   /* sáros alsó szél */
+      /* foltozás: ragasztószalag keresztben, damillal varrt vászonfolt */
+      rcTape(g, w * .3, h * .4, 170, 50, .5); rcTape(g, w * .3, h * .4, 150, 46, -.6); rcTape(g, w * .82, h * .47, 120, 40, .15);
+      g.fillStyle = "#c9b98a"; g.beginPath(); g.moveTo(w * .22, h * .82); g.lineTo(w * .36, h * .8); g.lineTo(w * .37, h * .9); g.lineTo(w * .21, h * .91); g.closePath(); g.fill(); g.strokeStyle = "rgba(240,240,255,.9)"; g.lineWidth = 2; for (let k = 0; k < 14; k++) { const t2 = k / 13; g.beginPath(); g.moveTo(w * (.22 + .14 * t2) - 6, h * (.815 - .02 * t2) - 6); g.lineTo(w * (.22 + .14 * t2) + 6, h * (.815 - .02 * t2) + 6); g.stroke(); }
+      /* LYUKAK – itt-ott: szakadt, rojtos szélű, átlátszó */
+      [[.42, .3, 22], [.8, .32, 16], [.18, .5, 30], [.72, .74, 26], [.46, .86, 34], [.9, .62, 14], [.12, .76, 18], [.58, .46, 12]].forEach(([u, v, r]) => rcHole(g, w * u, h * v, r));
+      /* felhasadt oldalvarrás és rojtos, kicsipkézett alsó szegély */
+      g.globalCompositeOperation = "destination-out"; g.fillStyle = "#000"; g.beginPath(); g.moveTo(w * .955, h * .7); g.lineTo(w * .975, h * .78); g.lineTo(w * .95, h * .86); g.lineTo(w * .94, h * .78); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(0, h); for (let x = 0; x <= w; x += 18) g.lineTo(x, h - rr(4, 30) - (Math.random() < .12 ? rr(30, 90) : 0)); g.lineTo(w, h); g.closePath(); g.fill(); g.globalCompositeOperation = "source-over";
+      g.strokeStyle = "rgba(235,225,195,.9)"; g.lineWidth = 2; for (let k = 0; k < 40; k++) { const x = rr(0, w); g.beginPath(); g.moveTo(x, h - 40); g.lineTo(x + rr(-6, 6), h - rr(0, 20)); g.stroke(); } });
+    coatT.anisotropy = 4;
+    const sleeveT = canvasTex(512, 768, (g, w, h) => { rcY(g, w, h); for (let k = 0; k < 14; k++) { const y = h * (.15 + k * .06) + rr(-10, 10); rcCrease(g, 0, y, w, y + rr(-40, 40), rr(10, 22)); } rcSeam(g, [[w * .5, 0], [w * .5, h]]);
+      g.fillStyle = "#e0ad12"; g.fillRect(0, h * .86, w, h * .14); g.fillStyle = "rgba(70,60,40,.55)"; g.fillRect(w * .1, h * .9, w * .3, h * .06); rcStitch(g, [[0, h * .86], [w, h * .86]]);   /* tépőzáras mandzsetta */
+      rcMud(g, w, h, 26, .5); rcSalt(g, w, h, 10); rcScuff(g, w * .3, h * .45, 30, 14); rcHole(g, w * .7, h * .5, 16); rcHole(g, w * .25, h * .7, 11); });
+    const hoodT = canvasTex(512, 512, (g, w, h) => { rcY(g, w, h); for (let k = 0; k < 10; k++) rcCrease(g, rr(0, w), rr(0, h), rr(0, w), rr(0, h), rr(10, 22)); rcSeam(g, [[w * .5, 0], [w * .5, h]]); g.fillStyle = "rgba(150,110,0,.4)"; g.fillRect(0, h * .9, w, h * .1); rcStitch(g, [[0, h * .9], [w, h * .9]]);
+      rcMud(g, w, h, 10, .3); rcSalt(g, w, h, 6); rcHole(g, w * .3, h * .45, 14); });
+    const coatM = std({ map: coatT, bumpMap: coatT, bumpScale: 2.5, roughness: .38, side: THREE.DoubleSide, alphaTest: .45 }), slM = std({ map: sleeveT, bumpMap: sleeveT, bumpScale: 2.5, roughness: .38, side: THREE.DoubleSide, alphaTest: .45 }), hdM = std({ map: hoodT, bumpMap: hoodT, bumpScale: 2.5, roughness: .38, side: THREE.DoubleSide, alphaTest: .45 });
+    const coat = new THREE.Group(); mast.add(coat); coat.visible = false; mast.userData.coat = coat;
+    const cN = 18, cM = 24, cPos = new Float32Array((cN + 1) * (cM + 1) * 3), cUv = new Float32Array((cN + 1) * (cM + 1) * 2), cIdx = [];
+    for (let j = 0; j <= cM; j++) for (let i = 0; i <= cN; i++) { const k = j * (cN + 1) + i; cUv[k * 2] = i / cN; cUv[k * 2 + 1] = 1 - j / cM; }
     for (let j = 0; j < cM; j++) for (let i = 0; i < cN; i++) { const a = j * (cN + 1) + i, b = a + 1, c = a + cN + 1, d = c + 1; cIdx.push(a, b, c, b, d, c); }
     const cGeo = new THREE.BufferGeometry(); cGeo.setAttribute("position", new THREE.BufferAttribute(cPos, 3)); cGeo.setAttribute("uv", new THREE.BufferAttribute(cUv, 2)); cGeo.setIndex(cIdx); W.disposables.push(cGeo);
     const coatBody = new THREE.Mesh(cGeo, coatM); coatBody.frustumCulled = false; coat.add(coatBody);
-    const sleeves = [-1, 1].map((sd) => { const sg = new THREE.Group(); coat.add(sg); const sl = new THREE.CylinderGeometry(.13, .17, .85, 10, 1, true); sl.translate(0, -.42, 0); mesh(sl, coatM, sg); const cuff = new THREE.TorusGeometry(.17, .03, 6, 12); cuff.rotateX(Math.PI / 2); cuff.translate(0, -.85, 0); mesh(cuff, std({ color: "#b8961a", roughness: .5 }), sg); return { sg, sd }; });
-    const hood = mesh(new THREE.SphereGeometry(.24, 12, 8, 0, TAU, 0, Math.PI * .6), coatM, coat);
+    /* ráncos ujjak (esztergált profil redőkkel), tépőzáras mandzsetta füllel, kilógó bélés-szálak */
+    const sleeves = [-1, 1].map((sd) => { const sg = new THREE.Group(); coat.add(sg); const prof = []; for (let k = 0; k <= 24; k++) { const v = k / 24; prof.push(new THREE.Vector2(.15 + .035 * v + (.007 * Math.sin(v * 29 + sd) + .005 * Math.sin(v * 61 + 2 * sd)) * (v > .1 && v < .86 ? 1 : 0) - (v > .55 && v < .66 ? .012 : 0), -v * .86)); }
+      const sl = new THREE.LatheGeometry(prof.reverse(), 16); mesh(sl, slM, sg); const cuff = new THREE.TorusGeometry(.18, .028, 6, 16); cuff.rotateX(Math.PI / 2); cuff.translate(0, -.85, 0); mesh(cuff, std({ color: "#c99e14", roughness: .45 }), sg);
+      const tab = new THREE.BoxGeometry(.09, .05, .014); tab.translate(.12, -.83, .12); tab.rotateY(.6); mesh(tab, std({ color: "#d8a814", roughness: .5 }), sg); return { sg, sd }; });
+    /* kapucni: mélyített, zsinórcsatornás perem, lógó zsinór stopperekkel (a szélben leng) */
+    const hood = new THREE.Group(); coat.add(hood);
+    { const hg = new THREE.SphereGeometry(.26, 18, 12, Math.PI * .65, Math.PI * 1.7, 0, Math.PI * .7); hg.scale(1, 1.18, 1.12); mesh(hg, hdM, hood); const rim = new THREE.TorusGeometry(.2, .025, 6, 20, Math.PI * 1.3); rim.rotateZ(-Math.PI * .15); rim.scale(1, 1.15, 1); rim.rotateX(-.25); rim.translate(0, .02, .2); mesh(rim, std({ color: "#d4a414", roughness: .4 }), hood);
+      const col = new THREE.CylinderGeometry(.17, .19, .14, 18, 1, true, Math.PI * .2, Math.PI * 1.6); col.translate(0, -.2, -.02); mesh(col, slM, hood); }
+    const cords = [-1, 1].map((sd) => { const cg = new THREE.Group(); cg.position.set(sd * .14, -.08, .22); hood.add(cg); mesh(new THREE.CylinderGeometry(.006, .006, .3, 4).translate(0, -.15, 0), std({ color: "#e8e2d0", roughness: .8 }), cg);
+      mesh(new THREE.CylinderGeometry(.018, .018, .04, 8).translate(0, -.22, 0), std({ color: "#1b1d22", roughness: .5 }), cg); mesh(new THREE.SphereGeometry(.012, 6, 4).translate(0, -.3, 0), std({ color: "#e8e2d0", roughness: .8 }), cg); return cg; });
     const coatLine = rodBetween(new THREE.Vector3(), new THREE.Vector3(0, 1, 0), .008, rope, mast, 4);
     const crew = [];
     if (o.crew) { const p = makePerson({ banana: true, beard: true, top: "#e9e1cf", bot: "#4a5a6a", hair: "#4a3424", seed: o.seed || 2, bareLegs: true, shoe: "#d29a72", sleeve: false }); body.add(p); crew.push(p); }
@@ -787,9 +863,9 @@
       coat.visible = sp > .03; coatLine.visible = coat.visible;
       if (coat.visible) { const fill = clamp(U / 6, .4, 1.25) * sp, sa = -S.side * clamp(A - 100, 0, 75) * D2R * .5; coat.position.set(Math.sin(sa) * .6 * sp, mastH - .6, .9 + .9 * sp); coat.rotation.set(-.15 * fill, sa, Math.sin(S.t * 1.4) * .06);
         const p = cGeo.attributes.position; for (let j = 0; j <= cM; j++) for (let i = 0; i <= cN; i++) { const k = j * (cN + 1) + i, u = i / cN, v = j / cM, wdt = .55 + .25 * (1 - v);
-          p.setXYZ(k, (u - .5) * 2 * wdt, -v * 1.9 * (.5 + .5 * sp), Math.sin(Math.PI * u) * .55 * fill * Math.sin(Math.PI * (.15 + .85 * v)) + .06 * Math.sin(S.t * 7 - v * 5 + u * 3) * (1.2 - fill)); } p.needsUpdate = true; cGeo.computeVertexNormals();
+          p.setXYZ(k, (u - .5) * 2 * wdt * (1 - .06 * Math.max(0, 1 - v * 5)), -v * 1.9 * (.5 + .5 * sp) - Math.pow(Math.abs(u - .5) * 2, 1.7) * .2 * Math.max(0, 1 - v * 1.6), Math.sin(Math.PI * u) * .55 * fill * Math.sin(Math.PI * (.15 + .85 * v)) + .06 * Math.sin(S.t * 7 - v * 5 + u * 3) * (1.2 - fill)); } p.needsUpdate = true; cGeo.computeVertexNormals();
         sleeves.forEach((q, i) => { q.sg.position.set(q.sd * .72, -.25, .05); q.sg.rotation.set(-.6 * fill + .25 * Math.sin(S.t * 5.3 + i * 2), 0, q.sd * (1.2 + .35 * Math.sin(S.t * 3.7 + i))); });
-        hood.position.set(0, .05, -.05); hood.rotation.x = -.6 + .15 * Math.sin(S.t * 2.1);
+        hood.position.set(0, .05, -.05); hood.rotation.x = -.6 + .15 * Math.sin(S.t * 2.1); cords.forEach((cg, i) => { cg.rotation.set(.4 * fill + .35 * Math.sin(S.t * 6.1 + i * 1.7), 0, .3 * Math.sin(S.t * 4.3 + i)); });
         mast.updateMatrixWorld(true); _a.set(0, mastH - .12, .03); _b.copy(coat.position); setRod(coatLine, _a, _b); }
       /* a kókusz arca */
       S.scare = Math.max(0, S.scare - dt); const mood = S.scare > 0 ? "jaj" : U > 8 ? "fel" : U < 3.5 ? "unat" : "vidam", t = S.t;

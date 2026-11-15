@@ -90,7 +90,7 @@
         B.btn(1080, 612, 350, 68, a.on ? "✎ Fiók" : "✉ Regisztráció", () => { HB.acctBack = "w1"; hbBoard("acct"); }, { fs: 26 }); }
       B.btn(44, 716, 340, 96, "⚓ Séta a kikötőben", () => hbWalk(true), { sub: "a hajók között, valódi méretben" });
       B.btn(398, 716, 340, 96, "🏆 Eredmények", () => hbBoard("trophy"), { sub: "sorozatok és serlegek" });
-      B.btn(752, 716, 340, 96, "🎓 Oktató futam", () => { wzStartTut(); }, { sub: "egy bója – gyakorlásra" });
+      B.btn(752, 716, 340, 96, "🎓 Oktatás", () => { hbSchool(); }, { sub: "szabályok a nagypapával, aztán a pálya" });
       B.btn(1106, 716, 340, 96, "‹ Vissza a sétához", () => { uiCloseAll(); W.close(); }, { sub: "Zephyr Apartmanház" });
       B.btn(44, 840, 1402, 116, "TOVÁBB ▶  a hajó kiválasztása", () => wzGo(2), { gold: true, fs: 44 });
     } else if (p === "w2") {
