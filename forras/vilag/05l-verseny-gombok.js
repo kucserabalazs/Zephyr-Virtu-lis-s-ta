@@ -101,7 +101,7 @@
       const rs = r.g.userData.S; if (rs) rs.heel = L(j + 3); try { r.g.userData.update(dt); } catch (e) {} });
     /* környezet a saját hajó körül (mint a futamban) */
     S.env.rotation.y = S.b; S.far.rotation.y = S.b; S.env.position.set(-S.x, 0, -S.z).applyAxisAngle(_YAX, S.b);
-    const wm = S.water; wm.position.set(Math.round(S.x / 40) * 40, 0, Math.round(S.z / 40) * 40); const mat = wm.userData.mat; S.wt = (S.wt || 0) + dt * .25; try { mat.uniforms.uT.value = S.wt; } catch (e) {}
+    try { rwUpdate(dt); } catch (e) {}   /* VÍZ 2.0 (05x) */
     /* a flotta közepe (a hajó terében) és a drón */
     let cx = 0, cz = 0, n = 1; S.riv.forEach((r) => { const dx = r.x - S.x, dz = r.z - S.z; if (Math.hypot(dx, dz) < 250) { const q = new THREE.Vector3(dx, 0, dz).applyAxisAngle(_YAX, S.b); cx += q.x; cz += q.z; n++; } }); cx /= n; cz /= n;
     P.a += dt * .07; P.cx = P.cx == null ? cx : P.cx + (cx - P.cx) * Math.min(1, dt * .8); P.cz = P.cz == null ? cz : P.cz + (cz - P.cz) * Math.min(1, dt * .8);

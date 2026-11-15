@@ -16,7 +16,7 @@
   function rwWaves(tws, wdirTo, seed) {
     const U = Math.max(2, tws), lp = clamp(1.0 * U + .6, 3, 13), Hs = clamp(.016 * Math.pow(U, 1.75), .05, 1.0), rnd = vrRng((seed | 0) * 977 + 31);
     /* [irány a széltől (fok), hullámhossz-szorzó, amplitúdó-szorzó, meredekség] – az első négy a rácsot is mozgatja, az utolsó kettő csak a fényt */
-    const spec = [[0, 1, .27, .62], [21, .71, .17, .55], [-27, .56, .13, .5], [-9, 1.38, .11, .32], [38, .39, .06, .45], [-49, .28, .045, .4]];
+    const spec = [[0, 1, .26, .6], [26, .74, .17, .55], [-33, .6, .14, .5], [-12, 1.33, .1, .32], [50, .41, .07, .45], [-61, .31, .05, .4]].map((q) => [q[0] + (rnd() - .5) * 10, q[1] * (.92 + rnd() * .16), q[2], q[3]]);
     RW.waves = spec.map(([a, lf, af, q]) => { const L = lp * lf, k = TAU / L, A = Hs * af; return { a: a * D2R, k, A, Q: clamp(q / Math.max(.001, k * A * 4.2), 0, .85), om: Math.sqrt(RW_G * k), ph: rnd() * TAU }; });
     RW.wdir = wdirTo; RW.Hs = Hs; RW.lp = lp; RW.tws = U;
   }
@@ -53,9 +53,11 @@
       const u = (x + .5) / N, v = (y + .5) / N, gi = Math.floor(u * G), gj = Math.floor(v * G); let f1 = 9, f2 = 9;
       for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const ci = ((gi + di) % G + G) % G, cj = ((gj + dj) % G + G) % G, px = (gi + di + pts[(cj * G + ci) * 2]) / G, py = (gj + dj + pts[(cj * G + ci) * 2 + 1]) / G, d = Math.hypot(px - u, py - v);
         if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d; }
-      const lace = clamp(1 - (f2 - f1) * G * 2.6, 0, 1), blot = vnT(u, v) * .65 + vnT(u * 2, v * 2) * .35, o = (y * N + x) * 4;
+      /* B: a hab „sűrűségtérképe” (4 oktávos, csempézhető zaj, kis buborékos csipkével) – küszöbölve nő a hab: kevésnél csak a csúcsok, soknál összefüggő;
+         A: apró buborékpettyek (Worley F1) a finom szerkezethez */
+      const fb = vnT(u, v) * .48 + vnT(u * 2, v * 2) * .26 + vnT(u * 4, v * 4) * .16 + vnT(u * 8, v * 8) * .1, lace = clamp(1 - (f2 - f1) * G * 3.2, 0, 1), bub = clamp(1 - f1 * G * 2.1, 0, 1), o = (y * N + x) * 4;
       data[o] = clamp(128 + 127 * sx[y * N + x] * sc, 0, 255); data[o + 1] = clamp(128 + 127 * sy[y * N + x] * sc, 0, 255);
-      data[o + 2] = clamp(255 * lace * (.35 + .65 * blot), 0, 255); data[o + 3] = clamp(255 * blot, 0, 255); }
+      data[o + 2] = clamp(255 * (fb * .86 + lace * .14), 0, 255); data[o + 3] = clamp(255 * (bub * .55 + fb * .45), 0, 255); }
     const t = new THREE.DataTexture(data, N, N, THREE.RGBAFormat); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true;
     try { t.anisotropy = Math.min(8, T.sceneEl.renderer.capabilities.getMaxAnisotropy()); } catch (e) { t.anisotropy = 4; }
     t.needsUpdate = true; RW.rip = t; return t;
@@ -78,7 +80,7 @@
     const ax = RW.fDir[0], az = RW.fDir[1];
     for (const p of RW.patches) {
       const tt = t + p.ph, c = Math.floor(tt / p.per), u = tt / p.per - c, env = smooth(clamp(u / .22, 0, 1)) * (1 - smooth(clamp((u - .7) / .3, 0, 1))); if (env < .02) continue;
-      const r = vrRng(p.s + c * 7919), x0 = r() * L, z0 = r() * L, R = (p.lull ? 34 + r() * 44 : 30 + r() * 60) * (.75 + .35 * env), k = (p.lull ? .7 + r() * .3 : .6 + r() * .4) * env, asp = p.lull ? 1.15 + r() * .5 : 1.4 + r() * .8, ch = p.lull ? 1 : 0;
+      const r = vrRng(p.s + c * 7919), x0 = p.fx != null ? p.fx - RW.fOff[0] : r() * L, z0 = p.fz != null ? p.fz - RW.fOff[1] : r() * L, R = (p.lull ? 34 + r() * 44 : 30 + r() * 60) * (.75 + .35 * env), k = (p.lull ? .7 + r() * .3 : .6 + r() * .4) * env, asp = p.lull ? 1.15 + r() * .5 : 1.4 + r() * .8, ch = p.lull ? 1 : 0;
       for (let lb = 0; lb < 3; lb++) {   /* három, egymásba olvadó lebeny: szabálytalan, „macskatappancs” alakú folt */
         const oa = lb ? (r() - .5) * R * 1.3 : 0, oc = lb ? (r() - .5) * R * .9 : 0, rl = lb ? R * (.5 + r() * .35) : R, kl = lb ? k * (.75 + r() * .25) : k;
         const cx = x0 + ax * oa - az * oc, cz = z0 + az * oa + ax * oc, ra = rl * asp, rc = rl, ext = ra * 1.6;
@@ -193,27 +195,35 @@
           vec3 R = reflect(-V, n); float el = clamp(R.y, 0., 1.);
           float farK = smoothstep(25., 220., vDist);
           /* a messzi fodros víz átlagosan magasabbról (sötétebb égrészből) tükröz, a tükörsima a világos láthatárt – ezért sötét a lökés, világos a lavór */
-          float el2 = clamp(el + farK * (.12 * gu - .035 * lu + .02), 0., 1.);
+          float rough = (.5 + 1.35 * gu) * (1. - .93 * lu);   /* a fodrozottság: lavórban ~0, átlagos víz 0,5, lökésben ~1,85 */
+          float el2 = clamp(el + farK * .1 * rough, 0., 1.);
           vec3 sky = mix(uSkyH, uSkyZ, pow(el2, .45));
           if (uSkyOn > .5) { float lx = R.x * uSkyRot.x - R.z * uSkyRot.y, lz = R.x * uSkyRot.y + R.z * uSkyRot.x; sky = texture2D(uSkyT, vec2(fract(atan(lz, -lx) / 6.2831853), clamp(asin(el2) / 1.5708, .02, .98))).rgb * uLight; }
           vec3 body = mix(uDeep, uShallow, clamp(.3 + crest * 1.4 + n.x * .4, 0., 1.)) * uLight;
           float sss = pow(max(dot(V, -uSun), 0.), 4.) * clamp(crest * 2.5, 0., 1.);
           body += vec3(.03, .12, .09) * sss * uLight;
-          float fr = clamp(fres * (1. - .38 * gu * farK) + .14 * lu * farK, 0., 1.);
+          float fr = clamp(fres * (1. - farK * clamp(.34 * rough, 0., .66)) + .06 * lu * farK, 0., 1.);
           vec3 col = mix(body, sky, fr) * (1. - .1 * gu);
           float rs = max(dot(R, uSun), 0.), shp = mix(1., 2.3, lu) * mix(1., .55, gu);
           col += uSunC * (pow(rs, 600. * shp) * 7. + pow(rs, 80. * shp) * .45 + pow(rs, 12.) * .035) * uSpec;
-          /* HAB: a megtörő tarajok fehér sapkája (a taraj mögött a vízen marad és elhal), friss szélben szélcsíkok, a hajó körül habpelyhek – mind a vízhez rögzítve */
+          /* HAB: a megtörő tarajok fehér sapkája (a taraj elején születik, mögötte a vízen marad és szétesik), friss szélben szélcsíkok, a hajó körül habpelyhek –
+             mind a vízhez rögzítve. A hab alakja egy zajtérkép küszöbölése: kevés habnál szórt buborékfoltok, soknál összefüggő, csipkés folt. */
           float k0 = uW[0].y, f0 = k0 * dot(vec2(cos(uWind + uW[0].x), sin(uWind + uW[0].x)), vW) - uWp[0].x * uT + uWp[0].y;
           float pc = mod(1.5708 - f0, 6.2832), cn = floor((1.5708 - f0) / 6.2832);
-          float br = vn(vW * .085 + vec2(cn * 7.31, cn * 3.17)) + (n2 - .5) * .2, th = uWc.x - .17 * gu + .12 * lu;
-          float wc = smoothstep(th, th + .1, br) * max(smoothstep(5.25, 6.2, pc) * .8, exp(-pc * 1.05)) * uWc.y * clamp(1.4 - px * .25, 0., 1.);
-          float lace = texture2D(uRip, vW / 3.7).b, lace2 = texture2D(uRip, vW / 1.25 + .37).b;
-          float foam = wc * (.4 + .95 * lace);
-          float strk = smoothstep(.6, .9, vn(vec2(q.x * .022, q.y * .5) + 11.)) * uWc.z * (.4 + .6 * lace);
-          float nearF = 1. - smoothstep(16., 110., vDist), fl = smoothstep(.5, .85, lace2) * smoothstep(.45, .8, vn(vW * .33 + 3.)) * nearF * uFlk * (1. - .8 * lu) * .7;
-          float bfo = clamp(bf, 0., 1.) * (.55 + .7 * lace2);
-          float fm = clamp(foam + strk * .3 + fl * .35 + bfo, 0., 1.) * uFoam;
+          vec2 rq = vec2(vW.x * .866 - vW.y * .5, vW.x * .5 + vW.y * .866);
+          float brk = texture2D(uRip, rq / 41. + vec2(cn * .37, cn * .61)).b * .7 + texture2D(uRip, vW / 13.7 + vec2(cn * .13, -cn * .29)).b * .3;
+          float th = uWc.x - .2 * gu + .14 * lu;
+          float crestE = smoothstep(5.5, 6.28, pc) + (1. - smoothstep(0., 2.2, pc)) * .85;
+          float wcI = smoothstep(th, th + .12, brk) * crestE * uWc.y * clamp(1.4 - px * .25, 0., 1.);
+          float fdn = texture2D(uRip, vW / 2.9).b * .62 + texture2D(uRip, vW / 1.1 + .37).a * .38;
+          float cover = (1. - smoothstep(0., 2.6, pc)) * .25 + .75;
+          float foam = smoothstep(1. - wcI * cover, 1.18 - wcI * cover, fdn);
+          float strk = smoothstep(.6, .9, vn(vec2(q.x * .022, q.y * .5) + 11.)) * uWc.z;
+          strk = smoothstep(1. - strk * .55, 1.15 - strk * .55, fdn);
+          float nearF = 1. - smoothstep(16., 110., vDist), flI = smoothstep(.45, .85, texture2D(uRip, vW / 23.).b) * nearF * uFlk * (1. - .8 * lu) * .32;
+          float fl = smoothstep(1. - flI, 1.12 - flI, fdn);
+          float bfo = smoothstep(1. - clamp(bf, 0., 1.), 1.16 - clamp(bf, 0., 1.), fdn);
+          float fm = clamp(foam * .9 + strk * .35 + fl * .5 + bfo * .95, 0., 1.) * uFoam;
           col = mix(col, vec3(.93, .96, .97) * uLight, fm);
           col = mix(col, uHaze, smoothstep(250., 1550., vDist) * .85);
           gl_FragColor = vec4(col, 1.);
@@ -228,7 +238,7 @@
   function rwSync(mat) {
     const U = mat.uniforms, W0 = RW.waves; if (W0) for (let i = 0; i < 6; i++) { const w = W0[i]; U.uW.value[i].set(w.a, w.k, w.A, w.Q); U.uWp.value[i].set(w.om, w.ph); }
     U.uWind.value = RW.wdir; U.uT.value = RW.t; if (RW.ft) U.uWf.value = RW.ft; U.uWfM.value.set(RW.fOff[0], RW.fOff[1], 1 / RW.fL, RW.patches.length ? 1 : 0);
-    const kn = RW.tws / KN; U.uWc.value.set(clamp(1.02 - (kn - 7) * .028, .58, 1.05), clamp((kn - 6) / 6, 0, 1), clamp((kn - 12) / 8, 0, 1) * .9, 0);
+    const kn = RW.tws / KN; U.uWc.value.set(clamp(.97 - (kn - 7) * .034, .52, 1.05), clamp((kn - 6) / 6, 0, 1), clamp((kn - 12) / 8, 0, 1) * .9, 0);
     U.uRipM.value.z = clamp(.17 + kn * .009, .17, .34);
   }
   /* versenyfutam: a víz beállítása a futam szeléhez */
@@ -265,10 +275,12 @@
         void main(){ vec3 p = position; float y = 0.; for (int i = 0; i < 4; i++) { float dir = uWind + uW[i].x; vec2 D = vec2(cos(dir), sin(dir)); y += uW[i].z * sin(uW[i].y * dot(D, p.xz) - uWp[i].x * uT + uWp[i].y); }
           p.y = y * .92 + .03; vA = aux; vXZ = position.xz; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.); }`,
       fragmentShader: `uniform sampler2D uRip; uniform float uLight; varying vec3 vA; varying vec2 vXZ;
-        void main(){ float u = abs(vA.x), age = vA.y, k = vA.z; float lace = texture2D(uRip, vXZ / 2.6).b, lace2 = texture2D(uRip, vXZ / 7.3 + .5).a;
-          float core = 1. - smoothstep(.25, 1., u), edge = smoothstep(.55, .95, u) * (1. - smoothstep(.95, 1., u));
-          float a = (core * (.35 + .75 * lace) + edge * .35 * lace) * k * exp(-age / 14.) * smoothstep(0., .6, age) * (.6 + .5 * lace2);
-          gl_FragColor = vec4(vec3(.94, .97, .98) * uLight, clamp(a, 0., .85)); }` });
+        void main(){ float u = abs(vA.x), age = vA.y, k = vA.z;
+          /* örvénylő, buborékos hab: középen sűrűbb, a szélén szakadozott; idővel foltokra esik szét és elhal (a vízhez rögzített zajtérkép küszöbölése) */
+          float fdn = texture2D(uRip, vXZ / 2.9).b * .62 + texture2D(uRip, vXZ / 1.1 + .37).a * .38;
+          float I = (1. - smoothstep(.1, 1., u)) * k * exp(-age / 12.) * smoothstep(0., .5, age);
+          float a = smoothstep(1. - I, 1.2 - I, fdn) * .8 + I * .12;
+          gl_FragColor = vec4(vec3(.93, .96, .97) * uLight, clamp(a, 0., .8)); }` });
     W.disposables.push(g, mat);
     const m = new THREE.Mesh(g, mat); m.frustumCulled = false; m.renderOrder = 2; parent.add(m);
     const pts = []; let acc = 0;
@@ -277,7 +289,7 @@
         acc += v * dt; const Uw = mat.uniforms; Uw.uT.value = RW.t; Uw.uWind.value = RW.wdir; if (RW.mat) Uw.uLight.value = RW.mat.uniforms.uLight.value;
         if (!pts.length || acc > 1.4) { pts.unshift({ x: x - Math.sin(hd) * 3.2, z: z - Math.cos(hd) * 3.2, hd, age: 0, v }); acc = 0; if (pts.length > N) pts.pop(); }
         for (const p of pts) p.age += dt;
-        for (let i = 0; i < N; i++) { const p = pts[Math.min(i, pts.length - 1)] || { x, z, hd, age: 99, v: 0 }, w = (width || .7) * (1 + p.age * .16) + p.age * Math.min(p.v, 5) * .055, nx = Math.cos(p.hd), nz = -Math.sin(p.hd), k6 = i * 6;
+        for (let i = 0; i < N; i++) { const p = pts[Math.min(i, pts.length - 1)] || { x, z, hd, age: 99, v: 0 }, w = (width || .7) * (1 + p.age * .045) + p.age * .07, nx = Math.cos(p.hd), nz = -Math.sin(p.hd), k6 = i * 6;
           pos[k6] = p.x - nx * w; pos[k6 + 1] = 0; pos[k6 + 2] = p.z - nz * w; pos[k6 + 3] = p.x + nx * w; pos[k6 + 4] = 0; pos[k6 + 5] = p.z + nz * w;
           const kk = i >= pts.length ? 0 : clamp((p.v - .6) / 3.4, 0, 1); aux[k6] = -1; aux[k6 + 1] = p.age; aux[k6 + 2] = kk; aux[k6 + 3] = 1; aux[k6 + 4] = p.age; aux[k6 + 5] = kk; }
         g.attributes.position.needsUpdate = true; g.attributes.aux.needsUpdate = true; } };
@@ -373,3 +385,5 @@
       while (r.spAcc > 1) { r.spAcc -= 1; const sd = Math.random() < .5 ? -1 : 1; rwSprayEmit(P, sd * rB * (.35 + Math.random() * .3), .25, -rL * .88, sd * (1.2 + Math.random() * 1.6) * sc2, (1.4 + Math.random() * 1.6) * sc2, -.8, .34 * sc2, .9, 0, .5, 1 + Math.random() * .5, r.x, r.z, r.b, r.v || 0); } });
     rwSprayFlush(P);
   }
+
+  W._rw = { RW, rwFieldAt, rwWindAt, rwHeight, rwSlope, rwFieldDraw };   /* teszteléshez */

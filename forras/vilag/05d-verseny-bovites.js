@@ -111,28 +111,15 @@
   }
 
   /* ---------------------------------------------------------------- 6. LAVÓR (szélcsendes foltok) */
-  function vrLavGen(C) {
-    const S = VRR, k = vrCs(), rnd = S.netRnd || Math.random, pts = [{ x: 0, z: 0 }].concat(C.marks), n = 4 + Math.floor(rnd() * 4);
-    let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; pts.forEach((p) => { x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); z0 = Math.min(z0, p.z); z1 = Math.max(z1, p.z); });
-    x0 -= 90 * k; x1 += 90 * k; z0 -= 90 * k; z1 += 90 * k;
-    S.lav = []; for (let i = 0; i < n * 3 && S.lav.length < n; i++) { const p = { x: x0 + rnd() * (x1 - x0), z: z0 + rnd() * (z1 - z0) };
-      if (pts.some((m) => Math.hypot(m.x - p.x, m.z - p.z) < 38 * k)) continue; if (S.lav.some((q) => Math.hypot(q.x - p.x, q.z - p.z) < 70 * k)) continue;
-      S.lav.push({ x: p.x, z: p.z, r: (28 + rnd() * 38) * k, k: .25 + rnd() * .3, t0: -60 - rnd() * 60, life: 160 + rnd() * 220, ph: rnd() * 6 }); }
-    S.lavMsgT = 0;
-  }
-  /* a szélszorzó egy pontban (1 = teljes szél; a folt közepén a folt „k”-ja) */
-  function vrLavK(x, z, t) { const L = VRR.lav; if (!L || !L.length) return 1; let f = 1;
-    for (const q of L) { const age = (t - q.t0) / q.life, life = clamp(Math.min(age * 4, (1 - age) * 4), 0, 1); if (life <= 0) continue; const d = Math.hypot(x - q.x, z - q.z); if (d > q.r * 1.15) continue;
-      const e = 1 - smooth(clamp((d - q.r * .45) / (q.r * .7), 0, 1)); f = Math.min(f, 1 - (1 - q.k) * e * life); }
-    return f; }
+  /* 2026-11-15 18:43 (tulajdonos: „Legyen valósághű … úgy ábrázold, hogy élethű legyen!”): a lavór és a széllökés a 05x szélmezőjéből jön – a lavór VILÁGOS,
+     TÜKÖRSIMA folt (gyenge szél, kicsit balra fordul), a széllökés SÖTÉT, FODROS folt (erősebb szél, kicsit jobbra fordul); mindkettő sodródik a széllel.
+     A régi, a vízre nem látszó „időzített lökések” megszűntek. A régi hívások (vrLavGen/vrLavK/vrLavTick) ide vezetnek. */
+  function vrLavGen(C) { const S = VRR; S.lav = []; S.lavMsgT = 0; S.gstMsgT = 0; try { rwRaceInit(C); } catch (e) { console.warn("szélmező", e); } }
+  function vrLavK(x, z) { try { return rwWindAt(x, z).k; } catch (e) { return 1; } }
   function vrLavTick(dt) {
-    const S = VRR; if (!S.lav) return; const wv = vfwd(S.wf);
-    S.lav.forEach((q) => { q.x += wv[0] * -.35 * dt * 0 + (-wv[0]) * .45 * dt; q.z += (-wv[1]) * .45 * dt;   /* a szél AMERRE fúj (a szél „felől” iránnyal ellentétes), lassan sodródik */
-      if (S.t - q.t0 > q.life) { const C = S.C, m = C.marks[(Math.random() * C.marks.length) | 0], a = Math.random() * TAU, d = (60 + Math.random() * 120) * vrCs(); q.x = m.x * .6 + Math.cos(a) * d; q.z = m.z * .6 + Math.sin(a) * d; q.t0 = S.t; q.life = 160 + Math.random() * 220; q.r = (28 + Math.random() * 38) * vrCs(); q.k = .25 + Math.random() * .3; } });
-    /* a víz shadere: a foltok helye a víz mintázatának koordinátáiban (a sebességérzet-eltolással együtt) */
-    const mat = S.water && S.water.userData.mat; if (mat && mat.uniforms.uLav) { const U = mat.uniforms.uLav.value; for (let i = 0; i < U.length; i++) { const q = S.lav[i]; if (!q) { U[i].set(0, 0, 0, 0); continue; } const age = (S.t - q.t0) / q.life, life = clamp(Math.min(age * 4, (1 - age) * 4), 0, 1); U[i].set(q.x + (S.fox || 0), q.z + (S.foz || 0), q.r, (1 - q.k) * life * 1.25); } }
-    /* üzenet, ha lavórba futottál */
-    const lk = vrLavK(S.x, S.z, S.t); if (lk < .8 && S.st === "race" && !S.fin && W.t - (S.lavMsgT || 0) > 20 && !(S.msgT > 0 && /⚠/.test(S.msg || ""))) { S.lavMsgT = W.t; S.msg = "LAVÓR! Szélcsendes foltba futottál – a víz itt sima, a szél leállt. Legközelebb kerüld meg (a tükörsima, fodrozódás nélküli víz jelzi)."; S.msgT = 7; }
+    const S = VRR; if (S.st !== "race" || S.fin) return; const lw = S.lw || rwWindAt(S.x, S.z);
+    if (lw.l > .55 && W.t - (S.lavMsgT || 0) > 25 && !(S.msgT > 0 && /⚠/.test(S.msg || ""))) { S.lavMsgT = W.t; S.msg = "LAVÓR! Szélcsendes foltba futottál – a víz itt világos és tükörsima, a szél leállt. Legközelebb kerüld ki: a sima, fényes vízfoltot messziről látod."; S.msgT = 7; }
+    else if (lw.g > .6 && W.t - (S.gstMsgT || 0) > 45 && !(S.msgT > 0)) { S.gstMsgT = W.t; S.msg = "SZÉLLÖKÉS! A sötét, fodros folt erősebb szelet hoz – a hajó gyorsul, a szél kicsit jobbra fordul. Keresd a sötét foltokat!"; S.msgT = 6; }
   }
 
   /* ---------------------------------------------------------------- 7. A PART A HÁTTÉRBEN: 2026-11-14 15:45 óta a VALÓDI Balaton (05j-verseny-balaton.js: VENUES, vrShoresSet) */

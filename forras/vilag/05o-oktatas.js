@@ -402,7 +402,9 @@
   function vPlay(R, buf) { const a = T.ac(); const src = a.createBufferSource(); src.buffer = buf; let out = null; try { const v = new THREE.Vector3(); (R.tch ? R.tch.root : R.board).getWorldPosition(v); v.y += 1.5; const sp = sp3(v, "vox", 4); out = sp && sp.node; } catch (e) {} src.connect(out || T.outBus("vox") || T.outBus()); src.start(); RB.src = src; if (R.tch) R.tch.c.say(buf.duration); return src; }
   function roomGreet(R) { roomHush(); const txt = GREET[R.h.id]; if (!SCH.voice || !txt) return; R.greetEnd = W.t + txt.length / 13; if (R.tch) { R.tch.c.act("integet"); R.tch.c.say(txt.length / 13); }
     vManifest().then(() => vBuf(vFile(R.h.id, txt))).then((b) => { if (SCH.R !== R || R.playing) return; if (b && b.duration) { try { vPlay(R, b); R.greetEnd = W.t + b.duration + .3; } catch (e) {} } else vSynth(txt, R, txt.length / 13); }); }
-  function roomSpeak(R) { roomHush(); R.adur = 0; R.wait = 0; if (!SCH.voice) return; const L = R.lessons[R.i], i0 = R.i; R.wait = 1;
+  /* 2026-11-15 (tulajdonos: „a hangok nem szólalnak meg vagy csak megkésve”): a ház közelében előre betöltjük a köszöntést és az első leckét, lejátszáskor a következőt */
+  function roomPre(R) { if (R.pre) return; R.pre = 1; try { vManifest().then(() => { const g = GREET[R.h.id]; if (g) vBuf(vFile(R.h.id, g)); const L = R.lessons && R.lessons[0]; if (L) vBuf(vFile(R.h.id, vText(L))); }).catch(() => {}); } catch (e) {} }
+  function roomSpeak(R) { roomHush(); R.adur = 0; R.wait = 0; if (!SCH.voice) return; const L = R.lessons[R.i], i0 = R.i; R.wait = 1; try { const N = R.lessons[R.i + 1]; if (N) vManifest().then(() => vBuf(vFile(R.h.id, vText(N)))).catch(() => {}); } catch (e) {}
     const fallback = () => { R.wait = 0; vSynth(vText(L), R, roomDur(R, R.i) - 2.5); };
     vManifest().then(() => vBuf(vFile(R.h.id, vText(L)))).then((b) => { if (SCH.R !== R || R.i !== i0 || !R.playing) return; if (!b || !b.duration) { fallback(); return; }
       try { vPlay(R, b); R.adur = b.duration; R.adurI = i0; R.t = 0; R.wait = 0; } catch (e) { fallback(); } }); }
@@ -411,9 +413,9 @@
     if (R.playing) roomSpeak(R); else roomHush(); roomDraw(R); bookDraw(R); if (SCH.LB) SCH.LB.dirty = 1; }
   function roomPause(R) { R.playing = !R.playing; if (!R.playing) roomHush(); else roomSpeak(R); roomDraw(R); bookDraw(R); if (SCH.LB) SCH.LB.dirty = 1; }
   /* ---- leülés / felállás ---- */
-  function roomSit(R) { if (!HB.walk) hbWalk(true); if (SCH.R !== R) roomEnter(R); HB.pos = { x: R.h.seat.x, z: R.h.seat.z }; HB.seat = R; R.sitAt = W.t; try { faceYaw(R.yaw + Math.PI); } catch (e) {} if (!T.inVR) { try { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.08; } catch (e) {} }
+  function roomSit(R) { if (!HB.walk) hbWalk(true); if (SCH.R !== R) roomEnter(R); locJump(R.h.seat.x, R.h.seat.z); R.seatPos = { x: HB.pos.x, z: HB.pos.z }; HB.seat = R; R.sitAt = W.t; try { faceYaw(R.yaw + Math.PI); } catch (e) {} if (!T.inVR) { try { const lc = T.cam.components["look-controls"]; if (lc && lc.pitchObject) lc.pitchObject.rotation.x = -.08; } catch (e) {} }
     try { uiSnd("success"); } catch (e) {} if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } roomEnter(R); bookDraw(R); roomBar(); if (!R.playing && !(R.t > 0)) R.autoAt = Math.max(W.t + 1.6, R.greetEnd || 0); }
-  function roomStand() { const R = HB.seat; HB.seat = null; if (R) R.autoAt = 0; if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } if (R) { HB.pos = { x: R.h.seat.x - Math.sin(R.yaw) * .9, z: R.h.seat.z - Math.cos(R.yaw) * .9 }; } if (SCH.R && !T.inVR) { const B = roomLB(SCH.R); B.show(true); roomDock(B); } }
+  function roomStand() { const R = HB.seat; HB.seat = null; if (R) R.autoAt = 0; if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } if (R) { locJump(R.h.seat.x - Math.sin(R.yaw) * .9, R.h.seat.z - Math.cos(R.yaw) * .9); } if (SCH.R && !T.inVR) { const B = roomLB(SCH.R); B.show(true); roomDock(B); } }
   /* ülve 2D-ben: kis sáv alul (a könyvre lenézés, szünet, felállás) */
   function roomBar() { if (T.inVR) return; if (SCH.BL && UIB.list.indexOf(SCH.BL) >= 0) return; SCH.BL = uiBoard({ w: 1500, h: 150, mw: 1.15, dist: 1.05, y: -.5, fps: 3, draw: (B, g) => { const R = SCH.R; if (!R) return; g.fillStyle = "rgba(8,26,48,.9)"; uiRR(g, 0, 0, 1500, 150, 26); g.fill();
       B.btn(16, 22, 470, 106, "📖 Lenézek a könyvre", () => { try { const lc = T.cam.components["look-controls"]; lc.pitchObject.rotation.x = lc.pitchObject.rotation.x < -.4 ? -.08 : -.72; } catch (e) {} }, { fs: 30 });
@@ -432,7 +434,7 @@
     return SCH.LB; }
   function roomDock(B) { if (B && B.dom && B.dcv) { B.dom.style.alignItems = "flex-end"; B.dom.style.justifyContent = "center"; B.dom.style.background = "transparent"; B.dom.style.pointerEvents = "none"; B.dcv.style.pointerEvents = "auto"; B.dcv.style.maxWidth = "min(58vw, 980px)"; B.dcv.style.marginBottom = "max(12vh, 92px)"; } }
   function schoolLeave(toCourse) { const R = SCH.R; roomHush(); if (R) R.playing = false; HB.seat = null; if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; }
-    if (toCourse) { wzStartTut(); return; } const o = R && R.h.out; HB.pos = o ? { x: o.x, z: o.z } : { x: 1.6, z: 1.2 }; if (o) { try { faceYaw(Math.atan2(-(o.lx - o.x), -(o.lz - o.z))); } catch (e) {} } }
+    if (toCourse) { wzStartTut(); return; } const o = R && R.h.out; if (o) locJump(o.x, o.z); else locJump(1.6, 1.2); if (o) { try { faceYaw(Math.atan2(-(o.lx - o.x), -(o.lz - o.z))); } catch (e) {} } }
   /* belépés a menüből („🎓 Oktatás”): leülsz az iskolában, és a nagypapa sorban elkezdi a teljes anyagot */
   function hbSchool() { const R = ROOMS.isk; if (!R) { wzStartTut(); return; } hbWalk(true); roomSit(R); R.mode = "all"; setTimeout(() => roomGo(R, 0, true), 400); }
   function roomEnter(R) { if (SCH.R === R) return; if (SCH.R) roomExit(SCH.R); SCH.R = R; R.board.material.map = RB.tex; R.board.material.needsUpdate = true; R.book.material.map = RB.btex; R.book.material.needsUpdate = true; roomFigs(R, true); roomDraw(R); bookDraw(R);
@@ -440,14 +442,18 @@
   function roomExit(R) { roomHush(); R.playing = false; R.autoAt = 0; R.board.material.map = R.statT; R.board.material.needsUpdate = true; R.book.material.map = R.bookStat; R.book.material.needsUpdate = true; SCH.R = null; if (SCH.LB) { SCH.LB.destroy(); SCH.LB = null; } if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } HB.seat = null; }
   function roomAt(p) { for (const id in ROOMS) { const B = ROOMS[id].h.box; if (p.x > B.x0 && p.x < B.x1 && p.z > B.z0 && p.z < B.z1) return ROOMS[id]; } return null; }
   function schoolTick(dt) {
-    if (!SCH.built) return; const p = HB.pos || { x: 0, z: 0 }; const R = HB.walk ? roomAt(p) : null;
-    if (HB.seat && (Math.hypot(p.x - HB.seat.h.seat.x, p.z - HB.seat.h.seat.z) > .05 || !HB.walk)) { HB.seat = null; if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } if (R && R === SCH.R) { const B = roomLB(R); B.show(true); roomDock(B); } }
+    if (!SCH.built) return; const p = (typeof locP === "function" ? locP() : HB.pos) || { x: 0, z: 0 }; const R = HB.walk ? roomAt(p) : null;   /* 2026-11-15: a FEJED helye számít (VR-ben a játéktér közepétől eltérhet) */
+    if (HB.seat && (Math.hypot(HB.pos.x - (HB.seat.seatPos ? HB.seat.seatPos.x : HB.seat.h.seat.x), HB.pos.z - (HB.seat.seatPos ? HB.seat.seatPos.z : HB.seat.h.seat.z)) > .05 || !HB.walk)) { HB.seat = null; if (SCH.BL) { SCH.BL.destroy(); SCH.BL = null; } if (R && R === SCH.R) { const B = roomLB(R); B.show(true); roomDock(B); } }
     if (R !== SCH.R) { if (R) roomEnter(R); else if (SCH.R) roomExit(SCH.R); }
+    /* háttérben, sorban (a legközelebbitől) előre felépítjük a szereplőket – félmásodpercenként egy házét –, és a shadereiket is lefordíttatjuk, így belépéskor nem akad */
+    SCH.preT = (SCH.preT || 0) + dt; if (SCH.preT > .6 && W.t > 4) { SCH.preT = 0; let best = null, bd = 1e9; for (const id in ROOMS) { const Q = ROOMS[id]; if (Q.tch) continue; const B = Q.h.box, d = Math.hypot(p.x - (B.x0 + B.x1) / 2, p.z - (B.z0 + B.z1) / 2); if (d < bd) { bd = d; best = Q; } }
+      if (best) { roomFigs(best, true); if (best.tch) { best.tch.root.visible = false; best.studs.forEach((f) => { f.root.visible = false; }); try { W.precompileObj && W.precompileObj(best.tch.root, best.studs.map((f) => f.root)); } catch (e) {} } } }
     let cam = null; try { cam = new THREE.Vector3(); T.sceneEl.camera.getWorldPosition(cam); } catch (e) {}
     /* a szereplők (tanár + tanulók) részletes család-figurák: csak abban a házban látszanak és mozognak, ahol vagy; a ház közelében (10 m) már
        előre felépülnek, hogy belépéskor ne akadjon a kép; messzebb (22 m) eltűnnek a memóriából is */
     for (const id in ROOMS) { const Q = ROOMS[id], B = Q.h.box, d = Math.hypot(p.x - (B.x0 + B.x1) / 2, p.z - (B.z0 + B.z1) / 2), near = !!HB.walk && d < 10;
-      if (near && !Q.tch) roomFigs(Q, true); else if (!near && Q.tch && d > 22 && SCH.R !== Q) roomFigs(Q, false);
+      if (near && !Q.tch) { roomFigs(Q, true); try { W.precompileObj && W.precompileObj(Q.tch.root); } catch (e) {} }   /* 2026-11-15 (akadás): a felépült szereplők megmaradnak (csak rejtve), nem épülnek újra minden közeledéskor */
+      if (d < 16) roomPre(Q);
       if (!Q.tch) continue; const vis = SCH.R === Q; Q.tch.root.visible = vis; Q.studs.forEach((f) => { f.root.visible = vis; }); if (!vis) continue;
       const tc = Q.tch.c; if (cam) tc.lookAt(cam); tc.update(dt, W.t);
       /* a tanár feléd fordul (beszéd közben kicsit a tábla felé is), simán */
@@ -460,6 +466,6 @@
     if (R.autoAt && HB.seat === R && W.t > R.autoAt && !R.playing) { R.autoAt = 0; if (!(R.t > 0)) { R.mode = "all"; roomGo(R, 0, true); } }
     if (R.playing && !R.wait) { R.t += dt; if (R.t > roomDur(R, R.i)) { R.done[R.i] = 1; if (R.mode === "all" && R.i < R.lessons.length - 1) roomGo(R, R.i + 1); else { R.playing = false; R.t = roomDur(R, R.i); if (R.tch) R.tch.c.act("bolint"); R.studs.forEach((f) => f.c.act(f.st.k === "gyerek" ? "tapsol" : "bolint")); bookDraw(R); if (SCH.LB) SCH.LB.dirty = 1; if (SCH.BL) SCH.BL.dirty = 1; } } }
     else if (R.wait) { R.wait += dt; if (R.wait > 4) R.wait = 0; }
-    RB.acc = (RB.acc || 0) + dt; if (RB.acc > 1 / 24) { RB.acc = 0; roomDraw(R); }
+    RB.acc = (RB.acc || 0) + dt; if (RB.acc > 1 / 12) { RB.acc = 0; roomDraw(R); }   /* 2026-11-15: 24 → 12 kép/mp (a nagy tábla feltöltése a Questen akasztott) */
     if (SCH.LB && SCH.LB.dom) roomDock(SCH.LB);
   }

@@ -113,7 +113,7 @@
     { const P = [], ii = [], ok = [], X0 = -100, NX = 51, Z0 = 2, NZ = 18; for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) { const x = X0 + i * 4, z = Z0 + j * 2.6, d = z - landShore(x); P.push(x, Math.max(.62, landY(x, z)) + .05, z); ok.push(d > .6); }
       for (let j = 0; j < NZ - 1; j++) for (let i = 0; i < NX - 1; i++) { const a = j * NX + i, b = a + 1, c = a + NX, d = c + 1; if (ok[a] && ok[b] && ok[c] && ok[d]) ii.push(a, c, b, b, c, d); }
       const tg = new THREE.BufferGeometry(); tg.setAttribute("position", new THREE.Float32BufferAttribute(P, 3)); tg.setIndex(ii); const tm = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide })); env.add(tm); W.disposables.push(tg, tm.material);
-      tm.userData.tp = () => !!HB.walk; tm.userData.noMerge = true; tm.userData.xr = { click: (h) => { if (!HB.walk || !h || !h.point) return; const p = W.root.worldToLocal(h.point.clone()); if (p.z - landShore(p.x) < .6) return; HB.pos = { x: clamp(p.x, -98, 98), z: clamp(p.z, Z0, Z0 + (NZ - 1) * 2.6) }; try { beep(); } catch (e) {} } }; try { T.xr.extra.add(tm); W.objs.push(tm); } catch (e) {} LAND.tp = tm; }
+      tm.userData.tp = () => !!HB.walk; tm.userData.noMerge = true; tm.userData.xr = { click: (h) => { if (!HB.walk || !h || !h.point) return; const p = W.root.worldToLocal(h.point.clone()); if (p.z - landShore(p.x) < .6) return; locJump(clamp(p.x, -98, 98), clamp(p.z, Z0, Z0 + (NZ - 1) * 2.6)); try { beep(); } catch (e) {} } }; try { T.xr.extra.add(tm); W.objs.push(tm); } catch (e) {} LAND.tp = tm; }
     LAND.built = true;
   }
   /* ahol nincs fű és napágy: a házak, a sétány melletti épületek helye */

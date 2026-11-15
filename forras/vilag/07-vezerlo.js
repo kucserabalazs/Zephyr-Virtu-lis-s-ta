@@ -293,6 +293,9 @@
     /* 2026-11-15 (szakértői jelentés B.5): a világ összes anyagának shaderét még az indulás pillanatában lefordítjuk (párhuzamosan, ha a böngésző tudja),
        hogy futam közben ne akadjon meg a kép egy-egy új anyag első megjelenésekor */
     setTimeout(() => { try { const r = T.sceneEl.renderer, sc = T.sceneEl.object3D, cam = T.sceneEl.camera; if (!W.active || !cam) return; if (r.compileAsync) r.compileAsync(sc, cam).catch(() => {}); else r.compile(sc, cam); } catch (e) {} }, 60);
+    /* 2026-11-15 19:24 (tulajdonos a szemüvegből: „nagyon akadozik … folyamatosan fagy”): a textúrák feltöltése is előre, apránként (képkockánként ~5 ms),
+       hogy az első rápillantás ne akassza meg a képet; a rejtett házbelsők shaderei is lefordulnak */
+    setTimeout(() => { try { W.precompileObj(W.root); W.preloadTex(W.root); } catch (e) {} }, 400);
     W.hud = makeHud(); W.hud.el.style.display = T.inVR ? "none" : ""; W.hud.draw();
     W.panel = makePanel(); W.panel.draw();
     /* 2026-11-15 (tulajdonos: „a fölösleges régi menütáblákat, amiket már kiváltanak más gombok, tüntesd el”): a Balaton Sailing VR-ben (kikötő, futam)
@@ -303,9 +306,21 @@
     addEventListener("keydown", kd); addEventListener("keyup", ku);
     W.hudT = 0;
   }
+  /* egy (akár rejtett) objektum shadereinek előfordítása – a rejtett részeket a hívás idejére láthatóvá tesszük (a fordítás aszinkron, a bejárás nem) */
+  W.precompileObj = function (obj, more) { try { const r = T.sceneEl.renderer, cam = T.sceneEl.camera; if (!r || !cam || !obj) return; const list = [obj].concat(more || []), shown = [];
+      list.forEach((o) => o.traverse((q) => { if (!q.visible) { shown.push(q); q.visible = true; } })); const sc = new THREE.Scene(); const par = list.map((o) => o.parent);
+      if (r.compileAsync) { list.forEach((o) => { if (o.parent) o.parent.updateMatrixWorld(true); }); r.compileAsync(T.sceneEl.object3D, cam).catch(() => {}); } else r.compile(T.sceneEl.object3D, cam);
+      shown.forEach((q) => { q.visible = false; }); void sc; void par; } catch (e) {} };
+  W.preloadTex = function (obj) { try { const r = T.sceneEl.renderer, set = new Set(); obj.traverse((o) => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; ms.forEach((m) => { for (const k in m) { const v = m[k]; if (v && v.isTexture) set.add(v); } if (m.uniforms) for (const k in m.uniforms) { const v = m.uniforms[k] && m.uniforms[k].value; if (v && v.isTexture) set.add(v); } }); });
+      const arr = Array.from(set); let i = 0; const step = () => { if (!W.active) return; const t0 = performance.now(); while (i < arr.length && performance.now() - t0 < 5) { try { r.initTexture(arr[i]); } catch (e) {} i++; } if (i < arr.length) setTimeout(step, 16); }; step(); } catch (e) {} };
+  /* VR-ben alkalmazkodó foveáció: ha a képkockák lassúak (a Quest nem éri el a 72/s-ot), a látótér szélét jobban egyszerűsítjük – a középen éles marad */
+  function fovAdapt(dt) { if (!T.inVR) { W.fovE = 0; return; } const xr = T.sceneEl.renderer && T.sceneEl.renderer.xr; if (!xr || !xr.setFoveation) return;
+    W.fovE = W.fovE ? W.fovE * .96 + dt * .04 : dt; W.fovT = (W.fovT || 0) + dt; if (W.fovT < 1.5) return; W.fovT = 0;
+    const cur = W.fovL == null ? .4 : W.fovL; let nx = cur; if (W.fovE > .0152) nx = Math.min(1, cur + .3); else if (W.fovE < .0126) nx = Math.max(.4, cur - .1);
+    if (nx !== cur) { W.fovL = nx; try { xr.setFoveation(nx); } catch (e) {} } }
   W.tick = function (dt) {
     if (!W.active || !W.spec) return;
-    W.t += dt;
+    W.t += dt; try { fovAdapt(dt); } catch (e) {}
     W.upd.forEach((f) => f(dt));
     W.spec.tick(dt);
     if (W.panel) { const np = !!(W.spec && W.spec.noPanel); if (np) T.xr.extra.delete(W.panel.m); W.panel.m.visible = T.inVR && !W.panelHidden && !np; if (W.panel.pill) { W.panel.pill.visible = false; T.xr.extra.delete(W.panel.pill); }   /* 2026-11-11 (tulajdonos): a bezárt menü után SEMMI nem marad a térben – a kis „Menü” fül megszűnt; visszahozás: tenyérmozdulat, csuklóóra vagy lenézve az öv-gomb */ if (T.inVR) W.panel.tick(dt); }

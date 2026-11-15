@@ -55,6 +55,7 @@
     try { schoolBuild(env); } catch (e) { console.warn("vitorlásiskola", e); }
     try { housesBuild(env); } catch (e) { console.warn("oktatóházak", e); }
     try { roomsBuild(env); } catch (e) { console.warn("tantermek", e); }
+    try { hzInnerSplit(); } catch (e) { console.warn("házbelsők", e); }   /* 2026-11-15: a házak belseje csak közelről rajzolódik */
     try { hbPolish(env); } catch (e) { console.warn("kikötő-hangulat", e); }   /* 2026-11-15 este: horgony-emlékmű, fényfüzér, sétányi lámpák, virágládák (05u) */
     /* szakértői jelentés B.25: nyilvános hálózathoz csak online módban kapcsolódunk (egyedül játszva nem) */
     try { const z = wzLoad(); if (z && z.mode === "online") netStart(); } catch (e) {}
@@ -122,7 +123,7 @@
     try { hbAmbience(dt); } catch (e) {}
     try { msTick(dt); } catch (e) {}
     try { hullMaskSet(HB.water && HB.water.userData.mat, (HB.boats || []).map((o) => o.g).concat(HB.prev ? [HB.prev.g] : [])); } catch (e) {}
-    const hp = HB.pos || { x: 0, z: 0 }, fy = HB.walk ? landWalkY(hp.x, hp.z) : .66, sit = HB.seat ? (T.inVR ? (VRR.seated ? 0 : .42) : .44) : 0; W.root.position.set(-hp.x, (T.inVR ? -fy : -fy - 1.62) + sit, -hp.z); W.root.quaternion.identity();   /* 2026-11-15: a parton a felszín, a házakban a padló a talaj; ülve 42–44 cm-rel lejjebb a szem */   /* séta: a választott pallópontra lépsz · a móló felszíne a padló (VR) / a szemmagasság alatt 1,62 m (2D) */
+    const hp = HB.pos || { x: 0, z: 0 }, hpH = HB.walk ? locP() : hp, fy = HB.walk ? landWalkY(hpH.x, hpH.z) : .66, sit = HB.seat ? (T.inVR ? (VRR.seated ? 0 : .42) : .44) : 0; W.root.position.set(-hp.x, (T.inVR ? -fy : -fy - 1.62) + sit, -hp.z); W.root.quaternion.identity();   /* 2026-11-15: a parton a felszín, a házakban a padló a talaj; ülve 42–44 cm-rel lejjebb a szem */   /* séta: a választott pallópontra lépsz · a móló felszíne a padló (VR) / a szemmagasság alatt 1,62 m (2D) */
     HB.water.userData.mat.uniforms.uT.value = W.t; HB.water.userData.mat.uniforms.uOff.value.set(0, 0);
     if (HB.storm) { const l = STM.lv.keleti || 0, per = l === 2 ? 60 / 90 : l === 1 ? 60 / 45 : 0, on = per && (W.t % per) / per < .34; HB.storm.glow.visible = !!on; HB.storm.lamp.material.color.set(on ? "#ffe066" : l ? "#7a6420" : "#4a4a40"); }
     (HB.swans || []).forEach((q, i) => { q.a += dt * q.w; q.g.position.set(q.cx + Math.cos(q.a) * q.r, Math.sin(W.t * 1.3 + i) * .03, q.cz + Math.sin(q.a) * q.r * .6); q.g.rotation.y = -q.a + (q.w > 0 ? Math.PI : 0); q.neck.rotation.x = .08 * Math.sin(W.t * .7 + i * 2); });

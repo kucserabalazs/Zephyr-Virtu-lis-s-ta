@@ -341,7 +341,22 @@
     [-1.1, 1.1].forEach((dx) => mesh(new THREE.BoxGeometry(.1, 2.1, .1).translate(dx, 1.05, 0), wood, G)); mesh(new THREE.BoxGeometry(2.4, 1.6, .06).translate(0, 1.55, -.02), wood, G); mesh(new THREE.PlaneGeometry(2.24, 1.44).translate(0, 1.55, .015), basic({ map: tx }), G); const rf = mesh(new THREE.BoxGeometry(2.6, .06, .4), wood, G); rf.position.set(0, 2.42, .05); rf.rotation.x = .2; }
 
   /* ---------------------------------------------------------------- mozgás képkockánként: zászlók, a világítótorony fénye, a torony viharjelzője */
-  function houseTick(dt) { const t = W.t;
+  /* 2026-11-15 19:24 (tulajdonos a szemüvegből: „nagyon akadozik … folyamatosan fagy”): a házak BELSEJE (bútor, tábla, plakátok, műszerek, mobil) csak akkor
+     rajzolódik, ha bent vagy, vagy 6,5 m-nél közelebb a házhoz – kintről a falak és a tető úgyis takarják, a Quest mégis végigrajzolta mind a nyolcat.
+     A belső tárgyakat a helyük alapján választjuk szét (a falakon belül, a födém alatt), és a ház saját csoportjában olvadnak össze (msAnchor). */
+  function hzInnerSplit() {
+    const bb = new THREE.Box3(), inv = new THREE.Matrix4(), env = HZ.env; if (!env) return; env.updateMatrixWorld(true); inv.copy(env.matrixWorld).invert();
+    HOUSES.forEach((h) => { const G = h.G, B = h.box; if (!G || !B || h.innerG) return;
+      const inner = new THREE.Group(); inner.name = "belso-" + h.id; inner.userData.msAnchor = 1; inner.userData.msHidable = 1; G.add(inner); h.innerG = inner; let n = 0;
+      const inside = (o) => { bb.setFromObject(o); if (bb.isEmpty()) return false; bb.applyMatrix4(inv); return bb.min.x > B.x0 + .08 && bb.max.x < B.x1 - .08 && bb.min.z > B.z0 + .08 && bb.max.z < B.z1 - .08; };
+      /* a csoportokon belül is keresünk: egy berendezés-csoport állhat kint és bent is (pl. a torony műszerei) – ilyenkor csak a bent lévő részei kerülnek a belsőbe */
+      const split = (par, depth) => { par.children.slice().forEach((o) => { if (o === inner || (o.userData && (o.userData.keepOut || o.userData.xr || o.userData.tp))) return;
+        if (inside(o)) { inner.attach(o); n++; } else if (depth < 3 && o.children && o.children.length && !o.isMesh) split(o, depth + 1); }); };
+      split(G, 0); h.innerN = n; });
+  }
+  function hzInnerTick() { const p = (typeof locP === "function" ? locP() : HB.pos) || { x: 0, z: 0 };
+    HOUSES.forEach((h) => { if (!h.innerG) return; const B = h.box, dx = Math.max(B.x0 - p.x, 0, p.x - B.x1), dz = Math.max(B.z0 - p.z, 0, p.z - B.z1); h.innerG.visible = Math.hypot(dx, dz) < 6.5; }); }
+  function houseTick(dt) { const t = W.t; try { hzInnerTick(); } catch (e) {}
     HZ.flags.forEach((f) => { if (!f.parent) return; const pa = f.geometry.attributes.position, b0 = f.userData.base; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 5 - t * 5.5 + f.userData.ph) * .07 * x; pa.array[i * 3 + 1] = b0[i * 3 + 1] + Math.sin(x * 3 - t * 3) * .015 * x; } pa.needsUpdate = true; });
     const night = (typeof NGT !== "undefined" && NGT.on) || !!HB.night; HZ.beams.forEach((b) => { b.rotation.y = t * .9; b.visible = night; });
     /* 2026-11-15 (tulajdonos): a viharjelző tornyon „menjen a sárga villogó fény percenként 45” – alaphelyzetben elsőfok, valódi másodfoknál 90/perc */

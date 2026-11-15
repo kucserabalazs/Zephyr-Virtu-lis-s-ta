@@ -20,7 +20,7 @@
     if (!(m.isMeshBasicMaterial || m.isMeshMatcapMaterial || m.isMeshStandardMaterial)) return false; if (m.isMeshMatcapMaterial && !m.matcap) return false;
     if (o.renderOrder || o.userData.xr || o.userData.night || o.userData.noMerge || o.geometry.morphAttributes && Object.keys(o.geometry.morphAttributes).length) return false;
     if (T.xr && T.xr.extra && T.xr.extra.has && T.xr.extra.has(o)) return false; if (W.objs && W.objs.indexOf(o) >= 0) return false;
-    for (let p = o.parent; p; p = p.parent) if (!p.visible || (p.userData && (p.userData.noMerge || p.userData.night))) return false;   /* rejtett ős alatt nem olvasztunk */
+    for (let p = o.parent; p; p = p.parent) if ((!p.visible && !(p.userData && p.userData.msHidable)) || (p.userData && (p.userData.noMerge || p.userData.night))) return false;   /* 2026-11-15: a házak belseje (msHidable) rejtve is összeolvad – a saját csoportjában marad */   /* rejtett ős alatt nem olvasztunk */
     return o.layers.mask === 1;
   }
   /* indítás: minden korábbi összeolvasztás visszaáll, és kezdődik a 3 mp-es figyelés */
@@ -31,8 +31,8 @@
   function msTick(dt) {
     if (MS.pend) { msSnap(); return; }
     if (MS.snap) { MS.t -= dt; if (MS.t <= 0) { const keep = []; MS.snap.forEach((sig, o) => { if (o.parent && msOk(o) && msSig(o) === sig) keep.push(o); }); MS.stat.keep = keep.length; const stat = new Set(); MS.nsnap.forEach((sig, o) => { if (msNSig(o) === sig && !(o.userData && (o.userData.noMerge || o.userData.night || o.userData.xr))) stat.add(o); }); MS.snap = null; MS.nsnap = null; msMerge(keep, stat); } return; }
-    MS.re = (MS.re || 0) + dt; if (MS.re > 8 && MS.root && MS.root.parent) { MS.re = 0; MS.pend = { root: MS.root, delay: 3 }; return; }   /* időnként újra: ami közben megállt (pl. a távoli nézők), azt is kisütjük */
-    MS.wd += dt; if (MS.wd < .5 || !MS.list.length) return; MS.wd = 0;
+    MS.re = (MS.re || 0) + dt; if (MS.re > 24 && MS.root && MS.root.parent) { MS.re = 0; MS.pend = { root: MS.root, delay: 3 }; return; }   /* időnként újra: ami közben megállt (pl. a távoli nézők), azt is kisütjük */
+    MS.wd += dt; if (MS.wd < 1.5 || !MS.list.length) return; MS.wd = 0;   /* 2026-11-15 (akadás a szemüvegben): ritkábban ellenőrzünk */
     MS.list.forEach((G) => { if (G.gone) return; for (let i = 0; i < G.src.length; i++) { const s = G.src[i]; if (!s.o.parent || msSig(s.o) !== s.sig) { msDissolve(G); return; } } for (let i = 0; i < G.chain.length; i++) if (msNSig(G.chain[i][0]) !== G.chain[i][1]) { msDissolve(G); return; } });
     MS.list = MS.list.filter((G) => !G.gone);
   }
@@ -43,7 +43,7 @@
     return `S|${side}|${Math.round(m.roughness * 4)}|${Math.round(m.metalness * 2)}|${m.flatShading}|${nk}`; }
   function msMerge(list, stat) {
     /* horgony: a legközelebbi MOZGÓ ős (vagy a gyökér) – a köztes, mozdulatlan csoportokon át az egész mozdulatlan részt egybeolvasztjuk */
-    const root = MS.root, anc = new Map(); list.forEach((o) => { let A = o.parent; while (A && A !== root && stat.has(A) && A.parent) A = A.parent; anc.set(o, A); });
+    const root = MS.root, anc = new Map(); list.forEach((o) => { let A = o.parent; while (A && A !== root && stat.has(A) && A.parent && !(A.userData && A.userData.msAnchor)) A = A.parent; anc.set(o, A); });   /* msAnchor: itt megáll (pl. a ház belseje külön olvad össze, így elrejthető) */
     const groups = new Map(); list.forEach((o) => { const k = anc.get(o).uuid + "#" + msKey(o); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(o); });
     const rel = new THREE.Matrix4(), inv = new THREE.Matrix4(); root.updateMatrixWorld(true);
     let saved = 0;

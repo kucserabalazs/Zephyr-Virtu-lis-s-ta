@@ -12466,6 +12466,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     XRP.extra.forEach((o) => { if (panelOpen && o.userData && o.userData.navSign) return; if (isShown(o)) list.push(o); });
     if (XRP.wrist && XRP.wrist.visible) list.push(XRP.wrist);
     if (XRP.camBtn && XRP.wristP && XRP.wristP.small && XRP.wristP.small.visible && XRP.wristP.camPod && XRP.wristP.camPod.visible) list.push(XRP.camBtn);
+    if (XRP.camBtn2 && XRP.fpod && XRP.fpod.visible) list.push(XRP.camBtn2);
     if (XRP.wristP && XRP.wristP.m.visible) list.push(XRP.wristP.m);
     return list;
   }
@@ -12692,7 +12693,33 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     try { const s = pres && sceneEl.renderer.xr.getSession(); if (s) { s.requestAnimationFrame(() => setTimeout(go, 0)); return; } } catch (e) {}
     go();
   }
-  function fotoCam(st) { try { const P = XRP.wristP; if (P && P.camDraw) { P.camDraw(st); clearTimeout(FOTO.camT); FOTO.camT = setTimeout(() => P.camDraw(), 2500); } } catch (e) {} }
+  function fotoCam(st) { try { const P = XRP.wristP; if (P && P.camDraw) { P.camDraw(st); clearTimeout(FOTO.camT); FOTO.camT = setTimeout(() => P.camDraw(), 2500); } } catch (e) {}
+    try { if (XRP.fpodDraw) { XRP.fpodDraw(st); clearTimeout(FOTO.camT2); FOTO.camT2 = setTimeout(() => XRP.fpodDraw(), 2500); } } catch (e) {} }
+  /* 📷 2026-11-15 19:24 (tulajdonos a szemüvegből: „a fényképező, amit korábban kértem, nincs ott”): a fényképező gomb az óra tokjára volt szerelve, az órát viszont
+     november 9-én levettük (tenyérmenü lett helyette) – így a gomb VR-ben sosem látszott. Most önálló, aranykeretes gomb a BAL CSUKLÓ külső oldalán (ahol az óra
+     lenne), kézzel és kontrollerrel is: a jobb mutatóujjal megérinted, vagy rámutatsz és csippentesz / meghúzod a ravaszt. Minden világban ott van. */
+  function fotoWristPod() {
+    if (!inVR || !fotoDev()) { if (XRP.fpod) XRP.fpod.visible = false; return; }
+    if (!XRP.fpod) { const g = new THREE.Group(), cv = document.createElement("canvas"); cv.width = cv.height = 128; const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
+      const gold = new THREE.MeshStandardMaterial({ color: 0xd4a13a, metalness: .85, roughness: .3 });
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(.021, .021, .008, 28).rotateX(Math.PI / 2), gold); g.add(body);
+      const face = new THREE.Mesh(new THREE.CircleGeometry(.0185, 28), new THREE.MeshBasicMaterial({ map: tx, transparent: true })); face.position.z = .0042; g.add(face);
+      const hit = new THREE.Mesh(new THREE.SphereGeometry(.03, 10, 8), new THREE.MeshBasicMaterial({ visible: false })); g.add(hit); XRP.camBtn2 = hit;
+      const press = () => { const n = performance.now(); if (n - (XRP.fpodT || 0) < 1500 || FOTO.busy) return; XRP.fpodT = n; try { const R = XRP.src.right; xrPulse(R && R.src, .7, 40); } catch (e) {} XRP.fpodDraw("busy"); fotoSnap(); };
+      hit.userData.xr = { click: press, hover: (on) => g.scale.setScalar(on ? 1.25 : 1) };
+      XRP.fpodDraw = (st) => { const c = cv.getContext("2d"), k = fotoKey(); c.clearRect(0, 0, 128, 128);
+        const col = st === "ok" ? "#2fbf6a" : st === "err" ? "#d8412f" : st === "busy" ? "#d99a16" : k ? (FOTO.err ? "#d8412f" : "#1f9d57") : "#123a63";
+        c.fillStyle = col; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); c.fillStyle = "#fff"; c.beginPath(); c.roundRect ? c.roundRect(24, 42, 80, 54, 10) : c.rect(24, 42, 80, 54); c.fill(); c.fillRect(46, 32, 26, 12);
+        c.fillStyle = col; c.beginPath(); c.arc(64, 69, 19, 0, 7); c.fill(); c.fillStyle = "#fff"; c.beginPath(); c.arc(64, 69, 10, 0, 7); c.fill(); tx.needsUpdate = true; };
+      XRP.fpodDraw(); XRP.fpodPress = press; sceneEl.object3D.add(g); XRP.fpod = g; }
+    const g = XRP.fpod, L = XRP.src.left; let base = null, nrm = null, axis = null;
+    if (L && L.hand && L.wristJ && L.palmN) { nrm = (XRP._fpN || (XRP._fpN = new THREE.Vector3())).copy(L.palmN).multiplyScalar(-1); axis = L.handDir || new THREE.Vector3(0, 1, 0); base = (XRP._fpB || (XRP._fpB = new THREE.Vector3())).copy(L.wristJ).addScaledVector(nrm, .028).addScaledVector(axis, -.045); }
+    else if (L && L.grip) { const m = L.grip; base = (XRP._fpB || (XRP._fpB = new THREE.Vector3())).setFromMatrixPosition(m); const q = new THREE.Matrix4().extractRotation(m); nrm = new THREE.Vector3(0, 1, 0).applyMatrix4(q).normalize(); axis = new THREE.Vector3(0, 0, -1).applyMatrix4(q).normalize(); base.addScaledVector(nrm, .045).addScaledVector(axis, -.07); }
+    if (!base) { g.visible = false; return; }
+    g.visible = true; g.position.copy(base); g.lookAt(base.x + nrm.x, base.y + nrm.y, base.z + nrm.z);
+    /* érintés a jobb mutatóujjal */
+    try { const R = XRP.src.right, tip = R && R.jp && R.jp.it; if (tip && tip.distanceTo(base) < .026) XRP.fpodPress(); } catch (e) {}
+  }
   function fotoDone(pres, rec) {
     if (rec && fotoKey()) { FOTO.sending = 1; fotoSend(rec).then(() => { FOTO.err = ""; FOTO.sending = 0; fotoBadge(); if (pres) { try { vrHaptic(null, .9, 40); setTimeout(() => vrHaptic(null, .9, 40), 120); } catch (e) {} fotoCam("ok"); try { XRP.wristP && XRP.wristP.draw(); } catch (e) {} } else { try { toast("✅ Elküldve Claude-nak – a következő üzenetednél már látja.", 4000); } catch (e) {} } })
       .catch((e) => { FOTO.err = String(e && e.message || e); FOTO.sending = 0; fotoBadge(); fotoCam("err"); if (!pres) { try { toast("⏳ A kép itt megmaradt, de most nem sikerült elküldeni (" + FOTO.err + "). Később magától újrapróbálja.", 6000); } catch (e2) {} } }); }
@@ -13153,7 +13180,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   const wEase = (k) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
   function xrWrist() {
     /* VR 2.0 (2026. nov. 9.): a karóra helyett TENYÉRMENÜ (smPalm) – az óra a Beállításokban visszakapcsolható */
-    if (true) {   /* a karóra-menü végleg kikerült (a tulajdonos, nov. 9.: „a tenyérmenü maradhat, az órásat dobjuk el”) – mindig a tenyérmenü */ const P0 = XRP.wristP; if (P0) { P0.g.visible = false; P0.m.visible = false; P0.open = false; } if (XRP.wrist) XRP.wrist.visible = false; smPalm(); return; }
+    if (true) {   /* a karóra-menü végleg kikerült (a tulajdonos, nov. 9.: „a tenyérmenü maradhat, az órásat dobjuk el”) – mindig a tenyérmenü */ const P0 = XRP.wristP; if (P0) { P0.g.visible = false; P0.m.visible = false; P0.open = false; } if (XRP.wrist) XRP.wrist.visible = false; smPalm(); try { fotoWristPod(); } catch (e) {} return; }
     if (!_wq) { _wq = new THREE.Quaternion(); _wq2 = new THREE.Quaternion(); _wm = new THREE.Matrix4(); _wv = new THREE.Vector3(); _wv2 = new THREE.Vector3(); _wv3 = new THREE.Vector3(); _wv4 = new THREE.Vector3(); _wup = new THREE.Vector3(0, 1, 0); }
     const L = (XRP.seen && XRP.seen.left) ? XRP.src.left : (XRP.seen && XRP.seen.none) ? XRP.src.none : null;
     const P = xrWatch();
@@ -13715,7 +13742,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "18dd2c2faf"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "6a641d65d9"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -13749,7 +13776,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "2822843b0c"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "92c460e59a"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 

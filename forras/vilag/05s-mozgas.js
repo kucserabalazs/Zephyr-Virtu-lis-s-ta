@@ -41,11 +41,17 @@
       const dq = locWallD(q, B); if (dq < .25 && !locDoorOk(h, q.x, q.z) && dq < locWallD(p, B)) return true; }
     return false;
   }
+  /* 2026-11-15 19:24 (tulajdonos a szemüvegből: „nem oda lép, ahova mutatok”): VR-ben a FEJED nincs feltétlenül a játéktér közepén (a szoba egy másik
+     pontján állsz, vagy a fordulás után elmozdult) – eddig a játéktér KÖZEPE ugrott a célra, te pedig mellé érkeztél. Most a fejed kerül pontosan a célkörre,
+     és a falak, a padló, a tantermek is a fejed helyét nézik. */
+  function locHeadOff() { try { if (T.inVR && T.headPos) { const h = T.headPos(); if (h && isFinite(h.x) && isFinite(h.z)) return { x: h.x, z: h.z }; } } catch (e) {} return { x: 0, z: 0 }; }
+  function locP() { const p = HB.pos || { x: 0, z: 0 }, o = locHeadOff(); return { x: p.x + o.x, z: p.z + o.z }; }
+  function locJump(x, z) { const o = locHeadOff(); HB.pos = { x: x - o.x, z: z - o.z }; }
   function locMove(dx, dz) {
-    const p = HB.pos || { x: 0, z: 0 }; const ok = (q) => locFloor(q.x, q.z) != null && !locBlocked(p, q);
+    const o = locHeadOff(), b = HB.pos || { x: 0, z: 0 }, p = { x: b.x + o.x, z: b.z + o.z }; const ok = (q) => locFloor(q.x, q.z) != null && !locBlocked(p, q);
     let q = { x: p.x + dx, z: p.z + dz };
     if (!ok(q)) { const qa = { x: p.x + dx, z: p.z }, qb = { x: p.x, z: p.z + dz }; if (Math.abs(dx) > 1e-4 && ok(qa)) q = qa; else if (Math.abs(dz) > 1e-4 && ok(qb)) q = qb; else return false; }
-    HB.pos = q; return true;
+    HB.pos = { x: q.x - o.x, z: q.z - o.z }; return true;
   }
   /* ---------------------------------------------------------------- fordulás a FEJED körül (nem a játéktér közepe körül) */
   function locTurn(a, smooth) {
@@ -77,23 +83,23 @@
     const m = LOC.blinkM; if (m && m.visible) { const k = (performance.now() - LOC.blinkT) / LOC.blinkD; if (k >= 1) { m.visible = false; m.material.opacity = 0; } else m.material.opacity = .9 * (1 - k * k); }
   }
   /* ---------------------------------------------------------------- teleport-ív (pöttyös ív + célkör), a jelenetben világkoordinátában */
+  /* 2026-11-15 19:24 (tulajdonos: „ez a világító jelzés a lépéshez is ocsmány”): a sárga fényoszlop, a vastag gyűrű és a sárga pöttysor helyett finom,
+     a Quest saját kezelőfelületére hasonlító jel: halvány fehér pöttyív, a padlón vékony fehér gyűrű lágy belső fénnyel és egy kis irány-nyíl. Ahova nem lehet lépni: halvány korallpiros. */
   function locAimObj() {
     if (LOC.aimG && LOC.aimG.parent) return LOC.aimG;
     const G = new THREE.Group(); G.renderOrder = 990; T.sceneEl.object3D.add(G);
-    const dotM = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .9, depthWrite: false }), N = 48;
-    const dots = new THREE.InstancedMesh(new THREE.SphereGeometry(.022, 8, 6), dotM, N); dots.count = 0; dots.frustumCulled = false; G.add(dots);
+    const dotM = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .55, depthWrite: false }), N = 48;
+    const dots = new THREE.InstancedMesh(new THREE.SphereGeometry(.011, 6, 4), dotM, N); dots.count = 0; dots.frustumCulled = false; G.add(dots);
     const ring = new THREE.Group(); G.add(ring);
-    const rM = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .95, depthWrite: false, side: THREE.DoubleSide });
-    const r1 = new THREE.Mesh(new THREE.RingGeometry(.34, .4, 48), rM); r1.rotation.x = -Math.PI / 2; ring.add(r1);
-    const dM = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .22, depthWrite: false, side: THREE.DoubleSide });
-    const r2 = new THREE.Mesh(new THREE.CircleGeometry(.34, 40), dM); r2.rotation.x = -Math.PI / 2; r2.position.y = -.003; ring.add(r2);
-    /* lábnyom-jel a kör közepén (merre nézel majd) */
-    const fM = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, depthWrite: false, side: THREE.DoubleSide });
-    const sh = new THREE.Shape(); sh.moveTo(0, -.2); sh.lineTo(.11, .02); sh.lineTo(.04, .02); sh.lineTo(.04, .14); sh.lineTo(-.04, .14); sh.lineTo(-.04, .02); sh.lineTo(-.11, .02); sh.closePath();
-    const ar = new THREE.Mesh(new THREE.ShapeGeometry(sh), fM); ar.rotation.x = -Math.PI / 2; ar.position.y = .004; ring.add(ar);
-    /* fénylő oszlop a célpont fölött (messziről is látszik) */
-    const cM = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: .16, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
-    const col = new THREE.Mesh(new THREE.CylinderGeometry(.36, .4, 1.6, 32, 1, true), cM); col.position.y = .8; ring.add(col);
+    const rM = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .92, depthWrite: false, side: THREE.DoubleSide });
+    const r1 = new THREE.Mesh(new THREE.RingGeometry(.255, .272, 64), rM); r1.rotation.x = -Math.PI / 2; ring.add(r1);
+    const gt = (() => { const cv = document.createElement("canvas"); cv.width = cv.height = 128; const g = cv.getContext("2d"), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, "rgba(255,255,255,.0)"); gr.addColorStop(.62, "rgba(255,255,255,.10)"); gr.addColorStop(.86, "rgba(255,255,255,.30)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+    const dM = new THREE.MeshBasicMaterial({ map: gt, color: 0xffffff, transparent: true, opacity: 1, depthWrite: false, side: THREE.DoubleSide });
+    const r2 = new THREE.Mesh(new THREE.PlaneGeometry(.62, .62), dM); r2.rotation.x = -Math.PI / 2; r2.position.y = -.002; ring.add(r2);
+    const fM = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .8, depthWrite: false, side: THREE.DoubleSide });
+    const sh = new THREE.Shape(); sh.moveTo(0, -.215); sh.lineTo(.05, -.15); sh.lineTo(-.05, -.15); sh.closePath();
+    const ar = new THREE.Mesh(new THREE.ShapeGeometry(sh), fM); ar.rotation.x = -Math.PI / 2; ar.position.y = .003; ring.add(ar);
+    const cM = new THREE.MeshBasicMaterial({ visible: false });
     G.visible = false; LOC.aimG = G; LOC.aimP = { dots, ring, rM, dM, dotM, cM, ar, N }; return G;
   }
   function locAimHide() { if (LOC.aimG) LOC.aimG.visible = false; if (LOC.aim) LOC.aim = null; }
@@ -104,21 +110,21 @@
     for (let i = 0; i < 70; i++) {
       const st = .028, np = p.clone().addScaledVector(v, st); v.y -= 9.8 * st;
       const lx = np.x - rp.x, lz = np.z - rp.z, ly = np.y - rp.y, fl = locFloor(lx, lz), fy = fl != null ? fl : 0;
-      if (ly <= fy) { if (fl != null && Math.hypot(lx - HB.pos.x, lz - HB.pos.z) < 40) { landed = { x: lx, z: lz, y: fl }; A.ok = true; } else wet = true; landed = landed || { x: lx, z: lz, y: Math.max(0, fy) }; break; }
+      if (ly <= fy) { if (fl != null && Math.hypot(lx - locP().x, lz - locP().z) < 40) { landed = { x: lx, z: lz, y: fl }; A.ok = true; } else wet = true; landed = landed || { x: lx, z: lz, y: Math.max(0, fy) }; break; }
       if (n < P.N && i % 1 === 0) { _lm4.makeTranslation(np.x, np.y, np.z); P.dots.setMatrixAt(n++, _lm4); }
       p = np;
     }
     P.dots.count = n; P.dots.instanceMatrix.needsUpdate = true;
-    const col = A.ok ? 0xffd166 : 0xe5533d; P.dotM.color.setHex(col); P.rM.color.setHex(col); P.dM.color.setHex(col); P.cM.color.setHex(col);
+    const col = A.ok ? 0xffffff : 0xff6b5a; P.dotM.color.setHex(col); P.rM.color.setHex(col); P.dM.color.setHex(col);
     if (landed) { P.ring.visible = true; P.ring.position.set(landed.x + rp.x, landed.y + rp.y + .02, landed.z + rp.z); let yaw = 0; try { yaw = T.camYaw(); } catch (e) {} P.ring.rotation.y = yaw; P.ar.visible = A.ok;
-      const pu = 1 + .06 * Math.sin(performance.now() / 120); P.ring.scale.set(pu, 1, pu); A.x = landed.x; A.z = landed.z; } else P.ring.visible = false;
+      const pu = 1 + .025 * Math.sin(performance.now() / 160); P.ring.scale.set(pu, 1, pu); A.x = landed.x; A.z = landed.z; } else P.ring.visible = false;
     void wet; G.visible = true;
   }
   function locAimGo() {
     const A = LOC.aim; LOC.aim = null; if (LOC.aimG) LOC.aimG.visible = false; if (!A) return;
     if (!A.ok) { try { uiSnd("warn"); } catch (e) {} return; }
     if (HB.seat) { try { roomStand(); } catch (e) {} }
-    locBlink(160); HB.pos = { x: A.x, z: A.z }; try { hapt(.35, 25); } catch (e) {} try { uiSnd("press"); } catch (e) {}
+    locBlink(160); locJump(A.x, A.z); try { hapt(.35, 25); } catch (e) {} try { uiSnd("press"); } catch (e) {}
   }
   /* a sugár célköre: ha a kéz/kontroller sugara járható felületen áll, ott látszik, hová lépsz (csippentésre / ravaszra) */
   function locHoverRing() {
@@ -126,7 +132,7 @@
     ["right", "left"].some((k) => { const hv = X && X.hov && X.hov[k]; if (hv && hv.kind === "obj" && hv.o && hv.o.userData && hv.o.userData.tp && hv.hit && hv.hit.point) { hit = hv.hit.point; return true; } return false; });
     if (!hit) { if (LOC.aimG && !LOC.aim) LOC.aimG.visible = false; return; }
     const G = locAimObj(), P = LOC.aimP; P.dots.count = 0; const rp = W.root.position, lx = hit.x - rp.x, lz = hit.z - rp.z, fl = locFloor(lx, lz);
-    const col = fl != null ? 0xffd166 : 0xe5533d; P.rM.color.setHex(col); P.dM.color.setHex(col); P.cM.color.setHex(col); P.ar.visible = fl != null;
+    const col = fl != null ? 0xffffff : 0xff6b5a; P.rM.color.setHex(col); P.dM.color.setHex(col); P.ar.visible = fl != null;
     P.ring.visible = true; P.ring.position.set(hit.x, (fl != null ? fl : 0) + rp.y + .02, hit.z); let yaw = 0; try { yaw = T.camYaw(); } catch (e) {} P.ring.rotation.y = yaw; P.ring.scale.set(.8, 1, .8); G.visible = true;
   }
   /* ---------------------------------------------------------------- a jobb kar: fordulás, teleport, megfordulás */
