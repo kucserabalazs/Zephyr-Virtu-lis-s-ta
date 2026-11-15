@@ -12447,6 +12447,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     const panelOpen = !!(VRS.panel || (XRP.wristP && XRP.wristP.open));   /* 2026-11-11: nyitott panel (pl. foglalási naptár) mellett az útjelzők láthatatlan fogófelülete NEM viheti el a sugarat – ettől volt „nem jelölhető” a naptár nagy része */
     XRP.extra.forEach((o) => { if (panelOpen && o.userData && o.userData.navSign) return; if (isShown(o)) list.push(o); });
     if (XRP.wrist && XRP.wrist.visible) list.push(XRP.wrist);
+    if (XRP.camBtn && XRP.wristP && XRP.wristP.small && XRP.wristP.small.visible) list.push(XRP.camBtn);
     if (XRP.wristP && XRP.wristP.m.visible) list.push(XRP.wristP.m);
     return list;
   }
@@ -12614,7 +12615,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   function fotoTx(mode, fn) { return fotoDB().then((db) => new Promise((ok, no) => { const tx = db.transaction("f", mode), st = tx.objectStore("f"); let res; try { res = fn(st); } catch (e) { no(e); return; } tx.oncomplete = () => ok(res && "result" in res ? res.result : res); tx.onerror = () => no(tx.error); })); }
   function fotoAll() { return fotoTx("readonly", (st) => st.getAll()).then((a) => (a || []).sort((p, q) => q.id - p.id)).catch(() => []); }
   function fotoCount() { fotoAll().then((a) => { FOTO.n = a.length; fotoBadge(); }); }
-  function fotoBadge() { const b = FOTO.ui && FOTO.ui.badge; if (b) { b.textContent = FOTO.n; b.style.display = FOTO.n ? "flex" : "none"; } }
+  function fotoBadge() { const b = FOTO.ui && FOTO.ui.badge; if (b) { b.textContent = FOTO.n; b.style.display = FOTO.n ? "flex" : "none"; } const c = FOTO.ui && FOTO.ui.cam; if (c) { let k = ""; try { k = localStorage.getItem("zephyrFotoKulcs") || ""; } catch (e) {} c.style.borderColor = k ? (FOTO.err ? "#e5533d" : "#5fd18a") : "rgba(228,187,99,.9)"; c.title = k ? "Fotó → rögtön Claude-nak" : "Fotó a mostani nézetről (a hiba javításához)"; } }
   function fotoWhere() {
     let s = ""; try { s = watchContext(); } catch (e) {}
     try { const W = window.ZephyrWorld; if (W && W.active && W._hb) { const H = W._hb; const R = H.SCH && H.SCH.R; if (R && R.h) s += " · " + R.h.name; } } catch (e) {}
@@ -12663,19 +12664,89 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       } catch (e) { FOTO.busy = false; try { toast("A fotó nem sikerült: " + (e && e.message || e), 5000); } catch (e2) {} return; }
       cv.toBlob((blob) => {
         const rec = { id: d.getTime(), t: d.toISOString(), name: fotoName(d), where: wh.s, pos: wh.p ? [wh.p.x, wh.p.y, wh.p.z].map((v) => +v.toFixed(2)) : null, vr: pres, v: window.ZEPHYR_BV || "", note: "", blob };
-        fotoTx("readwrite", (st) => st.put(rec)).then(() => { FOTO.n++; fotoBadge(); FOTO.busy = false; fotoDone(pres); }).catch((e) => { FOTO.busy = false; try { toast("A fotót nem sikerült elmenteni: " + (e && e.message || e), 5000); } catch (e2) {} });
+        fotoTx("readwrite", (st) => st.put(rec)).then(() => { FOTO.n++; fotoBadge(); FOTO.busy = false; fotoDone(pres, rec); }).catch((e) => { FOTO.busy = false; try { toast("A fotót nem sikerült elmenteni: " + (e && e.message || e), 5000); } catch (e2) {} });
       }, "image/jpeg", .9);
     };
     /* VR-ben a következő XR-képkocka után (friss fejhelyzet), 2D-ben azonnal */
     try { const s = pres && sceneEl.renderer.xr.getSession(); if (s) { s.requestAnimationFrame(() => setTimeout(go, 0)); return; } } catch (e) {}
     go();
   }
-  function fotoDone(pres) {
+  function fotoCam(st) { try { const P = XRP.wristP; if (P && P.camDraw) { P.camDraw(st); clearTimeout(FOTO.camT); FOTO.camT = setTimeout(() => P.camDraw(), 2500); } } catch (e) {} }
+  function fotoDone(pres, rec) {
+    if (rec && fotoKey()) { FOTO.sending = 1; fotoSend(rec).then(() => { FOTO.err = ""; FOTO.sending = 0; fotoBadge(); if (pres) { try { vrHaptic(null, .9, 40); setTimeout(() => vrHaptic(null, .9, 40), 120); } catch (e) {} fotoCam("ok"); try { XRP.wristP && XRP.wristP.draw(); } catch (e) {} } else { try { toast("✅ Elküldve Claude-nak – a következő üzenetednél már látja.", 4000); } catch (e) {} } })
+      .catch((e) => { FOTO.err = String(e && e.message || e); FOTO.sending = 0; fotoBadge(); fotoCam("err"); if (!pres) { try { toast("⏳ A kép itt megmaradt, de most nem sikerült elküldeni (" + FOTO.err + "). Később magától újrapróbálja.", 6000); } catch (e2) {} } }); }
     try { const a = ac(); if (a) { const src = a.createBufferSource(); src.buffer = noiseBuf(.06); const f = a.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 2500; const gn = a.createGain(); gn.gain.setValueAtTime(.5, a.currentTime); gn.gain.exponentialRampToValueAtTime(.001, a.currentTime + .09); src.connect(f); f.connect(gn); gn.connect(a.destination); src.start(); } } catch (e) {}
-    if (pres) { try { vrHaptic(null, .6, 60); } catch (e) {} try { const P = XRP.wristP; if (P) { P.draw(); } } catch (e) {} return; }
+    if (pres) { try { vrHaptic(null, .6, 60); } catch (e) {} if (!fotoKey()) fotoCam("ok"); try { const P = XRP.wristP; if (P) { P.draw(); } } catch (e) {} return; }
     const fl = document.createElement("div"); fl.style.cssText = "position:fixed;inset:0;z-index:2147483200;background:#fff;opacity:.85;pointer-events:none;transition:opacity .35s ease-out"; document.body.appendChild(fl);
     requestAnimationFrame(() => requestAnimationFrame(() => { fl.style.opacity = "0"; setTimeout(() => fl.remove(), 400); }));
-    try { toast(`📷 Fotó elmentve (${FOTO.n} db). A 🖼 gombbal megnézheted, letöltheted és megoszthatod.`, 3500); } catch (e) {}
+    try { toast(fotoKey() ? "📷 Fotó kész – küldöm Claude-nak…" : `📷 Fotó elmentve (${FOTO.n} db). Ahhoz, hogy rögtön Claude-hoz menjen: 🖼 → „Bekötés Claude-hoz”.`, 3500); } catch (e) {}
+  }
+  /* ---------------------------------------------------------------- 2026-11-15 15:41 (tulajdonos: „a fényképező rögtön hozzád legyen bekötve: lefotózom, és mindjárt neked küldi”):
+     a kép + a hely (melyik ház/terem, pozíció, VR/2D, verzió) azonnal felkerül a tulajdonos PRIVÁT GitHub-tárolójába (kucserabalazs/zephyr-hibafotok),
+     amit Claude olvas. A kulcs (csak erre a tárolóra érvényes GitHub-kulcs) KIZÁRÓLAG az eszköz böngészőjében van (localStorage), a kódban soha.
+     Új eszköz bekötése: beírás a Fotóim galériában, vagy párosítás 6 jegyű kóddal egy már bekötött eszközről (titkosított p2p, a kulcs nem megy át szerveren). */
+  const FOTO_REPO = "kucserabalazs/zephyr-hibafotok", FOTO_LS = "zephyrFotoKulcs";
+  function fotoKey() { try { return localStorage.getItem(FOTO_LS) || ""; } catch (e) { return ""; } }
+  function fotoSetKey(k) { try { if (k) localStorage.setItem(FOTO_LS, k.trim()); else localStorage.removeItem(FOTO_LS); } catch (e) {} fotoBadge(); }
+  try { const m = /(?:^#|&)fotokulcs=([A-Za-z0-9_]+)/.exec(location.hash); if (m) { fotoSetKey(m[1]); history.replaceState(null, "", location.href.replace(/[#&]fotokulcs=[A-Za-z0-9_]+/, "")); } } catch (e) {}
+  function fotoB64(blob) { return new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(String(fr.result).split(",")[1] || ""); fr.onerror = () => no(fr.error); fr.readAsDataURL(blob); }); }
+  function fotoUtf8B64(s) { return btoa(unescape(encodeURIComponent(s))); }
+  async function fotoGh(path, method, body) {
+    const k = fotoKey(); if (!k) throw new Error("nincs kulcs");
+    const r = await fetch("https://api.github.com/repos/" + FOTO_REPO + path, { method: method || "GET", headers: { Authorization: "Bearer " + k, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    if (!r.ok) { let m = ""; try { m = (await r.json()).message || ""; } catch (e) {} const er = new Error(r.status + (m ? " – " + m : "")); er.status = r.status; throw er; }
+    return r.status === 204 ? null : r.json();
+  }
+  function fotoMeta(rec) { return JSON.stringify({ fajl: rec.name, ido: rec.t, hely: rec.where, pozicio: rec.pos, vr: rec.vr, verzio: rec.v, megjegyzes: rec.note || "", eszkoz: navigator.userAgent, kepernyo: innerWidth + "×" + innerHeight }, null, 2); }
+  function fotoDir(rec) { return "/contents/fotok/" + rec.t.slice(0, 10) + "/"; }
+  async function fotoPut(path, b64, msg) { let sha; try { const o = await fotoGh(path + "?ref=main"); sha = o && o.sha; } catch (e) { if (e.status !== 404) throw e; } return fotoGh(path, "PUT", { message: msg, content: b64, branch: "main", sha }); }
+  async function fotoSend(rec) {
+    if (!fotoKey() || rec.sent) return false;
+    const d = fotoDir(rec), base = rec.name.replace(/\.jpg$/, ""), msg = `📷 ${rec.where || "hibafotó"}${rec.note ? " – " + rec.note : ""} (${rec.vr ? "VR" : "2D"}, v${(rec.v || "").slice(0, 10)})`;
+    await fotoGh(d + rec.name, "PUT", { message: msg, content: await fotoB64(rec.blob), branch: "main" }).catch((e) => { if (e.status !== 422) throw e; });   /* 422 = már fent van */
+    await fotoPut(d + base + ".json", fotoUtf8B64(fotoMeta(rec)), "adatok: " + rec.name);
+    rec.sent = Date.now(); await fotoTx("readwrite", (st) => st.put(rec)); return true;
+  }
+  async function fotoNoteSync(rec) { if (!fotoKey() || !rec.sent) return; try { await fotoPut(fotoDir(rec) + rec.name.replace(/\.jpg$/, "") + ".json", fotoUtf8B64(fotoMeta(rec)), "megjegyzés: " + rec.name); } catch (e) {} }
+  let FOTO_FL = null;
+  function fotoFlush() {   /* minden még el nem küldött képet felküld (hálózat nélkül készült képek is utólag) */
+    if (FOTO_FL || !fotoKey()) return FOTO_FL || Promise.resolve(0);
+    FOTO_FL = fotoAll().then(async (list) => { let n = 0; for (const r of list.slice().reverse()) { if (r.sent) continue; try { if (await fotoSend(r)) n++; } catch (e) { FOTO.err = String(e && e.message || e); break; } } return n; }).finally(() => { FOTO_FL = null; fotoBadge(); });
+    return FOTO_FL;
+  }
+  addEventListener("online", () => fotoFlush()); setTimeout(() => fotoFlush(), 4000);
+  /* --- párosítás egy már bekötött eszközről: 6 jegyű kód, titkosított WebRTC (a projekt meglévő p2p.js-e), 3 percig érvényes --- */
+  function fotoP2P() { return window.ZephyrP2P ? Promise.resolve(window.ZephyrP2P) : new Promise((ok, no) => { const s = document.createElement("script"); s.src = "p2p.js"; s.onload = () => window.ZephyrP2P ? ok(window.ZephyrP2P) : no(new Error("p2p")); s.onerror = () => no(new Error("p2p")); document.head.appendChild(s); }); }
+  async function fotoPair(code, give, onMsg) {
+    const P = await fotoP2P(), room = P.joinRoom({ appId: "zephyr-fotokulcs-" + code, password: "zfk-" + code + "-balaton" }, "par-" + code), [send, get] = room.makeAction("k");
+    const stop = () => { try { room.leave(); } catch (e) {} }; setTimeout(stop, 180000);
+    if (give) { room.onPeerJoin((id) => { send({ k: fotoKey() }, id); onMsg("✅ Átadva – a másik eszköz bekötve."); setTimeout(stop, 4000); }); }
+    else get((d) => { if (d && d.k) { fotoSetKey(d.k); onMsg("✅ Bekötve! Mostantól a képek rögtön Claude-hoz mennek."); fotoFlush(); setTimeout(stop, 2000); } });
+    return stop;
+  }
+  /* galéria: a „Bekötés Claude-hoz” panel */
+  function fotoLinkPanel(btnCss) {
+    const box = document.createElement("div"); box.style.cssText = "max-width:1200px;margin:0 auto 16px;padding:14px 16px;border-radius:14px;background:rgba(16,42,68,.75);border:1px solid rgba(228,187,99,.45);font:500 14px/1.45 Inter,system-ui,sans-serif";
+    const draw = () => {
+      const on = !!fotoKey(); box.innerHTML = "";
+      const h = document.createElement("div"); h.style.cssText = "font:800 17px/1.3 Inter,system-ui,sans-serif;margin-bottom:6px;color:" + (on ? "#7fe0a0" : "#E4BB63");
+      h.textContent = on ? "✅ Bekötve Claude-hoz – a 📷 képei rögtön hozzá kerülnek" : "🔗 Bekötés Claude-hoz (eszközönként egyszer)"; box.appendChild(h);
+      const p = document.createElement("div"); p.style.opacity = ".85"; p.textContent = on ? `Tároló: ${FOTO_REPO}${FOTO.err ? " · utolsó hiba: " + FOTO.err : ""}` : "Írd be ide a GitHub-kulcsot (csak a zephyr-hibafotok tárolóra érvényes), VAGY párosítsd ezt az eszközt egy már bekötött eszközzel a 6 jegyű kóddal."; box.appendChild(p);
+      const row = document.createElement("div"); row.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center"; box.appendChild(row);
+      const b = (t, f) => { const x = document.createElement("button"); x.type = "button"; x.textContent = t; x.style.cssText = btnCss + ";padding:9px 12px;font-size:14px"; x.addEventListener("click", f); row.appendChild(x); return x; };
+      const msg = document.createElement("div"); msg.style.cssText = "margin-top:8px;font-weight:700"; box.appendChild(msg); const say = (t) => { msg.textContent = t; };
+      if (!on) {
+        const inp = document.createElement("input"); inp.type = "password"; inp.placeholder = "github_pat_…"; inp.autocomplete = "off";
+        inp.style.cssText = "flex:1 1 260px;min-width:200px;padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.35);color:#fff;font:500 14px Inter,system-ui,sans-serif"; row.appendChild(inp);
+        b("💾 Mentés és próba", async () => { const k = inp.value.trim(); if (!k) return; fotoSetKey(k); say("Ellenőrzöm…"); try { await fotoGh(""); say("✅ Működik! Küldöm a meglévő képeket…"); const n = await fotoFlush(); say(`✅ Bekötve. Elküldve: ${n} kép.`); setTimeout(draw, 1500); } catch (e) { fotoSetKey(""); say("❌ Nem jó a kulcs vagy nincs ilyen tároló: " + e.message); } });
+        b("🔢 Kódot kaptam egy másik eszközről", () => { const c = (prompt("A másik eszközön látható 6 jegyű kód:") || "").replace(/\D/g, ""); if (c.length !== 6) return; say("Kapcsolódom… (a másik eszközön maradjon nyitva a kód)"); fotoPair(c, false, (t) => { say(t); setTimeout(draw, 1500); }).catch(() => say("❌ A párosítás nem sikerült.")); });
+      } else {
+        b("📤 Küldés most", async () => { say("Küldöm…"); const n = await fotoFlush(); say(FOTO.err ? "❌ " + FOTO.err : `✅ Elküldve: ${n} új kép.`); });
+        b("📲 Másik eszköz bekötése (kód)", () => { const c = String(Math.floor(100000 + Math.random() * 900000)); say(`A másik eszközön (pl. a szemüvegben) nyisd meg a Fotóim → „Kódot kaptam…” gombot, és írd be: ${c}  (3 percig érvényes)`); fotoPair(c, true, say).catch(() => say("❌ A párosítás nem indult el.")); });
+        b("✖ Kulcs törlése erről az eszközről", () => { if (confirm("Törlöd a kulcsot erről az eszközről? A képek ezután csak itt maradnak.")) { fotoSetKey(""); draw(); } });
+      }
+    };
+    draw(); return box;
   }
   /* ---------------------------------------------------------------- a mindig látható gombok (2D) */
   function fotoButtons() {
@@ -12706,10 +12777,10 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     ["pointerdown", "wheel", "keydown", "touchstart"].forEach((ev) => ov.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
     const btnCss = "padding:10px 14px;border-radius:10px;border:1.5px solid rgba(228,187,99,.8);background:rgba(16,42,68,.9);color:#fff;font:700 15px/1 Inter,system-ui,sans-serif;cursor:pointer";
     const head = document.createElement("div"); head.style.cssText = "display:flex;flex-wrap:wrap;align-items:center;gap:10px;max-width:1200px;margin:0 auto 16px";
-    head.innerHTML = `<div style="flex:1 1 260px"><div style="font:800 22px/1.2 Inter,system-ui,sans-serif;color:#E4BB63">🖼 Fotóim</div><div style="font:500 14px/1.4 Inter,system-ui,sans-serif;opacity:.8;margin-top:4px">A 📷 gombbal (VR-ben a tenyérmenüből) készült képek. Írj melléjük megjegyzést, aztán töltsd le vagy oszd meg, és küldd el a javításhoz.</div></div>`;
+    head.innerHTML = `<div style="flex:1 1 260px"><div style="font:800 22px/1.2 Inter,system-ui,sans-serif;color:#E4BB63">🖼 Fotóim</div><div style="font:500 14px/1.4 Inter,system-ui,sans-serif;opacity:.8;margin-top:4px">A 📷 gombbal (VR-ben a tenyérmenüből) készült képek. Bekötés után rögtön Claude-hoz kerülnek; a megjegyzésed is utánuk megy.</div></div>`;
     const hb = (t, f) => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.style.cssText = btnCss; b.addEventListener("click", f); head.appendChild(b); return b; };
     const grid = document.createElement("div"); grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:1200px;margin:0 auto";
-    ov.appendChild(head); ov.appendChild(grid); document.body.appendChild(ov);
+    ov.appendChild(head); ov.appendChild(fotoLinkPanel(btnCss)); ov.appendChild(grid); document.body.appendChild(ov);
     const urls = []; const close = () => { urls.forEach((u) => URL.revokeObjectURL(u)); ov.remove(); };
     fotoAll().then((list) => {
       hb("⬇ Mind letöltése", () => list.forEach((r, i) => setTimeout(() => fotoDl(r), i * 350)));
@@ -12720,11 +12791,11 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       list.forEach((r) => {
         const u = URL.createObjectURL(r.blob); urls.push(u); const c = document.createElement("div"); c.style.cssText = "background:rgba(16,42,68,.75);border:1px solid rgba(228,187,99,.35);border-radius:14px;overflow:hidden;display:flex;flex-direction:column";
         const im = document.createElement("img"); im.src = u; im.alt = r.name; im.style.cssText = "width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:zoom-in;background:#000"; im.addEventListener("click", () => window.open(u, "_blank"));
-        const tx = document.createElement("div"); tx.style.cssText = "padding:10px 12px 4px;font:600 14px/1.35 Inter,system-ui,sans-serif"; tx.textContent = `${new Date(r.t).toLocaleString("hu-HU")} · ${r.vr ? "VR" : "2D"}`;
+        const tx = document.createElement("div"); tx.style.cssText = "padding:10px 12px 4px;font:600 14px/1.35 Inter,system-ui,sans-serif"; tx.textContent = `${new Date(r.t).toLocaleString("hu-HU")} · ${r.vr ? "VR" : "2D"} · ${r.sent ? "✅ Claude-nál" : fotoKey() ? "⏳ küldésre vár" : "csak itt"}`;
         const wh = document.createElement("div"); wh.style.cssText = "padding:0 12px;font:500 13px/1.35 Inter,system-ui,sans-serif;opacity:.8"; wh.textContent = r.where || "";
         const no = document.createElement("textarea"); no.placeholder = "Megjegyzés: mi a hiba? (nem kötelező)"; no.value = r.note || ""; no.rows = 2;
         no.style.cssText = "margin:8px 12px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.3);color:#fff;font:500 14px/1.35 Inter,system-ui,sans-serif;resize:vertical";
-        no.addEventListener("change", () => { r.note = no.value.trim(); fotoTx("readwrite", (st) => st.put(r)); });
+        no.addEventListener("change", () => { r.note = no.value.trim(); fotoTx("readwrite", (st) => st.put(r)).then(() => fotoNoteSync(r)); });
         const bar = document.createElement("div"); bar.style.cssText = "display:flex;gap:8px;padding:0 12px 12px;flex-wrap:wrap";
         const bb = (t, f) => { const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.style.cssText = btnCss + ";padding:8px 11px;font-size:14px"; b.addEventListener("click", f); bar.appendChild(b); };
         bb("⬇ Letöltés", () => fotoDl(r)); bb("↗ Megosztás", () => fotoShare([r])); bb("🗑 Törlés", () => { fotoTx("readwrite", (st) => st.delete(r.id)).then(() => { FOTO.n = Math.max(0, FOTO.n - 1); fotoBadge(); c.remove(); }); });
@@ -12732,6 +12803,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       });
     });
   }
+  if (/[?&]zteszt\b/.test(location.search)) window.__zt = { xrWatch, XRP, fotoSend, fotoKey };   /* csak automata teszthez */
   if (document.body) setTimeout(fotoButtons, 0); else addEventListener("DOMContentLoaded", fotoButtons);
   function watchItems() {
     const world = !!(window.ZephyrWorld && ZephyrWorld.active);
@@ -12753,7 +12825,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         ["❔", "Súgó", pg("help")], ["✕", "Kilépés", () => vrEndSession()]];
     }
     if (!it.some((q) => q[1] === "Óra beállítás")) it = it.concat([watchSettings()]);
-    it = [["📷", FOTO.n ? `Fotó a hibáról (${FOTO.n})` : "Fotó a hibáról", () => fotoSnap()]].concat(it);   /* 2026-11-15: a fényképező mindig az első */
+    it = [["📷", fotoKey() ? (FOTO.err ? "Fotó (küldés hiba!)" : "Fotó → Claude") : FOTO.n ? `Fotó a hibáról (${FOTO.n})` : "Fotó a hibáról", () => fotoSnap()]].concat(it);   /* 2026-11-15: a fényképező mindig az első */
     return it.slice(0, 12);
   }
   function sceneGroup() { const sc = SCENES[current]; return sc ? sc.g : null; }
@@ -12866,6 +12938,22 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       const crown = new THREE.Mesh(new THREE.CylinderGeometry(.0034, .0034, .005, 18).rotateZ(Math.PI / 2), gold); crown.position.set(.0245, .004, 0); body.add(crown);
       for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2, r = new THREE.Mesh(new THREE.BoxGeometry(.0052, .0006, .0006), goldB); r.position.set(.0245, .004 + Math.cos(a) * .0035, Math.sin(a) * .0035); body.add(r); }
       const btn = new THREE.Mesh(new THREE.BoxGeometry(.0025, .008, .003), goldB); btn.position.set(.0232, -.009, 0); body.add(btn); }
+    /* 📷 2026-11-15 (tulajdonos: „VR módban is látszódjon, a kikötői séta és a vitorlásversenyek alatt is”): fényképező gomb az alkaron, az óra mellett
+       (könyök felé 7 cm-re, hogy ne nyissa véletlenül a menüt). Mindig ott van, minden világban. A jobb mutatóujjal megérintve fotóz; kontrollerrel rámutatsz + ravasz.
+       Színe: zöld = bekötve Claude-hoz, kék = csak helyben menti, sárga = küldi, piros = hiba. */
+    { const cv = document.createElement("canvas"); cv.width = 128; cv.height = 128; const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
+      const pod = new THREE.Group(); pod.position.set(-.07, 0, .004); small.add(pod); P.camPod = pod;
+      const bd = new THREE.ExtrudeGeometry(rrect(.03, .03, .009), { depth: .006, bevelEnabled: true, bevelThickness: .0015, bevelSize: .0015, bevelSegments: 2, curveSegments: 6 }); bd.translate(0, 0, -.003); pod.add(new THREE.Mesh(bd, gold));
+      const face = new THREE.Mesh(new THREE.PlaneGeometry(.028, .028), new THREE.MeshBasicMaterial({ map: tx, transparent: true })); face.position.z = .0047; pod.add(face);
+      const ch = new THREE.Mesh(new THREE.SphereGeometry(.032, 10, 8), new THREE.MeshBasicMaterial({ visible: false })); pod.add(ch); XRP.camBtn = ch;
+      ch.userData.xr = { click: () => P.camPress(), hover: (on) => pod.scale.setScalar(on ? 1.2 : 1) };
+      P.camDraw = (st) => { const g = cv.getContext("2d"), k = fotoKey(); g.clearRect(0, 0, 128, 128);
+        const col = st === "ok" ? "#2fbf6a" : st === "err" ? "#d8412f" : st === "busy" ? "#d99a16" : k ? (FOTO.err ? "#d8412f" : "#1f9d57") : "#123a63";
+        g.fillStyle = col; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 7; g.strokeStyle = "#E4BB63"; g.stroke();
+        g.fillStyle = "#fff"; g.beginPath(); g.roundRect ? g.roundRect(26, 44, 76, 50, 9) : g.rect(26, 44, 76, 50); g.fill(); g.fillRect(46, 35, 24, 12);
+        g.fillStyle = col; g.beginPath(); g.arc(64, 69, 18, 0, 7); g.fill(); g.fillStyle = "#fff"; g.beginPath(); g.arc(64, 69, 10, 0, 7); g.fill(); g.fillStyle = "#E4BB63"; g.fillRect(84, 50, 10, 6); tx.needsUpdate = true; };
+      P.camPress = () => { const n = performance.now(); if (n - (P.camT || 0) < 1500 || FOTO.busy) return; P.camT = n; P.justToggled = n; try { const R = XRP.src.right; xrPulse(R && R.src, .7, 40); } catch (e) {} P.camDraw("busy"); fotoSnap(); };
+      P.camDraw(); }
     P.strapG = null;
     /* --- találati sík (sugárhoz) és a kis óra (kontrollerhez) --- */
     const hit = new THREE.Mesh(new THREE.PlaneGeometry(WP.W, WP.H), new THREE.MeshBasicMaterial({ visible: false, side: THREE.DoubleSide })); panel.add(hit); P.m = hit; hit.visible = false;
@@ -13101,6 +13189,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
         _wm.makeBasis(x, y, z); P.small.quaternion.setFromRotationMatrix(_wm);
       } else { _wm.lookAt(_wv2.set(0, 0, 0), nrm.clone().multiplyScalar(-1), axis); P.small.quaternion.setFromRotationMatrix(_wm); }
       P.small.position.copy(base); }
+    if (P.camPod && base) { const Rt = XRP.src.right; if (Rt && Rt.hand && Rt.tip) { P.camPod.getWorldPosition(_wv4); const d = Rt.tip.distanceTo(_wv4); if (d < .022 && (P.camPrevD == null || P.camPrevD >= .022)) P.camPress(); P.camPrevD = d; } }
     P.small.visible = !!base; if (P.strapG) P.strapG.visible = !!(L && L.hand);
     XRP.wrist.visible = !!(L && !L.hand) && P.t < .05;
     const sz = WSTY.size[WS.size] || 1, e = wEase(P.t / .5);
