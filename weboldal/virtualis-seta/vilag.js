@@ -15591,9 +15591,11 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
      a gömbök, hengerek, tóruszok, kapszulák, kúpok, esztergált és cső-testek felbontását kb. a felére vesszük – a formák ugyanazok, csak kevesebb lapból.
      Kényszerítés teszthez: localStorage zephyr-lod = 1 (be) / 0 (ki). */
   function lodBuild(fn) {
-    let on = false; try { const f = localStorage.getItem("zephyr-lod"); on = f === "1" || (f !== "0" && !T.inVR && document.documentElement.dataset.device === "phone"); } catch (e) {}
+    /* 2026-11-15 (szakértői jelentés B.1 – a sakk 1,04 millió háromszöge): VR-szemüvegben is ritkább hálók, de csak mérsékelten (×0,7 – a részletek
+       megmaradnak; telefonon ×0,5). localStorage zephyr-lod = 0 kikapcsolja, = 1 mindig bekapcsolja. */
+    let on = false, kf = .5; try { const f = localStorage.getItem("zephyr-lod"); on = f === "1" || (f !== "0" && (T.inVR || document.documentElement.dataset.device === "phone")); if (T.inVR && f !== "1") kf = .7; } catch (e) {}
     if (!on) return fn();
-    const R = (v, d, mn, k) => Math.max(mn, Math.round((v == null ? d : v) * (k || .5))), keep = {}, set = (n, f) => { keep[n] = THREE[n]; const O = THREE[n]; const N = function () { return f(O, Array.prototype.slice.call(arguments)); }; N.prototype = O.prototype; THREE[n] = N; };
+    const R = (v, d, mn, k) => Math.max(mn, Math.round((v == null ? d : v) * (k ? k * kf / .5 : kf))), keep = {}, set = (n, f) => { keep[n] = THREE[n]; const O = THREE[n]; const N = function () { return f(O, Array.prototype.slice.call(arguments)); }; N.prototype = O.prototype; THREE[n] = N; };
     try {
       set("SphereGeometry", (O, a) => new O(a[0], R(a[1], 32, 7), R(a[2], 16, 5), a[3], a[4], a[5], a[6]));
       set("CylinderGeometry", (O, a) => new O(a[0], a[1], a[2], R(a[3], 32, 5), a[4] > 2 ? R(a[4], 1, 1) : a[4], a[5], a[6], a[7]));
@@ -15607,6 +15609,9 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   }
   function finishOpen() {
     document.body.classList.add("world-on");
+    /* 2026-11-15 (szakértői jelentés B.5): a világ összes anyagának shaderét még az indulás pillanatában lefordítjuk (párhuzamosan, ha a böngésző tudja),
+       hogy futam közben ne akadjon meg a kép egy-egy új anyag első megjelenésekor */
+    setTimeout(() => { try { const r = T.sceneEl.renderer, sc = T.sceneEl.object3D, cam = T.sceneEl.camera; if (!W.active || !cam) return; if (r.compileAsync) r.compileAsync(sc, cam).catch(() => {}); else r.compile(sc, cam); } catch (e) {} }, 60);
     W.hud = makeHud(); W.hud.el.style.display = T.inVR ? "none" : ""; W.hud.draw();
     W.panel = makePanel(); W.panel.draw();
     /* 2026-11-15 (tulajdonos: „a fölösleges régi menütáblákat, amiket már kiváltanak más gombok, tüntesd el”): a Balaton Sailing VR-ben (kikötő, futam)
