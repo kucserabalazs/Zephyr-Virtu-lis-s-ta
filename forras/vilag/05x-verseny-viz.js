@@ -116,7 +116,7 @@
     const mat = new THREE.ShaderMaterial({
       uniforms: { uT: { value: 0 }, uOff: { value: new THREE.Vector2() }, uWind: { value: 0 }, uW: { value: v4() }, uWp: { value: v2() }, uSun: { value: opt.sun || SUN }, uCam: { value: new THREE.Vector3() },
         uSkyH: { value: new THREE.Color(.70, .80, .87) }, uSkyZ: { value: new THREE.Color(.25, .45, .75) }, uDeep: { value: new THREE.Color(.045, .2, .19) }, uShallow: { value: new THREE.Color(.14, .4, .35) },
-        uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 }, uFlk: { value: 1 }, uFoam: { value: 1 },
+        uSunC: { value: new THREE.Color(1, .95, .82) }, uSkyT: { value: null }, uSkyOn: { value: 0 }, uSkyRot: { value: new THREE.Vector2(1, 0) }, uHaze: { value: new THREE.Color(.84, .89, .91) }, uLight: { value: 1 }, uSpec: { value: 1 }, uFlk: { value: 1 }, uFoam: { value: 1 }, uFlD: { value: new THREE.Vector3(0, .05, -1) }, uFlC: { value: new THREE.Color(0, 0, 0) },
         uRip: { value: rwRipTex() }, uRipM: { value: new THREE.Vector4(5.3, 1.7, .26, 0) }, uWf: { value: RW.ft }, uWfM: { value: new THREE.Vector4(0, 0, 1 / RW.fL, 1) }, uWc: { value: new THREE.Vector4(.9, 1, 0, 0) },
         uBt: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, uBs: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) },
         uHull: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector4(0, 0, 0, 0)) }, uHullS: { value: [0, 1, 2, 3, 4, 5].map(() => new THREE.Vector3(0, 0, 0)) },
@@ -138,7 +138,7 @@
         }`,
       fragmentShader: `
         uniform sampler2D uSkyT, uRip, uWf; uniform float uSkyOn, uFlk, uT, uWind, uLight, uSpec, uFoam; uniform vec2 uSkyRot;
-        uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze; uniform vec4 uW[6]; uniform vec2 uWp[6]; uniform vec4 uRipM, uWfM, uWc;
+        uniform vec3 uSun, uCam, uSkyH, uSkyZ, uDeep, uShallow, uSunC, uHaze, uFlD, uFlC; uniform vec4 uW[6]; uniform vec2 uWp[6]; uniform vec4 uRipM, uWfM, uWc;
         uniform vec4 uBt[4], uBs[4]; uniform vec4 uHull[6]; uniform vec3 uHullS[6];
         varying vec3 vP; varying float vDist; varying vec2 vW; varying vec2 vWP;
         float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -206,6 +206,8 @@
           vec3 col = mix(body, sky, fr) * (1. - .1 * gu);
           float rs = max(dot(R, uSun), 0.), shp = mix(1., 2.3, lu) * mix(1., .55, gu);
           col += uSunC * (pow(rs, 600. * shp) * 7. + pow(rs, 80. * shp) * .45 + pow(rs, 12.) * .035) * uSpec;
+          /* 2026-11-15: villám a láthatáron – fényes, remegő csík a vízen a villám felé, és a víz egészének halvány kivilágosodása (05za) */
+          if (uFlC.r + uFlC.g + uFlC.b > .002) { float rf = max(dot(R, uFlD), 0.); col += uFlC * (pow(rf, 220. * shp) * 2.6 + pow(rf, 22.) * .32 + pow(rf, 3.) * .05 + fr * .04); }
           /* HAB: a megtörő tarajok fehér sapkája (a taraj elején születik, mögötte a vízen marad és szétesik), friss szélben szélcsíkok, a hajó körül habpelyhek –
              mind a vízhez rögzítve. A hab alakja egy zajtérkép küszöbölése: kevés habnál szórt buborékfoltok, soknál összefüggő, csipkés folt. */
           float k0 = uW[0].y, f0 = k0 * dot(vec2(cos(uWind + uW[0].x), sin(uWind + uW[0].x)), vW) - uWp[0].x * uT + uWp[0].y;

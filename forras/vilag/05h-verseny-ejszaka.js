@@ -12,7 +12,7 @@
        (a várható legerősebb lökés: 40–60 km/h → elsőfok, 60 km/h fölött → másodfok; ilyenkor a távolban villámlik is). Forrás: HungaroMet / katasztrófavédelem.
      ÉG: holdfény (telihold a part fölött, ezüst holdút a vízen), csillagos ég Tejúttal, ritkán hullócsillag; a parton települések, sétány, kikötők, díszkivilágítás,
        tükörcsíkok a vízen; tücsökciripelés a part felől. */
-  const NGT = { on: false };
+  const NGT = { on: false }; W._ngt = NGT;   /* (tesztekhez) */
   function vrNightPref() { try { return localStorage.getItem("zephyr-napszak") || "valt"; } catch (e) { return "valt"; } }
   function vrIsNight(lvl) { if (VRR.nightForce != null) return !!VRR.nightForce; if (VRR.todMix) return (((lvl || 0) * 2654435761) >>> 0) % 3 === 1;   /* 22:48: vegyes napszak – futamonként változik */ if (VRR.net && VRR.net.night != null) return !!VRR.net.night; const p = vrNightPref(); return p === "ej" ? true : p === "nap" ? false : !!lvl && lvl % 3 === 0; }
   /* ragyogó pont-textúra */
@@ -101,6 +101,7 @@
           sh.fragmentShader = "uniform float uNav, uY0, uY1, uXc, uR; uniform vec3 uTk; varying vec3 vNavP;\n" + sh.fragmentShader.replace("#include <dithering_fragment>", "#include <dithering_fragment>\n { float f = uNav * (1. - smoothstep(uR * .35, uR, distance(vNavP, uTk))); float sR = smoothstep(-.25, .25, vNavP.x - uXc); vec3 nc = mix(vec3(.15, 1., .3), vec3(1., .14, .08), sR); gl_FragColor.rgb += nc * f * (.18 + .55 * diffuseColor.rgb); }"); };
         mt.customProgramCacheKey = () => "navjib"; mt.needsUpdate = true; } }
     NGT.moonL = new THREE.DirectionalLight("#9fb2d8", 0); W.root.add(NGT.moonL); NGT.moonL.userData.night = 1;
+    try { vrStormBuild(); } catch (e) { console.warn("vihar", e); }   /* 2026-11-15: holdfényes felhők, zivatarcellák, villámok (05za) */
   }
   /* a parti fények egyetlen pontfelhőben (villogással), a tükörcsíkok egy rajzolásban */
   function vrNightShore() {
@@ -157,6 +158,9 @@
     S.nightInfo = on ? `🌙 éjszakai futam · ${STM_BN[vb]}: ${NGT.storm === 2 ? "MÁSODFOKÚ viharjelzés (90 villanás/perc)" : NGT.storm === 1 ? "elsőfokú viharjelzés (45 villanás/perc)" : "viharjelzés alapfokon"}` : "";
     if (on) { S.msg = `🌙 ÉJSZAKAI FUTAM – holdfény, világító bóják. A hajókat a fényeik mutatják: zöld = jobb oldal, vörös = bal oldal, fehér = far. ${STM_BN[vb]}: ${NGT.storm === 2 ? "másodfokú viharjelzés" : NGT.storm === 1 ? "elsőfokú viharjelzés" : "viharjelzés alapfokon"}.`; S.msgT = 9; }
     NGT.flash = 0; NGT.lightning = 0;
+    try { vrStormSet(on, C); } catch (e) { console.warn("vihar", e); }
+    try { vrNightDefLights(on); } catch (e) {}
+    if (!on) { try { U.uFlC.value.setRGB(0, 0, 0); } catch (e) {} }
   }
   /* ---------------------------------------------------------------- képkockánként */
   const _cw = new THREE.Vector3(), _lw = new THREE.Vector3(), _lc = new THREE.Vector3();
@@ -202,9 +206,9 @@
     NGT.met.forEach((m) => { if (m.life <= 0) { m.q.visible = false; return; } m.life -= dt; const u = 1 - m.life / m.max, head = m.p0.clone().addScaledVector(m.dir, m.len * u * 1.6), tail = head.clone().addScaledVector(m.dir, -m.len * Math.min(1, u * 3));
       m.q.visible = true; m.q.position.copy(head).add(tail).multiplyScalar(.5); m.q.scale.set(head.distanceTo(tail), 3600 * .006, 1); m.q.lookAt(0, 0, 0); const dl = new THREE.Vector3().subVectors(head, tail).normalize(), right = new THREE.Vector3().crossVectors(m.q.position.clone().normalize(), dl);
       m.q.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(dl, right.normalize().cross(dl).negate(), m.q.position.clone().normalize().negate())); m.q.material.opacity = Math.sin(Math.PI * u); });
-    /* zivatar a távolban (másodfokon): villámlás a part fölött – a felhők alját és a vizet egy pillanatra kivilágítja */
-    if (NGT.storm === 2) { NGT.lightning -= dt; if (NGT.lightning <= 0) { NGT.lightning = 6 + Math.random() * 14; NGT.flash = 1; try { setTimeout(() => { const a = T.ac(); if (!a) return; const n2 = a.createBufferSource(); n2.buffer = T.noiseBuf(3); const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 90; const g2 = a.createGain(); g2.gain.setValueAtTime(.0001, a.currentTime); g2.gain.linearRampToValueAtTime(.18, a.currentTime + .4); g2.gain.exponentialRampToValueAtTime(.0005, a.currentTime + 3); n2.connect(f).connect(g2).connect(T.outBus()); n2.start(); }, 2500 + Math.random() * 3000); } catch (e) {} }
-      NGT.flash = Math.max(0, NGT.flash - dt * 3.2); const fl = NGT.flash * (.6 + .4 * Math.sin(t * 60)); NGT.sky.material.uniforms.uMoon.value.copy(NGT.moonDir); U.uLight.value = .2 + fl * 1.2; if (S.lights) S.lights.hemi.intensity = .05 + fl * .9; }
+    /* 2026-11-15: zivatar a láthatáron – gomolygó cellák, villámok, mennydörgés; holdfényes felhők minden éjjel (05za) */
+    try { vrStormTick(dt, U); } catch (e) {}
+    try { vrNavReflTick(); } catch (e) {}   /* a hajófények tükörcsíkja a vízen (05za) */
     /* tücskök a part felől (szintetizált, halk) */
     NGT.crT = (NGT.crT || 0) - dt; if (NGT.crT <= 0) { NGT.crT = .9 + Math.random() * 1.6; try { const a = T.ac(); if (a) { const t0 = a.currentTime, g2 = a.createGain(); g2.connect(T.outBus()); g2.gain.value = .006 + Math.random() * .006; for (let k = 0; k < 3 + (Math.random() * 3 | 0); k++) { const o = a.createOscillator(), gg = a.createGain(); o.frequency.value = 4300 + Math.random() * 500; gg.gain.setValueAtTime(0, t0 + k * .06); gg.gain.linearRampToValueAtTime(1, t0 + k * .06 + .01); gg.gain.linearRampToValueAtTime(0, t0 + k * .06 + .04); o.connect(gg).connect(g2); o.start(t0 + k * .06); o.stop(t0 + k * .06 + .05); } } } catch (e) {} }
   }
