@@ -311,7 +311,7 @@
     const aP = new THREE.InstancedBufferAttribute(new Float32Array(N * 4), 4), aV = new THREE.InstancedBufferAttribute(new Float32Array(N * 4), 4), aS = new THREE.InstancedBufferAttribute(new Float32Array(N * 4), 4);
     [aP, aV, aS].forEach((a) => { a.setUsage(THREE.DynamicDrawUsage); }); for (let i = 0; i < N; i++) aV.array[i * 4 + 3] = 0;
     g.setAttribute("aP", aP); g.setAttribute("aV", aV); g.setAttribute("aS", aS); g.instanceCount = N;
-    const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
+    const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide,
       uniforms: { uT: { value: 0 }, uWv: { value: new THREE.Vector3() }, uSun: { value: SUN }, uLight: { value: 1 }, uTex: { value: rwSprayTex() }, uNight: { value: 0 } },
       vertexShader: `uniform float uT; uniform vec3 uWv, uSun; attribute vec4 aP, aV, aS; varying vec2 vUv; varying float vA; varying float vL; varying float vK;
         void main(){
@@ -324,7 +324,7 @@
           vec3 vel = vec3(uWv.x + rel.x * e, (v0.y + 9.81 * tauY) * ey - 9.81 * tauY, uWv.z + rel.y * e);
           if (p.y < -.25) { gl_Position = vec4(2., 2., 2., 1.); vA = 0.; return; }
           vec4 mv = modelViewMatrix * vec4(p, 1.); vec3 vv = (modelViewMatrix * vec4(vel, 0.)).xyz;
-          float sz = aS.x * (1. + aS.y * age), sp = length(vv.xy); vec2 ax = sp > .01 ? vv.xy / sp : vec2(0., 1.), ay = vec2(-ax.y, ax.x);
+          float sz = aS.x * (1. + aS.y * age), sp = length(vv.xy); vec2 ax = sp > .01 ? vv.xy / sp : vec2(0., 1.); vec2 ay = vec2(ax.y, -ax.x);   /* (−y, x) tükrözött volna: a háromszögek hátat fordítottak és eltűntek */
           float st = kind > .5 ? 1. : 1. + min(sp * .09, 1.6);
           mv.xy += ax * position.y * sz * st + ay * position.x * sz;
           gl_Position = projectionMatrix * mv;
