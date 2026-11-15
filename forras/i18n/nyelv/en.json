@@ -2393,5 +2393,20 @@
  "{#}. december {#}. (vasárnap)": "{#}, December {#} (Sunday)",
  "dec. {#}.": "Dec {#}",
  "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
- "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Match identical tiles! A wrong pair goes to the tray above – if it fills up, the game is over."
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Match identical tiles! A wrong pair goes to the tray above – if it fills up, the game is over.",
+ "Ranglista": "Leaderboard",
+ "🏆 Ranglista": "🏆 Leaderboard",
+ "Világ": "World",
+ "Saját": "Mine",
+ "Felkerülsz a ranglistára!": "You made the leaderboard!",
+ "A neved": "Your name",
+ "Kihagyom": "Skip",
+ "pont": "points",
+ "Még nincs eredmény ezen az alakzaton.": "No results on this layout yet.",
+ "A világranglista a weboldal saját szerverén működik.": "The world leaderboard runs on the website’s own server.",
+ "Itt a „Saját” lapon látod a saját eredményeidet.": "Your own results are on the “Mine” tab.",
+ "Kiváltás!": "Cancelled out!",
+ "Mentés a tározóból": "Saved from the tray",
+ "Új": "New",
+ "Kikötő": "Harbour"
 }

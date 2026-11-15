@@ -2393,5 +2393,20 @@
  "{#}. december {#}. (vasárnap)": "{#}, {#} de diciembre (domingo)",
  "dec. {#}.": "{#} dic",
  "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
- "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "¡Empareja fichas iguales! Una pareja errónea va a la bandeja de arriba: si se llena, se acaba el juego."
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "¡Empareja fichas iguales! Una pareja errónea va a la bandeja de arriba: si se llena, se acaba el juego.",
+ "Ranglista": "Clasificación",
+ "🏆 Ranglista": "🏆 Clasificación",
+ "Világ": "Mundo",
+ "Saját": "Mías",
+ "Felkerülsz a ranglistára!": "¡Entras en la clasificación!",
+ "A neved": "Tu nombre",
+ "Kihagyom": "Omitir",
+ "pont": "puntos",
+ "Még nincs eredmény ezen az alakzaton.": "Aún no hay resultados en esta forma.",
+ "A világranglista a weboldal saját szerverén működik.": "La clasificación mundial funciona en el servidor propio de la web.",
+ "Itt a „Saját” lapon látod a saját eredményeidet.": "Tus resultados están en la pestaña «Mías».",
+ "Kiváltás!": "¡Se anulan!",
+ "Mentés a tározóból": "Salvada de la bandeja",
+ "Új": "Nueva",
+ "Kikötő": "Puerto"
 }

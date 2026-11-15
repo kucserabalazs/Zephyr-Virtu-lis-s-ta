@@ -31,6 +31,14 @@ Kész (main):
 - Rövid címek: /uj/ és /virtualis-seta/ a tároló gyökerében átirányít a weboldal/ alá.
 Hátra (javaslatok): iránytű-lépésjelző és ±3 nap bóják a VR-ben, kapitányi adatpult (billentyűzet 3D), fókuszcsapda a 2D párbeszédablakokban, valódi Quest 2-es mérés.
 
+## 2026-11-15 délelőtt: mahjong – sötét filc, pontozás, ranglista, látványos párok, új hangok
+- **Háttér:** sötétebb zöld filc (`felt`).
+- **Pontozás:** pár 100 pont + kombó (6 mp-en belüli párok: +50/kombószint, legfeljebb ×10), tározóból mentett pár +50, tározóbeli kiváltás +150; tipp −50 (és +10 mp), visszalépés −50, keverés −200; győzelemkor időbónusz (3000 − 8 × mp) és +500, ha a tározót nem használta. A számláló mutatja a pontot.
+- **Ranglista** (Menü → 🏆 Ranglista, illetve győzelem után): „Világ” (szerver: `api/index.php` `mahjong_rang` / `mahjong_rang_mentes`, tárolás `api/data/mahjong-ranglista.php`, alakzatonként 50, IP-nként 20 mp-enként egy beküldés, 15 mp alatti idő érvénytelen) és „Saját” (ez a készülék, `localStorage zephyr-mahjong-rang`, alakzatonként 10). Győzelem után nagy betűs névbekérő ablak (a nevet megjegyzi: `zephyr-mahjong-nev`). GitHub Pages-en a világranglista nem működik (nincs PHP) – ezt a panel kiírja.
+- **Párok eltűnése:** a két lap felemelkedik, egymás felé repül és összecsapódik: fehér-arany villanás, 2–3 lökéshullám-gyűrű, fénysugarak, arany szikrák, lebegő szirmok, lebegő pontszám; 3-as kombótól képernyőrázkódás és nagy „KOMBÓ ×n!” felirat (`S.mt`, `burst`, `S.rg`, `S.flsh`, `S.txt`).
+- **Hangok** (`mjSnd`, D-pentaton, zengetővel): elefántcsont koccanás (koppintás), tompa fakoppanás (nem szabad lap), pár: koccanás → összecsapás → véletlen guzheng-dallam + FM-harang + csillogás, kombónál taiko és hosszabb futam; suhanás a tározóba, koppanás a dobozban, kiváltás: csilingelő harangsor, figyelmeztetés, megtelt: mély gong, keverés: koccanássorozat, győzelem: taiko + guzheng-glissando + harangakkord.
+- Az új feliratok 24 nyelven a szótárban.
+
 ## 2026-11-15 reggel: BALATONI VITORLÁS MAHJONG (hivatalos név, a tulajdonos döntése)
 - A játék neve mindenhol „Balatoni Vitorlás Mahjong” (márkanév, nem fordítjuk; a 24 nyelvi fájlba felvéve, új leírással).
 - **Lapkészlet kicserélve** a díszdobozos mintakép szerint (`forras/referencia/mahjong/balaton-vitorlas-mahjong-minta.png`, összeállító: `compose.py`): 44 féle, `img/mahjong-balaton.webp` 8×6 rács, 200×260-as cellák. 0–8 萬 1–9 · 9–17 kormánykerék 1–9 (fölötte kínai számjel a 萬 lapokról) · 18–26 nád 1–9 · 27–30 東南西北 · 31 中 · 32 發 · 33 Balaton-térkép (a „fehér sárkány”) · 34–43 festett képek (vitorlás, Tihany, Badacsony, víztorony, gém, szőlő, fogas, naplemente, világítótorony, hattyú). A lap aránya `AR = 1.3`, aranyszegély és arany oldalél.

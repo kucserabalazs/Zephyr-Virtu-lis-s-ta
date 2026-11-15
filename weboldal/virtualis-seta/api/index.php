@@ -1467,6 +1467,30 @@ case 'jatekos_regisztracio': case 'jatekos_belepes': case 'jatekos_ellenorzes': 
     if ($r === 'jatekos_kilepes') { $jtokset(preg_replace('/[^a-f0-9]/', '', (string) (isset($P['token']) ? $P['token'] : token_in())), $f, true); out(array('ok' => true)); }
     fail('Ismeretlen kérés.');
 
+/* ------------------------------ 2026-11-15: BALATONI VITORLÁS MAHJONG – VILÁGRANGLISTA (a tulajdonos kérése).
+   mahjong_rang (GET ?lay=kik|hab|vit|tek) → a 20 legjobb · mahjong_rang_mentes (POST nev, pont, ido, lay) → { hely, lista }
+   Tárolás: data/mahjong-ranglista.php (az elején „exit”, a böngészőből nem olvasható); alakzatonként az 50 legjobb; IP-nként 20 mp-enként egy beküldés. */
+case 'mahjong_rang': case 'mahjong_rang_mentes':
+    header('Access-Control-Allow-Origin: *');
+    $mf = ZB_DATA_DIR . '/mahjong-ranglista.php';
+    $mload = function () use ($mf) { if (!is_file($mf)) { return array(); } $t = preg_replace('/^<\?php exit; \?>\n/', '', (string) @file_get_contents($mf)); $u = json_decode($t, true); return is_array($u) ? $u : array(); };
+    $mlay = isset($P['lay']) ? (string) $P['lay'] : (isset($_GET['lay']) ? (string) $_GET['lay'] : 'kik'); if (!in_array($mlay, array('kik', 'hab', 'vit', 'tek'), true)) { $mlay = 'kik'; }
+    if ($r === 'mahjong_rang') { $d = $mload(); $l = isset($d['l'][$mlay]) ? $d['l'][$mlay] : array(); out(array('ok' => true, 'lay' => $mlay, 'lista' => array_slice($l, 0, 20))); }
+    $nev = clean(isset($P['nev']) ? $P['nev'] : '', 20); $pont = (int) (isset($P['pont']) ? $P['pont'] : -1); $ido = (int) (isset($P['ido']) ? $P['ido'] : 0);
+    if ($nev === '') { fail('Adj meg egy nevet.'); }
+    if ($pont < 0 || $pont > 60000 || $ido < 15 || $ido > 86400) { fail('Érvénytelen eredmény.'); }
+    $lk = @fopen($mf . '.lock', 'c'); if ($lk) { flock($lk, LOCK_EX); }
+    $d = $mload(); $now = time(); $ip = sha1((isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '') . '|zephyr-mj');
+    if (!isset($d['ip']) || !is_array($d['ip'])) { $d['ip'] = array(); }
+    if (!empty($d['ip'][$ip]) && $now - $d['ip'][$ip] < 20) { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } fail('Túl gyakori beküldés – várj egy kicsit.', 429); }
+    $d['ip'][$ip] = $now; foreach ($d['ip'] as $k => $v) { if ($now - $v > 3600) { unset($d['ip'][$k]); } }
+    $l = isset($d['l'][$mlay]) ? $d['l'][$mlay] : array(); $e = array('n' => $nev, 'p' => $pont, 't' => $ido, 'd' => $now); $l[] = $e;
+    usort($l, function ($a, $b) { return ($b['p'] - $a['p']) ?: ($a['t'] - $b['t']); }); $l = array_slice($l, 0, 50);
+    $hely = 0; foreach ($l as $i => $x) { if ($x === $e) { $hely = $i + 1; break; } }
+    $d['l'][$mlay] = $l; @file_put_contents($mf, "<?php exit; ?>\n" . json_encode($d, JSON_UNESCAPED_UNICODE), LOCK_EX);
+    if ($lk) { flock($lk, LOCK_UN); fclose($lk); }
+    out(array('ok' => true, 'hely' => $hely, 'lista' => array_slice($l, 0, 20)));
+
 case 'viharjelzes':
     $cf = sys_get_temp_dir() . '/zephyr-viharjelzes.json';
     if (is_file($cf) && time() - filemtime($cf) < 300) { header('Content-Type: application/json; charset=utf-8'); header('Access-Control-Allow-Origin: *'); echo file_get_contents($cf); exit; }

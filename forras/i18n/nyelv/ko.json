@@ -2391,5 +2391,20 @@
  "{#}. december {#}. (vasárnap)": "{#}년 12월 {#}일 (일요일)",
  "dec. {#}.": "12월 {#}일",
  "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
- "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "같은 패를 짝지으세요! 틀린 짝은 위쪽 보관함으로 갑니다 – 가득 차면 게임 끝."
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "같은 패를 짝지으세요! 틀린 짝은 위쪽 보관함으로 갑니다 – 가득 차면 게임 끝.",
+ "Ranglista": "순위표",
+ "🏆 Ranglista": "🏆 순위표",
+ "Világ": "세계",
+ "Saját": "내 기록",
+ "Felkerülsz a ranglistára!": "순위에 올랐어요!",
+ "A neved": "이름",
+ "Kihagyom": "건너뛰기",
+ "pont": "점",
+ "Még nincs eredmény ezen az alakzaton.": "이 배치에는 아직 기록이 없습니다.",
+ "A világranglista a weboldal saját szerverén működik.": "세계 순위표는 웹사이트 자체 서버에서 작동합니다.",
+ "Itt a „Saját” lapon látod a saját eredményeidet.": "내 기록은 “내 기록” 탭에 있습니다.",
+ "Kiváltás!": "상쇄!",
+ "Mentés a tározóból": "보관함에서 구출",
+ "Új": "새 게임",
+ "Kikötő": "항구"
 }

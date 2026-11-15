@@ -2391,5 +2391,20 @@
  "{#}. december {#}. (vasárnap)": "năm {#}, ngày {#} tháng 12 (Chủ nhật)",
  "dec. {#}.": "{#} thg 12",
  "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
- "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Ghép các quân giống nhau! Cặp sai sẽ lên khay phía trên – khay đầy là thua."
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Ghép các quân giống nhau! Cặp sai sẽ lên khay phía trên – khay đầy là thua.",
+ "Ranglista": "Bảng xếp hạng",
+ "🏆 Ranglista": "🏆 Bảng xếp hạng",
+ "Világ": "Thế giới",
+ "Saját": "Của tôi",
+ "Felkerülsz a ranglistára!": "Bạn đã vào bảng xếp hạng!",
+ "A neved": "Tên bạn",
+ "Kihagyom": "Bỏ qua",
+ "pont": "điểm",
+ "Még nincs eredmény ezen az alakzaton.": "Chưa có kết quả cho kiểu xếp này.",
+ "A világranglista a weboldal saját szerverén működik.": "Bảng xếp hạng thế giới chạy trên máy chủ riêng của trang web.",
+ "Itt a „Saját” lapon látod a saját eredményeidet.": "Kết quả của bạn ở thẻ “Của tôi”.",
+ "Kiváltás!": "Triệt tiêu nhau!",
+ "Mentés a tározóból": "Cứu từ khay",
+ "Új": "Mới",
+ "Kikötő": "Bến cảng"
 }

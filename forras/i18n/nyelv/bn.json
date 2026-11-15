@@ -2391,5 +2391,20 @@
  "{#}. december {#}. (vasárnap)": "ডিসেম্বর {#}, {#} (রবিবার)",
  "dec. {#}.": "{#} ডিসে",
  "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
- "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "একই রকম টাইল মেলাও! ভুল জোড়া উপরের ট্রেতে যায় – ট্রে ভরে গেলে খেলা শেষ।"
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "একই রকম টাইল মেলাও! ভুল জোড়া উপরের ট্রেতে যায় – ট্রে ভরে গেলে খেলা শেষ।",
+ "Ranglista": "লিডারবোর্ড",
+ "🏆 Ranglista": "🏆 লিডারবোর্ড",
+ "Világ": "বিশ্ব",
+ "Saját": "আমার",
+ "Felkerülsz a ranglistára!": "তুমি লিডারবোর্ডে উঠেছ!",
+ "A neved": "তোমার নাম",
+ "Kihagyom": "বাদ দাও",
+ "pont": "পয়েন্ট",
+ "Még nincs eredmény ezen az alakzaton.": "এই বিন্যাসে এখনও কোনো ফল নেই।",
+ "A világranglista a weboldal saját szerverén működik.": "বিশ্ব লিডারবোর্ড ওয়েবসাইটের নিজস্ব সার্ভারে চলে।",
+ "Itt a „Saját” lapon látod a saját eredményeidet.": "তোমার ফল “আমার” ট্যাবে আছে।",
+ "Kiváltás!": "একে অপরকে বাতিল করল!",
+ "Mentés a tározóból": "ট্রে থেকে উদ্ধার",
+ "Új": "নতুন",
+ "Kikötő": "বন্দর"
 }

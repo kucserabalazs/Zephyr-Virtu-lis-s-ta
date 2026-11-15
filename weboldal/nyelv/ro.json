@@ -2393,5 +2393,20 @@
  "{#}. december {#}. (vasárnap)": "{#}, decembrie {#} (duminică)",
  "dec. {#}.": "{#} dec.",
  "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
- "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Potrivește piesele identice! O pereche greșită ajunge în tava de sus – când se umple, jocul s-a terminat."
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Potrivește piesele identice! O pereche greșită ajunge în tava de sus – când se umple, jocul s-a terminat.",
+ "Ranglista": "Clasament",
+ "🏆 Ranglista": "🏆 Clasament",
+ "Világ": "Lume",
+ "Saját": "Ale mele",
+ "Felkerülsz a ranglistára!": "Ai intrat în clasament!",
+ "A neved": "Numele tău",
+ "Kihagyom": "Sari peste",
+ "pont": "puncte",
+ "Még nincs eredmény ezen az alakzaton.": "Încă nu sunt rezultate pentru această formă.",
+ "A világranglista a weboldal saját szerverén működik.": "Clasamentul mondial rulează pe serverul propriu al site-ului.",
+ "Itt a „Saját” lapon látod a saját eredményeidet.": "Rezultatele tale sunt la „Ale mele”.",
+ "Kiváltás!": "Anulate!",
+ "Mentés a tározóból": "Salvată din tavă",
+ "Új": "Nou",
+ "Kikötő": "Port"
 }

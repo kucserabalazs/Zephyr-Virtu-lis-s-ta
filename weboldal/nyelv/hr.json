@@ -2393,5 +2393,20 @@
  "{#}. december {#}. (vasárnap)": "{#}., {#}. prosinca (nedjelja)",
  "dec. {#}.": "{#}. pro",
  "Balatoni Vitorlás Mahjong": "Balatoni Vitorlás Mahjong",
- "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Spoji iste pločice! Pogrešan par ide u spremnik gore – kad se napuni, igra je gotova."
+ "Párosítsd az egyforma lapokat! Ha nem pár, a felső tározóba kerül – ha megtelik, vége.": "Spoji iste pločice! Pogrešan par ide u spremnik gore – kad se napuni, igra je gotova.",
+ "Ranglista": "Ljestvica",
+ "🏆 Ranglista": "🏆 Ljestvica",
+ "Világ": "Svijet",
+ "Saját": "Moji",
+ "Felkerülsz a ranglistára!": "Ušao si na ljestvicu!",
+ "A neved": "Tvoje ime",
+ "Kihagyom": "Preskoči",
+ "pont": "bodova",
+ "Még nincs eredmény ezen az alakzaton.": "Još nema rezultata za ovaj raspored.",
+ "A világranglista a weboldal saját szerverén működik.": "Svjetska ljestvica radi na vlastitom poslužitelju stranice.",
+ "Itt a „Saját” lapon látod a saját eredményeidet.": "Svoje rezultate vidiš pod „Moji”.",
+ "Kiváltás!": "Poništeno!",
+ "Mentés a tározóból": "Spašeno iz spremnika",
+ "Új": "Nova",
+ "Kikötő": "Luka"
 }
