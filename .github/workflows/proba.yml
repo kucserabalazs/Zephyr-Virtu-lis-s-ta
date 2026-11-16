@@ -1,0 +1,12 @@
+name: Próba
+on:
+  push:
+    branches: [tmpwftest]
+jobs:
+  proba:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "hello"; python3 --version
+          curl -s -o /dev/null -w "commons api: %{http_code}\n" -A "ZephyrVR-fotok/1.0 (https://github.com/kucserabalazs/zephyr-virtu-lis-s-ta)" "https://commons.wikimedia.org/w/api.php?action=query&format=json&titles=File:Gulyásleves,_2.jpg&prop=imageinfo&iiprop=url"
+          curl -s -o /dev/null -w "upload: %{http_code}\n" -A "ZephyrVR-fotok/1.0 (https://github.com/kucserabalazs/zephyr-virtu-lis-s-ta)" "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Hungarian_Guly%C3%A1s.jpg/500px-Hungarian_Guly%C3%A1s.jpg"
