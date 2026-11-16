@@ -11,6 +11,30 @@
   "szerzo": "jujurenoult",
   "w": 960
  },
+ "badacsony": {
+  "cim": "File:Balaton Hungary Landscape.jpg",
+  "eredetiH": 2010,
+  "eredetiW": 3036,
+  "h": 636,
+  "leiras": "Landscape at Lake Balaton, Hungary.",
+  "licenc": "CC BY 2.0",
+  "licencUrl": "https://creativecommons.org/licenses/by/2.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3ABalaton_Hungary_Landscape.jpg",
+  "szerzo": "txd",
+  "w": 960
+ },
+ "bakcso": {
+  "cim": "File:Black-Crowned-Night-Heron.jpg",
+  "eredetiH": 1600,
+  "eredetiW": 2400,
+  "h": 640,
+  "leiras": "Black-crowned Night Heron (Nycticorax nycticorax).",
+  "licenc": "CC BY-SA 3.0",
+  "licencUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3ABlack-Crowned-Night-Heron.jpg",
+  "szerzo": "Calibas",
+  "w": 960
+ },
  "balaton": {
   "cim": "File:Balatoni vitorlások Tihanynál.jpg",
   "eredetiH": 2463,
@@ -131,6 +155,30 @@
   "szerzo": "LesMezei",
   "w": 960
  },
+ "gyekeny": {
+  "cim": "File:Typha latifolia 109956886.jpg",
+  "eredetiH": 1536,
+  "eredetiW": 2048,
+  "h": 720,
+  "leiras": "broadleaf cattail (Typha latifolia)",
+  "licenc": "CC BY-SA 4.0",
+  "licencUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3ATypha_latifolia_109956886.jpg",
+  "szerzo": "Michel Langeveld",
+  "w": 960
+ },
+ "gyurgyalag": {
+  "cim": "File:Merops apiaster 04.jpg",
+  "eredetiH": 2378,
+  "eredetiW": 3570,
+  "h": 639,
+  "leiras": "European Bee-eater Merops apiaster, Ariège, France. The female (in front) awaits the offering which the male will make.",
+  "licenc": "CC BY-SA 3.0",
+  "licencUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3AMerops_apiaster_04.jpg",
+  "szerzo": "Pierre Dalous",
+  "w": 960
+ },
  "halaszle": {
   "cim": "File:Balatoni halászlé 094 (4375940169).jpg",
   "eredetiH": 1269,
@@ -179,6 +227,18 @@
   "szerzo": "Charles J. Sharp",
   "w": 960
  },
+ "hod": {
+  "cim": "File:Bever - Eurasian beaver - Castor fiber 5.jpg",
+  "eredetiH": 2286,
+  "eredetiW": 3163,
+  "h": 694,
+  "leiras": "Beaver (Castor fiber) on the shore of Theisendammen Reservoir in Trondheim - Norway",
+  "licenc": "CC BY 4.0",
+  "licencUrl": "https://creativecommons.org/licenses/by/4.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3ABever_-_Eurasian_beaver_-_Castor_fiber_5.jpg",
+  "szerzo": "Bouke ten Cate",
+  "w": 960
+ },
  "hortobagyi": {
   "cim": "File:Hortobagy palacsinta.JPG",
   "eredetiH": 1600,
@@ -213,6 +273,18 @@
   "licencUrl": "https://creativecommons.org/licenses/by-sa/2.5",
   "oldal": "https://commons.wikimedia.org/wiki/File%3AEurasian_Spoonbill.jpg",
   "szerzo": "Andreas Trepte",
+  "w": 960
+ },
+ "kecsege": {
+  "cim": "File:Acipenser ruthenus Prague Vltava 1.jpg",
+  "eredetiH": 2000,
+  "eredetiW": 3000,
+  "h": 640,
+  "leiras": "Fish Sterlet on exhibition Subaqueous Vltava, Prague 2011, Czech Republic",
+  "licenc": "Public domain",
+  "licencUrl": "",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3AAcipenser_ruthenus_Prague_Vltava_1.jpg",
+  "szerzo": "Karelj",
   "w": 960
  },
  "keszeg": {
@@ -359,6 +431,18 @@
   "szerzo": "Robert Flogaus-Faust",
   "w": 960
  },
+ "oz": {
+  "cim": "File:Metskits - Roe deer - Capreolus capreolus.jpg",
+  "eredetiH": 2366,
+  "eredetiW": 3778,
+  "h": 601,
+  "leiras": "Roe deer in Lääneranna Parish, Estonia",
+  "licenc": "CC BY-SA 4.0",
+  "licencUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3AMetskits_-_Roe_deer_-_Capreolus_capreolus.jpg",
+  "szerzo": "Kristian Pikner",
+  "w": 960
+ },
  "palinka": {
   "cim": "File:Ceramic house, palinka flasks in Gyenesdiás, 2016 Hungary.jpg",
   "eredetiH": 1704,
@@ -503,6 +587,18 @@
   "szerzo": "Illustratedjc",
   "w": 960
  },
+ "suger": {
+  "cim": "File:Perca fluviatilis 2008 G1.jpg",
+  "eredetiH": 1100,
+  "eredetiW": 2200,
+  "h": 480,
+  "leiras": "Perch",
+  "licenc": "Public domain",
+  "licencUrl": "",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3APerca_fluviatilis_2008_G1.jpg",
+  "szerzo": "George Chernilevsky",
+  "w": 960
+ },
  "szalami": {
   "cim": "File:Salami aka.jpg",
   "eredetiH": 829,
@@ -513,6 +609,18 @@
   "licencUrl": "https://creativecommons.org/licenses/by-sa/2.5",
   "oldal": "https://commons.wikimedia.org/wiki/File%3ASalami_aka.jpg",
   "szerzo": "André Karwath aka Aka",
+  "w": 960
+ },
+ "szarcsa": {
+  "cim": "File:Eurasian Coot 2025 11 30 03.jpg",
+  "eredetiH": 3187,
+  "eredetiW": 4781,
+  "h": 640,
+  "leiras": "An Eurasian coot (Fulica atra) swimming.",
+  "licenc": "CC BY 4.0",
+  "licencUrl": "https://creativecommons.org/licenses/by/4.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3AEurasian_Coot_2025_11_30_03.jpg",
+  "szerzo": "Alexis Lours",
   "w": 960
  },
  "szitakoto": {
@@ -599,6 +707,18 @@
   "szerzo": "Pumeks",
   "w": 960
  },
+ "tokesrece": {
+  "cim": "File:Male mallard3.jpg",
+  "eredetiH": 1162,
+  "eredetiW": 1800,
+  "h": 620,
+  "leiras": "Male Mallard (Anas platyrhynchos).",
+  "licenc": "CC BY-SA 3.0",
+  "licencUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3AMale_mallard3.jpg",
+  "szerzo": "Calibas (edit by Aqwis)",
+  "w": 960
+ },
  "toltott": {
   "cim": "File:02022 Hungarian stuffed cabbage rolls in pickled cabbage leaves with veal and deer meat.jpg",
   "eredetiH": 2796,
@@ -645,6 +765,18 @@
   "licencUrl": "https://creativecommons.org/licenses/by-sa/4.0",
   "oldal": "https://commons.wikimedia.org/wiki/File%3AEuropean_otter_02.jpg",
   "szerzo": "Alexander Leisser",
+  "w": 960
+ },
+ "vizitok": {
+  "cim": "File:Nuphar lutea Krumpendorf 01.jpg",
+  "eredetiH": 6000,
+  "eredetiW": 4000,
+  "h": 1440,
+  "leiras": "Yellow Water-Lily (Nuphar lutea) in Krumpendorf am Wörthersee, Carinthia, Austria",
+  "licenc": "CC BY-SA 4.0",
+  "licencUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3ANuphar_lutea_Krumpendorf_01.jpg",
+  "szerzo": "Uoaei1",
   "w": 960
  },
  "vocsok": {
