@@ -1,0 +1,13 @@
+const THREE = AFRAME.THREE;
+const btns = (W.objs||[]).filter(o => o.userData && o.userData.xr && o.geometry && o.geometry.type==="BoxGeometry" && o.material && o.material.length===6);
+const bt = btns[0]; let wheel = null;
+W.root.traverse(o => { if (!wheel && o.geometry && o.geometry.type==="TorusGeometry" && Math.abs(o.geometry.parameters.radius-.46)<.002) wheel = o.parent.parent; });
+const rc = new THREE.Raycaster(); rc.camera = AFRAME.scenes[0].camera; const solid = [];
+wheel.traverse(o => { if (o.isMesh && o.visible && o.material && (o.material.opacity === undefined || o.material.opacity > .1) && o.material.visible !== false && o.material.colorWrite !== false) solid.push(o); });
+const P = bt.geometry.parameters, eyes = []; for (const dx of [-.12,0,.12]) for (const dy of [-.15,-.1,0,.05]) for (const dz of [-.05,0,.1,.2]) eyes.push(new THREE.Vector3(dx,dy,dz));
+bt.updateWorldMatrix(true,false);
+const pts = []; for (const x of [-.45,-.22,0,.22,.45]) for (const y of [-.45,0,.45]) pts.push(bt.localToWorld(new THREE.Vector3(P.width*x, P.height*y, P.depth/2)));
+const vis = (eye) => { let ok = 0; pts.forEach(p => { const dir = p.clone().sub(eye), dist = dir.length(); dir.normalize(); rc.set(eye, dir); rc.far = dist - .004; if (!rc.intersectObjects(solid, false).length) ok++; }); return ok / pts.length; };
+const f = eyes.map(vis), bc = bt.getWorldPosition(new THREE.Vector3());
+const el = Math.atan2(bc.y, -bc.z) * 180 / Math.PI;
+return JSON.stringify({ gombMéret: [+P.width.toFixed(3), +P.height.toFixed(3)], gombKözép: bc.toArray().map(x => +x.toFixed(3)), emelkedésSzög: +el.toFixed(1), min: +Math.min(...f).toFixed(2), átlag: +(f.reduce((a,b)=>a+b,0)/f.length).toFixed(2), szemállások: eyes.length });

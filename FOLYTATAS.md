@@ -1,7 +1,24 @@
 # Zephyr Apartman – a projekt állása és folytatási útmutató
 
-Utolsó mentés: 2026. november 16. hajnal (bemérés a rajt előtt, hajómozgás, fotók Claude-hoz – lásd a legfelső pontot); előtte 2026. november 15. este (Balaton Sailing VR verseny-fejlesztés); korábban 2026. november 9. (VR 2.0 – lásd a 0. pontot); korábban: 2026. november 6. hajnal (a `main` ágon; lásd a 23. pontot – VR-javítások, forgás kézzel, teljes foglalás a VR-ben) · Ezt a fájlt olvasd el először egy új munkamenet elején.
+Utolsó mentés: 2026. november 16. reggel (etalon-mentés, egyetlen Szünet gomb, bemérés csak egyszer, a házak bővítése – lásd a legfelső pontot); előtte hajnalban (hajómozgás, fotók Claude-hoz); előtte 2026. november 15. este (Balaton Sailing VR verseny-fejlesztés); korábban 2026. november 9. (VR 2.0 – lásd a 0. pontot); korábban: 2026. november 6. hajnal (a `main` ágon; lásd a 23. pontot – VR-javítások, forgás kézzel, teljes foglalás a VR-ben) · Ezt a fájlt olvasd el először egy új munkamenet elején.
 
+
+## 2026-11-16 reggel (04:xx): ETALON-MENTÉS, EGYETLEN SZÜNET GOMB, BEMÉRÉS CSAK EGYSZER, A HÁZAK BŐVÍTÉSE (éjszakai megbízás – FOLYAMATBAN)
+**A tulajdonos éjszakai megbízása (hangból, 04:06 „mehet”) – megállás és jóváhagyás nélkül, egymás után:** 1) etalon-mentés, 2) Szünet gomb + a műszer megemelése, 3) bemérés csak egyszer, 4) csomózóház bővítése új csomókkal,
+5) Magyar ételek és ízek háza (szebb belső, valódi ételfotók), 6) Természetvédelmi ház (valódi hal-, madár- és egyéb fotók, szélesebb, színesebb), 7) Elsősegélyház megfordítása (a bejárata rossz irányba néz, beleépült az oktatóházba),
+8) teljes ellenőrzés. A hibafotókon (Quest) még nem mentünk végig – a szemüveg nincs bekötve (lásd a fotós pontot lent). A felhasználási kerete fogyóban: a munkamenet Sonnet modellre váltott.
+- **ETALON („vasárnap éjjeli etalon”):** a teljes tároló pontosan a `82a8d79` commitban (BV `7e47883472`), a GitHubon az **`etalon-vasarnap-ejjeli`** ágon. **Soha ne töröld, ne írd át.**
+  Visszaállás (fájlok): `git fetch origin etalon-vasarnap-ejjeli && git checkout origin/etalon-vasarnap-ejjeli -- .` – teljes visszaállás: `git reset --hard origin/etalon-vasarnap-ejjeli && git push --force-with-lease origin HEAD:main`
+  (CSAK a tulajdonos kérésére). A címke (`vasarnap-ejjeli-etalon`) innen nem hozható létre: a környezet proxyja a címkék és a perjeles ágnevek feltöltését 403-mal elutasítja – ezért ág. Ha a tulajdonos kéri,
+  a GitHub weboldalán (Releases → új kiadás ezen az ágon) címke + letölthető zip is készíthető. A tesztszkriptek (korábban a repón kívül) most a `forras/tools/tesztek/` mappában vannak (`package.json`: playwright + aframe; futtatás: lásd a fájlok fejlécét).
+- **Egyetlen SZÜNET gomb** (05l `vrPodBtns`): a műszer alatt csak a ⏸ SZÜNET marad (nagyobb, 30 × 15 cm); a MENÜ és a KALIBRÁL gomb lekerült. Kormánykerékkel a konzol 15 cm-rel feljebb ül és 40°-ra dől
+  (05b `podSet`: `y 1,5 · rot.x 0,7`; botkormánynál a régi `1,35 · 0,3`) – sugárteszt: 48 szemállásból 100%-ban látszik a gomb, a konzol teteje a horizonton marad (`tesztek/ev-gomb-lathatosag.js`, `ev-muszer-racs.js`).
+- **Szünet utáni választás** (05l `vrPauseBoard`, `vrPauseToggle`, `vrResumeCal`): VR-ben a szünet tábláján két nagy gomb: „▶ FOLYTATÁS” (rögtön) és „◎ BEMÉRÉS, MAJD FOLYTATÁS” (a játék a bemérés végéig áll,
+  utána magától megy tovább – `S.calResume`). A műszer gombja és a tenyérmenü szünet-gombja szünetben a táblát újra a nézés elé hozza. Teszt: `tesztek/pausetest.js`.
+- **Bemérés csak EGYSZER** (05zd `CALS`, `vrCalBegin`, `vrCalRestore`, `calSession`): a munkamenetben (VR-be lépéstől a kilépésig) az első futam elején / VR-be lépéskor mér; az eredmény átvivődik a következő futamokra, helyszínekre
+  és a Kékszalag szakaszaira – **a Kékszalag egyetlen, megállás nélküli verseny (a tulajdonos szerint nincsenek szakaszai): szakaszváltáskor nincs tábla, nincs várakozás.** Újra csak kérésre mér: szünet → bemérés, tenyérmenü ◎,
+  versenymenü ◎, 🪑 kapcsoló. Nem kezdi elölről minden mozdulatnál: az ellenőrzés egyszer mér újra, másodszor már a mostani helyet fogadja el; 10 mp után akkor is bemér (`CAL_MAXW`, `CAL_RETRY`).
+  VR-ből kilépve a bemérés érvényét veszti. (A lenti „minden rajt és helyszín előtt” leírás ELAVULT.)
 
 ## 2026-11-16 hajnal: hajómozgás, bójakerülési jel, Siófok, BEMÉRÉS A RAJT ELŐTT, fotók Claude-hoz
 - **Hajómozgás (02:21 kérés, 03:06 helyesbítés):** a nehéz test csak a hosszabb hullámokat követi (`rwHullMotion`, `HM_HEAVY/LIGHT/RAFT/FLOAT` – 05z) – kis vízben alig bólint / emelkedik.
@@ -11,7 +28,7 @@ Utolsó mentés: 2026. november 16. hajnal (bemérés a rajt előtt, hajómozgá
 - A kikötő csilingelő árbochangja („ting-ting”, üveg eolhárfa) törölve (05f).
 - Új bójakerülési jel (`vrRIconBuild/vrRIconTick` – 05b): szalag a valódi kerülési úttal, a hajó felé döntve; piros = bal kéz, zöld = jobb kéz, kapu = egyenes nyíl két bója közt.
 - Siófok (05zb): Aranyangyal a fotó szerint, 2× nagyobb, fényes arany, éjjel alulról megvilágítva; óriáskerék távolabb a parton és nagyobb (sc 2,7); víztorony köztük, hátrébb, magasabban (sc 2,5).
-- **BEMÉRÉS (KALIBRÁLÁS) MINDEN RAJT ÉS MINDEN ÚJ HELYSZÍN ELŐTT** (02:22 kérés; `05zd-kalibralas.js`): minden futam elején (minden pálya / helyszín, a Kékszalag minden
+- **BEMÉRÉS (KALIBRÁLÁS) MINDEN RAJT ÉS MINDEN ÚJ HELYSZÍN ELŐTT – ELAVULT, 04:2x óta csak egyszer mér, lásd fent** (02:22 kérés; `05zd-kalibralas.js`): minden futam elején (minden pálya / helyszín, a Kékszalag minden
   szakasza, oktató futam, újrakezdés, VR-be lépés) a játék ÁLL (`vrCalTick` a `vrTick` elején), amíg: 1) a fej 1,2 mp-ig nyugodt (a tábla addig a nézés elé igazodik),
   2) bemér: `S.cal = {yaw, x, z}` – a kormányos helye a fej alá, a hajó orra a nézési irányba; álló / ülő a szemmagasságból (`CAL_SIT` 1,36 m; nagy hajón ülve a fedélzet
   `1,65 − szem` m-rel lejjebb, 30–70 cm; kis hajón az ülés `szem − 1,15` m-rel a padló fölött – tipikus felnőttnél ugyanaz, mint a régi 45 cm / 0,5 m), 3) ellenőriz

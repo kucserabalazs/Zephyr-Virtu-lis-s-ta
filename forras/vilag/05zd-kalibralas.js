@@ -15,7 +15,16 @@
        4) csak ezután indul a játék (a rajt visszaszámlálása). Online futamban az idő nem állhat meg (közös rajt) – ott a bemérés a visszaszámlálás alatt fut.
      A ◎ KALIBRÁL gomb és a tenyérmenü 🪑 (ülő / álló) gombja ugyanezt indítja futam közben is (a játék addig áll). A 🪑 gombbal megadott helyzetet
      (ülök / állok) a bemérés a munkamenet végéig elfogadja – ha a szemmagasságod alapján rosszul ismerném fel. 2D-ben (képernyőn) nincs bemérés. */
+  /* ---- MÓDOSÍTÁS 2026-11-16 04:2x (tulajdonos, hangban): „a bemérés csak egyszer legyen, a játék megkezdésekor – ez rendkívül hasznos –, de ne akarjon megállás nélkül, állandóan
+     bemérni; ha külön kéri az ember, akkor bármikor elvégezhesse. A Kékszalag egyetlen futam, nincsenek szakaszai, ott nincs megállás. A kormánynál csak egy SZÜNET gomb legyen, és a szünet
+     utáni újraindításkor ott legyen a választás: előbb bemérés, vagy rögtön folytatás.” MOST:
+       • a bemérés a munkamenetben (VR-be lépéstől a VR-ből kilépésig) EGYSZER fut: az első futam elején / VR-be lépéskor; az eredmény (CALS) átvivődik a következő futamokra, pályákra,
+         helyszínekre és a Kékszalag szakaszaira – megállás, tábla, várakozás nélkül (vrCalBegin → vrCalRestore);
+       • újra csak kérésre mér: SZÜNET tábla → „Bemérés, majd folytatás”, tenyérmenü ◎, versenymenü ◎, vagy a 🪑 (ülő / álló) kapcsoló;
+       • nem kezdi elölről minden mozdulatnál: az ellenőrzésben egyszer mér újra, másodszor már a mostani helyedet fogadja el; ha 10 mp alatt sem lettél nyugodt, akkor is bemér. */
   const CAL_STILL = 1.2, CAL_VERIFY = 1.5, CAL_OK = 1.1;   /* nyugalom → bemérés, ellenőrzés hossza, a „Rendben” kiírás ideje (mp) */
+  const CAL_MAXW = 10, CAL_RETRY = 1;                      /* legfeljebb ennyit vár a nyugalomra (mp); az ellenőrzés legfeljebb ennyiszer indít újra bemérést */
+  const CALS = { done: false, sv: null };                   /* a munkamenet bemérése: egyszer készül, a következő futamok átveszik */
   const CAL_V = .12, CAL_W = .5;                          /* „nyugodt” a fej: 12 cm/mp alatt mozdul, 0,5 rad/mp (≈29°/mp) alatt fordul */
   const CAL_TOL = .2, CAL_TOLA = .35, CAL_TOLY = .14;      /* az ellenőrzés tűrése: 20 cm oldalt, 20° irány, 14 cm magasság */
   const CAL_SIT = 1.36;                                   /* ennél alacsonyabb szemmagasság: ülsz */
@@ -47,7 +56,19 @@
     S.cal = null; S.calDrop = null; S.calLift = null;   /* a korábbi bemérés eldobva (egy másik futam / helyszín világához tartozott) */
     S.calR = { ph: "still", why: why || "start", hold: !S.net, t: 0, st: 0, vt: 0, okT: 0, fT: 0, n: 0, cap: null, last: null, v: null, w: null, dev: null, info: "", infoT: 0 };
     W.panelDirty = 1; }   /* (a tábla az első képkockán nyílik – addigra a nézési irány is beáll) */
+  /* a futam elején: a munkamenetben egyszer bemér; ha már volt, a régi bemérést veszi át (nincs megállás, nincs tábla) */
+  function vrCalBegin() { const S = VRR; if (!S.C || !calActive()) return; S.calAuto = true;
+    if (CALS.done && CALS.sv) { vrCalRestore(); return; } vrCalStart("start"); }
+  function vrCalRestore() { const S = VRR, v = CALS.sv; if (!v) return;
+    S.cal = { yaw: v.yaw, x: v.x, z: v.z }; S.calEye = v.eye; if (v.seated != null) S.seated = v.seated; calPosture();
+    try { vrRootPlace(0); } catch (e) {} W.panelDirty = 1; }
+  /* képkockánként (vrTick): VR-ből kilépve a bemérés érvényét veszti (a Quest tere újraindul); VR-be lépve – ha még nem volt bemérés – elindítja */
+  function calSession() { const S = VRR; if (!S.C) return;
+    if (!T.inVR && !W._calSim) { if (CALS.done) { CALS.done = false; CALS.sv = null; } S.calAuto = false; return; }
+    if (!S.calAuto && !S.calR && !S.replay) { S.calAuto = true; if (CALS.done && CALS.sv) vrCalRestore(); else vrCalStart("start"); } }
   function vrCalEnd(ok) { const S = VRR, R = S.calR; S.calR = null; vrCalBoard(false);
+    if (S.calResume) { S.calResume = false; try { vrPause(false); } catch (e) {} }   /* a szünet utáni „bemérés, majd folytatás” innen megy tovább */
+    if (ok && R && S.cal) { CALS.done = true; CALS.sv = { yaw: S.cal.yaw, x: S.cal.x, z: S.cal.z, eye: S.calEye, seated: S.seated }; }
     if (ok && R) { try { localStorage.setItem("zephyr-vr-kalibral", JSON.stringify({ t: Date.now(), ul: S.seated ? 1 : 0, szem: S.calEye })); } catch (e) {}
       S.msg = `◎ Bemérve – ${S.seated ? "ülő" : "álló"} helyzet: a kormányos helye a fejed alatt, a hajó orra előtted.${R.why === "start" ? (S.lvl ? " Indul a rajt!" : " Indulhatsz!") : " Folytatjuk!"}`; S.msgT = 5; }
     W.panelDirty = 1; }
@@ -76,11 +97,14 @@
         R.st = still ? R.st + dt : Math.max(0, R.st - dt * 2);
         /* a tábla a nézésed elé igazodik, amíg be nem mértünk – így előre nézve olvasod, és az lesz a hajó orra */
         if (S.calB && T.inVR) { const by = S.calB.m.rotation.y; R.fT = Math.abs(wrapA(h.yaw - by)) > .45 ? R.fT + dt : 0; if (R.fT > .4) { R.fT = 0; try { S.calB.place(); } catch (e) {} } }
-        if (R.st >= CAL_STILL) calCapture(h);
+        if (R.st >= CAL_STILL || R.t >= CAL_MAXW) calCapture(h);   /* 10 mp után akkor is bemér, ha nem lettél teljesen nyugodt – ne várakoztassa a játékost végtelenül */
       } else if (R.ph === "verify") {
         const c = R.cap, dx = Math.hypot(h.x - c.x, h.z - c.z), da = Math.abs(wrapA(h.yaw - c.yaw)), dy = h.y - c.y; R.dev = { dx, da, dy, ox: h.x - c.x, oz: h.z - c.z };
-        if (dx > CAL_TOL || da > CAL_TOLA || Math.abs(dy) > CAL_TOLY) {
-          R.info = Math.abs(dy) > CAL_TOLY ? (dy < 0 ? "Leültél? – újra bemérlek…" : "Felálltál? – újra bemérlek…") : dx > CAL_TOL ? "Elléptél a helyedről – újra bemérlek…" : "Elfordultál – nézz előre, újra bemérlek…";
+        if ((dx > CAL_TOL || da > CAL_TOLA || Math.abs(dy) > CAL_TOLY) && R.n >= CAL_RETRY) {
+          /* nem mérünk újra és újra (tulajdonos): másodszor már a mostani helyedet fogadjuk el bemérésnek */
+          calCapture(h); R.ph = "ok"; R.okT = 0; try { uiSnd("success"); } catch (e) {}
+        } else if (dx > CAL_TOL || da > CAL_TOLA || Math.abs(dy) > CAL_TOLY) {
+          R.info =Math.abs(dy) > CAL_TOLY ? (dy < 0 ? "Leültél? – újra bemérlek…" : "Felálltál? – újra bemérlek…") : dx > CAL_TOL ? "Elléptél a helyedről – újra bemérlek…" : "Elfordultál – nézz előre, újra bemérlek…";
           R.infoT = 3; R.ph = "still"; R.st = 0; R.vt = 0; R.n++; R.cap = null; R.dev = null; S.cal = null; S.calDrop = null; S.calLift = null; try { uiSnd("warn"); } catch (e) {}
         } else { R.vt += dt; if (R.vt >= CAL_VERIFY) { R.ph = "ok"; R.okT = 0; try { uiSnd("success"); } catch (e) {} try { hapt(.5, 60); } catch (e) {} } }
       } else if (R.ph === "ok") { R.okT += dt; if (R.okT >= CAL_OK) { vrCalEnd(true); return false; } }
@@ -97,7 +121,7 @@
   function calDraw(B, g) {
     const S = VRR, R = S.calR || { ph: "ok", why: "start", st: 0, vt: 0 }, W0 = B.o.w, small = S.pb && S.cls && S.cls.half < 4;
     const start = R.why === "start", where = S.C ? (S.C.kek ? S.C.name : S.lvl ? `${S.lvl}. futam` : "oktató futam") + (S.venue && S.venue.n ? " · " + S.venue.n : "") : "";
-    uiFrame(B, g, start ? "◎ BEMÉRÉS A RAJT ELŐTT" : R.why === "seat" ? "◎ ÜLŐ / ÁLLÓ HELYZET BEMÉRÉSE" : "◎ BEMÉRÉS (KALIBRÁLÁS)",
+    uiFrame(B, g, start ? "◎ BEMÉRÉS A JÁTÉK ELEJÉN" : R.why === "seat" ? "◎ ÜLŐ / ÁLLÓ HELYZET BEMÉRÉSE" : R.why === "resume" ? "◎ BEMÉRÉS A FOLYTATÁS ELŐTT" : "◎ BEMÉRÉS (KALIBRÁLÁS)",
       start ? `${where} – a játék akkor indul, ha jó helyen vagy` : R.hold ? "a játék addig áll, amíg be nem mértelek" : "online futam: a visszaszámlálás közben mérlek be");
     const pos = R.cap ? (S.seated ? "ÜLSZ" : "ÁLLSZ") : "", lock = S.seatLock != null ? " (a 🪑 gombbal megadva)" : "";
     const steps = [
@@ -139,4 +163,4 @@
     else if (R.info) { uiRR(g, 40, by, W0 - 80, 96, 22); g.fillStyle = "rgba(201,138,0,.9)"; g.fill(); g.fillStyle = "#fff"; g.textAlign = "center"; uiFit(g, R.info, W0 - 140, 40, 800); g.fillText(R.info, W0 / 2, by + 60); g.textAlign = "left"; }
     else { g.fillStyle = "#d6e8ff"; g.textAlign = "center"; const t = "Ha ülve játszol, de állónak mértelek (vagy fordítva): tenyérmenü → 🪑 – onnan megadhatod."; uiFit(g, t, W0 - 120, 26, 600); g.fillText(t, W0 / 2, by + 56); g.textAlign = "left"; }
   }
-  W._calApi = { start: (w) => vrCalStart(w), end: (ok) => vrCalEnd(ok), get R() { return VRR.calR; } };   /* (tesztekhez) */
+  W._calApi = { start: (w) => vrCalStart(w), end: (ok) => vrCalEnd(ok), get R() { return VRR.calR; }, get S() { return CALS; } };   /* (tesztekhez) */

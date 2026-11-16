@@ -1817,7 +1817,7 @@
         { const hd = mesh(new THREE.BoxGeometry(.6, .018, .13), carbon, pod); hd.position.set(0, .245, .05); hd.rotation.x = .12;
           [-1, 1].forEach((q) => { const ck = mesh(new THREE.BoxGeometry(.016, .3, .1), carbon, pod); ck.position.set(q * .292, .09, .04); }); }
         /* gombsor, forgatógomb, LED a képernyő alatt */
-        /* 2026-11-14 22:48 (tulajdonos): a műszer alatt három gomb – MENÜ, SZÜNET, KALIBRÁLÁS */ vrPodBtns(pod, .46, -.345, .02, .6); void rubber;
+        /* 2026-11-14 22:48 (tulajdonos): a műszer alatt három gomb – MENÜ, SZÜNET, KALIBRÁLÁS */ vrPodBtns(pod, .46, -.345, .02, .5); void rubber;   /* 2026-11-16 04:2x (tulajdonos): csak a SZÜNET gomb marad (05l) */
         { const kn = mesh(new THREE.CylinderGeometry(.024, .027, .026, 20), satin, pod); kn.rotation.x = Math.PI / 2; kn.position.set(.262, -.39, .022); kn.scale.setScalar(.62);
           const led = mesh(new THREE.SphereGeometry(.006, 8, 6), basic({ color: "#3dff7a" }), pod); led.position.set(-.262, -.39, .016); led.userData.noBake = true; }
         /* rozsdamentes kapaszkodókeret a ház körül (alul-oldalt), ahogy a valódi kormányállásokon */
@@ -1845,7 +1845,11 @@
           { const d1 = mesh(new THREE.CylinderGeometry(.215, .19, .05, 32), carbon, dh); d1.rotation.x = Math.PI / 2; d1.position.z = -.03; const r1 = mesh(new THREE.TorusGeometry(.2, .012, 8, 36), chrome, dh); r1.position.z = -.004; }
           { const pst2 = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), carbon, ped); pst2.position.set(0, 1.2, -.12); pst2.rotation.x = -.35; }
           G.userData.podSet = (til) => { mT.visible = false; dh.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = false; }); hood.forEach((m) => { m.visible = false; });
-            pod.position.set(0, 1.35, -.2); pod.rotation.set(.3, Math.PI, 0); pod.scale.setScalar(.62);
+            /* 2026-11-16 04:2x (tulajdonos: „a műszernél a stop gombot beletakarja a kormány – a műszer legyen annyira megemelve, hogy a gomb látszódjon és használható legyen. Ez nagyon fontos”):
+               kormánykerékkel a konzol 15 cm-rel feljebb ül és kicsit hátrébb dől (40°) – a sugárteszt (48 szemállás: ±12 cm oldalt, −15…+5 cm magasságban, −5…+20 cm előre-hátra)
+               szerint így a SZÜNET gomb a kerék pereme és a küllők felett MINDEN szemállásból teljesen látszik, a konzol teteje pedig épp a horizont vonalában marad (nem takarja ki).
+               Botkormánynál nincs kerék, ott a régi magasság és dőlés marad. */
+            pod.position.set(0, til ? 1.35 : 1.5, -.2); pod.rotation.set(til ? .3 : .7, Math.PI, 0); pod.scale.setScalar(.62);
             if (til) { scr.position.set(0, .88, -.14); scr.rotation.set(.38, Math.PI, 0); scr.scale.setScalar(.48);   /* 2026-11-12 10:05 (tulajdonos): lejjebb, hogy a két műszer ne takarja egymást – kis rés legyen köztük */ scr.translateZ(.002); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
           G.userData.podSet(true); } }
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
@@ -2084,7 +2088,7 @@
   }
   function buildVRace() {
     const root = W.root;
-    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0, cal: null, calDrop: null, calLift: null, calR: null, calB: null });   /* 2026-11-16: a régi bemérés (más világ / helyszín) nem öröklődik – minden futam elején újra bemérünk (05zd) */   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
+    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0, cal: null, calDrop: null, calLift: null, calR: null, calB: null, calAuto: false, calResume: false });   /* 2026-11-16: a régi bemérés (más világ / helyszín) nem öröklődik – minden futam elején újra bemérünk (05zd) */   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
     vrClassPre();
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
     const oldSky = makeSky(far); vrShoresBuild(far);
@@ -2344,7 +2348,7 @@
     try { if (C.kek) kekSetupHook(C); else if (KEK.on) kekEnd(); } catch (e) { console.warn("kékszalag", e); }   /* 2026-11-15 (05zc) */
     VRR.tut = lvl ? null : { step: 0 }; VRR.riv.forEach((r) => { r.g.visible = !!lvl; if (!lvl) { r.x += 9000; r.z += 9000; r.lbl.visible = false; } });
     if (!lvl) Object.assign(VRR, { t: 0, st: "race", started: true, msg: "OKTATÓ FUTAM – lépésről lépésre megtanulod a hajót. Nincs ellenfél, nincs időnyomás.", msgT: 6 });
-    try { vrCalStart("start"); } catch (e) { console.warn("bemérés", e); }   /* 2026-11-16 (tulajdonos): a játék csak a bemérés és az ellenőrzés után indul (05zd) */
+    try { vrCalBegin(); } catch (e) { console.warn("bemérés", e); }   /* 2026-11-16 (tulajdonos): a bemérés EGYSZER van – a játék elején; a következő futamok / szakaszok átveszik (05zd) */
     W.panelDirty = 1;
   }
   /* --------------------------------------------------------------- kormány */
@@ -2589,6 +2593,7 @@
     const S = VRR, C = S.C;
     /* 2026-11-14 22:48: drón-visszajátszás és SZÜNET – ilyenkor a futam nem halad */
     if (S.replay && vrReplayTick(dt)) return;
+    try { calSession(); } catch (e) {}   /* VR-be lépéskor (ha még nem volt bemérés) elindítja, VR-ből kilépve érvényteleníti (05zd) */
     if (S.calR && vrCalTick(dt)) return;   /* 2026-11-16 (tulajdonos): bemérés a rajt előtt – amíg nem állsz / ülsz jó helyen, a játék nem indul (05zd) */
     if (vrPausedTick(dt)) return;
     if (S.ensign) { const pa = S.ensign.geometry.attributes.position, b0 = S.ensign.userData.base, t = W.t; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 9 - t * 7) * .05 * x / .6; } pa.needsUpdate = true; }
@@ -3321,7 +3326,7 @@
     if (calActive()) vrCalStart("seat"); else { calPosture(); try { vrRootPlace(0); } catch (e) {} } W.panelDirty = 1; }
   function vrWrist() {
     const S = VRR;
-    return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", S.fin && S.st === "race" ? "Tovább (nem várok)" : "Kapitányi tájékoztató", () => (S.fin && S.st === "race" ? vrSkip() : vrBriefOpen())], ["⛵", "Főmenü", vrToHarbor], ["⏸", S.paused ? "Folytatás" : "Szünet", () => vrPause(!S.paused)], ["◎", "Kalibrálás", vrCalibrate], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
+    return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", S.fin && S.st === "race" ? "Tovább (nem várok)" : "Kapitányi tájékoztató", () => (S.fin && S.st === "race" ? vrSkip() : vrBriefOpen())], ["⛵", "Főmenü", vrToHarbor], ["⏸", S.paused ? "Folytatás" : "Szünet", () => vrPauseToggle()], ["◎", "Kalibrálás", vrCalibrate], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
       ["☰", "Versenymenü", () => vrRaceMenu(true)], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]];
   }
   function vrHud(H) {
@@ -3329,7 +3334,7 @@
     H.title(`Balaton Sailing VR · ${S.C.kek ? "" : S.lvl + ". futam · "}${S.C.name}${S.nightInfo ? " · " + S.nightInfo : ""} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.msgT > 0 ? S.msg + " · " : ""}${S.st === "pre" ? "rajt " + mmss(-S.t) : S.C.kek ? "összidő " + kekHms(KEK.T + (S.st === "kek" || KEK.done ? 0 : S.t)) + (KEK.done ? " – vége" : " / időkeret 3:00:00") : "idő " + mmss(S.t) + " / limit " + mmss(S.C.limit || 0)} · ${(S.v / KN).toFixed(1)} csomó · ${S.next < S.marks.length ? vrMkName(S.marks[S.next], S.next) : "befutó"}`);
     if (S.st === "done") H.steer([["⚓ Tájékoztató", vrBriefOpen], ["🎥 Visszajátszás", () => vrReplay(true)], ["☰ Menü", () => vrRaceMenu(true)]], () => { S.wa = 0; });
     else if (S.fin && S.st === "race") H.steer([["Tovább ▸", vrSkip], ["⚓ Kikötő", vrToHarbor]], () => { S.wa = 0; });
-    else H.steer([["☰ Menü", () => vrRaceMenu(true)], [S.paused ? "▶ Folytatás" : "⏸ Szünet", () => vrPause(!S.paused)], ["↻ Újrakezdés", () => vrSetup(S.lvl)]], () => { S.wa = 0; });
+    else H.steer([["☰ Menü", () => vrRaceMenu(true)], [S.paused ? "▶ Folytatás" : "⏸ Szünet", () => vrPauseToggle()], ["↻ Újrakezdés", () => vrSetup(S.lvl)]], () => { S.wa = 0; });
     H.hint(`Kormány: ◀ ▶ gomb vagy ← → (A / D) · a sárga fényoszlop a következő jel · ${S.next < S.marks.length ? vrMkHow(S.marks[S.next]) : "befutó a két bója között"}`);
   }
 /* ==== AUTOMATIKUSAN GENERÁLT (forras/tools/csalad.py) – az ugyvedhez.hu család-figurái (family3d v2: arc-mimika, ötujjú kéz, tincses haj, szél) ==== */
@@ -8894,20 +8899,22 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 6; g.strokeRect(5, 5, w - 10, h - 10); g.fillStyle = "#ffffff"; g.textAlign = "center"; g.textBaseline = "middle";
       let fs = 46; do { g.font = `900 ${fs}px system-ui, sans-serif`; fs -= 2; } while (g.measureText(label).width > w - 22 && fs > 20); g.fillText(label, w / 2, sub ? 50 : 64); if (sub) { g.font = "700 22px system-ui, sans-serif"; g.fillStyle = "rgba(255,255,255,.85)"; g.fillText(sub, w / 2, 96); } });
   }
-  /* a három gomb egy szülőn (a műszerházon / a kijelzőn): w = a sor szélessége, (x, y, z) a sor közepe a szülő terében */
+  /* 2026-11-16 04:2x (tulajdonos): „egyetlen gomb legyen a kormányon, a másik kettőt vegyük le – az egy STOP / SZÜNET gomb legyen”: a műszer alatt csak a ⏸ SZÜNET
+     marad (nagyobb, könnyebb eltalálni); a MENÜ és a KALIBRÁL gomb lekerült – a versenymenü és a bemérés a szünet tábláján (és a tenyérmenüben) érhető el.
+     w = a sor szélessége, (x, y, z) a gomb közepe a szülő terében */
   function vrPodBtns(parent, w, y, z, hk) {
-    const defs = [["☰ MENÜ", "versenymenü", ["#1d5a8e", "#0d3560"], () => vrRaceMenu(true)], ["⏸ SZÜNET", "megállít", ["#c98a00", "#7a5200"], () => vrPause(!VRR.paused)], ["◎ KALIBRÁL", "ide igazít", ["#2aa866", "#16703f"], () => vrCalibrate()]];
-    const bw = w / 3 * .92, bh = bw * (hk || .45), out = [];
+    const defs = [["⏸ SZÜNET", "megállít", ["#c98a00", "#7a5200"], () => vrPauseToggle()]];
+    const bw = Math.min(w * .66, .34), bh = bw * (hk || .45), out = [];
     defs.forEach(([l, sb, col, fn], i) => { const tex = vrBtnTex(l, sb, col), mtx = new THREE.MeshBasicMaterial({ map: tex }), side = new THREE.MeshStandardMaterial({ color: col[1], roughness: .5 });
       W.disposables.push(tex, mtx, side); const geo = new THREE.BoxGeometry(bw, bh, bw * .12); W.disposables.push(geo);
-      const b = new THREE.Mesh(geo, [side, side, side, side, mtx, side]); b.position.set(-w / 3 + i * w / 3, y, z); b.userData.noBake = 1; b.userData.noMerge = 1; parent.add(b);
+      const b = new THREE.Mesh(geo, [side, side, side, side, mtx, side]); b.position.set((i - (defs.length - 1) / 2) * w / 3, y, z); b.userData.noBake = 1; b.userData.noMerge = 1; parent.add(b);
       const st = { b, z0: z, t: 0, hov: false, fn, l };
       b.userData.xr = { hover: (on) => { st.hov = on; }, click: () => { st.t = .18; try { uiSnd("press"); } catch (e) {} try { fn(); } catch (e) { console.warn("gomb", e); } } };
       try { T.xr.extra.add(b); W.objs.push(b); } catch (e) {} out.push(st); VBTN.list.push(st); });
     return out;
   }
   function vrBtnTick(dt) { VBTN.list = VBTN.list.filter((st) => st.b.parent); VBTN.list.forEach((st) => { st.t = Math.max(0, st.t - dt); const d = st.b.geometry.parameters.depth; st.b.position.z = st.z0 - (st.t > 0 ? d * .6 : 0); st.b.scale.setScalar(st.hov ? 1.06 : 1);
-    if (st.l.indexOf("SZÜNET") >= 0 || st.l.indexOf("FOLYTAT") >= 0) { const want = VRR.paused ? "▶ FOLYTAT" : "⏸ SZÜNET"; if (st.l !== want) { st.l = want; const m = st.b.material[4]; if (m.map) m.map.dispose(); m.map = vrBtnTex(want, VRR.paused ? "tovább" : "megállít", VRR.paused ? ["#2aa866", "#16703f"] : ["#c98a00", "#7a5200"]); m.needsUpdate = true; } } }); }
+    if (st.l.indexOf("SZÜNET") >= 0 || st.l.indexOf("FOLYTAT") >= 0) { const want = VRR.paused ? "▶ FOLYTAT" : "⏸ SZÜNET"; if (st.l !== want) { st.l = want; const m = st.b.material[4]; if (m.map) m.map.dispose(); m.map = vrBtnTex(want, VRR.paused ? "bemérés vagy tovább" : "megállít", VRR.paused ? ["#2aa866", "#16703f"] : ["#c98a00", "#7a5200"]); m.needsUpdate = true; } } }); }
 
   /* ---------------------------------------------------------------- SZÜNET */
   function vrPause(on) { const S = VRR; if (!S.C) return; if (S.net && on) { S.msg = "Online futamban a szünet nem állítja meg a többieket – a versenymenü elérhető."; S.msgT = 5; return; }
@@ -8916,10 +8923,21 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     W.panelDirty = 1; }
   function vrPauseBoard(on) { const S = VRR;
     if (!on) { if (S.pauseB) { S.pauseB.destroy(); S.pauseB = null; } return; }
-    if (S.pauseB) return; S.pauseB = uiBoard({ w: 1200, h: 520, mw: 1.1, dist: 1.25, y: .05, fps: 2, bar: 110, draw: (B, g) => { uiFrame(B, g, "⏸ SZÜNET", "a játék áll – semmi nem mozdul, amíg nem folytatod");
-      B.btn(40, 170, 1120, 130, "▶ FOLYTATÁS", () => vrPause(false), { gold: true, fs: 52 });
-      B.btn(40, 320, 360, 150, "☰ Versenymenü", () => { vrPauseBoard(false); vrRaceMenu(true); }); B.btn(420, 320, 360, 150, "◎ Kalibrálás", () => vrCalibrate()); B.btn(800, 320, 360, 150, "↻ Újrakezdés", () => { vrPause(false); vrSetup(VRR.lvl); }); } });
+    /* 2026-11-16 04:2x (tulajdonos): „a szünet gombnak, hogyha az ember kimegy és elmozdul a helyéről, az újraindításkor legyen egy kalibrálási lehetőség: az elindulás előtt akar-e
+       kalibrálni, vagy rögtön folytatni szeretné” – VR-ben a folytatásnál két nagy gomb: rögtön tovább, vagy előbb bemérés (a játék a bemérés végéig áll, utána magától megy tovább) */
+    if (S.pauseB) return; S.pauseB = uiBoard({ w: 1200, h: 600, mw: 1.1, dist: 1.25, y: .05, fps: 2, bar: 110, draw: (B, g) => { const cal = calActive();
+      uiFrame(B, g, "⏸ SZÜNET", cal ? "a játék áll – folytatás előtt választhatsz: rögtön tovább, vagy előbb bemérlek" : "a játék áll – semmi nem mozdul, amíg nem folytatod");
+      if (cal) { B.btn(40, 160, 560, 220, "▶ FOLYTATÁS", () => vrPause(false), { gold: true, fs: 56, sub: "rögtön, ahol abbahagytad" });
+        B.btn(640, 160, 520, 220, "◎ BEMÉRÉS, MAJD FOLYTATÁS", () => vrResumeCal(), { fs: 36, sub: "ha elmozdultál a helyedről" }); }
+      else B.btn(40, 160, 1120, 160, "▶ FOLYTATÁS", () => vrPause(false), { gold: true, fs: 52 });
+      B.btn(40, cal ? 410 : 350, 560, 150, "☰ Versenymenü", () => { vrPauseBoard(false); vrRaceMenu(true); }); B.btn(640, cal ? 410 : 350, 520, 150, "↻ Újrakezdés", () => { vrPause(false); vrSetup(VRR.lvl); }); } });
     S.pauseB.show(true); }
+  /* a műszer SZÜNET gombja és a tenyérmenü szünet / folytatás gombja: futás közben megállít; szünetben a táblát újra a nézésed elé hozza (ott választasz: tovább / bemérés) */
+  function vrPauseToggle() { const S = VRR; if (!S.C) return; if (!S.paused) { vrPause(true); return; }
+    if (S.calR) return; if (!calActive()) { vrPause(false); return; } vrPauseBoard(false); vrPauseBoard(true); }
+  /* szünet után: előbb bemérés, aztán folytatás – a játék a bemérés végéig áll, a végén a bemérés (vrCalEnd) folytatja */
+  function vrResumeCal() { const S = VRR; if (!S.C) return; if (!calActive() || !S.paused) { vrPause(false); return; }
+    vrPauseBoard(false); S.msgT = 0; S.calResume = true; vrCalStart("resume"); }
   /* a versenyvilág tick-je ezt hívja minden képkockán a legelején: igazat ad, ha szünet van (ilyenkor semmi nem mozdul) */
   function vrPausedTick(dt) { const S = VRR; vrBtnTick(dt); uiTickAll(dt); if (S.raceMenu && !S.paused) return false; return !!S.paused; }
 
@@ -9027,7 +9045,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   /* 2D: P = szünet / folytatás, Esc = versenymenü */
   try { document.addEventListener("keydown", (e) => { if (W.kind !== "race" || !W.active || T.inVR || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return;
     if (e.key === "p" || e.key === "P") { vrPause(!VRR.paused); e.preventDefault(); } else if (e.key === "Escape") { vrRaceMenu(!VRR.raceMenu); } }); } catch (e) {}
-  W.vrReplay = vrReplay; W.vrPause = vrPause; W.vrCalibrate = vrCalibrate; W.vrRaceMenu = vrRaceMenu;
+  W.vrReplay = vrReplay; W.vrPause = vrPause; W.vrPauseToggle = vrPauseToggle; W.vrResumeCal = vrResumeCal; W.vrCalibrate = vrCalibrate; W.vrRaceMenu = vrRaceMenu;
   /* =================================================================== 2/M. BALATON SAILING VR – JÁTÉKOSFIÓK (e-mailes regisztráció), 2026. nov. 14. 22:48
      A tulajdonos kérése: „Legyen e-mailes regisztráció a játékhoz, hogy a játék mindig tudja elmenteni az adott felhasználó adatait és eredményeit.”
      • Regisztráció: e-mail + név + jelszó; a szerver 6 jegyű megerősítő kódot küld e-mailben (a játékban beírva a fiók „ellenőrzött” lesz).
@@ -12951,7 +12969,16 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
        4) csak ezután indul a játék (a rajt visszaszámlálása). Online futamban az idő nem állhat meg (közös rajt) – ott a bemérés a visszaszámlálás alatt fut.
      A ◎ KALIBRÁL gomb és a tenyérmenü 🪑 (ülő / álló) gombja ugyanezt indítja futam közben is (a játék addig áll). A 🪑 gombbal megadott helyzetet
      (ülök / állok) a bemérés a munkamenet végéig elfogadja – ha a szemmagasságod alapján rosszul ismerném fel. 2D-ben (képernyőn) nincs bemérés. */
+  /* ---- MÓDOSÍTÁS 2026-11-16 04:2x (tulajdonos, hangban): „a bemérés csak egyszer legyen, a játék megkezdésekor – ez rendkívül hasznos –, de ne akarjon megállás nélkül, állandóan
+     bemérni; ha külön kéri az ember, akkor bármikor elvégezhesse. A Kékszalag egyetlen futam, nincsenek szakaszai, ott nincs megállás. A kormánynál csak egy SZÜNET gomb legyen, és a szünet
+     utáni újraindításkor ott legyen a választás: előbb bemérés, vagy rögtön folytatás.” MOST:
+       • a bemérés a munkamenetben (VR-be lépéstől a VR-ből kilépésig) EGYSZER fut: az első futam elején / VR-be lépéskor; az eredmény (CALS) átvivődik a következő futamokra, pályákra,
+         helyszínekre és a Kékszalag szakaszaira – megállás, tábla, várakozás nélkül (vrCalBegin → vrCalRestore);
+       • újra csak kérésre mér: SZÜNET tábla → „Bemérés, majd folytatás”, tenyérmenü ◎, versenymenü ◎, vagy a 🪑 (ülő / álló) kapcsoló;
+       • nem kezdi elölről minden mozdulatnál: az ellenőrzésben egyszer mér újra, másodszor már a mostani helyedet fogadja el; ha 10 mp alatt sem lettél nyugodt, akkor is bemér. */
   const CAL_STILL = 1.2, CAL_VERIFY = 1.5, CAL_OK = 1.1;   /* nyugalom → bemérés, ellenőrzés hossza, a „Rendben” kiírás ideje (mp) */
+  const CAL_MAXW = 10, CAL_RETRY = 1;                      /* legfeljebb ennyit vár a nyugalomra (mp); az ellenőrzés legfeljebb ennyiszer indít újra bemérést */
+  const CALS = { done: false, sv: null };                   /* a munkamenet bemérése: egyszer készül, a következő futamok átveszik */
   const CAL_V = .12, CAL_W = .5;                          /* „nyugodt” a fej: 12 cm/mp alatt mozdul, 0,5 rad/mp (≈29°/mp) alatt fordul */
   const CAL_TOL = .2, CAL_TOLA = .35, CAL_TOLY = .14;      /* az ellenőrzés tűrése: 20 cm oldalt, 20° irány, 14 cm magasság */
   const CAL_SIT = 1.36;                                   /* ennél alacsonyabb szemmagasság: ülsz */
@@ -12983,7 +13010,19 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     S.cal = null; S.calDrop = null; S.calLift = null;   /* a korábbi bemérés eldobva (egy másik futam / helyszín világához tartozott) */
     S.calR = { ph: "still", why: why || "start", hold: !S.net, t: 0, st: 0, vt: 0, okT: 0, fT: 0, n: 0, cap: null, last: null, v: null, w: null, dev: null, info: "", infoT: 0 };
     W.panelDirty = 1; }   /* (a tábla az első képkockán nyílik – addigra a nézési irány is beáll) */
+  /* a futam elején: a munkamenetben egyszer bemér; ha már volt, a régi bemérést veszi át (nincs megállás, nincs tábla) */
+  function vrCalBegin() { const S = VRR; if (!S.C || !calActive()) return; S.calAuto = true;
+    if (CALS.done && CALS.sv) { vrCalRestore(); return; } vrCalStart("start"); }
+  function vrCalRestore() { const S = VRR, v = CALS.sv; if (!v) return;
+    S.cal = { yaw: v.yaw, x: v.x, z: v.z }; S.calEye = v.eye; if (v.seated != null) S.seated = v.seated; calPosture();
+    try { vrRootPlace(0); } catch (e) {} W.panelDirty = 1; }
+  /* képkockánként (vrTick): VR-ből kilépve a bemérés érvényét veszti (a Quest tere újraindul); VR-be lépve – ha még nem volt bemérés – elindítja */
+  function calSession() { const S = VRR; if (!S.C) return;
+    if (!T.inVR && !W._calSim) { if (CALS.done) { CALS.done = false; CALS.sv = null; } S.calAuto = false; return; }
+    if (!S.calAuto && !S.calR && !S.replay) { S.calAuto = true; if (CALS.done && CALS.sv) vrCalRestore(); else vrCalStart("start"); } }
   function vrCalEnd(ok) { const S = VRR, R = S.calR; S.calR = null; vrCalBoard(false);
+    if (S.calResume) { S.calResume = false; try { vrPause(false); } catch (e) {} }   /* a szünet utáni „bemérés, majd folytatás” innen megy tovább */
+    if (ok && R && S.cal) { CALS.done = true; CALS.sv = { yaw: S.cal.yaw, x: S.cal.x, z: S.cal.z, eye: S.calEye, seated: S.seated }; }
     if (ok && R) { try { localStorage.setItem("zephyr-vr-kalibral", JSON.stringify({ t: Date.now(), ul: S.seated ? 1 : 0, szem: S.calEye })); } catch (e) {}
       S.msg = `◎ Bemérve – ${S.seated ? "ülő" : "álló"} helyzet: a kormányos helye a fejed alatt, a hajó orra előtted.${R.why === "start" ? (S.lvl ? " Indul a rajt!" : " Indulhatsz!") : " Folytatjuk!"}`; S.msgT = 5; }
     W.panelDirty = 1; }
@@ -13012,11 +13051,14 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
         R.st = still ? R.st + dt : Math.max(0, R.st - dt * 2);
         /* a tábla a nézésed elé igazodik, amíg be nem mértünk – így előre nézve olvasod, és az lesz a hajó orra */
         if (S.calB && T.inVR) { const by = S.calB.m.rotation.y; R.fT = Math.abs(wrapA(h.yaw - by)) > .45 ? R.fT + dt : 0; if (R.fT > .4) { R.fT = 0; try { S.calB.place(); } catch (e) {} } }
-        if (R.st >= CAL_STILL) calCapture(h);
+        if (R.st >= CAL_STILL || R.t >= CAL_MAXW) calCapture(h);   /* 10 mp után akkor is bemér, ha nem lettél teljesen nyugodt – ne várakoztassa a játékost végtelenül */
       } else if (R.ph === "verify") {
         const c = R.cap, dx = Math.hypot(h.x - c.x, h.z - c.z), da = Math.abs(wrapA(h.yaw - c.yaw)), dy = h.y - c.y; R.dev = { dx, da, dy, ox: h.x - c.x, oz: h.z - c.z };
-        if (dx > CAL_TOL || da > CAL_TOLA || Math.abs(dy) > CAL_TOLY) {
-          R.info = Math.abs(dy) > CAL_TOLY ? (dy < 0 ? "Leültél? – újra bemérlek…" : "Felálltál? – újra bemérlek…") : dx > CAL_TOL ? "Elléptél a helyedről – újra bemérlek…" : "Elfordultál – nézz előre, újra bemérlek…";
+        if ((dx > CAL_TOL || da > CAL_TOLA || Math.abs(dy) > CAL_TOLY) && R.n >= CAL_RETRY) {
+          /* nem mérünk újra és újra (tulajdonos): másodszor már a mostani helyedet fogadjuk el bemérésnek */
+          calCapture(h); R.ph = "ok"; R.okT = 0; try { uiSnd("success"); } catch (e) {}
+        } else if (dx > CAL_TOL || da > CAL_TOLA || Math.abs(dy) > CAL_TOLY) {
+          R.info =Math.abs(dy) > CAL_TOLY ? (dy < 0 ? "Leültél? – újra bemérlek…" : "Felálltál? – újra bemérlek…") : dx > CAL_TOL ? "Elléptél a helyedről – újra bemérlek…" : "Elfordultál – nézz előre, újra bemérlek…";
           R.infoT = 3; R.ph = "still"; R.st = 0; R.vt = 0; R.n++; R.cap = null; R.dev = null; S.cal = null; S.calDrop = null; S.calLift = null; try { uiSnd("warn"); } catch (e) {}
         } else { R.vt += dt; if (R.vt >= CAL_VERIFY) { R.ph = "ok"; R.okT = 0; try { uiSnd("success"); } catch (e) {} try { hapt(.5, 60); } catch (e) {} } }
       } else if (R.ph === "ok") { R.okT += dt; if (R.okT >= CAL_OK) { vrCalEnd(true); return false; } }
@@ -13033,7 +13075,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   function calDraw(B, g) {
     const S = VRR, R = S.calR || { ph: "ok", why: "start", st: 0, vt: 0 }, W0 = B.o.w, small = S.pb && S.cls && S.cls.half < 4;
     const start = R.why === "start", where = S.C ? (S.C.kek ? S.C.name : S.lvl ? `${S.lvl}. futam` : "oktató futam") + (S.venue && S.venue.n ? " · " + S.venue.n : "") : "";
-    uiFrame(B, g, start ? "◎ BEMÉRÉS A RAJT ELŐTT" : R.why === "seat" ? "◎ ÜLŐ / ÁLLÓ HELYZET BEMÉRÉSE" : "◎ BEMÉRÉS (KALIBRÁLÁS)",
+    uiFrame(B, g, start ? "◎ BEMÉRÉS A JÁTÉK ELEJÉN" : R.why === "seat" ? "◎ ÜLŐ / ÁLLÓ HELYZET BEMÉRÉSE" : R.why === "resume" ? "◎ BEMÉRÉS A FOLYTATÁS ELŐTT" : "◎ BEMÉRÉS (KALIBRÁLÁS)",
       start ? `${where} – a játék akkor indul, ha jó helyen vagy` : R.hold ? "a játék addig áll, amíg be nem mértelek" : "online futam: a visszaszámlálás közben mérlek be");
     const pos = R.cap ? (S.seated ? "ÜLSZ" : "ÁLLSZ") : "", lock = S.seatLock != null ? " (a 🪑 gombbal megadva)" : "";
     const steps = [
@@ -13075,7 +13117,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     else if (R.info) { uiRR(g, 40, by, W0 - 80, 96, 22); g.fillStyle = "rgba(201,138,0,.9)"; g.fill(); g.fillStyle = "#fff"; g.textAlign = "center"; uiFit(g, R.info, W0 - 140, 40, 800); g.fillText(R.info, W0 / 2, by + 60); g.textAlign = "left"; }
     else { g.fillStyle = "#d6e8ff"; g.textAlign = "center"; const t = "Ha ülve játszol, de állónak mértelek (vagy fordítva): tenyérmenü → 🪑 – onnan megadhatod."; uiFit(g, t, W0 - 120, 26, 600); g.fillText(t, W0 / 2, by + 56); g.textAlign = "left"; }
   }
-  W._calApi = { start: (w) => vrCalStart(w), end: (ok) => vrCalEnd(ok), get R() { return VRR.calR; } };   /* (tesztekhez) */
+  W._calApi = { start: (w) => vrCalStart(w), end: (ok) => vrCalEnd(ok), get R() { return VRR.calR; }, get S() { return CALS; } };   /* (tesztekhez) */
 
   /* =================================================================== 3. A HÁZ MAKETTJE – varázslatos helyszínen, asztaltól életnagyságig (2026. nov. 6., 2. változat)
      • Helyszín (2026. nov. 6-tól): regatta-bója a Balaton közepén, körülötte életnagyságú verseny és jelenetek (06d); a part ~260 m-re (06c) – valódi napállás szerinti égbolt, a túlpart nevezetességeivel, élővilággal.

@@ -1,0 +1,24 @@
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const p = await b.newPage({ viewport: { width: 900, height: 600 }, locale: 'hu-HU' });
+  await p.route(/aframe.*\.js/, r => r.fulfill({ path: __dirname + '/node_modules/aframe/dist/aframe-master.min.js', contentType: 'application/javascript' }));
+  const errs = []; p.on('pageerror', e => errs.push('E:' + e.message.slice(0, 300)));
+  await p.goto('http://localhost:8097/weboldal/vr-zephyr-games/', { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2500); await p.click('[data-g="race"]');
+  await p.waitForFunction(() => window.ZephyrWorld && ZephyrWorld._hb && ZephyrWorld._race, null, { timeout: 90000 });
+  await p.evaluate(() => { const W = ZephyrWorld, S = W._race; S.mixFleet = false; S.todMix = false; S.lvl = 1; W._raceGo = true; W.open('race'); });
+  await p.waitForFunction(() => { const S = ZephyrWorld._race; return S && S.boat && S.C; }, null, { timeout: 90000 });
+  await p.waitForTimeout(1500);
+  const r0 = await p.evaluate(() => { const S = ZephyrWorld._race; S.wa = 0; return { wa: S.wa, b: S.b }; });
+  await p.mouse.click(450, 150); await p.keyboard.down('ArrowRight');
+  const r1 = await p.evaluate(() => { const S = ZephyrWorld._race; for (let i = 0; i < 20; i++) ZephyrWorld._raceTick(.05); return { wa: +S.wa.toFixed(3), b: +S.b.toFixed(3), keys: JSON.stringify(window.ZephyrWorld && 0) }; });
+  await p.keyboard.up('ArrowRight');
+  const r2 = await p.evaluate(() => { const S = ZephyrWorld._race; for (let i = 0; i < 40; i++) ZephyrWorld._raceTick(.05); return { wa: +S.wa.toFixed(3), b: +S.b.toFixed(3) }; });
+  await p.keyboard.down('a');
+  const r3 = await p.evaluate(() => { const S = ZephyrWorld._race; for (let i = 0; i < 10; i++) ZephyrWorld._raceTick(.05); return { wa: +S.wa.toFixed(3) }; });
+  await p.evaluate(() => window.dispatchEvent(new Event('blur')));
+  const r4 = await p.evaluate(() => { const S = ZephyrWorld._race; for (let i = 0; i < 40; i++) ZephyrWorld._raceTick(.05); return { wa: +S.wa.toFixed(3) }; });
+  console.log(JSON.stringify({ r0, r1, r2, r3, r4 }), '\nhibák:', errs.slice(0, 5).join('\n'));
+  await b.close();
+})().catch((e) => { console.log('FAIL', String(e).slice(0, 500)); process.exit(1); });

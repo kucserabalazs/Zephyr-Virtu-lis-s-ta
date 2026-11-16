@@ -1,0 +1,24 @@
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const p = await b.newPage({ viewport: { width: 1100, height: 700 }, locale: 'hu-HU' });
+  await p.route(/aframe.*\.js/, r => r.fulfill({ path: __dirname + '/node_modules/aframe/dist/aframe-master.min.js', contentType: 'application/javascript' }));
+  const errs = []; p.on('pageerror', e => errs.push('E:' + e.message.slice(0, 250))); p.on('console', m => { if (m.type() === 'error' && !/404|Failed to load/.test(m.text())) errs.push('c:' + m.text().slice(0, 200)); });
+  await p.goto('http://localhost:8097/weboldal/vr-zephyr-games/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(2500);
+  await p.click('[data-g="race"]'); await p.waitForFunction(() => window.ZephyrWorld && ZephyrWorld._race, null, { timeout: 90000 }); await p.waitForTimeout(1500);
+  await p.evaluate(() => { const W = ZephyrWorld, S = W._race; S.mixFleet = false; S.todMix = false; S.nightForce = null; S.lvl = 104; W._raceGo = true; W.open('race'); });
+  await p.waitForFunction(() => { const S = ZephyrWorld._race; return S && S.boat && S.C && S.water && S.setup; }, null, { timeout: 120000 });
+  await p.waitForTimeout(4000);
+  const step = async (name, fn, shot) => { try { await fn(); await p.waitForTimeout(1500); if (shot) await p.screenshot({ path: '/tmp/ui_' + shot + '.png' }); console.log('OK', name, errs.length ? errs.slice(-2).join(' | ') : ''); } catch (e) { console.log('HIBA', name, String(e).replace(/\u001b\[[0-9;]*m/g, '').split('\n').filter((l) => /intercept|visible|stable|enabled|retrying|scroll/.test(l)).slice(0, 4).join(' ¦ ')); } };
+  const clickTxt = async (t) => { const ok = await p.evaluate((t) => { const b = Array.from(document.querySelectorAll('#worldHud button')).find((x) => x.textContent.indexOf(t) >= 0 && x.offsetParent); if (!b) return false; b.click(); return true; }, t); if (!ok) throw new Error('nincs gomb: ' + t); };
+  await step('szünet', () => clickTxt('Szünet'), 'pause');
+  await step('folytatás', () => clickTxt('Folytatás'));
+  await step('menü', () => clickTxt('Menü'), 'menu');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(800);
+  await step('újrakezdés', async () => { await p.evaluate(() => ZephyrWorld._race.raceMenu && ZephyrWorld._race.raceMenu.destroy && (ZephyrWorld._race.raceMenu.destroy(), ZephyrWorld._race.raceMenu = null)); await clickTxt('Újrakezdés'); });
+  await step('befutó (szimulált)', async () => { await p.evaluate(() => { const W = ZephyrWorld, S = W._race; for (let n = 0; n < 200; n++) W.tick(1 / 20); S.st = 'race'; S.t = 240; S.started = true; S.next = S.marks.length; S.fin = S.t; S.res.push({ n: S.meName, t: S.t, me: true }); S.riv.forEach((r, i) => { r.fin = S.t + 20 + i * 10; S.res.push({ n: r.o.name, t: r.fin }); }); for (let n = 0; n < 100; n++) W.tick(1 / 20); }); }, 'finish');
+  await step('visszajátszás', () => clickTxt('Visszajátszás'), 'replay');
+  await p.waitForTimeout(3000); await p.screenshot({ path: '/tmp/ui_replay2.png' });
+  await step('oktató futam', () => p.evaluate(() => { const W = ZephyrWorld, S = W._race; S.setup(0); for (let n = 0; n < 400; n++) W.tick(1 / 20); }), 'tut');
+  console.log('hibák:', errs.slice(0, 8).join('\n')); await b.close();
+})().catch((e) => { console.log('FAIL', String(e).slice(0, 400)); process.exit(1); });

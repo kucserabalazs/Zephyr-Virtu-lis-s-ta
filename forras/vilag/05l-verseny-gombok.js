@@ -11,20 +11,22 @@
       g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 6; g.strokeRect(5, 5, w - 10, h - 10); g.fillStyle = "#ffffff"; g.textAlign = "center"; g.textBaseline = "middle";
       let fs = 46; do { g.font = `900 ${fs}px system-ui, sans-serif`; fs -= 2; } while (g.measureText(label).width > w - 22 && fs > 20); g.fillText(label, w / 2, sub ? 50 : 64); if (sub) { g.font = "700 22px system-ui, sans-serif"; g.fillStyle = "rgba(255,255,255,.85)"; g.fillText(sub, w / 2, 96); } });
   }
-  /* a három gomb egy szülőn (a műszerházon / a kijelzőn): w = a sor szélessége, (x, y, z) a sor közepe a szülő terében */
+  /* 2026-11-16 04:2x (tulajdonos): „egyetlen gomb legyen a kormányon, a másik kettőt vegyük le – az egy STOP / SZÜNET gomb legyen”: a műszer alatt csak a ⏸ SZÜNET
+     marad (nagyobb, könnyebb eltalálni); a MENÜ és a KALIBRÁL gomb lekerült – a versenymenü és a bemérés a szünet tábláján (és a tenyérmenüben) érhető el.
+     w = a sor szélessége, (x, y, z) a gomb közepe a szülő terében */
   function vrPodBtns(parent, w, y, z, hk) {
-    const defs = [["☰ MENÜ", "versenymenü", ["#1d5a8e", "#0d3560"], () => vrRaceMenu(true)], ["⏸ SZÜNET", "megállít", ["#c98a00", "#7a5200"], () => vrPause(!VRR.paused)], ["◎ KALIBRÁL", "ide igazít", ["#2aa866", "#16703f"], () => vrCalibrate()]];
-    const bw = w / 3 * .92, bh = bw * (hk || .45), out = [];
+    const defs = [["⏸ SZÜNET", "megállít", ["#c98a00", "#7a5200"], () => vrPauseToggle()]];
+    const bw = Math.min(w * .66, .34), bh = bw * (hk || .45), out = [];
     defs.forEach(([l, sb, col, fn], i) => { const tex = vrBtnTex(l, sb, col), mtx = new THREE.MeshBasicMaterial({ map: tex }), side = new THREE.MeshStandardMaterial({ color: col[1], roughness: .5 });
       W.disposables.push(tex, mtx, side); const geo = new THREE.BoxGeometry(bw, bh, bw * .12); W.disposables.push(geo);
-      const b = new THREE.Mesh(geo, [side, side, side, side, mtx, side]); b.position.set(-w / 3 + i * w / 3, y, z); b.userData.noBake = 1; b.userData.noMerge = 1; parent.add(b);
+      const b = new THREE.Mesh(geo, [side, side, side, side, mtx, side]); b.position.set((i - (defs.length - 1) / 2) * w / 3, y, z); b.userData.noBake = 1; b.userData.noMerge = 1; parent.add(b);
       const st = { b, z0: z, t: 0, hov: false, fn, l };
       b.userData.xr = { hover: (on) => { st.hov = on; }, click: () => { st.t = .18; try { uiSnd("press"); } catch (e) {} try { fn(); } catch (e) { console.warn("gomb", e); } } };
       try { T.xr.extra.add(b); W.objs.push(b); } catch (e) {} out.push(st); VBTN.list.push(st); });
     return out;
   }
   function vrBtnTick(dt) { VBTN.list = VBTN.list.filter((st) => st.b.parent); VBTN.list.forEach((st) => { st.t = Math.max(0, st.t - dt); const d = st.b.geometry.parameters.depth; st.b.position.z = st.z0 - (st.t > 0 ? d * .6 : 0); st.b.scale.setScalar(st.hov ? 1.06 : 1);
-    if (st.l.indexOf("SZÜNET") >= 0 || st.l.indexOf("FOLYTAT") >= 0) { const want = VRR.paused ? "▶ FOLYTAT" : "⏸ SZÜNET"; if (st.l !== want) { st.l = want; const m = st.b.material[4]; if (m.map) m.map.dispose(); m.map = vrBtnTex(want, VRR.paused ? "tovább" : "megállít", VRR.paused ? ["#2aa866", "#16703f"] : ["#c98a00", "#7a5200"]); m.needsUpdate = true; } } }); }
+    if (st.l.indexOf("SZÜNET") >= 0 || st.l.indexOf("FOLYTAT") >= 0) { const want = VRR.paused ? "▶ FOLYTAT" : "⏸ SZÜNET"; if (st.l !== want) { st.l = want; const m = st.b.material[4]; if (m.map) m.map.dispose(); m.map = vrBtnTex(want, VRR.paused ? "bemérés vagy tovább" : "megállít", VRR.paused ? ["#2aa866", "#16703f"] : ["#c98a00", "#7a5200"]); m.needsUpdate = true; } } }); }
 
   /* ---------------------------------------------------------------- SZÜNET */
   function vrPause(on) { const S = VRR; if (!S.C) return; if (S.net && on) { S.msg = "Online futamban a szünet nem állítja meg a többieket – a versenymenü elérhető."; S.msgT = 5; return; }
@@ -33,10 +35,21 @@
     W.panelDirty = 1; }
   function vrPauseBoard(on) { const S = VRR;
     if (!on) { if (S.pauseB) { S.pauseB.destroy(); S.pauseB = null; } return; }
-    if (S.pauseB) return; S.pauseB = uiBoard({ w: 1200, h: 520, mw: 1.1, dist: 1.25, y: .05, fps: 2, bar: 110, draw: (B, g) => { uiFrame(B, g, "⏸ SZÜNET", "a játék áll – semmi nem mozdul, amíg nem folytatod");
-      B.btn(40, 170, 1120, 130, "▶ FOLYTATÁS", () => vrPause(false), { gold: true, fs: 52 });
-      B.btn(40, 320, 360, 150, "☰ Versenymenü", () => { vrPauseBoard(false); vrRaceMenu(true); }); B.btn(420, 320, 360, 150, "◎ Kalibrálás", () => vrCalibrate()); B.btn(800, 320, 360, 150, "↻ Újrakezdés", () => { vrPause(false); vrSetup(VRR.lvl); }); } });
+    /* 2026-11-16 04:2x (tulajdonos): „a szünet gombnak, hogyha az ember kimegy és elmozdul a helyéről, az újraindításkor legyen egy kalibrálási lehetőség: az elindulás előtt akar-e
+       kalibrálni, vagy rögtön folytatni szeretné” – VR-ben a folytatásnál két nagy gomb: rögtön tovább, vagy előbb bemérés (a játék a bemérés végéig áll, utána magától megy tovább) */
+    if (S.pauseB) return; S.pauseB = uiBoard({ w: 1200, h: 600, mw: 1.1, dist: 1.25, y: .05, fps: 2, bar: 110, draw: (B, g) => { const cal = calActive();
+      uiFrame(B, g, "⏸ SZÜNET", cal ? "a játék áll – folytatás előtt választhatsz: rögtön tovább, vagy előbb bemérlek" : "a játék áll – semmi nem mozdul, amíg nem folytatod");
+      if (cal) { B.btn(40, 160, 560, 220, "▶ FOLYTATÁS", () => vrPause(false), { gold: true, fs: 56, sub: "rögtön, ahol abbahagytad" });
+        B.btn(640, 160, 520, 220, "◎ BEMÉRÉS, MAJD FOLYTATÁS", () => vrResumeCal(), { fs: 36, sub: "ha elmozdultál a helyedről" }); }
+      else B.btn(40, 160, 1120, 160, "▶ FOLYTATÁS", () => vrPause(false), { gold: true, fs: 52 });
+      B.btn(40, cal ? 410 : 350, 560, 150, "☰ Versenymenü", () => { vrPauseBoard(false); vrRaceMenu(true); }); B.btn(640, cal ? 410 : 350, 520, 150, "↻ Újrakezdés", () => { vrPause(false); vrSetup(VRR.lvl); }); } });
     S.pauseB.show(true); }
+  /* a műszer SZÜNET gombja és a tenyérmenü szünet / folytatás gombja: futás közben megállít; szünetben a táblát újra a nézésed elé hozza (ott választasz: tovább / bemérés) */
+  function vrPauseToggle() { const S = VRR; if (!S.C) return; if (!S.paused) { vrPause(true); return; }
+    if (S.calR) return; if (!calActive()) { vrPause(false); return; } vrPauseBoard(false); vrPauseBoard(true); }
+  /* szünet után: előbb bemérés, aztán folytatás – a játék a bemérés végéig áll, a végén a bemérés (vrCalEnd) folytatja */
+  function vrResumeCal() { const S = VRR; if (!S.C) return; if (!calActive() || !S.paused) { vrPause(false); return; }
+    vrPauseBoard(false); S.msgT = 0; S.calResume = true; vrCalStart("resume"); }
   /* a versenyvilág tick-je ezt hívja minden képkockán a legelején: igazat ad, ha szünet van (ilyenkor semmi nem mozdul) */
   function vrPausedTick(dt) { const S = VRR; vrBtnTick(dt); uiTickAll(dt); if (S.raceMenu && !S.paused) return false; return !!S.paused; }
 
@@ -144,4 +157,4 @@
   /* 2D: P = szünet / folytatás, Esc = versenymenü */
   try { document.addEventListener("keydown", (e) => { if (W.kind !== "race" || !W.active || T.inVR || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return;
     if (e.key === "p" || e.key === "P") { vrPause(!VRR.paused); e.preventDefault(); } else if (e.key === "Escape") { vrRaceMenu(!VRR.raceMenu); } }); } catch (e) {}
-  W.vrReplay = vrReplay; W.vrPause = vrPause; W.vrCalibrate = vrCalibrate; W.vrRaceMenu = vrRaceMenu;
+  W.vrReplay = vrReplay; W.vrPause = vrPause; W.vrPauseToggle = vrPauseToggle; W.vrResumeCal = vrResumeCal; W.vrCalibrate = vrCalibrate; W.vrRaceMenu = vrRaceMenu;

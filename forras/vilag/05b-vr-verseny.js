@@ -128,7 +128,7 @@
         { const hd = mesh(new THREE.BoxGeometry(.6, .018, .13), carbon, pod); hd.position.set(0, .245, .05); hd.rotation.x = .12;
           [-1, 1].forEach((q) => { const ck = mesh(new THREE.BoxGeometry(.016, .3, .1), carbon, pod); ck.position.set(q * .292, .09, .04); }); }
         /* gombsor, forgatógomb, LED a képernyő alatt */
-        /* 2026-11-14 22:48 (tulajdonos): a műszer alatt három gomb – MENÜ, SZÜNET, KALIBRÁLÁS */ vrPodBtns(pod, .46, -.345, .02, .6); void rubber;
+        /* 2026-11-14 22:48 (tulajdonos): a műszer alatt három gomb – MENÜ, SZÜNET, KALIBRÁLÁS */ vrPodBtns(pod, .46, -.345, .02, .5); void rubber;   /* 2026-11-16 04:2x (tulajdonos): csak a SZÜNET gomb marad (05l) */
         { const kn = mesh(new THREE.CylinderGeometry(.024, .027, .026, 20), satin, pod); kn.rotation.x = Math.PI / 2; kn.position.set(.262, -.39, .022); kn.scale.setScalar(.62);
           const led = mesh(new THREE.SphereGeometry(.006, 8, 6), basic({ color: "#3dff7a" }), pod); led.position.set(-.262, -.39, .016); led.userData.noBake = true; }
         /* rozsdamentes kapaszkodókeret a ház körül (alul-oldalt), ahogy a valódi kormányállásokon */
@@ -156,7 +156,11 @@
           { const d1 = mesh(new THREE.CylinderGeometry(.215, .19, .05, 32), carbon, dh); d1.rotation.x = Math.PI / 2; d1.position.z = -.03; const r1 = mesh(new THREE.TorusGeometry(.2, .012, 8, 36), chrome, dh); r1.position.z = -.004; }
           { const pst2 = mesh(new THREE.CylinderGeometry(.04, .05, .2, 14), carbon, ped); pst2.position.set(0, 1.2, -.12); pst2.rotation.x = -.35; }
           G.userData.podSet = (til) => { mT.visible = false; dh.visible = !!til; mW.visible = !til; rail.forEach((m) => { m.visible = false; }); hood.forEach((m) => { m.visible = false; });
-            pod.position.set(0, 1.35, -.2); pod.rotation.set(.3, Math.PI, 0); pod.scale.setScalar(.62);
+            /* 2026-11-16 04:2x (tulajdonos: „a műszernél a stop gombot beletakarja a kormány – a műszer legyen annyira megemelve, hogy a gomb látszódjon és használható legyen. Ez nagyon fontos”):
+               kormánykerékkel a konzol 15 cm-rel feljebb ül és kicsit hátrébb dől (40°) – a sugárteszt (48 szemállás: ±12 cm oldalt, −15…+5 cm magasságban, −5…+20 cm előre-hátra)
+               szerint így a SZÜNET gomb a kerék pereme és a küllők felett MINDEN szemállásból teljesen látszik, a konzol teteje pedig épp a horizont vonalában marad (nem takarja ki).
+               Botkormánynál nincs kerék, ott a régi magasság és dőlés marad. */
+            pod.position.set(0, til ? 1.35 : 1.5, -.2); pod.rotation.set(til ? .3 : .7, Math.PI, 0); pod.scale.setScalar(.62);
             if (til) { scr.position.set(0, .88, -.14); scr.rotation.set(.38, Math.PI, 0); scr.scale.setScalar(.48);   /* 2026-11-12 10:05 (tulajdonos): lejjebb, hogy a két műszer ne takarja egymást – kis rés legyen köztük */ scr.translateZ(.002); } else { scr.position.set(0, .826, -.622); scr.rotation.set(.55, Math.PI, 0); scr.scale.setScalar(.56); } };
           G.userData.podSet(true); } }
       /* kapaszkodó a talapzat előtt (rozsdamentes cső) */
@@ -395,7 +399,7 @@
   }
   function buildVRace() {
     const root = W.root;
-    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0, cal: null, calDrop: null, calLift: null, calR: null, calB: null });   /* 2026-11-16: a régi bemérés (más világ / helyszín) nem öröklődik – minden futam elején újra bemérünk (05zd) */   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
+    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0, cal: null, calDrop: null, calLift: null, calR: null, calB: null, calAuto: false, calResume: false });   /* 2026-11-16: a régi bemérés (más világ / helyszín) nem öröklődik – minden futam elején újra bemérünk (05zd) */   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
     vrClassPre();
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
     const oldSky = makeSky(far); vrShoresBuild(far);
@@ -655,7 +659,7 @@
     try { if (C.kek) kekSetupHook(C); else if (KEK.on) kekEnd(); } catch (e) { console.warn("kékszalag", e); }   /* 2026-11-15 (05zc) */
     VRR.tut = lvl ? null : { step: 0 }; VRR.riv.forEach((r) => { r.g.visible = !!lvl; if (!lvl) { r.x += 9000; r.z += 9000; r.lbl.visible = false; } });
     if (!lvl) Object.assign(VRR, { t: 0, st: "race", started: true, msg: "OKTATÓ FUTAM – lépésről lépésre megtanulod a hajót. Nincs ellenfél, nincs időnyomás.", msgT: 6 });
-    try { vrCalStart("start"); } catch (e) { console.warn("bemérés", e); }   /* 2026-11-16 (tulajdonos): a játék csak a bemérés és az ellenőrzés után indul (05zd) */
+    try { vrCalBegin(); } catch (e) { console.warn("bemérés", e); }   /* 2026-11-16 (tulajdonos): a bemérés EGYSZER van – a játék elején; a következő futamok / szakaszok átveszik (05zd) */
     W.panelDirty = 1;
   }
   /* --------------------------------------------------------------- kormány */
@@ -900,6 +904,7 @@
     const S = VRR, C = S.C;
     /* 2026-11-14 22:48: drón-visszajátszás és SZÜNET – ilyenkor a futam nem halad */
     if (S.replay && vrReplayTick(dt)) return;
+    try { calSession(); } catch (e) {}   /* VR-be lépéskor (ha még nem volt bemérés) elindítja, VR-ből kilépve érvényteleníti (05zd) */
     if (S.calR && vrCalTick(dt)) return;   /* 2026-11-16 (tulajdonos): bemérés a rajt előtt – amíg nem állsz / ülsz jó helyen, a játék nem indul (05zd) */
     if (vrPausedTick(dt)) return;
     if (S.ensign) { const pa = S.ensign.geometry.attributes.position, b0 = S.ensign.userData.base, t = W.t; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 9 - t * 7) * .05 * x / .6; } pa.needsUpdate = true; }
@@ -1632,7 +1637,7 @@
     if (calActive()) vrCalStart("seat"); else { calPosture(); try { vrRootPlace(0); } catch (e) {} } W.panelDirty = 1; }
   function vrWrist() {
     const S = VRR;
-    return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", S.fin && S.st === "race" ? "Tovább (nem várok)" : "Kapitányi tájékoztató", () => (S.fin && S.st === "race" ? vrSkip() : vrBriefOpen())], ["⛵", "Főmenü", vrToHarbor], ["⏸", S.paused ? "Folytatás" : "Szünet", () => vrPause(!S.paused)], ["◎", "Kalibrálás", vrCalibrate], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
+    return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", S.fin && S.st === "race" ? "Tovább (nem várok)" : "Kapitányi tájékoztató", () => (S.fin && S.st === "race" ? vrSkip() : vrBriefOpen())], ["⛵", "Főmenü", vrToHarbor], ["⏸", S.paused ? "Folytatás" : "Szünet", () => vrPauseToggle()], ["◎", "Kalibrálás", vrCalibrate], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
       ["☰", "Versenymenü", () => vrRaceMenu(true)], ["‹", GM_ON() ? "Játékok főmenü" : "A sétához", () => W.close()]];
   }
   function vrHud(H) {
@@ -1640,6 +1645,6 @@
     H.title(`Balaton Sailing VR · ${S.C.kek ? "" : S.lvl + ". futam · "}${S.C.name}${S.nightInfo ? " · " + S.nightInfo : ""} · ${String(window.ZEPHYR_BV || "").slice(0, 5)}`, `${S.msgT > 0 ? S.msg + " · " : ""}${S.st === "pre" ? "rajt " + mmss(-S.t) : S.C.kek ? "összidő " + kekHms(KEK.T + (S.st === "kek" || KEK.done ? 0 : S.t)) + (KEK.done ? " – vége" : " / időkeret 3:00:00") : "idő " + mmss(S.t) + " / limit " + mmss(S.C.limit || 0)} · ${(S.v / KN).toFixed(1)} csomó · ${S.next < S.marks.length ? vrMkName(S.marks[S.next], S.next) : "befutó"}`);
     if (S.st === "done") H.steer([["⚓ Tájékoztató", vrBriefOpen], ["🎥 Visszajátszás", () => vrReplay(true)], ["☰ Menü", () => vrRaceMenu(true)]], () => { S.wa = 0; });
     else if (S.fin && S.st === "race") H.steer([["Tovább ▸", vrSkip], ["⚓ Kikötő", vrToHarbor]], () => { S.wa = 0; });
-    else H.steer([["☰ Menü", () => vrRaceMenu(true)], [S.paused ? "▶ Folytatás" : "⏸ Szünet", () => vrPause(!S.paused)], ["↻ Újrakezdés", () => vrSetup(S.lvl)]], () => { S.wa = 0; });
+    else H.steer([["☰ Menü", () => vrRaceMenu(true)], [S.paused ? "▶ Folytatás" : "⏸ Szünet", () => vrPauseToggle()], ["↻ Újrakezdés", () => vrSetup(S.lvl)]], () => { S.wa = 0; });
     H.hint(`Kormány: ◀ ▶ gomb vagy ← → (A / D) · a sárga fényoszlop a következő jel · ${S.next < S.marks.length ? vrMkHow(S.marks[S.next]) : "befutó a két bója között"}`);
   }
