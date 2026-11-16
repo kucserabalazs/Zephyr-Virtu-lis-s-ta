@@ -451,14 +451,15 @@
         pos.push(...tip, ...bt, ...nt, ...tip, ...nt, ...bb); }
       const cg = new THREE.BufferGeometry(); cg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3)); W.disposables.push(cg);
       const cm = basic({ color: "#ffe14d", transparent: true, opacity: .9, depthWrite: false, side: THREE.DoubleSide, fog: false }); const ring = mesh(cg, cm, VRR.arrow); ring.frustumCulled = false; ring.renderOrder = 5; VRR.arrowRing = ring; }
-    /* 2026-11-12 10:10 (tulajdonos: „a bója FÖLÖTT, a felső részén jól láthatóan jelenjen meg a körbe mutató nyíl, amikor a bója már látótávolságban van”):
-       a soron következő bója fölött keringő nyílkoszorú mutatja a kerülés irányát (felülről nézve az óramutatóval ellentétesen – a bója bal kéz felől marad). */
-    { const N = 6, R1 = 3.6, y = 7.4, pos = []; for (let k = 0; k < N; k++) { const a = k / N * TAU, px = R1 * Math.cos(a), pz = -R1 * Math.sin(a), tx = -Math.sin(a), tz = -Math.cos(a);
-        const tip = [px + tx * 1.5, y, pz + tz * 1.5], bt = [px - tx * .9, y + .95, pz - tz * .9], bb = [px - tx * .9, y - .95, pz - tz * .9], nt = [px - tx * .1, y, pz - tz * .1];
-        pos.push(...tip, ...bt, ...nt, ...tip, ...nt, ...bb); }
-      const cg = new THREE.BufferGeometry(); cg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3)); W.disposables.push(cg);
-      const cm = basic({ color: "#ffe14d", transparent: true, opacity: .95, depthWrite: false, side: THREE.DoubleSide, fog: false }); const g4 = new THREE.Group(); env.add(g4); const ring = mesh(cg, cm, g4); ring.frustumCulled = false; ring.renderOrder = 6;
-      const hoop = mesh(new THREE.TorusGeometry(R1, .07, 6, 40), cm, g4); hoop.rotation.x = Math.PI / 2; hoop.position.y = y; const stem = mesh(new THREE.CylinderGeometry(.04, .04, 2.6, 6), cm, g4); stem.position.y = y - 1.9; VRR.ringUp = g4; VRR.ringUpM = cm; g4.visible = false; }
+    /* 2026-11-12 10:10 (tulajdonos: „a bója FÖLÖTT, a felső részén jól láthatóan jelenjen meg a körbe mutató nyíl, amikor a bója már látótávolságban van”) –
+       2026-11-16 02:52 ÚJ (tulajdonos: „a bója megkerülését jelző nyíl nagyon megtévesztő, cseréld le jobban értelmezhetőre”): a régi forgó nyílkoszorú vízszintes
+       gyűrűjét a hajóból élről látni, a forgásiránya nem dönthető el (és jobb kéz felőli jelnél is ugyanarra forgott). HELYETTE a bója fölött egy felülnézeti
+       „útvonal-kártya” lebeg, a hajó felé billentve (mint egy navigáció kanyarnyila): a jel kis köre, és a VALÓDI kerülési út – honnan érkezel, melyik oldalán
+       haladsz el, merre fordulsz, és merre mész tovább (nyílhegy a következő jel felé). Színe: PIROS = a bója bal kéz felől marad, ZÖLD = jobb kéz felől
+       (mint a műszeren); kapunál egyenes nyíl a két bója között. A szalagon fényimpulzusok futnak a nyílhegy felé – így a haladási irány is egyértelmű. */
+    { const g = new THREE.Group(); g.visible = false; env.add(g); const tl = new THREE.Group(); g.add(tl); const pg = new THREE.Group(); tl.add(pg);
+      const mm = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: .96, depthWrite: false, side: THREE.DoubleSide, fog: false }); W.disposables.push(mm);
+      VRR.rIcon = { g, tl, pg, mm, key: null, mesh: null }; }
     /* a rajt-/célkapu MINDKÉT vége bója: a rendezőhajó előtt is áll egy kapubója, és a kapunál mindkettő fényoszlopot kap */
     VRR.pin2 = vrRaceBuoy("pin", 0, 2.0); VRR.pin2.scale.setScalar(1.3); env.add(VRR.pin2); try { vrBake(VRR.pin2); } catch (e) {}
     /* célkapu (ahol a pálya külön célvonalat ad): két sárga célbója, köztük a vízen a célvonal */
@@ -806,6 +807,38 @@
      a forduló KÜLSŐ oldala felé húzott félegyenest (legfeljebb 45 m-re a bójától). Nem elég a közelében elhaladni; a rossz irányú átlépés hibát jelez. Ugyanez a szabály
      érvényes a játékosra és a gépi hajókra.  ÚTJOG: ellentétes csapáson a szelet JOBBRÓL kapó hajónak van útjoga (bumja a bal oldalon), azonos csapáson a szél felőli tér ki.
      A kitérésre kötelezett gépi hajó kitér; ha a játékos a kötelezett, az útjogos hajó rákiált („Starboard!”); ütközésnél a vétkes kap büntetést. A gépi hajók is hibáznak. */
+  /* ---- a kerülési „útvonal-kártya” (ld. a felépítésnél): a pálya geometriájából számolt út, a jel körül, a jelhez rögzítve */
+  function vrRIconBuild(i) {
+    const S = VRR, I = S.rIcon, C = S.C, m = S.marks[i]; if (!I || !m) return; const lm = { x: (C.line.a.x + C.line.b.x) / 2, z: (C.line.a.z + C.line.b.z) / 2 };
+    const p = i ? S.marks[i - 1] : lm, n = i + 1 < S.marks.length ? S.marks[i + 1] : finMid(); let ix = m.x - p.x, iz = m.z - p.z, il = Math.hypot(ix, iz) || 1, ox = n.x - m.x, oz = n.z - m.z, ol = Math.hypot(ox, oz) || 1; ix /= il; iz /= il; ox /= ol; oz /= ol;
+    const R = 3, pts = []; let col, dots = [[0, 0]];
+    if (m.gate) { const G = m.gate, d = G.dir, ax = (G.b.x - G.a.x) / G.w, az = (G.b.z - G.a.z) / G.w; for (let k = 0; k <= 12; k++) { const u = -7 + 14 * k / 12; pts.push([d[0] * u, d[1] * u]); } dots = [[-ax * 3.6, -az * 3.6], [ax * 3.6, az * 3.6]]; col = [.86, .96, .2]; }
+    else { const k = m.sd === -1 ? -1 : 1, rI = [-iz * k, ix * k], rO = [-oz * k, ox * k], thA = Math.atan2(rI[1], rI[0]), thE = Math.atan2(rO[1], rO[0]), sg = -k; let D = ((sg * (thE - thA)) % TAU + TAU) % TAU; if (D > TAU - .25) D = 0;
+      for (let q = 0; q <= 4; q++) { const u = -5 + 5 * q / 4; pts.push([rI[0] * R + ix * u, rI[1] * R + iz * u]); }
+      const na = Math.max(2, Math.round(D / .16)); for (let q = 1; q <= na; q++) { const th = thA + sg * D * q / na; pts.push([Math.cos(th) * R, Math.sin(th) * R]); }
+      for (let q = 1; q <= 5; q++) { const u = 5.5 * q / 5; pts.push([rO[0] * R + ox * u, rO[1] * R + oz * u]); }
+      col = k === 1 ? [1, .23, .19] : [.16, .86, .38]; }
+    /* szalag (fehér szegéllyel) + nyílhegy + a jel köre(i) – vízszintes síkban (x, z), a középpont a jel */
+    const pos = [], cl = [], uu = [], w = .62, wb = .92, L = pts.length; let acc = 0; const seg = [];
+    for (let q = 0; q < L; q++) { const a0 = pts[Math.max(0, q - 1)], a1 = pts[Math.min(L - 1, q + 1)], tx = a1[0] - a0[0], tz = a1[1] - a0[1], tn = Math.hypot(tx, tz) || 1; if (q) acc += Math.hypot(pts[q][0] - pts[q - 1][0], pts[q][1] - pts[q - 1][1]); seg.push([pts[q][0], pts[q][1], -tz / tn, tx / tn, acc]); }
+    const quad = (A, B, Cc, Dd, c, u) => { [A, B, Cc, A, Cc, Dd].forEach((P2, j) => { pos.push(P2[0], P2[2] || 0, P2[1]); cl.push(...c); uu.push(u[j] != null ? u[j] : -1); }); };
+    [[wb, [1, 1, 1], 0], [w, col, .03]].forEach(([ww, c, yy]) => { for (let q = 0; q + 1 < L; q++) { const s0 = seg[q], s1 = seg[q + 1]; quad([s0[0] + s0[2] * ww, s0[1] + s0[3] * ww, yy], [s0[0] - s0[2] * ww, s0[1] - s0[3] * ww, yy], [s1[0] - s1[2] * ww, s1[1] - s1[3] * ww, yy], [s1[0] + s1[2] * ww, s1[1] + s1[3] * ww, yy], c, yy ? [s0[4], s0[4], s1[4], s0[4], s1[4], s1[4]] : []); } });
+    { const e = seg[L - 1], tx = e[3], tz = -e[2], hw = [1.75, 1.35], hl = [2.7, 2.25]; [[0, [1, 1, 1], 0], [1, col, .03]].forEach(([j, c, yy]) => { const tip = [e[0] + tx * hl[j], e[1] + tz * hl[j], yy], l = [e[0] + e[2] * hw[j] - tx * .2, e[1] + e[3] * hw[j] - tz * .2, yy], r = [e[0] - e[2] * hw[j] - tx * .2, e[1] - e[3] * hw[j] - tz * .2, yy];
+        [tip, l, r].forEach((P2) => { pos.push(P2[0], P2[2], P2[1]); cl.push(...c); uu.push(yy ? e[4] + 1 : -1); }); }); }
+    dots.forEach(([dx, dz]) => { for (let q = 0; q < 16; q++) { const a0 = q / 16 * TAU, a1 = (q + 1) / 16 * TAU; [[0, 0, [1, 1, 1], 1.15, 0], [0, 0, [1, .55, .1], .85, .05]].forEach(([, , c, rr, yy]) => { pos.push(dx, yy, dz, dx + Math.cos(a0) * rr, yy, dz + Math.sin(a0) * rr, dx + Math.cos(a1) * rr, yy, dz + Math.sin(a1) * rr); for (let j = 0; j < 3; j++) { cl.push(...c); uu.push(-1); } }); } });
+    const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute("color", new THREE.Float32BufferAttribute(cl, 3)); geo.userData = { base: cl.slice(), u: uu, len: acc + 1 };
+    if (I.mesh) { I.pg.remove(I.mesh); I.mesh.geometry.dispose(); } I.mesh = new THREE.Mesh(geo, I.mm); I.mesh.frustumCulled = false; I.mesh.renderOrder = 6; I.pg.add(I.mesh); I.m = m;
+  }
+  function vrRIconTick(gateNow, dl) {
+    const S = VRR, I = S.rIcon; if (!I) return; const i = S.next, m = S.marks[i], on = !!m && !gateNow && !S.fin && dl < 220; I.g.visible = on; if (!on) return;
+    const key = i + "|" + S.marks.length + "|" + (S.C && S.C.name) + "|" + m.x.toFixed(1); if (I.key !== key) { I.key = key; vrRIconBuild(i); }
+    /* a kártya a hajó felé fordul és billen (a jel fölött), a mérete a távolsággal nő, hogy messziről is olvasható legyen */
+    const vx = S.x - m.x, vz = S.z - m.z, psi = Math.atan2(vx, vz), kk = clamp(dl / 55, 1, 2.6), H = (m.gate ? 4.2 : 6.2) + 2.4 * kk;
+    I.g.position.set(m.x, H + Math.sin(W.t * 1.3) * .12, m.z); I.g.rotation.y = psi; I.tl.rotation.x = .95; I.pg.rotation.y = -psi; I.g.scale.setScalar(kk);
+    I.mm.opacity = clamp((220 - dl) / 45, 0, 1) * .96;
+    /* fényimpulzusok a nyílhegy felé */
+    const G2 = I.mesh && I.mesh.geometry, U = G2 && G2.userData; if (U && U.u) { const C2 = G2.attributes.color.array, b = U.base, ph = (W.t * 7) % (U.len + 6); for (let q = 0; q < U.u.length; q++) { const u = U.u[q]; let k2 = 1; if (u >= 0) { const d = ph - u; k2 = d > 0 && d < 3.2 ? 1 + .55 * Math.sin(d / 3.2 * Math.PI) : 1; } C2[q * 3] = Math.min(1, b[q * 3] * k2); C2[q * 3 + 1] = Math.min(1, b[q * 3 + 1] * k2 + (k2 - 1) * .5); C2[q * 3 + 2] = Math.min(1, b[q * 3 + 2] * k2 + (k2 - 1) * .5); } G2.attributes.color.needsUpdate = true; }
+  }
   function vrMarkO(i) { const S = VRR, C = S.C, lm = { x: (C.line.a.x + C.line.b.x) / 2, z: (C.line.a.z + C.line.b.z) / 2 }, m = S.marks[i], p = i ? S.marks[i - 1] : lm, n = i + 1 < S.marks.length ? S.marks[i + 1] : finMid();
     let ix = m.x - p.x, iz = m.z - p.z, il = Math.hypot(ix, iz) || 1, ox = n.x - m.x, oz = n.z - m.z, ol = Math.hypot(ox, oz) || 1; ix /= il; iz /= il; ox /= ol; oz /= ol;
     let x = ix - ox, z = iz - oz, l = Math.hypot(x, z); if (l < .35) { const k = m.sd === -1 ? -1 : 1; x = -iz * k; z = ix * k; l = 1; } return [x / l, z / l]; }
@@ -1190,7 +1223,7 @@
       S.arrow.visible = false; S.beamLbl.visible = false; S.beam.visible = !S.fin;
       const gateNow = S.st === "pre" || !!S.ocs || !S.started || S.next >= S.marks.length, dl = Math.hypot(tgt.x - S.x, tgt.z - S.z);
       if (S.beam2) { S.beam2.visible = gateNow && !S.fin; if (gateNow && S.ocs !== 1) { const fg = C.fin && S.started && S.next >= S.marks.length && S.fb, p1 = fg ? S.fb[0] : S.pin, p2 = fg ? S.fb[1] : S.pin2; S.beam.position.set(p1.position.x, 30, p1.position.z); S.beam2.position.set(p2.position.x, 30, p2.position.z); } }
-      if (S.ringUp) { const on = !gateNow && !S.fin && dl < 190; S.ringUp.visible = on; if (on) { S.ringUp.position.set(tgt.x, Math.sin(W.t * 1.3) * .15, tgt.z); S.ringUp.rotation.y = W.t * .9; S.ringUpM.opacity = clamp((190 - dl) / 50, 0, 1) * (.8 + .18 * Math.sin(W.t * 4)); } } }
+      try { vrRIconTick(gateNow, dl); } catch (e) { if (W.debug) console.warn("kerülési nyíl", e); } }
     S.instT = (S.instT || 0) - dt; S.awa = awa; S.aws = aws; S.twa = twa; S.tgt = tgt;
     if (S.instT <= 0) { S.instT = .3; vrInstruments(); }
     vrExtTick(dt); vrBtnTick(dt); vrRecTick(dt);
