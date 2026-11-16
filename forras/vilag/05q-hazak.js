@@ -2,7 +2,7 @@
      7 + 1 ház, „nagyon igényes legyen az elrendezés és szép”; jelölés: B + C – jelzőzászló az oromzaton és saját szín az ajtó- és ablakkereten,
      a tetőgerincen, a móló tövétől a házig vezető ösvénycsíkon és a kikötőtérképen).
      A házak a part mentén, a sétány mögött állnak, a kikötő felé néznek (2026. nov. 15. este: tömörebben, a kikötői tér két oldalán – nyugatra a Mentőmellény-pont, a Csomózóház és a Viharjelző torony, keletre a Természetvédelmi ház és a Magyar Ízek Háza; korábban 60 m-en szétszórva); a Vitorlásiskola és az Elsősegély cölöpökön a víz fölött, egymás mellett,
-     közös fedett tornáccal; a világítótorony a keleti hullámtörő végén. A belső tér (tábla, tanár, szék, könyv, tanulók) a 05o-ban él. */
+     3 m-es közzel (2026. nov. 16.: az Elsősegély bejárata a déli, parti falon van, a közös tornác megszűnt); a világítótorony a keleti hullámtörő végén. A belső tér (tábla, tanár, szék, könyv, tanulók) a 05o-ban él. */
   const HOUSES = [
     { id: "izek", name: "Magyar Ízek Háza", sub: "ételek · borok · hungarikumok", col: "#8e1b2e", flag: "E", kind: "csarda", box: { x0: 15.4, x1: 24.4, z0: 13.2, z1: 19.6 }, teacher: "anya", voice: "berta" },
     { id: "ter", name: "Természetvédelmi ház", sub: "a Balaton élővilága", col: "#3d9a4b", flag: "A", kind: "cabin", box: { x0: 4.6, x1: 11.6, z0: 13, z1: 18.6 }, teacher: "apa", voice: "imre" },
@@ -10,7 +10,7 @@
     { id: "cso", name: "Csomózóház", sub: "csomók és kötélmunka", col: "#7a4ea3", flag: "K", kind: "cabin", box: { x0: -20.2, x1: -14.6, z0: 13, z1: 18.2 }, teacher: "matroz4", voice: "imre" },
     { id: "mel", name: "Mentőmellény-pont", sub: "mellény, mentőöv, mentés", col: "#f07a12", flag: "O", kind: "cabin", box: { x0: -11.2, x1: -6.2, z0: 12.6, z1: 17.4 }, teacher: "matroz1", voice: "imre" },
     { id: "isk", name: "Vitorlásiskola", sub: "a nagypapa szabályai", col: "#2f6fb7", flag: "P", kind: "school", box: { x0: 3.5, x1: 9.5, z0: -1.5, z1: 4 }, teacher: "nagypapa", voice: "imre" },
-    { id: "els", name: "Elsősegély", sub: "a nagymama tanít", col: "#d0342c", flag: "W", kind: "cabin", stilts: true, box: { x0: 11.2, x1: 16.2, z0: -1.5, z1: 4 }, teacher: "nagymama", voice: "anna" },
+    { id: "els", name: "Elsősegély", sub: "a nagymama tanít", col: "#d0342c", flag: "W", kind: "cabin", stilts: true, box: { x0: 12.5, x1: 17.5, z0: -1.5, z1: 4 }, teacher: "nagymama", voice: "anna" },
     { id: "vil", name: "Világítótorony", sub: "fények és jelek éjjel", col: "#14a0a6", flag: "L", kind: "light", box: { x0: 25.9, x1: 30.9, z0: -29.8, z1: -24.8 }, teacher: "orseg", voice: "imre" }
   ];
   const HOUSES_FOOT = HOUSES.map((h) => [h.box.x0, h.box.x1, h.box.z0, h.box.z1]);
@@ -77,7 +77,7 @@
     frame(o.door, d0, d1, 0, 2.2, false); (o.win || []).forEach(([wall, c, w]) => frame(wall, c - w / 2, c + w / 2, wy0, wy1, true));
     /* nyitott deszkaajtó (befelé nyílik), a ház színére festett lécekkel */
     { const dg = new THREE.Group(); G.add(dg); const ax = o.door === "n" || o.door === "s"; const hx = ax ? d0 : (o.door === "w" ? B.x0 : B.x1), hz = ax ? (o.door === "n" ? B.z0 : B.z1) : d0; dg.position.set(hx, F, hz);
-      dg.rotation.y = o.door === "n" ? -1.2 : o.door === "s" ? Math.PI + 1.2 : o.door === "w" ? -1.9 + Math.PI / 2 : 1.9; for (let k = 0; k < 6; k++) mesh(new THREE.BoxGeometry(dw / 6 - .01, 2.16, .05).translate((k + .5) * dw / 6, 1.08, 0), std({ map: logT, roughness: .9 }), dg);
+      dg.rotation.y = o.door === "n" ? -1.2 : o.door === "s" ? 1.2 : o.door === "w" ? -1.9 + Math.PI / 2 : 1.9;   /* déli ajtó: a nyugati zsanértól befelé (északra) nyílik */ for (let k = 0; k < 6; k++) mesh(new THREE.BoxGeometry(dw / 6 - .01, 2.16, .05).translate((k + .5) * dw / 6, 1.08, 0), std({ map: logT, roughness: .9 }), dg);
       [.4, 1.8].forEach((y) => mesh(new THREE.BoxGeometry(dw - .05, .12, .07).translate(dw / 2, y, .05), frameM, dg)); }
     /* névtábla a bejárat fölött */
     { const t = houseSign(h), sw = Math.min(3.4, (o.door === "n" || o.door === "s" ? B.x1 - B.x0 : B.z1 - B.z0) - .6), sh = sw * .29, pl = mesh(new THREE.PlaneGeometry(sw, sh), basic({ map: t }), G);
@@ -112,17 +112,17 @@
       return; }
     if (h.kind === "light") { lighthouseBuild(G, h); return; }
     if (h.stilts) {
-      /* ELSŐSEGÉLY – az iskola mellett, cölöpökön; saját bejárat a nyugati falon (a két ház közötti fedett tornácra nyílik) */
-      const C = cabinBuild(G, { box: B, F, door: "w", dc: 2.2, win: [["s", xc, 1.4], ["e", .9, 1.1], ["n", xc + 1.1, 1.0]], h, flagX: B.x1 + .15 });
-      /* fedett tornác a két ház között: deszkatető oszlopokon */
-      { const post = std({ color: "#5d4630", roughness: .95 }); [[9.75, -1.1], [9.75, 4.3], [11.0, -1.1], [11.0, 4.3]].forEach(([x, z]) => mesh(new THREE.CylinderGeometry(.07, .08, 2.6, 8).translate(x, F + 1.3, z), post, G));
-        const rf = mesh(new THREE.BoxGeometry(1.9, .08, 5.8), std({ map: HZ.shT, roughness: .95 }), G); rf.position.set(10.38, F + 2.68, 1.6); rf.rotation.z = .08; }
-      /* vöröskereszt-tábla a déli falon és a tornác felőli oromzaton */
+      /* ELSŐSEGÉLY – az iskola mellett, cölöpökön. 2026. nov. 16. éjjel (tulajdonos: „az első segélyház fordítva áll, bele van nőve az oktatóházba,
+         a bejárata nem jó irányba mutat”): a ház 1,3 m-rel keletebbre áll (3 m rés az iskola és közte, a két tető nem olvad össze), a közös fedett tornác
+         megszűnt, a bejárat a DÉLI (parti) falon van – ahol a sétány és a korlát mentén érkezel –, a névtábla, a lámpás és a vöröskereszt az ajtó mellett */
+      const DC = B.x0 + 2.0, WS = B.x1 - 1.0;   /* az ajtó és a déli ablak közepe a déli fal mentén */
+      const C = cabinBuild(G, { box: B, F, door: "s", dc: DC, win: [["s", WS, 1.2], ["e", .9, 1.1], ["n", xc + 1.1, 1.0]], h, flagX: B.x1 + .15 });
+      /* vöröskereszt-tábla a nyugati oromzaton (az iskola felől is látszik) és a déli falon az ajtótól nyugatra */
       const rcT = canvasTex(256, 256, (g, w, hh) => { g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, hh); g.fillStyle = "#d0342c"; g.fillRect(w * .38, hh * .14, w * .24, hh * .72); g.fillRect(w * .14, hh * .38, w * .72, hh * .24); g.strokeStyle = "#d0342c"; g.lineWidth = 10; g.strokeRect(5, 5, w - 10, hh - 10); });
-      { const p = mesh(new THREE.PlaneGeometry(.8, .8), basic({ map: rcT }), G); p.position.set(B.x0 - .2, F + 3.55, zc); p.rotation.y = -Math.PI / 2; const p2 = mesh(new THREE.PlaneGeometry(.7, .7), basic({ map: rcT }), G); p2.position.set(xc + 1.7, F + 1.6, B.z1 + .2); }
+      { const p = mesh(new THREE.PlaneGeometry(.8, .8), basic({ map: rcT }), G); p.position.set(B.x0 - .2, F + 3.55, zc); p.rotation.y = -Math.PI / 2; const p2 = mesh(new THREE.PlaneGeometry(.7, .7), basic({ map: rcT }), G); p2.position.set(DC - .6 - .75, F + 1.6, B.z1 + .2); }
       firstAidProps(G, h, C);
       h.board = { x: B.x1 - .2, y: F + 1.65, z: zc + .1, ry: -Math.PI / 2, w: 3.0 }; h.seat = { x: B.x1 - 3.0, z: zc + .4 }; h.tpos = { x: B.x1 - .85, z: B.z0 + .9, ry: -.95 }; h.studs = [{ k: "apa", x: B.x1 - 2.15, z: zc - .85 }];
-      hbTpSurf(HZ.env || G, xc, zc, B.x1 - B.x0 - .6, B.z1 - B.z0 - .6, F + .01, .25); h.out = { x: 10.35, z: 4.3, lx: 10.35, lz: 8 }; return;
+      hbTpSurf(HZ.env || G, xc, zc, B.x1 - B.x0 - .6, B.z1 - B.z0 - .6, F + .01, .25); h.out = { x: DC, z: B.z1 + .5, lx: DC, lz: B.z1 + 4 }; return;
     }
     houseFound(G, B, F);
     if (h.kind === "csarda") { csardaBuild(G, h); }
@@ -149,14 +149,14 @@
     /* elsősegély-szekrény a falon */
     { const g = new THREE.Group(); g.position.set(B.x0 + .3, F + 1.5, B.z1 - .7); g.rotation.y = Math.PI / 2; G.add(g); mesh(new THREE.BoxGeometry(.7, .6, .22), white, g); mesh(new THREE.BoxGeometry(.12, .4, .01).translate(0, 0, .115), red, g); mesh(new THREE.BoxGeometry(.4, .12, .01).translate(0, 0, .115), red, g); }
     /* hordágy a fal mellett */
-    { const g = new THREE.Group(); g.position.set(xMid(B), F + .02, B.z1 - .45); G.add(g); const pole = std({ color: "#b0b6bc", metalness: .7, roughness: .35 }); [-.28, .28].forEach((dz) => { const p = new THREE.CylinderGeometry(.02, .02, 2.2, 8); p.rotateZ(Math.PI / 2); mesh(p.translate(0, .14, dz), pole, g); }); mesh(new THREE.BoxGeometry(1.8, .02, .56).translate(0, .14, 0), std({ color: "#c64a2a", roughness: .9 }), g); [-.75, .75].forEach((dx) => [-.28, .28].forEach((dz) => mesh(new THREE.CylinderGeometry(.02, .02, .12, 6).translate(dx, .06, dz), pole, g))); }
+    { const g = new THREE.Group(); g.position.set(B.x1 - 1.4, F + .02, B.z1 - .45); G.add(g); const pole = std({ color: "#b0b6bc", metalness: .7, roughness: .35 }); [-.28, .28].forEach((dz) => { const p = new THREE.CylinderGeometry(.02, .02, 2.2, 8); p.rotateZ(Math.PI / 2); mesh(p.translate(0, .14, dz), pole, g); }); mesh(new THREE.BoxGeometry(1.8, .02, .56).translate(0, .14, 0), std({ color: "#c64a2a", roughness: .9 }), g); [-.75, .75].forEach((dx) => [-.28, .28].forEach((dz) => mesh(new THREE.CylinderGeometry(.02, .02, .12, 6).translate(dx, .06, dz), pole, g))); }
     /* gyakorlóbaba (újraélesztés) egy szőnyegen */
     { const g = new THREE.Group(); g.position.set(B.x0 + 1.4, F + .03, B.z0 + .9); g.rotation.y = .2; G.add(g); mesh(new THREE.BoxGeometry(1.4, .02, .8), std({ color: "#3a6ea8", roughness: .9 }), g); const sk = std({ color: "#e6c4a6", roughness: .6 }); const t = new THREE.CapsuleGeometry(.17, .42, 4, 12); t.rotateZ(Math.PI / 2); t.scale(1, .55, 1); mesh(t.translate(.05, .1, 0), sk, g); mesh(new THREE.SphereGeometry(.12, 14, 10).translate(-.45, .12, 0), sk, g); mesh(new THREE.BoxGeometry(.3, .02, .32).translate(.08, .2, 0), std({ color: "#2a2f36", roughness: .8 }), g); }
     /* összehajtott takarók, kötszeres polc, kancsó */
     { const C2 = ["#c9302c", "#d9b24a", "#3d6fa8"]; for (let k = 0; k < 3; k++) mesh(new THREE.BoxGeometry(.5, .09, .38).translate(B.x1 - .5, F + .05 + k * .1, B.z0 + .4), std({ color: C2[k], roughness: .95 }), G); }
     { const sg = shelf(G, B.x0 + .2, F + 1.95, B.z0 + 1.4, Math.PI / 2, 1.0, wood); for (let k = 0; k < 4; k++) mesh(new THREE.CylinderGeometry(.05, .05, .1, 12).rotateZ(Math.PI / 2).translate(-.35 + k * .22, .07, 0), white, sg); }
     poster(G, ["112", "HOL?", "MI TÖRTÉNT?", "HÁNYAN?", "ne tedd le!"], "#d0342c", B.x0 + .2, F + 1.75, B.z0 + 2.7, Math.PI / 2, .7);
-    poster(G, ["30 : 2", "mellkasnyomás", "100–120 / perc", "5–6 cm mélyen", "2 befúvás"], "#d0342c", B.x0 + 1.4, F + 1.75, B.z1 - .2, Math.PI, .7); }
+    poster(G, ["30 : 2", "mellkasnyomás", "100–120 / perc", "5–6 cm mélyen", "2 befúvás"], "#d0342c", B.x0 + .85, F + 1.75, B.z1 - .2, Math.PI, .7); }   /* a déli ajtótól nyugatra */
   const xMid = (B) => (B.x0 + B.x1) / 2;
   function natureProps(G, h, C) { const B = h.box, F = C.F, wood = C.frameM;
     /* akvárium balatoni halakkal (lapos, rajzolt halak az üveg mögött) */
@@ -320,7 +320,7 @@
     east.forEach((h, i) => { const off = .5 + i * .2, B = h.box, dx = h.kind === "csarda" ? xMid(B) : h.id === "ter" ? B.x0 + 1.6 : xMid(B) - .9, pz = landPromZ(dx), dz = h.kind === "csarda" ? B.z0 - 1.9 : B.z0 - 1.6;
       ribbon([[start.x + .3, start.z], [start.x + .7, landPromZ(0) + .2], [dx - 1.2, pz + .2], [dx, pz + .9], [dx, dz]], h.col, off); });
     const isk = HZ.byId.isk, els = HZ.byId.els, vil = HZ.byId.vil;
-    ribbon([[1.7, 4.3], [2.6, 3.6], [2.9, 2.2]], isk.col, 0); ribbon([[1.7, 4.5], [9.9, 4.45], [10.4, 3.4], [10.6, 2.3]], els.col, 0);
+    ribbon([[1.7, 4.3], [2.6, 3.6], [2.9, 2.2]], isk.col, 0); ribbon([[1.7, 4.5], [els.dr ? els.dr.c : 14.5, 4.46], [els.dr ? els.dr.c : 14.5, 4.28]], els.col, 0);
     ribbon([[start.x + .4, start.z + .2], [3, landPromZ(3) - .4], [22.5, landPromZ(22.5) - .4], [24.6, 3.4], [25.6, -10], [26.6, -20], [27.7, -23.6]], vil.col, 0);
     const m = new THREE.Mesh(mergeGeoms(parts), std({ map: dash, vertexColors: true, transparent: true, alphaTest: .4, roughness: .7, depthWrite: true, polygonOffset: true, polygonOffsetFactor: -2 })); m.renderOrder = 1; dash.wrapT = THREE.RepeatWrapping; env.add(m); }
   /* ---------------------------------------------------------------- KIKÖTŐTÉRKÉP a móló tövénél (a házak a saját színükkel és zászlójukkal) */

@@ -162,9 +162,9 @@
     const deckM = std({ map: plank, roughness: .9 }), wallM = std({ map: canvasTex(256, 256, (g, w, h) => { g.fillStyle = "#e8e2d2"; g.fillRect(0, 0, w, h); for (let x = 0; x < w; x += 32) { g.fillStyle = "rgba(0,0,0,.08)"; g.fillRect(x, 0, 3, h); } }, { repeat: [3, 1] }), roughness: .85 }),
       trim = std({ color: "#0b3a5e", roughness: .6 }), roofM = std({ color: "#7a2e22", roughness: .8 }), post = std({ color: "#5d4630", roughness: .95 });
     /* terasz-padló a mólótól a házig + cölöpök */
-    mesh(new THREE.BoxGeometry(16, .22, 7.4).translate(9.5, .55, 1.2), deckM, G); for (let x = 2; x <= 17.2; x += 2.6) for (let z = -2.2; z <= 4.6; z += 3.3) mesh(new THREE.CylinderGeometry(.12, .14, 2.4, 8).translate(x, -.6, z), post, G);
+    mesh(new THREE.BoxGeometry(18, .22, 7.4).translate(10.5, .55, 1.2), deckM, G); for (let x = 2; x <= 19.4; x += 2.6) for (let z = -2.2; z <= 4.6; z += 3.3) mesh(new THREE.CylinderGeometry(.12, .14, 2.4, 8).translate(x, -.6, z), post, G);
     /* korlát a terasz szélén */
-    [[1.6, 4.85, 17.4, 4.85], [17.4, -2.4, 17.4, 4.85]].forEach(([x0, z0, x1, z1]) => { const L = Math.hypot(x1 - x0, z1 - z0); const r = mesh(new THREE.BoxGeometry(.06, .06, L), post, G); r.position.set((x0 + x1) / 2, F + .9, (z0 + z1) / 2); r.rotation.y = Math.atan2(x1 - x0, z1 - z0);
+    [[1.6, 4.85, 19.4, 4.85], [19.4, -2.4, 19.4, 4.85]].forEach(([x0, z0, x1, z1]) => { const L = Math.hypot(x1 - x0, z1 - z0); const r = mesh(new THREE.BoxGeometry(.06, .06, L), post, G); r.position.set((x0 + x1) / 2, F + .9, (z0 + z1) / 2); r.rotation.y = Math.atan2(x1 - x0, z1 - z0);
       for (let k = 0; k <= L; k += 1.2) mesh(new THREE.BoxGeometry(.06, .9, .06).translate(x0 + (x1 - x0) * k / L, F + .45, z0 + (z1 - z0) * k / L), post, G); });
     /* ===== 2026-11-15 02:57 (tulajdonos: „rönkház legyen az oktatóház kívül és belül is; a házon belül legyenek régi vitorlák és más díszítő elemek,
        legyen szépen kidolgozott”): RÖNKHÁZ – vízszintesen egymásra rakott, kérges rönkök sarokkötéssel (a rönkvégek a sarkokon túlnyúlnak, évgyűrűs
@@ -280,7 +280,7 @@
       const p = mesh(new THREE.PlaneGeometry(.8, 1), basic({ map: tx }), G); p.position.set(x, F + 1.7, z); p.rotation.y = ry; };
     poster(["CSOMÓK", "nyolcas", "bak", "kikötő-", "bowline", "szorító"], 8.7, B.z1 - LR - .04, Math.PI, "#0b3a5e"); poster(["112", "HOL?", "MI TÖRTÉNT?", "HÁNYAN?", "ne tedd le!"], B.x0 + LR + .04, 3.4, Math.PI / 2, "#c8102e");
     /* járható felületek: terasz és a ház padlója */
-    hbTpSurf(env, 9.5, 1.2, 15.6, 7.0, .67, .3);   /* az egész terasz (a két ház közötti tornáccal) egy felület */
+    hbTpSurf(env, 10.5, 1.2, 17.6, 7.0, .67, .3);   /* az egész terasz (az iskola, a köz és az Elsősegély előtere) egy felület */
     SCH.built = true;
   }
   /* =================================================================== TANTERMEK (2026-11-15, a tulajdonos kérése a kikötő-jelentés után):
