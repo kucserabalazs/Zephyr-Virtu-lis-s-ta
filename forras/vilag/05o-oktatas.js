@@ -334,7 +334,7 @@
   }
   /* ---- szereplők: a tanár és a tanulók (lustán épülnek, ha a ház közelébe érsz; messze menve eltűnnek) ---- */
   function figMake(k, full) { let c, root, s = 1.1;
-    if (/^matroz|^orseg/.test(k)) { const o = { full: true, seed: { matroz1: 1, matroz2: 2, matroz4: 4, orseg: 5 }[k] || 1 }; if (k === "matroz1") { o.zvest = true; o.top = "#1f5fa8"; } if (k === "matroz2") { o.top = "#e8e4d8"; } if (k === "matroz4") { o.cap = "#1f2a44"; o.top = "#7a4ea3"; } if (k === "orseg") { o.beard = true; o.cap = "#1f2a44"; o.top = "#24324a"; }
+    if (/^matroz|^orseg/.test(k)) { const o = { full: true, seed: { matroz1: 1, matroz2: 2, matroz3: 3, matroz4: 4, orseg: 5, matroz5: 6 }[k] || 1 }; if (k === "matroz3") { o.top = "#d0342c"; o.cap = "#d0342c"; } if (k === "matroz5") { o.top = "#2f8f8a"; } if (k === "matroz1") { o.zvest = true; o.top = "#1f5fa8"; } if (k === "matroz2") { o.top = "#e8e4d8"; } if (k === "matroz4") { o.cap = "#1f2a44"; o.top = "#7a4ea3"; } if (k === "orseg") { o.beard = true; o.cap = "#1f2a44"; o.top = "#24324a"; }
       const g = makeFamPerson(o); c = g.userData.P.fam; root = g; s = 1; }
     else { c = new FAM.Character(k, { expr: "vidam" }); famStd(c.root); c.blob.visible = false; c.root.traverse((m) => { if (m.isMesh) m.castShadow = false; }); root = c.root; }
     root.userData.noMerge = true; root.scale.setScalar(s); void full; try { if (!c._frozen) famFreeze(c, true); } catch (e) { console.warn("figura-sütés", e); } return { c, root, s }; }
