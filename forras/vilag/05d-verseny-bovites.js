@@ -59,7 +59,7 @@
     /* 2026-11-16: a kis hajó a SAJÁT méretével és tömegével ring a hullámokon (05z rwHullMotion): a dingi és a flamingó a rövid fodrot is érzi, a tutaj lomhábban */
     const hmL = rwHullMotion(S.hmL || (S.hmL = {}), S.x, S.z, S.b, Math.max(1.6, S.cls.half * 2), S.cls.id === "tutaj" ? 2.4 : S.cls.id === "flamingo" ? 1.2 : 1.55, dt, rwHullP(S.cls.id));
     PS.pitch = -hmL[1];
-    PS.heel = (S.heelW != null ? S.heelW : BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : S.cls.id === "flamingo" ? .9 : .35) - hmL[2];   /* a tutaj pontosan úgy dől, mint a nagy hajó */
+    PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : S.cls.id === "flamingo" ? .9 : .35);   /* 2026-11-16 03:06: a dőlés az eredeti (tulajdonos) */   /* a tutaj pontosan úgy dől, mint a nagy hajó */
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
     const lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hmL[0] + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */

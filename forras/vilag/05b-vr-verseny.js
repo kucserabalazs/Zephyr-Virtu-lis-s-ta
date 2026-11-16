@@ -1113,7 +1113,7 @@
       /* 2026-11-13 00:39 (tulajdonos, ALAPSZABÁLY): „amerre kormányzom a hajót, arra megy, ez alól nincs kivétel; a kormánymozdulat irányítja a hajót, nem löki félre semmi –
          egyetlen kivétel az ütközés.” Ezért a saját hajón a szélbe húzás (luvgierigkeit: dőlésben a hajó a szél felé fordult) MEGSZŰNT; a széllökés csak dönt és gyorsít,
          az irányt (S.b) kizárólag a kormány változtatja. Ide SEMMI olyan tagot ne tegyél vissza, amely a kormánytól függetlenül forgatja a saját hajót. */ }
-    BS.heel = -side * S.heel * .78;   /* látványban kicsit visszafogva (a kormányos helye le van horgonyozva) */ S.heelW = BS.heel;
+    BS.heel = -side * S.heel * .78;   /* látványban kicsit visszafogva (a kormányos helye le van horgonyozva) */
     /* MOZGÁS A HULLÁMOKON – 2026-11-16 02:21 (tulajdonos: „kis víz esetén a hajók természetellenesen ringatóznak – ezek 3500 kg-os testek”): a 3,5 tonnás test a teljes
        test alatti vízfelszín átlagát követi, a saját lengésidejével (rwHullMotion, 05z). A korábbi, hullámtól független mesterséges himbálás (±3°) és a két pontból
        számolt, a rövid fodrokat követő bólintás megszűnt: kis vízben csak lassú, pár tized fokos ringás marad, nagyobb hullámban természetes bólintás és emelkedés. */
@@ -1124,7 +1124,11 @@
     S.prevHb = hb;
     if (seaK > 0 && S.prevHs != null && (hs2 - S.prevHs) / Math.max(dt, .001) < -.42 && S.v > 2.6 && W.t - (S.sternT || 0) > 2.4 && Math.random() < .3 * seaK) { S.sternSlap = clamp(.6 + S.v / 8, .6, 1.5); S.sternT = W.t; } S.prevHs = hs2;   /* 2026-11-15: tatpermet, ha a tat a hullámvölgybe csap */
     const slamE = S.slam * Math.sin(Math.min(1, (W.t - (S.slamT || 0)) * 3) * Math.PI);
-    BS.pitch = -hm[1] - slamE; BS.heel -= hm[2];
+    BS.pitch = -hm[1] - slamE;
+    /* 2026-11-16 03:06 (tulajdonos: „miért nyúltál hozzá a dőléshez? nem kértem … kérem vissza az eredeti beállítást”): a DŐLÉS az EREDETI –
+       a szél okozta dőlés és a régi, lassú oldalirányú ringás változatlanul; a nehéz-test modellből (rwHullMotion) csak a bólintás és az emelkedés jön. */
+    const rockK = clamp(1.25 - S.v / 8, .28, 1.25);
+    BS.heel += Math.sin(W.t * .83 + 1.3) * .03 * rockK + Math.sin(W.t * 1.37) * .012 * rockK;
     S.boat.position.y = hm[0] + slamE * 2;
     S.boat.userData.update(dt);
     /* permet: GPU-részecskék a tó terében (05x) */
@@ -1401,7 +1405,7 @@
     OS.side = (wfv[0] * Xv[0] + wfv[1] * Xv[1]) > 0 ? -1 : 1; OS.boom = clamp((twa - 28) * .78, 7, 82) * D2R * OS.side; OS.jib = clamp((twa - 28) * .55, 8, 52) * D2R; OS.luff = clamp(1 - (twa - 18) / 18, 0, 1);
     OS.spin += ((spin ? 1 : 0) - OS.spin) * Math.min(1, dt * .35);
     { const tw2 = [wfv[0] * S.tws * (r.gkL || 1), wfv[1] * S.tws * (r.gkL || 1)], aw2 = [tw2[0] + f[0] * r.v / VR_SPD, tw2[1] + f[1] * r.v / VR_SPD], aws2 = Math.hypot(aw2[0], aw2[1]), awa2 = Math.acos(clamp((aw2[0] * f[0] + aw2[1] * f[1]) / (aws2 || 1), -1, 1)) * R2D;
-      OS.awa = awa2; OS.aws = aws2; OS.gust = r.gkL || 1; r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 * clamp((RW.Hs - .15) / .4, .08, 1) : 0) - hmR[2]; } OS.pitch = -hmR[1];   /* (a spinakkeres billegés is csak nagyobb hullámban erős) */
+      OS.awa = awa2; OS.aws = aws2; OS.gust = r.gkL || 1; r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 : 0); } OS.pitch = -hmR[1];   /* 2026-11-16 03:06: a dőlés az eredeti (tulajdonos) – a modellből csak a bólintás */
     const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.g.userData.update(dt);   /* minden képkockán, távol is (ne „ugráljon” a vitorla) */
     r.wk.push(r.x, r.z, r.g.rotation.y, r.v, dt, .05);
     /* névtábla a hajó fölött (helyezéssel), 25–220 m között látszik */

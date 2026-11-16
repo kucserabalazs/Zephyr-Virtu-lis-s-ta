@@ -211,8 +211,10 @@
         if (d < 260) { const A = Bu.fg.attributes.position, base = Bu.base; for (let i = 0; i < A.count; i++) { const x = base[i * 3], wv = Math.sin(t * 7.5 - x * 7 + Bu.ph) * .07 * x + Math.sin(t * 4.1 - x * 4) * .03 * x; A.setZ(i, wv); } A.needsUpdate = true; }
         Bu.wash.material.opacity = night ? .14 : .62; } };
     (S.marks || []).forEach((m) => { buoy(m.g); if (m.g2) buoy(m.g2); }); buoy(S.pin); buoy(S.pin2); (S.fb || []).forEach(buoy);
-    if (S.cb) rwFloatHull(S.cb, 13, 4.6, dt, HM_HEAVY);   /* 2026-11-16: a nehéz hajótestek a test alatti átlagos felszínt követik (rwHullMotion) */
-    (S.spect || []).forEach((q) => rwFloatHull(q.g, 11 * (q.sc || 1), 4 * (q.sc || 1), dt, HM_HEAVY));
+    /* 2026-11-16 03:06 (tulajdonos): a DŐLÉS az eredeti (rwFloatOne) – a nehéz-test modellből (rwHullMotion) csak a bólintás és az emelkedés jön */
+    const hullKeepRoll = (o, L, B, kT, rate) => { if (!o || o.visible === false) return; rwFloatOne(o, L, B, kT, rate, dt, null); const rz = o.rotation.z; rwFloatHull(o, L, B, dt, HM_HEAVY); o.rotation.z = rz; };
+    if (S.cb) hullKeepRoll(S.cb, 13, 4.6, .85, 3.2);
+    (S.spect || []).forEach((q) => hullKeepRoll(q.g, 11 * (q.sc || 1), 4 * (q.sc || 1), .85, 3.4));
     /* a rajt- és célvonal csíkja a hullámokra simul */
     rwDrape(S.lineM, .07); rwDrape(S.finM, .08); if (S.CM && S.CM.gate && S.CM.gate.visible) rwDrape(S.CM.strip, .11);
   }
