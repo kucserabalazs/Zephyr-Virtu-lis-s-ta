@@ -9303,6 +9303,93 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     B.btn(x2, y0 + 2 * (kh + 8), 1446 - x2, kh, "szóköz", () => { AK.v[AK.f] += " "; B.dirty = 1; }, { fs: 22, r: 12 }); B.btn(x2, y0 + 3 * (kh + 8), 1446 - x2, kh, "tovább", () => { AK.f = (AK.f + 1) % (AK.mode === "login" ? 3 : 3); if (AK.mode === "login" && AK.f === 1) AK.f = 2; B.dirty = 1; }, { fs: 22, r: 12 }); }
   /* 2D: a fizikai billentyűzet is ír a mezőkbe, amíg a fiók-oldal nyitva van */
   try { document.addEventListener("keydown", (e) => { if (W.kind !== "harbor" || !HB.B || HB.page !== "acct" || T.inVR) return; if (e.key === "Backspace") { AK.v[AK.f] = AK.v[AK.f].slice(0, -1); } else if (e.key === "Tab" || e.key === "Enter") { AK.f = (AK.f + 1) % 3; if (AK.mode === "login" && AK.f === 1) AK.f = 2; } else if (e.key.length === 1) { AK.v[AK.f] = (AK.v[AK.f] + e.key).slice(0, 80); } else return; e.preventDefault(); HB.B.dirty = 1; }); } catch (e) {}
+  /* =====================================================================================================
+     2026-11-16 (éjszakai munka; tulajdonos: „valós ételfotókat bemutató kép illusztrációkat”, „valós halakkal … valós madár … fotókkal”)
+     VALÓDI FOTÓK a Magyar Ízek Házában és a Természetvédelmi Házban.
+     A képek a Wikimedia Commonsból valók, kizárólag szabad licenccel (CC BY, CC BY-SA, CC0, közkincs). A fejlesztői környezet a Wikimediát
+     nem éri el, ezért a letöltést a GitHub Actions végzi (.github/workflows/fotok.yml · forras/tools/fotok.py): kepek/<azonosító>.jpg
+     (960 px széles) és kepek/forrasok.json (szerző, licenc, a Commons-oldal). A kijelölés: forras/kepek/fotok.json (azonosító → fájlnév).
+     A játék a szerzőt és a licencet kiírja: minden képre kis felirat kerül, a házakban pedig „Képek forrása” tábla függ.
+     Ha egy kép nem tölthető be (vagy az oldal olyan helyen fut, ahol nincs kepek mappa), a leckék a korábbi rajzolt ábrát mutatják.
+     A képek lustán töltődnek (a ház közelében, illetve a lecke megjelenésekor), legfeljebb ~14 dekódolt kép van a memóriában.
+     ===================================================================================================== */
+  const FOTO = (function () {
+    const S = {}, M = { m: null, p: null }, MAXK = 14;
+    const hash = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+    function meta() { if (!M.p) M.p = fetch("kepek/forrasok.json?v=" + (window.ZEPHYR_BV || "0")).then((r) => (r.ok ? r.json() : {})).catch(() => ({})).then((m) => (M.m = m || {})); return M.p; }
+    const ent = (id) => S[id] || (S[id] = { id, s: 0, img: null, cb: [], used: 0 });
+    function fire(e) { const l = e.cb; e.cb = []; l.forEach((f) => { try { f(e.s === 2 ? e.img : null, e.id); } catch (x) { console.warn("fotó", e.id, x); } }); }
+    function evict() { const ready = Object.keys(S).map((k) => S[k]).filter((e) => e.s === 2); if (ready.length <= MAXK) return; const now = performance.now(); ready.sort((a, b) => a.used - b.used);
+      for (let i = 0; i < ready.length - MAXK; i++) { if (now - ready[i].used < 30000) break; ready[i].img = null; ready[i].s = 0; } }
+    function load(e) { e.s = 1; meta().then((m) => { const q = m[e.id]; if (!q) { e.s = 3; fire(e); return; }
+      const im = new Image(); im.decoding = "async"; const done = () => { e.img = im; e.s = 2; e.used = performance.now(); evict(); fire(e); };
+      im.onload = () => { if (im.decode) im.decode().then(done, done); else done(); }; im.onerror = () => { e.s = 3; fire(e); };
+      im.src = "kepek/" + e.id + ".jpg?h=" + hash(q.cim + "|" + q.w); }); }
+    /* kérd a képeket (ismételt hívás olcsó) */
+    function need(ids) { const now = performance.now(); ids.forEach((id) => { const e = ent(id); e.used = now; if (e.s === 0) load(e); }); }
+    /* kész kép (vagy null); a használat időpontját frissíti */
+    function img(id) { const e = S[id]; if (!e || e.s !== 2) return null; e.used = performance.now(); return e.img; }
+    /* állapot: 0 nem kért, 1 töltődik, 2 kész, 3 hiba / nincs ilyen kép */
+    const st = (id) => (S[id] ? S[id].s : 0);
+    /* visszahívás, ha kész (azonnal, ha már kész; null-lal, ha nincs ilyen kép) */
+    function then(id, f) { const e = ent(id); need([id]); if (e.s === 2) f(e.img, id); else if (e.s === 3) f(null, id); else e.cb.push(f); }
+    /* visszahívás a kép megérkezésekor – a letöltést NEM indítja el (a falikép csak akkor tölt, ha a ház közelébe érsz) */
+    function onready(id, f) { const e = ent(id); if (e.s === 2) f(e.img, id); else if (e.s === 3) f(null, id); else e.cb.push(f); }
+    const info = (id) => (M.m && M.m[id]) || null;
+    /* a szerző neve tisztán (zárójel, hivatkozás nélkül) és a licenc magyarul */
+    function who(id) { const q = info(id); if (!q) return ""; let a = String(q.szerzo || "").replace(/\(.*$/, "").replace(/https?:\S+/g, "").replace(/\s+/g, " ").trim(); if (!a || /^no machine/i.test(a)) a = "ismeretlen szerző"; if (a.length > 26) a = a.slice(0, 25).trim() + "…"; return a; }
+    function lic(id) { const q = info(id); if (!q) return ""; const l = String(q.licenc || ""); return /^public domain/i.test(l) ? "közkincs" : l; }
+    /* a kép alá írt forrássor; ha g (a megfelelő betűvel) és maxW adott, a hosszú szerzőnevet rövidíti, hogy elférjen */
+    const credit = (id, g, maxW) => { let a = who(id); if (!a) return ""; const l = lic(id), tx = () => "Fotó: " + a + " · " + l; if (g && maxW) while (g.measureText(tx()).width > maxW && a.length > 5) a = a.replace(/…$/, "").slice(0, -2) + "…"; return tx(); };
+    /* fókuszpont (a kép melyik részét tartsa meg a vágás): azonosító → [x, y] törtekben; alapból a közepe */
+    const FOC = {
+      gulyas: [.5, .3], halaszle: [.5, .45], toltott: [.5, .55], dobos: [.45, .5], tokaji: [.5, .62], palinka: [.5, .45], rantott: [.4, .55], somloi: [.35, .42], pogacsa: [.45, .5], turoscsusza: [.5, .45], szalami: [.5, .5]
+    };
+    /* a képet kitöltve (vágva) rajzolja a téglalapba; o.z: nagyítás (1 = teljes kitöltés), o.fx/o.fy: fókuszpont */
+    function cover(g, im, x, y, w, h, o) { o = o || {}; const fx = o.fx == null ? .5 : o.fx, fy = o.fy == null ? .5 : o.fy, z = Math.max(1, o.z || 1), iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+      let sw = iw, sh = ih; if (iw / ih > w / h) sw = ih * w / h; else sh = iw * h / w; sw /= z; sh /= z;
+      const sx = Math.max(0, Math.min(iw - sw, fx * iw - sw / 2)), sy = Math.max(0, Math.min(ih - sh, fy * ih - sh / 2)); g.drawImage(im, sx, sy, sw, sh, x, y, w, h); }
+    function covId(g, id, x, y, w, h, o) { const im = img(id); if (!im) return false; const f = FOC[id] || [.5, .5]; cover(g, im, x, y, w, h, Object.assign({ fx: f[0], fy: f[1] }, o || {})); return true; }
+    /* ---- lecke-ábra fotókkal: a rajzolt ábra marad tartaléknak ---- */
+    const LAY = { 1: [[0, 0, 300, 190]], 2: [[0, 0, 148, 190], [152, 0, 148, 190]], 3: [[0, 0, 176, 190], [180, 0, 120, 93], [180, 97, 120, 93]], 4: [[0, 0, 148, 93], [152, 0, 148, 93], [0, 97, 148, 93], [152, 97, 148, 93]] };
+    function chip(g, txt, x, y, fs) { g.font = `800 ${fs}px ${UIF}`; const w = g.measureText(txt).width + fs * 1.1, h = fs * 1.55; g.fillStyle = "rgba(20,12,4,.62)"; uiRR(g, x, y - h, w, h, h / 2); g.fill(); g.fillStyle = "#fff6dc"; g.textAlign = "left"; g.fillText(txt, x + fs * .55, y - h * .3); }
+    function lesson(oldD, spec) { const ids = spec.ids, cap = spec.cap || [];
+      return function (g, t) { need(ids); const ready = ids.filter((id) => st(id) === 2), busy = ids.some((id) => st(id) === 0 || st(id) === 1);
+        if (!ready.length || busy) return oldD(g, t);
+        const lay = LAY[Math.min(4, ready.length)], k = Math.min(1, t / 30), z = 1 + .07 * (k * (2 - k));
+        g.fillStyle = "#1b1209"; g.fillRect(0, 0, 300, 190);
+        ready.forEach((id, i) => { const r = lay[i]; g.save(); g.beginPath(); g.rect(r[0], r[1], r[2], r[3]); g.clip(); covId(g, id, r[0], r[1], r[2], r[3], { z }); g.restore();
+          const gr = g.createLinearGradient(0, r[1] + r[3] - 46, 0, r[1] + r[3]); gr.addColorStop(0, "rgba(0,0,0,0)"); gr.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = gr; g.fillRect(r[0], r[1] + r[3] - 46, r[2], 46);
+          const c = cap[ids.indexOf(id)]; if (c) chip(g, c, r[0] + 6, r[1] + r[3] - 14, ready.length === 1 ? 13 : 9.5);
+          g.font = `600 ${ready.length === 1 ? 6.2 : 5.4}px ${UIF}`; const cr = credit(id, g, r[2] - 12); if (cr) { g.textAlign = "right"; g.fillStyle = "rgba(0,0,0,.65)"; g.fillText(cr, r[0] + r[2] - 4.6, r[1] + r[3] - 3.6); g.fillStyle = "rgba(255,255,255,.92)"; g.fillText(cr, r[0] + r[2] - 5, r[1] + r[3] - 4); g.textAlign = "left"; } }); }; }
+    /* a lista adott elemeinek ábráját (cím szerint) a fotós változatra cseréli: specs = { "lecke címe": { ids: [...], cap: [...] } } */
+    function lessons(arr, specs) { arr.forEach((L) => { const sp = specs[L.t]; if (sp) { L.d = lesson(L.d, sp); L.ph = sp.ids; } }); }
+    /* ---- falra akasztott, keretezett fotó (a kép a ház közelében töltődik; addig papírszínű, feliratos hely) ---- */
+    function paintFrame(g, w, hh, cap, id, im) { g.fillStyle = "#f4ecd7"; g.fillRect(0, 0, w, hh); g.strokeStyle = "rgba(120,90,50,.35)"; g.lineWidth = 3; g.strokeRect(6, 6, w - 12, hh - 12);
+      const pad = Math.round(w * .045), ph = hh - pad - Math.round(w * .13);
+      if (im) { g.save(); g.beginPath(); g.rect(pad, pad, w - 2 * pad, ph); g.clip(); const f = FOC[id] || [.5, .5]; cover(g, im, pad, pad, w - 2 * pad, ph, { fx: f[0], fy: f[1] }); g.restore(); g.strokeStyle = "rgba(60,40,20,.55)"; g.lineWidth = 2; g.strokeRect(pad, pad, w - 2 * pad, ph); }
+      else { const gr = g.createLinearGradient(0, pad, 0, pad + ph); gr.addColorStop(0, "#d9c9a3"); gr.addColorStop(1, "#bfa77a"); g.fillStyle = gr; g.fillRect(pad, pad, w - 2 * pad, ph); }
+      g.textAlign = "center"; g.fillStyle = "#3a2614"; let fs = Math.round(w * .066); g.font = `800 ${fs}px ${UIF}`; while (g.measureText(cap).width > w - 2 * pad && fs > 12) { fs -= 2; g.font = `800 ${fs}px ${UIF}`; } g.fillText(cap, w / 2, hh - Math.round(w * .066));
+      g.font = `600 ${Math.round(w * .033)}px ${UIF}`; const cr = im ? credit(id, g, w - 2 * pad) : ""; if (cr) { g.fillStyle = "#7a6648"; g.fillText(cr, w / 2, hh - Math.round(w * .02)); } }
+    function frameTex(id, cap, w, h) { const PW = 512, PHh = Math.round(PW * h / w); const t = canvasTex(PW, PHh, (g) => paintFrame(g, PW, PHh, cap, id, null));
+      onready(id, (im) => { if (!im) return; try { paintFrame(t._canvas.getContext("2d"), PW, PHh, cap, id, im); t.needsUpdate = true; } catch (e) { console.warn("keret", id, e); } }); return t; }
+    /* a keretek és a „Képek forrása” tábla anyagai közösek (összevonhatók) */
+    const FW = { m: null };
+    function frame(G, h, id, cap, x, y, z, ry, w, hh) { if (!FW.m) FW.m = std({ color: "#4a2e18", roughness: .7 });
+      const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; G.add(g); const fw = .04, d = .05;
+      /* a papír (a képpel) és a fakeret */
+      const pl = mesh(new THREE.PlaneGeometry(w, hh).translate(0, 0, d / 2 + .002), basic({ map: frameTex(id, cap, w, hh) }), g); pl.userData.noMerge = true;
+      mesh(mergeGeoms([[new THREE.BoxGeometry(w + 2 * fw, fw, d), M4(0, hh / 2 + fw / 2, 0)], [new THREE.BoxGeometry(w + 2 * fw, fw, d), M4(0, -hh / 2 - fw / 2, 0)], [new THREE.BoxGeometry(fw, hh, d), M4(-w / 2 - fw / 2, 0, 0)], [new THREE.BoxGeometry(fw, hh, d), M4(w / 2 + fw / 2, 0, 0)]]), FW.m, g);
+      (h.phIds = h.phIds || []).push(id); return g; }
+    /* „Képek forrása” tábla: a ház fotóinak szerzője és licence */
+    function creditBoard(G, h, title, ents, x, y, z, ry, w) { const PW = 1024, lh = 27, PHh = 150 + ents.length * lh + 56, hh = w * PHh / PW;
+      const paint = (g) => { g.fillStyle = "#2a1c10"; g.fillRect(0, 0, PW, PHh); g.strokeStyle = "#c9a23a"; g.lineWidth = 6; g.strokeRect(10, 10, PW - 20, PHh - 20); g.textAlign = "center"; g.fillStyle = "#ffd98a"; g.font = `900 46px ${UIF}`; g.fillText(title, PW / 2, 78);
+        g.fillStyle = "rgba(255,243,214,.8)"; g.font = `600 22px ${UIF}`; g.fillText("Szabad licencű fotók a Wikimedia Commonsból · a képeket átméreteztük és kivágtuk", PW / 2, 116); g.textAlign = "left";
+        ents.forEach(([id, nev], i) => { const q = info(id), y0 = 158 + i * lh; g.font = `700 21px ${UIF}`; g.fillStyle = "#ffd98a"; g.fillText(nev, 40, y0); g.font = `500 20px ${UIF}`; g.fillStyle = "#f4ead2"; g.fillText(q ? who(id) + " · " + lic(id) : "…", 330, y0); }); };
+      const t = canvasTex(PW, PHh, paint); const m = mesh(new THREE.PlaneGeometry(w, hh), basic({ map: t }), G); m.position.set(x, y, z); m.rotation.y = ry; m.userData.noMerge = true;
+      meta().then(() => { try { paint(t._canvas.getContext("2d")); t.needsUpdate = true; } catch (e) {} }); (h.phIds = h.phIds || []); return m; }
+    return { need, img, st, then, onready, meta, info, who, lic, credit, cover, covId, lesson, lessons, frame, frameTex, creditBoard, FOC, LAY };
+  })();
   /* =====================================================================================================================
      2026-11-15 01:36–01:39 (tulajdonos): „A kikötőben legyen egy kis épített házikó, amire a vitorlás oktatás van kiírva. Ha bemegyünk, a nagypapa
      egy táblánál állva elmagyarázza a szabályokat, amit már a 2 dimenziós megjelenítésben megcsináltunk a gyerekeknek is alkalmas illusztrációval.
@@ -9913,7 +10000,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     { id: "vil", name: "Világítótorony", sub: "fények és jelek éjjel", col: "#14a0a6", flag: "L", kind: "light", box: { x0: 25.9, x1: 30.9, z0: -29.8, z1: -24.8 }, teacher: "orseg", voice: "imre" }
   ];
   const HOUSES_FOOT = HOUSES.map((h) => [h.box.x0, h.box.x1, h.box.z0, h.box.z1]);
-  const HZ = { flags: [], beams: [], lamps: [] };
+  const HZ = { flags: [], beams: [], lamps: [], anim: [] };
   /* nemzetközi jelzőzászlók (a 05o-tervrajz szerint) – vászon-rajz 96 × 64 */
   function icsFlag(g, f, w, h) { const B = "#1f4fa0", Y = "#f2c200", R = "#d0342c", Wt = "#ffffff", K = "#111111", r = (x, y, ww, hh, c) => { g.fillStyle = c; g.fillRect(x * w, y * h, ww * w, hh * h); };
     if (f === "P") { r(0, 0, 1, 1, B); r(.3, .3, .4, .4, Wt); }
@@ -10170,11 +10257,12 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       /* bogrács gulyással, tálak, kenyér, lángos */ { const g = new THREE.Group(); g.position.set(B.x0 + .7, F + .99, zc - 1.2); G.add(g); mesh(new THREE.SphereGeometry(.2, 18, 10, 0, TAU, Math.PI / 2, Math.PI / 2).translate(0, .2, 0), pot, g); mesh(new THREE.CircleGeometry(.19, 18).rotateX(-Math.PI / 2).translate(0, .17, 0), soup, g); mesh(new THREE.TorusGeometry(.16, .008, 4, 18, Math.PI).translate(0, .25, 0), pot, g); }
       [[zc - .5, "#d9a35a"], [zc + .05, "#e8c48a"], [zc + .6, "#c27a3a"]].forEach(([z, c], i) => { mesh(new THREE.CylinderGeometry(.15, .1, .06, 18).translate(B.x0 + .7, F + 1.02, z), std({ color: "#f4f1e8", roughness: .3 }), G); if (i === 1) { const l = new THREE.CylinderGeometry(.13, .13, .03, 16); l.scale(1, 1, .8); mesh(l.translate(B.x0 + .7, F + 1.06, z), std({ color: c, roughness: .8 }), G); mesh(new THREE.CylinderGeometry(.1, .1, .01, 14).translate(B.x0 + .7, F + 1.08, z), std({ color: "#f8f4e8", roughness: .7 }), G); } else mesh(new THREE.SphereGeometry(.09, 12, 8).translate(B.x0 + .7, F + 1.08, z), std({ color: c, roughness: .8 }), G); });
       /* dobostorta a pult végén (karamell-teteje) */ mesh(new THREE.CylinderGeometry(.16, .16, .14, 20).translate(B.x0 + .7, F + 1.06, zc + 1.1), std({ color: "#7a4a24", roughness: .6 }), G); mesh(new THREE.CylinderGeometry(.165, .165, .02, 20).translate(B.x0 + .7, F + 1.14, zc + 1.1), std({ color: "#c8892a", roughness: .25 }), G);
-      /* borospolc a keleti falon palackokkal (fehér, vörös, aszú) */ { const sx = B.x1 - .3; for (let r = 0; r < 4; r++) { mesh(new THREE.BoxGeometry(.35, .04, 2.4).translate(sx, F + .5 + r * .45, zc), wood, G); for (let k = 0; k < 8; k++) { const c = r === 3 ? "#c99a2a" : k % 2 ? "#3a1018" : "#cfd8a0"; const b = new THREE.CylinderGeometry(.035, .035, .26, 10); b.rotateZ(Math.PI / 2); mesh(b.translate(sx, F + .57 + r * .45, zc - 1.05 + k * .3), std({ color: c, roughness: .15, metalness: .1, transparent: r !== 1, opacity: .85 }), G); } } }
+      /* borospolc a keleti falon palackokkal (fehér, vörös, aszú) */ { const sx = B.x1 - .4; for (let r = 0; r < 4; r++) { mesh(new THREE.BoxGeometry(.35, .04, 2.4).translate(sx, F + .5 + r * .45, zc), wood, G); for (let k = 0; k < 8; k++) { const c = r === 3 ? "#c99a2a" : k % 2 ? "#3a1018" : "#cfd8a0"; const b = new THREE.CylinderGeometry(.035, .035, .26, 10); b.rotateZ(Math.PI / 2); mesh(b.translate(sx, F + .57 + r * .45, zc - 1.05 + k * .3), std({ color: c, roughness: .15, metalness: .1, transparent: r !== 1, opacity: .85 }), G); } } }
       /* hordók */ [[B.x1 - .6, B.z1 - .7], [B.x1 - 1.4, B.z1 - .6]].forEach(([x, z]) => { const br = new THREE.LatheGeometry([[0, 0], [.26, 0], [.31, .2], [.33, .4], [.31, .6], [.26, .8], [0, .8]].map(([a, b]) => new THREE.Vector2(a, b)), 18); br.rotateZ(Math.PI / 2); mesh(br.translate(x + .4, F + .34, z), std(HZ.logT ? { map: HZ.logT, roughness: .8 } : { color: "#7a5532", roughness: .8 }), G); });
-      /* pálinkás üvegek (szilva, barack, körte) és az Unicum gömbölyű üvege a polcon */ { const sg = shelf(G, B.x0 + .2, F + 1.85, zc + .2, Math.PI / 2, 1.3, wood); ["#e8e4d0", "#f2c46a", "#e9e6c8", "#1b1b1b"].forEach((c, k) => { if (k === 3) { mesh(new THREE.SphereGeometry(.08, 14, 10).translate(-.45 + k * .3, .1, 0), std({ color: c, roughness: .2 }), sg); mesh(new THREE.CylinderGeometry(.015, .015, .08, 8).translate(-.45 + k * .3, .2, 0), std({ color: "#c9a23a", metalness: .7 }), sg); return; } mesh(new THREE.CylinderGeometry(.04, .05, .24, 12).translate(-.45 + k * .3, .14, 0), std({ color: c, roughness: .1, transparent: true, opacity: .7 }), sg); mesh(new THREE.CylinderGeometry(.015, .02, .08, 8).translate(-.45 + k * .3, .3, 0), std({ color: "#2b2b2b" }), sg); }); }
+      /* pálinkás üvegek (szilva, barack, körte) és az Unicum gömbölyű üvege a polcon */ { const sg = shelf(G, B.x0 + .44, F + 1.5, zc + .2, Math.PI / 2, 1.3, wood); ["#e8e4d0", "#f2c46a", "#e9e6c8", "#1b1b1b"].forEach((c, k) => { if (k === 3) { mesh(new THREE.SphereGeometry(.08, 14, 10).translate(-.45 + k * .3, .1, 0), std({ color: c, roughness: .2 }), sg); mesh(new THREE.CylinderGeometry(.015, .015, .08, 8).translate(-.45 + k * .3, .2, 0), std({ color: "#c9a23a", metalness: .7 }), sg); return; } mesh(new THREE.CylinderGeometry(.04, .05, .24, 12).translate(-.45 + k * .3, .14, 0), std({ color: c, roughness: .1, transparent: true, opacity: .7 }), sg); mesh(new THREE.CylinderGeometry(.015, .02, .08, 8).translate(-.45 + k * .3, .3, 0), std({ color: "#2b2b2b" }), sg); }); }
       /* lógó téliszalámi és kolbász a gerendán */ for (let k = 0; k < 4; k++) { const sx = B.x0 + 1.5 + k * .4; rodBetween(new THREE.Vector3(sx, F + 2.85, B.z0 + .9), new THREE.Vector3(sx, F + 2.55, B.z0 + .9), .004, std({ color: "#ddd" }), G, 3); mesh(new THREE.CylinderGeometry(.045, .045, .5, 10).translate(sx, F + 2.28, B.z0 + .9), std({ color: k % 2 ? "#d9d0bd" : "#7a2a1a", roughness: .9 }), G); }
-      poster(G, ["HUNGARIKUM", "pálinka · Tokaji aszú", "PICK és HERZ szalámi", "szegedi, kalocsai", "paprika · Unicum"], h.col, B.x1 - .2, F + 2.05, B.z0 + 1.0, -Math.PI / 2, .7); }
+      poster(G, ["HUNGARIKUM", "pálinka · Tokaji aszú", "PICK és HERZ szalámi", "szegedi, kalocsai", "paprika · Unicum"], h.col, B.x1 - .33, F + 1.75, B.z0 + 1.0, -Math.PI / 2, .7); }
+    try { izekBelso(G, h); } catch (e) { console.warn("Ízek belső", e); }
     h.board = { x: xc + .5, y: F + 1.65, z: B.z1 - .35, ry: Math.PI, w: 3.2 }; h.seat = { x: xc + .5, z: B.z1 - 3.35 }; h.tpos = { x: xc - 1.6, z: B.z1 - 1.0, ry: Math.PI - .65 }; h.studs = [{ k: "gyerek", x: xc + 2.3, z: B.z1 - 1.75 }]; }
   /* ---------------------------------------------------------------- VILÁGÍTÓTORONY a hullámtörő végén – az őrház a tanterem (rönkház, ajtaja a hullámtörő felé),
      mellette a zárt, fehér-piros sávos torony kerengővel és forgó fénnyel (2026-11-15: a toronybelső szűk volt és szétesett – a tanítás az őrházba költözött) */
@@ -10254,14 +10342,136 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       split(G, 0); h.innerN = n; });
   }
   function hzInnerTick() { const p = (typeof locP === "function" ? locP() : HB.pos) || { x: 0, z: 0 };
-    HOUSES.forEach((h) => { if (!h.innerG) return; const B = h.box, dx = Math.max(B.x0 - p.x, 0, p.x - B.x1), dz = Math.max(B.z0 - p.z, 0, p.z - B.z1); h.innerG.visible = Math.hypot(dx, dz) < 6.5; }); }
+    HOUSES.forEach((h) => { if (!h.innerG) return; const B = h.box, dx = Math.max(B.x0 - p.x, 0, p.x - B.x1), dz = Math.max(B.z0 - p.z, 0, p.z - B.z1); const dd = Math.hypot(dx, dz); h.innerG.visible = dd < 6.5; if (h.phIds && dd < 14) FOTO.need(h.phIds); }); }
   function houseTick(dt) { const t = W.t; try { hzInnerTick(); } catch (e) {}
     HZ.flags.forEach((f) => { if (!f.parent) return; const pa = f.geometry.attributes.position, b0 = f.userData.base; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 5 - t * 5.5 + f.userData.ph) * .07 * x; pa.array[i * 3 + 1] = b0[i * 3 + 1] + Math.sin(x * 3 - t * 3) * .015 * x; } pa.needsUpdate = true; });
     const night = (typeof NGT !== "undefined" && NGT.on) || !!HB.night; HZ.beams.forEach((b) => { b.rotation.y = t * .9; b.visible = night; });
     /* 2026-11-15 (tulajdonos): a viharjelző tornyon „menjen a sárga villogó fény percenként 45” – alaphelyzetben elsőfok, valódi másodfoknál 90/perc */
     const l = (typeof STM !== "undefined" && STM.lv) ? (STM.lv.keleti || 0) : 0, per = l === 2 ? 60 / 90 : 60 / 45, on = per && (t % per) / per < .34;
     HZ.lamps.forEach((q) => { q.glow.visible = !!on; q.lamp.material.color.set(on ? "#ffe066" : "#7a6420"); q.lamp.material.emissive.set(on ? "#ffaa00" : "#000000"); });
-    try { cloudHouseTick(dt); } catch (e) {} try { knotHouseTick(dt); } catch (e) {} }
+    try { cloudHouseTick(dt); } catch (e) {} try { knotHouseTick(dt); } catch (e) {} HZ.anim.forEach((f) => { try { f(t); } catch (e) {} }); }
+  /* =====================================================================================================
+     2026-11-16 éjjel (tulajdonos: „a magyar ételek és ízek házánál … sokkal szebb megjelenést belül, és sokkal látványosabb és valós ételfotókat
+     bemutató kép illusztrációkat”): A MAGYAR ÍZEK HÁZA BELSEJE – falusi csárda
+       gerendás deszkamennyezet · népi festett (tulipános) fríz körben · diófa lambéria · tányérfal · kemence parázzsal és kürtővel
+       · két gyöngyvászon (pepita) terítős asztal székekkel · lógó paprika-, fokhagyma- és fűszerfüzér · rézedények · nemzeti színű zászlófüzér
+       · szőttes futószőnyeg · csipkefüggöny · pult-futó hímzéssel · valódi, keretezett ételfotók és „Képek forrása” tábla (05na-fotok.js).
+     A régi berendezés (pult, bogrács, polcok, hordók, lógó szalámi, plakát) a 05q-csardaBuild-ben marad; ez csak gazdagítja.
+     ===================================================================================================== */
+  function izekBelso(G, h) {
+    const B = h.box, F = h.F, xc = (B.x0 + B.x1) / 2, zc = (B.z0 + B.z1) / 2, t = .3, X0 = B.x0 + t, X1 = B.x1 - t, Z0 = B.z0 + t, Z1 = B.z1 - t, Hh = 2.9, RP = { repeat: [1, 1] };
+    const pts = {}, put = (k, geom, x, y, z, ry, rx, rz, sx, sy, sz) => { (pts[k] = pts[k] || []).push([geom, M4(x, y, z, ry, rx, rz, sx, sy, sz)]); };
+    const quad = (w, hh, tu, tv) => { const g = new THREE.PlaneGeometry(w, hh), uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / tu, uv.getY(i) * hh / tv); return g; };
+    const dec = (o) => std(Object.assign({ roughness: .92, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }, o));
+    /* ---------- vászon-textúrák */
+    const tulip = (g, cx, cy, s, c1, c2) => { g.fillStyle = "#2f7a3a"; [[-16, -.55], [16, .55]].forEach(([dx, a]) => { g.beginPath(); g.ellipse(cx + dx * s, cy + 12 * s, 17 * s, 6 * s, a, 0, TAU); g.fill(); });
+      g.strokeStyle = "#2f7a3a"; g.lineWidth = 3 * s; g.beginPath(); g.moveTo(cx, cy + 26 * s); g.lineTo(cx, cy + 2 * s); g.stroke();
+      g.fillStyle = c2; [[-9, -.35], [9, .35]].forEach(([dx, a]) => { g.beginPath(); g.ellipse(cx + dx * s, cy - 6 * s, 8 * s, 17 * s, a, 0, TAU); g.fill(); }); g.fillStyle = c1; g.beginPath(); g.ellipse(cx, cy - 8 * s, 9 * s, 21 * s, 0, 0, TAU); g.fill(); };
+    const TX = {
+      plank: canvasTex(512, 512, (g, w, hh) => { g.fillStyle = "#c79a5e"; g.fillRect(0, 0, w, hh); for (let i = 0; i < 8; i++) { const x = i * 64; g.fillStyle = `rgba(${90 + rand() * 40 | 0},${55 + rand() * 25 | 0},20,${.08 + rand() * .12})`; g.fillRect(x, 0, 64, hh); g.fillStyle = "rgba(60,36,14,.55)"; g.fillRect(x, 0, 2, hh);
+        for (let k = 0; k < 26; k++) { g.strokeStyle = `rgba(80,48,18,${.08 + rand() * .12})`; g.lineWidth = 1; const gx = x + 6 + rand() * 52; g.beginPath(); g.moveTo(gx, 0); g.bezierCurveTo(gx + rand() * 8 - 4, hh * .3, gx + rand() * 8 - 4, hh * .6, gx + rand() * 6 - 3, hh); g.stroke(); } } }, RP),
+      beam: canvasTex(256, 128, (g, w, hh) => { g.fillStyle = "#4b2f1a"; g.fillRect(0, 0, w, hh); for (let k = 0; k < 40; k++) { g.strokeStyle = `rgba(${20 + rand() * 30 | 0},10,4,${.2 + rand() * .3})`; g.lineWidth = 1 + rand() * 2; const y = rand() * hh; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y + rand() * 6 - 3); g.stroke(); }
+        g.fillStyle = "#7a1d24"; g.fillRect(0, 44, w, 40); g.fillStyle = "#e9d9b0"; for (let i = 0; i < 8; i++) { const cx = 16 + i * 32; g.beginPath(); g.moveTo(cx, 50); g.lineTo(cx + 10, 64); g.lineTo(cx, 78); g.lineTo(cx - 10, 64); g.closePath(); g.fill(); } g.fillStyle = "#e9d9b0"; g.fillRect(0, 40, w, 3); g.fillRect(0, 85, w, 3); }, RP),
+      fr: canvasTex(1024, 128, (g, w, hh) => { g.fillStyle = "#f2e8cc"; g.fillRect(0, 0, w, hh); g.fillStyle = "#8e1b2e"; g.fillRect(0, 0, w, 14); g.fillRect(0, hh - 14, w, 14); g.fillStyle = "#e3b53a"; g.fillRect(0, 17, w, 3); g.fillRect(0, hh - 20, w, 3);
+        for (let i = 0; i < 8; i++) { const cx = 64 + i * 128; tulip(g, cx, 66, .82, i % 2 ? "#2a56a0" : "#c8121e", i % 2 ? "#6f93cf" : "#8e1b2e"); g.fillStyle = "#2a56a0"; [[64, 56], [64, 76], [58, 66], [70, 66]].forEach(([dx, y]) => { g.beginPath(); g.arc(cx + dx, y, 3.4, 0, TAU); g.fill(); }); } }, RP),
+      wain: canvasTex(256, 256, (g, w, hh) => { g.fillStyle = "#7a4a28"; g.fillRect(0, 0, w, hh); for (let i = 0; i < 4; i++) { const x = i * 64; g.fillStyle = `rgba(${60 + rand() * 40 | 0},${30 + rand() * 20 | 0},10,${.12 + rand() * .15})`; g.fillRect(x, 0, 64, hh); g.fillStyle = "rgba(30,16,6,.6)"; g.fillRect(x, 0, 3, hh);
+        for (let k = 0; k < 14; k++) { g.strokeStyle = `rgba(40,20,8,${.1 + rand() * .15})`; g.lineWidth = 1; const gx = x + 6 + rand() * 52; g.beginPath(); g.moveTo(gx, 0); g.bezierCurveTo(gx + rand() * 6 - 3, hh * .3, gx + rand() * 6 - 3, hh * .7, gx + rand() * 4 - 2, hh); g.stroke(); } } }, RP),
+      rug: canvasTex(384, 1024, (g, w, hh) => { g.fillStyle = "#7d1426"; g.fillRect(0, 0, w, hh); g.strokeStyle = "rgba(241,231,207,.8)"; g.lineWidth = 3; for (let x = 12; x < w; x += 12) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 14); g.moveTo(x, hh - 14); g.lineTo(x, hh); g.stroke(); }
+        [["#f1e7cf", 22, 14], ["#2f7a3a", 14, 40], ["#e3b53a", 7, 58], ["#2a56a0", 14, 70]].forEach(([c, lw, off]) => { g.strokeStyle = c; g.lineWidth = lw; g.strokeRect(off / 2 + lw / 2 + 8, off / 2 + lw / 2 + 18, w - off - lw - 16, hh - off - lw - 36); });
+        for (let y = 130; y < hh - 100; y += 150) { g.fillStyle = "#f1e7cf"; g.beginPath(); g.moveTo(w / 2, y - 52); g.lineTo(w / 2 + 52, y); g.lineTo(w / 2, y + 52); g.lineTo(w / 2 - 52, y); g.closePath(); g.fill(); g.fillStyle = "#7d1426"; g.beginPath(); g.moveTo(w / 2, y - 36); g.lineTo(w / 2 + 36, y); g.lineTo(w / 2, y + 36); g.lineTo(w / 2 - 36, y); g.closePath(); g.fill(); tulip(g, w / 2, y + 2, .62, "#f1e7cf", "#e3b53a"); } }),
+      check: canvasTex(128, 128, (g, w, hh) => { g.fillStyle = "#fbf8ef"; g.fillRect(0, 0, w, hh); g.fillStyle = "rgba(200,24,36,.55)"; g.fillRect(0, 0, 64, hh); g.fillRect(0, 0, w, 64); }, RP),
+      lace: canvasTex(256, 256, (g, w, hh) => { g.clearRect(0, 0, w, hh); g.fillStyle = "rgba(252,249,238,.9)"; g.fillRect(0, 0, w, 26); for (let x = 16; x < w; x += 32) { g.beginPath(); g.arc(x, 26, 16, 0, Math.PI); g.fill(); } for (let r = 0; r < 6; r++) for (let c = 0; c < 8; c++) { g.beginPath(); g.arc(16 + c * 32 + (r % 2) * 16, 70 + r * 30, r < 5 ? 7 : 11, 0, TAU); g.fill(); } for (let x = 0; x < w; x += 32) { g.beginPath(); g.moveTo(x + 4, 30); g.lineTo(x + 16, 240); g.lineTo(x + 28, 30); g.closePath(); g.fillStyle = "rgba(252,249,238,.35)"; g.fill(); } }),
+      glow: canvasTex(128, 128, (g, w, hh) => { g.clearRect(0, 0, w, hh); g.fillStyle = "#140a05"; g.beginPath(); g.moveTo(8, hh); g.lineTo(8, 56); g.quadraticCurveTo(8, 6, 64, 6); g.quadraticCurveTo(120, 6, 120, 56); g.lineTo(120, hh); g.closePath(); g.fill();
+        const gr = g.createRadialGradient(64, 112, 4, 64, 104, 74); gr.addColorStop(0, "rgba(255,230,120,1)"); gr.addColorStop(.35, "rgba(255,140,30,.95)"); gr.addColorStop(.75, "rgba(160,40,8,.55)"); gr.addColorStop(1, "rgba(80,16,4,0)"); g.save(); g.beginPath(); g.moveTo(8, hh); g.lineTo(8, 56); g.quadraticCurveTo(8, 6, 64, 6); g.quadraticCurveTo(120, 6, 120, 56); g.lineTo(120, hh); g.closePath(); g.clip(); g.fillStyle = gr; g.fillRect(0, 0, w, hh); g.restore();
+        g.fillStyle = "#3a1c0c"; for (let i = 0; i < 4; i++) { g.save(); g.translate(30 + i * 20, 118); g.rotate(-.1 + i * .08); g.fillRect(-14, -5, 28, 9); g.restore(); } })
+    };
+    const plates = [0, 1, 2].map((k) => canvasTex(128, 128, (g) => { g.fillStyle = "#f6f1e4"; g.beginPath(); g.arc(64, 64, 63, 0, TAU); g.fill(); const rim = ["#2a56a0", "#a8231f", "#2f7a3a"][k]; g.strokeStyle = rim; g.lineWidth = 7; g.beginPath(); g.arc(64, 64, 56, 0, TAU); g.stroke(); g.lineWidth = 2; g.beginPath(); g.arc(64, 64, 46, 0, TAU); g.stroke();
+      for (let i = 0; i < 16; i++) { const a = i / 16 * TAU; g.fillStyle = rim; g.beginPath(); g.arc(64 + Math.cos(a) * 51, 64 + Math.sin(a) * 51, 2.2, 0, TAU); g.fill(); }
+      if (k === 0) tulip(g, 64, 66, .95, "#c8121e", "#8e1b2e"); else if (k === 1) { g.fillStyle = "#e3b53a"; g.beginPath(); g.arc(64, 64, 8, 0, TAU); g.fill(); for (let i = 0; i < 8; i++) { const a = i / 8 * TAU; g.fillStyle = "#2a56a0"; g.beginPath(); g.ellipse(64 + Math.cos(a) * 20, 64 + Math.sin(a) * 20, 12, 7, a, 0, TAU); g.fill(); } }
+      else { g.fillStyle = "#6b2f7a"; for (let r = 0; r < 4; r++) for (let c = 0; c <= r; c++) { g.beginPath(); g.arc(64 + (c - r / 2) * 13, 48 + r * 12, 6.2, 0, TAU); g.fill(); } g.fillStyle = "#2f7a3a"; g.beginPath(); g.ellipse(60, 38, 14, 6, -.5, 0, TAU); g.fill(); } }));
+    /* ---------- anyagok */
+    const MT = { ceil: std({ map: TX.plank, roughness: .9 }), beam: std({ map: TX.beam, roughness: .8 }), fr: dec({ map: TX.fr }), wain: dec({ map: TX.wain, roughness: .8 }), rail: std({ color: "#4a2e18", roughness: .6 }),
+      plaster: std({ color: "#efe6d2", roughness: .95 }), wood: std({ color: "#6b4a2a", roughness: .7 }), woodL: std({ color: "#b98a55", roughness: .75 }), copper: std({ color: "#b8693a", metalness: .7, roughness: .35 }),
+      red: std({ color: "#c8121e", roughness: .4 }), redD: std({ color: "#8e1b2e", roughness: .45 }), garlic: std({ color: "#efe8d6", roughness: .6 }), cord: std({ color: "#caa56a", roughness: .9 }),
+      herbG: std({ color: "#6f8a5a", roughness: .9 }), herbL: std({ color: "#8a78b0", roughness: .9 }), herbD: std({ color: "#c9b46a", roughness: .9 }), cer: std({ color: "#f4f1e8", roughness: .3 }), soup: std({ color: "#a8331c", roughness: .3 }),
+      bread: std({ color: "#c27a3a", roughness: .8 }), lamp: new THREE.MeshStandardMaterial({ color: "#ffe9b0", emissive: "#ffb347", emissiveIntensity: 1.1, roughness: .4 }), shade: std({ color: "#f1e7cf", roughness: .6, side: THREE.DoubleSide }),
+      bR: std({ color: "#d0342c", roughness: .8, side: THREE.DoubleSide }), bW: std({ color: "#f5f2ea", roughness: .8, side: THREE.DoubleSide }), bG: std({ color: "#2f8a4a", roughness: .8, side: THREE.DoubleSide }),
+      check: dec({ map: TX.check, roughness: .95 }), kemence: std({ color: "#efe6d2", roughness: .98 }), soot: std({ color: "#2a1a10", roughness: 1 }) };
+    W.disposables.push(MT.lamp);
+    /* ---------- mennyezet: deszka + gerendák (a fő gerenda hosszában, keresztgerendák 1,8 m-ként) */
+    { const bw = .2, bh = .24, by = F + Hh - .02 - bh / 2;
+      put("ceil", quad(X1 - X0, Z1 - Z0, 1, 1).rotateX(Math.PI / 2), xc, F + Hh - .02, zc, 0);
+      const bx = (x0, x1, y, z, th) => { const len = x1 - x0, cx = (x0 + x1) / 2; put("beam", quad(len, th, 1.2, th), cx, y, z + bw / 2, 0); put("beam", quad(len, th, 1.2, th), cx, y, z - bw / 2, Math.PI); put("beam", quad(len, bw, 1.2, bw).rotateX(Math.PI / 2), cx, y - th / 2, z, 0); };
+      const bz = (z0, z1, x, y, th) => { const len = z1 - z0, cz = (z0 + z1) / 2; put("beam", quad(len, th, 1.2, th), x + bw / 2, y, cz, Math.PI / 2); put("beam", quad(len, th, 1.2, th), x - bw / 2, y, cz, -Math.PI / 2); put("beam", quad(len, bw, 1.2, bw).rotateX(Math.PI / 2).rotateY(Math.PI / 2), x, y - th / 2, cz, 0); };
+      bx(X0, X1, F + Hh - .02 - .15, zc, .3); [16.6, 18.4, 20.2, 22.0, 23.8].forEach((x) => bz(Z0, Z1, x, by, bh)); }
+    /* ---------- fríz (népi festés) és lambéria körben; a lambéria az ajtónál megszakad */
+    { const fy = F + 2.5, fh = .26, wy = F + .475, wh = .95, d0 = h.dr.c - h.dr.w / 2, d1 = h.dr.c + h.dr.w / 2;
+      put("fr", quad(X1 - X0, fh, 2.08, fh), xc, fy, Z0 + .014, 0); put("fr", quad(X1 - X0, fh, 2.08, fh), xc, fy, Z1 - .014, Math.PI); put("fr", quad(Z1 - Z0, fh, 2.08, fh), X0 + .014, fy, zc, Math.PI / 2); put("fr", quad(Z1 - Z0, fh, 2.08, fh), X1 - .014, fy, zc, -Math.PI / 2);
+      put("wain", quad(d0 - X0, wh, 1, wh), (X0 + d0) / 2, wy, Z0 + .014, 0); put("wain", quad(X1 - d1, wh, 1, wh), (d1 + X1) / 2, wy, Z0 + .014, 0); put("wain", quad(X1 - X0, wh, 1, wh), xc, wy, Z1 - .014, Math.PI);
+      put("wain", quad(Z1 - Z0, wh, 1, wh), X0 + .014, wy, zc, Math.PI / 2); put("wain", quad(Z1 - Z0, wh, 1, wh), X1 - .014, wy, zc, -Math.PI / 2);
+      const rl = F + .965; put("rail", new THREE.BoxGeometry(d0 - X0, .045, .05), (X0 + d0) / 2, rl, Z0 + .03, 0); put("rail", new THREE.BoxGeometry(X1 - d1, .045, .05), (d1 + X1) / 2, rl, Z0 + .03, 0); put("rail", new THREE.BoxGeometry(X1 - X0, .045, .05), xc, rl, Z1 - .03, 0);
+      put("rail", new THREE.BoxGeometry(.05, .045, Z1 - Z0), X0 + .03, rl, zc, 0); put("rail", new THREE.BoxGeometry(.05, .045, Z1 - Z0), X1 - .03, rl, zc, 0);
+      put("rail", new THREE.BoxGeometry(X1 - X0, .06, .06), xc, F + 2.36, Z0 + .03, 0); put("rail", new THREE.BoxGeometry(X1 - X0, .06, .06), xc, F + 2.36, Z1 - .03, 0); put("rail", new THREE.BoxGeometry(.06, .06, Z1 - Z0), X0 + .03, F + 2.36, zc, 0); put("rail", new THREE.BoxGeometry(.06, .06, Z1 - Z0), X1 - .03, F + 2.36, zc, 0); }
+    /* ---------- tányérfal a pult fölött (nyugati fal): két sor, háromféle festett tányér */
+    { for (let r = 0; r < 2; r++) for (let k = 0; k < (r ? 8 : 9); k++) { const z = 14.7 + k * .37 + (r ? .185 : 0), y = F + 1.99 + r * .24, v = (k + r) % 3; (pts["pl" + v] = pts["pl" + v] || []).push([new THREE.CircleGeometry(.115, 20), M4(X0 + .018, y, z, Math.PI / 2)]); }
+      [0, 1, 2].forEach((v) => { MT["pl" + v] = dec({ map: plates[v], roughness: .35 }); }); }
+    /* ---------- pult: hímzett futó az elején + további finomságok a tetején (az ételek a lecke-fotókon is látszanak) */
+    { put("fr", quad(3.25, .42, 2.08, .26), B.x0 + .7 + .382, F + .62, zc - .2, Math.PI / 2);
+      [[14.8, 0], [16.72, 1]].forEach(([z, k]) => { if (k === 0) { for (let s = 0; s < 3; s++) { const kg = new THREE.CylinderGeometry(.05, .05, .16, 14, 1, true); put("bread", kg, B.x0 + .7, F + 1.06 + s * .17, z, 0); put("bread", new THREE.CylinderGeometry(.046, .046, .16, 14, 1, true), B.x0 + .7, F + 1.06 + s * .17, z, 0); } put("bread", new THREE.CylinderGeometry(.16, .16, .02, 18), B.x0 + .7, F + .99, z, 0); }
+        else { put("cer", new THREE.CylinderGeometry(.17, .12, .04, 18), B.x0 + .7, F + 1.0, z, 0); for (let s = 0; s < 6; s++) { const a = s / 6 * TAU; put("bread", new THREE.CylinderGeometry(.05, .045, .04, 10), B.x0 + .7 + Math.cos(a) * .085, F + 1.04, z + Math.sin(a) * .085, 0); } put("bread", new THREE.CylinderGeometry(.05, .045, .04, 10), B.x0 + .7, F + 1.08, z, 0); } }); }
+    /* ---------- kemence a DNy sarokban: fehérre meszelt boltozat (félhenger) kemencepadkával, parázsló szájjal és kürtővel */
+    { const kx = X0 + .98, kz = Z1 - .78, vx = kx - .08, VL = 1.55, VR = .66;
+      put("kemence", new THREE.BoxGeometry(1.76, .56, 1.5), kx, F + .28, kz, 0);
+      put("kemence", new THREE.CylinderGeometry(VR, VR, VL, 22, 1, true, 0, Math.PI).rotateZ(Math.PI / 2), vx, F + .56, kz, 0);
+      put("kemence", new THREE.CircleGeometry(VR, 22, 0, Math.PI).rotateY(Math.PI / 2), vx + VL / 2, F + .56, kz, 0);
+      put("kemence", new THREE.CircleGeometry(VR, 22, 0, Math.PI).rotateY(-Math.PI / 2), vx - VL / 2, F + .56, kz, 0);
+      put("kemence", new THREE.CylinderGeometry(.24, .5, 1.74, 4, 1, true).rotateY(Math.PI / 4), kx - .3, F + 1.15 + .87, kz, 0);
+      put("soot", new THREE.BoxGeometry(.04, .02, .7), vx + VL / 2 + .02, F + .575, kz, 0);
+      const gl = mesh(new THREE.PlaneGeometry(.52, .44), basic({ map: TX.glow, transparent: true, depthWrite: false }), G); gl.position.set(vx + VL / 2 + .008, F + .56 + .24, kz); gl.rotation.y = Math.PI / 2; gl.userData.noMerge = true;
+      (HZ.anim || (HZ.anim = [])).push((tt) => { gl.material.opacity = .84 + .16 * Math.sin(tt * 9.1) * Math.sin(tt * 3.7 + 1); gl.scale.set(1 + .02 * Math.sin(tt * 7), 1 + .04 * Math.sin(tt * 11), 1); });
+      /* fahasáb a kemence mellett, kenyerek a kemence tetején, sütőlapát a falnak támasztva */
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 4 - r; c++) put("woodL", new THREE.CylinderGeometry(.07, .07, .5, 8).rotateZ(Math.PI / 2), vx + VL / 2 + .5, F + .08 + r * .13, Z1 - .32 - (c + r * .5) * .15, 0);
+      for (let k = 0; k < 3; k++) put("bread", new THREE.SphereGeometry(.12, 12, 8), kx + .45, F + .61, kz - .5 + k * .35, 0, 0, 0, 1.3, .6, 1);
+      put("woodL", new THREE.BoxGeometry(.02, 1.7, .22), X0 + .12, F + 1.0, Z1 - 1.9, 0, 0, .1); }
+    /* ---------- két terített asztal a nyugati és keleti ablak alatt, padkákkal (a középső folyosó szabad marad) */
+    [[17.45, 14.5], [22.4, 14.5]].forEach(([tx, tz], ti) => {
+      put("check", quad(1.36, .82, .45, .45).rotateX(-Math.PI / 2), tx, F + .795, tz, 0); put("woodL", new THREE.BoxGeometry(1.3, .05, .76), tx, F + .75, tz, 0); [[-.6, -.33], [.6, -.33], [-.6, .33], [.6, .33]].forEach(([dx, dz]) => put("woodL", new THREE.BoxGeometry(.06, .73, .06), tx + dx, F + .37, tz + dz, 0));
+      [-.36, .36].forEach((dx) => { put("woodL", new THREE.CylinderGeometry(.19, .17, .05, 14), tx + dx, F + .46, tz + .86, 0); [[-.11, -.11], [.11, -.11], [-.11, .11], [.11, .11]].forEach(([a, b]) => put("woodL", new THREE.CylinderGeometry(.018, .018, .44, 5), tx + dx + a, F + .22, tz + .86 + b, 0)); });
+      put("cer", new THREE.CylinderGeometry(.13, .09, .06, 16), tx - .35, F + .84, tz + .06, 0); put("soup", new THREE.CylinderGeometry(.115, .115, .01, 16), tx - .35, F + .873, tz + .06, 0);
+      put("cer", new THREE.CylinderGeometry(.13, .09, .06, 16), tx + .35, F + .84, tz + .06, 0); put("soup", new THREE.CylinderGeometry(.115, .115, .01, 16), tx + .35, F + .873, tz + .06, 0);
+      put("bread", new THREE.CylinderGeometry(.14, .1, .07, 14), tx, F + .84, tz - .18, 0); for (let s = 0; s < 3; s++) put("bread", new THREE.SphereGeometry(.05, 8, 6), tx - .06 + s * .06, F + .9, tz - .18, 0, 0, 0, 1.2, .8, 1);
+      put("lamp", new THREE.CylinderGeometry(.03, .03, .1, 8), tx + .02, F + .87, tz - .02, 0); put("cer", new THREE.CylinderGeometry(.045, .05, .04, 10), tx + .02, F + .83, tz - .02, 0);
+      /* csüngő lámpa az asztal fölött */ put("cord", new THREE.CylinderGeometry(.006, .006, .45, 4), tx, F + Hh - .02 - .225, tz, 0); put("shade", new THREE.ConeGeometry(.24, .18, 14, 1, true), tx, F + 2.34, tz, 0); put("lamp", new THREE.SphereGeometry(.05, 8, 6), tx, F + 2.3, tz, 0);
+      /* csipkefüggöny az ablakon belülről */ const cu = mesh(new THREE.PlaneGeometry(1.0, 1.2), std({ map: TX.lace, transparent: true, roughness: 1, side: THREE.DoubleSide, depthWrite: false }), G); cu.position.set(h.dr.c + (ti ? 2.6 : -2.6), F + 1.55, Z0 + .03); cu.userData.noMerge = true; });
+    /* ---------- szőttes futószőnyeg a bejárattól a tábláig */
+    { const rg = new THREE.PlaneGeometry(1.34, 3.5).rotateX(-Math.PI / 2); const rm = mesh(rg, std({ map: TX.rug, roughness: 1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), G); rm.position.set(h.dr.c, F + .014, 15.75); rm.receiveShadow = true; rm.userData.noMerge = true; }
+    /* ---------- lógó füzérek a gerendákról: pirospaprika, fokhagyma, szárított fűszerek; rézedények a déli falon */
+    { const rope = (x, z, len) => put("cord", new THREE.CylinderGeometry(.007, .007, len, 4), x, F + Hh - .03 - len / 2, z, 0);
+      [[16.3, 15.2], [16.3, 17.2], [18.2, 13.95], [22.9, 13.95], [23.7, 18.8], [17.9, 18.9]].forEach(([x, z], i) => { const n = 16, len = 1.0; rope(x, z, len); for (let k = 0; k < n; k++) { const a = k * 2.4 + i, y = F + Hh - .1 - k * .058; const c = new THREE.ConeGeometry(.032 - k * .0004, .14, 6); put(k % 5 === 4 ? "redD" : "red", c, x + Math.cos(a) * .045, y, z + Math.sin(a) * .045, 0, Math.PI + Math.cos(a) * .35, Math.sin(a) * .35); } });
+      [[21.1, 13.95], [19.2, 18.9]].forEach(([x, z]) => { rope(x, z, .7); for (let k = 0; k < 9; k++) { const a = k * 2.2, y = F + Hh - .13 - k * .055; put("garlic", new THREE.SphereGeometry(.034 + (k < 4 ? .008 : 0), 8, 6), x + Math.cos(a) * .035, y, z + Math.sin(a) * .035, 0, 0, 0, 1, .85, 1); } put("herbD", new THREE.CylinderGeometry(.005, .008, .3, 4), x, F + Hh - .02 - .15, z, 0); });
+      [[19.8, 13.95, "herbG"], [20.6, 13.95, "herbL"], [24.0, 15.0, "herbD"], [16.0, 14.3, "herbG"]].forEach(([x, z, m]) => { rope(x, z, .25); put(m, new THREE.ConeGeometry(.075, .3, 7), x, F + Hh - .03 - .4, z, 0); put("cord", new THREE.CylinderGeometry(.012, .012, .03, 6), x, F + Hh - .03 - .26, z, 0); });
+      /* rézedények rúdon a déli fal nyugati felén */ put("rail", new THREE.CylinderGeometry(.013, .013, 2.0, 6).rotateZ(Math.PI / 2), X0 + 1.2, F + 1.62, Z1 - .08, 0);
+      [[.35, .1, .12], [.7, .125, .14], [1.05, .09, .1], [1.4, .11, .13], [1.75, .075, .09]].forEach(([dx, r, hh]) => { put("copper", new THREE.CylinderGeometry(r, r * .88, hh, 14), X0 + .2 + dx, F + 1.62 - hh / 2 - .06, Z1 - .09, 0); put("cord", new THREE.TorusGeometry(r * .7, .006, 4, 10, Math.PI), X0 + .2 + dx, F + 1.62 - .03, Z1 - .09, 0, 0, 0, 1, 1, 1); }); }
+    /* ---------- nemzeti színű zászlófüzér a mennyezet alatt (két sor keresztben, egy hosszában) */
+    { const sh = new THREE.Shape(); sh.moveTo(-.075, 0); sh.lineTo(.075, 0); sh.lineTo(0, -.2); sh.closePath(); const tri = new THREE.ShapeGeometry(sh);
+      const run = (a, b, ax, fixed, y0, sag) => { const L = Math.abs(b - a), n = Math.floor(L / .27); let prev = null; for (let i = 0; i <= n; i++) { const u = i / n, p = a + (b - a) * u, y = y0 - sag * Math.sin(Math.PI * u), P = ax === "x" ? new THREE.Vector3(p, y, fixed) : new THREE.Vector3(fixed, y, p);
+          if (prev) pts.cord.push(rodGeom(prev, P, .004, 3)); prev = P; if (i < n || true) put(["bR", "bW", "bG"][i % 3], tri, P.x, P.y, P.z, ax === "x" ? 0 : Math.PI / 2); } };
+      pts.cord = pts.cord || []; run(X0 + .1, X1 - .1, "x", 15.0, F + 2.72, .32); run(X0 + .1, X1 - .1, "x", 17.75, F + 2.72, .32); run(Z0 + .1, Z1 - .1, "z", 18.0, F + 2.74, .28); }
+    /* ---------- összeállítás: anyagonként egyetlen hálóba */
+    Object.keys(pts).forEach((k) => { if (!pts[k].length) return; const m = MT[k]; if (!m) { console.warn("Ízek belső: nincs anyag", k); return; } const me = mesh(mergeGeoms(pts[k]), m, G); me.castShadow = false; });
+    /* ---------- valódi ételfotók keretben a falon + a „Képek forrása” tábla (a lecke-fotók azonosítói a 05r-ben) */
+    FOTO.frame(G, h, "hortobagyi", "Hortobágyi húsos palacsinta", 18.55, F + 1.62, Z0 + .03, 0, .86, .6);
+    FOTO.frame(G, h, "lecso", "Lecsó kolbásszal, tojással", 16.25, F + 1.7, Z0 + .03, 0, .7, .49);
+    FOTO.frame(G, h, "turoscsusza", "Túrós csusza", 23.6, F + 1.7, Z0 + .03, 0, .7, .49);
+    FOTO.frame(G, h, "rantott", "Rántott hús", 23.1, F + 2.03, Z1 - .03, Math.PI, .7, .49);
+    FOTO.frame(G, h, "somloi", "Somlói galuska", 23.1, F + 1.4, Z1 - .03, Math.PI, .7, .49);
+    FOTO.frame(G, h, "pogacsa", "Sajtos pogácsa", X1 - .03, F + 1.75, 18.5, -Math.PI / 2, .86, .6);
+    FOTO.frame(G, h, "badacsony", "Badacsony, a Balaton borvidéke", X0 + .03, F + 1.55, 15.15, Math.PI / 2, .86, .6);
+    h.phCred = [["gulyas", "Gulyásleves"], ["halaszle", "Halászlé"], ["langos", "Lángos"], ["porkolt", "Pörkölt"], ["paprikas", "Csirkepaprikás"], ["toltott", "Töltött káposzta"], ["dobos", "Dobostorta"], ["kurtos", "Kürtőskalács"], ["paprika", "Fűszerpaprika"], ["szalami", "Téliszalámi"],
+      ["tokaji", "Tokaji aszú"], ["bikaver", "Egri bikavér"], ["palinka", "Pálinkás butykosok"], ["unicum", "Unicum"], ["hortobagyi", "Hortobágyi palacsinta"], ["lecso", "Lecsó"], ["turoscsusza", "Túrós csusza"], ["rantott", "Rántott hús"], ["somloi", "Somlói galuska"], ["pogacsa", "Pogácsa"], ["badacsony", "Badacsony"]];
+    FOTO.creditBoard(G, h, "KÉPEK FORRÁSA", h.phCred, 21.25, F + 1.5, Z0 + .03, 0, 1.12);
+    h.phIds = (h.phIds || []).filter((v, i, a) => a.indexOf(v) === i);
+  }
   /* =================================================================== 2/R. AZ OKTATÓHÁZAK LECKÉI (2026-11-15) – minden lecke: szakasz (s), cím (t), a tanár szövege (say),
      és a táblán futó mozgó ábra (d), a 05o rajzkészletével (300 × 190-es koordináták). A szabályok a nemzetközi gyakorlatot követik (starboard / port). */
   const dBg = (g, c0, c1) => { const gr = g.createLinearGradient(0, 0, 0, 190); gr.addColorStop(0, c0 || "#e9f3f7"); gr.addColorStop(1, c1 || "#cfe4ee"); g.fillStyle = gr; g.fillRect(0, 0, 300, 190); };
@@ -10394,8 +10604,12 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
         d: (g, t) => { dBg(g, "#fff7e2", "#ffe6b0"); dSun(g, 260, 34, 14, t); g.fillStyle = "#d9a35a"; g.beginPath(); g.ellipse(150, 110, 80, 50, 0, 0, TAU); g.fill(); g.fillStyle = "#f8f4e8"; g.beginPath(); g.ellipse(150, 108, 64, 38, 0, 0, TAU); g.fill(); const k = cl01((t % 6) / 3); for (let i = 0; i < 40 * k; i++) { g.fillStyle = "#ffd65a"; g.fillRect(100 + (i * 37) % 100, 84 + (i * 23) % 50, 8, 2); } kT(g, "tejföl · sajt · fokhagyma", 150, 176, 12, SN, "center", 900); } },
       { s: "Ételek", t: "Pörkölt, paprikás csirke, töltött káposzta", say: "A pörkölt sűrű, paprikás ragu, amelyet a világ gulyásnak hív. A paprikás csirkét tejfölös szaftban, galuskával, vagyis nokedlivel esszük. Karácsonykor és lakodalmakban pedig a töltött káposzta kerül az asztalra – másnap még finomabb!",
         d: (g, t) => { dBg(g, "#fbf3e6", "#f0dfc4"); [[70, "#7a2a1a", "pörkölt"], [150, "#e07a3a", "paprikás"], [230, "#c9b46a", "töltött k."]].forEach(([x, c, n], i) => { g.fillStyle = "#f4f1e8"; g.beginPath(); g.ellipse(x, 110, 40, 14, 0, 0, TAU); g.fill(); g.fillStyle = c; g.beginPath(); g.ellipse(x, 106 + Math.sin(t * 2 + i) * 1, 28, 8, 0, 0, TAU); g.fill(); kT(g, n, x, 146, 11, SN, "center", 900); }); for (let k = 0; k < 8; k++) sCirc(g, 140 + (k * 7) % 22, 104 + (k % 3) * 2, 2, "#fff3c4"); } },
+      { s: "Ételek", t: "Hortobágyi palacsinta, lecsó, túrós csusza", say: "A magyar konyha nemcsak ünnepi fogásokból áll, a hétköznapok ízei is nagyon finomak. A hortobágyi húsos palacsinta húsos raguval töltött palacsinta paprikás tejfölös szósszal – az Alföld pásztorainak vidékéről kapta a nevét. A lecsó paprikából, paradicsomból és hagymából készül, kolbásszal vagy tojással, nyáron szinte minden konyhában ez rotyog. A túrós csusza pedig széles metélt túróval, tejföllel és ropogós szalonnával – egyszerű, de nagyon laktató.",
+        d: (g, t) => { dBg(g, "#fbf3e6", "#f0dfc4"); [[70, "#d98a3a", "palacsinta"], [150, "#d0442c", "lecsó"], [230, "#f2e8cc", "csusza"]].forEach(([x, c, n], i) => { g.fillStyle = "#f4f1e8"; g.beginPath(); g.ellipse(x, 110, 40, 14, 0, 0, TAU); g.fill(); g.fillStyle = c; g.beginPath(); g.ellipse(x, 106 + Math.sin(t * 2 + i) * 1, 28, 8, 0, 0, TAU); g.fill(); kT(g, n, x, 146, 11, SN, "center", 900); }); } },
       { s: "Édességek", t: "Dobostorta és kürtőskalács", say: "A dobostortát Dobos C. József cukrászmester találta ki 1884-ben: vékony piskótalapok csokoládékrémmel, a tetején ropogós karamellel. A kürtőskalács fahengeren, parázs fölött sül, cukros, diós vagy fahéjas bundában. Mindkettő hungarikum!",
         d: (g, t) => { dBg(g, "#fbf3e6", "#f0dfc4"); for (let k = 0; k < 6; k++) { g.fillStyle = k % 2 ? "#5a2e16" : "#e8c48a"; g.fillRect(40, 140 - k * 10, 90, 10); } g.fillStyle = "#c8892a"; g.fillRect(40, 72, 90, 10); kT(g, "dobostorta", 85, 166, 11, SN, "center", 900); g.save(); g.translate(220, 104); g.rotate(t * 1.5); for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? "#d9a35a" : "#c27a3a"; g.fillRect(-40 + k * 10, -18, 10, 36); } g.restore(); kT(g, "kürtőskalács", 220, 166, 11, SN, "center", 900); } },
+      { s: "Ételek", t: "Rántott hús, somlói galuska, sajtos pogácsa", say: "A vasárnapi ebéd klasszikusa a rántott hús: vékony szelet ropogós panírban kisütve, citrommal, petrezselymes krumplival és savanyúsággal. Desszertnek a somlói galuska jöhet: piskótadarabok, csokoládészósz, dió, vaníliakrém és tejszínhab. A sós sütemények királya pedig a sajtos pogácsa – aranybarna, ropogós, és ünnepen meg hétköznap is ott van az asztalon.",
+        d: (g, t) => { dBg(g, "#fbf3e6", "#f0dfc4"); [[70, "#c8893a", "rántott hús"], [150, "#5a2e16", "somlói"], [230, "#e0a85a", "pogácsa"]].forEach(([x, c, n], i) => { g.fillStyle = "#f4f1e8"; g.beginPath(); g.ellipse(x, 110, 40, 14, 0, 0, TAU); g.fill(); g.fillStyle = c; g.beginPath(); g.ellipse(x, 106 + Math.sin(t * 2 + i) * 1, 28, 8, 0, 0, TAU); g.fill(); kT(g, n, x, 146, 11, SN, "center", 900); }); } },
       { s: "Hungarikumok", t: "Paprika és téliszalámi", say: "A szegedi és a kalocsai fűszerpaprika-őrlemény hungarikum: ettől lesz piros és zamatos a gulyás és a halászlé. A PICK és a HERZ téliszalámi is hungarikum: hosszan, hidegen érlelik, és a héján nemes penész nő, ettől olyan különleges az íze.",
         d: (g, t) => { dBg(g, "#fbf3e6", "#f0dfc4"); for (let k = 0; k < 9; k++) { g.save(); g.translate(40 + k * 12, 40 + k * 6); g.rotate(.3 + Math.sin(t + k) * .05); g.fillStyle = "#c8121e"; g.beginPath(); g.moveTo(-6, 0); g.quadraticCurveTo(0, 40, 3, 46); g.quadraticCurveTo(8, 24, 6, 0); g.fill(); g.restore(); } kT(g, "Szeged · Kalocsa", 90, 172, 11, SR, "center", 900); g.fillStyle = "#d9d0bd"; uiRR(g, 190, 40, 30, 120, 14); g.fill(); g.fillStyle = "#7a2a1a"; g.beginPath(); g.ellipse(205, 160, 15, 8, 0, 0, TAU); g.fill(); kT(g, "PICK · HERZ", 205, 176, 11, SN, "center", 900); } },
       { s: "Borok", t: "Tokaji aszú, Egri Bikavér, balatoni borok", say: "Magyarország híres a borairól – ezek csak a felnőtteknek valók. A Tokaji aszút a királyok borának, a borok királyának hívják, még a Himnuszunk is megemlíti, és hungarikum, akárcsak az Egri Bikavér. A Balaton északi partján, Badacsonyban és Balatonfüreden a szürkebarát és az olaszrizling terem. A nyári fröccs, a bor és a szódavíz keveréke is hungarikum.",
@@ -10406,6 +10620,22 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
         d: (g, t) => { dBg(g, "#fbf3e6", "#f0dfc4"); dBowl(g, 150, 100, "#a8331c", true, t); kT(g, "JÓ ÉTVÁGYAT!", 150, 166, 20, "#8e1b2e", "center", 900); } }
     ]
   };
+
+  /* ---- valódi fotók a leckékben (Wikimedia Commons, szabad licenc; a szerző és a licenc a képen látszik) ---- */
+  FOTO.lessons(LX.izek, {
+    "Isten hozott a Magyar Ízek Házában!": { ids: ["gulyas", "porkolt", "dobos", "paprika"], cap: ["Gulyásleves", "Pörkölt", "Dobostorta", "Fűszerpaprika"] },
+    "Gulyásleves – hungarikum": { ids: ["gulyas"], cap: ["Gulyásleves"] },
+    "Halászlé – a halas hungarikum": { ids: ["halaszle"], cap: ["Halászlé"] },
+    "Lángos – a strand kedvence": { ids: ["langos"], cap: ["Lángos tejföllel és sajttal"] },
+    "Pörkölt, paprikás csirke, töltött káposzta": { ids: ["porkolt", "paprikas", "toltott"], cap: ["Pörkölt nokedlivel", "Paprikás csirke", "Töltött káposzta"] },
+    "Hortobágyi palacsinta, lecsó, túrós csusza": { ids: ["hortobagyi", "lecso", "turoscsusza"], cap: ["Hortobágyi húsos palacsinta", "Lecsó", "Túrós csusza"] },
+    "Dobostorta és kürtőskalács": { ids: ["dobos", "kurtos"], cap: ["Dobostorta", "Kürtőskalács"] },
+    "Rántott hús, somlói galuska, sajtos pogácsa": { ids: ["rantott", "somloi", "pogacsa"], cap: ["Rántott hús", "Somlói galuska", "Sajtos pogácsa"] },
+    "Paprika és téliszalámi": { ids: ["paprika", "szalami"], cap: ["Fűszerpaprika", "Téliszalámi"] },
+    "Tokaji aszú, Egri Bikavér, balatoni borok": { ids: ["tokaji", "bikaver", "badacsony"], cap: ["Tokaji aszú", "Egri Bikavér", "Badacsony"] },
+    "Pálinka és Unicum": { ids: ["palinka", "unicum"], cap: ["Pálinka", "Unicum"] },
+    "Jó étvágyat – egészségedre!": { ids: ["langos", "halaszle", "kurtos"], cap: ["Lángos", "Halászlé", "Kürtőskalács"] }
+  });
   /* =================================================================== 2/S. MOZGÁS 2.0 – szabad séta és fordulás a kikötőben (2026. nov. 15. este)
      A tulajdonos kérése: „nem megoldott a VR térben történő megfordulás … a legfejlettebb mozgási megoldással, mint szabadkezes, mint kontrolleres módon”.
      A Meta (Quest) kényelmi irányelvei és a mai VR-játékok bevett gyakorlata szerint:
