@@ -104,14 +104,12 @@
       const beak = mesh(new THREE.ConeGeometry(.035, .14, 8), std({ color: "#ff7a1a", roughness: .5 }), neck); beak.rotation.x = Math.PI / 2 + .35; beak.position.set(0, py + .0, pz + .16); const knob = mesh(new THREE.SphereGeometry(.03, 8, 6), dark, neck); knob.position.set(0, py + .04, pz + .1);
       env.add(g); return { g, neck, cx, cz, r, w: w2, a: Math.random() * TAU }; });
   }
-  /* 2026-11-15 (szakértői jelentés F.5): KIKÖTŐI HANGKÉP – a kikötők legjellegzetesebb hangja, a fallal (kötél) csapkodó alumíniumárboc „ting-ting”-je
-     a kikötött hajók árbocairól, térben; időnként a móló deszkáinak nyikorgása; a víz csobogása a cölöpökön (a környezeti csatornán) */
+  /* 2026-11-15 (szakértői jelentés F.5): KIKÖTŐI HANGKÉP – időnként a móló deszkáinak nyikorgása; a víz csobogása a cölöpökön (a környezeti csatornán).
+     (Az árbocok „ting-ting”-je 2026-11-16-án a tulajdonos kérésére kikerült.) */
   function hbAmbience(dt) { const a = T.ac(); if (!a || !HB.boats || !HB.boats.length) return; HB.amb = HB.amb || { ting: 1.5, creak: 6, lap: 2 };
     const A = HB.amb; A.ting -= dt; A.creak -= dt; A.lap -= dt;
-    if (A.ting <= 0) { A.ting = .6 + Math.random() * 2.6; const o = HB.boats[(Math.random() * HB.boats.length) | 0], p = new THREE.Vector3(); o.g.getWorldPosition(p); p.y += 6 + Math.random() * 4;
-      const sp = sp3(p, "amb", 6); if (sp) { const t0 = a.currentTime + sp.delay, n = 1 + (Math.random() < .45 ? 1 : 0) + (Math.random() < .2 ? 1 : 0), f0 = 1700 + Math.random() * 900;
-        for (let k = 0; k < n; k++) { const t = t0 + k * (.16 + Math.random() * .12); [1, 2.76, 5.4].forEach((m, j) => { const os = a.createOscillator(), g = a.createGain(); os.type = "sine"; os.frequency.value = f0 * m * (1 + (Math.random() - .5) * .01);
-            g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05 / (j + 1), t + .002); g.gain.exponentialRampToValueAtTime(.0004, t + (j ? .35 : 1.1)); os.connect(g).connect(sp.node); os.start(t); os.stop(t + 1.2); }); } } }
+    /* 2026-11-16 02:40 (tulajdonos: „ezt a csilingelő hangot szüntesd meg … a kikötő hangját akartad utánozni, de ez egy üveg eolhárfa hangja – és idegesítő”):
+       az árbocok szintetizált „ting-ting”-je TÖRÖLVE – a kikötőben csak a víz csobogása és a móló nyikorgása szól */
     if (A.creak <= 0 && HB.walk) { A.creak = 7 + Math.random() * 12; try { const t = a.currentTime, n = a.createBufferSource(); n.buffer = T.noiseBuf(.8); const f = a.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 18;
         f.frequency.setValueAtTime(380 + Math.random() * 200, t); f.frequency.linearRampToValueAtTime(220 + Math.random() * 120, t + .6); const g = a.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t + .08); g.gain.exponentialRampToValueAtTime(.001, t + .7);
         n.connect(f).connect(g).connect(T.outBus("amb") || T.outBus()); n.start(t); n.stop(t + .8); } catch (e) {} }
@@ -127,7 +125,7 @@
     HB.water.userData.mat.uniforms.uT.value = W.t; HB.water.userData.mat.uniforms.uOff.value.set(0, 0);
     if (HB.storm) { const l = STM.lv.keleti || 0, per = l === 2 ? 60 / 90 : l === 1 ? 60 / 45 : 0, on = per && (W.t % per) / per < .34; HB.storm.glow.visible = !!on; HB.storm.lamp.material.color.set(on ? "#ffe066" : l ? "#7a6420" : "#4a4a40"); }
     (HB.swans || []).forEach((q, i) => { q.a += dt * q.w; q.g.position.set(q.cx + Math.cos(q.a) * q.r, Math.sin(W.t * 1.3 + i) * .03, q.cz + Math.sin(q.a) * q.r * .6); q.g.rotation.y = -q.a + (q.w > 0 ? Math.PI : 0); q.neck.rotation.x = .08 * Math.sin(W.t * .7 + i * 2); });
-    HB.boats.forEach((o) => { const S = o.g.userData.S; S.heel = Math.sin(W.t * .9 + o.ph) * .03; S.pitch = Math.sin(W.t * 1.1 + o.ph) * .015; o.g.position.y = Math.sin(W.t * 1.2 + o.ph) * .05; S.awa = 150 + 20 * Math.sin(W.t * .2 + o.ph); S.aws = 2.5;
+    HB.boats.forEach((o) => { const S = o.g.userData.S; S.heel = Math.sin(W.t * .62 + o.ph) * .006 + Math.sin(W.t * .23 + o.ph * 2) * .004; S.pitch = Math.sin(W.t * .71 + o.ph) * .003;   /* 2026-11-16: a kikötőben álló nehéz hajó alig mozdul (korábban ±1,7°) */ o.g.position.y = Math.sin(W.t * .55 + o.ph) * .015; S.awa = 150 + 20 * Math.sin(W.t * .2 + o.ph); S.aws = 2.5;
       o.g.visible = !(HB.prev && HB.prev.id === o.b.id); if (o.g.visible) o.g.userData.update(dt); o.lbl.visible = !HB.prev && !SCH.inside && (!HB.walk || Math.hypot(hp.x - o.b.x, hp.z - o.b.z) < (o.b.big ? 11 : 7.5)); o.hit.visible = !SCH.inside && (!HB.walk || hbNearBoat(o));   /* kikötő-jelentés 2.3: csak a közeli hajó felirata */ o.lbl.material.opacity = o.hov ? 1 : .85; const k = o.hov ? 1.12 : 1; o.lbl.scale.set((o.b.big ? 3.6 : 2.4) * k, o.lbl.scale.y / o.lbl.scale.x * (o.b.big ? 3.6 : 2.4) * k, 1); });
     ["flag0", "flag1"].forEach((k) => { const f = HB[k]; if (!f) return; const pa = f.geometry.attributes.position, b0 = f.userData.base; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 5 - W.t * 6) * .08 * (x + .7); } pa.needsUpdate = true; });
     if (HB.gulls) HB.gulls.tick(dt, 0, -20);

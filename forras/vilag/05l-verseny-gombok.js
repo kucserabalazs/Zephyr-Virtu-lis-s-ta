@@ -123,10 +123,11 @@
     const A = F[P.i], Bf = F[Math.min(F.length - 1, P.i + 1)], k = Bf[0] > A[0] ? clamp((P.t - A[0]) / (Bf[0] - A[0]), 0, 1) : 0, L = (j) => A[j] + (Bf[j] - A[j]) * k, LA = (j) => A[j] + wrapA(Bf[j] - A[j]) * k, Q = (j) => (k < .5 ? A[j] : Bf[j]);
     const sail = (OS, j) => { if (!OS) return; OS.awa = L(j); OS.aws = L(j + 1); OS.side = Q(j + 2); if (OS.spin != null) OS.spin = L(j + 3); };
     S.x = L(1); S.z = L(2); S.b = LA(3); S.v = L(5); const own = S.pb || S.boat;
-    if (own) { const OS = own.userData.S; if (OS) { OS.heel = L(4); OS.pitch = A.length > 10 ? L(10) : 0; sail(OS, 6); } try { own.userData.update(dt); } catch (e) {} own.position.y = rwHeight(S.x, S.z) * .5; }
+    if (own) { const OS = own.userData.S; if (OS) { OS.heel = L(4); OS.pitch = A.length > 10 ? L(10) : 0; sail(OS, 6); } try { own.userData.update(dt); } catch (e) {} own.position.y = rwHullMotion(P.hmO || (P.hmO = {}), S.x, S.z, S.b, own === S.pb ? Math.max(1.6, S.cls.half * 2) : 10.8, own === S.pb ? 1.55 : 3.6, dt, own === S.pb ? rwHullP(S.cls.id) : HM_HEAVY)[0]; }
     S.riv.forEach((r, i) => { const j = REC_OWN + i * REC_RIV; if (j + REC_RIV - 1 >= A.length) return; r.x = L(j); r.z = L(j + 1); r.b = LA(j + 2); r.v = L(j + 8); const f = vfwd(r.b);
-      r.g.position.set(r.x, rwHeight(r.x, r.z) * .62, r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);
-      const rs = r.g.userData.S; if (rs) { rs.heel = L(j + 3); sail(rs, j + 4); const sl = rwSlope(r.x, r.z); rs.pitch = clamp(-(sl[0] * f[0] + sl[1] * f[1]) * .55, -.06, .06); } try { r.g.userData.update(dt); } catch (e) {}
+      const hmR = rwHullMotion((P.hmR || (P.hmR = []))[i] || (P.hmR[i] = {}), r.x, r.z, r.b, (S.cls ? S.cls.half : 6) * 1.8, S.cls && S.cls.half < 4 ? 1.6 : 3.6, dt, rwHullP(S.cls && S.cls.id));   /* 2026-11-16: mint a futamban (05z) */
+      r.g.position.set(r.x, hmR[0], r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);
+      const rs = r.g.userData.S; if (rs) { rs.heel = L(j + 3); sail(rs, j + 4); rs.pitch = -hmR[1]; } try { r.g.userData.update(dt); } catch (e) {}
       try { if (r.wk) r.wk.push(r.x, r.z, r.g.rotation.y, r.v || 0, dt * P.spd, .05); } catch (e) {} });
     try { const f = vfwd(S.b); S.wake.push(S.x, S.z, Math.atan2(f[0], f[1]), S.v, dt * P.spd, .05); } catch (e) {}
     /* környezet a saját hajó körül (mint a futamban) */

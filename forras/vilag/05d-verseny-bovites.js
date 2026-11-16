@@ -55,10 +55,13 @@
   function vrClassTick(dt) {
     const S = VRR, pb = S.pb; if (!pb) return; const BS = S.boat.userData.S, PS = pb.userData.S;
     if (PS.scare != null && dt > 0) { if (S._vPrev != null && S._vPrev - S.v > .6 && S._vPrev > 1) PS.scare = 1.6; S._vPrev = S.v; }   /* ütközés (hirtelen lassulás): a kókusz megijed */
-    PS.side = BS.side; PS.awa = BS.awa != null ? BS.awa : S.awa; PS.aws = BS.aws != null ? BS.aws : S.aws; PS.pitch = (BS.pitch || 0) * 1.6; PS.rud = S.wa / WA_MAX;
-    PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : S.cls.id === "flamingo" ? .9 : .35);   /* a tutaj pontosan úgy dől, mint a nagy hajó */
+    PS.side = BS.side; PS.awa = BS.awa != null ? BS.awa : S.awa; PS.aws = BS.aws != null ? BS.aws : S.aws; PS.rud = S.wa / WA_MAX;
+    /* 2026-11-16: a kis hajó a SAJÁT méretével és tömegével ring a hullámokon (05z rwHullMotion): a dingi és a flamingó a rövid fodrot is érzi, a tutaj lomhábban */
+    const hmL = rwHullMotion(S.hmL || (S.hmL = {}), S.x, S.z, S.b, Math.max(1.6, S.cls.half * 2), S.cls.id === "tutaj" ? 2.4 : S.cls.id === "flamingo" ? 1.2 : 1.55, dt, rwHullP(S.cls.id));
+    PS.pitch = -hmL[1];
+    PS.heel = (S.heelW != null ? S.heelW : BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : S.cls.id === "flamingo" ? .9 : .35) - hmL[2];   /* a tutaj pontosan úgy dől, mint a nagy hajó */
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
-    const hb = vrWave(S.x, S.z, W.t), lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hb * .45 + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
+    const lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hmL[0] + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
     pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { _sv.copy(pb.userData.seat).multiply(bdy.scale).add(bdy.position).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 19:52 (tulajdonos): a nézőpont NEM követi a dőlést (a 18:39-es változás visszavonva) */
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);

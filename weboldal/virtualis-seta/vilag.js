@@ -2769,17 +2769,19 @@
       /* 2026-11-13 00:39 (tulajdonos, ALAPSZABÁLY): „amerre kormányzom a hajót, arra megy, ez alól nincs kivétel; a kormánymozdulat irányítja a hajót, nem löki félre semmi –
          egyetlen kivétel az ütközés.” Ezért a saját hajón a szélbe húzás (luvgierigkeit: dőlésben a hajó a szél felé fordult) MEGSZŰNT; a széllökés csak dönt és gyorsít,
          az irányt (S.b) kizárólag a kormány változtatja. Ide SEMMI olyan tagot ne tegyél vissza, amely a kormánytól függetlenül forgatja a saját hajót. */ }
-    BS.heel = -side * S.heel * .78;   /* látványban kicsit visszafogva (a kormányos helye le van horgonyozva) */
-    /* mozgás a hullámokon: a lassú hajót dobálja a víz (jobban ring), a száguldó hajó kisimul – csak néha ugrik meg egy-egy hullámon */
-    const hb = vrWave(S.x + fx * 6, S.z + fz * 6, W.t), hs2 = vrWave(S.x - fx * 6, S.z - fz * 6, W.t);
-    const rockK = clamp(1.25 - S.v / 8, .28, 1.25);
+    BS.heel = -side * S.heel * .78;   /* látványban kicsit visszafogva (a kormányos helye le van horgonyozva) */ S.heelW = BS.heel;
+    /* MOZGÁS A HULLÁMOKON – 2026-11-16 02:21 (tulajdonos: „kis víz esetén a hajók természetellenesen ringatóznak – ezek 3500 kg-os testek”): a 3,5 tonnás test a teljes
+       test alatti vízfelszín átlagát követi, a saját lengésidejével (rwHullMotion, 05z). A korábbi, hullámtól független mesterséges himbálás (±3°) és a két pontból
+       számolt, a rövid fodrokat követő bólintás megszűnt: kis vízben csak lassú, pár tized fokos ringás marad, nagyobb hullámban természetes bólintás és emelkedés. */
+    const hm = rwHullMotion(S.hmS || (S.hmS = {}), S.x, S.z, S.b, 10.8, 3.6, dt, HM_HEAVY);
+    const hb = vrWave(S.x + fx * 6, S.z + fz * 6, W.t), hs2 = vrWave(S.x - fx * 6, S.z - fz * 6, W.t), seaK = clamp((RW.Hs - .3) / .25, 0, 1);   /* csapódás, tatpermet: csak valódi hullámzásban (kis vízben nincs) */
     S.slam = (S.slam || 0) * Math.pow(.015, dt);
-    if (S.v > 5 && S.prevHb != null && (hb - S.prevHb) / Math.max(dt, .001) > .45 && W.t - (S.slamT || 0) > 1.6 && Math.random() < .35) { S.slam = .03 + Math.random() * .02; S.slamT = W.t; S.sprayBurst = 1; hapt(.4, 40); }
+    if (seaK > 0 && S.v > 5 && S.prevHb != null && (hb - S.prevHb) / Math.max(dt, .001) > .45 && W.t - (S.slamT || 0) > 1.6 && Math.random() < .35 * seaK) { S.slam = (.02 + Math.random() * .015) * seaK; S.slamT = W.t; S.sprayBurst = 1; hapt(.4, 40); }
     S.prevHb = hb;
-    if (S.prevHs != null && (hs2 - S.prevHs) / Math.max(dt, .001) < -.42 && S.v > 2.6 && W.t - (S.sternT || 0) > 2.4 && Math.random() < .3) { S.sternSlap = clamp(.6 + S.v / 8, .6, 1.5); S.sternT = W.t; } S.prevHs = hs2;   /* 2026-11-15: tatpermet, ha a tat a hullámvölgybe csap */
-    BS.pitch = clamp((hs2 - hb) / 12 * 1.1 * rockK, -.05, .05) - S.slam * Math.sin(Math.min(1, (W.t - (S.slamT || 0)) * 3) * Math.PI);
-    BS.heel += Math.sin(W.t * .83 + 1.3) * .03 * rockK + Math.sin(W.t * 1.37) * .012 * rockK;
-    S.boat.position.y = (hb + hs2) / 2 * .5 * rockK + S.slam * 3 * Math.sin(Math.min(1, (W.t - (S.slamT || 0)) * 3) * Math.PI);
+    if (seaK > 0 && S.prevHs != null && (hs2 - S.prevHs) / Math.max(dt, .001) < -.42 && S.v > 2.6 && W.t - (S.sternT || 0) > 2.4 && Math.random() < .3 * seaK) { S.sternSlap = clamp(.6 + S.v / 8, .6, 1.5); S.sternT = W.t; } S.prevHs = hs2;   /* 2026-11-15: tatpermet, ha a tat a hullámvölgybe csap */
+    const slamE = S.slam * Math.sin(Math.min(1, (W.t - (S.slamT || 0)) * 3) * Math.PI);
+    BS.pitch = -hm[1] - slamE; BS.heel -= hm[2];
+    S.boat.position.y = hm[0] + slamE * 2;
     S.boat.userData.update(dt);
     /* permet: GPU-részecskék a tó terében (05x) */
     try { rwSprayTick(dt); } catch (e) { if (W.debug) console.warn('permet', e); }
@@ -3049,12 +3051,13 @@
       if (rel === "O" && (r._rel === "A" || r._rel === "B")) { r._ovT = W.t; r._ovBy = r._rel === "A" ? S : r; } if (rel !== "O") r._ovT = 0; r._rel = rel; }
     /* (2026-11-12 13:36: a „közeli keresztezés is szabálytalanság” szabály törölve – ütközés nélkül nincs büntetés) */
     /* megjelenítés */
-    r.g.position.set(r.x, rwHeight(r.x, r.z) * .62, r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);   /* 2026-11-15: a valódi (látott) hullámokon ring */
+    const hmR = rwHullMotion(r.hmS || (r.hmS = {}), r.x, r.z, r.b, (S.cls ? S.cls.half : 6) * 1.8, S.cls && S.cls.half < 4 ? 1.6 : 3.6, dt, rwHullP(S.cls && S.cls.id));   /* 2026-11-16: a test alatti átlagos felszínen, a saját lengésidejével (05z) */
+    r.g.position.set(r.x, hmR[0], r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);
     const OS = r.g.userData.S, wfv = vfwd(S.wf), yaw = r.g.rotation.y, Xv = [Math.cos(yaw), -Math.sin(yaw)];
     OS.side = (wfv[0] * Xv[0] + wfv[1] * Xv[1]) > 0 ? -1 : 1; OS.boom = clamp((twa - 28) * .78, 7, 82) * D2R * OS.side; OS.jib = clamp((twa - 28) * .55, 8, 52) * D2R; OS.luff = clamp(1 - (twa - 18) / 18, 0, 1);
     OS.spin += ((spin ? 1 : 0) - OS.spin) * Math.min(1, dt * .35);
     { const tw2 = [wfv[0] * S.tws * (r.gkL || 1), wfv[1] * S.tws * (r.gkL || 1)], aw2 = [tw2[0] + f[0] * r.v / VR_SPD, tw2[1] + f[1] * r.v / VR_SPD], aws2 = Math.hypot(aw2[0], aw2[1]), awa2 = Math.acos(clamp((aw2[0] * f[0] + aw2[1] * f[1]) / (aws2 || 1), -1, 1)) * R2D;
-      OS.awa = awa2; OS.aws = aws2; OS.gust = r.gkL || 1; r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 : 0); } { const sl = rwSlope(r.x, r.z); OS.pitch = clamp(-(sl[0] * f[0] + sl[1] * f[1]) * .55, -.06, .06); }
+      OS.awa = awa2; OS.aws = aws2; OS.gust = r.gkL || 1; r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 * clamp((RW.Hs - .15) / .4, .08, 1) : 0) - hmR[2]; } OS.pitch = -hmR[1];   /* (a spinakkeres billegés is csak nagyobb hullámban erős) */
     const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.g.userData.update(dt);   /* minden képkockán, távol is (ne „ugráljon” a vitorla) */
     r.wk.push(r.x, r.z, r.g.rotation.y, r.v, dt, .05);
     /* névtábla a hajó fölött (helyezéssel), 25–220 m között látszik */
@@ -7196,10 +7199,13 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
   function vrClassTick(dt) {
     const S = VRR, pb = S.pb; if (!pb) return; const BS = S.boat.userData.S, PS = pb.userData.S;
     if (PS.scare != null && dt > 0) { if (S._vPrev != null && S._vPrev - S.v > .6 && S._vPrev > 1) PS.scare = 1.6; S._vPrev = S.v; }   /* ütközés (hirtelen lassulás): a kókusz megijed */
-    PS.side = BS.side; PS.awa = BS.awa != null ? BS.awa : S.awa; PS.aws = BS.aws != null ? BS.aws : S.aws; PS.pitch = (BS.pitch || 0) * 1.6; PS.rud = S.wa / WA_MAX;
-    PS.heel = (BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : S.cls.id === "flamingo" ? .9 : .35);   /* a tutaj pontosan úgy dől, mint a nagy hajó */
+    PS.side = BS.side; PS.awa = BS.awa != null ? BS.awa : S.awa; PS.aws = BS.aws != null ? BS.aws : S.aws; PS.rud = S.wa / WA_MAX;
+    /* 2026-11-16: a kis hajó a SAJÁT méretével és tömegével ring a hullámokon (05z rwHullMotion): a dingi és a flamingó a rövid fodrot is érzi, a tutaj lomhábban */
+    const hmL = rwHullMotion(S.hmL || (S.hmL = {}), S.x, S.z, S.b, Math.max(1.6, S.cls.half * 2), S.cls.id === "tutaj" ? 2.4 : S.cls.id === "flamingo" ? 1.2 : 1.55, dt, rwHullP(S.cls.id));
+    PS.pitch = -hmL[1];
+    PS.heel = (S.heelW != null ? S.heelW : BS.heel || 0) * (S.cls.id === "finn" || S.cls.id === "j420" ? .55 : S.cls.id === "tutaj" ? 1 : S.cls.id === "flamingo" ? .9 : .35) - hmL[2];   /* a tutaj pontosan úgy dől, mint a nagy hajó */
     const spT = S.sp && (S.sp.st === "fly" || S.sp.st === "pop" || S.sp.st === "spread") ? 1 : 0; PS.spin = (PS.spin || 0) + (spT - (PS.spin || 0)) * Math.min(1, dt * .8);
-    const hb = vrWave(S.x, S.z, W.t), lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hb * .45 + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
+    const lift = S.cls.id === "finn" || S.cls.id === "j420" ? .1 : 0; pb.position.set(0, hmL[0] + lift, 0);   /* a könnyű dingi magasabban úszik: a padlója a víz fölött */ pb.rotation.set(0, Math.PI, 0); pb.userData.update(dt);
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
     pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { _sv.copy(pb.userData.seat).multiply(bdy.scale).add(bdy.position).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 19:52 (tulajdonos): a nézőpont NEM követi a dőlést (a 18:39-es változás visszavonva) */
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);
@@ -7801,14 +7807,12 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
       const beak = mesh(new THREE.ConeGeometry(.035, .14, 8), std({ color: "#ff7a1a", roughness: .5 }), neck); beak.rotation.x = Math.PI / 2 + .35; beak.position.set(0, py + .0, pz + .16); const knob = mesh(new THREE.SphereGeometry(.03, 8, 6), dark, neck); knob.position.set(0, py + .04, pz + .1);
       env.add(g); return { g, neck, cx, cz, r, w: w2, a: Math.random() * TAU }; });
   }
-  /* 2026-11-15 (szakértői jelentés F.5): KIKÖTŐI HANGKÉP – a kikötők legjellegzetesebb hangja, a fallal (kötél) csapkodó alumíniumárboc „ting-ting”-je
-     a kikötött hajók árbocairól, térben; időnként a móló deszkáinak nyikorgása; a víz csobogása a cölöpökön (a környezeti csatornán) */
+  /* 2026-11-15 (szakértői jelentés F.5): KIKÖTŐI HANGKÉP – időnként a móló deszkáinak nyikorgása; a víz csobogása a cölöpökön (a környezeti csatornán).
+     (Az árbocok „ting-ting”-je 2026-11-16-án a tulajdonos kérésére kikerült.) */
   function hbAmbience(dt) { const a = T.ac(); if (!a || !HB.boats || !HB.boats.length) return; HB.amb = HB.amb || { ting: 1.5, creak: 6, lap: 2 };
     const A = HB.amb; A.ting -= dt; A.creak -= dt; A.lap -= dt;
-    if (A.ting <= 0) { A.ting = .6 + Math.random() * 2.6; const o = HB.boats[(Math.random() * HB.boats.length) | 0], p = new THREE.Vector3(); o.g.getWorldPosition(p); p.y += 6 + Math.random() * 4;
-      const sp = sp3(p, "amb", 6); if (sp) { const t0 = a.currentTime + sp.delay, n = 1 + (Math.random() < .45 ? 1 : 0) + (Math.random() < .2 ? 1 : 0), f0 = 1700 + Math.random() * 900;
-        for (let k = 0; k < n; k++) { const t = t0 + k * (.16 + Math.random() * .12); [1, 2.76, 5.4].forEach((m, j) => { const os = a.createOscillator(), g = a.createGain(); os.type = "sine"; os.frequency.value = f0 * m * (1 + (Math.random() - .5) * .01);
-            g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05 / (j + 1), t + .002); g.gain.exponentialRampToValueAtTime(.0004, t + (j ? .35 : 1.1)); os.connect(g).connect(sp.node); os.start(t); os.stop(t + 1.2); }); } } }
+    /* 2026-11-16 02:40 (tulajdonos: „ezt a csilingelő hangot szüntesd meg … a kikötő hangját akartad utánozni, de ez egy üveg eolhárfa hangja – és idegesítő”):
+       az árbocok szintetizált „ting-ting”-je TÖRÖLVE – a kikötőben csak a víz csobogása és a móló nyikorgása szól */
     if (A.creak <= 0 && HB.walk) { A.creak = 7 + Math.random() * 12; try { const t = a.currentTime, n = a.createBufferSource(); n.buffer = T.noiseBuf(.8); const f = a.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 18;
         f.frequency.setValueAtTime(380 + Math.random() * 200, t); f.frequency.linearRampToValueAtTime(220 + Math.random() * 120, t + .6); const g = a.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.22, t + .08); g.gain.exponentialRampToValueAtTime(.001, t + .7);
         n.connect(f).connect(g).connect(T.outBus("amb") || T.outBus()); n.start(t); n.stop(t + .8); } catch (e) {} }
@@ -7824,7 +7828,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     HB.water.userData.mat.uniforms.uT.value = W.t; HB.water.userData.mat.uniforms.uOff.value.set(0, 0);
     if (HB.storm) { const l = STM.lv.keleti || 0, per = l === 2 ? 60 / 90 : l === 1 ? 60 / 45 : 0, on = per && (W.t % per) / per < .34; HB.storm.glow.visible = !!on; HB.storm.lamp.material.color.set(on ? "#ffe066" : l ? "#7a6420" : "#4a4a40"); }
     (HB.swans || []).forEach((q, i) => { q.a += dt * q.w; q.g.position.set(q.cx + Math.cos(q.a) * q.r, Math.sin(W.t * 1.3 + i) * .03, q.cz + Math.sin(q.a) * q.r * .6); q.g.rotation.y = -q.a + (q.w > 0 ? Math.PI : 0); q.neck.rotation.x = .08 * Math.sin(W.t * .7 + i * 2); });
-    HB.boats.forEach((o) => { const S = o.g.userData.S; S.heel = Math.sin(W.t * .9 + o.ph) * .03; S.pitch = Math.sin(W.t * 1.1 + o.ph) * .015; o.g.position.y = Math.sin(W.t * 1.2 + o.ph) * .05; S.awa = 150 + 20 * Math.sin(W.t * .2 + o.ph); S.aws = 2.5;
+    HB.boats.forEach((o) => { const S = o.g.userData.S; S.heel = Math.sin(W.t * .62 + o.ph) * .006 + Math.sin(W.t * .23 + o.ph * 2) * .004; S.pitch = Math.sin(W.t * .71 + o.ph) * .003;   /* 2026-11-16: a kikötőben álló nehéz hajó alig mozdul (korábban ±1,7°) */ o.g.position.y = Math.sin(W.t * .55 + o.ph) * .015; S.awa = 150 + 20 * Math.sin(W.t * .2 + o.ph); S.aws = 2.5;
       o.g.visible = !(HB.prev && HB.prev.id === o.b.id); if (o.g.visible) o.g.userData.update(dt); o.lbl.visible = !HB.prev && !SCH.inside && (!HB.walk || Math.hypot(hp.x - o.b.x, hp.z - o.b.z) < (o.b.big ? 11 : 7.5)); o.hit.visible = !SCH.inside && (!HB.walk || hbNearBoat(o));   /* kikötő-jelentés 2.3: csak a közeli hajó felirata */ o.lbl.material.opacity = o.hov ? 1 : .85; const k = o.hov ? 1.12 : 1; o.lbl.scale.set((o.b.big ? 3.6 : 2.4) * k, o.lbl.scale.y / o.lbl.scale.x * (o.b.big ? 3.6 : 2.4) * k, 1); });
     ["flag0", "flag1"].forEach((k) => { const f = HB[k]; if (!f) return; const pa = f.geometry.attributes.position, b0 = f.userData.base; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 5 - W.t * 6) * .08 * (x + .7); } pa.needsUpdate = true; });
     if (HB.gulls) HB.gulls.tick(dt, 0, -20);
@@ -8964,10 +8968,11 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const A = F[P.i], Bf = F[Math.min(F.length - 1, P.i + 1)], k = Bf[0] > A[0] ? clamp((P.t - A[0]) / (Bf[0] - A[0]), 0, 1) : 0, L = (j) => A[j] + (Bf[j] - A[j]) * k, LA = (j) => A[j] + wrapA(Bf[j] - A[j]) * k, Q = (j) => (k < .5 ? A[j] : Bf[j]);
     const sail = (OS, j) => { if (!OS) return; OS.awa = L(j); OS.aws = L(j + 1); OS.side = Q(j + 2); if (OS.spin != null) OS.spin = L(j + 3); };
     S.x = L(1); S.z = L(2); S.b = LA(3); S.v = L(5); const own = S.pb || S.boat;
-    if (own) { const OS = own.userData.S; if (OS) { OS.heel = L(4); OS.pitch = A.length > 10 ? L(10) : 0; sail(OS, 6); } try { own.userData.update(dt); } catch (e) {} own.position.y = rwHeight(S.x, S.z) * .5; }
+    if (own) { const OS = own.userData.S; if (OS) { OS.heel = L(4); OS.pitch = A.length > 10 ? L(10) : 0; sail(OS, 6); } try { own.userData.update(dt); } catch (e) {} own.position.y = rwHullMotion(P.hmO || (P.hmO = {}), S.x, S.z, S.b, own === S.pb ? Math.max(1.6, S.cls.half * 2) : 10.8, own === S.pb ? 1.55 : 3.6, dt, own === S.pb ? rwHullP(S.cls.id) : HM_HEAVY)[0]; }
     S.riv.forEach((r, i) => { const j = REC_OWN + i * REC_RIV; if (j + REC_RIV - 1 >= A.length) return; r.x = L(j); r.z = L(j + 1); r.b = LA(j + 2); r.v = L(j + 8); const f = vfwd(r.b);
-      r.g.position.set(r.x, rwHeight(r.x, r.z) * .62, r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);
-      const rs = r.g.userData.S; if (rs) { rs.heel = L(j + 3); sail(rs, j + 4); const sl = rwSlope(r.x, r.z); rs.pitch = clamp(-(sl[0] * f[0] + sl[1] * f[1]) * .55, -.06, .06); } try { r.g.userData.update(dt); } catch (e) {}
+      const hmR = rwHullMotion((P.hmR || (P.hmR = []))[i] || (P.hmR[i] = {}), r.x, r.z, r.b, (S.cls ? S.cls.half : 6) * 1.8, S.cls && S.cls.half < 4 ? 1.6 : 3.6, dt, rwHullP(S.cls && S.cls.id));   /* 2026-11-16: mint a futamban (05z) */
+      r.g.position.set(r.x, hmR[0], r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);
+      const rs = r.g.userData.S; if (rs) { rs.heel = L(j + 3); sail(rs, j + 4); rs.pitch = -hmR[1]; } try { r.g.userData.update(dt); } catch (e) {}
       try { if (r.wk) r.wk.push(r.x, r.z, r.g.rotation.y, r.v || 0, dt * P.spd, .05); } catch (e) {} });
     try { const f = vfwd(S.b); S.wake.push(S.x, S.z, Math.atan2(f[0], f[1]), S.v, dt * P.spd, .05); } catch (e) {}
     /* környezet a saját hajó körül (mint a futamban) */
@@ -11734,7 +11739,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     rwSprayFlush(P);
   }
 
-  W._rw = { RW, rwFieldAt, rwWindAt, rwHeight, rwSlope, rwFieldDraw };   /* teszteléshez */
+  W._rw = { RW, rwFieldAt, rwWindAt, rwHeight, rwSlope, rwFieldDraw, rwWaves };   /* teszteléshez */
   /* ============================================================================================ 05y – VERSENY: A FEDÉLZETI MŰSZER ÚJ KIJELZŐJE
      2026-11-15 18:39 (tulajdonos): „a műszert szeretném sokkal közérthetőbbre és használhatóbbra kidolgozni”.
      A régi kijelzőn tucatnyi apró felirat versengett (szakaszsáv, iránytűgyűrű, rangsor, VMG, irány …) – VR-ben, fél méterről nem lehetett elolvasni,
@@ -11999,6 +12004,40 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     B.wash.rotation.z = Math.atan2(dx, dz) - yb;   /* a sodorvonal a szél alá nyúlik */
     const lx = dx * Math.cos(yb) - dz * Math.sin(yb), lz = dx * Math.sin(yb) + dz * Math.cos(yb); B.flag.rotation.y = Math.atan2(-lz, lx); }   /* a zászló a szél alá leng */
 
+  /* ------------------------------------------------------------------ NEHÉZ HAJÓTEST A HULLÁMOKON
+     2026-11-16 02:21 (tulajdonos: „versenyzésnél kis víz esetén a hajók természetellenesen ringatóznak – ezek 3500 kg-os testek, nem mozog így soha …
+     a hullám okozta kisvizes mozgást tedd helyre kis ringatózásra”; hangban: „kis ringatózás lehet a kis vízen, de ilyen mozgást nem végez”).
+     A hajó nem EGY pontban követi a vizet: a test alatti felszín felhajtóereje a hajó teljes hosszán és szélességén összegződik, ezért a hajónál rövidebb
+     hullámok hatása kioltja egymást (a balatoni rövid fodroktól egy 10–15 m-es, 3,5 tonnás test alig mozdul), és a test a tehetetlensége miatt csak
+     a saját lengésidejénél lassabb változásokat követi. A modell:
+     (1) a felszínt a test talpán 5 × 3 pontban mintázzuk, és síkot illesztünk rá: átlagmagasság, hossz- és keresztirányú lejtés (térbeli aluláteresztés);
+     (2) a hajó csillapított rezgő rendszerként követi ezt a síkot – emelkedés ~1,7 s, bólintás ~2,3 s, dőlés ~3,6 s saját lengésidővel (nehéz tőkesúlyos hajó),
+         a dőlésre a mély test és a tőkesúly miatt csak a keresztlejtés egy része hat.
+     Kis vízben így csak lassú, pár tized fokos ringás marad; erős szélben, hosszabb hullámokon természetes, határozott bólintás és emelkedés. */
+  const HM_HEAVY = { th: 1.7, zh: .55, tp: 2.3, zp: .45, tr: 3.6, zr: .24, kp: .85, kr: .4 };   /* 3–4 tonnás versenyjacht, nézőhajó, rendezőhajó */
+  const HM_LIGHT = { th: .8, zh: .5, tp: .9, zp: .42, tr: 1.6, zr: .32, kp: 1, kr: .75 };     /* dingi (Finn, 420): a rövid hullámot is érzi */
+  const HM_RAFT = { th: 1.0, zh: .62, tp: 1.15, zp: .55, tr: 1.5, zr: .5, kp: .95, kr: .7 };   /* rönktutaj: nehéz, lomha rönkök */
+  const HM_FLOAT = { th: .45, zh: .5, tp: .5, zp: .45, tr: .7, zr: .45, kp: 1, kr: 1 };        /* felfújt flamingó: a felszínnel együtt mozog */
+  function rwHullP(id) { return id === "finn" || id === "j420" ? HM_LIGHT : id === "tutaj" ? HM_RAFT : id === "flamingo" ? HM_FLOAT : HM_HEAVY; }
+  /* st: állapot (hajónként), x, z: helyzet, b: irány (előre = [sin b, −cos b]), L, B: a test hossza és szélessége (m)
+     visszaad: [emelkedés (m), bólintás (rad, + = orr fel), dőlés (rad, + = jobb oldal fel)] */
+  function rwHullMotion(st, x, z, b, L, B, dt, P) {
+    P = P || HM_HEAVY; const fx = Math.sin(b), fz = -Math.cos(b), rx = Math.cos(b), rz = Math.sin(b);
+    let s0 = 0, su = 0, sv = 0, uu = 0, vv = 0;
+    if (RW.waves) for (let i = 0; i < 5; i++) { const u = (i / 4 - .5) * L; for (let j = 0; j < 3; j++) { const v = (j - 1) * .5 * B, h = rwHeight(x + fx * u + rx * v, z + fz * u + rz * v); s0 += h; su += u * h; sv += v * h; uu += u * u; vv += v * v; } }
+    const T0 = uu ? s0 / 15 : 0, tp = uu ? Math.atan(su / uu) * P.kp : 0, tr = vv ? Math.atan(sv / vv) * P.kr : 0;
+    if (!st.y || dt > .5 || !(dt >= 0)) { st.y = [T0, tp, tr]; st.v = [0, 0, 0]; return st.y; }
+    const tg = [T0, tp, tr], T = [P.th, P.tp, P.tr], Z = [P.zh, P.zp, P.zr], n = Math.max(1, Math.ceil(dt / .02)), h = dt / n;
+    for (let k = 0; k < 3; k++) { const w = TAU / T[k]; for (let q = 0; q < n; q++) { st.v[k] += (w * w * (tg[k] - st.y[k]) - 2 * Z[k] * w * st.v[k]) * h; st.y[k] += st.v[k] * h; } }
+    return st.y;
+  }
+  /* nehéz úszó test (néző- és rendezőhajó) a fenti modellel – a forgatás a test saját tengelyei szerint, mint az rwFloatOne-nál */
+  function rwFloatHull(o, L, B, dt, P) {
+    if (!o || o.visible === false) return; const ud = o.userData; if (o.rotation.order !== "YXZ") o.rotation.order = "YXZ";
+    const m = rwHullMotion(ud.hm || (ud.hm = {}), o.position.x, o.position.z, Math.PI - o.rotation.y, L, B, dt, P);
+    o.position.y = m[0] + (ud.fy0 || 0); o.rotation.x = -m[1]; o.rotation.z = -m[2];
+  }
+
   /* ------------------------------------------------------------------ ÚSZÓ TÁRGYAK A HULLÁMOKON */
   function rwFloatOne(o, L, B, kT, rate, dt, lean) {
     if (!o || o.visible === false) return; const p = o.position, ud = o.userData, b = o.rotation.y, sb = Math.sin(b), cb = Math.cos(b);
@@ -12019,8 +12058,8 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
         if (d < 260) { const A = Bu.fg.attributes.position, base = Bu.base; for (let i = 0; i < A.count; i++) { const x = base[i * 3], wv = Math.sin(t * 7.5 - x * 7 + Bu.ph) * .07 * x + Math.sin(t * 4.1 - x * 4) * .03 * x; A.setZ(i, wv); } A.needsUpdate = true; }
         Bu.wash.material.opacity = night ? .14 : .62; } };
     (S.marks || []).forEach((m) => { buoy(m.g); if (m.g2) buoy(m.g2); }); buoy(S.pin); buoy(S.pin2); (S.fb || []).forEach(buoy);
-    if (S.cb) rwFloatOne(S.cb, 13, 4.6, .85, 3.2, dt, null);
-    (S.spect || []).forEach((q) => rwFloatOne(q.g, 11 * (q.sc || 1), 4 * (q.sc || 1), .85, 3.4, dt, null));
+    if (S.cb) rwFloatHull(S.cb, 13, 4.6, dt, HM_HEAVY);   /* 2026-11-16: a nehéz hajótestek a test alatti átlagos felszínt követik (rwHullMotion) */
+    (S.spect || []).forEach((q) => rwFloatHull(q.g, 11 * (q.sc || 1), 4 * (q.sc || 1), dt, HM_HEAVY));
     /* a rajt- és célvonal csíkja a hullámokra simul */
     rwDrape(S.lineM, .07); rwDrape(S.finM, .08); if (S.CM && S.CM.gate && S.CM.gate.visible) rwDrape(S.CM.strip, .11);
   }
@@ -12676,9 +12715,13 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const S = VRR, F = KEK.fl; if (!F) return; let nY = 0, nR = 0, nF = 0; const night = typeof NGT !== "undefined" && NGT.on, t = W.t;
     const LP = F.lights.geometry.attributes.position.array, LC = F.lights.geometry.attributes.color.array; let nl = 0;
     T.camObj().getWorldPosition(_kc); S.env.worldToLocal(_kc);
+    /* 2026-11-16: a hajók a test hossza menti átlagos felszínt követik, simítva (nehéz test – kis vízben alig mozdul; ld. 05z rwHullMotion) */
+    const dtF = clamp(W.t - (F.lt0 == null ? W.t : F.lt0), 0, .2); F.lt0 = W.t; if (!F.hy) { F.hy = new Float32Array(F.n); F.hp = new Float32Array(F.n); F.hyOk = 0; }
     for (let i = 0; i < F.n; i++) {
-      const x = F.x[i], z = F.z[i], b = F.b[i], y = rwHeight(x, z) * .6, twa = wrapA(S.wf - b), heel = clamp(Math.abs(Math.sin(twa)) * .32 * (F.v[i] / 6), 0, .3) * Math.sign(twa), sc = F.sc[i], cls = F.cls[i];
-      _ke.set(0, Math.PI - b, heel); _kq.setFromEuler(_ke); _kp.set(x, y, z); _ks.set(sc, sc, sc); _km.compose(_kp, _kq, _ks);
+      const x = F.x[i], z = F.z[i], b = F.b[i], twa = wrapA(S.wf - b), heel = clamp(Math.abs(Math.sin(twa)) * .32 * (F.v[i] / 6), 0, .3) * Math.sign(twa), sc = F.sc[i], cls = F.cls[i];
+      { const Lh = (cls === 2 ? 1 : cls === 1 ? 2 : 5.5) * sc, fx = Math.sin(b) * Lh, fz = -Math.cos(b) * Lh, h0 = rwHeight(x, z), h1 = rwHeight(x + fx, z + fz), h2 = rwHeight(x - fx, z - fz), ty = (h0 * 2 + h1 + h2) / 4, tp = Math.atan((h1 - h2) / (2 * Lh)) * (cls ? .9 : .8);
+        const k = F.hyOk ? Math.min(1, dtF / (cls === 2 ? .25 : cls === 1 ? .55 : 1.1)) : 1; F.hy[i] += (ty - F.hy[i]) * k; F.hp[i] += (tp - F.hp[i]) * k * .8; }
+      const y = F.hy[i]; _ke.set(-F.hp[i], Math.PI - b, heel); _kq.setFromEuler(_ke); _kp.set(x, y, z); _ks.set(sc, sc, sc); _km.compose(_kp, _kq, _ks);
       if (cls === 0) { F.hull.setMatrixAt(nY, _km); F.mast.setMatrixAt(nY, _km);
         const ta = Math.abs(twa) * R2D, sa = clamp((ta - 22) / 158 * 1.45, .1, 1.45) * -Math.sign(twa);
         _ke.set(0, sa, 0); _kq.setFromEuler(_ke); _km2.makeRotationFromQuaternion(_kq); _km2.setPosition(0, 0, 1.2); F.main.setMatrixAt(nY, _km2.premultiply(_km));
@@ -12692,7 +12735,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
         if (ang <= 2 && ang >= -114) put(x + fx * L2 - rx * .9 * sc, Y, z + fz * L2 - rz * .9 * sc, 1, .15, .1);
         if (Math.abs(ang) >= 110) put(x - fx * 6.8 * sc, Y, z - fz * 6.8 * sc, 1, .95, .85); }
     }
-    [[F.hull, nY], [F.mast, nY], [F.main, nY], [F.jib, nY], [F.raft, nR], [F.rsail, nR], [F.flam, nF]].forEach(([m, n]) => { m.count = n; m.instanceMatrix.needsUpdate = true; });
+    F.hyOk = 1; [[F.hull, nY], [F.mast, nY], [F.main, nY], [F.jib, nY], [F.raft, nR], [F.rsail, nR], [F.flam, nF]].forEach(([m, n]) => { m.count = n; m.instanceMatrix.needsUpdate = true; });
     F.lights.geometry.setDrawRange(0, nl); F.lights.geometry.attributes.position.needsUpdate = true; F.lights.geometry.attributes.color.needsUpdate = true; F.lights.visible = night;
     /* a mezőny anyagai éjjel a holdfényhez sötétülnek */
     const k = night ? .32 : 1; [F.hull, F.main, F.jib, F.mast, F.raft, F.rsail, F.flam].forEach((m) => { if (m.material.userData.k !== k) { m.material.userData.k = k; if (!m.material.userData.c0) m.material.userData.c0 = m.material.color.clone(); m.material.color.copy(m.material.userData.c0).multiplyScalar(k); } });

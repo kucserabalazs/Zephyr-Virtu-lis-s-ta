@@ -157,6 +157,40 @@
     B.wash.rotation.z = Math.atan2(dx, dz) - yb;   /* a sodorvonal a szél alá nyúlik */
     const lx = dx * Math.cos(yb) - dz * Math.sin(yb), lz = dx * Math.sin(yb) + dz * Math.cos(yb); B.flag.rotation.y = Math.atan2(-lz, lx); }   /* a zászló a szél alá leng */
 
+  /* ------------------------------------------------------------------ NEHÉZ HAJÓTEST A HULLÁMOKON
+     2026-11-16 02:21 (tulajdonos: „versenyzésnél kis víz esetén a hajók természetellenesen ringatóznak – ezek 3500 kg-os testek, nem mozog így soha …
+     a hullám okozta kisvizes mozgást tedd helyre kis ringatózásra”; hangban: „kis ringatózás lehet a kis vízen, de ilyen mozgást nem végez”).
+     A hajó nem EGY pontban követi a vizet: a test alatti felszín felhajtóereje a hajó teljes hosszán és szélességén összegződik, ezért a hajónál rövidebb
+     hullámok hatása kioltja egymást (a balatoni rövid fodroktól egy 10–15 m-es, 3,5 tonnás test alig mozdul), és a test a tehetetlensége miatt csak
+     a saját lengésidejénél lassabb változásokat követi. A modell:
+     (1) a felszínt a test talpán 5 × 3 pontban mintázzuk, és síkot illesztünk rá: átlagmagasság, hossz- és keresztirányú lejtés (térbeli aluláteresztés);
+     (2) a hajó csillapított rezgő rendszerként követi ezt a síkot – emelkedés ~1,7 s, bólintás ~2,3 s, dőlés ~3,6 s saját lengésidővel (nehéz tőkesúlyos hajó),
+         a dőlésre a mély test és a tőkesúly miatt csak a keresztlejtés egy része hat.
+     Kis vízben így csak lassú, pár tized fokos ringás marad; erős szélben, hosszabb hullámokon természetes, határozott bólintás és emelkedés. */
+  const HM_HEAVY = { th: 1.7, zh: .55, tp: 2.3, zp: .45, tr: 3.6, zr: .24, kp: .85, kr: .4 };   /* 3–4 tonnás versenyjacht, nézőhajó, rendezőhajó */
+  const HM_LIGHT = { th: .8, zh: .5, tp: .9, zp: .42, tr: 1.6, zr: .32, kp: 1, kr: .75 };     /* dingi (Finn, 420): a rövid hullámot is érzi */
+  const HM_RAFT = { th: 1.0, zh: .62, tp: 1.15, zp: .55, tr: 1.5, zr: .5, kp: .95, kr: .7 };   /* rönktutaj: nehéz, lomha rönkök */
+  const HM_FLOAT = { th: .45, zh: .5, tp: .5, zp: .45, tr: .7, zr: .45, kp: 1, kr: 1 };        /* felfújt flamingó: a felszínnel együtt mozog */
+  function rwHullP(id) { return id === "finn" || id === "j420" ? HM_LIGHT : id === "tutaj" ? HM_RAFT : id === "flamingo" ? HM_FLOAT : HM_HEAVY; }
+  /* st: állapot (hajónként), x, z: helyzet, b: irány (előre = [sin b, −cos b]), L, B: a test hossza és szélessége (m)
+     visszaad: [emelkedés (m), bólintás (rad, + = orr fel), dőlés (rad, + = jobb oldal fel)] */
+  function rwHullMotion(st, x, z, b, L, B, dt, P) {
+    P = P || HM_HEAVY; const fx = Math.sin(b), fz = -Math.cos(b), rx = Math.cos(b), rz = Math.sin(b);
+    let s0 = 0, su = 0, sv = 0, uu = 0, vv = 0;
+    if (RW.waves) for (let i = 0; i < 5; i++) { const u = (i / 4 - .5) * L; for (let j = 0; j < 3; j++) { const v = (j - 1) * .5 * B, h = rwHeight(x + fx * u + rx * v, z + fz * u + rz * v); s0 += h; su += u * h; sv += v * h; uu += u * u; vv += v * v; } }
+    const T0 = uu ? s0 / 15 : 0, tp = uu ? Math.atan(su / uu) * P.kp : 0, tr = vv ? Math.atan(sv / vv) * P.kr : 0;
+    if (!st.y || dt > .5 || !(dt >= 0)) { st.y = [T0, tp, tr]; st.v = [0, 0, 0]; return st.y; }
+    const tg = [T0, tp, tr], T = [P.th, P.tp, P.tr], Z = [P.zh, P.zp, P.zr], n = Math.max(1, Math.ceil(dt / .02)), h = dt / n;
+    for (let k = 0; k < 3; k++) { const w = TAU / T[k]; for (let q = 0; q < n; q++) { st.v[k] += (w * w * (tg[k] - st.y[k]) - 2 * Z[k] * w * st.v[k]) * h; st.y[k] += st.v[k] * h; } }
+    return st.y;
+  }
+  /* nehéz úszó test (néző- és rendezőhajó) a fenti modellel – a forgatás a test saját tengelyei szerint, mint az rwFloatOne-nál */
+  function rwFloatHull(o, L, B, dt, P) {
+    if (!o || o.visible === false) return; const ud = o.userData; if (o.rotation.order !== "YXZ") o.rotation.order = "YXZ";
+    const m = rwHullMotion(ud.hm || (ud.hm = {}), o.position.x, o.position.z, Math.PI - o.rotation.y, L, B, dt, P);
+    o.position.y = m[0] + (ud.fy0 || 0); o.rotation.x = -m[1]; o.rotation.z = -m[2];
+  }
+
   /* ------------------------------------------------------------------ ÚSZÓ TÁRGYAK A HULLÁMOKON */
   function rwFloatOne(o, L, B, kT, rate, dt, lean) {
     if (!o || o.visible === false) return; const p = o.position, ud = o.userData, b = o.rotation.y, sb = Math.sin(b), cb = Math.cos(b);
@@ -177,8 +211,8 @@
         if (d < 260) { const A = Bu.fg.attributes.position, base = Bu.base; for (let i = 0; i < A.count; i++) { const x = base[i * 3], wv = Math.sin(t * 7.5 - x * 7 + Bu.ph) * .07 * x + Math.sin(t * 4.1 - x * 4) * .03 * x; A.setZ(i, wv); } A.needsUpdate = true; }
         Bu.wash.material.opacity = night ? .14 : .62; } };
     (S.marks || []).forEach((m) => { buoy(m.g); if (m.g2) buoy(m.g2); }); buoy(S.pin); buoy(S.pin2); (S.fb || []).forEach(buoy);
-    if (S.cb) rwFloatOne(S.cb, 13, 4.6, .85, 3.2, dt, null);
-    (S.spect || []).forEach((q) => rwFloatOne(q.g, 11 * (q.sc || 1), 4 * (q.sc || 1), .85, 3.4, dt, null));
+    if (S.cb) rwFloatHull(S.cb, 13, 4.6, dt, HM_HEAVY);   /* 2026-11-16: a nehéz hajótestek a test alatti átlagos felszínt követik (rwHullMotion) */
+    (S.spect || []).forEach((q) => rwFloatHull(q.g, 11 * (q.sc || 1), 4 * (q.sc || 1), dt, HM_HEAVY));
     /* a rajt- és célvonal csíkja a hullámokra simul */
     rwDrape(S.lineM, .07); rwDrape(S.finM, .08); if (S.CM && S.CM.gate && S.CM.gate.visible) rwDrape(S.CM.strip, .11);
   }

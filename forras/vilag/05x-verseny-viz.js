@@ -391,4 +391,4 @@
     rwSprayFlush(P);
   }
 
-  W._rw = { RW, rwFieldAt, rwWindAt, rwHeight, rwSlope, rwFieldDraw };   /* teszteléshez */
+  W._rw = { RW, rwFieldAt, rwWindAt, rwHeight, rwSlope, rwFieldDraw, rwWaves };   /* teszteléshez */

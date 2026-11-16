@@ -1080,17 +1080,19 @@
       /* 2026-11-13 00:39 (tulajdonos, ALAPSZABÁLY): „amerre kormányzom a hajót, arra megy, ez alól nincs kivétel; a kormánymozdulat irányítja a hajót, nem löki félre semmi –
          egyetlen kivétel az ütközés.” Ezért a saját hajón a szélbe húzás (luvgierigkeit: dőlésben a hajó a szél felé fordult) MEGSZŰNT; a széllökés csak dönt és gyorsít,
          az irányt (S.b) kizárólag a kormány változtatja. Ide SEMMI olyan tagot ne tegyél vissza, amely a kormánytól függetlenül forgatja a saját hajót. */ }
-    BS.heel = -side * S.heel * .78;   /* látványban kicsit visszafogva (a kormányos helye le van horgonyozva) */
-    /* mozgás a hullámokon: a lassú hajót dobálja a víz (jobban ring), a száguldó hajó kisimul – csak néha ugrik meg egy-egy hullámon */
-    const hb = vrWave(S.x + fx * 6, S.z + fz * 6, W.t), hs2 = vrWave(S.x - fx * 6, S.z - fz * 6, W.t);
-    const rockK = clamp(1.25 - S.v / 8, .28, 1.25);
+    BS.heel = -side * S.heel * .78;   /* látványban kicsit visszafogva (a kormányos helye le van horgonyozva) */ S.heelW = BS.heel;
+    /* MOZGÁS A HULLÁMOKON – 2026-11-16 02:21 (tulajdonos: „kis víz esetén a hajók természetellenesen ringatóznak – ezek 3500 kg-os testek”): a 3,5 tonnás test a teljes
+       test alatti vízfelszín átlagát követi, a saját lengésidejével (rwHullMotion, 05z). A korábbi, hullámtól független mesterséges himbálás (±3°) és a két pontból
+       számolt, a rövid fodrokat követő bólintás megszűnt: kis vízben csak lassú, pár tized fokos ringás marad, nagyobb hullámban természetes bólintás és emelkedés. */
+    const hm = rwHullMotion(S.hmS || (S.hmS = {}), S.x, S.z, S.b, 10.8, 3.6, dt, HM_HEAVY);
+    const hb = vrWave(S.x + fx * 6, S.z + fz * 6, W.t), hs2 = vrWave(S.x - fx * 6, S.z - fz * 6, W.t), seaK = clamp((RW.Hs - .3) / .25, 0, 1);   /* csapódás, tatpermet: csak valódi hullámzásban (kis vízben nincs) */
     S.slam = (S.slam || 0) * Math.pow(.015, dt);
-    if (S.v > 5 && S.prevHb != null && (hb - S.prevHb) / Math.max(dt, .001) > .45 && W.t - (S.slamT || 0) > 1.6 && Math.random() < .35) { S.slam = .03 + Math.random() * .02; S.slamT = W.t; S.sprayBurst = 1; hapt(.4, 40); }
+    if (seaK > 0 && S.v > 5 && S.prevHb != null && (hb - S.prevHb) / Math.max(dt, .001) > .45 && W.t - (S.slamT || 0) > 1.6 && Math.random() < .35 * seaK) { S.slam = (.02 + Math.random() * .015) * seaK; S.slamT = W.t; S.sprayBurst = 1; hapt(.4, 40); }
     S.prevHb = hb;
-    if (S.prevHs != null && (hs2 - S.prevHs) / Math.max(dt, .001) < -.42 && S.v > 2.6 && W.t - (S.sternT || 0) > 2.4 && Math.random() < .3) { S.sternSlap = clamp(.6 + S.v / 8, .6, 1.5); S.sternT = W.t; } S.prevHs = hs2;   /* 2026-11-15: tatpermet, ha a tat a hullámvölgybe csap */
-    BS.pitch = clamp((hs2 - hb) / 12 * 1.1 * rockK, -.05, .05) - S.slam * Math.sin(Math.min(1, (W.t - (S.slamT || 0)) * 3) * Math.PI);
-    BS.heel += Math.sin(W.t * .83 + 1.3) * .03 * rockK + Math.sin(W.t * 1.37) * .012 * rockK;
-    S.boat.position.y = (hb + hs2) / 2 * .5 * rockK + S.slam * 3 * Math.sin(Math.min(1, (W.t - (S.slamT || 0)) * 3) * Math.PI);
+    if (seaK > 0 && S.prevHs != null && (hs2 - S.prevHs) / Math.max(dt, .001) < -.42 && S.v > 2.6 && W.t - (S.sternT || 0) > 2.4 && Math.random() < .3 * seaK) { S.sternSlap = clamp(.6 + S.v / 8, .6, 1.5); S.sternT = W.t; } S.prevHs = hs2;   /* 2026-11-15: tatpermet, ha a tat a hullámvölgybe csap */
+    const slamE = S.slam * Math.sin(Math.min(1, (W.t - (S.slamT || 0)) * 3) * Math.PI);
+    BS.pitch = -hm[1] - slamE; BS.heel -= hm[2];
+    S.boat.position.y = hm[0] + slamE * 2;
     S.boat.userData.update(dt);
     /* permet: GPU-részecskék a tó terében (05x) */
     try { rwSprayTick(dt); } catch (e) { if (W.debug) console.warn('permet', e); }
@@ -1360,12 +1362,13 @@
       if (rel === "O" && (r._rel === "A" || r._rel === "B")) { r._ovT = W.t; r._ovBy = r._rel === "A" ? S : r; } if (rel !== "O") r._ovT = 0; r._rel = rel; }
     /* (2026-11-12 13:36: a „közeli keresztezés is szabálytalanság” szabály törölve – ütközés nélkül nincs büntetés) */
     /* megjelenítés */
-    r.g.position.set(r.x, rwHeight(r.x, r.z) * .62, r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);   /* 2026-11-15: a valódi (látott) hullámokon ring */
+    const hmR = rwHullMotion(r.hmS || (r.hmS = {}), r.x, r.z, r.b, (S.cls ? S.cls.half : 6) * 1.8, S.cls && S.cls.half < 4 ? 1.6 : 3.6, dt, rwHullP(S.cls && S.cls.id));   /* 2026-11-16: a test alatti átlagos felszínen, a saját lengésidejével (05z) */
+    r.g.position.set(r.x, hmR[0], r.z); r.g.rotation.y = Math.atan2(f[0], f[1]);
     const OS = r.g.userData.S, wfv = vfwd(S.wf), yaw = r.g.rotation.y, Xv = [Math.cos(yaw), -Math.sin(yaw)];
     OS.side = (wfv[0] * Xv[0] + wfv[1] * Xv[1]) > 0 ? -1 : 1; OS.boom = clamp((twa - 28) * .78, 7, 82) * D2R * OS.side; OS.jib = clamp((twa - 28) * .55, 8, 52) * D2R; OS.luff = clamp(1 - (twa - 18) / 18, 0, 1);
     OS.spin += ((spin ? 1 : 0) - OS.spin) * Math.min(1, dt * .35);
     { const tw2 = [wfv[0] * S.tws * (r.gkL || 1), wfv[1] * S.tws * (r.gkL || 1)], aw2 = [tw2[0] + f[0] * r.v / VR_SPD, tw2[1] + f[1] * r.v / VR_SPD], aws2 = Math.hypot(aw2[0], aw2[1]), awa2 = Math.acos(clamp((aw2[0] * f[0] + aw2[1] * f[1]) / (aws2 || 1), -1, 1)) * R2D;
-      OS.awa = awa2; OS.aws = aws2; OS.gust = r.gkL || 1; r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 : 0); } { const sl = rwSlope(r.x, r.z); OS.pitch = clamp(-(sl[0] * f[0] + sl[1] * f[1]) * .55, -.06, .06); }
+      OS.awa = awa2; OS.aws = aws2; OS.gust = r.gkL || 1; r.heel = (r.heel || 0) + (heelEq(awa2, aws2) * (1 - OS.spin * .75 * clamp((awa2 - 75) / 55, 0, 1)) * (1 + OS.spin * .5 * clamp(1 - (awa2 - 75) / 45, 0, 1)) - (r.heel || 0)) * Math.min(1, dt * 1.2); OS.heel = -OS.side * r.heel + (OS.spin > .5 ? Math.sin(W.t * 1.2 + r.ph) * .05 * clamp((RW.Hs - .15) / .4, .08, 1) : 0) - hmR[2]; } OS.pitch = -hmR[1];   /* (a spinakkeres billegés is csak nagyobb hullámban erős) */
     const d2 = Math.hypot(r.x - S.x, r.z - S.z); r.g.userData.update(dt);   /* minden képkockán, távol is (ne „ugráljon” a vitorla) */
     r.wk.push(r.x, r.z, r.g.rotation.y, r.v, dt, .05);
     /* névtábla a hajó fölött (helyezéssel), 25–220 m között látszik */

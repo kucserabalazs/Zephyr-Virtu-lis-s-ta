@@ -244,9 +244,13 @@
     const S = VRR, F = KEK.fl; if (!F) return; let nY = 0, nR = 0, nF = 0; const night = typeof NGT !== "undefined" && NGT.on, t = W.t;
     const LP = F.lights.geometry.attributes.position.array, LC = F.lights.geometry.attributes.color.array; let nl = 0;
     T.camObj().getWorldPosition(_kc); S.env.worldToLocal(_kc);
+    /* 2026-11-16: a hajók a test hossza menti átlagos felszínt követik, simítva (nehéz test – kis vízben alig mozdul; ld. 05z rwHullMotion) */
+    const dtF = clamp(W.t - (F.lt0 == null ? W.t : F.lt0), 0, .2); F.lt0 = W.t; if (!F.hy) { F.hy = new Float32Array(F.n); F.hp = new Float32Array(F.n); F.hyOk = 0; }
     for (let i = 0; i < F.n; i++) {
-      const x = F.x[i], z = F.z[i], b = F.b[i], y = rwHeight(x, z) * .6, twa = wrapA(S.wf - b), heel = clamp(Math.abs(Math.sin(twa)) * .32 * (F.v[i] / 6), 0, .3) * Math.sign(twa), sc = F.sc[i], cls = F.cls[i];
-      _ke.set(0, Math.PI - b, heel); _kq.setFromEuler(_ke); _kp.set(x, y, z); _ks.set(sc, sc, sc); _km.compose(_kp, _kq, _ks);
+      const x = F.x[i], z = F.z[i], b = F.b[i], twa = wrapA(S.wf - b), heel = clamp(Math.abs(Math.sin(twa)) * .32 * (F.v[i] / 6), 0, .3) * Math.sign(twa), sc = F.sc[i], cls = F.cls[i];
+      { const Lh = (cls === 2 ? 1 : cls === 1 ? 2 : 5.5) * sc, fx = Math.sin(b) * Lh, fz = -Math.cos(b) * Lh, h0 = rwHeight(x, z), h1 = rwHeight(x + fx, z + fz), h2 = rwHeight(x - fx, z - fz), ty = (h0 * 2 + h1 + h2) / 4, tp = Math.atan((h1 - h2) / (2 * Lh)) * (cls ? .9 : .8);
+        const k = F.hyOk ? Math.min(1, dtF / (cls === 2 ? .25 : cls === 1 ? .55 : 1.1)) : 1; F.hy[i] += (ty - F.hy[i]) * k; F.hp[i] += (tp - F.hp[i]) * k * .8; }
+      const y = F.hy[i]; _ke.set(-F.hp[i], Math.PI - b, heel); _kq.setFromEuler(_ke); _kp.set(x, y, z); _ks.set(sc, sc, sc); _km.compose(_kp, _kq, _ks);
       if (cls === 0) { F.hull.setMatrixAt(nY, _km); F.mast.setMatrixAt(nY, _km);
         const ta = Math.abs(twa) * R2D, sa = clamp((ta - 22) / 158 * 1.45, .1, 1.45) * -Math.sign(twa);
         _ke.set(0, sa, 0); _kq.setFromEuler(_ke); _km2.makeRotationFromQuaternion(_kq); _km2.setPosition(0, 0, 1.2); F.main.setMatrixAt(nY, _km2.premultiply(_km));
@@ -260,7 +264,7 @@
         if (ang <= 2 && ang >= -114) put(x + fx * L2 - rx * .9 * sc, Y, z + fz * L2 - rz * .9 * sc, 1, .15, .1);
         if (Math.abs(ang) >= 110) put(x - fx * 6.8 * sc, Y, z - fz * 6.8 * sc, 1, .95, .85); }
     }
-    [[F.hull, nY], [F.mast, nY], [F.main, nY], [F.jib, nY], [F.raft, nR], [F.rsail, nR], [F.flam, nF]].forEach(([m, n]) => { m.count = n; m.instanceMatrix.needsUpdate = true; });
+    F.hyOk = 1; [[F.hull, nY], [F.mast, nY], [F.main, nY], [F.jib, nY], [F.raft, nR], [F.rsail, nR], [F.flam, nF]].forEach(([m, n]) => { m.count = n; m.instanceMatrix.needsUpdate = true; });
     F.lights.geometry.setDrawRange(0, nl); F.lights.geometry.attributes.position.needsUpdate = true; F.lights.geometry.attributes.color.needsUpdate = true; F.lights.visible = night;
     /* a mezőny anyagai éjjel a holdfényhez sötétülnek */
     const k = night ? .32 : 1; [F.hull, F.main, F.jib, F.mast, F.raft, F.rsail, F.flam].forEach((m) => { if (m.material.userData.k !== k) { m.material.userData.k = k; if (!m.material.userData.c0) m.material.userData.c0 = m.material.color.clone(); m.material.color.copy(m.material.userData.c0).multiplyScalar(k); } });
