@@ -162,3 +162,65 @@
     "Pálinka és Unicum": { ids: ["palinka", "unicum"], cap: ["Pálinka", "Unicum"] },
     "Jó étvágyat – egészségedre!": { ids: ["langos", "halaszle", "kurtos"], cap: ["Lángos", "Halászlé", "Kürtőskalács"] }
   });
+
+  /* ---- 2026-11-16: a Természetvédelmi Ház új leckéi – az élővilág szélesebb, színesebb bemutatása valódi fotókkal.
+     A tények ellenőrzött forrásokból valók (Balaton-felvidéki Nemzeti Park, természetvédelmi adatlapok, hazai kutatási összefoglalók). A régi leckék szövege (és így a felvett hang) változatlan. ---- */
+  { const dNat = (ico, nev, c0, c1) => (g, t) => { dBg(g, c0 || "#dff0f7", c1 || "#b9dcea"); sWater(g, t); kT(g, ico, 150 + Math.sin(t * 1.3) * 8, 84 + Math.sin(t * 2) * 3, 56, SN, "center", 900); kT(g, nev, 150, 160, 14, SN, "center", 900); };
+    const ins = (after, arr) => { const i = LX.ter.findIndex((l) => l.t === after); LX.ter.splice(i < 0 ? LX.ter.length - 1 : i + 1, 0, ...arr); };
+    ins("Fogas, ponty, keszeg, harcsa", [
+      { s: "Ragadozók", t: "Csuka, balin, sügér – a vízi ragadozók", say: "A halak között is vannak vadászok. A csuka a nádas szélén lesben áll: hosszú, hegyes testével mozdulatlanul vár, aztán egyetlen villámgyors rohanással csap le. A balin a pontyfélék közül ragadozó életmódot folytat: a víz felszínén kapkodja az apró halakat. A sügér csíkos testéről és piros úszóiról ismerhető fel, a fiatalok rajban járnak. Ezek a ragadozók is a tó egyensúlyát őrzik, mert elkapják a beteg és a gyenge halakat. A Balatonba tavasszal százezres nagyságrendben telepítenek előnevelt csukaivadékot.",
+        d: dNat("🐟", "Csuka · balin · sügér") },
+      { s: "Különlegességek", t: "Compó, kecsege és angolna – különleges halak", say: "Három különleges lakó. A compó olajzöld, nyálkás bőrű, apró pikkelyű hal; a növényekkel benőtt, iszapos, nyugodt vizeket szereti, és lassan, óvatosan mozog. A kecsege kis termetű tokféle: orra előtt négy bajuszszállal kutatja át az aljzatot. Az angolna kígyószerű hal, az Atlanti-óceán mélyén születik. A Balatonba az 1960-as évektől telepítették, az 1990-es évek óta már nem. A kifejlett angolnák azonban ma is élnek a tóban.",
+        d: dNat("🐟", "Compó · kecsege · angolna") }
+    ]);
+    ins("Hattyú, kócsag, gém, sirály", [
+      { s: "Gémfélék", t: "Kócsagok és gémek – a sekély víz vadászai", say: "A sekély vízben hosszú lábú vadászok állnak. A nagy kócsag hófehér, nyaka S-alakban hajlik; csőre költési időben fekete, egyébként sárga. A kis kócsag kisebb: csőre és lába fekete, lábujjai sárgák. A szürke gém türelmes: percekig mozdulatlanul áll, aztán egy gyors csőrcsapással elkapja a halat. A bakcsó zömök, kissé éjszakai életmódú gém, napközben a fák és a nád árnyékában pihen. A nagy kócsag állománya a múlt század elején erősen megfogyatkozott, a Kis-Balatonon már 1922-től őrizték.",
+        d: dNat("🦢", "Kócsagok és gémek", "#e6f2f8", "#bcdbe8") },
+      { s: "Vízimadarak", t: "Vöcsök, szárcsa, tőkés réce – a vízen úszók", say: "A nyílt vízen is sok a lakó. A búbos vöcsök hosszú nyakú, fején díszes tollbúbot visel; tavasszal párban látványos udvarlótáncot jár, kicsinyeit pedig a hátán hordozza. A szárcsa fekete, homlokán fehér pajzs van; nem kacsa, hanem a guvatfélék családjába tartozik, lábujjain úszólebenyek vannak. A tőkés réce a legismertebb kacsánk: a gácsér feje fémesen zöld, a tojó barnás, és a legtöbb házikacsa az ő leszármazottja. Őket sem szabad kenyérrel etetni!",
+        d: dNat("🦆", "Vöcsök · szárcsa · tőkés réce") },
+      { s: "Halászmadarak", t: "Jégmadár, kárókatona, halászsas, rétisas – a halászok", say: "Sok madár a halakból él. A jégmadár alig nagyobb egy verébnél, de kék-narancs tollai miatt a part egyik legszebb látványa: ágról a vízbe veti magát, és csőrével kapja ki a halat. Fészkét meredek földfalba vájt alagútba rakja. A nagy kárókatona víz alatt üldözi a halat, utána kiterjesztett szárnyakkal szárítkozik. A halászsas vonuláskor tűnik fel: lábbal csap le a halra. A rétisas szárnyfesztávolsága akár két és fél méter is lehet, hazánk egyik legnagyobb madara. Fokozottan védett.",
+        d: dNat("🦅", "Halászmadarak", "#e6f2f8", "#bcdbe8") },
+      { s: "Nyári vendégek", t: "Gólya, kanalasgém, gyurgyalag – a nyári vendégek", say: "Sok madár csak a nyarat tölti nálunk. A fehér gólya tavasszal érkezik Afrikából, kéményen és villanyoszlopon fészkel, békát, rovart és egeret eszik. A kanalasgém csőre kanál alakú: a sekély vízben jobbra-balra söpri, így fogja ki az apró halakat és rákokat. A gyurgyalag a színek bajnoka: zöld, kék, sárga és barna. Repülés közben kapja el a méheket, darazsakat és szitakötőket, és földfalba vájt üregben költ. Ősszel mind délre indul.",
+        d: dNat("🐦", "Gólya · kanalasgém · gyurgyalag", "#e6f2f8", "#bcdbe8") }
+    ]);
+    ins("A nádas a tó szűrője és bölcsője", [
+      { s: "Kétéltűek, hüllők", t: "Béka, sikló, teknős – a víz és a szárazföld határán", say: "A part menti nádasban és a vizes réten kétéltűek és hüllők is élnek. A zöld levelibéka kicsi és fűzöld; ujjai végén tapadókorongok vannak, ezért nádszálra is felmászik, tavasszal este hangosan kuruttyol. A vízisikló ártalmatlan: kitűnően úszik, békát és halat fog, tarkóján két világos félhold látszik. A mocsári teknős hazánk egyetlen őshonos teknőse; napos uszadékfán szeret sütkérezni. Hazánkban minden kétéltű és hüllő védett: nézd meg őket, de ne vidd haza! Díszteknőst pedig soha ne engedj a vízbe, mert kiszorítja az őshonos fajokat.",
+        d: dNat("🐸", "Béka · sikló · teknős", "#e8f3df", "#cfe4bd") },
+      { s: "Emlősök", t: "Vidra, hód, őz – a part emlősei", say: "A tó körül emlősök is élnek, de ritkán látod őket. A vidra kitűnő úszó és búvár, sűrű, vízhatlan bundája van; halat, rákot és békát eszik, főleg éjjel jár. Fokozottan védett, természetvédelmi értéke kétszázötvenezer forint. A hód Európa legnagyobb rágcsálója: fát vág, gátat épít. Nálunk a tizenkilencedik század közepén kipusztult, az 1990-es években tért vissza, és ma már több ezer él belőle. Az őz erdők szélén és réteken él. Ha gidát találsz a fűben, ne nyúlj hozzá: az anyja a közelben van.",
+        d: dNat("🐾", "Vidra · hód · őz", "#e8f3df", "#cfe4bd") },
+      { s: "Rovarok", t: "Szitakötők és lepkék – a repülő ékszerek", say: "A nádas és a vízpart felett rengeteg rovar száll. A szitakötő lárvája hosszú ideig a vízben él, és ragadozó; a kifejlett szitakötő a levegőben kapja el a szúnyogokat. Sok szitakötő érzékeny a víz állapotára, ezért a tiszta, élő víz jele. A fecskefarkú lepke a nyár egyik legszebb lepkéje: hernyója a vadmurok, a kapor és más ernyős virágú növények levelét eszi. Ha lepkét látsz, ne fogd meg: a szárnyuk apró pikkelyei könnyen megsérülnek.",
+        d: dNat("🦋", "Szitakötők és lepkék", "#e8f3df", "#cfe4bd") },
+      { s: "Vízi növények", t: "Tavirózsa, vízitök, nőszirom, gyékény – a part virágai", say: "A part menti vizekben szép növények élnek. A fehér tavirózsa, más néven fehér tündérrózsa védett: nagy, lebegő levelei vannak, virága nappal nyílik, estére összezár. A sárga vízitök termése kis palack alakú. A sárga nőszirom a víz szélén él, tavasz végén nyílik, levele kardszerű. A gyékény barna, buzogányszerű virágzatáról ismerhető fel; régen kosarat és szőnyeget fontak a leveléből. A virágokat ne tépd le, és ne gázolj be közéjük: a halak és a madarak is itt bújnak el.",
+        d: dNat("🌿", "Tavirózsa · vízitök · nőszirom · gyékény", "#e8f3df", "#cfe4bd") }
+    ]);
+    ins("Tihany és a Kis-Balaton", [
+      { s: "Kis-Balaton", t: "A Kis-Balaton – a tó veséje", say: "A Kis-Balaton a Balaton délnyugati sarkában fekvő mocsárvilág. Valamikor a tó öble volt: a Zala vize a mocsáron át érkezett a Balatonba, és a nád meg a vízinövények kiszűrték belőle a szennyeződést. Amikor a mocsarat lecsapolták, a tó vize romlani kezdett, ezért 1984-ben újra elárasztani kezdték. Azóta madárparadicsom: több mint kétszázötven madárfajt figyeltek meg itt, közülük mintegy száznegyven fészkel is. Él itt vidra, rétisas és nagy kócsag is. A Kis-Balaton Látogatóközpont és a zalavári Kis-Balaton Ház bemutatja ezt a világot.",
+        d: dNat("🌾", "A Kis-Balaton", "#e6f2f8", "#bcdbe8") },
+      { s: "Legelők", t: "Szürkemarha és racka – a legelő őrei", say: "Nem minden védett állat vad. A Balaton-felvidéki Nemzeti Park a védett réteket régi magyar háziállatokkal legelteti: szürkemarhával és rackajuhval. A szürkemarha hosszú, lant alakú szarvú, kemény, ellenálló fajta; a racka csavart szarvú juh. Ha nem legelnének, a bokrok és a magas fű benőnék a rétet, és eltűnnének a ritka virágok és rovarok. A Tihanyi-félszigeten és a Káli-medencében legelnek. A salföldi major bemutatja a régi háziállatokat: rackát, szürkemarhát, mangalicát és bivalyt.",
+        d: dNat("🐄", "Szürkemarha és racka", "#f1f4de", "#dbe6b2") },
+      { s: "Megfigyelés", t: "Hogyan figyeld meg az állatokat?", say: "A legjobb természetvédő az, aki csendben figyel. Indulj korán reggel vagy napnyugtakor, mert ilyenkor a legtöbb állat aktív. Viselj nem rikító színeket, lépj óvatosan, ne kiabálj. Távcsővel vagy a telefonod nagyításával közelítsd meg őket, ne a lábaddal. A fészkeket és a kölyköket ne zavard. A földön ülő kismadárhoz és az őzgidához se nyúlj, mert a szülők a közelben vannak. Védett területen a kutyádat tartsd pórázon. Hazaérve írd fel, mit láttál: így ismered meg igazán a környéket.",
+        d: dNat("🔭", "Csendben, türelemmel", "#e6f2f8", "#bcdbe8") }
+    ]);
+  }
+  FOTO.lessons(LX.ter, {
+    "A Balaton a szomszédaink otthona": { ids: ["balaton", "jegmadar", "vidra", "tavirozsa"], cap: ["A Balaton Tihanynál", "Jégmadár", "Vidra", "Fehér tavirózsa"] },
+    "Közép-Európa legnagyobb tava – és sekély": { ids: ["balaton", "tihany"], cap: ["Vitorlások a Balatonon", "A Tihanyi-félsziget"] },
+    "Fogas, ponty, keszeg, harcsa": { ids: ["fogas", "ponty", "keszeg", "harcsa"], cap: ["Fogassüllő", "Ponty", "Dévérkeszeg", "Harcsa"] },
+    "Csuka, balin, sügér – a vízi ragadozók": { ids: ["csuka", "balin", "suger"], cap: ["Csuka", "Balin", "Sügér"] },
+    "Compó, kecsege és angolna – különleges halak": { ids: ["compo", "kecsege", "angolna"], cap: ["Compó", "Kecsege", "Angolna"] },
+    "Hattyú, kócsag, gém, sirály": { ids: ["hattyu", "kocsag", "szurkegem", "siraly"], cap: ["Bütykös hattyú", "Nagy kócsag", "Szürke gém", "Dankasirály"] },
+    "Kócsagok és gémek – a sekély víz vadászai": { ids: ["kocsag", "kiskocsag", "szurkegem", "bakcso"], cap: ["Nagy kócsag", "Kis kócsag", "Szürke gém", "Bakcsó"] },
+    "Vöcsök, szárcsa, tőkés réce – a vízen úszók": { ids: ["vocsok", "szarcsa", "tokesrece"], cap: ["Búbos vöcsök", "Szárcsa", "Tőkés réce"] },
+    "Jégmadár, kárókatona, halászsas, rétisas – a halászok": { ids: ["jegmadar", "kormoran", "halaszsas", "retisas"], cap: ["Jégmadár", "Nagy kárókatona", "Halászsas", "Rétisas"] },
+    "Gólya, kanalasgém, gyurgyalag – a nyári vendégek": { ids: ["golya", "kanalasgem", "gyurgyalag"], cap: ["Fehér gólya", "Kanalasgém", "Gyurgyalag"] },
+    "A nádas a tó szűrője és bölcsője": { ids: ["nadas", "nad"], cap: ["Nádas Balatonbogláron", "A nád tollas bugája"] },
+    "Béka, sikló, teknős – a víz és a szárazföld határán": { ids: ["beka", "siklo", "teknos"], cap: ["Zöld levelibéka", "Vízisikló", "Mocsári teknős"] },
+    "Vidra, hód, őz – a part emlősei": { ids: ["vidra", "hod", "oz"], cap: ["Vidra", "Hód", "Őz"] },
+    "Szitakötők és lepkék – a repülő ékszerek": { ids: ["szitakoto", "lepke"], cap: ["Szitakötő", "Fecskefarkú lepke"] },
+    "Tavirózsa, vízitök, nőszirom, gyékény – a part virágai": { ids: ["tavirozsa", "vizitok", "nosziromy", "gyekeny"], cap: ["Fehér tavirózsa", "Sárga vízitök", "Sárga nőszirom", "Gyékény"] },
+    "Tihany és a Kis-Balaton": { ids: ["tihany", "kisbalaton"], cap: ["A Tihanyi-félsziget", "A Kis-Balaton"] },
+    "Szürkemarha és racka – a legelő őrei": { ids: ["szurkemarha", "racka"], cap: ["Magyar szürkemarha", "Racka juh"] },
+    "A Kis-Balaton – a tó veséje": { ids: ["kisbalaton", "kocsag", "retisas", "vidra"], cap: ["A Kis-Balaton", "Nagy kócsag", "Rétisas", "Vidra"] },
+    "Hogyan figyeld meg az állatokat?": { ids: ["szurkegem", "oz"], cap: ["Szürke gém", "Őz"] },
+    "Vigyázz a Balatonra!": { ids: ["balaton"], cap: ["A Balaton – vitorlások Tihanynál"] }
+  });

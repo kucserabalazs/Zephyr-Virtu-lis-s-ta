@@ -38,7 +38,9 @@
     const credit = (id, g, maxW) => { let a = who(id); if (!a) return ""; const l = lic(id), tx = () => "Fotó: " + a + " · " + l; if (g && maxW) while (g.measureText(tx()).width > maxW && a.length > 5) a = a.replace(/…$/, "").slice(0, -2) + "…"; return tx(); };
     /* fókuszpont (a kép melyik részét tartsa meg a vágás): azonosító → [x, y] törtekben; alapból a közepe */
     const FOC = {
-      gulyas: [.5, .3], halaszle: [.5, .45], toltott: [.5, .55], dobos: [.45, .5], tokaji: [.5, .62], palinka: [.5, .45], rantott: [.4, .55], somloi: [.35, .42], pogacsa: [.45, .5], turoscsusza: [.5, .45], szalami: [.5, .5]
+      gulyas: [.5, .3], halaszle: [.5, .45], toltott: [.5, .55], dobos: [.45, .5], tokaji: [.5, .62], palinka: [.5, .45], rantott: [.4, .55], somloi: [.35, .42], pogacsa: [.45, .5], turoscsusza: [.5, .45], szalami: [.5, .5],
+      /* természet: a fej / a fő alak maradjon a képen */
+      szitakoto: [.26, .45], fogas: [.4, .5], harcsa: [.5, .4], angolna: [.45, .6], tihany: [.5, .56], bakcso: [.42, .5]
     };
     /* a képet kitöltve (vágva) rajzolja a téglalapba; o.z: nagyítás (1 = teljes kitöltés), o.fx/o.fy: fókuszpont */
     function cover(g, im, x, y, w, h, o) { o = o || {}; const fx = o.fx == null ? .5 : o.fx, fy = o.fy == null ? .5 : o.fy, z = Math.max(1, o.z || 1), iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
@@ -77,10 +79,10 @@
       mesh(mergeGeoms([[new THREE.BoxGeometry(w + 2 * fw, fw, d), M4(0, hh / 2 + fw / 2, 0)], [new THREE.BoxGeometry(w + 2 * fw, fw, d), M4(0, -hh / 2 - fw / 2, 0)], [new THREE.BoxGeometry(fw, hh, d), M4(-w / 2 - fw / 2, 0, 0)], [new THREE.BoxGeometry(fw, hh, d), M4(w / 2 + fw / 2, 0, 0)]]), FW.m, g);
       (h.phIds = h.phIds || []).push(id); return g; }
     /* „Képek forrása” tábla: a ház fotóinak szerzője és licence */
-    function creditBoard(G, h, title, ents, x, y, z, ry, w) { const PW = 1024, lh = 27, PHh = 150 + ents.length * lh + 56, hh = w * PHh / PW;
-      const paint = (g) => { g.fillStyle = "#2a1c10"; g.fillRect(0, 0, PW, PHh); g.strokeStyle = "#c9a23a"; g.lineWidth = 6; g.strokeRect(10, 10, PW - 20, PHh - 20); g.textAlign = "center"; g.fillStyle = "#ffd98a"; g.font = `900 46px ${UIF}`; g.fillText(title, PW / 2, 78);
-        g.fillStyle = "rgba(255,243,214,.8)"; g.font = `600 22px ${UIF}`; g.fillText("Szabad licencű fotók a Wikimedia Commonsból · a képeket átméreteztük és kivágtuk", PW / 2, 116); g.textAlign = "left";
-        ents.forEach(([id, nev], i) => { const q = info(id), y0 = 158 + i * lh; g.font = `700 21px ${UIF}`; g.fillStyle = "#ffd98a"; g.fillText(nev, 40, y0); g.font = `500 20px ${UIF}`; g.fillStyle = "#f4ead2"; g.fillText(q ? who(id) + " · " + lic(id) : "…", 330, y0); }); };
+    function creditBoard(G, h, title, ents, x, y, z, ry, w, cols) { cols = cols || 1; const rows = Math.ceil(ents.length / cols), PW = cols === 1 ? 1024 : 684 * cols, lh = 27, top = cols === 1 ? 158 : 146, PHh = top - 8 + rows * lh + 48, hh = w * PHh / PW, cw = PW / cols;
+      const paint = (g) => { g.fillStyle = "#2a1c10"; g.fillRect(0, 0, PW, PHh); g.strokeStyle = "#c9a23a"; g.lineWidth = 6; g.strokeRect(10, 10, PW - 20, PHh - 20); g.textAlign = "center"; g.fillStyle = "#ffd98a"; g.font = `900 ${cols === 1 ? 46 : 42}px ${UIF}`; g.fillText(title, PW / 2, cols === 1 ? 78 : 70);
+        g.fillStyle = "rgba(255,243,214,.8)"; g.font = `600 22px ${UIF}`; g.fillText("Szabad licencű fotók a Wikimedia Commonsból · a képeket átméreteztük és kivágtuk", PW / 2, cols === 1 ? 116 : 106); g.textAlign = "left";
+        ents.forEach(([id, nev], i) => { const q = info(id), c = Math.floor(i / rows), r = i % rows, x0 = c * cw + (cols === 1 ? 40 : 38), y0 = top + r * lh; g.font = `700 21px ${UIF}`; g.fillStyle = "#ffd98a"; g.fillText(nev, x0, y0); g.font = `500 ${cols === 1 ? 20 : 19}px ${UIF}`; g.fillStyle = "#f4ead2"; g.fillText(q ? who(id) + " · " + lic(id) : "…", x0 + (cols === 1 ? 290 : 196), y0); }); };
       const t = canvasTex(PW, PHh, paint); const m = mesh(new THREE.PlaneGeometry(w, hh), basic({ map: t }), G); m.position.set(x, y, z); m.rotation.y = ry; m.userData.noMerge = true;
       meta().then(() => { try { paint(t._canvas.getContext("2d")); t.needsUpdate = true; } catch (e) {} }); (h.phIds = h.phIds || []); return m; }
     return { need, img, st, then, onready, meta, info, who, lic, credit, cover, covId, lesson, lessons, frame, frameTex, creditBoard, FOC, LAY };

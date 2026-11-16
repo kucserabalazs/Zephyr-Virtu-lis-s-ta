@@ -169,8 +169,7 @@
       mesh(new THREE.CylinderGeometry(.008, .008, .3, 5).translate(.3, .17, 0), std({ color: "#c9a23a" }), sg); const hb = new THREE.SphereGeometry(.09, 12, 8); hb.scale(1, .8, 1.7); mesh(hb.translate(.3, .38, 0), gm, sg); mesh(new THREE.CylinderGeometry(.015, .02, .22, 6).rotateX(-.6).translate(.3, .5, .1), gm, sg);
       mesh(new THREE.CylinderGeometry(.04, .045, .16, 10).rotateX(Math.PI / 2).translate(0, .08, -.03), std({ color: "#1b1d22", roughness: .4 }), sg); mesh(new THREE.CylinderGeometry(.04, .045, .16, 10).rotateX(Math.PI / 2).translate(.09, .08, -.03), std({ color: "#1b1d22", roughness: .4 }), sg); }
     { const reed = std({ color: "#b59a5a", roughness: .9 }), parts = []; for (let k = 0; k < 40; k++) { const g = new THREE.CylinderGeometry(.008, .01, 1.9, 4); parts.push([g, M4(B.x1 - .45 + (rand() - .5) * .25, F + .95, B.z0 + .45 + (rand() - .5) * .25, 0, (rand() - .5) * .12, (rand() - .5) * .12)]); } mesh(mergeGeoms(parts), reed, G); }
-    poster(G, ["BALATONI HALAK", "fogassüllő", "ponty", "dévérkeszeg", "harcsa"], "#3d9a4b", B.x0 + .2, F + 1.75, B.z1 - 1.3, Math.PI / 2, .72);
-    poster(G, ["MADARAK", "bütykös hattyú", "nagy kócsag", "szürke gém", "dankasirály"], "#3d9a4b", B.x1 - .2, F + 1.75, B.z1 - 1.2, -Math.PI / 2, .72); }
+    try { termeszetBelso(G, h, C); } catch (e) { console.warn("Természet belső", e); } }
   const zMid = (B) => (B.z0 + B.z1) / 2;
   function knotProps(G, h, C) { const B = h.box, F = C.F, rope = std({ color: "#e7dcc0", roughness: .95 }), rope2 = std({ color: "#c33b2a", roughness: .9 }), rope3 = std({ color: "#2f5e9a", roughness: .9 });
     /* csomótábla: keretben a hat alapcsomó (rajzolt kötél) */
@@ -356,7 +355,7 @@
       split(G, 0); h.innerN = n; });
   }
   function hzInnerTick() { const p = (typeof locP === "function" ? locP() : HB.pos) || { x: 0, z: 0 };
-    HOUSES.forEach((h) => { if (!h.innerG) return; const B = h.box, dx = Math.max(B.x0 - p.x, 0, p.x - B.x1), dz = Math.max(B.z0 - p.z, 0, p.z - B.z1); const dd = Math.hypot(dx, dz); h.innerG.visible = dd < 6.5; if (h.phIds && dd < 14) FOTO.need(h.phIds); }); }
+    HOUSES.forEach((h) => { if (!h.innerG) return; const B = h.box, dx = Math.max(B.x0 - p.x, 0, p.x - B.x1), dz = Math.max(B.z0 - p.z, 0, p.z - B.z1); const dd = Math.hypot(dx, dz); h.innerG.visible = dd < 6.5; if (h.phIds && dd < 10) FOTO.need(h.phIds); }); }
   function houseTick(dt) { const t = W.t; try { hzInnerTick(); } catch (e) {}
     HZ.flags.forEach((f) => { if (!f.parent) return; const pa = f.geometry.attributes.position, b0 = f.userData.base; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 5 - t * 5.5 + f.userData.ph) * .07 * x; pa.array[i * 3 + 1] = b0[i * 3 + 1] + Math.sin(x * 3 - t * 3) * .015 * x; } pa.needsUpdate = true; });
     const night = (typeof NGT !== "undefined" && NGT.on) || !!HB.night; HZ.beams.forEach((b) => { b.rotation.y = t * .9; b.visible = night; });
