@@ -47,11 +47,6 @@
   "Egri Bikavér",
   "Egri bikavér wine"
  ],
- "frocs": [
-  "fröccs szóda pohár",
-  "Hungarian wine spritzer soda",
-  "házmester fröccs"
- ],
  "palinka": [
   "pálinka pohár",
   "Hungarian fruit brandy pálinka bottle",
@@ -176,11 +171,6 @@
  "nosziromy": [
   "Iris pseudacorus"
  ],
- "levendula": [
-  "Tihany levendula virágzó",
-  "lavender blooming Tihany",
-  "Lavandula angustifolia flowering"
- ],
  "balaton": [
   "Balaton vitorlások",
   "Lake Balaton sailing boats sunset",
@@ -204,5 +194,50 @@
  "racka": [
   "racka juh",
   "Racka sheep"
+ ],
+ "badacsony": [
+  "Badacsony vineyard Balaton",
+  "Badacsonyi szőlő bor",
+  "Badacsony hegy szőlő"
+ ],
+ "tokesrece": [
+  "mallard drake male",
+  "Anas platyrhynchos male swimming"
+ ],
+ "szarcsa": [
+  "Eurasian coot Fulica atra",
+  "coot swimming"
+ ],
+ "gyurgyalag": [
+  "European bee-eater Merops apiaster",
+  "gyurgyalag"
+ ],
+ "bakcso": [
+  "black-crowned night heron Nycticorax",
+  "bakcsó"
+ ],
+ "suger": [
+  "European perch Perca fluviatilis",
+  "perch underwater"
+ ],
+ "kecsege": [
+  "sterlet Acipenser ruthenus",
+  "kecsege"
+ ],
+ "hod": [
+  "Eurasian beaver Castor fiber",
+  "European beaver swimming"
+ ],
+ "oz": [
+  "roe deer Capreolus capreolus",
+  "őz"
+ ],
+ "vizitok": [
+  "Nuphar lutea yellow water-lily",
+  "sárga vízitök"
+ ],
+ "gyekeny": [
+  "Typha latifolia cattail",
+  "gyékény Typha"
  ]
 }
