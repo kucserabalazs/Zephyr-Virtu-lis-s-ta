@@ -5,7 +5,7 @@ A Magyar Ízek Háza és a Természetvédelmi ház fotói a Wikimedia Commonsbó
 | Kép | Cím a Commonsban | Szerző | Licenc |
 |---|---|---|---|
 | angolna | [File:Anguilla anguilla head.jpg](https://commons.wikimedia.org/wiki/File%3AAnguilla_anguilla_head.jpg) | jujurenoult | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
-| balaton | [File:View of Lake Balaton from Siófok 2010.jpg](https://commons.wikimedia.org/wiki/File%3AView_of_Lake_Balaton_from_Si%C3%B3fok_2010.jpg) | Gothika | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
+| balaton | [File:Balatoni vitorlások Tihanynál.jpg](https://commons.wikimedia.org/wiki/File%3ABalatoni_vitorl%C3%A1sok_Tihanyn%C3%A1l.jpg) | Pier Paolo Lisarelli | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) |
 | balin | [File:Aspius aspius Prague Vltava 2.jpg](https://commons.wikimedia.org/wiki/File%3AAspius_aspius_Prague_Vltava_2.jpg) | Karelj | Public domain |
 | beka | [File:European tree frog (Hyla arborea) Extremadura.jpg](https://commons.wikimedia.org/wiki/File%3AEuropean_tree_frog_%28Hyla_arborea%29_Extremadura.jpg) | Charles J. Sharp | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | bikaver | [File:020230319 egri bikaver.jpg](https://commons.wikimedia.org/wiki/File%3A020230319_egri_bikaver.jpg) | Silar | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
@@ -31,12 +31,13 @@ A Magyar Ízek Háza és a Természetvédelmi ház fotói a Wikimedia Commonsbó
 | langos | [File:Langos Eger Hungary.jpg](https://commons.wikimedia.org/wiki/File%3ALangos_Eger_Hungary.jpg) | sikeri | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | lecso | [File:Budapest, KEG sörművház, lecsó tojással, kolbásszal.jpg](https://commons.wikimedia.org/wiki/File%3ABudapest%2C_KEG_s%C3%B6rm%C5%B1vh%C3%A1z%2C_lecs%C3%B3_toj%C3%A1ssal%2C_kolb%C3%A1sszal.jpg) | Christo | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) |
 | lepke | [File:Papilio machaon Mitterbach 01.jpg](https://commons.wikimedia.org/wiki/File%3APapilio_machaon_Mitterbach_01.jpg) | Uoaei1 | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
-| levendula | [File:Lavender field. - Tihany Peninsula.JPG](https://commons.wikimedia.org/wiki/File%3ALavender_field._-_Tihany_Peninsula.JPG) | Globetrotter19 | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
 | nad | [File:Dülmen, Hausdülmen, Heubach -- 2019 -- 3260.jpg](https://commons.wikimedia.org/wiki/File%3AD%C3%BClmen%2C_Hausd%C3%BClmen%2C_Heubach_--_2019_--_3260.jpg) | Dietmar Rabich | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | nadas | [File:Nádas és stég a kikötő mólójánál, 2018 Balatonboglár.jpg](https://commons.wikimedia.org/wiki/File%3AN%C3%A1das_%C3%A9s_st%C3%A9g_a_kik%C3%B6t%C5%91_m%C3%B3l%C3%B3j%C3%A1n%C3%A1l%2C_2018_Balatonbogl%C3%A1r.jpg) | Globetrotter19 | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
 | nosziromy | [File:Iris pseudacorus 3 RF.jpg](https://commons.wikimedia.org/wiki/File%3AIris_pseudacorus_3_RF.jpg) | Robert Flogaus-Faust | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
+| palinka | [File:Ceramic house, palinka flasks in Gyenesdiás, 2016 Hungary.jpg](https://commons.wikimedia.org/wiki/File%3ACeramic_house%2C_palinka_flasks_in_Gyenesdi%C3%A1s%2C_2016_Hungary.jpg) | Globetrotter19 | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
 | paprika | [File:Aleva paprika.jpg](https://commons.wikimedia.org/wiki/File%3AAleva_paprika.jpg) | Ljiljana Sundać | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) |
 | paprikas | [File:Paprikahuhn.jpg](https://commons.wikimedia.org/wiki/File%3APaprikahuhn.jpg) | Kobako | [CC BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5) |
+| pogacsa | [File:Pogácsa.jpg](https://commons.wikimedia.org/wiki/File%3APog%C3%A1csa.jpg) | Burrows | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
 | ponty | [File:Cyprinus carpio.jpeg](https://commons.wikimedia.org/wiki/File%3ACyprinus_carpio.jpeg) | Dezidor | [CC BY-SA 3.0](http://creativecommons.org/licenses/by-sa/3.0/) |
 | porkolt | [File:Pörkölt.jpg](https://commons.wikimedia.org/wiki/File%3AP%C3%B6rk%C3%B6lt.jpg) | Orrling | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |
 | racka | [File:Zackelschafe Tiergarten Bernburg 06-03-2008.jpg](https://commons.wikimedia.org/wiki/File%3AZackelschafe_Tiergarten_Bernburg_06-03-2008.jpg) | Tragopan | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) |

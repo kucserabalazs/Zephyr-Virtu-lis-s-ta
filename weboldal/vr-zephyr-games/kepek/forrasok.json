@@ -12,15 +12,15 @@
   "w": 960
  },
  "balaton": {
-  "cim": "File:View of Lake Balaton from Siófok 2010.jpg",
-  "eredetiH": 2773,
-  "eredetiW": 9016,
-  "h": 295,
-  "leiras": "A Balaton Siófoknál",
-  "licenc": "CC BY-SA 3.0",
-  "licencUrl": "https://creativecommons.org/licenses/by-sa/3.0",
-  "oldal": "https://commons.wikimedia.org/wiki/File%3AView_of_Lake_Balaton_from_Si%C3%B3fok_2010.jpg",
-  "szerzo": "Gothika",
+  "cim": "File:Balatoni vitorlások Tihanynál.jpg",
+  "eredetiH": 2463,
+  "eredetiW": 3695,
+  "h": 640,
+  "leiras": "Balatoni vitorlások Tihanynál",
+  "licenc": "CC BY 2.0",
+  "licencUrl": "https://creativecommons.org/licenses/by/2.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3ABalatoni_vitorl%C3%A1sok_Tihanyn%C3%A1l.jpg",
+  "szerzo": "Pier Paolo Lisarelli",
   "w": 960
  },
  "balin": {
@@ -323,18 +323,6 @@
   "szerzo": "Uoaei1",
   "w": 960
  },
- "levendula": {
-  "cim": "File:Lavender field. - Tihany Peninsula.JPG",
-  "eredetiH": 1704,
-  "eredetiW": 2272,
-  "h": 720,
-  "leiras": "Lavender field. - Tihany Peninsula, Veszprém County, Hungary",
-  "licenc": "CC BY-SA 3.0",
-  "licencUrl": "https://creativecommons.org/licenses/by-sa/3.0",
-  "oldal": "https://commons.wikimedia.org/wiki/File%3ALavender_field._-_Tihany_Peninsula.JPG",
-  "szerzo": "Globetrotter19",
-  "w": 960
- },
  "nad": {
   "cim": "File:Dülmen, Hausdülmen, Heubach -- 2019 -- 3260.jpg",
   "eredetiH": 4371,
@@ -371,6 +359,18 @@
   "szerzo": "Robert Flogaus-Faust",
   "w": 960
  },
+ "palinka": {
+  "cim": "File:Ceramic house, palinka flasks in Gyenesdiás, 2016 Hungary.jpg",
+  "eredetiH": 1704,
+  "eredetiW": 2272,
+  "h": 720,
+  "leiras": "Ceramic house. Ceramic (porcelain?) palinka (sour cherry, grape, plum fruit brandies) bottles - Route 71, Gyenesdiás, Zala County, Hungary.",
+  "licenc": "CC BY-SA 3.0",
+  "licencUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3ACeramic_house%2C_palinka_flasks_in_Gyenesdi%C3%A1s%2C_2016_Hungary.jpg",
+  "szerzo": "Globetrotter19",
+  "w": 960
+ },
  "paprika": {
   "cim": "File:Aleva paprika.jpg",
   "eredetiH": 1836,
@@ -393,6 +393,18 @@
   "licencUrl": "https://creativecommons.org/licenses/by-sa/2.5",
   "oldal": "https://commons.wikimedia.org/wiki/File%3APaprikahuhn.jpg",
   "szerzo": "Kobako",
+  "w": 960
+ },
+ "pogacsa": {
+  "cim": "File:Pogácsa.jpg",
+  "eredetiH": 2405,
+  "eredetiW": 3087,
+  "h": 748,
+  "leiras": "Some pogácsa, (pronounced [ˈpoga:tʃɒ]), a type of round, savory scone in Hungarian cuisine on a plate.",
+  "licenc": "CC BY-SA 3.0",
+  "licencUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "oldal": "https://commons.wikimedia.org/wiki/File%3APog%C3%A1csa.jpg",
+  "szerzo": "Burrows",
   "w": 960
  },
  "ponty": {
