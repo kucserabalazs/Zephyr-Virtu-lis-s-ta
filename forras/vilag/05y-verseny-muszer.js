@@ -12,13 +12,13 @@
   function muFit(g, txt, maxW, px, w) { let s = px; g.font = MU.font(w, s); while (s > 12 && g.measureText(txt).width > maxW) { s -= 2; g.font = MU.font(w, s); } return s; }
   function muPill(g, x, y, w, h, r, fill, stroke, lw) { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = lw || 3; g.stroke(); } }
   function vrChart() {
-    const S = VRR, t = S.ck && S.ck.chartT; if (!t || !S.C) return; const g = t._canvas.getContext("2d"), N = 1024, C = S.C, F = MU.font;
+    const S = VRR, t = S.ck && S.ck.chartT; if (!t || !S.C) return; const g = t._canvas.getContext("2d"), N = 1024, NH = t._canvas.height, XH = NH - 1024, C = S.C, F = MU.font;   /* 2026-11-16 18:44: a vászon magasabb (a kisebb SZÜNET gomb helyén nagyobb kijelző) – a többletet (XH) a térkép kapja
     /* ---- a pillanatnyi feladat */
     const lineMid = { x: (C.line.a.x + C.line.b.x) / 2, z: (C.line.a.z + C.line.b.z) / 2 }, gate = S.st === "pre" || !!S.ocs || (S.st === "race" && !S.started) || S.next >= S.marks.length;
     const finNow = S.started && !S.ocs && S.next >= S.marks.length, tg = gate ? (finNow ? finMid() : lineMid) : S.marks[S.next];
     const dT = Math.hypot(tg.x - S.x, tg.z - S.z), brgT = Math.atan2(tg.x - S.x, -(tg.z - S.z)), relT = wrapA(brgT - S.b), vmg = S.v * Math.cos(relT), eta = vmg > .4 ? dT / vmg : null;
     const hint = vrHint(S, tg, dT, relT, gate, finNow), upwind = Math.abs(wrapA(brgT - S.wf)) * R2D < 42, lw = S.lw || { g: 0, l: 0 };
-    g.fillStyle = "#04111d"; g.fillRect(0, 0, N, N);
+    g.fillStyle = "#04111d"; g.fillRect(0, 0, N, NH);
     /* ================= 1) FELSŐ TÁBLA ================= */
     muPill(g, 14, 14, 996, 290, 26, "#0b2236", "#24506f", 3);
     const lbl = S.pen > 0 ? "BÜNTETÉS" : S.ocs ? "KORAI RAJT" : S.st === "pre" ? "RAJT ELŐTT" : S.fin ? "BEFUTOTTÁL" : "KÖVETKEZŐ CÉL";
@@ -52,7 +52,7 @@
     /* ================= 2) MIT TEGYÉL – egy mondat ================= */
     { muPill(g, 14, 318, 996, 78, 20, hint[1]); g.fillStyle = "#ffffff"; g.textAlign = "center"; muFit(g, hint[0], 960, 36, 800); g.fillText(hint[0], 512, 369); g.textAlign = "left"; }
     /* ================= 2b) TÉRKÉP – orral felfelé, a hajó alul-középen ================= */
-    { const X0 = 14, Y0 = 410, Wm = 996, Hm = 396, ox = X0 + Wm / 2, oy = Y0 + Hm * .74; g.save(); muPill(g, X0, Y0, Wm, Hm, 22, "#0a2a43", "#24506f", 3); g.beginPath(); if (g.roundRect) g.roundRect(X0, Y0, Wm, Hm, 22); else g.rect(X0, Y0, Wm, Hm); g.clip();
+    { const X0 = 14, Y0 = 410, Wm = 996, Hm = 396 + XH, ox = X0 + Wm / 2, oy = Y0 + Hm * .74; g.save(); muPill(g, X0, Y0, Wm, Hm, 22, "#0a2a43", "#24506f", 3); g.beginPath(); if (g.roundRect) g.roundRect(X0, Y0, Wm, Hm, 22); else g.rect(X0, Y0, Wm, Hm); g.clip();
       const span = clamp(Math.max(dT * 1.25, 110), 110, 1400), k = (Hm * .68) / span, c0 = Math.cos(-S.b), s0 = Math.sin(-S.b);
       const P = (x, z) => { const dx = x - S.x, dz = z - S.z; return [ox + (dx * c0 - dz * s0) * k, oy + (dx * s0 + dz * c0) * k]; };
       const dir = (b) => { const a = b - S.b; return [Math.sin(a), -Math.cos(a)]; };
@@ -91,7 +91,7 @@
         g.textAlign = "left"; g.fillStyle = "#58c7ff"; g.font = F(800, 24); g.fillText("SZÉL", X0 + 112, Y0 + 66); g.fillStyle = "#cfe3f2"; g.font = F(600, 20); g.fillText("sötét folt = lökés · világos = lavór", X0 + 112, Y0 + 94); }
       g.restore(); }
     /* ================= 3) NÉGY NAGY SZÁM ================= */
-    { const y0 = 822, cw = 248; const cell = (i, top, big, unit, col, badge) => { const x = 14 + i * (cw + 1.3); muPill(g, x, y0, cw - 6, 188, 20, "#0b2236", "#24506f", 3); g.textAlign = "center"; g.fillStyle = "#7fd3ff"; g.font = F(800, 26); g.fillText(top, x + cw / 2 - 3, y0 + 40);
+    { const y0 = 822 + XH, cw = 248; const cell = (i, top, big, unit, col, badge) => { const x = 14 + i * (cw + 1.3); muPill(g, x, y0, cw - 6, 188, 20, "#0b2236", "#24506f", 3); g.textAlign = "center"; g.fillStyle = "#7fd3ff"; g.font = F(800, 26); g.fillText(top, x + cw / 2 - 3, y0 + 40);
         g.fillStyle = col || "#fff"; muFit(g, big, cw - 30, 88, 900); g.fillText(big, x + cw / 2 - 3, y0 + 128); if (unit) { g.fillStyle = "#9fc3dc"; g.font = F(700, 24); g.fillText(unit, x + cw / 2 - 3, y0 + 166); }
         if (badge) { muPill(g, x + 16, y0 + 140, cw - 38, 38, 19, badge[1]); g.fillStyle = badge[2] || "#fff"; g.font = F(800, 22); g.fillText(badge[0], x + cw / 2 - 3, y0 + 166); } };
       cell(0, "SEBESSÉG", (S.v / KN).toFixed(1).replace(".", ","), "csomó");

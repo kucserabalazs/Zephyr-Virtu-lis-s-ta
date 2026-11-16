@@ -6,8 +6,8 @@
      • VISSZAJÁTSZÁS: a futam alatt 4-szer másodpercenként rögzítjük minden hajó helyét, irányát, dőlését; a befutó után a futam egy lassan körbeszálló
        DRÓN nézőpontjából visszanézhető (lejátszás / szünet, 1× / 4× / 8×, ugrás az elejére). */
   const VBTN = { list: [] };
-  function vrBtnTex(label, sub, col) {
-    return canvasTex(256, 128, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, col[0]); gr.addColorStop(1, col[1]); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  function vrBtnTex(label, sub, col, tw) {   /* tw: a textúra szélessége (keskeny, lapos gombhoz 384 – így a felirat nem torzul) */
+    return canvasTex(tw || 256, 128, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, col[0]); gr.addColorStop(1, col[1]); g.fillStyle = gr; g.fillRect(0, 0, w, h);
       g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 6; g.strokeRect(5, 5, w - 10, h - 10); g.fillStyle = "#ffffff"; g.textAlign = "center"; g.textBaseline = "middle";
       let fs = 46; do { g.font = `900 ${fs}px system-ui, sans-serif`; fs -= 2; } while (g.measureText(label).width > w - 22 && fs > 20); g.fillText(label, w / 2, sub ? 50 : 64); if (sub) { g.font = "700 22px system-ui, sans-serif"; g.fillStyle = "rgba(255,255,255,.85)"; g.fillText(sub, w / 2, 96); } });
   }
@@ -16,17 +16,17 @@
      w = a sor szélessége, (x, y, z) a gomb közepe a szülő terében */
   function vrPodBtns(parent, w, y, z, hk) {
     const defs = [["⏸ SZÜNET", "megállít", ["#c98a00", "#7a5200"], () => vrPauseToggle()]];
-    const bw = Math.min(w * .66, .34), bh = bw * (hk || .45), out = [];
-    defs.forEach(([l, sb, col, fn], i) => { const tex = vrBtnTex(l, sb, col), mtx = new THREE.MeshBasicMaterial({ map: tex }), side = new THREE.MeshStandardMaterial({ color: col[1], roughness: .5 });
+    const bw = Math.min(w * .66, .34), bh = bw * (hk || .45), out = [], flat = bh / bw < .4;   /* 2026-11-16 18:44: a műszeren kicsi, lapos gomb – alcím nélkül, szélesebb textúrával */
+    defs.forEach(([l, sb, col, fn], i) => { const tex = vrBtnTex(l, flat ? "" : sb, col, flat ? 384 : 256), mtx = new THREE.MeshBasicMaterial({ map: tex }), side = new THREE.MeshStandardMaterial({ color: col[1], roughness: .5 });
       W.disposables.push(tex, mtx, side); const geo = new THREE.BoxGeometry(bw, bh, bw * .12); W.disposables.push(geo);
       const b = new THREE.Mesh(geo, [side, side, side, side, mtx, side]); b.position.set((i - (defs.length - 1) / 2) * w / 3, y, z); b.userData.noBake = 1; b.userData.noMerge = 1; parent.add(b);
-      const st = { b, z0: z, t: 0, hov: false, fn, l };
+      const st = { b, z0: z, t: 0, hov: false, fn, l, flat };
       b.userData.xr = { hover: (on) => { st.hov = on; }, click: () => { st.t = .18; try { uiSnd("press"); } catch (e) {} try { fn(); } catch (e) { console.warn("gomb", e); } } };
       try { T.xr.extra.add(b); W.objs.push(b); } catch (e) {} out.push(st); VBTN.list.push(st); });
     return out;
   }
   function vrBtnTick(dt) { VBTN.list = VBTN.list.filter((st) => st.b.parent); VBTN.list.forEach((st) => { st.t = Math.max(0, st.t - dt); const d = st.b.geometry.parameters.depth; st.b.position.z = st.z0 - (st.t > 0 ? d * .6 : 0); st.b.scale.setScalar(st.hov ? 1.06 : 1);
-    if (st.l.indexOf("SZÜNET") >= 0 || st.l.indexOf("FOLYTAT") >= 0) { const want = VRR.paused ? "▶ FOLYTAT" : "⏸ SZÜNET"; if (st.l !== want) { st.l = want; const m = st.b.material[4]; if (m.map) m.map.dispose(); m.map = vrBtnTex(want, VRR.paused ? "bemérés vagy tovább" : "megállít", VRR.paused ? ["#2aa866", "#16703f"] : ["#c98a00", "#7a5200"]); m.needsUpdate = true; } } }); }
+    if (st.l.indexOf("SZÜNET") >= 0 || st.l.indexOf("FOLYTAT") >= 0 || st.l.indexOf("KILÉPÉS") >= 0) { const want = VRR.replay ? "✕ KILÉPÉS" : VRR.paused ? "▶ FOLYTAT" : "⏸ SZÜNET"; if (st.l !== want) { st.l = want; const m = st.b.material[4]; if (m.map) m.map.dispose(); m.map = vrBtnTex(want, st.flat ? "" : VRR.paused ? "bemérés vagy tovább" : "megállít", VRR.replay ? ["#c9302c", "#7a1a17"] : VRR.paused ? ["#2aa866", "#16703f"] : ["#c98a00", "#7a5200"], st.flat ? 384 : 256); m.needsUpdate = true; } } }); }
 
   /* ---------------------------------------------------------------- SZÜNET */
   function vrPause(on) { const S = VRR; if (!S.C) return; if (S.net && on) { S.msg = "Online futamban a szünet nem állítja meg a többieket – a versenymenü elérhető."; S.msgT = 5; return; }
@@ -45,7 +45,8 @@
       B.btn(40, cal ? 410 : 350, 560, 150, "☰ Versenymenü", () => { vrPauseBoard(false); vrRaceMenu(true); }); B.btn(640, cal ? 410 : 350, 520, 150, "↻ Újrakezdés", () => { vrPause(false); vrSetup(VRR.lvl); }); } });
     S.pauseB.show(true); }
   /* a műszer SZÜNET gombja és a tenyérmenü szünet / folytatás gombja: futás közben megállít; szünetben a táblát újra a nézésed elé hozza (ott választasz: tovább / bemérés) */
-  function vrPauseToggle() { const S = VRR; if (!S.C) return; if (!S.paused) { vrPause(true); return; }
+  function vrPauseToggle() { const S = VRR; if (!S.C) return; if (S.replay) { vrReplay(false); return; }   /* visszajátszás alatt a SZÜNET gomb (és a tenyérmenü szünet-gombja) kilép a visszajátszásból */
+    if (!S.paused) { vrPause(true); return; }
     if (S.calR) return; if (!calActive()) { vrPause(false); return; } vrPauseBoard(false); vrPauseBoard(true); }
   /* szünet után: előbb bemérés, aztán folytatás – a játék a bemérés végéig áll, a végén a bemérés (vrCalEnd) folytatja */
   function vrResumeCal() { const S = VRR; if (!S.C) return; if (!calActive() || !S.paused) { vrPause(false); return; }
@@ -97,6 +98,7 @@
     if (R.f.length > 9000) R.f.splice(0, 1); if (S.st === "done") R.end = true; }
   function vrReplay(on) { const S = VRR;
     if (!on) { if (!S.replay) return; const P = S.replay; S.replay = null; if (S.repB) { S.repB.destroy(); S.repB = null; }
+      try { if (typeof LOC !== "undefined" && LOC.blinkM) { LOC.blinkM.visible = false; LOC.blinkM.material.opacity = 0; } } catch (e) {}   /* biztosan ne maradjon sötét */
       /* az állapot visszaállítása, ahol a futam tartott */ Object.assign(S, P.save); S.riv.forEach((r, i) => Object.assign(r, P.rsave[i])); S.cal = P.cal; W.panelDirty = 1; return; }
     if (!S.rec || S.rec.f.length < 3) return; if (S.rec.f[S.rec.f.length - 1][0] <= 0) { S.msg = "🎥 A visszajátszás a rajt után indítható."; S.msgT = 4; return; }   /* szakértői jelentés B.14 */
     if (S.paused) { S.paused = false; vrPauseBoard(false); }

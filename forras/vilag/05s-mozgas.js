@@ -65,9 +65,13 @@
   function locCamObj() { return T.cam && T.cam.object3D; }
   function locBlink(ms) {
     const c = locCamObj(); if (!c) return;
-    if (!LOC.blinkM) { const m = new THREE.Mesh(new THREE.SphereGeometry(.18, 16, 10), new THREE.MeshBasicMaterial({ color: 0x02060c, side: THREE.BackSide, transparent: true, opacity: 0, depthTest: false, depthWrite: false })); m.renderOrder = 1003; m.frustumCulled = false; m.visible = false; LOC.blinkM = m; }
+    if (!LOC.blinkM) { const m = new THREE.Mesh(new THREE.SphereGeometry(.18, 16, 10), new THREE.MeshBasicMaterial({ color: 0x02060c, side: THREE.BackSide, transparent: true, opacity: 0, depthTest: false, depthWrite: false })); m.renderOrder = 1003; m.frustumCulled = false; m.visible = false; LOC.blinkM = m;
+      /* 2026-11-16 18:44 JAVÍTÁS (tulajdonos: „visszajátszásnál lefagy, fekete marad a kép, és ki se lehet lépni”): az elsötétülést eddig csak a kikötői séta (locTick → locFxTick)
+         halványította el – a versenyben (drón-visszajátszás kameraváltása) a fekete gömb örökre a szem előtt maradt. Most önmagát halványítja minden kirajzoláskor, és egy időzítő is biztosan eltünteti. */
+      m.onBeforeRender = () => { try { locFxTick(0); } catch (e) {} }; }
     if (LOC.blinkM.parent !== c) c.add(LOC.blinkM);
     LOC.blinkT = performance.now(); LOC.blinkD = ms || 130; LOC.blinkM.visible = true; LOC.blinkM.material.opacity = .9;
+    clearTimeout(LOC.blinkTo); LOC.blinkTo = setTimeout(() => { try { if (LOC.blinkM && performance.now() - LOC.blinkT >= LOC.blinkD) { LOC.blinkM.visible = false; LOC.blinkM.material.opacity = 0; } } catch (e) {} }, (ms || 130) + 120);
   }
   function locVig(target, dt) {
     const c = locCamObj(); if (!c) return;
@@ -241,4 +245,4 @@
     } else LOC.mv = 0;
     locVig(C.vig && (LOC.mv || LOC.sturn) ? .9 : 0, dt);
   }
-  W._loc = { LOC, move: (dx, dz) => locMove(dx, dz), floor: locFloor, blocked: locBlocked, turn: locTurn, cfg: locCfg, help: locHelp, aim: locAim, aimGo: locAimGo, right: locRight };   /* tesztekhez */
+  W._loc = { LOC, blink: (ms) => locBlink(ms), move: (dx, dz) => locMove(dx, dz), floor: locFloor, blocked: locBlocked, turn: locTurn, cfg: locCfg, help: locHelp, aim: locAim, aimGo: locAimGo, right: locRight };   /* tesztekhez */

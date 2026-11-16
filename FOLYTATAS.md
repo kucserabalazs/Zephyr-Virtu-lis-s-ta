@@ -1,7 +1,18 @@
 # Zephyr Apartman – a projekt állása és folytatási útmutató
 
-Utolsó mentés: 2026. november 16. reggel (etalon-mentés, egyetlen Szünet gomb, bemérés csak egyszer, a házak bővítése – lásd a legfelső pontot; a Magyar Ízek Háza és a Természetvédelmi ház valódi fotókkal, a fotórendszer leírása ugyanott); előtte hajnalban (hajómozgás, fotók Claude-hoz); előtte 2026. november 15. este (Balaton Sailing VR verseny-fejlesztés); korábban 2026. november 9. (VR 2.0 – lásd a 0. pontot); korábban: 2026. november 6. hajnal (a `main` ágon; lásd a 23. pontot – VR-javítások, forgás kézzel, teljes foglalás a VR-ben) · Ezt a fájlt olvasd el először egy új munkamenet elején.
+Utolsó mentés: 2026. november 16. este (futó kerülési nyíl, nagyobb kijelző, visszajátszás-javítás – lásd a legfelső pontot); előtte reggel (etalon-mentés, egyetlen Szünet gomb, bemérés csak egyszer, a házak bővítése – lásd a legfelső pontot; a Magyar Ízek Háza és a Természetvédelmi ház valódi fotókkal, a fotórendszer leírása ugyanott); előtte hajnalban (hajómozgás, fotók Claude-hoz); előtte 2026. november 15. este (Balaton Sailing VR verseny-fejlesztés); korábban 2026. november 9. (VR 2.0 – lásd a 0. pontot); korábban: 2026. november 6. hajnal (a `main` ágon; lásd a 23. pontot – VR-javítások, forgás kézzel, teljes foglalás a VR-ben) · Ezt a fájlt olvasd el először egy új munkamenet elején.
 
+
+## 2026-11-16 este (18:44): VÍZRE FESTETT FUTÓ KERÜLÉSI NYÍL, NAGYOBB KIJELZŐ, VISSZAJÁTSZÁS-FAGYÁS JAVÍTVA (BV `81a97d8114`)
+- **Kerülési jel (05b `vrRIconBuild/vrRIconTick`):** a tulajdonos szerint a bója fölötti, távolsággal nőő „útvonal-kártya” borzalmasan ronda, hatalmas. Helyette EGYETLEN vékony, vízre festett nyílhegy
+  (fehér szegély + piros = bal kéz / zöld = jobb kéz / sárga = kapu) fut folyamatosan a valódi kerülési íven (12 m × hajóosztály-szorzó sugár; bejövő egyenes → ív → kimenő egyenes), a végén elhalványul,
+  az elején újra feltűnik – mint az útelterelés futófénye. Nem nő a távolsággal, a hullámon fekszik (`vrWave`). Több nyíl, körbeölelő gyűrű NEM kell (ő kérte így).
+- **Műszer (05b konzol, 05y `vrChart`, 05l `vrPodBtns`):** a ház mérete VÁLTOZATLAN; a SZÜNET gomb kb. harmadakkora (lapos, alcím nélkül, 384 px széles textúra), a képernyő .45×.40 → .47×.54 m,
+  a vászon 1024×1180 – a többlet (XH = 156 px) teljes egészében a térképé („radarkép”).
+- **Visszajátszás fekete képpel lefagyott (VR):** a kameraváltás `locBlink`-et kér, de az elsötétülést csak a kikötői `locTick` halványította el – versenyben a fekete gömb a szem előtt maradt és
+  a ✕ Kilépés táblát is eltakarta. Javítás (05s): a gömb `onBeforeRender`-ben magát halványítja + biztonsági időzítő; kilépéskor biztosan eltűnik. Ezen felül (05b `vrTick`): ha a visszajátszás hibára fut,
+  a tábla működik, ismétlődő hibánál magától visszalép a futamba; (05l) visszajátszás alatt a műszer gombja „✕ KILÉPÉS” és kilép. Teszthorog: `W._loc.blink(ms)`.
+- Ellenőrizve: uismoke, pausetest OK; saját teszt (kerülési nyíl pályája, kijelző vászon, elsötétülés 900 ms után eltűnt, gombbal kilépés). Quest-próba még hátra.
 
 ## 2026-11-16 reggel (04:xx): ETALON-MENTÉS, EGYETLEN SZÜNET GOMB, BEMÉRÉS CSAK EGYSZER, A HÁZAK BŐVÍTÉSE (éjszakai megbízás – MIND A 8 PONT KÉSZ; a végső ellenőrzés eredménye a „VÉGSŐ ELLENŐRZÉS” pontban)
 **A tulajdonos éjszakai megbízása (hangból, 04:06 „mehet”) – megállás és jóváhagyás nélkül, egymás után:** 1) etalon-mentés, 2) Szünet gomb + a műszer megemelése, 3) bemérés csak egyszer, 4) csomózóház bővítése új csomókkal,
