@@ -1,0 +1,38 @@
+name: Fotók a Wikimedia Commonsból
+# A fejlesztői környezet a Wikimediát nem éri el, a GitHub futtatója igen: ez a munkafolyamat készíti a jelöltlapokat (forras/kepek/kandidatok)
+# és tölti le a kiválasztott fotókat (weboldal/vr-zephyr-games/kepek) – szerző- és licencadatokkal. Lásd forras/tools/fotok.py.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'forras/kepek/kereses.json'
+      - 'forras/kepek/fotok.json'
+      - 'forras/tools/fotok.py'
+      - '.github/workflows/fotok.yml'
+concurrency:
+  group: fotok
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  fotok:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow
+      - name: Jelöltlapok
+        run: python3 forras/tools/fotok.py kereses
+      - name: Letöltés
+        run: python3 forras/tools/fotok.py letoltes
+      - name: Mentés
+        run: |
+          git config user.name "fotok-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A forras/kepek weboldal/vr-zephyr-games/kepek
+          if git diff --cached --quiet; then echo "nincs változás"; exit 0; fi
+          git commit -m "Fotók: jelöltlapok / letöltések a Wikimedia Commonsból (automatikus)"
+          for i in 1 2 3 4; do git pull --rebase origin main && git push origin HEAD:main && break || sleep 5; done

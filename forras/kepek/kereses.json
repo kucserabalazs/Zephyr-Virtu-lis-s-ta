@@ -1,0 +1,201 @@
+{
+ "gulyas": [
+  "gulyásleves",
+  "Hungarian goulash soup"
+ ],
+ "halaszle": [
+  "halászlé",
+  "Hungarian fish soup halászlé"
+ ],
+ "langos": [
+  "lángos",
+  "Hungarian lángos fried dough"
+ ],
+ "porkolt": [
+  "pörkölt",
+  "Hungarian pörkölt stew"
+ ],
+ "paprikas": [
+  "csirkepaprikás nokedlivel",
+  "chicken paprikash nokedli"
+ ],
+ "toltott": [
+  "töltött káposzta",
+  "Hungarian stuffed cabbage"
+ ],
+ "dobos": [
+  "dobostorta",
+  "Dobos torte"
+ ],
+ "kurtos": [
+  "kürtőskalács",
+  "chimney cake kürtőskalács"
+ ],
+ "paprika": [
+  "fűszerpaprika",
+  "Kalocsa paprika"
+ ],
+ "szalami": [
+  "téliszalámi",
+  "Hungarian winter salami"
+ ],
+ "tokaji": [
+  "Tokaji aszú",
+  "Tokaji wine bottle"
+ ],
+ "bikaver": [
+  "Egri Bikavér",
+  "Egri bikavér wine"
+ ],
+ "frocs": [
+  "fröccs",
+  "Hungarian spritzer fröccs"
+ ],
+ "palinka": [
+  "pálinka",
+  "Hungarian pálinka"
+ ],
+ "unicum": [
+  "Unicum",
+  "Zwack Unicum bottle"
+ ],
+ "hortobagyi": [
+  "Hortobágyi palacsinta",
+  "Hungarian pancake meat"
+ ],
+ "pogacsa": [
+  "pogácsa",
+  "Hungarian pogácsa"
+ ],
+ "somloi": [
+  "somlói galuska",
+  "Somlói galuska dessert"
+ ],
+ "lecso": [
+  "lecsó",
+  "Hungarian lecsó"
+ ],
+ "turoscsusza": [
+  "túrós csusza",
+  "túrós csusza"
+ ],
+ "rantott": [
+  "rántott hús",
+  "Hungarian fried schnitzel"
+ ],
+ "fogas": [
+  "Sander lucioperca"
+ ],
+ "ponty": [
+  "Cyprinus carpio"
+ ],
+ "keszeg": [
+  "Abramis brama"
+ ],
+ "harcsa": [
+  "Silurus glanis"
+ ],
+ "csuka": [
+  "Esox lucius"
+ ],
+ "balin": [
+  "Aspius aspius"
+ ],
+ "compo": [
+  "Tinca tinca"
+ ],
+ "angolna": [
+  "Anguilla anguilla"
+ ],
+ "hattyu": [
+  "Cygnus olor"
+ ],
+ "kocsag": [
+  "Ardea alba"
+ ],
+ "szurkegem": [
+  "Ardea cinerea"
+ ],
+ "siraly": [
+  "Chroicocephalus ridibundus"
+ ],
+ "vocsok": [
+  "Podiceps cristatus"
+ ],
+ "kormoran": [
+  "Phalacrocorax carbo"
+ ],
+ "retisas": [
+  "Haliaeetus albicilla"
+ ],
+ "halaszsas": [
+  "Pandion haliaetus"
+ ],
+ "jegmadar": [
+  "Alcedo atthis"
+ ],
+ "kanalasgem": [
+  "Platalea leucorodia"
+ ],
+ "kiskocsag": [
+  "Egretta garzetta"
+ ],
+ "golya": [
+  "Ciconia ciconia"
+ ],
+ "vidra": [
+  "Lutra lutra"
+ ],
+ "teknos": [
+  "Emys orbicularis"
+ ],
+ "siklo": [
+  "Natrix natrix"
+ ],
+ "beka": [
+  "Hyla arborea"
+ ],
+ "szitakoto": [
+  "Anax imperator",
+  "dragonfly"
+ ],
+ "lepke": [
+  "Papilio machaon"
+ ],
+ "nad": [
+  "Phragmites australis"
+ ],
+ "tavirozsa": [
+  "Nymphaea alba"
+ ],
+ "nosziromy": [
+  "Iris pseudacorus"
+ ],
+ "levendula": [
+  "Tihany levendula",
+  "lavender field Tihany"
+ ],
+ "balaton": [
+  "Balaton panoráma",
+  "Lake Balaton"
+ ],
+ "tihany": [
+  "Tihanyi-félsziget",
+  "Tihany abbey Balaton"
+ ],
+ "kisbalaton": [
+  "Kis-Balaton"
+ ],
+ "nadas": [
+  "Balaton nádas",
+  "reed bed Lake Balaton"
+ ],
+ "szurkemarha": [
+  "magyar szürke marha",
+  "Hungarian grey cattle"
+ ],
+ "racka": [
+  "racka juh",
+  "Racka sheep"
+ ]
+}
