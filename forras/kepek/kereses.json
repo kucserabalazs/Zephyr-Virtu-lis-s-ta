@@ -48,12 +48,14 @@
   "Egri bikavér wine"
  ],
  "frocs": [
-  "fröccs",
-  "Hungarian spritzer fröccs"
+  "fröccs szóda pohár",
+  "Hungarian wine spritzer soda",
+  "házmester fröccs"
  ],
  "palinka": [
-  "pálinka",
-  "Hungarian pálinka"
+  "pálinka pohár",
+  "Hungarian fruit brandy pálinka bottle",
+  "szilvapálinka barackpálinka"
  ],
  "unicum": [
   "Unicum",
@@ -64,8 +66,9 @@
   "Hungarian pancake meat"
  ],
  "pogacsa": [
-  "pogácsa",
-  "Hungarian pogácsa"
+  "sajtos pogácsa",
+  "Hungarian pogácsa savory scone",
+  "tepertős pogácsa"
  ],
  "somloi": [
   "somlói galuska",
@@ -87,10 +90,12 @@
   "Sander lucioperca"
  ],
  "ponty": [
-  "Cyprinus carpio"
+  "common carp underwater",
+  "Cyprinus carpio swimming"
  ],
  "keszeg": [
-  "Abramis brama"
+  "common bream underwater",
+  "Abramis brama swimming"
  ],
  "harcsa": [
   "Silurus glanis"
@@ -172,12 +177,14 @@
   "Iris pseudacorus"
  ],
  "levendula": [
-  "Tihany levendula",
-  "lavender field Tihany"
+  "Tihany levendula virágzó",
+  "lavender blooming Tihany",
+  "Lavandula angustifolia flowering"
  ],
  "balaton": [
-  "Balaton panoráma",
-  "Lake Balaton"
+  "Balaton vitorlások",
+  "Lake Balaton sailing boats sunset",
+  "Balaton Zamárdi"
  ],
  "tihany": [
   "Tihanyi-félsziget",
