@@ -1,0 +1,44 @@
+{
+ "q": [
+  "somlói galuska",
+  "Somlói galuska dessert"
+ ],
+ "jeloltek": [
+  {
+   "cim": "File:Somloi-galuska.JPG",
+   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Somloi-galuska.JPG/330px-Somloi-galuska.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "w": 5234,
+   "h": 3480,
+   "lic": "CC BY-SA 3.0",
+   "szerzo": "Illustratedjc",
+   "leiras": "Somlói galuska as served at Fáy Présház Étterem on Somlyó-hegy in Fót, Hungary."
+  },
+  {
+   "cim": "File:Somlói galuska.jpg",
+   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Soml%C3%B3i_galuska.jpg/330px-Soml%C3%B3i_galuska.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "w": 4032,
+   "h": 3024,
+   "lic": "CC BY-SA 4.0",
+   "szerzo": "Toben",
+   "leiras": "A typical hungarian dessert, made out of biscuit and vanilla cream"
+  },
+  {
+   "cim": "File:Somlói galuska, 2.jpg",
+   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Soml%C3%B3i_galuska%2C_2.jpg/330px-Soml%C3%B3i_galuska%2C_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "w": 5888,
+   "h": 3312,
+   "lic": "CC BY-SA 4.0",
+   "szerzo": "Christo",
+   "leiras": "somlói galuska"
+  },
+  {
+   "cim": "File:Přerov, restaurace U Labutě, šomló.jpg",
+   "thumb": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/P%C5%99erov%2C_restaurace_U_Labut%C4%9B%2C_%C5%A1oml%C3%B3.jpg/330px-P%C5%99erov%2C_restaurace_U_Labut%C4%9B%2C_%C5%A1oml%C3%B3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+   "w": 4640,
+   "h": 3472,
+   "lic": "CC BY 4.0",
+   "szerzo": "Palickap",
+   "leiras": "Přerov, Czechia."
+  }
+ ]
+}
