@@ -42,6 +42,7 @@
 
   /* ---------------------------------------------------------------- KALIBRÁLÁS: a kormányos helye a fejed alá, a hajó orra a nézési irányodba */
   function vrCalibrate() { const S = VRR; if (!S.C) return;
+    if (calActive()) { vrCalStart("button"); return; }   /* 2026-11-16: VR-ben bemérés + ellenőrzés, a játék addig áll (05zd) */
     const h = new THREE.Vector3(); try { T.camObj().getWorldPosition(h); } catch (e) { return; } const yaw = T.camYaw ? T.camYaw() : 0;
     /* a fej a rig terében (a W.root a rig gyermeke – a rig maga az origóban áll) */
     S.cal = { yaw, x: T.inVR ? h.x : 0, z: T.inVR ? h.z : 0 };

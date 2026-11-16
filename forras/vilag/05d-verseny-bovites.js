@@ -65,7 +65,7 @@
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
     pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { _sv.copy(pb.userData.seat).multiply(bdy.scale).add(bdy.position).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 19:52 (tulajdonos): a nézőpont NEM követi a dőlést (a 18:39-es változás visszavonva) */
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);
-    if (T.inVR) { const lift = S.seated ? 0 : .5; W.root.position.set(-_sv.x, lift - _sv.y - .05, -_sv.z); }
+    if (T.inVR) { const lift = vrSeatLift(); W.root.position.set(-_sv.x, lift - _sv.y - .05, -_sv.z); }   /* 2026-11-16: az ülés magassága a bemérésből (05zd) – bemérés nélkül a régi álló 0,5 / ülő 0 m */
     else if (W.dbgEye) W.root.position.set(-_sv.x, .5 - _sv.y - .05 - 1.65, -_sv.z);   /* teszt: a VR-ben álló kormányos szemmagassága */
     else { const back = ph ? 9.5 : 5.6, up = ph ? 3.4 : 1.75; W.root.position.set(-_sv.x, -up - _sv.y, -_sv.z - back); }   /* 2D-ben a kamera a világ y = 0 pontjában van */
     if (S.msgL) S.msgL.position.set(_sv.x, _sv.y + 1.9, _sv.z - 3.2);

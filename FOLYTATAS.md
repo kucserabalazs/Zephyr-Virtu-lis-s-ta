@@ -1,7 +1,28 @@
 # Zephyr Apartman – a projekt állása és folytatási útmutató
 
-Utolsó mentés: 2026. november 15. este (Balaton Sailing VR verseny-fejlesztés – lásd a legfelső pontot); korábban 2026. november 9. (VR 2.0 – lásd a 0. pontot); korábban: 2026. november 6. hajnal (a `main` ágon; lásd a 23. pontot – VR-javítások, forgás kézzel, teljes foglalás a VR-ben) · Ezt a fájlt olvasd el először egy új munkamenet elején.
+Utolsó mentés: 2026. november 16. hajnal (bemérés a rajt előtt, hajómozgás, fotók Claude-hoz – lásd a legfelső pontot); előtte 2026. november 15. este (Balaton Sailing VR verseny-fejlesztés); korábban 2026. november 9. (VR 2.0 – lásd a 0. pontot); korábban: 2026. november 6. hajnal (a `main` ágon; lásd a 23. pontot – VR-javítások, forgás kézzel, teljes foglalás a VR-ben) · Ezt a fájlt olvasd el először egy új munkamenet elején.
 
+
+## 2026-11-16 hajnal: hajómozgás, bójakerülési jel, Siófok, BEMÉRÉS A RAJT ELŐTT, fotók Claude-hoz
+- **Hajómozgás (02:21 kérés, 03:06 helyesbítés):** a nehéz test csak a hosszabb hullámokat követi (`rwHullMotion`, `HM_HEAVY/LIGHT/RAFT/FLOAT` – 05z) – kis vízben alig bólint / emelkedik.
+  **A DŐLÉS AZ EREDETI** (a tulajdonos 03:06-kor kifejezetten visszakérte: „miért nyúltál hozzá a dőléshez? … kérem vissza az eredeti beállítást”): saját hajón a régi
+  `rockK`-s ringás, ellenfeleken a régi spinakkeres billegés, kis hajókon `BS.heel × osztálytényező`, kikötőben `sin·0,03`, rendező- és nézőhajón `rwFloatOne` dőlése.
+  A modellből CSAK a bólintás és az emelkedés jön. **A dőléshez kérés nélkül ne nyúlj.**
+- A kikötő csilingelő árbochangja („ting-ting”, üveg eolhárfa) törölve (05f).
+- Új bójakerülési jel (`vrRIconBuild/vrRIconTick` – 05b): szalag a valódi kerülési úttal, a hajó felé döntve; piros = bal kéz, zöld = jobb kéz, kapu = egyenes nyíl két bója közt.
+- Siófok (05zb): Aranyangyal a fotó szerint, 2× nagyobb, fényes arany, éjjel alulról megvilágítva; óriáskerék távolabb a parton és nagyobb (sc 2,7); víztorony köztük, hátrébb, magasabban (sc 2,5).
+- **BEMÉRÉS (KALIBRÁLÁS) MINDEN RAJT ÉS MINDEN ÚJ HELYSZÍN ELŐTT** (02:22 kérés; `05zd-kalibralas.js`): minden futam elején (minden pálya / helyszín, a Kékszalag minden
+  szakasza, oktató futam, újrakezdés, VR-be lépés) a játék ÁLL (`vrCalTick` a `vrTick` elején), amíg: 1) a fej 1,2 mp-ig nyugodt (a tábla addig a nézés elé igazodik),
+  2) bemér: `S.cal = {yaw, x, z}` – a kormányos helye a fej alá, a hajó orra a nézési irányba; álló / ülő a szemmagasságból (`CAL_SIT` 1,36 m; nagy hajón ülve a fedélzet
+  `1,65 − szem` m-rel lejjebb, 30–70 cm; kis hajón az ülés `szem − 1,15` m-rel a padló fölött – tipikus felnőttnél ugyanaz, mint a régi 45 cm / 0,5 m), 3) ellenőriz
+  1,5 mp-ig (20 cm, 20°, 14 cm magasság) – elmozdulásnál újra bemér; 4) csak ezután indul az idő. Online futamban (közös rajt) nem áll meg az idő, a bemérés a visszaszámlálás alatt fut.
+  A hibák oka volt: a fej valódi helyét nem nézte a futam; a régi KALIBRÁL-eredmény (`S.cal`) a következő futamra / VR-be lépésre is megmaradt (rossz irány / hely); kézi ülő mód.
+  ◎ KALIBRÁL gomb és tenyérmenü 🪑 (a megadott ülő / álló helyzetet a munkamenet végéig elfogadja: `S.seatLock`) ugyanezt indítja. 2D-ben nincs bemérés.
+  Teszt: `/home/claude/scratch/calt.js` és `calkek.js` (szimulált fej: `W._calSim = {x,y,z,yaw}`, gyorsítás `W.tick(1/60)`), API: `W._calApi`.
+- **Fotók Claude-hoz:** privát tároló `kucserabalazs/zephyr-hibafotok` kész (GitHub Desktopból), finomhangolt kulcs (csak ez a tároló, Contents írás, lejár 2027-11-16) –
+  a Mac beépített böngészőjében (Claude app) bekötve. A kulcsmező mostantól elutasítja a nem-kulcs szöveget (a chatből kimásolt szöveg „ISO-8859-1” hibát adott).
+  **HÁTRA:** a Quest bekötése 6 jegyű kóddal (Mac: Fotóim → „📲 Másik eszköz bekötése (kód)”; Quest böngésző, nem VR-módban: Fotóim → „🔢 Kódot kaptam…”). Utána a képek a
+  tároló `fotok/ÉÉÉÉ-HH-NN/` mappájába kerülnek; Claude a munkamenethez csatolt tárolóból olvassa (`/home/claude/zephyr-hibafotok`).
 
 ## 2026-11-15 este: BALATON SAILING VR – a verseny nagy fejlesztése (a tulajdonos 18:39-es kérése; FOLYAMATBAN)
 Játékoldal: `weboldal/vr-zephyr-games/` (indítás: https://kucserabalazs.github.io/Zephyr-Virtu-lis-s-ta/weboldal/vr-zephyr-games/?v=<verzio.json v>). Forrás: `forras/vilag/*.js` → `bash forras/tools/build.sh`.

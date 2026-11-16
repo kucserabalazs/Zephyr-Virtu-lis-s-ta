@@ -12785,7 +12785,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
       if (!on) {
         const inp = document.createElement("input"); inp.type = "password"; inp.placeholder = "github_pat_…"; inp.autocomplete = "off";
         inp.style.cssText = "flex:1 1 260px;min-width:200px;padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.35);color:#fff;font:500 14px Inter,system-ui,sans-serif"; row.appendChild(inp);
-        b("💾 Mentés és próba", async () => { const k = inp.value.trim(); if (!k) return; fotoSetKey(k); say("Ellenőrzöm…"); try { await fotoGh(""); say("✅ Működik! Küldöm a meglévő képeket…"); const n = await fotoFlush(); say(`✅ Bekötve. Elküldve: ${n} kép.`); setTimeout(draw, 1500); } catch (e) { fotoSetKey(""); say("❌ Nem jó a kulcs vagy nincs ilyen tároló: " + e.message); } });
+        b("💾 Mentés és próba", async () => { const k = inp.value.replace(/\s+/g, ""); if (!k) return; if (!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(k)) { say("❌ Ez nem GitHub-kulcs: a kulcs „github_pat_” kezdetű. A GitHub oldalán kattints bele a kulcsba, Cmd+A, Cmd+C – aztán illeszd be ide."); return; } fotoSetKey(k); say("Ellenőrzöm…"); try { await fotoGh(""); say("✅ Működik! Küldöm a meglévő képeket…"); const n = await fotoFlush(); say(`✅ Bekötve. Elküldve: ${n} kép.`); setTimeout(draw, 1500); } catch (e) { fotoSetKey(""); say("❌ Nem jó a kulcs vagy nincs ilyen tároló: " + e.message); } });
         b("🔢 Kódot kaptam egy másik eszközről", () => { const c = (prompt("A másik eszközön látható 6 jegyű kód:") || "").replace(/\D/g, ""); if (c.length !== 6) return; say("Kapcsolódom… (a másik eszközön maradjon nyitva a kód)"); fotoPair(c, false, (t) => { say(t); setTimeout(draw, 1500); }).catch(() => say("❌ A párosítás nem sikerült.")); });
       } else {
         b("📤 Küldés most", async () => { say("Küldöm…"); const n = await fotoFlush(); say(FOTO.err ? "❌ " + FOTO.err : `✅ Elküldve: ${n} új kép.`); });
@@ -13741,7 +13741,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
   /* ---- „ÚJ VÁLTOZAT” GOMB (2026-11-11, tulajdonos a szemüvegből: „nagyon nehezen tudom az új oldalt megnyitni” – a Quest böngészője a régit mutatja) ----
      Az oldal betöltés után (és 3 percenként, valamint visszatéréskor) megnézi a verzio.json-t; ha a szerveren újabb változat van, nagy arany gomb jelenik meg:
      egy koppintás, és a legfrissebb oldal töltődik be – címet gépelni nem kell. */
-  { const BV = "a6b5cf5598"; let shown = false; window.ZEPHYR_BV = BV;
+  { const BV = "7e47883472"; let shown = false; window.ZEPHYR_BV = BV;
     /* 2026-11-12 01:04: a tulajdonos a szemüvegben órákig a RÉGI változatot látta (VR-ben a gomb nem jelenik meg, és az oldalt nem töltötte újra).
        A TESZTOLDALON (github.io) ezért az oldal MAGÁTÓL frissül, ha a szerveren újabb változat van – VR-en kívül, betöltéskor, visszatéréskor és VR-ből kilépve.
        Az éles oldalon marad a gomb (ott egy vendég foglalás közben lehet). A VR játékok panelje kiírja a futó változat jelét. */
@@ -13775,7 +13775,7 @@ void main(){ vec2 p = gl_PointCoord * 2. - 1.; float d = dot(p, p); gl_FragColor
     vrClose();
     const run = () => window.ZephyrWorld && ZephyrWorld.open(kind);
     if (window.ZephyrWorld) return run();
-    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "a09a88bcb7"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    if (!worldLoading) worldLoading = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vilag.js?v=" + (window.ZEPHYR_WORLD_V || "fa5afbd00a"); s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     worldLoading.then(run).catch(() => { worldLoading = null; });
   }
 

@@ -395,7 +395,7 @@
   }
   function buildVRace() {
     const root = W.root;
-    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0 });   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
+    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0, cal: null, calDrop: null, calLift: null, calR: null, calB: null });   /* 2026-11-16: a régi bemérés (más világ / helyszín) nem öröklődik – minden futam elején újra bemérünk (05zd) */   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
     vrClassPre();
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
     const oldSky = makeSky(far); vrShoresBuild(far);
@@ -419,7 +419,7 @@
     const hw = boat.localToWorld(hp.clone());
     VRR.noSigns = (() => { try { return localStorage.getItem("zephyr-verseny-tablak") === "0"; } catch (e) { return false; } })();
     VRR.seated = (() => { try { return localStorage.getItem("zephyr-vr-ules") === "1"; } catch (e) { return false; } })();
-    VRR.baseY = -(hw.y + eye); root.position.set(-hw.x + (ph2d ? -1.1 : 0), VRR.baseY - (VRR.seated && T.inVR ? .45 : 0), -hw.z - camBack); VRR.rootX = -hw.x + (ph2d ? -1.1 : 0); VRR.rootZ = -hw.z - camBack; VRR.helmL = hp.clone(); boat.updateMatrix(); VRR.helmRest = hp.clone().applyMatrix4(boat.matrix); root.updateMatrixWorld(true);   /* ülve a fedélzet 45 cm-rel lejjebb kerül – így ülve is a kerék fölött látsz */
+    VRR.baseY = -(hw.y + eye); root.position.set(-hw.x + (ph2d ? -1.1 : 0), VRR.baseY - vrSeatDrop(), -hw.z - camBack); VRR.rootX = -hw.x + (ph2d ? -1.1 : 0); VRR.rootZ = -hw.z - camBack; VRR.helmL = hp.clone(); boat.updateMatrix(); VRR.helmRest = hp.clone().applyMatrix4(boat.matrix); root.updateMatrixWorld(true);   /* ülve a fedélzet 45 cm-rel lejjebb kerül – így ülve is a kerék fölött látsz */
     VRR.wake = rwWake(env, VRR.cls.id === "zephyr" ? 1.25 : .45);
     /* 2026-11-15 (tulajdonos: „a felcsapódó vízpermet nagyon csúnya”): GPU-s cseppfürt- és párarészecskék a tó terében (05x: rwSprayBuild/rwSprayTick) */
     VRR.spray = rwSprayBuild(env);
@@ -655,6 +655,7 @@
     try { if (C.kek) kekSetupHook(C); else if (KEK.on) kekEnd(); } catch (e) { console.warn("kékszalag", e); }   /* 2026-11-15 (05zc) */
     VRR.tut = lvl ? null : { step: 0 }; VRR.riv.forEach((r) => { r.g.visible = !!lvl; if (!lvl) { r.x += 9000; r.z += 9000; r.lbl.visible = false; } });
     if (!lvl) Object.assign(VRR, { t: 0, st: "race", started: true, msg: "OKTATÓ FUTAM – lépésről lépésre megtanulod a hajót. Nincs ellenfél, nincs időnyomás.", msgT: 6 });
+    try { vrCalStart("start"); } catch (e) { console.warn("bemérés", e); }   /* 2026-11-16 (tulajdonos): a játék csak a bemérés és az ellenőrzés után indul (05zd) */
     W.panelDirty = 1;
   }
   /* --------------------------------------------------------------- kormány */
@@ -899,6 +900,7 @@
     const S = VRR, C = S.C;
     /* 2026-11-14 22:48: drón-visszajátszás és SZÜNET – ilyenkor a futam nem halad */
     if (S.replay && vrReplayTick(dt)) return;
+    if (S.calR && vrCalTick(dt)) return;   /* 2026-11-16 (tulajdonos): bemérés a rajt előtt – amíg nem állsz / ülsz jó helyen, a játék nem indul (05zd) */
     if (vrPausedTick(dt)) return;
     if (S.ensign) { const pa = S.ensign.geometry.attributes.position, b0 = S.ensign.userData.base, t = W.t; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 9 - t * 7) * .05 * x / .6; } pa.needsUpdate = true; }
     /* KÉZI FOGÁS – MARKOLÁS (nem csippentés): ha a tenyered a perem mellett van és ökölbe zárod, a kezed „ráfog” a kerékre
@@ -1135,9 +1137,7 @@
     try { rwSprayTick(dt); } catch (e) { if (W.debug) console.warn('permet', e); }
     /* a kormányos helye „lehorgonyozva”: a dőlés/bólintás/hullámzás a kormány körül forgatja a hajót, nem a láb alól húzza ki –
        így a kerék mindig a kéz ügyében marad, a fedélzet nem csúszik el (kényelmesebb, kevésbé émelyítő) */
-    if (S.helmL) { const bd = S.boat.userData.body; bd.updateMatrix(); S.boat.updateMatrix(); const cur = S.helmL.clone().applyMatrix4(bd.matrix).applyMatrix4(S.boat.matrix);
-      W.root.position.set(S.rootX - (cur.x - S.helmRest.x), S.baseY - (S.seated && T.inVR ? .45 : 0) - (cur.y - S.helmRest.y), S.rootZ - (cur.z - S.helmRest.z)); }
-    vrClassTick(dt); if (S.cal) vrCalApply(); else if (W.root && !W.root.quaternion.equals(_qI)) W.root.quaternion.identity();   /* 19:52 (tulajdonos): a hajó dőlése NE forgassa a nézőpontot – visszavonva */
+    vrRootPlace(dt);   /* (05zd) a kormányos helye lehorgonyozva + a kis hajó ülése + a bemérés; 19:52 (tulajdonos): a hajó dőlése NE forgassa a nézőpontot – visszavonva */
     /* legénység: a szél felőli oldalra ül (forduláskor átmászik) */
     S.crewSide = S.crewSide == null ? -side : S.crewSide + (-side - S.crewSide) * Math.min(1, dt * .9);
     S.ck.crew.forEach((c, i) => { const s = S.ck.sh(c.u); c.g.position.set(S.crewSide * (s.hb - .55), s.y - .02, s.z); const ry = S.crewSide > 0 ? Math.PI / 2 : -Math.PI / 2; c.g.rotation.y = ry; c.g.rotation.z = Math.sin(W.t * 2 + i) * .02;
@@ -1628,7 +1628,8 @@
     CK2.tiller.til.visible = CK2.tiller.ext.visible = S.tiller; if (S.helpL) S.helpL.visible = false; S.everGrab = true;
     S.msg = S.tiller ? "Botkormány: fogd meg a mellkasod előtt – eltolod: jobbra, a válladhoz húzod: balra." : "Kormánykerék: fogd meg a peremét, és fordítsd – negyed fordulat (90°) a végállás."; S.msgT = 7; W.panelDirty = 1; }
   function vrSigns() { VRR.noSigns = !VRR.noSigns; try { localStorage.setItem("zephyr-verseny-tablak", VRR.noSigns ? "0" : "1"); } catch (e) {} W.panelDirty = 1; }
-  function vrSeat() { VRR.seated = !VRR.seated; try { localStorage.setItem("zephyr-vr-ules", VRR.seated ? "1" : "0"); } catch (e) {} W.root.position.y = VRR.baseY - (VRR.seated && T.inVR ? .45 : 0); W.panelDirty = 1; }
+  function vrSeat() { const S = VRR; S.seatLock = !S.seated; S.seated = S.seatLock; try { localStorage.setItem("zephyr-vr-ules", S.seated ? "1" : "0"); } catch (e) {}   /* 2026-11-16: a megadott helyzetet a bemérés elfogadja, és újra bemér (05zd) */
+    if (calActive()) vrCalStart("seat"); else { calPosture(); try { vrRootPlace(0); } catch (e) {} } W.panelDirty = 1; }
   function vrWrist() {
     const S = VRR;
     return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", S.fin && S.st === "race" ? "Tovább (nem várok)" : "Kapitányi tájékoztató", () => (S.fin && S.st === "race" ? vrSkip() : vrBriefOpen())], ["⛵", "Főmenü", vrToHarbor], ["⏸", S.paused ? "Folytatás" : "Szünet", () => vrPause(!S.paused)], ["◎", "Kalibrálás", vrCalibrate], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],

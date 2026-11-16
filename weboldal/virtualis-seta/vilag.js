@@ -2084,7 +2084,7 @@
   }
   function buildVRace() {
     const root = W.root;
-    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0 });   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
+    Object.assign(VRR, { grab: null, wHover: false, crewSide: null, lastSide: 0, podium: null, helpL: null, msgL: null, lblAr: 0, cal: null, calDrop: null, calLift: null, calR: null, calB: null });   /* 2026-11-16: a régi bemérés (más világ / helyszín) nem öröklődik – minden futam elején újra bemérünk (05zd) */   /* (az előző megnyitás átmeneti állapota ne maradjon meg; a futam száma igen) */
     vrClassPre();
     const far = new THREE.Group(), env = new THREE.Group(); root.add(far); root.add(env); VRR.far = far; VRR.env = env;
     const oldSky = makeSky(far); vrShoresBuild(far);
@@ -2108,7 +2108,7 @@
     const hw = boat.localToWorld(hp.clone());
     VRR.noSigns = (() => { try { return localStorage.getItem("zephyr-verseny-tablak") === "0"; } catch (e) { return false; } })();
     VRR.seated = (() => { try { return localStorage.getItem("zephyr-vr-ules") === "1"; } catch (e) { return false; } })();
-    VRR.baseY = -(hw.y + eye); root.position.set(-hw.x + (ph2d ? -1.1 : 0), VRR.baseY - (VRR.seated && T.inVR ? .45 : 0), -hw.z - camBack); VRR.rootX = -hw.x + (ph2d ? -1.1 : 0); VRR.rootZ = -hw.z - camBack; VRR.helmL = hp.clone(); boat.updateMatrix(); VRR.helmRest = hp.clone().applyMatrix4(boat.matrix); root.updateMatrixWorld(true);   /* ülve a fedélzet 45 cm-rel lejjebb kerül – így ülve is a kerék fölött látsz */
+    VRR.baseY = -(hw.y + eye); root.position.set(-hw.x + (ph2d ? -1.1 : 0), VRR.baseY - vrSeatDrop(), -hw.z - camBack); VRR.rootX = -hw.x + (ph2d ? -1.1 : 0); VRR.rootZ = -hw.z - camBack; VRR.helmL = hp.clone(); boat.updateMatrix(); VRR.helmRest = hp.clone().applyMatrix4(boat.matrix); root.updateMatrixWorld(true);   /* ülve a fedélzet 45 cm-rel lejjebb kerül – így ülve is a kerék fölött látsz */
     VRR.wake = rwWake(env, VRR.cls.id === "zephyr" ? 1.25 : .45);
     /* 2026-11-15 (tulajdonos: „a felcsapódó vízpermet nagyon csúnya”): GPU-s cseppfürt- és párarészecskék a tó terében (05x: rwSprayBuild/rwSprayTick) */
     VRR.spray = rwSprayBuild(env);
@@ -2344,6 +2344,7 @@
     try { if (C.kek) kekSetupHook(C); else if (KEK.on) kekEnd(); } catch (e) { console.warn("kékszalag", e); }   /* 2026-11-15 (05zc) */
     VRR.tut = lvl ? null : { step: 0 }; VRR.riv.forEach((r) => { r.g.visible = !!lvl; if (!lvl) { r.x += 9000; r.z += 9000; r.lbl.visible = false; } });
     if (!lvl) Object.assign(VRR, { t: 0, st: "race", started: true, msg: "OKTATÓ FUTAM – lépésről lépésre megtanulod a hajót. Nincs ellenfél, nincs időnyomás.", msgT: 6 });
+    try { vrCalStart("start"); } catch (e) { console.warn("bemérés", e); }   /* 2026-11-16 (tulajdonos): a játék csak a bemérés és az ellenőrzés után indul (05zd) */
     W.panelDirty = 1;
   }
   /* --------------------------------------------------------------- kormány */
@@ -2588,6 +2589,7 @@
     const S = VRR, C = S.C;
     /* 2026-11-14 22:48: drón-visszajátszás és SZÜNET – ilyenkor a futam nem halad */
     if (S.replay && vrReplayTick(dt)) return;
+    if (S.calR && vrCalTick(dt)) return;   /* 2026-11-16 (tulajdonos): bemérés a rajt előtt – amíg nem állsz / ülsz jó helyen, a játék nem indul (05zd) */
     if (vrPausedTick(dt)) return;
     if (S.ensign) { const pa = S.ensign.geometry.attributes.position, b0 = S.ensign.userData.base, t = W.t; for (let i = 0; i < pa.count; i++) { const x = b0[i * 3]; pa.array[i * 3 + 2] = Math.sin(x * 9 - t * 7) * .05 * x / .6; } pa.needsUpdate = true; }
     /* KÉZI FOGÁS – MARKOLÁS (nem csippentés): ha a tenyered a perem mellett van és ökölbe zárod, a kezed „ráfog” a kerékre
@@ -2824,9 +2826,7 @@
     try { rwSprayTick(dt); } catch (e) { if (W.debug) console.warn('permet', e); }
     /* a kormányos helye „lehorgonyozva”: a dőlés/bólintás/hullámzás a kormány körül forgatja a hajót, nem a láb alól húzza ki –
        így a kerék mindig a kéz ügyében marad, a fedélzet nem csúszik el (kényelmesebb, kevésbé émelyítő) */
-    if (S.helmL) { const bd = S.boat.userData.body; bd.updateMatrix(); S.boat.updateMatrix(); const cur = S.helmL.clone().applyMatrix4(bd.matrix).applyMatrix4(S.boat.matrix);
-      W.root.position.set(S.rootX - (cur.x - S.helmRest.x), S.baseY - (S.seated && T.inVR ? .45 : 0) - (cur.y - S.helmRest.y), S.rootZ - (cur.z - S.helmRest.z)); }
-    vrClassTick(dt); if (S.cal) vrCalApply(); else if (W.root && !W.root.quaternion.equals(_qI)) W.root.quaternion.identity();   /* 19:52 (tulajdonos): a hajó dőlése NE forgassa a nézőpontot – visszavonva */
+    vrRootPlace(dt);   /* (05zd) a kormányos helye lehorgonyozva + a kis hajó ülése + a bemérés; 19:52 (tulajdonos): a hajó dőlése NE forgassa a nézőpontot – visszavonva */
     /* legénység: a szél felőli oldalra ül (forduláskor átmászik) */
     S.crewSide = S.crewSide == null ? -side : S.crewSide + (-side - S.crewSide) * Math.min(1, dt * .9);
     S.ck.crew.forEach((c, i) => { const s = S.ck.sh(c.u); c.g.position.set(S.crewSide * (s.hb - .55), s.y - .02, s.z); const ry = S.crewSide > 0 ? Math.PI / 2 : -Math.PI / 2; c.g.rotation.y = ry; c.g.rotation.z = Math.sin(W.t * 2 + i) * .02;
@@ -3317,7 +3317,8 @@
     CK2.tiller.til.visible = CK2.tiller.ext.visible = S.tiller; if (S.helpL) S.helpL.visible = false; S.everGrab = true;
     S.msg = S.tiller ? "Botkormány: fogd meg a mellkasod előtt – eltolod: jobbra, a válladhoz húzod: balra." : "Kormánykerék: fogd meg a peremét, és fordítsd – negyed fordulat (90°) a végállás."; S.msgT = 7; W.panelDirty = 1; }
   function vrSigns() { VRR.noSigns = !VRR.noSigns; try { localStorage.setItem("zephyr-verseny-tablak", VRR.noSigns ? "0" : "1"); } catch (e) {} W.panelDirty = 1; }
-  function vrSeat() { VRR.seated = !VRR.seated; try { localStorage.setItem("zephyr-vr-ules", VRR.seated ? "1" : "0"); } catch (e) {} W.root.position.y = VRR.baseY - (VRR.seated && T.inVR ? .45 : 0); W.panelDirty = 1; }
+  function vrSeat() { const S = VRR; S.seatLock = !S.seated; S.seated = S.seatLock; try { localStorage.setItem("zephyr-vr-ules", S.seated ? "1" : "0"); } catch (e) {}   /* 2026-11-16: a megadott helyzetet a bemérés elfogadja, és újra bemér (05zd) */
+    if (calActive()) vrCalStart("seat"); else { calPosture(); try { vrRootPlace(0); } catch (e) {} } W.panelDirty = 1; }
   function vrWrist() {
     const S = VRR;
     return [["🪑", S.seated ? "Álló mód" : "Ülő mód", () => vrSeat()], ["☸", S.tiller ? "Kormánykerékre váltok" : "Botkormányra váltok", () => vrSteerMode()], ["🪧", S.noSigns ? "Táblák mutatása" : "Táblák elrejtése", vrSigns], ["↻", "Futam újra", () => vrSetup(S.lvl)], ["▸", S.fin && S.st === "race" ? "Tovább (nem várok)" : "Kapitányi tájékoztató", () => (S.fin && S.st === "race" ? vrSkip() : vrBriefOpen())], ["⛵", "Főmenü", vrToHarbor], ["⏸", S.paused ? "Folytatás" : "Szünet", () => vrPause(!S.paused)], ["◎", "Kalibrálás", vrCalibrate], ["⎈", "Kormány egyenesbe", () => { S.wa = 0; }],
@@ -7246,7 +7247,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     /* a néző helye: a kormányos ülése (VR), vagy kicsit mögötte és fölötte (2D – így a hajó is látszik) */
     pb.updateMatrix(); const bdy = pb.userData.body; if (bdy) { _sv.copy(pb.userData.seat).multiply(bdy.scale).add(bdy.position).applyMatrix4(pb.matrix); } else _sv.copy(pb.userData.seat).applyMatrix4(pb.matrix);   /* 19:52 (tulajdonos): a nézőpont NEM követi a dőlést (a 18:39-es változás visszavonva) */
     const ph = !T.inVR && (document.documentElement.dataset.device === "phone" || innerHeight > innerWidth * 1.15);
-    if (T.inVR) { const lift = S.seated ? 0 : .5; W.root.position.set(-_sv.x, lift - _sv.y - .05, -_sv.z); }
+    if (T.inVR) { const lift = vrSeatLift(); W.root.position.set(-_sv.x, lift - _sv.y - .05, -_sv.z); }   /* 2026-11-16: az ülés magassága a bemérésből (05zd) – bemérés nélkül a régi álló 0,5 / ülő 0 m */
     else if (W.dbgEye) W.root.position.set(-_sv.x, .5 - _sv.y - .05 - 1.65, -_sv.z);   /* teszt: a VR-ben álló kormányos szemmagassága */
     else { const back = ph ? 9.5 : 5.6, up = ph ? 3.4 : 1.75; W.root.position.set(-_sv.x, -up - _sv.y, -_sv.z - back); }   /* 2D-ben a kamera a világ y = 0 pontjában van */
     if (S.msgL) S.msgL.position.set(_sv.x, _sv.y + 1.9, _sv.z - 3.2);
@@ -8924,6 +8925,7 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
 
   /* ---------------------------------------------------------------- KALIBRÁLÁS: a kormányos helye a fejed alá, a hajó orra a nézési irányodba */
   function vrCalibrate() { const S = VRR; if (!S.C) return;
+    if (calActive()) { vrCalStart("button"); return; }   /* 2026-11-16: VR-ben bemérés + ellenőrzés, a játék addig áll (05zd) */
     const h = new THREE.Vector3(); try { T.camObj().getWorldPosition(h); } catch (e) { return; } const yaw = T.camYaw ? T.camYaw() : 0;
     /* a fej a rig terében (a W.root a rig gyermeke – a rig maga az origóban áll) */
     S.cal = { yaw, x: T.inVR ? h.x : 0, z: T.inVR ? h.z : 0 };
@@ -12932,6 +12934,148 @@ const FAM = { Character: FAMM.Character, CAST: FAMM.CAST, WIND: WINDM.WIND, lock
     const segs = []; for (let i = 0; i + 1 < pts.length; i++) segs.push([pts[i], pts[i + 1], Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1])]); const tot = segs.reduce((a, s2) => a + s2[2], 0); let u = ((t * .04) % 1) * tot, si = 0; while (si < segs.length - 1 && u > segs[si][2]) { u -= segs[si][2]; si++; }
     const s0 = segs[si], f = u / s0[2], q = Q(s0[0][0] + (s0[1][0] - s0[0][0]) * f, s0[0][1] + (s0[1][1] - s0[0][1]) * f); g.fillStyle = "#ffffff"; g.beginPath(); g.arc(q[0], q[1], 6, 0, TAU); g.fill(); g.strokeStyle = "#c8102e"; g.lineWidth = 3; g.stroke();
   }
+  /* =================================================================== 2/ZD. BALATON SAILING VR – BEMÉRÉS (KALIBRÁLÁS) MINDEN RAJT ÉS MINDEN ÚJ HELYSZÍN ELŐTT
+     2026-11-16 02:22 (tulajdonos): „A kalibráció mindenhol rossz, soha nem ott állok, ahol kellene. A verseny kezdésekor a rendszer kalibrálja be a játékost,
+     majd ellenőrizze, hogy biztos jó helyen áll vagy ül, és úgy indítsa csak el a játékot; illetve minden egyes új helyszínnél végezze ezt el.”
+     A HIBA OKAI:
+       (1) a futam a kormányos helyét a VR-tér origójába tette, a fejed valódi helyét nem nézte – a Quest a tér origóját a munkamenet indulásakor /
+           újraközpontosításkor rögzíti, ezért ha azóta odébb álltál vagy ültél, a kormánytól fél-egy méterre kerültél;
+       (2) a ◎ KALIBRÁL gomb eredménye a világ akkori helyzetéhez kötve MEGMARADT – a következő futam / helyszín új elforgatása után már rossz irányba
+           és rossz helyre tolta a hajót (ezért volt „mindenhol rossz”);
+       (3) az álló / ülő mód kézi kapcsoló volt: rossz beállítással guggolva vagy a fedélzet fölött lebegve láttad a hajót.
+     MOST minden futam elején – minden pálya és helyszín, a Kékszalag minden szakasza, az oktató futam, az újrakezdés és a VR-be lépés – a játék ÁLL, és:
+       1) megvárja, hogy nyugodtan állj vagy ülj (a fejed 1,2 mp-ig nem mozdul; a tábla addig a nézésed elé igazodik),
+       2) BEMÉR: a kormányos helyét pontosan a fejed alá, a hajó orrát a nézési irányodba teszi; a szemmagasságodból eldönti, hogy állsz vagy ülsz,
+          és ehhez igazítja a fedélzet magasságát (ülve a fedélzet lejjebb kerül, így ülve is a kerék fölött látsz – mint eddig, de a te magasságodhoz mérve),
+       3) ELLENŐRIZ: 1,5 mp-ig figyeli, hogy ott maradtál-e (20 cm-en, 20°-on, 14 cm magasságon belül) – ha elmozdultál, felálltál vagy leültél, újra bemér,
+       4) csak ezután indul a játék (a rajt visszaszámlálása). Online futamban az idő nem állhat meg (közös rajt) – ott a bemérés a visszaszámlálás alatt fut.
+     A ◎ KALIBRÁL gomb és a tenyérmenü 🪑 (ülő / álló) gombja ugyanezt indítja futam közben is (a játék addig áll). A 🪑 gombbal megadott helyzetet
+     (ülök / állok) a bemérés a munkamenet végéig elfogadja – ha a szemmagasságod alapján rosszul ismerném fel. 2D-ben (képernyőn) nincs bemérés. */
+  const CAL_STILL = 1.2, CAL_VERIFY = 1.5, CAL_OK = 1.1;   /* nyugalom → bemérés, ellenőrzés hossza, a „Rendben” kiírás ideje (mp) */
+  const CAL_V = .12, CAL_W = .5;                          /* „nyugodt” a fej: 12 cm/mp alatt mozdul, 0,5 rad/mp (≈29°/mp) alatt fordul */
+  const CAL_TOL = .2, CAL_TOLA = .35, CAL_TOLY = .14;      /* az ellenőrzés tűrése: 20 cm oldalt, 20° irány, 14 cm magasság */
+  const CAL_SIT = 1.36;                                   /* ennél alacsonyabb szemmagasság: ülsz */
+  const CAL_EYE_ST = 1.65;                                /* nagy hajón ülve a szem ilyen magasra kerül a fedélzet fölött (mint állva) */
+  /* a fej helyzete a világban (VR-ben a szemüvegből; teszteléshez W._calSim adja) */
+  function calHead() {
+    const Q = W._calSim; if (Q) return { x: Q.x, y: Q.y, z: Q.z, yaw: Q.yaw, ok: Q.ok !== false };
+    const p = T.headPos ? T.headPos() : null; if (!p) return null; let yaw = 0; try { yaw = T.camYaw(); } catch (e) {}
+    return { x: p.x, y: p.y, z: p.z, yaw, ok: p.y > .3 };
+  }
+  function calActive() { return !!(T.inVR || W._calSim); }
+  const calM = (v) => v.toFixed(2).replace(".", ",");
+  /* a fedélzet süllyesztése ülve (nagy hajó) – a bemérésből, vagy a régi alapérték (45 cm), amíg nincs bemérés */
+  function vrSeatDrop() { const S = VRR; if (!T.inVR) return 0; return S.calDrop != null ? S.calDrop : (S.seated ? .45 : 0); }
+  /* a kis hajó ülése a valódi padló fölött (VR) – a bemérésből a szemmagasságodhoz mérve, különben a régi álló / ülő érték */
+  function vrSeatLift() { const S = VRR; return S.calLift != null ? S.calLift : (S.seated ? 0 : .5); }
+  function calPosture() { const S = VRR, e = S.calEye; if (e == null) { S.calDrop = null; S.calLift = null; return; }
+    S.calDrop = S.seated ? clamp(CAL_EYE_ST - e, .3, .7) : 0;   /* állva: a fedélzet = a valódi padló; ülve: a szemed a fedélzet fölött ~1,65 m-re (a kerék fölött) */
+    S.calLift = clamp(e - 1.15, -.15, .75); }                    /* kis hajó: a szemed az ülés fölött ~1,2 m-rel – mint eddig (állva 0,5 m, ülve 0 m), de a te magasságodhoz mérve */
+  /* a világ gyökere: a kormányos helye „lehorgonyozva” (a dőlés / bólintás a kormány körül forgatja a hajót) + a kis hajó ülése + a bemérés */
+  function vrRootPlace(dt) { const S = VRR;
+    if (S.helmL) { const bd = S.boat.userData.body; bd.updateMatrix(); S.boat.updateMatrix(); const cur = S.helmL.clone().applyMatrix4(bd.matrix).applyMatrix4(S.boat.matrix);
+      W.root.position.set(S.rootX - (cur.x - S.helmRest.x), S.baseY - vrSeatDrop() - (cur.y - S.helmRest.y), S.rootZ - (cur.z - S.helmRest.z)); }
+    vrClassTick(dt); if (S.cal) vrCalApply(); else if (W.root && !W.root.quaternion.equals(_qI)) W.root.quaternion.identity(); }
+
+  /* ---------------------------------------------------------------- indítás / befejezés */
+  function vrCalStart(why) { const S = VRR; if (!S.C || S.replay) return;
+    if (!calActive()) { S.calR = null; return; }
+    S.cal = null; S.calDrop = null; S.calLift = null;   /* a korábbi bemérés eldobva (egy másik futam / helyszín világához tartozott) */
+    S.calR = { ph: "still", why: why || "start", hold: !S.net, t: 0, st: 0, vt: 0, okT: 0, fT: 0, n: 0, cap: null, last: null, v: null, w: null, dev: null, info: "", infoT: 0 };
+    W.panelDirty = 1; }   /* (a tábla az első képkockán nyílik – addigra a nézési irány is beáll) */
+  function vrCalEnd(ok) { const S = VRR, R = S.calR; S.calR = null; vrCalBoard(false);
+    if (ok && R) { try { localStorage.setItem("zephyr-vr-kalibral", JSON.stringify({ t: Date.now(), ul: S.seated ? 1 : 0, szem: S.calEye })); } catch (e) {}
+      S.msg = `◎ Bemérve – ${S.seated ? "ülő" : "álló"} helyzet: a kormányos helye a fejed alatt, a hajó orra előtted.${R.why === "start" ? (S.lvl ? " Indul a rajt!" : " Indulhatsz!") : " Folytatjuk!"}`; S.msgT = 5; }
+    W.panelDirty = 1; }
+  /* bemérés: a mostani fejhelyzet lesz a kormányos helye */
+  function calCapture(h) { const S = VRR, R = S.calR;
+    S.seated = S.seatLock != null ? S.seatLock : h.y < CAL_SIT; try { localStorage.setItem("zephyr-vr-ules", S.seated ? "1" : "0"); } catch (e) {}
+    S.calEye = h.y; calPosture(); S.cal = { yaw: h.yaw, x: h.x, z: h.z };
+    R.cap = { x: h.x, y: h.y, z: h.z, yaw: h.yaw }; R.ph = "verify"; R.vt = 0; R.info = ""; R.dev = { dx: 0, da: 0, dy: 0 };
+    try { vrRootPlace(0); } catch (e) {} if (S.calB && T.inVR) { try { S.calB.place(); } catch (e) {} }   /* a tábla pontosan előre, a hajó orra fölé */
+    try { uiSnd("press"); } catch (e) {} try { hapt(.3, 30); } catch (e) {} W.panelDirty = 1; }
+
+  /* ---------------------------------------------------------------- képkockánként (a vrTick elején) – true: a játék áll */
+  function vrCalTick(dt) { const S = VRR, R = S.calR; if (!R) return false;
+    if (!calActive()) { vrCalEnd(false); return false; }
+    if (!S.calB) vrCalBoard(true);
+    R.t += dt; if (R.infoT > 0) { R.infoT -= dt; if (R.infoT <= 0) R.info = ""; }
+    const h = calHead();
+    if (!h || !h.ok) { R.st = 0; R.last = null; R.info = "Várom a szemüveg helyzetét…"; R.infoT = .5; }
+    else {
+      const L = R.last, k = Math.min(1, dt * 6);
+      if (L && dt > 1e-4) { const vv = Math.hypot(h.x - L.x, h.y - L.y, h.z - L.z) / dt, ww = Math.abs(wrapA(h.yaw - L.yaw)) / dt;
+        R.v = R.v == null ? vv : R.v + (vv - R.v) * k; R.w = R.w == null ? ww : R.w + (ww - R.w) * k; }   /* simítva: a fej természetes remegése ne nullázza a számlálót */
+      R.last = { x: h.x, y: h.y, z: h.z, yaw: h.yaw };
+      const still = R.v != null && R.v < CAL_V && R.w < CAL_W;
+      if (R.ph === "still") {
+        R.st = still ? R.st + dt : Math.max(0, R.st - dt * 2);
+        /* a tábla a nézésed elé igazodik, amíg be nem mértünk – így előre nézve olvasod, és az lesz a hajó orra */
+        if (S.calB && T.inVR) { const by = S.calB.m.rotation.y; R.fT = Math.abs(wrapA(h.yaw - by)) > .45 ? R.fT + dt : 0; if (R.fT > .4) { R.fT = 0; try { S.calB.place(); } catch (e) {} } }
+        if (R.st >= CAL_STILL) calCapture(h);
+      } else if (R.ph === "verify") {
+        const c = R.cap, dx = Math.hypot(h.x - c.x, h.z - c.z), da = Math.abs(wrapA(h.yaw - c.yaw)), dy = h.y - c.y; R.dev = { dx, da, dy, ox: h.x - c.x, oz: h.z - c.z };
+        if (dx > CAL_TOL || da > CAL_TOLA || Math.abs(dy) > CAL_TOLY) {
+          R.info = Math.abs(dy) > CAL_TOLY ? (dy < 0 ? "Leültél? – újra bemérlek…" : "Felálltál? – újra bemérlek…") : dx > CAL_TOL ? "Elléptél a helyedről – újra bemérlek…" : "Elfordultál – nézz előre, újra bemérlek…";
+          R.infoT = 3; R.ph = "still"; R.st = 0; R.vt = 0; R.n++; R.cap = null; R.dev = null; S.cal = null; S.calDrop = null; S.calLift = null; try { uiSnd("warn"); } catch (e) {}
+        } else { R.vt += dt; if (R.vt >= CAL_VERIFY) { R.ph = "ok"; R.okT = 0; try { uiSnd("success"); } catch (e) {} try { hapt(.5, 60); } catch (e) {} } }
+      } else if (R.ph === "ok") { R.okT += dt; if (R.okT >= CAL_OK) { vrCalEnd(true); return false; } }
+    }
+    if (R.hold) { vrBtnTick(dt); uiTickAll(dt); vrRootPlace(0); return true; }
+    return false;
+  }
+
+  /* ---------------------------------------------------------------- a bemérés táblája (VR-ben a nézésed előtt) */
+  function vrCalBoard(on) { const S = VRR;
+    if (!on) { if (S.calB) { try { S.calB.destroy(); } catch (e) {} S.calB = null; } return; }
+    if (S.calB) return;
+    S.calB = uiBoard({ w: 1400, h: 840, mw: 1.3, dist: 1.35, y: -.06, fps: 8, bar: 120, draw: (B, g) => calDraw(B, g) }); S.calB.show(true); }
+  function calDraw(B, g) {
+    const S = VRR, R = S.calR || { ph: "ok", why: "start", st: 0, vt: 0 }, W0 = B.o.w, small = S.pb && S.cls && S.cls.half < 4;
+    const start = R.why === "start", where = S.C ? (S.C.kek ? S.C.name : S.lvl ? `${S.lvl}. futam` : "oktató futam") + (S.venue && S.venue.n ? " · " + S.venue.n : "") : "";
+    uiFrame(B, g, start ? "◎ BEMÉRÉS A RAJT ELŐTT" : R.why === "seat" ? "◎ ÜLŐ / ÁLLÓ HELYZET BEMÉRÉSE" : "◎ BEMÉRÉS (KALIBRÁLÁS)",
+      start ? `${where} – a játék akkor indul, ha jó helyen vagy` : R.hold ? "a játék addig áll, amíg be nem mértelek" : "online futam: a visszaszámlálás közben mérlek be");
+    const pos = R.cap ? (S.seated ? "ÜLSZ" : "ÁLLSZ") : "", lock = S.seatLock != null ? " (a 🪑 gombbal megadva)" : "";
+    const steps = [
+      { t: "Állj vagy ülj oda, ahol játszani fogsz, és nézz előre", s: "arra, amerre a hajó orrát szeretnéd látni – maradj nyugodtan egy pillanatig", p: R.ph === "still" ? clamp(R.st / CAL_STILL, 0, 1) : 1, on: R.ph === "still" },
+      { t: R.cap ? `Bemérve: ${pos}${lock} – szemmagasság ${calM(R.cap.y)} m` : "Bemérés", s: R.cap ? (S.seated ? (small ? "a kis hajó ülése a magasságodhoz igazítva" : `a fedélzet ${Math.round((S.calDrop || 0) * 100)} cm-rel lejjebb került – így ülve is a kerék fölött látsz`) : (small ? "a kis hajó ülése a magasságodhoz igazítva" : "a fedélzet a valódi padlód magasságában, a kormányos helye a lábad alatt")) : "a kormányos helye a fejed alá, a hajó orra a nézési irányodba kerül", p: R.cap ? 1 : 0, on: false },
+      { t: "Ellenőrzés: ott maradtál?", s: R.ph === "verify" ? "maradj így – figyelem, hogy a helyeden maradsz-e…" : R.ph === "ok" ? "igen – a helyeden maradtál" : "20 cm-en és 20°-on belül kell maradnod", p: R.ph === "verify" ? clamp(R.vt / CAL_VERIFY, 0, 1) : R.ph === "ok" ? 1 : 0, on: R.ph === "verify" }
+    ];
+    const x0 = 40, cw = W0 - 80 - 330, ch = 150; let y = 162;
+    steps.forEach((st, i) => { const done = st.p >= 1 && !st.on;
+      uiCard(g, x0, y, cw, ch, { bg: st.on ? "rgba(14,58,96,.92)" : "rgba(5,24,48,.86)" });
+      /* sorszám-kör: kész = zöld pipa, folyamatban = arany */
+      const cx = x0 + 62, cy = y + ch / 2; g.beginPath(); g.arc(cx, cy, 38, 0, TAU); g.fillStyle = done ? "#2aa866" : st.on ? "#d99a26" : "rgba(255,255,255,.14)"; g.fill();
+      if (done) uiIcon(g, "check", cx, cy, 40, "#ffffff"); else { g.fillStyle = "#fff"; g.font = `900 40px ${UIF}`; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(i + 1), cx, cy + 2); g.textAlign = "left"; g.textBaseline = "alphabetic"; }
+      const tx = x0 + 124, tw = cw - 150; g.fillStyle = "#fff1c4"; uiFit(g, st.t, tw, 38, 800); g.fillText(st.t, tx, y + 54);
+      g.fillStyle = "#d6e8ff"; uiFit(g, st.s, tw, 27, 600); g.fillText(st.s, tx, y + 92);
+      /* folyamatjelző */
+      uiRR(g, tx, y + 110, tw, 16, 8); g.fillStyle = "rgba(255,255,255,.12)"; g.fill(); if (st.p > 0) { uiRR(g, tx, y + 110, Math.max(16, tw * st.p), 16, 8); g.fillStyle = done ? "#2aa866" : "#f2c14e"; g.fill(); }
+      y += ch + 16; });
+    /* jobbra: felülnézeti „radar” – a kör a megengedett hely (20 cm), a pont a fejed; felfelé = a hajó orra */
+    { const rx = W0 - 40 - 300, ry = 162, rw = 300, rh = ch * 3 + 32; uiCard(g, rx, ry, rw, rh);
+      const cx = rx + rw / 2, cy = ry + 232, rr = 100; g.fillStyle = "#f2c14e"; g.font = `800 26px ${UIF}`; g.textAlign = "center"; g.fillText("a helyed felülről", cx, ry + 46);
+      g.beginPath(); g.arc(cx, cy, rr, 0, TAU); g.fillStyle = R.ph === "ok" ? "rgba(42,168,102,.25)" : "rgba(255,255,255,.07)"; g.fill(); g.lineWidth = 4; g.strokeStyle = R.cap ? "#2aa866" : "rgba(255,255,255,.35)"; g.stroke();
+      /* a hajó orra felé mutató nyíl */
+      g.fillStyle = "rgba(242,193,78,.85)"; g.beginPath(); g.moveTo(cx, cy - rr - 26); g.lineTo(cx - 14, cy - rr - 4); g.lineTo(cx + 14, cy - rr - 4); g.closePath(); g.fill();
+      g.fillStyle = "#d6e8ff"; g.font = `700 20px ${UIF}`; g.fillText("a hajó orra", cx, cy - rr - 34);
+      /* a fejed: az eltérés a bemért helyhez képest, a hajó irányában (1 kör = 20 cm) */
+      let px = cx, py = cy; const D = R.dev; if (R.cap && D && D.ox != null) { const c = Math.cos(R.cap.yaw), s = Math.sin(R.cap.yaw), lx = D.ox * c - D.oz * s, lz = D.ox * s + D.oz * c, k = rr / CAL_TOL;
+        px = cx + clamp(lx * k, -rr * 1.25, rr * 1.25); py = cy + clamp(lz * k, -rr * 1.25, rr * 1.25); }
+      const okNow = R.cap && (!D || (D.dx <= CAL_TOL && D.da <= CAL_TOLA)); g.beginPath(); g.arc(px, py, 22, 0, TAU); g.fillStyle = !R.cap ? "rgba(255,255,255,.5)" : okNow ? "#7fe0a0" : "#ff7a6b"; g.fill();
+      /* a nézési irányod a ponton */
+      if (R.cap && D && D.da != null) { const a = R.last ? wrapA(R.last.yaw - R.cap.yaw) : 0; g.strokeStyle = "#fff"; g.lineWidth = 4; g.beginPath(); g.moveTo(px, py); g.lineTo(px - Math.sin(a) * 42, py - Math.cos(a) * 42); g.stroke(); }
+      g.fillStyle = "#fff"; g.font = `700 22px ${UIF}`; g.fillText(R.cap ? (okNow ? "a kormányos helyén vagy" : "lépj vissza a körbe") : "még nincs bemérve", cx, cy + rr + 46);
+      if (R.cap && D && D.dx != null) { g.fillStyle = "#d6e8ff"; g.font = `600 20px ${UIF}`; g.fillText(`eltérés ${Math.round(D.dx * 100)} cm · ${Math.round(D.da * R2D)}°`, cx, cy + rr + 76); }
+      g.textAlign = "left"; }
+    /* alul: az eredmény / figyelmeztetés / tipp */
+    const by = 162 + 3 * (ch + 16) + 8;
+    if (R.ph === "ok") { uiRR(g, 40, by, W0 - 80, 96, 22); g.fillStyle = "rgba(42,168,102,.92)"; g.fill(); g.fillStyle = "#fff"; g.textAlign = "center";
+      const t = `✓ RENDBEN – jó helyen ${S.seated ? "ülsz" : "állsz"}.${start ? (S.lvl ? " Indul a rajt!" : " Indulhatsz!") : " Folytatjuk!"}`; uiFit(g, t, W0 - 140, 46, 900); g.fillText(t, W0 / 2, by + 63); g.textAlign = "left"; }
+    else if (R.info) { uiRR(g, 40, by, W0 - 80, 96, 22); g.fillStyle = "rgba(201,138,0,.9)"; g.fill(); g.fillStyle = "#fff"; g.textAlign = "center"; uiFit(g, R.info, W0 - 140, 40, 800); g.fillText(R.info, W0 / 2, by + 60); g.textAlign = "left"; }
+    else { g.fillStyle = "#d6e8ff"; g.textAlign = "center"; const t = "Ha ülve játszol, de állónak mértelek (vagy fordítva): tenyérmenü → 🪑 – onnan megadhatod."; uiFit(g, t, W0 - 120, 26, 600); g.fillText(t, W0 / 2, by + 56); g.textAlign = "left"; }
+  }
+  W._calApi = { start: (w) => vrCalStart(w), end: (ok) => vrCalEnd(ok), get R() { return VRR.calR; } };   /* (tesztekhez) */
 
   /* =================================================================== 3. A HÁZ MAKETTJE – varázslatos helyszínen, asztaltól életnagyságig (2026. nov. 6., 2. változat)
      • Helyszín (2026. nov. 6-tól): regatta-bója a Balaton közepén, körülötte életnagyságú verseny és jelenetek (06d); a part ~260 m-re (06c) – valódi napállás szerinti égbolt, a túlpart nevezetességeivel, élővilággal.
