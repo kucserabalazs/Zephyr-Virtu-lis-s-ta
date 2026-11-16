@@ -141,7 +141,7 @@
     /* lengő háromszögletű zászló (a bója színében, sötét szegéllyel) */
     const fg = new THREE.BufferGeometry(); { const NX = 8, pos = [], uv = [], idx = []; for (let i = 0; i <= NX; i++) { const u = i / NX, hh = .42 * (1 - u * .92); pos.push(u * .78, hh / 2, 0, u * .78, -hh / 2, 0); uv.push(u, 1, u, 0); } for (let i = 0; i < NX; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
       fg.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); fg.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); fg.setIndex(idx); fg.computeVertexNormals(); }
-    const fT = canvasTex(64, 32, (gg, w, h) => { gg.fillStyle = fcol; gg.fillRect(0, 0, w, h); gg.fillStyle = "#0b2f5e"; gg.fillRect(0, 0, w, 3); gg.fillRect(0, h - 3, w, 3); gg.fillRect(0, 0, 5, h); });
+    const fT = TEXC["vr-flag|" + fcol] || (TEXC["vr-flag|" + fcol] = canvasTex(64, 32, (gg, w, h) => { gg.fillStyle = fcol; gg.fillRect(0, 0, w, h); gg.fillStyle = "#0b2f5e"; gg.fillRect(0, 0, w, 3); gg.fillRect(0, h - 3, w, 3); gg.fillRect(0, 0, 5, h); }));   /* (gyorsítótárból – futamonként ne keletkezzen új textúra) */
     const flag = mesh(fg, std({ map: fT, roughness: .7, side: THREE.DoubleSide }), g); flag.position.set(.03, H * 1.05 + 1.36, 0); flag.userData.noBake = true; flag.frustumCulled = false;
     const lamp = mesh(new THREE.SphereGeometry(.07, 12, 8), basic({ color: "#fff3b0" }), g); lamp.position.y = H * 1.05 + 1.64; lamp.userData.noBake = true;
     /* habgallér + sodorvonal a vízen (a csoporttal együtt ring; a szél alá fordítjuk) */

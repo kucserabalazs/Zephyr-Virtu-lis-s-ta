@@ -166,7 +166,7 @@
     VRR.forceCls = plan[0] === 201 ? "zephyr" : null;   /* a Kékszalagon nagyhajóval – a választott hajó (a mentett beállítás) a többi futamra megmarad */
     return plan; }
   function wzStart() { const Z = HB.wz; wzApply();
-    if (Z.mode === "online") { try { netStart(); } catch (e) {} if (NET.on && netActive().length) { NET.queue = { t: Date.now(), ann: 0 }; try { netPost({ k: "q", on: 1, cls: Z.cls }); } catch (e) {} hbBoard("w5"); return; } }
+    if (Z.mode === "online" && !KEK.on) {   /* (a Kékszalag egyszemélyes – a 200 hajós gépi mezőnnyel) */ try { netStart(); } catch (e) {} if (NET.on && netActive().length) { NET.queue = { t: Date.now(), ann: 0 }; try { netPost({ k: "q", on: 1, cls: Z.cls }); } catch (e) {} hbBoard("w5"); return; } }
     uiCloseAll(); setTimeout(() => { W._raceGo = true; W.open("race"); }, 30); }
   function wzStartTut() { HB.wz = HB.wz || wzLoad(); wzSave(); VRR.mixFleet = false; VRR.nightForce = false; VRR.todMix = false; HB.sel = HB.wz.cls; uiCloseAll(); VRR.lvl = 0; setTimeout(() => { W._raceGo = true; W.open("race"); }, 30); }
   /* ---------------------------------------------------------------- futam közben: „Kapitányi tájékoztató” (a pálya útvonala) */

@@ -618,14 +618,14 @@
     else if (st === 5) { if (T2.sd0 == null || twa < 110) T2.sd0 = sd; else if (sd !== T2.sd0 && twa > 120) next(); if (S.fin) T2.step = 6; }
     if (T2.step < VR_TUT.length && !S.fin && S.msgT < 1.5 && !/^⚠/.test(S.msg || "")) { S.msg = VR_TUT[T2.step][0] + " – " + VR_TUT[T2.step][1]; S.msgT = 1.6; if (T2.shown !== T2.step) { T2.shown = T2.step; W.panelDirty = 1; } } }
   function vrSetup(lvl) {
-    try { kekSkyReset(); } catch (e) {}   /* 2026-11-15: a Kékszalag naplementés ege / fényei előbb visszaállnak (05zc) – minden futam tiszta nappali állapotból indul */
+    try { kekSkyReset(); kekPreSetup(lvl); } catch (e) {}   /* 2026-11-15: a Kékszalag naplementés ege / fényei előbb visszaállnak (05zc) – minden futam tiszta nappali állapotból indul */
     /* 22:48: új futamnál a szünet, a versenymenü és a visszajátszás lezárul; a kalibrálás megmarad */
     try { if (VRR.replay) vrReplay(false); VRR.paused = false; vrPauseBoard(false); if (VRR.raceMenu) { VRR.raceMenu.destroy(); VRR.raceMenu = null; } VRR.menuPaused = false; VRR.rec = null; } catch (e) {}
     if (!VRR.diff) { try { VRR.diff = localStorage.getItem("zephyr-vr-nehezseg") || "halado"; } catch (e) { VRR.diff = "halado"; } } if (!VR_DIFF[VRR.diff]) VRR.diff = "halado";
     if (!VRR.champ) VRR.champ = vrChampLoad();
     const C = VRR.C = vrCourse(lvl); VRR.lvl = lvl; if (lvl) C.tws *= vrDiff().wind;
     VRR.wf = C.wf; VRR.tws = C.tws;
-    while (VRR.markG.children.length) VRR.markG.remove(VRR.markG.children[0]);
+    while (VRR.markG.children.length) { const o = VRR.markG.children[0]; VRR.markG.remove(o); o.traverse((q) => { if (q.geometry) q.geometry.dispose(); }); }   /* 2026-11-16: a régi bóják hálói felszabadulnak (addig minden futam/újrakezdés után a videómemóriában maradtak) */
     /* 2026-11-15: valódi felfújható versenybóják (05z vrRaceBuoy) – szám körben háromszor, reklámcsík, lengő zászló, habgallér; a hullámokon ringanak */
     /* 2026-11-15: kapu = két bója („KAPU” felirattal); jobb kéz felőli jel = zöld zászló, zöld gyűrűs szám (05zb) */
     VRR.marks = C.marks.map((m, i) => { const last = i === C.marks.length - 1 && C.marks.length > 2;
@@ -1268,7 +1268,12 @@
     if (S.st === "pre") { const q = vrRivalPreTarget(r); tx = q.x; tz = q.z; }
     else if (!fin) { const m = S.marks[r.next];
       if (m.gate) { const G = m.gate, sp = ((r.i || 0) % 3 - 1) * G.w * .22; tx = m.x + G.dir[0] * 22 + (G.b.x - G.a.x) / G.w * sp; tz = m.z + G.dir[1] * 22 + (G.b.z - G.a.z) / G.w * sp; }   /* kapu: a két bója között át, kicsit túl */
-      else { const O = vrMarkO(r.next), off = 13 + (r.wide || 0), k = m.sd === -1 ? -1 : 1; tx = m.x + O[0] * off + O[1] * 7 * k; tz = m.z + O[1] * off - O[0] * 7 * k; } }   /* a kerülési félegyenesen, kicsit túl rajta – így biztosan átlépi, bal kéz felől hagyva a bóját */
+      else { const O = vrMarkO(r.next), off = 13 + (r.wide || 0), k = m.sd === -1 ? -1 : 1; tx = m.x + O[0] * off + O[1] * 7 * k; tz = m.z + O[1] * off - O[0] * 7 * k;   /* a kerülési félegyenesen, kicsit túl rajta – így biztosan átlépi, bal kéz felől hagyva a bóját */
+        /* 2026-11-16: ha a bója közelében a ROSSZ oldalán jár (onnan a fenti pontot elérve sosem lépné át a kerülési félegyenest, és a bója körül köröz),
+           előbb a helyes oldalra, a bója mellé megy – a valóságban is így: a jelet a megfelelő oldaláról közelíti meg */
+        const rx = r.x - m.x, rz = r.z - m.z, sdc = (O[0] * rz - O[1] * rx) * k, dm = Math.hypot(rx, rz); if (r._rsN !== r.next) { r._rsN = r.next; r._rsPre = 0; }
+        if (dm < 70 && sdc < -2) r._rsPre = 1; else if (r._rsPre && sdc > 6) r._rsPre = 0;
+        if (r._rsPre) { const pr = 20 + (r.wide || 0) * .5; tx = m.x + -O[1] * k * pr - O[0] * 4; tz = m.z + O[0] * k * pr - O[1] * 4; } } }
     else { const fm = finMid(); tx = fm.x - C.u[0] * 15; tz = fm.z - C.u[1] * 15; }
     if (S.st === "race" && !r.started) { const ls = lineSide(r), mx = (C.line.a.x + C.line.b.x) / 2 + C.c[0] * (-14 + r.i * 14), mz = (C.line.a.z + C.line.b.z) / 2 + C.c[1] * (-14 + r.i * 14);
       const crossed = r._ls0 != null && r._ls0 <= 0 && ls > 0 && inGate(r); r._ls0 = ls;
@@ -1299,7 +1304,7 @@
        2026-11-15: a nézőhajó-kikerülés UTÁN is érvényes – addig a rendezőhajó mellett a kikerülés és a cél iránya felváltva húzta a hajót, az a szélbe
        állt, megállt, és ott ragadt (a gépi próbán a mezőny harmada nem rajtolt el); ha mégis szélben áll és nincs sebessége, határozottan leesik a csapása felé */
     { const relW = wrapA(want - S.wf); if (Math.abs(relW) < (UPA - 4) * D2R) want = S.wf + (relW === 0 ? r.tack : Math.sign(relW)) * (UPA - 4) * D2R;
-      const relB = wrapA(r.b - S.wf); if (r.v < 1.1 && Math.abs(relB) < (UPA - 2) * D2R) { r.ironT = (r.ironT || 0) + dt; if (r.ironT > 2.5) { const sd = Math.sign(relB) || r.tack || 1; want = S.wf + sd * (UPA + 18) * D2R; } } else r.ironT = 0; }
+      const relB = wrapA(r.b - S.wf); if (r.v < 1.1 && Math.abs(relB) < (UPA - 2) * D2R) { r.ironT = (r.ironT || 0) + dt; if (r.ironT > 2.5) { const sd = Math.sign(relB) || r.tack || 1; want = S.wf + sd * (UPA + 18) * D2R; if (r.tack !== sd) { r.tack = sd; r.lastTack = W.t; } } } else r.ironT = 0; }   /* 2026-11-16: a kiszabaduláskor ezen a csapáson marad – ne forduljon rögtön vissza a szélbe */
     /* egymásba se csússzanak: fizikai szétválasztás */
     S.riv.forEach((o) => { if (o === r || o.out) return; const dx = r.x - o.x, dz = r.z - o.z, d = Math.hypot(dx, dz), D9 = 9 * kz; if (d < D9 && d > .01) { const k = (D9 - d) / 2; r.x += dx / d * k; r.z += dz / d * k; o.x -= dx / d * k; o.z -= dz / d * k; } });
     /* AZONOS FIZIKA (2026. nov. 9., a tulajdonos kérésére: „mindenkire ugyanaz a fizikai törvény vonatkozzon”):
@@ -1325,7 +1330,7 @@
     if (S.st === "race" && !r.fin && !r.remote) { if (r._nk !== r.next) { r._nk = r.next; r._mkT = W.t; }
       if (!r.started && S.t > 120) r.started = true;
       else if (r.started && !fin && W.t - (r._mkT || W.t) > 150) { const m = S.marks[r.next], dm = Math.hypot(m.x - r.x, m.z - r.z); if (dm < (m.gate ? m.gate.w / 2 + 12 : 32)) { r.next++; r.wide = 0; } } }
-    if (S.st === "race" && !r.fin && r.started && !(fin && r.pen > 0)) { if (!fin) { if (vrRoundCheck(r, r.next) === 1) { r.next++; r.wide = 0; } } else if (crossLine(r)) { cbHorn(.4, .12); r.fin = S.t; S.res.push({ n: r.o.name, t: S.t, ai: !!r.aiTook, human: !!r.human }); horn(.4, .06); } }
+    if (S.st === "race" && !r.fin && r.started && !(r.next >= S.marks.length && r.pen > 0)) { if (r.next < S.marks.length) { if (vrRoundCheck(r, r.next) === 1) { r.next++; r.wide = 0; } } else if (crossLine(r)) {   /* (2026-11-16: a „fin” a tick elején számolódik – a biztonsági háló közben léptethet) */ cbHorn(.4, .12); r.fin = S.t; S.res.push({ n: r.o.name, t: S.t, ai: !!r.aiTook, human: !!r.human }); horn(.4, .06); } }
     r.prevSide = lineSide(r);
     /* ütközés a saját hajónkkal: szétlöki a két hajót, mindkettő lelassul, koppanás és kiabálás helyett kürt */
     { const hg = vrHullGap(S, r), d = hg.d, dx = hg.nx, dz = hg.nz, HT = S.cls ? S.cls.hit : 4.6; if (d < HT) { const k = (HT - d) / 2; r.x += dx * k; r.z += dz * k; S.x -= dx * k; S.z -= dz * k;

@@ -69,6 +69,9 @@
   function kekBegin(lvl) { Object.assign(KEK, { on: true, lvl, fun: lvl === 202, si: 0, T: 0, seed: (Date.now() / 1000 | 0) % 100000, res: [], fleet: null, riv: {}, done: false, over: 0, stageEnd: -1, board: null, W: null, t0: performance.now() });
     if (KEK.fl) { KEK.fl.T.fill(0); KEK.fl.off.fill(0); } }   /* (a mezőny összetett ideje is nulláról indul – a hajók újrahasznosulnak) */
   function kekEnd() { KEK.on = false; RW.kekGrad = null; if (KEK.fl) KEK.fl.G.visible = false; try { kekSkyReset(); } catch (e) {} try { VRR.water.userData.mat.uniforms.uKg2.value.w = 0; } catch (e) {} if (typeof NGT !== "undefined") { NGT.tw = 0; try { NGT.sky.material.uniforms.uTw.value = 0; } catch (e) {} } kekBoard(false); }
+  /* a vrSetup ELEJÉN (pl. „Újrakezdés” a szakaszvégi tábla alatt): a már teljesített szakasz helyett a következő jön, a befejezett Kékszalag elölről indul */
+  function kekPreSetup(lvl) { if (!KEK.on || !kekIs(lvl)) return; if (KEK.B) kekBoard(false);
+    if (KEK.stageEnd === KEK.si) { if (KEK.board && KEK.board.last) kekBegin(KEK.lvl); else { KEK.si++; KEK.stageEnd = -1; } } }
   /* a vrSetup végén: üldözéses rajt a 2. szakasztól; a rajtvonal kellékei csak az első szakaszban látszanak */
   function kekSetupHook(C) {
     const S = VRR; if (!KEK.on || !C.kek) return; const si = C.kek.si;
@@ -95,7 +98,7 @@
     const C = S.C, gm = S.marks[S.marks.length - 1], est = (x, z, nx) => { const rem = Math.hypot(gm.x - x, gm.z - z) + (nx === 0 && S.marks.length > 1 ? Math.hypot(S.marks[0].x - x, S.marks[0].z - z) * 0 : 0); return S.t + rem / 4.6; };
     S.riv.forEach((r, i) => { const base = KEK.riv[i] != null ? KEK.riv[i] : 0, rt = r.kekT != null ? r.kekT : est(r.x, r.z, r.next); KEK.riv[i] = base + rt; });
     const F = KEK.fl; if (F) for (let i = 0; i < F.n; i++) { const rt = F.st[i] >= 0 ? F.st[i] : est(F.x[i], F.z[i], F.nx[i]); F.T[i] += rt + F.off[i]; F.off[i] = 0; }
-    const last = si >= KEK_ST.length - 1; KEK.board = { si, tp, last }; S.st = "kek"; S.paused = true;
+    const last = si >= KEK_ST.length - 1 || !!KEK.over; KEK.board = { si, tp, last };   /* (a 3 órás időkeret lejártával a verseny véget ér) */ S.st = "kek"; S.paused = true;
     uiSnd("success"); if (last) { [0, 400, 800].forEach((d) => setTimeout(() => horn(.35, .12), d)); vrApplause(5); }
     kekBoard(true);
   }
@@ -230,8 +233,8 @@
           if (s0 < 0 && s1 >= 0 && al > -.05 && al < 1.05) { F.st[i] = S.t; F.nx[i] = ms.length; } }
         else if (Math.hypot(F.x[i] - tgtM.x, F.z[i] - tgtM.z) < 45 && nx < ms.length - 1) { const dO = (F.x[i] - tgtM.x) * (tgtM.x - (nx ? ms[nx - 1].x : 0)) + (F.z[i] - tgtM.z) * (tgtM.z - (nx ? ms[nx - 1].z : 0)); if (dO > 0) F.nx[i] = nx + 1; } }
     }
-    /* egymásba ne csússzanak: rács szerinti szétválasztás */
-    { const cell = 24, H = new Map(); for (let i = 0; i < F.n; i++) { const k = (Math.floor(F.x[i] / cell) * 73856093) ^ (Math.floor(F.z[i] / cell) * 19349663); let a = H.get(k); if (!a) H.set(k, a = []); a.push(i); }
+    /* egymásba ne csússzanak: rács szerinti szétválasztás (másodpercenként ~15-ször – elég, és kíméli a processzort) */
+    F.sepT = (F.sepT || 0) + dt; if (F.sepT >= .066) { F.sepT = 0; const cell = 24, H = new Map(); for (let i = 0; i < F.n; i++) { const k = (Math.floor(F.x[i] / cell) * 73856093) ^ (Math.floor(F.z[i] / cell) * 19349663); let a = H.get(k); if (!a) H.set(k, a = []); a.push(i); }
       H.forEach((a) => { for (let p = 0; p < a.length; p++) for (let q = p + 1; q < a.length; q++) { const i = a[p], j = a[q], dx = F.x[i] - F.x[j], dz = F.z[i] - F.z[j], d = Math.hypot(dx, dz), D = 13; if (d < D && d > .01) { const k2 = (D - d) / 2 / d; F.x[i] += dx * k2; F.z[i] += dz * k2; F.x[j] -= dx * k2; F.z[j] -= dz * k2; } } });
       /* a játékostól és a három versenytárstól is tartsanak távolságot */
       [S].concat(S.riv).forEach((o) => { for (let i = 0; i < F.n; i++) { const dx = F.x[i] - o.x, dz = F.z[i] - o.z; if (Math.abs(dx) > 16 || Math.abs(dz) > 16) continue; const d = Math.hypot(dx, dz); if (d < 15 && d > .01) { F.x[i] += dx / d * (15 - d); F.z[i] += dz / d * (15 - d); } } }); }
@@ -247,7 +250,7 @@
       if (cls === 0) { F.hull.setMatrixAt(nY, _km); F.mast.setMatrixAt(nY, _km);
         const ta = Math.abs(twa) * R2D, sa = clamp((ta - 22) / 158 * 1.45, .1, 1.45) * -Math.sign(twa);
         _ke.set(0, sa, 0); _kq.setFromEuler(_ke); _km2.makeRotationFromQuaternion(_kq); _km2.setPosition(0, 0, 1.2); F.main.setMatrixAt(nY, _km2.premultiply(_km));
-        _ke.set(0, sa * .75, 0); _kq.setFromEuler(_ke); _km2.makeRotationFromQuaternion(_kq); _km2.setPosition(0, 0, 0); _km2.multiply(new THREE.Matrix4().makeTranslation(0, 0, 0)); F.jib.setMatrixAt(nY, _km2.premultiply(_km)); nY++; }
+        _ke.set(0, sa * .75, 0); _kq.setFromEuler(_ke); _km2.makeRotationFromQuaternion(_kq); _km2.setPosition(0, 0, 0); F.jib.setMatrixAt(nY, _km2.premultiply(_km)); nY++; }
       else if (cls === 1) { F.raft.setMatrixAt(nR, _km); _ke.set(0, clamp(twa, -1.2, 1.2) * -.8, 0); _kq.setFromEuler(_ke); _km2.makeRotationFromQuaternion(_kq); F.rsail.setMatrixAt(nR, _km2.premultiply(_km)); nR++; }
       else { F.flam.setMatrixAt(nF, _km); nF++; }
       /* éjjel: oldalfények (zöld jobbra, vörös balra), farfény – a néző felől látható szektorban */
